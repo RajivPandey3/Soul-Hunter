@@ -14,6 +14,6 @@ public class GameBootstrap : MonoBehaviour
 
     private void InitializeFramework()
     {
-        Debug.Log("Soul Hunter Framework Initialized");
+        Debug.Log("Soul Hunter Initialized");
     }
 }
