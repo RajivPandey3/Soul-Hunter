@@ -1,0 +1,177 @@
+## 1. The Core Framework (Scene Root)
+
+  Create an empty GameObject in your very first scene. This will boot up the entire game engine.
+
+  Hierarchy Name: [BOOTSTRAP]
+
+  • Required Unity Components: None
+  • Custom Scripts to Attach:
+      • GameBootstrap.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Bootstrap\GameBootstrap.cs
+          • Role: Initializes the Event Bus, Input, Save System, and Scene Manager.
+
+
+  ──────
+  ## 2. The Player Entity
+
+  Create an empty GameObject (or use your 3D character model base).
+
+  Hierarchy Name: Player_Entity
+
+  • Required Unity Components: Rigidbody, CapsuleCollider
+  • Custom Scripts to Attach:
+      1. PlayerController.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Player\PlayerController.cs
+          • Role: The brain. Listens to inputs and moves the character.
+      2. EnvironmentScanner.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Physics\EnvironmentScanner.cs
+          • Role: Detects the ground and slopes.
+          • Inspector Setup: Assign the Ground Layer and drop a small empty child transform into the Feet Pivot slot.
+      3. HealthController.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Combat\HealthController.cs
+          • Role: Makes the player take damage.
+
+
+
+  ### ↳ Child of Player_Entity: Visual_Model
+
+  (This is where your actual 3D model goes)
+
+  • Required Unity Components: Animator
+  • Custom Scripts to Attach:
+      • EntityAnimator.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Animation\EntityAnimator.cs
+
+
+
+  ### ↳ Child of Visual_Model (or Hand Bone): Weapon_Hitbox
+
+  • Required Unity Components: None
+  • Custom Scripts to Attach:
+      • DamageCaster.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Combat\DamageCaster.cs
+          • Inspector Setup: Set Target Layer to "Enemy". Adjust the Hitbox Size.
+
+
+  ──────
+  ## 3. The Enemy Entity
+
+  Very similar to the Player, proving our code is 100% reusable.
+
+  Hierarchy Name: Enemy_Entity
+
+  • Required Unity Components: Rigidbody, CapsuleCollider
+  • Custom Scripts to Attach:
+      1. EnemyController.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\AI\EnemyController.cs
+          • Role: The AI brain that chases the player.
+      2. EnvironmentScanner.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Physics\EnvironmentScanner.cs
+      3. HealthController.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Combat\HealthController.cs
+
+
+
+  ### ↳ Child of Enemy_Entity: Enemy_Model
+
+  • Required Unity Components: Animator
+  • Custom Scripts to Attach:
+      • EntityAnimator.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Animation\EntityAnimator.cs
+
+
+
+  ### ↳ Child of Enemy_Model (or Hand Bone): Enemy_Weapon_Hitbox
+
+  • Required Unity Components: None
+  • Custom Scripts to Attach:
+      • DamageCaster.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Gameplay\Combat\DamageCaster.cs
+          • Inspector Setup: Set Target Layer to "Player".
+
+
+  ──────
+  ## 4. The User Interface (Canvas)
+
+  Create a UI Canvas for your HUD.
+
+  Hierarchy Name: HUD_Canvas
+
+  • Required Unity Components: Canvas, CanvasScaler, GraphicRaycaster
+  • Custom Scripts to Attach: None directly on Canvas.
+
+  ### ↳ Child of HUD_Canvas: HealthBar_Panel
+
+  • Required Unity Components: Slider (Unity UI component)
+  • Custom Scripts to Attach:
+      • PlayerHUD.cs
+          • Full Path: D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\UI\PlayerHUD.cs
+          • Inspector Setup: Drag the Slider component into the Health Slider slot in the inspector.
+          • Note: In a GameManager (or testing script), you must call PlayerHUD.BindToPlayer() and pass the Player's HealthController.
+
+
+  ──────
+  Upar di gayi details se aap seedha Unity Editor mein files search karke drag-and-drop kar sakte hain!
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+ Samajh gaya Chief! Aap ekdum Step-by-Step, Click-by-Click guide chahte hain taaki Unity Editor mein bina soche seedha kaam ho jaye.
+
+  Chaliye, shuru karte hain dot-by-dot setup:
+
+  ### STEP 1: The Core Framework Setup ⚙️
+
+  Goal: Game ka engine start karna (Event Bus, Save System, etc.)
+
+  1. Unity Editor mein left side Hierarchy window par jayein.
+  2. Right-Click karein aur Create Empty par click karein.
+  3. Us naye GameObject ka naam type karein: [BOOTSTRAP] aur Enter dabayein.
+  4. Ab Hierarchy mein [BOOTSTRAP] par click karke use select karein.
+  5. Right side Inspector window mein jayein.
+  6. Sabse niche Add Component button par click karein.
+  7. Search box mein type karein GameBootstrap aur jo script aaye us par click karke attach kar dein.
+  (Step 1 Done! Aapka engine setup ho gaya)
+  ──────
+  ### STEP 2: Player Setup (Main Character) 🤺
+
+  Goal: Player ko scene mein lana aur movement/health setup karna.
+
+  1. Hierarchy window mein Right-Click -> 3D Object -> Capsule (ya apna custom model drag karein).
+  2. Is capsule ka naam rakh dein Player_Entity.
+  3. Player_Entity par click karein.
+  4. Inspector mein Add Component click karein, search karein Rigidbody aur attach karein.
+      • (Optional: Rigidbody mein Constraints ke andar Freeze Rotation X, Y, Z ko tick kar dein taaki character ludhak na jaye).
+  5. Wapas Add Component click karein aur ye 3 scripts search karke add karein:
+      • PlayerController
+      • EnvironmentScanner
+      • HealthController
+  6. Ab Hierarchy mein wapas ayen, Player_Entity par Right-Click karein -> Create Empty.
+  7. Is bachhe (child object) ka naam rakhein FeetPivot. Isko Inspector mein Y position -1 de dein (taaki pairo ke paas chala jaye).
+  8. Wapas Player_Entity click karein. Inspector mein EnvironmentScanner script dikhegi. Wahan Feet Pivot ka box hoga. Usme Hierarchy se apne naye FeetPivot ko drag karke chhod dein.
+  ──────
+  ### STEP 3: Weapon Hitbox Setup (Player ke Hathiyaar) ⚔️
+
+  Goal: Talwar/Weapon jisse damage hoga.
+
+  1. Hierarchy mein Player_Entity par Right-Click -> Create Empty.
+  2. Naam rakhein Weapon_Hitbox.
+  3. Is naye Weapon_Hitbox par click karein.
+  4. Inspector mein Add Component click karein aur DamageCaster search karke laga dein.
+  5. DamageCaster ke andar Inspector mein Target Layer dikhega. Us drop-down menu ko click karke "Enemy" select kar dein (Agar "Enemy" layer nahi hai, toh top-right mein Add Layer karke ek
+  bana lein).
+  ──────
+  ### STEP 4: UI & Health Bar Setup 🖥️
+
+  Goal: Screen par Health slider dikhana.
+
+  1. Hierarchy mein Right-Click -> UI -> Canvas.
+  2. Canvas select karke Inspector mein Canvas Scaler component dekhein, wahan "UI Scale Mode" ko Scale With Screen Size par set kar dein.
+  3. Ab Hierarchy mein Canvas par Right-Click -> UI -> Slider.
+  4. Slider ka naam rakhein HealthBar. (Aap chahein toh slider ke child "Handle Slide Area" ko delete kar sakte hain agar sirf health fill dikhani hai).
+  5. Ab Canvas par click karein.
+  6. Inspector mein Add Component click karein aur PlayerHUD search karke add karein.
+  7. Inspector mein PlayerHUD script ke andar Health Slider ka empty box dikhega. Hierarchy se apne HealthBar ko pakdein aur us box mein drag karke chhod dein.
+  ──────
+  Boom! 💥
+  Aapka setup puri tarah se link ho chuka hai Chief. Ye click-by-click steps bilkul foolproof hain. Agar aap ise follow karte hain toh Unity mein kahin koi error nahi aayega aur
+  architecture seamlessly connect ho jayega!

@@ -1,0 +1,11 @@
+using UnityEngine;
+namespace SoulHunter.Core.Services
+{
+    public class TestService : IGameService
+    {
+        public void Initialize()
+        {
+            Debug.Log("Test Service Initialize");
+        }
+    }
+}

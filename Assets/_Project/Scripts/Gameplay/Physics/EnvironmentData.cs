@@ -1,0 +1,16 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.Physics
+{
+    /// <summary>
+    /// Learning Comment:
+    /// Blueprint (collision-system.md) ke anusar ye zero-allocation struct hai.
+    /// Ye player aur enemy dono ke current environment state ko hold karta hai bina heap memory use kiye.
+    /// </summary>
+    public struct EnvironmentData
+    {
+        public bool IsGrounded;
+        public Vector3 GroundNormal;
+        public float GroundAngle;
+    }
+}

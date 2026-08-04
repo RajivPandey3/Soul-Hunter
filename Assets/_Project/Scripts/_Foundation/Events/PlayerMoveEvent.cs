@@ -1,0 +1,19 @@
+using UnityEngine;
+
+namespace SoulHunter.Core.Events
+{
+    /// <summary>
+    /// Learning Comment:
+    /// Struct is used instead of class for Hybrid System compliance (Zero Allocation).
+    /// Isse garbage collection nahi hoga jab player lagatar move karega.
+    /// </summary>
+    public struct PlayerMoveEvent : IGameEvent
+    {
+        public Vector2 Direction { get; }
+
+        public PlayerMoveEvent(Vector2 direction)
+        {
+            Direction = direction;
+        }
+    }
+}

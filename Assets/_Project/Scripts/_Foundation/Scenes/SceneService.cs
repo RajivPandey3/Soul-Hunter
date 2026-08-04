@@ -1,0 +1,49 @@
+using System;
+using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using SoulHunter.Core.Services;
+
+namespace SoulHunter.Core.Scenes
+{
+    /// <summary>
+    /// Learning Comment:
+    /// Centralized Scene Manager. Decouples scene loading from UI and gameplay logic.
+    /// Uses Task-based async (await Task.Yield()) to monitor progress without needing a MonoBehaviour Update loop.
+    /// </summary>
+    public class SceneService : IGameService
+    {
+        public event Action<float> OnLoadProgress;
+        public event Action OnLoadComplete;
+
+        public void Initialize()
+        {
+            Debug.Log("[SceneService] Initialized.");
+        }
+
+        public async void LoadSceneAsync(string sceneName)
+        {
+            AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
+            if (operation == null)
+            {
+                Debug.LogError($"[SceneService] Failed to load scene: {sceneName}");
+                return;
+            }
+
+            // Monitor progress asynchronously without blocking the main thread
+            while (!operation.isDone)
+            {
+                // Unity's async progress stops at 0.9 until activation is complete
+                float progress = Mathf.Clamp01(operation.progress / 0.9f);
+                OnLoadProgress?.Invoke(progress);
+                
+                await Task.Yield(); // Wait until the next frame
+            }
+
+            OnLoadProgress?.Invoke(1f);
+            OnLoadComplete?.Invoke();
+            
+            Debug.Log($"[SceneService] Scene '{sceneName}' loaded successfully.");
+        }
+    }
+}
