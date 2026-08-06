@@ -1,0 +1,125 @@
+# 🎮 Unity Complete Setup Guide (Soul-Hunter) v2.0 (Zero Omissions)
+
+This is the **100% exact mapping** of where every asset is created, where every script lives, and how the Scene Hierarchy is constructed. Nothing is skipped. 
+
+---
+
+## STEP 1: SCENE SETUP
+Your main working scene must be saved in the correct locked folder.
+1. Save your current Scene (Ctrl+S or File > Save).
+2. Save it exactly here: `Assets/_Project/Scenes/Main_Gameplay.unity`
+
+---
+
+## STEP 2: ASSET CREATION (ANIMATORS)
+You must create exactly 2 Animator Controllers in the Art folder.
+
+1. Navigate to: `Assets/_Project/Art/`
+2. Right-click -> **Create > Animator Controller**. Name it EXACTLY: `PlayerAnimator`
+3. Right-click -> **Create > Animator Controller**. Name it EXACTLY: `EnemyAnimator`
+4. Double-click `PlayerAnimator` to open the Animator Window.
+   - Go to the **Parameters** tab.
+   - Click **+** -> select **Float**. Name it: `Speed`
+   - Click **+** -> select **Trigger**. Name it: `Attack`
+5. Double-click `EnemyAnimator` and add the exact same parameters:
+   - **Float**: `Speed`
+   - **Trigger**: `Attack`
+
+---
+
+## STEP 3: THE CORE FRAMEWORK
+Create an empty GameObject in your scene hierarchy.
+
+**Hierarchy GameObject Name:** `[BOOTSTRAP]`
+- **Required Unity Components:** None
+- **Scripts to Attach:**
+  - `GameBootstrap.cs`
+    - **Drag from:** `Assets/_Project/Scripts/_Foundation/Bootstrap/GameBootstrap.cs`
+
+---
+
+## STEP 4: THE PLAYER ENTITY
+Create an empty GameObject in your scene hierarchy.
+
+**Hierarchy GameObject Name:** `Player_Entity`
+- **Required Unity Components:** `Rigidbody`, `CapsuleCollider`
+- **Scripts to Attach:**
+  1. `PlayerController.cs` 
+     - **Drag from:** `Assets/_Project/Scripts/Gameplay/Player/PlayerController.cs`
+  2. `EnvironmentScanner.cs`
+     - **Drag from:** `Assets/_Project/Scripts/Gameplay/Physics/EnvironmentScanner.cs`
+     - **Inspector Setup:** Create a new Unity Layer called "Ground". Assign this layer to the `Ground Layer` mask in the inspector. Create an empty child GameObject at the bottom of the capsule (feet) and assign it to the `Feet Pivot` slot.
+  3. `HealthController.cs`
+     - **Drag from:** `Assets/_Project/Scripts/Gameplay/Combat/HealthController.cs`
+
+### ↳ Child of `Player_Entity`: `Visual_Model`
+(Create an empty child inside `Player_Entity`. This is where your actual 3D model goes)
+- **Required Unity Components:** `Animator`
+  - **Inspector Setup:** Drag the `PlayerAnimator` asset (from `Assets/_Project/Art/PlayerAnimator.controller`) into the `Controller` slot of this Animator.
+- **Scripts to Attach:**
+  - `EntityAnimator.cs`
+    - **Drag from:** `Assets/_Project/Scripts/Gameplay/Animation/EntityAnimator.cs`
+
+### ↳ Child of `Visual_Model`: `Weapon_Hitbox`
+(Create an empty child inside `Visual_Model`)
+- **Required Unity Components:** None
+- **Scripts to Attach:**
+  - `DamageCaster.cs`
+    - **Drag from:** `Assets/_Project/Scripts/Gameplay/Combat/DamageCaster.cs`
+    - **Inspector Setup:** Set `Target Layer` to "Enemy".
+
+---
+
+## STEP 5: THE ENEMY ENTITY
+Create an empty GameObject in your scene hierarchy.
+
+**Hierarchy GameObject Name:** `Enemy_Entity`
+- **Required Unity Components:** `Rigidbody`, `CapsuleCollider`
+- **Scripts to Attach:**
+  1. `EnemyController.cs`
+     - **Drag from:** `Assets/_Project/Scripts/Gameplay/AI/EnemyController.cs`
+  2. `EnvironmentScanner.cs`
+     - **Drag from:** `Assets/_Project/Scripts/Gameplay/Physics/EnvironmentScanner.cs`
+  3. `HealthController.cs`
+     - **Drag from:** `Assets/_Project/Scripts/Gameplay/Combat/HealthController.cs`
+
+### ↳ Child of `Enemy_Entity`: `Enemy_Model`
+- **Required Unity Components:** `Animator`
+  - **Inspector Setup:** Drag the `EnemyAnimator` asset (from `Assets/_Project/Art/EnemyAnimator.controller`) into the `Controller` slot of this Animator.
+- **Scripts to Attach:**
+  - `EntityAnimator.cs`
+    - **Drag from:** `Assets/_Project/Scripts/Gameplay/Animation/EntityAnimator.cs`
+
+### ↳ Child of `Enemy_Model`: `Enemy_Weapon_Hitbox`
+- **Required Unity Components:** None
+- **Scripts to Attach:**
+  - `DamageCaster.cs`
+    - **Drag from:** `Assets/_Project/Scripts/Gameplay/Combat/DamageCaster.cs`
+    - **Inspector Setup:** Set `Target Layer` to "Player".
+
+---
+
+## STEP 6: THE USER INTERFACE (HUD)
+Create a UI Canvas in your scene hierarchy.
+
+**Hierarchy GameObject Name:** `HUD_Canvas`
+- **Required Unity Components:** `Canvas`, `CanvasScaler`, `GraphicRaycaster`
+
+### ↳ Child of `HUD_Canvas`: `HealthBar_Panel`
+- **Required Unity Components:** `Slider` (Unity UI component)
+- **Scripts to Attach:**
+  - `PlayerHUD.cs`
+    - **Drag from:** `Assets/_Project/Scripts/UI/PlayerHUD.cs`
+    - **Inspector Setup:** Drag the `Slider` component into the `Health Slider` slot in the inspector.
+
+---
+
+## STEP 7: PREFAB CREATION
+Once the Scene Hierarchy is perfectly set up, you MUST save these objects as Prefabs so they can be reused and aren't just stuck in one scene.
+
+1. In the Project window, navigate to: `Assets/_Project/Prefabs/`
+2. Drag `Player_Entity` from the Hierarchy into this folder. It becomes a Prefab.
+3. Drag `Enemy_Entity` from the Hierarchy into this folder. It becomes a Prefab.
+4. Drag `HUD_Canvas` from the Hierarchy into this folder. It becomes a Prefab.
+
+**Final Check:** You should now have exactly 3 Prefabs in `Assets/_Project/Prefabs/`. You can now safely run the scene.

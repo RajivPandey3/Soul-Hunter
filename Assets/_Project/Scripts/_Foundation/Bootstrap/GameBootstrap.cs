@@ -44,6 +44,9 @@ namespace SoulHunter.Core.Bootstrap
             BootstrapInstaller installer = new BootstrapInstaller(services);
 
             installer.Install();
+
+            // Transition to the Gameplay scene
+            services.Get<SoulHunter.Core.Scenes.SceneService>().LoadSceneAsync("Gameplay");
         }
     }
 }

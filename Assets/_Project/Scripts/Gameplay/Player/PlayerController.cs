@@ -34,7 +34,19 @@ namespace SoulHunter.Gameplay.Player
 
         private void Start()
         {
+            if (GameServices.Instance == null)
+            {
+                Debug.LogError("[PlayerController] GameServices.Instance is NULL! The Bootstrapper must run first.");
+                return;
+            }
+
             _eventBus = GameServices.Instance.Get<EventBus>();
+
+            if (_eventBus == null)
+            {
+                Debug.LogError("[PlayerController] EventBus is NULL in GameServices!");
+                return;
+            }
 
             _onMoveEventHandler = OnMoveEvent;
             _onAttackEventHandler = OnAttackEvent;
