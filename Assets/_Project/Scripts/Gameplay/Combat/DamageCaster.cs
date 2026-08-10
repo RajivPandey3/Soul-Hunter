@@ -26,15 +26,29 @@ namespace SoulHunter.Gameplay.Combat
                 _targetLayer
             );
 
+            bool hitSomething = false;
+
             for (int i = 0; i < hits; i++)
             {
-                var target = _hitColliders[i].GetComponent<IDamageable>();
+                // Collider root ya parent par IDamageable dhoondhein
+                var target = _hitColliders[i].GetComponentInParent<IDamageable>();
                 if (target != null)
                 {
                     Vector3 knockback = (_hitColliders[i].transform.position - transform.position).normalized;
                     DamagePacket packet = new DamagePacket(_damageAmount, transform.position, knockback);
                     target.TakeDamage(packet);
+                    hitSomething = true;
+                    Debug.Log($"[DamageCaster] Hit and damaged: {_hitColliders[i].gameObject.name}");
                 }
+                else
+                {
+                    Debug.LogWarning($"[DamageCaster] Found {_hitColliders[i].gameObject.name} in layer, but it has no IDamageable!");
+                }
+            }
+
+            if (hits > 0 && !hitSomething)
+            {
+                Debug.LogWarning($"[DamageCaster] Found {hits} colliders, but none had an IDamageable component attached.");
             }
         }
 

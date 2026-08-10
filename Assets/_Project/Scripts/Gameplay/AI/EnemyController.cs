@@ -19,7 +19,9 @@ namespace SoulHunter.Gameplay.AI
         private EnvironmentScanner _scanner;
         private IEnemyState _currentState;
         
-        public float MoveSpeed = 3f;
+        [SerializeField] private SoulHunter.Gameplay.Data.EnemyData _enemyData;
+
+        public float MoveSpeed { get; private set; }
         public float ChaseDistance = 10f;
         public float AttackDistance = 1.5f;
 
@@ -29,8 +31,28 @@ namespace SoulHunter.Gameplay.AI
             Animator = GetComponentInChildren<EntityAnimator>();
             _scanner = GetComponent<EnvironmentScanner>();
             
-            // For now, let's auto-find the player (in a real game, use Physics.OverlapSphere for aggro)
-            var player = FindObjectOfType<SoulHunter.Gameplay.Player.PlayerController>();
+            // 100% Data-Driven setup
+            if (_enemyData != null)
+            {
+                MoveSpeed = _enemyData.MoveSpeed;
+                
+                var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+                if (health != null) health.Initialize(_enemyData.MaxHealth);
+                
+                var drop = GetComponent<EnemyDrop>();
+                if (drop != null) 
+                {
+                    drop.ChickenDropChance = _enemyData.DropChanceChicken;
+                    drop.DropsChest = _enemyData.DropsChest;
+                }
+            }
+            else
+            {
+                MoveSpeed = 3f; // Default fallback
+            }
+
+            // Target Player ko dhundho
+            var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
             if (player != null)
             {
                 Target = player.transform;
@@ -51,7 +73,8 @@ namespace SoulHunter.Gameplay.AI
         {
             if (_currentState != null)
             {
-                var envData = _scanner != null ? _scanner.ScanEnvironment() : new EnvironmentData();
+                // Agar scanner disable kiya hua hai, toh CPU bachaane ke liye usey mat chalao
+                var envData = (_scanner != null && _scanner.isActiveAndEnabled) ? _scanner.ScanEnvironment() : new EnvironmentData();
                 _currentState.UpdatePhysics(ref envData);
             }
         }

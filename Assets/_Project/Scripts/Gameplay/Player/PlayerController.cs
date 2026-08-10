@@ -54,7 +54,22 @@ namespace SoulHunter.Gameplay.Player
             _eventBus.Subscribe(_onMoveEventHandler);
             _eventBus.Subscribe(_onAttackEventHandler);
 
+            // Kami #4 Fix: Player ke marne par Game Over
+            var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            if (health != null)
+            {
+                health.OnDied += HandlePlayerDeath;
+            }
+
             ChangeState(new PlayerIdleState(this));
+        }
+
+        private void HandlePlayerDeath()
+        {
+            if (SoulHunter.Gameplay.Core.GameSessionManager.Instance != null)
+            {
+                SoulHunter.Gameplay.Core.GameSessionManager.Instance.GameOver();
+            }
         }
 
         private void OnDestroy()
@@ -63,6 +78,12 @@ namespace SoulHunter.Gameplay.Player
             {
                 if (_onMoveEventHandler != null) _eventBus.Unsubscribe(_onMoveEventHandler);
                 if (_onAttackEventHandler != null) _eventBus.Unsubscribe(_onAttackEventHandler);
+            }
+
+            var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            if (health != null)
+            {
+                health.OnDied -= HandlePlayerDeath;
             }
         }
 

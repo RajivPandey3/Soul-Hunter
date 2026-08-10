@@ -10,7 +10,8 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class HealthController : MonoBehaviour, IDamageable
     {
-        [SerializeField] private int _maxHealth = 100;
+        [Tooltip("Asli Vampire Survivors mein early dushmano ki HP bahut kam (10-15) hoti hai taaki wo 1 hit mein marein")]
+        [SerializeField] private int _maxHealth = 10;
         private int _currentHealth;
 
         public event Action<int, int> OnHealthChanged;
@@ -18,7 +19,18 @@ namespace SoulHunter.Gameplay.Combat
 
         private void Awake()
         {
+            ResetHealth();
+        }
+
+        public void ResetHealth()
+        {
             _currentHealth = _maxHealth;
+        }
+
+        public void Initialize(int maxHealth)
+        {
+            _maxHealth = maxHealth;
+            ResetHealth();
         }
 
         public void TakeDamage(DamagePacket packet)
@@ -26,6 +38,15 @@ namespace SoulHunter.Gameplay.Combat
             if (_currentHealth <= 0) return; // Already dead
 
             _currentHealth -= packet.Amount;
+            
+            // Kami #3 Fix: Damage Number dikhana
+            if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
+            {
+                // Thoda sa upar dikhate hain taaki enemy ke sir par aaye
+                Vector3 popupPos = transform.position + Vector3.up * 1.5f; 
+                SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(packet.Amount, popupPos);
+            }
+
             _currentHealth = Mathf.Max(0, _currentHealth);
 
             // Optional: Apply knockback force if entity has a Rigidbody
@@ -41,6 +62,18 @@ namespace SoulHunter.Gameplay.Combat
             {
                 Die();
             }
+        }
+
+        public void Heal(int amount)
+        {
+            if (_currentHealth <= 0) return; // Dead things don't heal
+            
+            _currentHealth += amount;
+            _currentHealth = Mathf.Min(_currentHealth, _maxHealth); // Cap to max
+            
+            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+            
+            Debug.Log($"[HealthController] Healed for {amount}! Current: {_currentHealth}");
         }
 
         private void Die()

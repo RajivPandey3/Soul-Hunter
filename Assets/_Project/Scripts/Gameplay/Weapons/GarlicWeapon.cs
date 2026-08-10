@@ -1,0 +1,68 @@
+using UnityEngine;
+using SoulHunter.Gameplay.Combat;
+
+namespace SoulHunter.Gameplay.Weapons
+{
+    /// <summary>
+    /// Learning Comment:
+    /// VS = SH Rule: Garlic weapon. Ye player ke aas paas ek aura (circle) banata hai.
+    /// Har X seconds mein us aura ke andar aane wale sabhi dushmano ko damage lagta hai.
+    /// Ye kisi ko point nahi karta, bas area of effect (AoE) mein damage deta hai.
+    /// </summary>
+    public class GarlicWeapon : MonoBehaviour
+    {
+        [Tooltip("Kitne meter ke daayre (radius) mein garlic asar karega")]
+        [SerializeField] private float _damageRadius = 2.5f;
+        
+        [Tooltip("Har kitne second mein garlic damage dega")]
+        [SerializeField] private float _damageInterval = 1f;
+        
+        [Tooltip("Ek baar mein kitna damage padega")]
+        [SerializeField] private int _damageAmount = 5;
+        
+        [SerializeField] private LayerMask _enemyLayer;
+
+        private float _timer;
+
+        private void Update()
+        {
+            _timer -= Time.deltaTime;
+            
+            // Har X second ke baad aas-paas ke dushmano par hamla karo
+            if (_timer <= 0f)
+            {
+                ApplyDamageToEnemies();
+                _timer = _damageInterval;
+            }
+        }
+
+        private void ApplyDamageToEnemies()
+        {
+            // Player ke center se ek bada gola (Sphere) phek kar usme aaye dushmano ko dhoondho
+            Collider[] hits = UnityEngine.Physics.OverlapSphere(transform.position, _damageRadius, _enemyLayer);
+            
+            foreach (var hit in hits)
+            {
+                var damageable = hit.GetComponentInParent<IDamageable>();
+                if (damageable != null)
+                {
+                    // Garlic doesn't really knockback in VS, it just damages
+                    var packet = new DamagePacket
+                    {
+                        Amount = _damageAmount,
+                        HitPoint = hit.ClosestPoint(transform.position),
+                        KnockbackDirection = (hit.transform.position - transform.position).normalized * 0.1f // Tiny knockback
+                    };
+                    damageable.TakeDamage(packet);
+                }
+            }
+        }
+
+        // Scene window mein Garlic ka size dekhne ke liye visual guide (White circle)
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = new Color(1f, 1f, 1f, 0.3f);
+            Gizmos.DrawSphere(transform.position, _damageRadius);
+        }
+    }
+}
