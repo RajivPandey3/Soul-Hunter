@@ -1,0 +1,50 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.Combat
+{
+    public class RunetracerWeapon : AutoAttackWeapon
+    {
+        public GameObject RunePrefab;
+        public float Speed = 8f;
+
+        private int _amount = 1;
+
+        public override void LevelUp()
+        {
+            CurrentLevel++;
+            DamageAmount += 5f;
+            if (CurrentLevel == 3 || CurrentLevel == 6) _amount++;
+        }
+
+        protected override void Attack()
+        {
+            if (RunePrefab == null) return;
+
+            for (int i = 0; i < _amount; i++)
+            {
+                Vector2 randomDir = Random.insideUnitCircle.normalized;
+                GameObject rune = WeaponPoolManager.Instance != null
+                    ? WeaponPoolManager.Instance.GetFromPool(RunePrefab, transform.position, Quaternion.identity)
+                    : Instantiate(RunePrefab, transform.position, Quaternion.identity);
+                if (rune == null) continue;
+
+                var rb = rune.GetComponent<Rigidbody>();
+                if (rb == null) rb = rune.AddComponent<Rigidbody>();
+                rb.useGravity = false;
+                rb.isKinematic = false;
+                rb.constraints = RigidbodyConstraints.FreezePositionY;
+                // Bouncing logic usually handled by 3D physics material on the prefab
+                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * Speed;
+
+                var damageDealer = rune.GetComponent<ProjectileDamage>();
+                if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
+                damageDealer.DamageAmount = DamageAmount;
+                damageDealer.SourceWeaponName = "Runetracer";
+
+                var lifetime = rune.GetComponent<PooledLifetime>();
+                if (lifetime != null) lifetime.Arm(5f);
+                else Destroy(rune, 5f); // compatibility when no pool exists
+            }
+        }
+    }
+}

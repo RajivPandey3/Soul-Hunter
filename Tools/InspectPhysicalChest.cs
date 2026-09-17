@@ -1,0 +1,4 @@
+var chest=UnityEngine.Object.FindObjectsByType<SoulHunter.Gameplay.Pickups.ChestPickup>(UnityEngine.FindObjectsInactive.Include,UnityEngine.FindObjectsSortMode.None).First(c=>c.name=="PhysicalChestVerification");
+var player=UnityEngine.Object.FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
+var data=new UnityEditor.SerializedObject(chest);
+return new{chestActive=chest.gameObject.activeInHierarchy,chest.enabled,mask=data.FindProperty("_playerLayer").intValue,radius=data.FindProperty("_pickupRadius").floatValue,chestPosition=chest.transform.position.ToString(),playerPosition=player.transform.position.ToString(),timeScale=UnityEngine.Time.timeScale,colliders=player.GetComponentsInChildren<UnityEngine.Collider>().Select(c=>new{c.name,c.enabled,c.isTrigger,layer=c.gameObject.layer,position=c.bounds.center.ToString()}).ToArray()};

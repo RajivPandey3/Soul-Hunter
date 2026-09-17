@@ -1,0 +1,54 @@
+using UnityEngine;
+using SoulHunter.Gameplay.Player;
+
+namespace SoulHunter.Gameplay.Combat
+{
+    public class ThousandEdgeWeapon : AutoAttackWeapon
+    {
+        public GameObject KnifePrefab;
+        public float KnifeSpeed = 25f;
+
+        private PlayerController _player;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            _player = FindFirstObjectByType<PlayerController>();
+        }
+
+        private void Start()
+        {
+            AttackCooldown = 0.05f; // Machine-gun speed (NO cooldown basically)
+        }
+
+        public override void LevelUp() {}
+
+        protected override void Attack()
+        {
+            if (KnifePrefab == null || _player == null) return;
+
+            Vector3 moveDir = _player.Rigidbody.linearVelocity;
+            moveDir.y = 0f;
+            if (moveDir.sqrMagnitude < 0.001f)
+                moveDir = _player.transform.localScale.x < 0f ? Vector3.left : Vector3.right;
+            else moveDir.Normalize();
+
+            Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * moveDir;
+            Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
+
+            GameObject knife = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(KnifePrefab, spawnPos, Quaternion.identity)
+                : Instantiate(KnifePrefab, spawnPos, Quaternion.identity);
+            if (knife == null) return;
+            knife.transform.forward = spreadDir;
+
+            var proj = knife.GetComponent<Projectile>();
+            if (proj == null) proj = knife.AddComponent<Projectile>();
+            proj.Initialize(spreadDir, KnifeSpeed, 35f, 3f);
+
+            var damageDealer = knife.GetComponent<ProjectileDamage>();
+            if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
+            damageDealer.SourceWeaponName = "Thousand Edge";
+        }
+    }
+}

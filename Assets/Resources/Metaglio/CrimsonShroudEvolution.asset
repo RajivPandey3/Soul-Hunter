@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 120d34e42236e7a42a35b4196ffc89b0, type: 3}
+  m_Name: CrimsonShroudEvolution
+  m_EditorClassIdentifier: 
+  BaseWeapon: 18
+  BaseWeaponMaxLevel: 7
+  RequiredPassive: 34
+  RequiredPassiveMaxLevel: 9
+  AdditionalPassives:
+  - Type: 35
+    MinimumLevel: 9
+  EvolvedWeaponPrefab: {fileID: 1627340184506893090, guid: de42150923f5eab44890a5dacf341e28, type: 3}
+  EvolvedName: Crimson Shroud
+  EvolvedIcon: {fileID: 0}

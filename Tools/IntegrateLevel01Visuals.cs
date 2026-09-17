@@ -1,0 +1,8 @@
+if(UnityEditor.EditorApplication.isPlaying)throw new System.Exception("Edit mode required");
+UnityEngine.GameObject Load(string path)=>UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>(path)??throw new System.Exception("Missing asset: "+path);
+void RemoveVisualChildren(UnityEngine.GameObject root){foreach(var child in root.transform.Cast<UnityEngine.Transform>().ToArray()){if(child.name=="Enemy_Model"||child.name=="Child_Enemy_Model"||child.name=="SH10_Visual")UnityEngine.Object.DestroyImmediate(child.gameObject);}}
+void AddVisual(string rootPath,string visualPath,string visualName){var root=UnityEditor.PrefabUtility.LoadPrefabContents(rootPath);try{if(rootPath.Contains("Enemy_Entity")){RemoveVisualChildren(root);var mr=root.GetComponent<UnityEngine.MeshRenderer>();if(mr)mr.enabled=false;var mf=root.GetComponent<UnityEngine.MeshFilter>();if(mf)mf.sharedMesh=null;}var visual=UnityEditor.PrefabUtility.InstantiatePrefab(Load(visualPath),root.transform) as UnityEngine.GameObject;visual.name=visualName;visual.transform.localPosition=UnityEngine.Vector3.zero;visual.transform.localRotation=UnityEngine.Quaternion.identity;visual.transform.localScale=UnityEngine.Vector3.one;UnityEditor.PrefabUtility.SaveAsPrefabAsset(root,rootPath);}finally{UnityEditor.PrefabUtility.UnloadPrefabContents(root);}}
+AddVisual("Assets/Prefabs/Player/Player.prefab","Assets/Prefabs/Player/SH10_Kael.prefab","SH10_Visual");
+AddVisual("Assets/Prefabs/Weapons/Enemy_Entity.prefab","Assets/Prefabs/Enemies/SH10_L01_Enemy.prefab","SH10_Visual");
+UnityEditor.AssetDatabase.SaveAssets();
+return new{player="Assets/Prefabs/Player/Player.prefab",enemy="Assets/Prefabs/Weapons/Enemy_Entity.prefab",visuals="SH10_Kael + SH10_L01_Enemy",gameplayComponentsPreserved=true};

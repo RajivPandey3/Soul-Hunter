@@ -1,0 +1,88 @@
+using UnityEngine;
+using System.Collections.Generic;
+
+namespace SoulHunter.Gameplay.Combat
+{
+    /// <summary>
+    /// Learning Comment:
+    /// VS = SH Rule: Player ke paas kaun-kaun se hathiyar hain, aur wo kis level par hain, 
+    /// ye sab WeaponManager handle karta hai. Naya upgrade milne par ye us hathiyar ko chalu kar deta hai.
+    /// </summary>
+    public class WeaponManager : MonoBehaviour
+    {
+        // Abhi hamare paas sirf ek hi weapon (WandWeapon) script hai.
+        [SerializeField] private WandWeapon _magicWand;
+        [SerializeField] private GameObject _garlicWeaponObject;
+        
+        // Record rakhenge ki kaunsa hathiyar kis level par hai (0 matlab abhi nahi mila)
+        private Dictionary<UpgradeData.UpgradeType, int> _weaponLevels = new Dictionary<UpgradeData.UpgradeType, int>();
+
+        private void Start()
+        {
+            // Shuru mein Magic Wand level 1 par milti hai
+            _weaponLevels[UpgradeData.UpgradeType.MagicWand] = 1;
+            
+            // Abhi hamare paas baaki weapons ki scripts nahi hain, toh unhe 0 set karte hain
+            _weaponLevels[UpgradeData.UpgradeType.Whip] = 0;
+            _weaponLevels[UpgradeData.UpgradeType.Garlic] = 0;
+        }
+
+        public void ApplyUpgrade(UpgradeData upgrade)
+        {
+            Debug.Log($"[WeaponManager] Applying Upgrade: {upgrade.UpgradeName}");
+
+            // Level badhao
+            if (_weaponLevels.ContainsKey(upgrade.Type))
+            {
+                _weaponLevels[upgrade.Type] = upgrade.Level;
+            }
+            else
+            {
+                _weaponLevels[upgrade.Type] = upgrade.Level;
+            }
+
+            // VS = SH Logic: Upgrade ke hisaab se power badhao
+            switch (upgrade.Type)
+            {
+                case UpgradeData.UpgradeType.MagicWand:
+                    if (_magicWand != null)
+                    {
+                        // Fire rate (delay) kam karo taaki jaldi-jaldi goli chale (Asli VS logic)
+                        _magicWand.FireRate -= 0.1f; 
+                    }
+                    break;
+                case UpgradeData.UpgradeType.Whip:
+                    Debug.Log("Whip unlocked! (Iska code hum agle step mein likhenge)");
+                    break;
+                case UpgradeData.UpgradeType.Garlic:
+                    if (_garlicWeaponObject != null)
+                    {
+                        // Agar pehli baar mila hai toh isey ON kar do
+                        if (!_garlicWeaponObject.activeSelf)
+                        {
+                            _garlicWeaponObject.SetActive(true);
+                        }
+                        else
+                        {
+                            // Agar pehle se on hai toh iska level badhao (Damage radius badhao)
+                            var garlicScript = _garlicWeaponObject.GetComponent<SoulHunter.Gameplay.Weapons.GarlicWeapon>();
+                            if (garlicScript != null)
+                            {
+                                // Agle level par area thoda bada ho jayega (ya aage chal kar property set karenge)
+                                Debug.Log("Garlic Level Up!");
+                            }
+                        }
+                    }
+                    break;
+                case UpgradeData.UpgradeType.PlayerSpeed:
+                    var player = GetComponent<SoulHunter.Gameplay.Player.PlayerController>();
+                    if (player != null)
+                    {
+                        // Speed badhao
+                    }
+                    break;
+            }
+        }
+    }
+}
+

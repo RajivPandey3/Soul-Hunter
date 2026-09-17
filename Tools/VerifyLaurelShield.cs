@@ -1,0 +1,41 @@
+var scene = UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+var root = new UnityEngine.GameObject("ShieldVerification");
+UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root, scene);
+var checks = new System.Collections.Generic.List<string>();
+try {
+ var health = root.AddComponent<SoulHunter.Gameplay.Combat.HealthController>();
+ health.Initialize(100); health.KnockbackResistance = 1;
+ var child = new UnityEngine.GameObject("Laurel"); child.transform.SetParent(root.transform);
+ var shield = child.AddComponent<SoulHunter.Gameplay.Combat.LaurelWeapon>();
+ var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+ var type = shield.GetType();
+ type.GetMethod("OnEnable", flags).Invoke(shield, null);
+ int damageEvents = 0; health.OnDamaged += () => damageEvents++;
+ var hit = new SoulHunter.Gameplay.Combat.DamagePacket(10, UnityEngine.Vector3.zero, UnityEngine.Vector3.zero);
+ health.TakeDamage(hit);
+ if (health.CurrentHealth != 100 || shield.CurrentCharges != 0 || damageEvents != 0) throw new System.Exception("First block failed");
+ checks.Add("damage blocked, charge consumed, no damage event");
+ health.TakeDamage(hit);
+ if (health.CurrentHealth != 100) throw new System.Exception("Grace failed");
+ checks.Add("consecutive hits blocked during grace");
+ type.GetField("_graceRemaining", flags).SetValue(shield, 0f);
+ health.TakeDamage(hit);
+ if (health.CurrentHealth != 90 || damageEvents != 1) throw new System.Exception("Exhausted shield failed");
+ checks.Add("exhausted shield allows damage");
+ type.GetField("_rechargeRemaining", flags).SetValue(shield, 0f);
+ type.GetMethod("AdvanceTime", flags).Invoke(shield, new object[] { 0.001f });
+ if (shield.CurrentCharges != 1) throw new System.Exception("Recharge failed");
+ checks.Add("recharge restores charge");
+ health.IsInvincible = true; health.TakeDamage(hit); health.IsInvincible = false;
+ if (shield.CurrentCharges != 1) throw new System.Exception("Invincibility consumed charge");
+ checks.Add("invincibility preserves charge");
+ shield.enabled = false; type.GetMethod("OnDisable", flags).Invoke(shield, null);
+ health.TakeDamage(hit);
+ if (health.CurrentHealth != 80 || health.DamageInterceptor != null) throw new System.Exception("Disable failed");
+ checks.Add("disable unregisters protection");
+ for (int i=0; i<20; i++) shield.LevelUp();
+ if (shield.AttackCooldown < 0.1f) throw new System.Exception("Cooldown became invalid");
+ checks.Add("upgrade cooldown remains positive");
+ return new { passed = checks.Count, checks };
+} finally { UnityEngine.Object.DestroyImmediate(root); UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene); }
+

@@ -1,0 +1,27 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.Combat
+{
+    /// <summary>
+    /// Learning Comment:
+    /// VS = SH Rule: Har upgrade ek data file hoti hai. 
+    /// Ye ScriptableObject humein Unity Editor mein naye upgrades (jaise Magic Wand Lv2, Whip Lv1) 
+    /// asani se banane ki taqat deta hai, bina naya code likhe.
+    /// </summary>
+    [CreateAssetMenu(fileName = "New Upgrade", menuName = "Soul Hunter/Upgrade Data")]
+    public class UpgradeData : ScriptableObject
+    {
+        public string UpgradeName;
+        [TextArea]
+        public string Description;
+        public Sprite Icon;
+
+        // Upgrade kis cheez ka hai?
+        public enum UpgradeType { MagicWand, Whip, Garlic, PlayerSpeed, MaxHealth }
+        public UpgradeType Type;
+        
+        // Upgrade ka level kya hai (Level 1 naya weapon deta hai, Level 2 purane ki taqat badhata hai)
+        public int Level;
+    }
+}
+

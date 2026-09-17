@@ -1,0 +1,22 @@
+if(UnityEditor.EditorApplication.isPlaying) throw new System.Exception("Stop Play mode first");
+var scene=UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/MainMenu/MainMenu.unity");
+var all=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).Select(t=>t.gameObject).ToArray();
+UnityEngine.GameObject Find(string n)=>all.First(g=>g.name==n);
+var controller=Find("Main_Menu_Controller");
+var nav=controller.GetComponent<SoulHunter.UI.MainMenuNavigation>();
+if(!nav)nav=controller.AddComponent<SoulHunter.UI.MainMenuNavigation>();
+nav.HomePanel=Find("Home_Menu_Panel");nav.CharacterPanel=Find("HeroSelection_Panel");nav.PowerUpPanel=Find("PowerUp_Panel");
+nav.StartButton=Find("Start_Button").GetComponent<UnityEngine.UI.Button>();
+nav.PowerUpButton=Find("PowerUP_Button").GetComponent<UnityEngine.UI.Button>();
+nav.QuitButton=Find("Quit_Button").GetComponent<UnityEngine.UI.Button>();
+nav.CharacterBackButton=nav.CharacterPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true).First(b=>b.name=="Back_Button");
+nav.PowerUpBackButton=nav.PowerUpPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true).First(b=>b.name=="Back_Button");
+foreach(var b in new[]{nav.StartButton,nav.PowerUpButton,nav.QuitButton,nav.CharacterBackButton,nav.PowerUpBackButton})
+while(b.onClick.GetPersistentEventCount()>0) UnityEditor.Events.UnityEventTools.RemovePersistentListener(b.onClick,0);
+nav.ShowHome();
+var boot=UnityEngine.Object.FindFirstObjectByType<SoulHunter.Core.Bootstrap.GameBootstrap>();
+if(!boot)boot=new UnityEngine.GameObject("Scene_Services").AddComponent<SoulHunter.Core.Bootstrap.GameBootstrap>();
+var so=new UnityEditor.SerializedObject(boot);so.FindProperty("_loadMenuOnStartup").boolValue=false;so.ApplyModifiedPropertiesWithoutUndo();
+UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+return new {scene=scene.path,missing=all.Sum(g=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(g))};

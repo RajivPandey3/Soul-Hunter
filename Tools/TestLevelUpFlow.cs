@@ -1,0 +1,1 @@
+var e=UnityEngine.Object.FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerExperience>();e.AddXP(100);var p=UnityEngine.GameObject.Find("LevelUp_Panel");return new{xp=e.CurrentXP,level=e.CurrentLevel,timeScale=UnityEngine.Time.timeScale,panel=p!=null&&p.activeSelf};

@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python",
+    "Tools/ArchitectureChecks/run-regression.py"
+  ],
+  "cwd": "D:\\Unity Projects\\Soul-Hunter",
+  "timeoutSeconds": 120,
+  "startedUtc": "2026-09-10T20:03:33.119399+00:00",
+  "pid": 8336,
+  "exitCode": 0,
+  "timedOut": false,
+  "finishedUtc": "2026-09-10T20:03:34.132728+00:00"
+}

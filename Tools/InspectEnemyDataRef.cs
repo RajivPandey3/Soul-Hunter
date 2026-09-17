@@ -1,0 +1,1 @@
+var root=UnityEditor.PrefabUtility.LoadPrefabContents("Assets/Prefabs/Weapons/Enemy_Entity.prefab");try{var c=root.GetComponent<SoulHunter.Gameplay.AI.EnemyController>();var so=new UnityEditor.SerializedObject(c);var p=so.FindProperty("_enemyData");return p.objectReferenceValue?p.objectReferenceValue.name:"NULL";}finally{UnityEditor.PrefabUtility.UnloadPrefabContents(root);}

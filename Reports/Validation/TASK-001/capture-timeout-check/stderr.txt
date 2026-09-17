@@ -1,0 +1,1 @@
+SUCCESS: The process with PID 18356 (child process of PID 18188) has been terminated.

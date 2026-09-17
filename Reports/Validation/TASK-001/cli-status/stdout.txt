@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "command": "command editor_status",
+  "data": {
+    "command": "editor_status",
+    "parameters": {},
+    "result": {
+      "status": "ready",
+      "compiling": false,
+      "domainReloadInProgress": false,
+      "playMode": "stopped",
+      "lastHeartbeat": "2026-09-10T20:04:26.6045866Z",
+      "projectPath": "D:\\Unity Projects\\Soul-Hunter",
+      "unityVersion": "6000.0.36f1"
+    },
+    "target": {
+      "host": "127.0.0.1",
+      "port": 7800,
+      "projectPath": "D:\\Unity Projects\\Soul-Hunter"
+    },
+    "success": true
+  },
+  "errors": [],
+  "warnings": []
+}
