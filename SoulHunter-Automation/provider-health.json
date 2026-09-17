@@ -1,0 +1,18 @@
+﻿{
+    "agy":  {
+                "provider":  "agy",
+                "state":  "EXHAUSTED",
+                "checked_at":  "2026-09-14T15:42:57.9584409+05:30",
+                "cooldown_until":  "2026-09-14T16:12:57.9584409+05:30",
+                "exit_code":  1,
+                "reason":  "agy reported quota/rate/usage exhaustion."
+            },
+    "codex":  {
+                  "provider":  "codex",
+                  "state":  "READY",
+                  "checked_at":  "2026-09-14T15:43:08.9707630+05:30",
+                  "cooldown_until":  null,
+                  "exit_code":  0,
+                  "reason":  "Live read-only probe succeeded."
+              }
+}

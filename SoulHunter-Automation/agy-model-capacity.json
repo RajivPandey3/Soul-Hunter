@@ -1,0 +1,29 @@
+{
+  "schema": "soul-hunter.autopilot.agy-model-capacity.v1",
+  "provider": "AGY",
+  "observed_at": "2026-09-14T16:00:00",
+  "source": "Antigravity Models UI",
+  "models": [
+    {
+      "model": "Gemini",
+      "status": "QUOTA_EXHAUSTED",
+      "raw_capacity": 0,
+      "reason": "Weekly model limit shown as 0% remaining.",
+      "source": "antigravity-models-ui"
+    },
+    {
+      "model": "Claude",
+      "status": "AVAILABLE",
+      "raw_capacity": 100,
+      "reason": "Weekly model limit shown as 100% remaining.",
+      "source": "antigravity-models-ui"
+    },
+    {
+      "model": "GPT",
+      "status": "AVAILABLE",
+      "raw_capacity": 100,
+      "reason": "Weekly model limit shown as 100% remaining.",
+      "source": "antigravity-models-ui"
+    }
+  ]
+}
