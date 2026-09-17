@@ -1,0 +1,706 @@
+﻿[
+    {
+        "id":  "SHADOW-KAEL-LOADOUT-MIRROR",
+        "objective":  "Implement Shadow Kael\u0027s requirement to mirror the player\u0027s active weapon loadout by instantiating boss-owned copies of the player\u0027s weapons.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-084646-768",
+        "completed_at":  "2026-09-12T08:57:17.9325574+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs",
+                               "Assets/_Project/Gameplay/Combat/WeaponManager.cs"
+                           ]
+    },
+    {
+        "id":  "SHADOW-KAEL-STAT-MIRROR",
+        "objective":  "Apply the captured player stats (Might, Cooldown, Area, MoveSpeed) to Shadow Kael\u0027s EnemyController and instantiated weapons.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-125632-833",
+        "completed_at":  "2026-09-12T13:05:00.5471872+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs",
+                               "Assets/_Project/Gameplay/Weapons/MagicWandWeapon.cs"
+                           ]
+    },
+    {
+        "id":  "SHADOW-KAEL-APPLY-STATS",
+        "objective":  "Apply the mirrored player stats (Might, Cooldown, Area, MoveSpeed) to ShadowKaelController\u0027s movement and instantiated weapons.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-130500-688",
+        "completed_at":  "2026-09-12T13:29:28.4552753+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs"
+                           ]
+    },
+    {
+        "id":  "SHADOW-KAEL-WEAPON-RETARGET",
+        "objective":  "Update ShadowKaelController and weapon scripts to dynamically reassign DamageCaster layers and TouchDamage tags on mirrored weapons so they attack the player.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-132928-600",
+        "completed_at":  "2026-09-12T13:35:57.7306276+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs",
+                               "Assets/_Project/Gameplay/Combat/DamageCaster.cs",
+                               "Assets/_Project/Gameplay/Combat/TouchDamage.cs",
+                               "Assets/_Project/Gameplay/Weapons/BibleWeapon.cs"
+                           ]
+    },
+    {
+        "id":  "SHADOW-KAEL-WEAPON-HOSTILITY-FIX",
+        "objective":  "Add TargetLayer/TargetTag setters to weapon scripts and update ShadowKaelController to retarget mirrored weapons against the player.",
+        "status":  "TASK_BLOCKED",
+        "run_id":  "AUTO-20260912-133557-847",
+        "completed_at":  "2026-09-12T13:41:47.6633573+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs",
+                               "Assets/_Project/Gameplay/Combat/DamageCaster.cs",
+                               "Assets/_Project/Gameplay/Weapons/BibleWeapon.cs",
+                               "Assets/_Project/Gameplay/Weapons/WhipWeapon.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-TIMEFREEZE-PICKUP",
+        "objective":  "Create a functional TimeFreeze_Pickup prefab wrapping the SH10_TimeFreeze visual, and correctly wire it to the PickupPoolManager in Main_Gameplay.unity.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-162103-726",
+        "completed_at":  "2026-09-12T16:31:10.8056336+05:30",
+        "evidence_files":  [
+                               "Assets/Scenes/Gameplay/Main_Gameplay.unity",
+                               "Assets/Prefabs/Items/SH10_TimeFreeze.prefab"
+                           ]
+    },
+    {
+        "id":  "REWIRE-PICKUP-PREFABS",
+        "objective":  "Remove primitive mesh components from Magnet_Pickup, create a functional TimeFreeze_Pickup wrapper with collider and script, and wire it to PickupPoolManager.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-163110-942",
+        "completed_at":  "2026-09-12T17:07:23.6175374+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Items/PickupPoolManager.cs",
+                               "Assets/Scenes/Gameplay/Main_Gameplay.unity",
+                               "Assets/Prefabs/Items/Magnet_Pickup.prefab",
+                               "Assets/Prefabs/Items/SH10_TimeFreeze.prefab"
+                           ]
+    },
+    {
+        "id":  "WIRE-VFX-POOL-MANAGER",
+        "objective":  "Attach the VFXPoolManager script to the persistent GameBootstrap object in the Bootstrap.unity scene.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-183552-514",
+        "completed_at":  "2026-09-12T18:40:25.0788307+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/VFX/Combat/VFXPoolManager.cs",
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity",
+                               "Assets/_Project/Core/Bootstrap/GameBootstrap.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-VFX-POOL-MANAGER-STANDALONE",
+        "objective":  "Update VFXPoolManager.cs Awake() to call DontDestroyOnLoad and add a standalone VFXPoolManager GameObject to the Bootstrap.unity scene.",
+        "status":  "TASK_BLOCKED",
+        "run_id":  "AUTO-20260912-184025-211",
+        "completed_at":  "2026-09-12T18:44:50.3686608+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/VFX/Combat/VFXPoolManager.cs",
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity"
+                           ]
+    },
+    {
+        "id":  "WIRE-VFX-POOL-MANAGER-PROGRAMMATIC",
+        "objective":  "Programmatically instantiate VFXPoolManager within BootstrapInstaller.cs and call DontDestroyOnLoad to safely inject it into the global persistent scene context.",
+        "status":  "TASK_BLOCKED",
+        "run_id":  "AUTO-20260912-184450-484",
+        "completed_at":  "2026-09-12T18:49:08.9677041+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Bootstrap/BootstrapInstaller.cs",
+                               "Assets/_Project/VFX/Combat/VFXPoolManager.cs"
+                           ]
+    },
+    {
+        "id":  "MIGRATE-VFX-SYSTEMS-TO-BOOTSTRAP",
+        "objective":  "Move the VFX_Systems GameObject from Main_Gameplay.unity to Bootstrap.unity, and add DontDestroyOnLoad to VFXPoolManager.cs.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-184909-105",
+        "completed_at":  "2026-09-12T18:57:00.9948504+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/VFX/Combat/VFXPoolManager.cs",
+                               "Assets/Scenes/Gameplay/Main_Gameplay.unity",
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity"
+                           ]
+    },
+    {
+        "id":  "WIRE-VFX-POOL-MANAGER-AUTO-PERSIST",
+        "objective":  "Update VFXPoolManager.cs to self-instantiate via RuntimeInitializeOnLoadMethod and add DontDestroyOnLoad to Awake.",
+        "status":  "TASK_BLOCKED",
+        "run_id":  "AUTO-20260912-185701-138",
+        "completed_at":  "2026-09-12T19:02:53.0949439+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/VFX/Combat/VFXPoolManager.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-AUDIO-MANAGER-BOOTSTRAP",
+        "objective":  "Create an AudioManager GameObject in the Bootstrap.unity scene, attach AudioManager.cs, and assign the 5 SFX clips to secure serialized ownership.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-191944-917",
+        "completed_at":  "2026-09-12T19:24:05.7674474+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Audio/AudioSystems/AudioManager.cs",
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity",
+                               "Assets/_Project/Audio/SFX/GemPickup.wav",
+                               "Assets/_Project/Audio/SFX/LevelUp.wav",
+                               "Assets/_Project/Audio/SFX/EnemyHit.wav",
+                               "Assets/_Project/Audio/SFX/ChestOpen.wav",
+                               "Assets/_Project/Audio/SFX/Heal.wav"
+                           ]
+    },
+    {
+        "id":  "WIRE-AUDIO-MANAGER-BOOTSTRAP-COMPONENT",
+        "objective":  "Attach AudioManager.cs as a component to the existing BOOTSTRAP GameObject in Bootstrap.unity and assign the 5 SFX clips.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-192405-892",
+        "completed_at":  "2026-09-12T19:31:37.8372669+05:30",
+        "evidence_files":  [
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity",
+                               "Assets/_Project/Audio/AudioSystems/AudioManager.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-PICKUPS-SCENE-RECOVERY",
+        "objective":  "Update SceneRecovery.cs to assign Magnet_Pickup.prefab and TimeFreeze_Pickup.prefab to PickupPoolManager\u0027s _magnetPrefab and _timeFreezePrefab fields.",
+        "status":  "TASK_BLOCKED",
+        "run_id":  "AUTO-20260912-203927-921",
+        "completed_at":  "2026-09-12T20:48:47.1069927+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs",
+                               "Assets/_Project/Gameplay/Items/PickupPoolManager.cs"
+                           ]
+    },
+    {
+        "id":  "CREATE-AUDIO-MANAGER-PREFAB",
+        "objective":  "Create an AudioManager.prefab in Assets/Resources, attach AudioManager.cs, and assign the 5 SFX clips.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-205408-733",
+        "completed_at":  "2026-09-12T21:05:49.8555104+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Audio/AudioSystems/AudioManager.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-AUDIO-MANAGER-BOOTSTRAP-INSTANTIATION",
+        "objective":  "Programmatically instantiate Resources.Load\u003cGameObject\u003e(\"AudioManager\") inside GameBootstrap.cs Awake() to ensure deterministic global audio availability.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-210550-009",
+        "completed_at":  "2026-09-12T21:10:48.2800154+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Bootstrap/GameBootstrap.cs",
+                               "Assets/Resources/AudioManager.prefab"
+                           ]
+    },
+    {
+        "id":  "WIRE-AUDIO-MANAGER-BOOTSTRAP-INSTALLER",
+        "objective":  "Instantiate the AudioManager prefab from Resources within BootstrapInstaller.Install() to secure deterministic runtime availability alongside core framework services.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-211048-405",
+        "completed_at":  "2026-09-12T21:14:38.1471178+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Bootstrap/BootstrapInstaller.cs",
+                               "Assets/Resources/AudioManager.prefab"
+                           ]
+    },
+    {
+        "id":  "WIRE-GAMESESSION-MANAGER-BOOTSTRAP",
+        "objective":  "Programmatically instantiate GameSessionManager as a persistent GameObject in BootstrapInstaller.cs and remove the primitive fallback from VSSystemsDynamicSpawner.cs.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-213215-535",
+        "completed_at":  "2026-09-12T21:36:57.2778473+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Bootstrap/VSSystemsDynamicSpawner.cs",
+                               "Assets/_Project/Core/Bootstrap/BootstrapInstaller.cs",
+                               "Assets/_Project/Core/Game/GameSessionManager.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-GAMESESSION-MANAGER-BOOTSTRAP-SCENE",
+        "objective":  "Attach GameSessionManager component to the BOOTSTRAP GameObject in Bootstrap.unity, remove it from Main_Gameplay.unity, and remove the primitive fallback from VSSystemsDynamicSpawner.cs.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-213657-416",
+        "completed_at":  "2026-09-12T21:49:12.9679559+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Bootstrap/VSSystemsDynamicSpawner.cs",
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity",
+                               "Assets/Scenes/Gameplay/Main_Gameplay.unity"
+                           ]
+    },
+    {
+        "id":  "WIRE-GAMESESSION-MANAGER-AUTO-PERSIST",
+        "objective":  "Update GameSessionManager.cs to self-instantiate via RuntimeInitializeOnLoadMethod(BeforeSceneLoad), apply DontDestroyOnLoad in Awake, and remove the primitive fallback from VSSystemsDynamicSpawner.cs.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-214913-084",
+        "completed_at":  "2026-09-12T21:56:05.7674333+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/GameSessionManager.cs",
+                               "Assets/_Project/Gameplay/Bootstrap/VSSystemsDynamicSpawner.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-GAMESESSION-MANAGER-BOOTSTRAP-CHILD",
+        "objective":  "Create a GameSessionManager GameObject as a child of the BOOTSTRAP GameObject in Bootstrap.unity, attach GameSessionManager.cs, and remove the primitive spawning logic from VSSystemsDynamicSpawner.cs.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-215605-896",
+        "completed_at":  "2026-09-12T22:08:59.5774727+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Bootstrap/VSSystemsDynamicSpawner.cs",
+                               "Assets/Scenes/Bootstrap/Bootstrap.unity"
+                           ]
+    },
+    {
+        "id":  "GAMESESSION-PERSISTENCE-LIFECYCLE-FIX",
+        "objective":  "Update GameSessionManager to reset session state (SurvivalTime, flags) and restore Time.timeScale on SceneManager.sceneLoaded.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-220859-724",
+        "completed_at":  "2026-09-12T22:18:59.3511382+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/GameSessionManager.cs"
+                           ]
+    },
+    {
+        "id":  "INFINITEMAP-PLAYER-INJECTION",
+        "objective":  "Refactor InfiniteMap to remove the fallback GameObject.FindWithTag(\u0027Player\u0027) lookup from the Update loop and inject the player reference deterministically.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-231930-288",
+        "completed_at":  "2026-09-12T23:25:02.3658527+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/World/Environment/InfiniteMap.cs"
+                           ]
+    },
+    {
+        "id":  "INFINITEMAP-PLAYER-INJECTION-FIX",
+        "objective":  "Refactor InfiniteMap to remove the fallback GameObject.FindWithTag(\u0027Player\u0027) lookup from the Update loop and inject the player reference deterministically.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-232502-919",
+        "completed_at":  "2026-09-12T23:35:13.8774395+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/World/Environment/InfiniteMap.cs"
+                           ]
+    },
+    {
+        "id":  "WIRE-INFINITEMAP-PLAYER",
+        "objective":  "Expose _player as a [SerializeField] in InfiniteMap.cs and update SceneRecovery.cs and 05_EnvironmentSetupBuilder.cs to deterministically wire the Player transform to the InfiniteMap_Manager.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-233514-014",
+        "completed_at":  "2026-09-12T23:45:09.1593336+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/World/Environment/InfiniteMap.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs",
+                               "Assets/_Project/Tools/Build/05_EnvironmentSetupBuilder.cs"
+                           ]
+    },
+    {
+        "id":  "INFINITEMAP-PLAYER-SERIALIZE-WIRE",
+        "objective":  "Expose _player as a [SerializeField] in InfiniteMap.cs and update 05_EnvironmentSetupBuilder.cs and SceneRecovery.cs to deterministically wire the Player transform to the InfiniteMap_Manager.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260912-234509-284",
+        "completed_at":  "2026-09-12T23:50:45.0366606+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/World/Environment/InfiniteMap.cs",
+                               "Assets/_Project/Tools/Build/05_EnvironmentSetupBuilder.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "INFINITEMAP-PLAYER-CONTROLLER-INJECTION",
+        "objective":  "Update PlayerController.Start() to retrieve InfiniteMap via FindFirstObjectByType and invoke SetPlayer(transform) to inject the player deterministically.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260912-235045-167",
+        "completed_at":  "2026-09-13T00:00:08.2898051+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Player/PlayerController.cs",
+                               "Assets/_Project/World/Environment/InfiniteMap.cs"
+                           ]
+    },
+    {
+        "id":  "EVENTBUS-EDITMODE-TEST",
+        "objective":  "Create EventBusTests.cs in Assets/_Project/Tests/EditMode to verify EventBus Subscription, Raise, and Unsubscribe mechanics, ensuring events reach subscribers and disposed subscriptions prevent leaks.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-005930-917",
+        "completed_at":  "2026-09-13T01:09:44.0501770+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Events/EventBus.cs",
+                               "Assets/_Project/Core/Events/EventSubscription.cs",
+                               "Assets/_Project/Tests/EditMode"
+                           ]
+    },
+    {
+        "id":  "SIMPLE-SERVICE-CONTAINER-TEST",
+        "objective":  "Create an EditMode test for SimpleServiceContainer to verify deterministic Add and Get storage contracts.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-011412-763",
+        "completed_at":  "2026-09-13T01:17:48.9434642+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Services/SimpleServiceContainer.cs",
+                               "Assets/_Project/Tests/EditMode/SoulHunter.Tests.EditMode.asmdef"
+                           ]
+    },
+    {
+        "id":  "PLAYERSTATS-EDITMODE-TEST",
+        "objective":  "Create PlayerStatsTests.cs in EditMode tests to verify stat calculations, Cooldown boundaries, and Revival logic.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-030116-163",
+        "completed_at":  "2026-09-13T03:04:34.3649706+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Player/PlayerStats.cs",
+                               "Assets/_Project/Tests/EditMode/SoulHunter.Tests.EditMode.asmdef"
+                           ]
+    },
+    {
+        "id":  "RUNSTATSTRACKER-EDITMODE-TEST",
+        "objective":  "Create RunStatsTrackerTests.cs in EditMode tests to verify deterministic kill counting, gold accumulation, and damage tracking.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-031033-755",
+        "completed_at":  "2026-09-13T03:14:04.3052696+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/RunStatsTracker.cs"
+                           ]
+    },
+    {
+        "id":  "IMPLEMENT-RUNSTATSTRACKER-EDITMODE-TEST",
+        "objective":  "Create RunStatsTrackerTests.cs in EditMode tests to verify deterministic kill counting, gold accumulation, and damage tracking logic.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-031404-427",
+        "completed_at":  "2026-09-13T03:23:00.9864534+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/RunStatsTracker.cs",
+                               "Assets/_Project/Tests/EditMode/SoulHunter.Tests.EditMode.asmdef"
+                           ]
+    },
+    {
+        "id":  "IMPLEMENT-LEVELUPMANAGER-EDITMODE-TEST",
+        "objective":  "Create LevelUpManagerTests.cs in EditMode tests to verify option generation from GameContentCatalog based on WeaponManager state.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-084540-530",
+        "completed_at":  "2026-09-13T08:50:45.7106763+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/LevelUpManager.cs",
+                               "Assets/_Project/Data/Config/GameContentCatalog.cs"
+                           ]
+    },
+    {
+        "id":  "CAMERAFOLLOW-PLAYER-INJECTION",
+        "objective":  "Refactor CameraFollow to remove GameObject.FindWithTag(\u0027Player\u0027) from LateUpdate, add a SetTarget(Transform) method, and update PlayerController.Start() to inject the player transform via FindFirstObjectByType.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-090723-522",
+        "completed_at":  "2026-09-13T09:14:28.4235216+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Camera/PlayerCamera/CameraFollow.cs",
+                               "Assets/_Project/Gameplay/Player/PlayerController.cs"
+                           ]
+    },
+    {
+        "id":  "CAMERAFOLLOW-INIT-INJECTION",
+        "objective":  "Refactor CameraFollow to remove the GameObject.FindWithTag(\u0027Player\u0027) fallback lookup from LateUpdate() and inject the player target deterministically during Start() via FindFirstObjectByType\u003cPlayerController\u003e().",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-091428-569",
+        "completed_at":  "2026-09-13T09:24:20.6112121+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Camera/PlayerCamera/CameraFollow.cs"
+                           ]
+    },
+    {
+        "id":  "CAMERAFOLLOW-EDITMODE-TEST",
+        "objective":  "Create CameraFollowTests.cs in EditMode tests to verify deterministic PlayerController injection in Start() and graceful null handling in LateUpdate().",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-092421-054",
+        "completed_at":  "2026-09-13T09:31:09.3537445+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Camera/PlayerCamera/CameraFollow.cs"
+                           ]
+    },
+    {
+        "id":  "IMPLEMENT-CAMERAFOLLOW-EDITMODE-TEST",
+        "objective":  "Create CameraFollowTests.cs in EditMode tests to verify deterministic PlayerController injection in Start() and graceful null handling in LateUpdate().",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-093109-521",
+        "completed_at":  "2026-09-13T09:36:32.0755110+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Camera/PlayerCamera/CameraFollow.cs",
+                               "Assets/_Project/Tests/EditMode/SoulHunter.Tests.EditMode.asmdef"
+                           ]
+    },
+    {
+        "id":  "SHADOW-KAEL-PLAYER-INJECTION",
+        "objective":  "Refactor ShadowKaelController to replace GameObject.FindWithTag(\u0027Player\u0027) with FindFirstObjectByType\u003cPlayerController\u003e() and access its gameObject to eliminate the fragile string-based tag lookup.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-094356-360",
+        "completed_at":  "2026-09-13T09:49:49.4088367+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs"
+                           ]
+    },
+    {
+        "id":  "SHADOW-KAEL-REMOVE-TAG-LOOKUP",
+        "objective":  "Refactor ShadowKaelController to replace GameObject.FindWithTag(\u0027Player\u0027) with FindFirstObjectByType\u003cPlayerController\u003e() to deterministically resolve the player.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-094949-752",
+        "completed_at":  "2026-09-13T10:01:22.9932817+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/ShadowKaelController.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYDROP-PLAYER-INJECTION",
+        "objective":  "Refactor EnemyDrop.HandleDeath() to remove the GameObject.FindWithTag(\u0027Player\u0027) fallback lookup and replace it with FindFirstObjectByType\u003cSoulHunter.Gameplay.Player.PlayerController\u003e() or by fetching the Target from the attached EnemyController.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-100946-422",
+        "completed_at":  "2026-09-13T10:15:51.6302050+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemyDrop.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYDROP-PLAYER-INJECTION-FIX",
+        "objective":  "Refactor EnemyDrop.HandleDeath() to remove the GameObject.FindWithTag(\u0027Player\u0027) fallback lookup and replace it with FindFirstObjectByType\u003cSoulHunter.Gameplay.Player.PlayerController\u003e() or fetching from EnemyController.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-101551-818",
+        "completed_at":  "2026-09-13T10:24:28.2944809+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemyDrop.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYSPAWNER-PLAYER-INJECTION",
+        "objective":  "Refactor EnemySpawner to remove GameObject.FindWithTag(\u0027Player\u0027) from Start() and Update(), replacing it with FindFirstObjectByType\u003cSoulHunter.Gameplay.Player.PlayerController\u003e() to securely resolve the player.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-103230-543",
+        "completed_at":  "2026-09-13T10:40:28.8864314+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemySpawner.cs"
+                           ]
+    },
+    {
+        "id":  "GAMEEVENTDIRECTOR-PLAYER-INJECTION",
+        "objective":  "Refactor GameEventDirector.Start() to remove GameObject.FindWithTag(\u0027Player\u0027) and fetch the player securely via FindFirstObjectByType\u003cSoulHunter.Gameplay.Player.PlayerController\u003e().",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-104803-981",
+        "completed_at":  "2026-09-13T10:53:30.4466443+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/GameEventDirector.cs"
+                           ]
+    },
+    {
+        "id":  "GAMEEVENTDIRECTOR-PLAYER-LOOKUP-RETRY",
+        "objective":  "Refactor GameEventDirector to remove GameObject.FindWithTag(\u0027Player\u0027) and replace it with FindFirstObjectByType\u003cSoulHunter.Gameplay.Player.PlayerController\u003e() in Start(), including a time-throttled fallback lookup in Update() for late-spawned players.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-105330-621",
+        "completed_at":  "2026-09-13T11:02:40.5963094+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/GameEventDirector.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYIDLESTATE-PLAYER-INJECTION",
+        "objective":  "Refactor EnemyIdleState to remove the FindFirstObjectByType fallback lookup for PlayerController, relying entirely on the target injected by EnemyController.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-111554-590",
+        "completed_at":  "2026-09-13T11:23:12.0289637+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemyIdleState.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYIDLESTATE-PLAYER-INJECTION-FIX",
+        "objective":  "Refactor EnemyIdleState.UpdateLogic() to remove the FindFirstObjectByType fallback lookup for PlayerController, relying entirely on the Target property injected by EnemyController.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-112312-215",
+        "completed_at":  "2026-09-13T11:32:10.2567023+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemyIdleState.cs",
+                               "Assets/_Project/AI/Enemies/EnemyController.cs"
+                           ]
+    },
+    {
+        "id":  "CHESTPICKUP-DEPENDENCY-INJECTION",
+        "objective":  "Refactor ChestPickup to remove FindFirstObjectByType lookups by exposing a dependency injection method (e.g. Initialize), and update PickupPoolManager to resolve ChestLogicController and ChestUI once and inject them into spawned chests.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-113842-810",
+        "completed_at":  "2026-09-13T11:48:11.2277529+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Items/ChestPickup.cs",
+                               "Assets/_Project/Gameplay/Items/PickupPoolManager.cs"
+                           ]
+    },
+    {
+        "id":  "PICKUPPOOL-CHEST-DEPENDENCY-WIRE",
+        "objective":  "Expose _chestLogicController and _chestUI as [SerializeField] in PickupPoolManager, remove FindFirstObjectByType from Awake, and update SceneRecovery.cs to deterministically wire these references.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-114811-377",
+        "completed_at":  "2026-09-13T11:55:44.8700711+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Items/PickupPoolManager.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "GAMEHUD-WEAPONMANAGER-INJECTION",
+        "objective":  "Refactor GameHUDController to replace FindFirstObjectByType\u003cWeaponManager\u003e() with a serialized field and wire it deterministically in SceneRecovery.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-120300-408",
+        "completed_at":  "2026-09-13T12:11:35.6535696+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/UI/HUD/GameHUDController.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "LEVELUPMANAGER-DEPENDENCY-INJECTION",
+        "objective":  "Refactor LevelUpManager to replace FindFirstObjectByType lookups with [SerializeField] explicit dependencies, and update SceneRecovery.cs to wire these dependencies deterministically.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-121735-455",
+        "completed_at":  "2026-09-13T12:27:54.4452042+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/LevelUpManager.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "LEVELUPMANAGER-DI-VALIDATION-TEST",
+        "objective":  "Create LevelUpManagerTests.cs in EditMode to verify LevelUpManager safely handles its explicitly injected dependencies and does not fall back to FindFirstObjectByType.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-122754-808",
+        "completed_at":  "2026-09-13T12:36:03.3790769+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/LevelUpManager.cs"
+                           ]
+    },
+    {
+        "id":  "PICKUPPOOL-DEPENDENCY-INJECTION",
+        "objective":  "Expose _chestLogicController and _chestUI as [SerializeField] in PickupPoolManager, remove FindFirstObjectByType calls from Awake(), and wire the references deterministically in SceneRecovery.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-125911-864",
+        "completed_at":  "2026-09-13T13:08:56.8132084+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Items/PickupPoolManager.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "WEAPONMANAGER-REMOVE-TAG-LOOKUP",
+        "objective":  "Refactor WeaponManager to replace GameObject.FindGameObjectWithTag(\u0027Player\u0027) with FindFirstObjectByType\u003cSoulHunter.Gameplay.Player.PlayerController\u003e() for safe, strongly-typed player resolution.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-131605-971",
+        "completed_at":  "2026-09-13T13:25:02.0141511+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Combat/WeaponManager.cs"
+                           ]
+    },
+    {
+        "id":  "HEALTHPICKUP-DEPENDENCY-INJECTION",
+        "objective":  "Refactor HealthPickup to remove FindFirstObjectByType lookups by introducing an Initialize(Transform) method, and update PickupPoolManager and SceneRecovery to deterministically inject the player transform.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-135714-191",
+        "completed_at":  "2026-09-13T14:06:53.1326981+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Items/HealthPickup.cs",
+                               "Assets/_Project/Gameplay/Items/PickupPoolManager.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "CAMERAFOLLOW-REMOVE-FALLBACK-LOOKUP",
+        "objective":  "Refactor CameraFollow.cs to remove the FindFirstObjectByType\u003cPlayerController\u003e() fallback lookup from Start().",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-141400-162",
+        "completed_at":  "2026-09-13T14:26:52.2967776+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Camera/PlayerCamera/CameraFollow.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "CAMERAFOLLOW-NULL-HANDLING-TEST",
+        "objective":  "Create CameraFollowTests.cs in EditMode to verify that LateUpdate gracefully handles a null _target without throwing exceptions or attempting fallback lookups.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-142653-464",
+        "completed_at":  "2026-09-13T14:32:59.0864137+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Camera/PlayerCamera/CameraFollow.cs"
+                           ]
+    },
+    {
+        "id":  "SAVESERVICE-CORRUPT-OVERWRITE-FIX",
+        "objective":  "Update SaveService to back up corrupt save data before fallback and add an EditMode test using Unity JSON serialization to verify file preservation.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-144126-895",
+        "completed_at":  "2026-09-13T14:51:08.1134898+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Save/SaveData/SaveService.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYCONTROLLER-REMOVE-PLAYER-LOOKUP",
+        "objective":  "Refactor EnemyController to remove FindFirstObjectByType lookups for PlayerController, and update EnemySpawner and GameEventDirector to deterministically inject the player Transform into the Target property.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-150750-516",
+        "completed_at":  "2026-09-13T15:15:51.3411418+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemyController.cs",
+                               "Assets/_Project/AI/Enemies/EnemySpawner.cs",
+                               "Assets/_Project/AI/Enemies/GameEventDirector.cs"
+                           ]
+    },
+    {
+        "id":  "ENEMYCONTROLLER-REMOVE-PLAYER-LOOKUP-FIX",
+        "objective":  "Refactor EnemyController to remove FindFirstObjectByType fallback lookups for PlayerController, and update EnemySpawner and GameEventDirector to deterministically inject the player Transform into the Target property.",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-151551-539",
+        "completed_at":  "2026-09-13T15:28:02.3463921+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/AI/Enemies/EnemyController.cs",
+                               "Assets/_Project/AI/Enemies/EnemySpawner.cs",
+                               "Assets/_Project/AI/Enemies/GameEventDirector.cs"
+                           ]
+    },
+    {
+        "id":  "CAMPAIGNSIGNATURE-DEPENDENCY-INJECTION",
+        "objective":  "Refactor CampaignSignatureSystem to replace FindFirstObjectByType lookups for PlayerController and LevelProgressionManager with [SerializeField] explicit dependencies, and update SceneRecovery.cs to wire these references deterministically.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-164346-894",
+        "completed_at":  "2026-09-13T16:49:32.4466628+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/CampaignSignatureSystem.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "CAMPAIGNSIGNATURE-DEPENDENCY-INJECTION-FIX",
+        "objective":  "Refactor CampaignSignatureSystem to remove FindFirstObjectByType lookups for PlayerController and LevelProgressionManager by exposing them as [SerializeField] explicit dependencies, and update SceneRecovery.cs to wire them deterministically.",
+        "status":  "TASK_BLOCKED",
+        "run_id":  "AUTO-20260913-164932-669",
+        "completed_at":  "2026-09-13T16:56:20.7247057+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/CampaignSignatureSystem.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    },
+    {
+        "id":  "THOUSANDEDGE-KNIFE-REMOVE-PLAYER-LOOKUP",
+        "objective":  "Refactor ThousandEdgeWeapon and KnifeWeapon to remove FindFirstObjectByType and instead resolve the PlayerController deterministically using GetComponentInParent\u003cPlayerController\u003e().",
+        "status":  "APPLIED",
+        "run_id":  "AUTO-20260913-170138-321",
+        "completed_at":  "2026-09-13T17:10:12.3748380+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Gameplay/Weapons/ThousandEdgeWeapon.cs",
+                               "Assets/_Project/Gameplay/Weapons/KnifeWeapon.cs"
+                           ]
+    },
+    {
+        "id":  "CAMPAIGNSCENECONNECTOR-DEPENDENCY-INJECTION",
+        "objective":  "Refactor CampaignSceneConnector to remove FindFirstObjectByType\u003cLevelProgressionManager\u003e() by exposing it as a [SerializeField] explicit dependency, and update SceneRecovery.cs to wire it deterministically.",
+        "status":  "REJECTED",
+        "run_id":  "AUTO-20260913-171618-329",
+        "completed_at":  "2026-09-13T17:23:10.7595959+05:30",
+        "evidence_files":  [
+                               "Assets/_Project/Core/Game/CampaignSceneConnector.cs",
+                               "Assets/_Project/Tools/Editor/SceneRecovery.cs"
+                           ]
+    }
+]

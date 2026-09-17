@@ -1,0 +1,26 @@
+﻿{
+    "schema":  "soul-hunter.quota-status.v3",
+    "generated_at":  "2026-09-17T12:10:32.5922909Z",
+    "verified":  true,
+    "status":  "AVAILABLE",
+    "error":  "",
+    "record":  {
+                   "agent_id":  "AGY/Gemini",
+                   "provider":  "AGY",
+                   "model_id":  "gemini-3.8-flash-high",
+                   "quota_scope":  "shared_pool",
+                   "pool_id":  "AGY-GEMINI",
+                   "five_hour_remaining_percent":  100,
+                   "weekly_remaining_percent":  16.74,
+                   "remaining_percent":  17,
+                   "effective_remaining_percent":  17,
+                   "reserve_percent":  25,
+                   "usable_remaining_percent":  12,
+                   "verified":  true,
+                   "status":  "AVAILABLE",
+                   "reason":  "Live read-only quota evidence",
+                   "quota_source":  "AGY local RPC https://127.0.0.1:13698/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary",
+                   "fetched_at":  "2026-09-17T12:10:34.3426339Z",
+                   "reset_at":  "2026-09-17T17:10:01Z"
+               }
+}

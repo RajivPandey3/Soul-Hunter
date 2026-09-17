@@ -1,0 +1,26 @@
+﻿{
+    "schema":  "soul-hunter.quota-status.v3",
+    "generated_at":  "2026-09-16T15:24:38.9732209Z",
+    "verified":  true,
+    "status":  "QUOTA_EXHAUSTED",
+    "error":  "",
+    "record":  {
+                   "agent_id":  "AGY/GPT",
+                   "provider":  "AGY",
+                   "model_id":  "gpt-oss-120b-medium",
+                   "quota_scope":  "shared_pool",
+                   "pool_id":  "AGY-CLAUDE-GPT",
+                   "five_hour_remaining_percent":  26.14,
+                   "weekly_remaining_percent":  0,
+                   "remaining_percent":  0,
+                   "effective_remaining_percent":  0,
+                   "reserve_percent":  25,
+                   "usable_remaining_percent":  0,
+                   "verified":  true,
+                   "status":  "QUOTA_EXHAUSTED",
+                   "reason":  "Live read-only quota evidence",
+                   "quota_source":  "AGY local RPC https://127.0.0.1:13698/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary",
+                   "fetched_at":  "2026-09-16T15:24:39.7860342Z",
+                   "reset_at":  "2026-09-16T17:13:31Z"
+               }
+}

@@ -1,0 +1,26 @@
+﻿{
+    "schema":  "soul-hunter.quota-status.v3",
+    "generated_at":  "2026-09-16T15:24:39.8092728Z",
+    "verified":  false,
+    "status":  "UNVERIFIED",
+    "error":  "Codex rate-limit read returned no usable result.",
+    "record":  {
+                   "agent_id":  "Codex",
+                   "provider":  "OpenAI",
+                   "model_id":  "codex",
+                   "quota_scope":  "unknown",
+                   "pool_id":  "",
+                   "five_hour_remaining_percent":  null,
+                   "weekly_remaining_percent":  null,
+                   "remaining_percent":  null,
+                   "effective_remaining_percent":  null,
+                   "reserve_percent":  25,
+                   "usable_remaining_percent":  0,
+                   "verified":  false,
+                   "status":  "UNVERIFIED",
+                   "reason":  "Codex rate-limit read returned no usable result.",
+                   "quota_source":  "none",
+                   "fetched_at":  "2026-09-16T15:24:39.8092728Z",
+                   "reset_at":  ""
+               }
+}
