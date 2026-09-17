@@ -1,0 +1,19 @@
+{
+    "name": "SoulHunter.UI",
+    "rootNamespace": "SoulHunter.UI",
+    "references": [
+        "SoulHunter.Foundation",
+        "SoulHunter.Gameplay",
+        "Unity.TextMeshPro",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

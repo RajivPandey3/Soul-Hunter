@@ -1,0 +1,16 @@
+var ui=UnityEngine.Object.FindFirstObjectByType<SoulHunter.Gameplay.UI.ChestUI>();
+var player=UnityEngine.Object.FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
+if(ui==null||player==null)throw new System.Exception("Missing gameplay UI/player");
+var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+var panel=(UnityEngine.GameObject)ui.GetType().GetField("_chestPanel",flags).GetValue(ui);
+var label=(TMPro.TextMeshProUGUI)ui.GetType().GetField("_rewardText",flags).GetValue(ui);
+var button=(UnityEngine.UI.Button)ui.GetType().GetField("_claimButton",flags).GetValue(ui);
+var chest=UnityEngine.Object.FindObjectsByType<SoulHunter.Gameplay.Pickups.ChestPickup>(UnityEngine.FindObjectsInactive.Include,UnityEngine.FindObjectsSortMode.None).First(c=>c.name=="PhysicalChestVerification");
+if(chest.gameObject.activeSelf)throw new System.Exception("Physical overlap did not collect chest");
+if(!panel.activeInHierarchy||!label.text.Contains("Crimson Shroud")||UnityEngine.Time.timeScale!=0)throw new System.Exception("Reward UI/pause failed");
+if(player.GetComponentInChildren<SoulHunter.Gameplay.Combat.CrimsonShroudWeapon>()==null)throw new System.Exception("No evolved weapon");
+button.onClick.Invoke();
+if(panel.activeSelf||UnityEngine.Time.timeScale!=1)throw new System.Exception("Claim did not close/resume");
+UnityEngine.Object.Destroy(chest.gameObject);
+var result=new{passed=true,checks=5,reward=label.text};
+System.IO.File.WriteAllText("Logs/PhysicalChestVerification.json",Newtonsoft.Json.JsonConvert.SerializeObject(result));return result;

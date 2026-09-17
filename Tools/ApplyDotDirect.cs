@@ -1,0 +1,1 @@
+var e=UnityEngine.GameObject.Find("DOT_TEST");e.GetComponent<SoulHunter.Gameplay.Combat.StatusEffectController>().Apply(SoulHunter.Gameplay.Combat.StatusEffectType.Burn,2f,10f);return e.GetComponent<SoulHunter.Gameplay.Combat.HealthController>().CurrentHealth;

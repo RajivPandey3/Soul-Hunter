@@ -1,0 +1,14 @@
+{
+    "name": "SoulHunter.Tests.EditMode",
+    "rootNamespace": "SoulHunter.Tests.EditMode",
+    "references": [
+        "SoulHunter.Foundation",
+        "SoulHunter.Gameplay"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

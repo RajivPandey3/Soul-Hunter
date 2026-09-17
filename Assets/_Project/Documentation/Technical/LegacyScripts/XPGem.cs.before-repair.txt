@@ -1,0 +1,69 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.Pickups
+{
+    /// <summary>
+    /// Learning Comment:
+    /// Vampire Survivors ka XP Gem. Zameen par pada rehta hai.
+    /// Jab player magnet radius mein aata hai, toh gem tezi se player ki taraf udta hai (fly).
+    /// </summary>
+    public class XPGem : MonoBehaviour
+    {
+        public int XPValue = 10;
+        [SerializeField] private float _magnetRadius = 3f;
+        [SerializeField] private float _flySpeed = 15f;
+        [SerializeField] private LayerMask _playerLayer;
+
+        private Transform _targetPlayer;
+        private bool _isMagnetized = false;
+
+        private void Update()
+        {
+            if (!_isMagnetized)
+            {
+                // Player ko dhoondho
+                Collider[] hits = UnityEngine.Physics.OverlapSphere(transform.position, _magnetRadius, _playerLayer);
+                if (hits.Length > 0)
+                {
+                    _targetPlayer = hits[0].transform;
+                    _isMagnetized = true;
+                }
+            }
+            else if (_targetPlayer != null)
+            {
+                // Player ki taraf udo (Vampire Survivors magnet effect)
+                transform.position = Vector3.MoveTowards(transform.position, _targetPlayer.position, _flySpeed * Time.deltaTime);
+
+                // Check collect distance
+                if (Vector3.Distance(transform.position, _targetPlayer.position) < 0.5f)
+                {
+                    Collect(_targetPlayer);
+                }
+            }
+        }
+
+        public void ResetPickup()
+        {
+            _isMagnetized = false;
+            _targetPlayer = null;
+        }
+
+        private void Collect(Transform playerTransform)
+        {
+            var playerExperience = playerTransform.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerExperience>();
+            if (playerExperience != null)
+            {
+                playerExperience.AddXP(XPValue);
+            }
+
+            if (SoulHunter.Gameplay.Audio.AudioManager.Instance != null)
+            {
+                SoulHunter.Gameplay.Audio.AudioManager.Instance.PlaySFX(SoulHunter.Gameplay.Audio.AudioManager.Instance.GemPickupSound);
+            }
+            
+            // Pool mein wapas bhej do (Destroy mat karo)
+            gameObject.SetActive(false);
+        }
+    }
+}
+

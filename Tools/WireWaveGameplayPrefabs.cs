@@ -1,0 +1,3 @@
+var waveNames = new[]{"Graveyard Wave","Forest Swarm","Fire Demons","Castle Gargoyles","Poison Slimes","Ice Wraiths","Spectral Swarm","Elite Guards","Reaper Swarm","Shadow Kael Clones"}; int changed = 0;
+for (int i = 0; i < 10; i++) { string n = (i + 1).ToString("00"); var wave = UnityEditor.AssetDatabase.LoadAssetAtPath<SoulHunter.Gameplay.Data.WaveData>($"Assets/_Project/Data/Config/{waveNames[i]}.asset"); var enemy = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>($"Assets/Prefabs/Enemies/Gameplay/SH10_L{n}_EnemyGameplay.prefab"); if (wave == null || enemy == null) continue; wave.EnemyPrefab = enemy; UnityEditor.EditorUtility.SetDirty(wave); changed++; }
+UnityEditor.AssetDatabase.SaveAssets(); return new { changed };

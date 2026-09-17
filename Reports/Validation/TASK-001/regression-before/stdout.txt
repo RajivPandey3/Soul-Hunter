@@ -1,0 +1,11 @@
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Events\EventRegistry.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Services\GameServices.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Services\IGameService.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Events\Core\EventSubscriptionEntry.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Events\EventSubscription.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Events\GameEvent.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Events\EventBus.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\Editor\Validator\ProjectValidatorLayer2.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Persistence\SaveService.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Scenes\SceneService.cs' could not be found.
+error CS2001: Source file 'D:\Unity Projects\Soul-Hunter\Assets\_Project\Scripts\_Foundation\Persistence\GameData.cs' could not be found.

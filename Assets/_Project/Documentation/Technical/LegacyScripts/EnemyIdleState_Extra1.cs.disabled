@@ -1,0 +1,59 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.AI
+{
+
+    /// <summary>
+    /// Learning Comment:
+    /// Yeh script EnemyIdleState.cs ke core logic ko handle karti hai.
+    /// </summary>
+    public class EnemyIdleState : IEnemyState
+    {
+        private readonly EnemyController _controller;
+
+        public EnemyIdleState(EnemyController controller)
+        {
+            _controller = controller;
+        }
+
+        public void Enter()
+        {
+            if (_controller.Animator != null)
+            {
+                _controller.Animator.UpdateSpeed(0f);
+            }
+        }
+
+        public void UpdateLogic()
+        {
+            if (_controller.Target == null)
+            {
+                var player = Object.FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
+                if (player != null)
+                {
+                    _controller.Target = player.transform;
+                }
+            }
+
+            if (_controller.Target != null)
+            {
+                // Optimization: sqrMagnitude is faster than Vector3.Distance
+                float sqrDist = (_controller.Target.position - _controller.transform.position).sqrMagnitude;
+                if (sqrDist <= _controller.ChaseDistance * _controller.ChaseDistance)
+                {
+                    _controller.ChangeState(new EnemyChaseState(_controller));
+                }
+            }
+        }
+
+        public void UpdatePhysics(ref SoulHunter.Gameplay.Physics.EnvironmentData envData)
+        {
+            _controller.Rigidbody.linearVelocity = new Vector3(0, _controller.Rigidbody.linearVelocity.y, 0);
+        }
+
+        public void Exit()
+        {
+        }
+    }
+}
+

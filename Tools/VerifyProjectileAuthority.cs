@@ -1,0 +1,35 @@
+var scene=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+var root=new UnityEngine.GameObject("ProjectileVerification");
+UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root,scene);
+var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+var checks=new System.Collections.Generic.List<string>();
+try {
+ var target=new UnityEngine.GameObject("Target"); target.transform.SetParent(root.transform); target.tag="Enemy";
+ var collider=target.AddComponent<UnityEngine.BoxCollider>();
+ var health=target.AddComponent<SoulHunter.Gameplay.Combat.HealthController>(); health.Initialize(100); health.KnockbackResistance=1;
+ var shot=UnityEngine.GameObject.CreatePrimitive(UnityEngine.PrimitiveType.Sphere); shot.transform.SetParent(root.transform);
+ var projectile=shot.AddComponent<SoulHunter.Gameplay.Combat.Projectile>();
+ var secondary=shot.AddComponent<SoulHunter.Gameplay.Combat.ProjectileDamage>(); secondary.DamageAmount=80;
+ var hit=projectile.GetType().GetMethod("OnTriggerEnter",flags);
+ var otherHit=secondary.GetType().GetMethod("OnTriggerEnter",flags);
+ projectile.Initialize(UnityEngine.Vector3.forward,10,30,3);
+ otherHit.Invoke(secondary,new object[]{collider}); hit.Invoke(projectile,new object[]{collider}); otherHit.Invoke(secondary,new object[]{collider});
+ if(health.CurrentHealth!=70) throw new System.Exception("Duplicate damage / initialized damage mismatch");
+ checks.Add("coexisting damage components apply exactly initialized 30 damage");
+ hit.Invoke(projectile,new object[]{collider});
+ if(health.CurrentHealth!=70) throw new System.Exception("Inactive projectile applied damage");
+ checks.Add("consumed projectile ignores queued contacts");
+ shot.SetActive(true); projectile.Initialize(UnityEngine.Vector3.forward,10,7,3);
+ hit.Invoke(projectile,new object[]{collider});
+ if(health.CurrentHealth!=63) throw new System.Exception("Pool reuse retained old damage");
+ checks.Add("reuse resets damage to new value");
+ shot.SetActive(true); health.IsInvincible=true;
+ hit.Invoke(projectile,new object[]{collider});
+ if(health.CurrentHealth!=63) throw new System.Exception("Invulnerability ignored");
+ checks.Add("invulnerable target loses no health");
+ health.IsInvincible=false; shot.SetActive(true); projectile.enabled=false;
+ otherHit.Invoke(secondary,new object[]{collider});
+ if(health.CurrentHealth!=0) throw new System.Exception("Standalone damage component suppressed");
+ checks.Add("standalone damage authority remains functional");
+ return new { passed=checks.Count,checks };
+} finally { UnityEngine.Object.DestroyImmediate(root); UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene); }

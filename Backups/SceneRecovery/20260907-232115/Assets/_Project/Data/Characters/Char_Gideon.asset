@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3261ac544a4dde64b81e1f50940665a9, type: 3}
+  m_Name: Char_Gideon
+  m_EditorClassIdentifier: 
+  CharacterName: Gideon
+  Description: The Brute. Area of attacks increased by 50%.
+  CharacterIcon: {fileID: 5323749332437794263, guid: 1786e2f61ceb80548a9843fb74fc3b92, type: 3}
+  CharacterModelPrefab: {fileID: 4841224244229858963, guid: 00b626b90c37f0047b79e25970a60595, type: 3}
+  StartingWeapon: 5
+  BaseMaxHealth: 200
+  BaseMoveSpeed: 0.8
+  StartingMight: 1.5
+  StartingArea: 1
+  StartingCooldown: 1
+  StartingArmor: 0

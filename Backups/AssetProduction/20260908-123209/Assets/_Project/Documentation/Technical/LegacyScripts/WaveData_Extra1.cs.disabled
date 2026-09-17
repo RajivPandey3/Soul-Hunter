@@ -1,0 +1,30 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.Data
+{
+    /// <summary>
+    /// Learning Comment:
+    /// Kami #1 Fix: Wave System (Vampire Survivors).
+    /// Har wave ka apna ek time hota hai (jaise 60 seconds par naye dushman).
+    /// Is Data file se Spawner ko pata chalega ki kis time par kaunsa dushman spawn karna hai.
+    /// </summary>
+    [CreateAssetMenu(fileName = "New Wave Data", menuName = "Soul Hunter/Data/Wave Data")]
+    public class WaveData : ScriptableObject
+    {
+        public string WaveName = "Wave 1";
+        [Tooltip("Game shuru hone ke kitne second baad ye wave aayegi")]
+        public float StartTimeInSeconds = 0f;
+        
+        [Tooltip("Kaunsa dushman aayega (Jaise Bat ya Zombie ka prefab)")]
+        public GameObject EnemyPrefab;
+        
+        [Tooltip("Kitne interval me spawn honge")]
+        public float SpawnInterval = 1f;
+        
+        [Tooltip("Ek baar me kitne spawn honge (Horde size)")]
+        public int EnemiesPerSpawn = 1;
+        
+        [Tooltip("Kya ye ek Boss hai? (Agar haan, toh ye sirf ek baar spawn hoga)")]
+        public bool IsBossWave = false;
+    }
+}

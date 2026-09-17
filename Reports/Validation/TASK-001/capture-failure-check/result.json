@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python",
+    "-c",
+    "import sys; print(123); sys.exit(7)"
+  ],
+  "cwd": "D:\\Unity Projects\\Soul-Hunter",
+  "timeoutSeconds": 5,
+  "startedUtc": "2026-09-10T20:05:26.114487+00:00",
+  "pid": 10136,
+  "exitCode": 7,
+  "timedOut": false,
+  "finishedUtc": "2026-09-10T20:05:26.153371+00:00"
+}

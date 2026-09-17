@@ -1,0 +1,3635 @@
+[
+  {
+    "name": "SH10_L01_Ground",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L01_Ground_Moss": [
+        0.175,
+        0.21,
+        0.238
+      ],
+      "SH10_L01_Ground_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_Gravestone",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Gravestone.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Gravestone.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_L01_Gravestone_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L01_Gravestone_Edge": [
+        0.375,
+        0.44999999999999996,
+        0.51
+      ],
+      "SH10_L01_Gravestone_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_Gravestone_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_CrossGrave",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_CrossGrave.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_CrossGrave.fbx",
+    "triangles": 152,
+    "materials": {
+      "SH10_L01_CrossGrave_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L01_CrossGrave_Edge": [
+        0.375,
+        0.44999999999999996,
+        0.51
+      ],
+      "SH10_L01_CrossGrave_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_CrossGrave_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_Crypt",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Crypt.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Crypt.fbx",
+    "triangles": 378,
+    "materials": {
+      "SH10_L01_Crypt_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L01_Crypt_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_Crypt_Edge": [
+        0.375,
+        0.44999999999999996,
+        0.51
+      ],
+      "SH10_L01_Crypt_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L01_Crypt_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_Gate",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Gate.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Gate.fbx",
+    "triangles": 876,
+    "materials": {
+      "SH10_L01_Gate_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L01_Gate_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_Gate_Edge": [
+        0.375,
+        0.44999999999999996,
+        0.51
+      ],
+      "SH10_L01_Gate_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_L01_Gate_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L01_Gate_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_DeadTree",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_DeadTree.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_DeadTree.fbx",
+    "triangles": 224,
+    "materials": {
+      "SH10_L01_DeadTree_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_Enemy",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Enemy.fbx",
+    "triangles": 532,
+    "materials": {
+      "SH10_L01_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L01_Enemy_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_Enemy_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_L01_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_Elite",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Elite.fbx",
+    "triangles": 576,
+    "materials": {
+      "SH10_L01_Elite_Edge": [
+        0.375,
+        0.44999999999999996,
+        0.51
+      ],
+      "SH10_L01_Elite_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_Elite_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_L01_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L01_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L01_Boss",
+    "pack": "01_Cursed_Graveyard",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\01_Cursed_Graveyard\\Blender\\SH10_L01_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L01_Boss.fbx",
+    "triangles": 604,
+    "materials": {
+      "SH10_L01_Boss_Edge": [
+        0.375,
+        0.44999999999999996,
+        0.51
+      ],
+      "SH10_L01_Boss_Slate": [
+        0.25,
+        0.3,
+        0.34
+      ],
+      "SH10_L01_Boss_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_L01_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L01_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L01_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Ground",
+    "pack": "02_Dark_Forest",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L02_Ground_Moss": [
+        0.08399999999999999,
+        0.154,
+        0.091
+      ],
+      "SH10_L02_Ground_Slate": [
+        0.12,
+        0.22,
+        0.13
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Pine",
+    "pack": "02_Dark_Forest",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Pine.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Pine.fbx",
+    "triangles": 70,
+    "materials": {
+      "SH10_L02_Pine_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_L02_Pine_Moss": [
+        0.08399999999999999,
+        0.154,
+        0.091
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_FallenLog",
+    "pack": "02_Dark_Forest",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_FallenLog.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_FallenLog.fbx",
+    "triangles": 84,
+    "materials": {
+      "SH10_L02_FallenLog_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Mushrooms",
+    "pack": "02_Dark_Forest",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Mushrooms.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Mushrooms.fbx",
+    "triangles": 144,
+    "materials": {
+      "SH10_L02_Mushrooms_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L02_Mushrooms_Soul": [
+        0.45,
+        0.9,
+        0.15
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_ForestShrine",
+    "pack": "02_Dark_Forest",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_ForestShrine.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_ForestShrine.fbx",
+    "triangles": 192,
+    "materials": {
+      "SH10_L02_ForestShrine_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L02_ForestShrine_Slate": [
+        0.12,
+        0.22,
+        0.13
+      ],
+      "SH10_L02_ForestShrine_Edge": [
+        0.18,
+        0.33,
+        0.195
+      ],
+      "SH10_L02_ForestShrine_Soul": [
+        0.45,
+        0.9,
+        0.15
+      ],
+      "SH10_L02_ForestShrine_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Briar",
+    "pack": "02_Dark_Forest",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Briar.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Briar.fbx",
+    "triangles": 210,
+    "materials": {
+      "SH10_L02_Briar_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Enemy",
+    "pack": "02_Dark_Forest",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Enemy.fbx",
+    "triangles": 552,
+    "materials": {
+      "SH10_L02_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L02_Enemy_Slate": [
+        0.12,
+        0.22,
+        0.13
+      ],
+      "SH10_L02_Enemy_Soul": [
+        0.45,
+        0.9,
+        0.15
+      ],
+      "SH10_L02_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L02_Enemy_Moss": [
+        0.08399999999999999,
+        0.154,
+        0.091
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Elite",
+    "pack": "02_Dark_Forest",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Elite.fbx",
+    "triangles": 596,
+    "materials": {
+      "SH10_L02_Elite_Edge": [
+        0.18,
+        0.33,
+        0.195
+      ],
+      "SH10_L02_Elite_Slate": [
+        0.12,
+        0.22,
+        0.13
+      ],
+      "SH10_L02_Elite_Soul": [
+        0.45,
+        0.9,
+        0.15
+      ],
+      "SH10_L02_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L02_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L02_Elite_Moss": [
+        0.08399999999999999,
+        0.154,
+        0.091
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L02_Boss",
+    "pack": "02_Dark_Forest",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\02_Dark_Forest\\Blender\\SH10_L02_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L02_Boss.fbx",
+    "triangles": 624,
+    "materials": {
+      "SH10_L02_Boss_Edge": [
+        0.18,
+        0.33,
+        0.195
+      ],
+      "SH10_L02_Boss_Slate": [
+        0.12,
+        0.22,
+        0.13
+      ],
+      "SH10_L02_Boss_Soul": [
+        0.45,
+        0.9,
+        0.15
+      ],
+      "SH10_L02_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L02_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L02_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L02_Boss_Moss": [
+        0.08399999999999999,
+        0.154,
+        0.091
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Ground",
+    "pack": "03_Burning_Village",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L03_Ground_Moss": [
+        0.182,
+        0.091,
+        0.063
+      ],
+      "SH10_L03_Ground_Slate": [
+        0.26,
+        0.13,
+        0.09
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_BurntHouse",
+    "pack": "03_Burning_Village",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_BurntHouse.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_BurntHouse.fbx",
+    "triangles": 260,
+    "materials": {
+      "SH10_L03_BurntHouse_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L03_BurntHouse_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Chimney",
+    "pack": "03_Burning_Village",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Chimney.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Chimney.fbx",
+    "triangles": 308,
+    "materials": {
+      "SH10_L03_Chimney_Slate": [
+        0.26,
+        0.13,
+        0.09
+      ],
+      "SH10_L03_Chimney_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Cart",
+    "pack": "03_Burning_Village",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Cart.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Cart.fbx",
+    "triangles": 544,
+    "materials": {
+      "SH10_L03_Cart_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_L03_Cart_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Rubble",
+    "pack": "03_Burning_Village",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Rubble.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Rubble.fbx",
+    "triangles": 80,
+    "materials": {
+      "SH10_L03_Rubble_Slate": [
+        0.26,
+        0.13,
+        0.09
+      ],
+      "SH10_L03_Rubble_Moss": [
+        0.182,
+        0.091,
+        0.063
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Brazier",
+    "pack": "03_Burning_Village",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Brazier.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Brazier.fbx",
+    "triangles": 172,
+    "materials": {
+      "SH10_L03_Brazier_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L03_Brazier_Soul": [
+        1,
+        0.25,
+        0.04
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Enemy",
+    "pack": "03_Burning_Village",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Enemy.fbx",
+    "triangles": 552,
+    "materials": {
+      "SH10_L03_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L03_Enemy_Slate": [
+        0.26,
+        0.13,
+        0.09
+      ],
+      "SH10_L03_Enemy_Soul": [
+        1,
+        0.25,
+        0.04
+      ],
+      "SH10_L03_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Elite",
+    "pack": "03_Burning_Village",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Elite.fbx",
+    "triangles": 596,
+    "materials": {
+      "SH10_L03_Elite_Edge": [
+        0.39,
+        0.195,
+        0.135
+      ],
+      "SH10_L03_Elite_Slate": [
+        0.26,
+        0.13,
+        0.09
+      ],
+      "SH10_L03_Elite_Soul": [
+        1,
+        0.25,
+        0.04
+      ],
+      "SH10_L03_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L03_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L03_Boss",
+    "pack": "03_Burning_Village",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\03_Burning_Village\\Blender\\SH10_L03_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L03_Boss.fbx",
+    "triangles": 624,
+    "materials": {
+      "SH10_L03_Boss_Edge": [
+        0.39,
+        0.195,
+        0.135
+      ],
+      "SH10_L03_Boss_Slate": [
+        0.26,
+        0.13,
+        0.09
+      ],
+      "SH10_L03_Boss_Soul": [
+        1,
+        0.25,
+        0.04
+      ],
+      "SH10_L03_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L03_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L03_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Ground",
+    "pack": "04_Ruined_Castle",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L04_Ground_Moss": [
+        0.22399999999999998,
+        0.21,
+        0.252
+      ],
+      "SH10_L04_Ground_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_CastleWall",
+    "pack": "04_Ruined_Castle",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_CastleWall.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_CastleWall.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_L04_CastleWall_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ],
+      "SH10_L04_CastleWall_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Tower",
+    "pack": "04_Ruined_Castle",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Tower.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Tower.fbx",
+    "triangles": 440,
+    "materials": {
+      "SH10_L04_Tower_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ],
+      "SH10_L04_Tower_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Stairs",
+    "pack": "04_Ruined_Castle",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Stairs.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Stairs.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_L04_Stairs_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_SpikeTrap",
+    "pack": "04_Ruined_Castle",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_SpikeTrap.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_SpikeTrap.fbx",
+    "triangles": 156,
+    "materials": {
+      "SH10_L04_SpikeTrap_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L04_SpikeTrap_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Arch",
+    "pack": "04_Ruined_Castle",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Arch.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Arch.fbx",
+    "triangles": 296,
+    "materials": {
+      "SH10_L04_Arch_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L04_Arch_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ],
+      "SH10_L04_Arch_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ],
+      "SH10_L04_Arch_Soul": [
+        0.55,
+        0.25,
+        0.95
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Enemy",
+    "pack": "04_Ruined_Castle",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Enemy.fbx",
+    "triangles": 532,
+    "materials": {
+      "SH10_L04_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L04_Enemy_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ],
+      "SH10_L04_Enemy_Soul": [
+        0.55,
+        0.25,
+        0.95
+      ],
+      "SH10_L04_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Elite",
+    "pack": "04_Ruined_Castle",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Elite.fbx",
+    "triangles": 576,
+    "materials": {
+      "SH10_L04_Elite_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ],
+      "SH10_L04_Elite_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ],
+      "SH10_L04_Elite_Soul": [
+        0.55,
+        0.25,
+        0.95
+      ],
+      "SH10_L04_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L04_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L04_Boss",
+    "pack": "04_Ruined_Castle",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\04_Ruined_Castle\\Blender\\SH10_L04_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L04_Boss.fbx",
+    "triangles": 604,
+    "materials": {
+      "SH10_L04_Boss_Edge": [
+        0.48,
+        0.44999999999999996,
+        0.54
+      ],
+      "SH10_L04_Boss_Slate": [
+        0.32,
+        0.3,
+        0.36
+      ],
+      "SH10_L04_Boss_Soul": [
+        0.55,
+        0.25,
+        0.95
+      ],
+      "SH10_L04_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L04_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L04_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Ground",
+    "pack": "05_Crimson_Swamp",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L05_Ground_Moss": [
+        0.16799999999999998,
+        0.077,
+        0.105
+      ],
+      "SH10_L05_Ground_Slate": [
+        0.24,
+        0.11,
+        0.15
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_BogPool",
+    "pack": "05_Crimson_Swamp",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_BogPool.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_BogPool.fbx",
+    "triangles": 252,
+    "materials": {
+      "SH10_L05_BogPool_Soul": [
+        0.65,
+        0.1,
+        0.23
+      ],
+      "SH10_L05_BogPool_Slate": [
+        0.24,
+        0.11,
+        0.15
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Reeds",
+    "pack": "05_Crimson_Swamp",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Reeds.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Reeds.fbx",
+    "triangles": 392,
+    "materials": {
+      "SH10_L05_Reeds_Moss": [
+        0.16799999999999998,
+        0.077,
+        0.105
+      ],
+      "SH10_L05_Reeds_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Stump",
+    "pack": "05_Crimson_Swamp",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Stump.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Stump.fbx",
+    "triangles": 56,
+    "materials": {
+      "SH10_L05_Stump_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_L05_Stump_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Mushrooms",
+    "pack": "05_Crimson_Swamp",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Mushrooms.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Mushrooms.fbx",
+    "triangles": 144,
+    "materials": {
+      "SH10_L05_Mushrooms_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L05_Mushrooms_Soul": [
+        0.65,
+        0.1,
+        0.23
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_BogTotem",
+    "pack": "05_Crimson_Swamp",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_BogTotem.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_BogTotem.fbx",
+    "triangles": 192,
+    "materials": {
+      "SH10_L05_BogTotem_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L05_BogTotem_Slate": [
+        0.24,
+        0.11,
+        0.15
+      ],
+      "SH10_L05_BogTotem_Edge": [
+        0.36,
+        0.165,
+        0.22499999999999998
+      ],
+      "SH10_L05_BogTotem_Soul": [
+        0.65,
+        0.1,
+        0.23
+      ],
+      "SH10_L05_BogTotem_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Enemy",
+    "pack": "05_Crimson_Swamp",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Enemy.fbx",
+    "triangles": 552,
+    "materials": {
+      "SH10_L05_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L05_Enemy_Slate": [
+        0.24,
+        0.11,
+        0.15
+      ],
+      "SH10_L05_Enemy_Soul": [
+        0.65,
+        0.1,
+        0.23
+      ],
+      "SH10_L05_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L05_Enemy_Moss": [
+        0.16799999999999998,
+        0.077,
+        0.105
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Elite",
+    "pack": "05_Crimson_Swamp",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Elite.fbx",
+    "triangles": 596,
+    "materials": {
+      "SH10_L05_Elite_Edge": [
+        0.36,
+        0.165,
+        0.22499999999999998
+      ],
+      "SH10_L05_Elite_Slate": [
+        0.24,
+        0.11,
+        0.15
+      ],
+      "SH10_L05_Elite_Soul": [
+        0.65,
+        0.1,
+        0.23
+      ],
+      "SH10_L05_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L05_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L05_Elite_Moss": [
+        0.16799999999999998,
+        0.077,
+        0.105
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L05_Boss",
+    "pack": "05_Crimson_Swamp",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\05_Crimson_Swamp\\Blender\\SH10_L05_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L05_Boss.fbx",
+    "triangles": 624,
+    "materials": {
+      "SH10_L05_Boss_Edge": [
+        0.36,
+        0.165,
+        0.22499999999999998
+      ],
+      "SH10_L05_Boss_Slate": [
+        0.24,
+        0.11,
+        0.15
+      ],
+      "SH10_L05_Boss_Soul": [
+        0.65,
+        0.1,
+        0.23
+      ],
+      "SH10_L05_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L05_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L05_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L05_Boss_Moss": [
+        0.16799999999999998,
+        0.077,
+        0.105
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_Ground",
+    "pack": "06_Frozen_Peaks",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L06_Ground_Moss": [
+        0.32899999999999996,
+        0.44799999999999995,
+        0.5249999999999999
+      ],
+      "SH10_L06_Ground_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_IceCrystal",
+    "pack": "06_Frozen_Peaks",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_IceCrystal.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_IceCrystal.fbx",
+    "triangles": 256,
+    "materials": {
+      "SH10_L06_IceCrystal_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L06_IceCrystal_Soul": [
+        0.2,
+        0.75,
+        1
+      ],
+      "SH10_L06_IceCrystal_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_SnowDrift",
+    "pack": "06_Frozen_Peaks",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_SnowDrift.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_SnowDrift.fbx",
+    "triangles": 80,
+    "materials": {
+      "SH10_L06_SnowDrift_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ],
+      "SH10_L06_SnowDrift_Moss": [
+        0.32899999999999996,
+        0.44799999999999995,
+        0.5249999999999999
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_IceArch",
+    "pack": "06_Frozen_Peaks",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_IceArch.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_IceArch.fbx",
+    "triangles": 296,
+    "materials": {
+      "SH10_L06_IceArch_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L06_IceArch_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ],
+      "SH10_L06_IceArch_Edge": [
+        0.705,
+        0.96,
+        1
+      ],
+      "SH10_L06_IceArch_Soul": [
+        0.2,
+        0.75,
+        1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_Glacier",
+    "pack": "06_Frozen_Peaks",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_Glacier.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_Glacier.fbx",
+    "triangles": 100,
+    "materials": {
+      "SH10_L06_Glacier_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ],
+      "SH10_L06_Glacier_Moss": [
+        0.32899999999999996,
+        0.44799999999999995,
+        0.5249999999999999
+      ],
+      "SH10_L06_Glacier_Edge": [
+        0.705,
+        0.96,
+        1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_FrozenObelisk",
+    "pack": "06_Frozen_Peaks",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_FrozenObelisk.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_FrozenObelisk.fbx",
+    "triangles": 256,
+    "materials": {
+      "SH10_L06_FrozenObelisk_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L06_FrozenObelisk_Edge": [
+        0.705,
+        0.96,
+        1
+      ],
+      "SH10_L06_FrozenObelisk_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_Enemy",
+    "pack": "06_Frozen_Peaks",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_Enemy.fbx",
+    "triangles": 552,
+    "materials": {
+      "SH10_L06_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L06_Enemy_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ],
+      "SH10_L06_Enemy_Soul": [
+        0.2,
+        0.75,
+        1
+      ],
+      "SH10_L06_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_Elite",
+    "pack": "06_Frozen_Peaks",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_Elite.fbx",
+    "triangles": 596,
+    "materials": {
+      "SH10_L06_Elite_Edge": [
+        0.705,
+        0.96,
+        1
+      ],
+      "SH10_L06_Elite_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ],
+      "SH10_L06_Elite_Soul": [
+        0.2,
+        0.75,
+        1
+      ],
+      "SH10_L06_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L06_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L06_Boss",
+    "pack": "06_Frozen_Peaks",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\06_Frozen_Peaks\\Blender\\SH10_L06_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L06_Boss.fbx",
+    "triangles": 624,
+    "materials": {
+      "SH10_L06_Boss_Edge": [
+        0.705,
+        0.96,
+        1
+      ],
+      "SH10_L06_Boss_Slate": [
+        0.47,
+        0.64,
+        0.75
+      ],
+      "SH10_L06_Boss_Soul": [
+        0.2,
+        0.75,
+        1
+      ],
+      "SH10_L06_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L06_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L06_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Ground",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L07_Ground_Moss": [
+        0.08399999999999999,
+        0.22399999999999998,
+        0.259
+      ],
+      "SH10_L07_Ground_Slate": [
+        0.12,
+        0.32,
+        0.37
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Jetty",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Jetty.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Jetty.fbx",
+    "triangles": 464,
+    "materials": {
+      "SH10_L07_Jetty_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Boat",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Boat.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Boat.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L07_Boat_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_L07_Boat_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Anchor",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Anchor.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Anchor.fbx",
+    "triangles": 320,
+    "materials": {
+      "SH10_L07_Anchor_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_SpectralTree",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_SpectralTree.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_SpectralTree.fbx",
+    "triangles": 284,
+    "materials": {
+      "SH10_L07_SpectralTree_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_L07_SpectralTree_Soul": [
+        0.15,
+        0.95,
+        0.85
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_SoulBeacon",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_SoulBeacon.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_SoulBeacon.fbx",
+    "triangles": 192,
+    "materials": {
+      "SH10_L07_SoulBeacon_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L07_SoulBeacon_Slate": [
+        0.12,
+        0.32,
+        0.37
+      ],
+      "SH10_L07_SoulBeacon_Edge": [
+        0.18,
+        0.48,
+        0.5549999999999999
+      ],
+      "SH10_L07_SoulBeacon_Soul": [
+        0.15,
+        0.95,
+        0.85
+      ],
+      "SH10_L07_SoulBeacon_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Enemy",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Enemy.fbx",
+    "triangles": 552,
+    "materials": {
+      "SH10_L07_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L07_Enemy_Slate": [
+        0.12,
+        0.32,
+        0.37
+      ],
+      "SH10_L07_Enemy_Soul": [
+        0.15,
+        0.95,
+        0.85
+      ],
+      "SH10_L07_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L07_Enemy_Moss": [
+        0.08399999999999999,
+        0.22399999999999998,
+        0.259
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Elite",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Elite.fbx",
+    "triangles": 596,
+    "materials": {
+      "SH10_L07_Elite_Edge": [
+        0.18,
+        0.48,
+        0.5549999999999999
+      ],
+      "SH10_L07_Elite_Slate": [
+        0.12,
+        0.32,
+        0.37
+      ],
+      "SH10_L07_Elite_Soul": [
+        0.15,
+        0.95,
+        0.85
+      ],
+      "SH10_L07_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L07_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L07_Elite_Moss": [
+        0.08399999999999999,
+        0.22399999999999998,
+        0.259
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L07_Boss",
+    "pack": "07_Sea_of_Lost_Souls",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\07_Sea_of_Lost_Souls\\Blender\\SH10_L07_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L07_Boss.fbx",
+    "triangles": 624,
+    "materials": {
+      "SH10_L07_Boss_Edge": [
+        0.18,
+        0.48,
+        0.5549999999999999
+      ],
+      "SH10_L07_Boss_Slate": [
+        0.12,
+        0.32,
+        0.37
+      ],
+      "SH10_L07_Boss_Soul": [
+        0.15,
+        0.95,
+        0.85
+      ],
+      "SH10_L07_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L07_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L07_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L07_Boss_Moss": [
+        0.08399999999999999,
+        0.22399999999999998,
+        0.259
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_Ground",
+    "pack": "08_Blood_Arenas",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L08_Ground_Moss": [
+        0.21,
+        0.08399999999999999,
+        0.08399999999999999
+      ],
+      "SH10_L08_Ground_Slate": [
+        0.3,
+        0.12,
+        0.12
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_ArenaWall",
+    "pack": "08_Blood_Arenas",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_ArenaWall.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_ArenaWall.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_L08_ArenaWall_Slate": [
+        0.3,
+        0.12,
+        0.12
+      ],
+      "SH10_L08_ArenaWall_Edge": [
+        0.44999999999999996,
+        0.18,
+        0.18
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_BloodBasin",
+    "pack": "08_Blood_Arenas",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_BloodBasin.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_BloodBasin.fbx",
+    "triangles": 252,
+    "materials": {
+      "SH10_L08_BloodBasin_Soul": [
+        0.95,
+        0.07,
+        0.06
+      ],
+      "SH10_L08_BloodBasin_Slate": [
+        0.3,
+        0.12,
+        0.12
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_SpikeBarricade",
+    "pack": "08_Blood_Arenas",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_SpikeBarricade.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_SpikeBarricade.fbx",
+    "triangles": 156,
+    "materials": {
+      "SH10_L08_SpikeBarricade_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L08_SpikeBarricade_Edge": [
+        0.44999999999999996,
+        0.18,
+        0.18
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_Banner",
+    "pack": "08_Blood_Arenas",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_Banner.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_Banner.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L08_Banner_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L08_Banner_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L08_Banner_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_WeaponRack",
+    "pack": "08_Blood_Arenas",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_WeaponRack.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_WeaponRack.fbx",
+    "triangles": 276,
+    "materials": {
+      "SH10_L08_WeaponRack_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_L08_WeaponRack_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L08_WeaponRack_Edge": [
+        0.44999999999999996,
+        0.18,
+        0.18
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_Enemy",
+    "pack": "08_Blood_Arenas",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_Enemy.fbx",
+    "triangles": 532,
+    "materials": {
+      "SH10_L08_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L08_Enemy_Slate": [
+        0.3,
+        0.12,
+        0.12
+      ],
+      "SH10_L08_Enemy_Soul": [
+        0.95,
+        0.07,
+        0.06
+      ],
+      "SH10_L08_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_Elite",
+    "pack": "08_Blood_Arenas",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_Elite.fbx",
+    "triangles": 576,
+    "materials": {
+      "SH10_L08_Elite_Edge": [
+        0.44999999999999996,
+        0.18,
+        0.18
+      ],
+      "SH10_L08_Elite_Slate": [
+        0.3,
+        0.12,
+        0.12
+      ],
+      "SH10_L08_Elite_Soul": [
+        0.95,
+        0.07,
+        0.06
+      ],
+      "SH10_L08_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L08_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L08_Boss",
+    "pack": "08_Blood_Arenas",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\08_Blood_Arenas\\Blender\\SH10_L08_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L08_Boss.fbx",
+    "triangles": 604,
+    "materials": {
+      "SH10_L08_Boss_Edge": [
+        0.44999999999999996,
+        0.18,
+        0.18
+      ],
+      "SH10_L08_Boss_Slate": [
+        0.3,
+        0.12,
+        0.12
+      ],
+      "SH10_L08_Boss_Soul": [
+        0.95,
+        0.07,
+        0.06
+      ],
+      "SH10_L08_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L08_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L08_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Ground",
+    "pack": "09_Throne_of_Death",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L09_Ground_Moss": [
+        0.13999999999999999,
+        0.126,
+        0.196
+      ],
+      "SH10_L09_Ground_Slate": [
+        0.2,
+        0.18,
+        0.28
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Throne",
+    "pack": "09_Throne_of_Death",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Throne.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Throne.fbx",
+    "triangles": 268,
+    "materials": {
+      "SH10_L09_Throne_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L09_Throne_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_L09_Throne_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L09_Throne_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L09_Throne_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L09_Throne_Soul": [
+        0.75,
+        0.25,
+        0.95
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Pillar",
+    "pack": "09_Throne_of_Death",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Pillar.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Pillar.fbx",
+    "triangles": 116,
+    "materials": {
+      "SH10_L09_Pillar_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L09_Pillar_Slate": [
+        0.2,
+        0.18,
+        0.28
+      ],
+      "SH10_L09_Pillar_Edge": [
+        0.30000000000000004,
+        0.27,
+        0.42000000000000004
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_RoyalStairs",
+    "pack": "09_Throne_of_Death",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_RoyalStairs.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_RoyalStairs.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_L09_RoyalStairs_Edge": [
+        0.30000000000000004,
+        0.27,
+        0.42000000000000004
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Obelisk",
+    "pack": "09_Throne_of_Death",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Obelisk.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Obelisk.fbx",
+    "triangles": 256,
+    "materials": {
+      "SH10_L09_Obelisk_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L09_Obelisk_Edge": [
+        0.30000000000000004,
+        0.27,
+        0.42000000000000004
+      ],
+      "SH10_L09_Obelisk_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_DeathSigil",
+    "pack": "09_Throne_of_Death",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_DeathSigil.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_DeathSigil.fbx",
+    "triangles": 312,
+    "materials": {
+      "SH10_L09_DeathSigil_Soul": [
+        0.75,
+        0.25,
+        0.95
+      ],
+      "SH10_L09_DeathSigil_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Enemy",
+    "pack": "09_Throne_of_Death",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Enemy.fbx",
+    "triangles": 532,
+    "materials": {
+      "SH10_L09_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L09_Enemy_Slate": [
+        0.2,
+        0.18,
+        0.28
+      ],
+      "SH10_L09_Enemy_Soul": [
+        0.75,
+        0.25,
+        0.95
+      ],
+      "SH10_L09_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Elite",
+    "pack": "09_Throne_of_Death",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Elite.fbx",
+    "triangles": 576,
+    "materials": {
+      "SH10_L09_Elite_Edge": [
+        0.30000000000000004,
+        0.27,
+        0.42000000000000004
+      ],
+      "SH10_L09_Elite_Slate": [
+        0.2,
+        0.18,
+        0.28
+      ],
+      "SH10_L09_Elite_Soul": [
+        0.75,
+        0.25,
+        0.95
+      ],
+      "SH10_L09_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L09_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L09_Boss",
+    "pack": "09_Throne_of_Death",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\09_Throne_of_Death\\Blender\\SH10_L09_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L09_Boss.fbx",
+    "triangles": 604,
+    "materials": {
+      "SH10_L09_Boss_Edge": [
+        0.30000000000000004,
+        0.27,
+        0.42000000000000004
+      ],
+      "SH10_L09_Boss_Slate": [
+        0.2,
+        0.18,
+        0.28
+      ],
+      "SH10_L09_Boss_Soul": [
+        0.75,
+        0.25,
+        0.95
+      ],
+      "SH10_L09_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L09_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L09_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_Ground",
+    "pack": "10_Soul_Core",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_Ground.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_Ground.fbx",
+    "triangles": 92,
+    "materials": {
+      "SH10_L10_Ground_Moss": [
+        0.091,
+        0.161,
+        0.21
+      ],
+      "SH10_L10_Ground_Slate": [
+        0.13,
+        0.23,
+        0.3
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_CorePrism",
+    "pack": "10_Soul_Core",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_CorePrism.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_CorePrism.fbx",
+    "triangles": 256,
+    "materials": {
+      "SH10_L10_CorePrism_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L10_CorePrism_Soul": [
+        0.1,
+        0.95,
+        0.95
+      ],
+      "SH10_L10_CorePrism_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_CoreRing",
+    "pack": "10_Soul_Core",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_CoreRing.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_CoreRing.fbx",
+    "triangles": 312,
+    "materials": {
+      "SH10_L10_CoreRing_Soul": [
+        0.1,
+        0.95,
+        0.95
+      ],
+      "SH10_L10_CoreRing_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_Pylon",
+    "pack": "10_Soul_Core",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_Pylon.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_Pylon.fbx",
+    "triangles": 256,
+    "materials": {
+      "SH10_L10_Pylon_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L10_Pylon_Edge": [
+        0.195,
+        0.34500000000000003,
+        0.44999999999999996
+      ],
+      "SH10_L10_Pylon_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_MirrorSpikes",
+    "pack": "10_Soul_Core",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_MirrorSpikes.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_MirrorSpikes.fbx",
+    "triangles": 156,
+    "materials": {
+      "SH10_L10_MirrorSpikes_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_L10_MirrorSpikes_Edge": [
+        0.195,
+        0.34500000000000003,
+        0.44999999999999996
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_Portal",
+    "pack": "10_Soul_Core",
+    "category": "Environment",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_Portal.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_Portal.fbx",
+    "triangles": 488,
+    "materials": {
+      "SH10_L10_Portal_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L10_Portal_Slate": [
+        0.13,
+        0.23,
+        0.3
+      ],
+      "SH10_L10_Portal_Edge": [
+        0.195,
+        0.34500000000000003,
+        0.44999999999999996
+      ],
+      "SH10_L10_Portal_Soul": [
+        0.1,
+        0.95,
+        0.95
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_Enemy",
+    "pack": "10_Soul_Core",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_Enemy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_Enemy.fbx",
+    "triangles": 552,
+    "materials": {
+      "SH10_L10_Enemy_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_L10_Enemy_Slate": [
+        0.13,
+        0.23,
+        0.3
+      ],
+      "SH10_L10_Enemy_Soul": [
+        0.1,
+        0.95,
+        0.95
+      ],
+      "SH10_L10_Enemy_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_Elite",
+    "pack": "10_Soul_Core",
+    "category": "Enemies",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_Elite.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_Elite.fbx",
+    "triangles": 596,
+    "materials": {
+      "SH10_L10_Elite_Edge": [
+        0.195,
+        0.34500000000000003,
+        0.44999999999999996
+      ],
+      "SH10_L10_Elite_Slate": [
+        0.13,
+        0.23,
+        0.3
+      ],
+      "SH10_L10_Elite_Soul": [
+        0.1,
+        0.95,
+        0.95
+      ],
+      "SH10_L10_Elite_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L10_Elite_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_L10_Boss",
+    "pack": "10_Soul_Core",
+    "category": "Bosses",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\10_Soul_Core\\Blender\\SH10_L10_Boss.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_L10_Boss.fbx",
+    "triangles": 624,
+    "materials": {
+      "SH10_L10_Boss_Edge": [
+        0.195,
+        0.34500000000000003,
+        0.44999999999999996
+      ],
+      "SH10_L10_Boss_Slate": [
+        0.13,
+        0.23,
+        0.3
+      ],
+      "SH10_L10_Boss_Soul": [
+        0.1,
+        0.95,
+        0.95
+      ],
+      "SH10_L10_Boss_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_L10_Boss_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_L10_Boss_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Kael",
+    "pack": "Shared",
+    "category": "Player",
+    "actor": true,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Kael.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Kael.fbx",
+    "triangles": 576,
+    "materials": {
+      "SH10_Kael_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_Kael_Slate": [
+        0.2,
+        0.25,
+        0.3
+      ],
+      "SH10_Kael_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_Kael_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Kael_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ]
+    },
+    "clips": [
+      "Idle",
+      "Run",
+      "Attack",
+      "Death"
+    ],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_MagicWand",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_MagicWand.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_MagicWand.fbx",
+    "triangles": 188,
+    "materials": {
+      "SH10_MagicWand_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_MagicWand_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_MagicWand_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Whip",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Whip.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Whip.fbx",
+    "triangles": 308,
+    "materials": {
+      "SH10_Whip_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_Whip_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Garlic",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Garlic.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Garlic.fbx",
+    "triangles": 148,
+    "materials": {
+      "SH10_Garlic_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_Garlic_Moss": [
+        0.16,
+        0.23,
+        0.12
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Axe",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Axe.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Axe.fbx",
+    "triangles": 48,
+    "materials": {
+      "SH10_Axe_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_Axe_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Bible",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Bible.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Bible.fbx",
+    "triangles": 152,
+    "materials": {
+      "SH10_Bible_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_Bible_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_Bible_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Cross",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Cross.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Cross.fbx",
+    "triangles": 88,
+    "materials": {
+      "SH10_Cross_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_Cross_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Knife",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Knife.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Knife.fbx",
+    "triangles": 108,
+    "materials": {
+      "SH10_Knife_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_Knife_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_Knife_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_FireWand",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_FireWand.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_FireWand.fbx",
+    "triangles": 188,
+    "materials": {
+      "SH10_FireWand_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_FireWand_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_FireWand_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_SantaWater",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_SantaWater.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_SantaWater.fbx",
+    "triangles": 48,
+    "materials": {
+      "SH10_SantaWater_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_SantaWater_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Runetracer",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Runetracer.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Runetracer.fbx",
+    "triangles": 20,
+    "materials": {
+      "SH10_Runetracer_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_LightningRing",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_LightningRing.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_LightningRing.fbx",
+    "triangles": 292,
+    "materials": {
+      "SH10_LightningRing_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_LightningRing_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Pentagram",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Pentagram.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Pentagram.fbx",
+    "triangles": 292,
+    "materials": {
+      "SH10_Pentagram_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_Pentagram_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Peachone",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Peachone.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Peachone.fbx",
+    "triangles": 80,
+    "materials": {
+      "SH10_Peachone_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_Peachone_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Bone",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Bone.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Bone.fbx",
+    "triangles": 108,
+    "materials": {
+      "SH10_Bone_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_CherryBomb",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_CherryBomb.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_CherryBomb.fbx",
+    "triangles": 48,
+    "materials": {
+      "SH10_CherryBomb_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_CherryBomb_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_ClockLancet",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_ClockLancet.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_ClockLancet.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_ClockLancet_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_ClockLancet_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Laurel",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Laurel.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Laurel.fbx",
+    "triangles": 292,
+    "materials": {
+      "SH10_Laurel_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_Laurel_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Gun",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Gun.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Gun.fbx",
+    "triangles": 88,
+    "materials": {
+      "SH10_Gun_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ],
+      "SH10_Gun_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_SongOfMana",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_SongOfMana.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_SongOfMana.fbx",
+    "triangles": 152,
+    "materials": {
+      "SH10_SongOfMana_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_SongOfMana_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_SongOfMana_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_BloodyTear",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_BloodyTear.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_BloodyTear.fbx",
+    "triangles": 308,
+    "materials": {
+      "SH10_BloodyTear_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_BloodyTear_Iron": [
+        0.13,
+        0.18,
+        0.23
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_HolyWand",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_HolyWand.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_HolyWand.fbx",
+    "triangles": 188,
+    "materials": {
+      "SH10_HolyWand_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_HolyWand_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_HolyWand_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_DeathSpiral",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_DeathSpiral.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_DeathSpiral.fbx",
+    "triangles": 68,
+    "materials": {
+      "SH10_DeathSpiral_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_DeathSpiral_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_ThousandEdge",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_ThousandEdge.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_ThousandEdge.fbx",
+    "triangles": 108,
+    "materials": {
+      "SH10_ThousandEdge_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_ThousandEdge_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_ThousandEdge_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Vandalier",
+    "pack": "Shared",
+    "category": "Weapons",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Vandalier.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Vandalier.fbx",
+    "triangles": 80,
+    "materials": {
+      "SH10_Vandalier_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_Vandalier_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_XP_Gem",
+    "pack": "Shared",
+    "category": "Items",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_XP_Gem.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_XP_Gem.fbx",
+    "triangles": 48,
+    "materials": {
+      "SH10_XP_Gem_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_XP_Gem_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Gold_Coin",
+    "pack": "Shared",
+    "category": "Items",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Gold_Coin.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Gold_Coin.fbx",
+    "triangles": 60,
+    "materials": {
+      "SH10_Gold_Coin_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Health_Chicken",
+    "pack": "Shared",
+    "category": "Items",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Health_Chicken.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Health_Chicken.fbx",
+    "triangles": 48,
+    "materials": {
+      "SH10_Health_Chicken_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_Health_Chicken_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Chest",
+    "pack": "Shared",
+    "category": "Items",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Chest.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Chest.fbx",
+    "triangles": 240,
+    "materials": {
+      "SH10_Chest_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ],
+      "SH10_Chest_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_Chest_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_Magnet",
+    "pack": "Shared",
+    "category": "Items",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_Magnet.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_Magnet.fbx",
+    "triangles": 220,
+    "materials": {
+      "SH10_Magnet_Cloth": [
+        0.26,
+        0.035,
+        0.055
+      ],
+      "SH10_Magnet_Edge": [
+        0.34,
+        0.4,
+        0.44
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  },
+  {
+    "name": "SH10_TimeFreeze",
+    "pack": "Shared",
+    "category": "Items",
+    "actor": false,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\SH10_v01\\Shared\\Blender\\SH10_TimeFreeze.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\SH10_TimeFreeze.fbx",
+    "triangles": 144,
+    "materials": {
+      "SH10_TimeFreeze_Bronze": [
+        0.48,
+        0.28,
+        0.1
+      ],
+      "SH10_TimeFreeze_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ]
+    },
+    "clips": [],
+    "status": "art asset; gameplay integration not verified"
+  }
+]

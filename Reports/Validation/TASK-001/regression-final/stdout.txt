@@ -1,0 +1,30 @@
+PASS initialization follows registration order exactly once
+PASS late registration rejected
+PASS reverse cleanup exactly once
+PASS disposed registry not globally reachable
+PASS disposed lookup rejected
+PASS replacement releases previous services
+PASS duplicate registration rejected
+PASS failed startup propagates
+PASS failed startup cleans all resources
+PASS cleanup failure reported
+PASS cleanup continues after one service fails
+PASS subscription disposal actually removes handler
+PASS bus disposal clears listeners
+PASS Start lookup is not attributed to Update
+PASS nested frame lookup detected
+PASS expression-bodied physics lookup detected
+PASS comments and string braces ignored
+PASS verbatim quoted strings preserve boundaries
+PASS existing progression preserved during settings migration
+PASS legacy settings migrated
+PASS legacy keys retained
+PASS volume clamped and lower score ignored
+PASS JSON settings persist and legacy values do not overwrite them
+PASS unavailable scene rejected
+PASS duplicate and chained loads do not overlap
+PASS Bootstrap activation can queue Loading
+PASS disposed scene service cannot launch transitions
+TOTAL PASSED: 27
+
+Test artifacts: C:\Users\Lenovo\AppData\Local\Temp\soul-hunter-regression-v0zfcswo

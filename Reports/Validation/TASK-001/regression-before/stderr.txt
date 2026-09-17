@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "D:\Unity Projects\Soul-Hunter\Tools\ArchitectureChecks\run-regression.py", line 26, in <module>
+    subprocess.run([dotnet, str(sdk/'Roslyn/bincore/csc.dll'), '@'+str(rsp)], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python313\Lib\subprocess.py", line 579, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['C:\\Program Files\\dotnet\\dotnet.EXE', 'C:\\Program Files\\dotnet\\sdk\\8.0.424\\Roslyn\\bincore\\csc.dll', '@C:\\Users\\Lenovo\\AppData\\Local\\Temp\\soul-hunter-regression-nx2nrtc6\\Regression.rsp']' returned non-zero exit status 1.

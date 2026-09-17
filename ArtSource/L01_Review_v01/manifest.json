@@ -1,0 +1,100 @@
+[
+  {
+    "name": "L01R_Gravestone",
+    "triangles": 220,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\Gravestone.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_Gravestone.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_CrossGrave",
+    "triangles": 152,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\CrossGrave.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_CrossGrave.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_Coffin",
+    "triangles": 264,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\Coffin.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_Coffin.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_Crypt",
+    "triangles": 378,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\Crypt.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_Crypt.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_Gate",
+    "triangles": 876,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\Gate.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_Gate.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_Fence",
+    "triangles": 494,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\Fence.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_Fence.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_DeadTree",
+    "triangles": 224,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\DeadTree.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_DeadTree.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_RockCluster",
+    "triangles": 80,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\RockCluster.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_RockCluster.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_SoulLantern",
+    "triangles": 318,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\SoulLantern.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_SoulLantern.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_SoulWand",
+    "triangles": 188,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\SoulWand.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_SoulWand.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_XPGem",
+    "triangles": 48,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\XPGem.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_XPGem.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_TreasureChest",
+    "triangles": 240,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\TreasureChest.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_TreasureChest.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_KaelStudy",
+    "triangles": 680,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\KaelStudy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_KaelStudy.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  },
+  {
+    "name": "L01R_GraveGhoulStudy",
+    "triangles": 704,
+    "source": "D:\\Unity Projects\\Soul-Hunter\\ArtSource\\L01_Review_v01\\GraveGhoulStudy.blend",
+    "model": "D:\\Unity Projects\\Soul-Hunter\\Assets\\Art\\Models\\L01R_GraveGhoulStudy.fbx",
+    "status": "static visual review; no rig or gameplay components"
+  }
+]

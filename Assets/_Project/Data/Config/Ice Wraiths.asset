@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc2ed95cb0de43b4aa88624605b16972, type: 3}
+  m_Name: Ice Wraiths
+  m_EditorClassIdentifier: 
+  WaveName: Level 06 Ice Wraiths
+  StartTimeInSeconds: 0
+  EnemyPrefab: {fileID: 3302251089070150895, guid: efa3af63e85320d4b8ef740333745b07, type: 3}
+  SpawnInterval: 0.65
+  EnemiesPerSpawn: 3
+  IsBossWave: 0

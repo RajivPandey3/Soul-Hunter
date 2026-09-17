@@ -1,0 +1,13 @@
+var progression = UnityEngine.Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelProgressionManager>();
+var session = SoulHunter.Gameplay.Core.GameSessionManager.Instance;
+var ui = UnityEngine.Object.FindFirstObjectByType<SoulHunter.Gameplay.UI.GameOverUI>();
+if(progression==null || session==null || ui==null) throw new System.Exception("Gameplay not ready");
+int victories=0; session.OnVictory += () => victories++;
+var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+progression.GetType().GetMethod("GameWon",flags).Invoke(progression,null);
+session.CompleteCampaign(); session.GameOver();
+SoulHunter.Gameplay.Core.GameSystemManager.Instance?.TogglePause();
+var panel=(UnityEngine.GameObject)ui.GetType().GetField("_gameOverPanel",flags).GetValue(ui);
+var label=(TMPro.TextMeshProUGUI)ui.GetType().GetField("_survivalTimeText",flags).GetValue(ui);
+if(!session.IsVictory || !session.IsRunFinished || victories!=1 || UnityEngine.Time.timeScale!=0 || panel==null || !panel.activeInHierarchy || label==null || !label.text.Contains("ALL TEN STAGES SURVIVED")) throw new System.Exception("Victory integration failed");
+return new { passed=true, singleVictoryEvent=victories, terminalPause=UnityEngine.Time.timeScale, panelVisible=panel.activeInHierarchy, resultText=label.text };
