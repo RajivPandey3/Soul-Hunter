@@ -65,7 +65,7 @@ namespace SoulHunter.Gameplay.Combat
             // Zone 3 seconds tak zameen pe rahega
             var lifetime = zone.GetComponent<PooledLifetime>();
             if (lifetime != null) lifetime.Arm(3f);
-            else Destroy(zone, 3f);
+            else if (Application.isPlaying) Destroy(zone, 3f);
         }
     }
 }

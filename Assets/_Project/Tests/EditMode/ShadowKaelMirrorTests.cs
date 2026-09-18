@@ -459,6 +459,7 @@ namespace SoulHunter.Tests.EditMode
             var rootWeapon = new GameObject("MockTouchDamageWeapon");
             _cleanupList.Add(rootWeapon);
 
+            rootWeapon.AddComponent<BoxCollider>();
             var touchDamage = rootWeapon.AddComponent<TouchDamage>();
             touchDamage.TargetTag = "Enemy";
 
@@ -466,6 +467,7 @@ namespace SoulHunter.Tests.EditMode
             childObject.transform.SetParent(rootWeapon.transform);
             _cleanupList.Add(childObject);
 
+            childObject.AddComponent<BoxCollider>();
             var childTouchDamage = childObject.AddComponent<TouchDamage>();
             childTouchDamage.TargetTag = "Enemy";
 

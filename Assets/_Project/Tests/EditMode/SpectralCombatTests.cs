@@ -251,6 +251,8 @@ namespace SoulHunter.Tests.EditMode
 
             projectilePrefab = new GameObject("TestProjectilePrefab");
             _cleanupList.Add(projectilePrefab);
+            projectilePrefab.AddComponent<BoxCollider>();
+            projectilePrefab.AddComponent<Rigidbody>();
             projectilePrefab.AddComponent<Projectile>();
             projectilePrefab.SetActive(false);
 
@@ -301,6 +303,8 @@ namespace SoulHunter.Tests.EditMode
         {
             var projObject = new GameObject("TestNormalProjectile");
             _cleanupList.Add(projObject);
+            projObject.AddComponent<BoxCollider>();
+            projObject.AddComponent<Rigidbody>();
             var projectile = projObject.AddComponent<Projectile>();
             projectile.Initialize(Vector3.forward, 20f, damage, 3f, DamageType.Normal, "NormalWeapon");
             projObject.SetActive(true);

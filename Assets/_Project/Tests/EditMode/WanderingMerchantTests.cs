@@ -55,6 +55,9 @@ namespace SoulHunter.Tests.EditMode
             // Merchant GameObject setup
             _merchantObject = new GameObject("TestWanderingMerchant");
             _cleanupList.Add(_merchantObject);
+            // WanderingMerchant requires a concrete Collider. Unity cannot auto-create
+            // the abstract Collider type declared by RequireComponent in EditMode.
+            _merchantObject.AddComponent<BoxCollider>();
             _merchant = _merchantObject.AddComponent<WanderingMerchant>();
 
             // Target Player GameObject setup with HealthController and PlayerStats

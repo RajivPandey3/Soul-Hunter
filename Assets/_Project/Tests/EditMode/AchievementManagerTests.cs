@@ -159,6 +159,18 @@ namespace SoulHunter.Tests.EditMode
             handler?.Invoke(second);
         }
 
+        private static void InvokeEditModeLifecycle(MonoBehaviour behaviour, string methodName)
+        {
+            // Plain EditMode tests do not provide a Player frame, so invoke lifecycle
+            // callbacks explicitly whenever the contract under test depends on them.
+            var method = behaviour.GetType().GetMethod(
+                methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(method, Is.Not.Null, $"Expected lifecycle method {methodName} was not found.");
+            method.Invoke(behaviour, null);
+        }
+
         private void ResetStaticSingleton<T>(string propertyName)
         {
             var prop = typeof(T).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Static);
@@ -219,6 +231,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             Assert.That(_manager.IsAchievementUnlocked("Kills_1"), Is.False);
 
@@ -236,6 +249,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             Assert.That(_manager.IsAchievementUnlocked("Survive_30"), Is.False);
 
@@ -253,6 +267,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             Assert.That(_manager.IsAchievementUnlocked("Whip_Level2"), Is.False);
 
@@ -271,9 +286,11 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             // Component ko disable karte hain
             _manager.enabled = false;
+            InvokeEditModeLifecycle(_manager, "OnDisable");
 
             _stats.AddKill();
 
@@ -290,12 +307,15 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             _manager.enabled = false;
+            InvokeEditModeLifecycle(_manager, "OnDisable");
             _stats.AddKill();
             Assert.That(_manager.IsAchievementUnlocked("Kills_2"), Is.False);
 
             _manager.enabled = true;
+            InvokeEditModeLifecycle(_manager, "OnEnable");
             _stats.AddKill();
 
             Assert.That(_manager.IsAchievementUnlocked("Kills_2"), Is.True,
@@ -368,6 +388,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             TriggerSurvivalSecond(_session, 60);
 
@@ -407,6 +428,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             for (int i = 0; i < 10; i++)
             {
@@ -497,6 +519,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(new List<AchievementData> { ach });
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             TriggerSurvivalSecond(_session, 10);
             Assert.That(_manager.IsAchievementUnlocked("Survive_10s"), Is.True);
@@ -521,6 +544,7 @@ namespace SoulHunter.Tests.EditMode
             _manager.SetAchievements(catalog);
             _manager.Configure(_session, _stats, _weapons);
             _manager.gameObject.SetActive(true);
+            InvokeEditModeLifecycle(_manager, "OnEnable");
 
             Assert.DoesNotThrow(() => TriggerSurvivalSecond(_session, 5));
             Assert.That(_manager.IsAchievementUnlocked("Valid_Survive"), Is.True);
