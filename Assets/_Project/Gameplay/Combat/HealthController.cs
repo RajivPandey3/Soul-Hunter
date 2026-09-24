@@ -27,6 +27,14 @@ namespace SoulHunter.Gameplay.Combat
         public int Armor { get; set; }
 
         public bool IsInvincible { get; set; } = false;
+
+        /// <summary>
+        /// Seconds of immunity after taking a hit (VS-style). 0 = none; enemies keep 0 so rapid
+        /// hits land, and the player sets it. Separate from IsInvincible, which dash/revive toggle.
+        /// </summary>
+        public float PostHitInvulnerability { get; set; }
+        private float _hitInvulnerableUntil = -1f;
+        public bool IsHitInvulnerable => Time.time < _hitInvulnerableUntil;
         private bool _keepAliveAfterDeath;
 
         private void Awake()
@@ -38,6 +46,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;
             _currentHealth = _maxHealth;
+            _hitInvulnerableUntil = -1f;
         }
 
         public void Initialize(int maxHealth)
@@ -55,6 +64,7 @@ namespace SoulHunter.Gameplay.Combat
         public void TakeDamage(DamagePacket packet)
         {
             if (_currentHealth <= 0 || IsInvincible) return; // Already dead or invincible
+            if (IsHitInvulnerable && !packet.IgnoresHitInvulnerability) return; // brief immunity after the last hit
             if (packet.Amount <= 0 || (DamageInterceptor != null && DamageInterceptor(packet))) return;
 
             int incomingDamage = packet.Amount;
@@ -80,6 +90,8 @@ namespace SoulHunter.Gameplay.Combat
             if (DamageModifier != null) incomingDamage = Mathf.Max(0, DamageModifier(incomingDamage));
             if (incomingDamage == 0) return;
             _currentHealth -= incomingDamage;
+            if (PostHitInvulnerability > 0f && !packet.IgnoresHitInvulnerability)
+                _hitInvulnerableUntil = Time.time + PostHitInvulnerability;
             
             // Kami #3 Fix: Damage Number dikhana
             if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)

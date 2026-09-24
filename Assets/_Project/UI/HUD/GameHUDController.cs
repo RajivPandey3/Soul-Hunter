@@ -47,6 +47,11 @@ namespace SoulHunter.Gameplay.UI
             {
                 _playerHealth.OnHealthChanged += UpdateHealthBar;
                 UpdateHealthBar(_playerHealth.CurrentHealth, _playerHealth.MaxHealth);
+
+                // VS-style low-HP feedback: pulsing red tint at 30% HP or below.
+                var lowHealthWarning = GetComponent<LowHealthWarning>();
+                if (lowHealthWarning == null) lowHealthWarning = gameObject.AddComponent<LowHealthWarning>();
+                lowHealthWarning.Bind(_playerHealth);
             }
 
             // Weapon Manager setup

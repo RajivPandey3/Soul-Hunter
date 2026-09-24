@@ -15,6 +15,11 @@ namespace SoulHunter.Gameplay.Combat
         public Vector3 HitPoint;
         public Vector3 KnockbackDirection;
         public DamageType Type;
+        /// <summary>
+        /// Continuous hazards (e.g. the Level 9 arena boundary, applied every frame) set this so the
+        /// post-hit invulnerability window neither blocks them nor is started by them.
+        /// </summary>
+        public bool IgnoresHitInvulnerability;
         public DamagePacket(int amount, Vector3 hitPoint, Vector3 knockbackDirection)
             : this(amount, hitPoint, knockbackDirection, DamageType.Normal) { }
 
@@ -24,6 +29,7 @@ namespace SoulHunter.Gameplay.Combat
             HitPoint = hitPoint;
             KnockbackDirection = knockbackDirection;
             Type = type;
+            IgnoresHitInvulnerability = false;
         }
     }
 }

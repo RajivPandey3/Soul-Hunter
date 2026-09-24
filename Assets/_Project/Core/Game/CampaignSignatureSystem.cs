@@ -164,7 +164,13 @@ private void TrySubscribeToProgression()
             if (flat.magnitude <= radius) return;
             Vector3 safe = flat.normalized * radius;
             _player.transform.position = new Vector3(safe.x, _player.transform.position.y, safe.z);
-            if (_playerHealth != null) _playerHealth.TakeDamage(new DamagePacket(Mathf.Max(1, Mathf.CeilToInt(_boundaryDamagePerSecond * Time.deltaTime)), _player.transform.position, Vector3.zero));
+            if (_playerHealth != null)
+            {
+                // Applied every frame outside the arena, so it must not be swallowed by the post-hit window.
+                var boundaryHit = new DamagePacket(Mathf.Max(1, Mathf.CeilToInt(_boundaryDamagePerSecond * Time.deltaTime)), _player.transform.position, Vector3.zero);
+                boundaryHit.IgnoresHitInvulnerability = true;
+                _playerHealth.TakeDamage(boundaryHit);
+            }
         }
 
         private void CreateHazards(CampaignHazard.HazardType type, int damage, int count)
