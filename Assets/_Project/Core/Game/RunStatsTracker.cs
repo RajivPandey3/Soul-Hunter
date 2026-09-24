@@ -14,6 +14,8 @@ namespace SoulHunter.Gameplay.Core
         public static RunStatsTracker Instance { get; private set; }
 
         public event System.Action<int> OnKillsChanged;
+        /// <summary>Gold collected this run (after Greed) changed.</summary>
+        public event System.Action<int> OnGoldChanged;
 
         public int TotalKills { get; private set; } = 0;
         public int TotalGoldCollected { get; private set; } = 0;
@@ -31,6 +33,7 @@ namespace SoulHunter.Gameplay.Core
             TotalGoldCollected = 0;
             _weaponDamageStats.Clear();
             OnKillsChanged?.Invoke(0);
+            OnGoldChanged?.Invoke(0);
         }
 
         private void Awake()
@@ -64,6 +67,7 @@ namespace SoulHunter.Gameplay.Core
         public void AddGold(int amount)
         {
             TotalGoldCollected += amount;
+            OnGoldChanged?.Invoke(TotalGoldCollected);
         }
 
         public void RecordDamage(string weaponName, int amount)

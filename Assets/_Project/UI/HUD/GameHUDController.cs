@@ -31,7 +31,6 @@ namespace SoulHunter.Gameplay.UI
 
         private SoulHunter.Gameplay.Core.RunStatsTracker _stats;
         private WeaponManager _boundWeapons;
-        private EconomyService _boundEconomy;
 
         private int _currentWeaponIndex = 0;
         private int _currentPassiveIndex = 0;
@@ -61,23 +60,14 @@ namespace SoulHunter.Gameplay.UI
                 _boundWeapons.OnWeaponAcquiredOrUpgraded += HandleWeaponAcquired;
             }
 
-            // Economy setup
-            if (GameServices.Instance != null)
-            {
-                var economy = GameServices.Instance.Get<EconomyService>();
-                if (economy != null)
-                {
-                    _boundEconomy = economy;
-                    _boundEconomy.OnGoldChanged += UpdateGoldUI;
-                    UpdateGoldUI(economy.CurrentGold);
-                }
-            }
-
+            // VS HUD shows gold collected this run (the saved total lives in the menu shop).
             _stats = SoulHunter.Gameplay.Core.RunStatsTracker.Instance;
             if (_stats != null)
             {
                 _stats.OnKillsChanged += UpdateKills;
                 UpdateKills(_stats.TotalKills);
+                _stats.OnGoldChanged += UpdateGoldUI;
+                UpdateGoldUI(_stats.TotalGoldCollected);
             }
 
             // Slots ko shuru mein khali karo
@@ -91,8 +81,11 @@ namespace SoulHunter.Gameplay.UI
             if (_playerHealth != null) _playerHealth.OnHealthChanged -= UpdateHealthBar;
 
             if (_boundWeapons != null) _boundWeapons.OnWeaponAcquiredOrUpgraded -= HandleWeaponAcquired;
-            if (_boundEconomy != null) _boundEconomy.OnGoldChanged -= UpdateGoldUI;
-            if (_stats != null) _stats.OnKillsChanged -= UpdateKills;
+            if (_stats != null)
+            {
+                _stats.OnKillsChanged -= UpdateKills;
+                _stats.OnGoldChanged -= UpdateGoldUI;
+            }
         }
 
         private void UpdateHealthBar(int newHealth, int maxHealth)
@@ -107,8 +100,7 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_goldText != null)
             {
-                _goldText.text = "Total Gold: " + gold.ToString();
-                Debug.Log("GOLD TEXT = " + _goldText);
+                _goldText.text = "Gold: " + gold.ToString();
             }
         }
 

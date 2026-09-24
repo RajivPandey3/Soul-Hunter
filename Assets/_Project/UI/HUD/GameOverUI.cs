@@ -93,6 +93,10 @@ namespace SoulHunter.Gameplay.UI
             if (RunStatsTracker.Instance != null)
             {
                 finalStatsText += $"<color=red>Total Kills: {RunStatsTracker.Instance.TotalKills}</color>\n";
+                finalStatsText += $"<color=yellow>Gold Earned: {RunStatsTracker.Instance.TotalGoldCollected}</color>\n";
+                var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+                var experience = player != null ? player.GetComponent<SoulHunter.Gameplay.Player.PlayerExperience>() : null;
+                if (experience != null) finalStatsText += $"Level Reached: {experience.CurrentLevel}\n";
                 finalStatsText += "------------------------\n";
 
                 var damageDict = RunStatsTracker.Instance.GetWeaponStats();
