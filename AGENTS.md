@@ -127,13 +127,13 @@ Do not claim performance acceptance without representative profiling.
 
 Treat the following as known risks until corrected and revalidated.
 
-### Shared EnemyData defect
+### Per-stage EnemyData and elites (fixed statically, runtime unverified)
 
-22 enemy/boss prefabs (the `SH10_L01`–`L10` Enemy/Boss Gameplay prefabs and `Enemy_Entity.prefab`) reference GUID `01217a48f2e5cb44588556a395026c0a`.
+Each level's Enemy, Elite and Boss gameplay prefab now has its own EnemyData asset in `Assets/_Project/Data/Config/Enemies/`. Bosses drop chests, contact damage comes from `DamageToPlayer`, and stage-boss health comes from its EnemyData. `Enemy_Entity.prefab` (the base template) still uses `Bat_Enemy_Data.asset`.
 
-That GUID now resolves to `Assets/_Project/Data/Config/Bat_Enemy_Data.asset`, the only EnemyData asset in the project, so every enemy and boss shares the Bat data.
+Elites spawn from `Assets/Prefabs/Enemies/Gameplay/SH10_L01`–`L10_EliteGameplay.prefab`, built like the enemy gameplay prefabs with the elite model as the `SH10_Visual` child. `SH10_Lxx_Elite.prefab` stays a visual-only model used by the showcase scenes.
 
-Treat this as a known data defect until each enemy/boss has its own data or per-prefab overrides are proven.
+The stat values are provisional balance numbers. `EnemyDataWiringTests` covers the wiring; treat it as unverified until those tests and a runtime run pass.
 
 ### Bible prefab defect
 

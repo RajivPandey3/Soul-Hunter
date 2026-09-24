@@ -36,6 +36,7 @@ namespace SoulHunter.Gameplay.AI
         public float AttackDistance = 1.5f;
 
         public bool IsSpectral => _isSpectral;
+        public SoulHunter.Gameplay.Data.EnemyData Data => _enemyData;
 
         private void Awake()
         {
@@ -55,7 +56,10 @@ namespace SoulHunter.Gameplay.AI
                 
                 var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
                 if (health != null) health.Initialize(_enemyData.MaxHealth);
-                
+
+                var touchDamage = GetComponent<SoulHunter.Gameplay.Combat.TouchDamage>();
+                if (touchDamage != null) touchDamage.DamageAmount = _enemyData.DamageToPlayer;
+
                 var drop = GetComponent<EnemyDrop>();
                 if (drop != null) 
                 {

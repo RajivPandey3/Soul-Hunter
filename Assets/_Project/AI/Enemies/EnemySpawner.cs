@@ -196,7 +196,12 @@ namespace SoulHunter.Gameplay.AI
             var health = bossObj.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null)
             {
-                health.Initialize(1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage); 
+                // Stage boss EnemyData is authoritative. Fallback bosses built from
+                // ordinary enemy prefabs keep the stage formula, not enemy health.
+                var bossData = bossController != null && basePrefab == _stageBossPrefab ? bossController.Data : null;
+                health.Initialize(bossData != null
+                    ? bossData.MaxHealth
+                    : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage);
                 health.KnockbackResistance = 1f; // Immune to knockback
                 
                 if (!_bossCallbacks.Contains(health))

@@ -158,7 +158,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5883ba6a92a88dd4093972b2f8e74925, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyData: {fileID: 11400000, guid: 01217a48f2e5cb44588556a395026c0a, type: 2}
+  _enemyData: {fileID: 11400000, guid: 870ede5097cb416d9e509f2e889b1171, type: 2}
   ChaseDistance: 10
   AttackDistance: 1.5
 --- !u!114 &5830707199133840602
