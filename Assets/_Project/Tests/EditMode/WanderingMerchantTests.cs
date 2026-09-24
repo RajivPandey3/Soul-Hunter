@@ -49,7 +49,7 @@ namespace SoulHunter.Tests.EditMode
             // Learning Comment:
             // Test start hone se pehle Time.timeScale ko baseline 1f par reset karte hain
             // aur fresh isolated GameObjects initialize karte hain.
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
             _cleanupList.Clear();
 
             // Merchant GameObject setup
@@ -79,7 +79,7 @@ namespace SoulHunter.Tests.EditMode
             // Learning Comment:
             // Test complete hone par hamesha Time.timeScale ko 1f restore karte hain
             // taake test failure ki soorat mein bhi Unity Editor frozen na rahe.
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
 
             for (int i = _cleanupList.Count - 1; i >= 0; i--)
             {

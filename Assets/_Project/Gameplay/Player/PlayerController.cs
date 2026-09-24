@@ -133,7 +133,7 @@ namespace SoulHunter.Gameplay.Player
             // to physics aur movement ko unfreeze karne ke liye timeScale reset karein.
             if (Time.timeScale <= 0f)
             {
-                Time.timeScale = 1f;
+                SoulHunter.Core.Services.GameTime.ResetAll();
             }
 
             ApplySelectedCharacterStats();

@@ -34,7 +34,7 @@ namespace SoulHunter.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
             foreach (var upgrade in _pool) Object.DestroyImmediate(upgrade);
             _pool.Clear();
             Object.DestroyImmediate(_object);

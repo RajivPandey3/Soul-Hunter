@@ -34,7 +34,7 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_claimButton != null) _claimButton.onClick.RemoveListener(CloseChest);
             // Modal UI can be destroyed during a scene transition while the run is paused.
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.Resume(this);
         }
 
         public void OpenChest(string message)
@@ -44,7 +44,7 @@ namespace SoulHunter.Gameplay.UI
                 SoulHunter.Gameplay.Audio.AudioManager.Instance.PlaySFX(SoulHunter.Gameplay.Audio.AudioManager.Instance.ChestOpenSound);
             }
 
-            Time.timeScale = 0f; // Game pause
+            SoulHunter.Core.Services.GameTime.Pause(this); // Game pause
             
             if (_rewardText != null)
             {
@@ -57,7 +57,7 @@ namespace SoulHunter.Gameplay.UI
         private void CloseChest()
         {
             if (_chestPanel != null) _chestPanel.SetActive(false);
-            Time.timeScale = 1f; // Game resume
+            SoulHunter.Core.Services.GameTime.Resume(this); // Game resume
         }
     }
 }

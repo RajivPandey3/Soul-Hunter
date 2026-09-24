@@ -97,10 +97,9 @@ namespace SoulHunter.Gameplay.Core
             _runDurationReached = false;
             _stageTransitionQueued = false;
             _bossDefeated = false;
-            // Stage transition ke baad previous level ka pause/slow state carry
-            // forward nahi hona chahiye. Frozen Peaks ka intentional slow
-            // modifier CampaignSignatureSystem khud dobara apply karega.
-            Time.timeScale = 1f;
+            // Stage transition must not carry the previous stage's slow motion forward,
+            // but a level-up, chest or merchant screen still open keeps its pause.
+            SoulHunter.Core.Services.GameTime.SetSlowMotion(1f);
             var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
             if (player != null) player.ResumeMovementAfterMenu();
             var level = CurrentLevel;
@@ -165,7 +164,7 @@ namespace SoulHunter.Gameplay.Core
             GameSessionManager.Instance?.CompleteCampaign();
             Debug.Log("[LevelProgressionManager] ALL 10 STAGES CLEARED! YOU BEAT THE GAME!");
             OnGameWon?.Invoke();
-            Time.timeScale = 0f; // Game finish
+            SoulHunter.Core.Services.GameTime.Pause(this); // Game finish
         }
     }
 }

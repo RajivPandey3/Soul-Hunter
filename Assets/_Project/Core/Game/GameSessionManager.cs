@@ -33,7 +33,7 @@ namespace SoulHunter.Gameplay.Core
             _isGameActive = true;
             IsRunFinished = false;
             IsVictory = false;
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
         }
 
         public void CompleteCampaign()
@@ -43,7 +43,7 @@ namespace SoulHunter.Gameplay.Core
             IsVictory = true;
             _isGameActive = false;
             GameSystemManager.Instance?.SaveHighScore(SurvivalTime);
-            Time.timeScale = 0f;
+            SoulHunter.Core.Services.GameTime.Pause(this);
             OnVictory?.Invoke();
         }
 
@@ -100,7 +100,7 @@ namespace SoulHunter.Gameplay.Core
             }
 
             // Pause game
-            Time.timeScale = 0f;
+            SoulHunter.Core.Services.GameTime.Pause(this);
 
             OnGameOver?.Invoke();
         }
@@ -117,7 +117,7 @@ namespace SoulHunter.Gameplay.Core
             // A scene transition must never carry a paused timescale into the next run.
             if (Instance == this)
             {
-                Time.timeScale = 1f;
+                SoulHunter.Core.Services.GameTime.ResetAll();
                 Instance = null;
             }
         }

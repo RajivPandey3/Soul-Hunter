@@ -23,7 +23,7 @@ namespace SoulHunter.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
             Object.DestroyImmediate(_object);
         }
 

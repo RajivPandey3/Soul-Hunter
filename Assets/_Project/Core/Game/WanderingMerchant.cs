@@ -68,7 +68,7 @@ namespace SoulHunter.Gameplay.Core
         public void OpenShop()
         {
             _isShopOpen = true;
-            Time.timeScale = 0f;
+            SoulHunter.Core.Services.GameTime.Pause(this);
         }
 
         // Learning Comment: Attempts to purchase a healing potion using harvested souls from EconomyService.
@@ -248,7 +248,7 @@ namespace SoulHunter.Gameplay.Core
         public void CloseShop()
         {
             _isShopOpen = false;
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.Resume(this);
         }
 
         // Learning Comment: When the merchant component or GameObject is disabled (e.g. stage transition or object pooling),
@@ -266,7 +266,7 @@ namespace SoulHunter.Gameplay.Core
         {
             if (_isShopOpen)
             {
-                Time.timeScale = 1f;
+                SoulHunter.Core.Services.GameTime.Resume(this);
             }
         }
     }

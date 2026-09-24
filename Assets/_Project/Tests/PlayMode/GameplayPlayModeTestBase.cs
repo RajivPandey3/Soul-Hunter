@@ -37,7 +37,7 @@ namespace SoulHunter.Tests.PlayMode
         public IEnumerator CleanSlate()
         {
             Application.logMessageReceived -= CaptureErrors;
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
 
             // Later tests must not inherit this run's singletons
             // (LevelProgressionManager, GameSessionManager, GameServices, ...).

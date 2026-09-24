@@ -57,11 +57,11 @@ namespace SoulHunter.Gameplay.Core
 
             if (_isPaused)
             {
-                Time.timeScale = 0f; // Game ko freeze kar do
+                SoulHunter.Core.Services.GameTime.Pause(this); // Game ko freeze kar do
             }
             else
             {
-                Time.timeScale = 1f; // Game wapas chala do
+                SoulHunter.Core.Services.GameTime.Resume(this); // Game wapas chala do
             }
         }
 

@@ -57,7 +57,7 @@ namespace SoulHunter.Gameplay.UI
                 _session.OnGameOver -= ShowGameOverScreen;
                 _session.OnVictory -= ShowVictoryScreen;
             }
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.Resume(this);
         }
 
         private void ShowVictoryScreen()
@@ -73,7 +73,7 @@ namespace SoulHunter.Gameplay.UI
 
         private void ShowGameOverScreen()
         {
-            Time.timeScale = 0f; // Pause the game
+            SoulHunter.Core.Services.GameTime.Pause(this); // Pause the game
 
             if (_gameOverPanel != null)
             {
@@ -124,7 +124,7 @@ namespace SoulHunter.Gameplay.UI
         {
             // Learning Comment: Game over ke waqt Time.timeScale = 0 hota hai.
             // Scene reload se pehle timeScale ko wapas 1 karna zaroori hai taake physics aur animations unpause ho jayein.
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.ResetAll();
             Debug.Log("[GameOverUI] Restart button clicked! Reloading game session...");
 
             // Learning Comment: Naye run se pehle session state aur run stats ko reset karna laazmi hai

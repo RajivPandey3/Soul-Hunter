@@ -173,6 +173,12 @@ Validated 2026-09-24: `BiblePrefabTests` (T) and the full PlayMode suite with 0 
 
 `TouchDamage.TargetTag` defaults to "Player" (it was written for enemy contact damage). Song of Mana and Bloody Tear never changed it, so their beams/whips damaged the player; Aria (Song of Mana) died within seconds of starting. All TouchDamage weapons now use `AutoAttackWeapon.HostileTag`: "Enemy", or "Player" when a boss holds the weapon (Shadow Kael's mirror). Validated by `WeaponTargetingTests` (T) and `PlayerLoadoutPlayModeTests` (R: Aria takes no damage from her own beam).
 
+### Pause / time-scale conflicts
+
+Pause menu, level-up, chest, Wandering Merchant, game over, Soul Burst hit-stop and stage start each wrote `Time.timeScale` directly, so one resumed the game underneath another that was still open: toggling pause twice during a level-up/chest/shop, Soul Burst's slow motion ending, or the next stage starting 5 s after a clear. All of them now go through `SoulHunter.Core.Services.GameTime` (reference-counted `Pause(owner)`/`Resume(owner)`, `SetSlowMotion`, `ResetAll` only at run start, restart and scene change). Do not write `Time.timeScale` directly in gameplay code. Validated 2026-09-24 by `GameTimeTests` (T), EditMode 235/235 and PlayMode 20/20 (R) in the isolated copy; hands-on play still unverified.
+
+This came from a review of an external "Vampire Survivors engine" write-up (owner direction: adopt what is officially documented, follow the rest). Officially documented mechanics were already present statically (time survival, hordes, levelled weapons, gems that never despawn, persistent gold power-ups). Of the engineering recommendations, pooling (`WeaponPoolManager`, `PickupPoolManager`), data-driven enemies (`EnemyData`), damage data (`DamagePacket`), death events (`HealthController.OnDied`), multi-level-up and a stage clock already existed; the missing run-state/pause arbitration is what `GameTime` adds.
+
 ### Audio
 
 No scene contains an `AudioManager`; it now creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Enemy-hit, death and music audio are still missing.

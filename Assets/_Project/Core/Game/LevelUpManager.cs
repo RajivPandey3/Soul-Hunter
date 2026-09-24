@@ -166,7 +166,7 @@ namespace SoulHunter.Gameplay.Core
     }
 
     // ONLY pause once we know the UI can be presented.
-    Time.timeScale = 0f;
+    SoulHunter.Core.Services.GameTime.Pause(this);
 
     Debug.Log($"[LevelUpManager] >>> Game PAUSED | timeScale={Time.timeScale}");
 
@@ -276,7 +276,7 @@ namespace SoulHunter.Gameplay.Core
 
         private void ResumeGameplay()
         {
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.Resume(this);
             if (_playerController != null) _playerController.ResumeMovementAfterMenu();
         }
 

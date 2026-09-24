@@ -133,12 +133,12 @@ namespace SoulHunter.Gameplay.Combat
             if (playerHealth != null) playerHealth.IsInvincible = true;
 
             // Hit-Stop (Slow motion effect for Anime feel)
-            Time.timeScale = 0.1f;
+            SoulHunter.Core.Services.GameTime.SetSlowMotion(0.1f);
             
             // Wait in real time so timescale doesn't freeze the wait itself
             yield return new WaitForSecondsRealtime(0.5f);
             
-            Time.timeScale = 1f;
+            SoulHunter.Core.Services.GameTime.SetSlowMotion(1f);
 
             // Wait remaining 1.5 seconds for invincibility to wear off
             yield return new WaitForSeconds(1.5f);
