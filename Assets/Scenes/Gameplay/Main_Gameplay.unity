@@ -850,7 +850,7 @@ MonoBehaviour:
   _healthChickenPrefab: {fileID: 5282398691362115392, guid: 84f854f8c67a16b4eb3d730077589315, type: 3}
   _chestPrefab: {fileID: 7462485815864332528, guid: 2d13f39b128f5ad43b67f1f42c787b52, type: 3}
   _magnetPrefab: {fileID: 2984942668396759097, guid: 64b4f649601a55c4fbea5b4dfbb24507, type: 3}
-  _timeFreezePrefab: {fileID: 2984942668396759097, guid: 1234567890abcdef1234567890abcdef, type: 3}
+  _timeFreezePrefab: {fileID: 2984942668396759097, guid: 2882d4ae123f42d0b419ff467aba7196, type: 3}
   _prewarmPerPickupType: 32
   _chestLogicController: {fileID: 2018371213}
   _chestUI: {fileID: 819978282}
