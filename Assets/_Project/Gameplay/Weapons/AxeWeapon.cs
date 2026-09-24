@@ -27,6 +27,15 @@ namespace SoulHunter.Gameplay.Weapons
 
         private void Awake()
         {
+            // Learning Comment:
+            // Infinite Recursion Safeguard:
+            // Agar ye script kisi spawned axe projectile par lag gayi ho, toh turant disable karein.
+            if (transform.parent != null && transform.parent.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() == null)
+            {
+                enabled = false;
+                return;
+            }
+
             _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
         }
 
@@ -45,6 +54,14 @@ namespace SoulHunter.Gameplay.Weapons
         private void ThrowAxe()
         {
             if (_axePrefab == null || WeaponPoolManager.Instance == null) return;
+
+            // Learning Comment:
+            // Self-Reference Guard:
+            if (_axePrefab == gameObject || _axePrefab.GetComponent<AxeWeapon>() != null)
+            {
+                Debug.LogError("[AxeWeapon] Infinite loop blocked! _axePrefab cannot be AxeWeapon itself.");
+                return;
+            }
 
             // Axe banao O(1) performance ke sath
             GameObject axeObj = WeaponPoolManager.Instance.GetFromPool(_axePrefab, transform.position, Quaternion.identity);

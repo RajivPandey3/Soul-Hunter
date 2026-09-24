@@ -16,8 +16,28 @@ namespace SoulHunter.Gameplay.UI
         [Tooltip("Ye Unity ka Slider component hai jisme hum Fill ko use karenge")]
         [SerializeField] private Slider _xpSlider;
 
+        private void Awake()
+        {
+            // Learning Comment:
+            // "Read First, Match Later":
+            // Agar Inspector mein references unassigned hon toh scene se dynamically dhoond kar bind karein.
+            if (_playerExperience == null)
+            {
+                _playerExperience = FindFirstObjectByType<PlayerExperience>();
+            }
+            if (_xpSlider == null)
+            {
+                _xpSlider = GetComponent<Slider>();
+            }
+        }
+
         private void OnEnable()
         {
+            if (_playerExperience == null)
+            {
+                _playerExperience = FindFirstObjectByType<PlayerExperience>();
+            }
+
             if (_playerExperience != null)
             {
                 // Jaise hi script chalu ho, XP event se jud jao

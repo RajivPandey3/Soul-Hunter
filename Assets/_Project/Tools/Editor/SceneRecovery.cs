@@ -61,7 +61,7 @@ Ref(levelUpManager,"_experience",player.GetComponent<PlayerExperience>());
 Ref(levelUpManager,"_weaponManager",weapons);
 Ref(levelUpManager,"_playerController",player.GetComponent<PlayerController>());
 Ref(Find("Main Camera").GetComponent<SoulHunter.Gameplay.CameraSystem.CameraFollow>(),"_target",player.transform);
-var camera=Find("Main Camera").GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=12;camera.transform.position=player.transform.position+new Vector3(0,15,-10);camera.transform.LookAt(player.transform);camera.farClipPlane=250;camera.cullingMask=-1;
+var camera=Find("Main Camera").GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=12;camera.transform.position=player.transform.position+new Vector3(0,20,0);camera.transform.rotation=Quaternion.Euler(90,0,0);camera.farClipPlane=250;camera.cullingMask=-1;
 
 var enemyPath="Assets/Prefabs/Weapons/Enemy_Entity.prefab";
 var enemy=PrefabUtility.LoadPrefabContents(enemyPath);

@@ -21,6 +21,29 @@ namespace SoulHunter.Gameplay.Core
         // Is event ko UI system listen karega
         public event System.Action<List<UpgradeData>> OnLevelUpUIRound;
 
+        // Pending level-ups ki queue (agar ek sath bohot saara XP mile aur multiple level ups hon)
+        private int _pendingLevelUps = 0;
+        private bool _isLevelUpActive = false;
+
+        private void Awake()
+        {
+            // Learning Comment:
+            // "Read First, Match Later" aur Self-Healing pattern:
+            // Agar Inspector mein references unlinked / null reh jayein, toh scene se dynamically dhoond kar bind karein.
+            if (_experience == null)
+            {
+                _experience = FindFirstObjectByType<PlayerExperience>();
+            }
+            if (_weaponManager == null)
+            {
+                _weaponManager = FindFirstObjectByType<WeaponManager>();
+            }
+            if (_playerController == null)
+            {
+                _playerController = FindFirstObjectByType<PlayerController>();
+            }
+        }
+
         private void Start()
         {
             // Unity Inspector se bachne ke liye Resources folder se load kar rahe hain
@@ -36,6 +59,10 @@ namespace SoulHunter.Gameplay.Core
             {
                 _experience.OnLevelUp += HandleLevelUp;
             }
+            else
+            {
+                Debug.LogError("[LevelUpManager] PlayerExperience nahi mila! Level Up event bind nahi ho saka.");
+            }
         }
         
         private void OnDestroy()
@@ -48,35 +75,75 @@ namespace SoulHunter.Gameplay.Core
 
         private void HandleLevelUp(int newLevel)
         {
-            Debug.Log($"[LevelUpManager] Game Paused for Level {newLevel} Upgrades!");
-            // Pause the game
-            Time.timeScale = 0f;
-            
-            // Pick 3 random upgrades
-            List<UpgradeData> choices = GetRandomValidUpgrades(3);
-            if (choices.Count == 0) { ResumeGameplay(); return; }
-            
-            // Agar koi UI is event ko sun raha hai toh usko options bhejo
-            if (OnLevelUpUIRound != null)
+            Debug.Log($"[LevelUpManager] Level Up Event received! New Level: {newLevel}");
+            _pendingLevelUps++;
+
+            // Agar pehle se koi Level Up menu nahi khula, toh agla process karo
+            if (!_isLevelUpActive)
             {
-                OnLevelUpUIRound.Invoke(choices);
-            }
-            else
-            {
-                // UI abhi nahi bani (UI BAAD MEIN BANAYEGEIN), isliye Backend test ke liye auto-select:
-                if (choices.Count > 0)
-                {
-                    Debug.Log($"[LevelUpManager] (No UI Found) Auto-Selecting: {choices[0].UpgradeName}");
-                    SelectUpgrade(choices[0]);
-                }
-                else
-                {
-                    // Agar koi upgrade hi na bacha ho
-                    Debug.Log("[LevelUpManager] Max limit reached! No more upgrades available.");
-                    ResumeGameplay();
-                }
+                ProcessNextLevelUp();
             }
         }
+
+        private void ProcessNextLevelUp()
+{
+    Debug.Log($"[LevelUpManager] >>> ProcessNextLevelUp ENTER | pending={_pendingLevelUps} | active={_isLevelUpActive} | timeScale={Time.timeScale}");
+
+    if (_pendingLevelUps <= 0)
+    {
+        Debug.Log("[LevelUpManager] No pending level-ups. Resuming gameplay.");
+        _isLevelUpActive = false;
+        ResumeGameplay();
+        return;
+    }
+
+    _isLevelUpActive = true;
+
+    Debug.Log($"[LevelUpManager] >>> Preparing level-up UI | pending={_pendingLevelUps}");
+
+    // IMPORTANT: generate choices BEFORE pausing.
+    Debug.Log("[LevelUpManager] >>> Calling GetRandomValidUpgrades(3)");
+
+    List<UpgradeData> choices = GetRandomValidUpgrades(3);
+
+    Debug.Log($"[LevelUpManager] <<< GetRandomValidUpgrades returned | count={choices.Count}");
+
+    if (choices.Count == 0)
+    {
+        Debug.LogWarning("[LevelUpManager] No valid upgrades available. Cancelling level-up menu.");
+        _pendingLevelUps = 0;
+        _isLevelUpActive = false;
+        ResumeGameplay();
+        return;
+    }
+
+    Debug.Log("[LevelUpManager] >>> Valid choices found:");
+
+    for (int i = 0; i < choices.Count; i++)
+    {
+        Debug.Log($"[LevelUpManager] Choice {i}: {choices[i].UpgradeName} | Level={choices[i].Level} | Type={choices[i].Type}");
+    }
+
+    // ONLY pause once we know the UI can be presented.
+    Time.timeScale = 0f;
+
+    Debug.Log($"[LevelUpManager] >>> Game PAUSED | timeScale={Time.timeScale}");
+
+    if (OnLevelUpUIRound != null)
+    {
+        Debug.Log("[LevelUpManager] >>> Sending choices to LevelUpUI");
+
+        OnLevelUpUIRound.Invoke(choices);
+
+        Debug.Log("[LevelUpManager] <<< LevelUpUI event returned");
+    }
+    else
+    {
+        Debug.LogWarning("[LevelUpManager] No LevelUpUI subscriber found. Auto-selecting first upgrade.");
+
+        SelectUpgrade(choices[0]);
+    }
+}
         
         /// <summary>
         /// Jab player UI mein kisi ek card par click karega, toh yeh function call hoga.
@@ -89,9 +156,20 @@ namespace SoulHunter.Gameplay.Core
                 _weaponManager.ApplyUpgrade(upgrade);
             }
             
-            // Resume game
-            ResumeGameplay();
-            Debug.Log($"[LevelUpManager] Game Resumed. Acquired: {upgrade.UpgradeName}");
+            Debug.Log($"[LevelUpManager] Acquired Upgrade: {upgrade.UpgradeName}");
+            _pendingLevelUps = Mathf.Max(0, _pendingLevelUps - 1);
+
+            // Agar aur level ups pending hain toh agla round dikhao, warna game resume karo
+            if (_pendingLevelUps > 0)
+            {
+                ProcessNextLevelUp();
+            }
+            else
+            {
+                _isLevelUpActive = false;
+                ResumeGameplay();
+                Debug.Log("[LevelUpManager] All Level Ups processed. Game Resumed.");
+            }
         }
 
         private void ResumeGameplay()

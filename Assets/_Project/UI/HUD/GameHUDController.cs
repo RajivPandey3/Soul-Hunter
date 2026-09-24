@@ -78,7 +78,8 @@ namespace SoulHunter.Gameplay.UI
             // Slots ko shuru mein khali karo
             ClearSlots(_weaponSlots);
             ClearSlots(_passiveSlots);
-        }
+            
+     }
 
         private void OnDestroy()
         {
@@ -101,13 +102,14 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_goldText != null)
             {
-                _goldText.text = gold.ToString();
+                _goldText.text = "Total Gold: " + gold.ToString();
+                Debug.Log("GOLD TEXT = " + _goldText);
             }
         }
 
         private void UpdateKills(int kills)
         {
-            if (_killText != null) _killText.text = kills.ToString();
+            if (_killText != null) _killText.text = "Total Kills: " + kills.ToString();
         }
 
         private void HandleWeaponAcquired(UpgradeData upgrade)

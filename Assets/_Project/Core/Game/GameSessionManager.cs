@@ -21,6 +21,21 @@ namespace SoulHunter.Gameplay.Core
         public bool IsVictory { get; private set; }
         public event Action OnVictory;
 
+        /// <summary>
+        /// Learning Comment:
+        /// Run khatam hone ya restart hone ke baad state ko initial zero par laana zaroori hai.
+        /// Is ke baghair agla match foran Game Over screen par phans jata hai.
+        /// </summary>
+        public void ResetSession()
+        {
+            SurvivalTime = 0f;
+            _lastSecond = -1;
+            _isGameActive = true;
+            IsRunFinished = false;
+            IsVictory = false;
+            Time.timeScale = 1f;
+        }
+
         public void CompleteCampaign()
         {
             if (IsRunFinished) return;
@@ -37,17 +52,20 @@ namespace SoulHunter.Gameplay.Core
             if (Instance == null)
             {
                 Instance = this;
+                ResetSession();
             }
-            else
+            else if (Instance != this)
             {
+                // Learning Comment: Agar purana singleton instance pehle se majood ho toh naye run ke liye uska session reset karein
+                Instance.ResetSession();
                 Destroy(gameObject);
+                return;
             }
         }
 
         private void Start()
         {
-            SurvivalTime = 0f;
-            _isGameActive = true;
+            ResetSession();
         }
 
         private void Update()

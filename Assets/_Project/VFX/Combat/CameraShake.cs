@@ -1,51 +1,62 @@
 using UnityEngine;
-using System.Collections;
 
 namespace SoulHunter.Gameplay.VFX
 {
-    /// <summary>
-    /// Learning Comment:
-    /// VS Quality Screen Shake. Jab Soul Burst use hoga ya bari hit lagegi,
-    /// toh screen hil jayegi. Isse hits mein "Wazan" (Weight) feel hota hai.
-    /// </summary>
     public class CameraShake : MonoBehaviour
     {
         public static CameraShake Instance { get; private set; }
 
-        private Vector3 _originalPos;
-        private float _shakeDuration = 0f;
-        private float _shakeMagnitude = 0.7f;
-        private float _dampingSpeed = 1.0f;
+        private Vector3 _baseLocalPosition;
+        private float _shakeTime;
+        private float _shakeDuration;
+        private float _shakeMagnitude;
 
         private void Awake()
         {
-            if (Instance == null) Instance = this;
-            else Destroy(gameObject);
-        }
-
-        private void OnEnable()
-        {
-            _originalPos = transform.localPosition;
-        }
-
-        private void Update()
-        {
-            if (_shakeDuration > 0)
+            if (Instance == null)
             {
-                transform.localPosition = _originalPos + Random.insideUnitSphere * _shakeMagnitude;
-                _shakeDuration -= Time.deltaTime * _dampingSpeed;
+                Instance = this;
             }
             else
             {
-                _shakeDuration = 0f;
-                transform.localPosition = _originalPos;
+                Destroy(gameObject);
             }
         }
 
-        public void TriggerShake(float duration = 0.2f, float magnitude = 0.5f)
+        private void Start()
+        {
+            _baseLocalPosition = transform.localPosition;
+        }
+
+        private void LateUpdate()
+        {
+            if (_shakeTime > 0f)
+            {
+                _shakeTime -= Time.deltaTime;
+
+                float normalizedTime = Mathf.Clamp01(
+                    _shakeTime / _shakeDuration
+                );
+
+                Vector3 offset =
+                    Random.insideUnitSphere *
+                    (_shakeMagnitude * normalizedTime);
+
+                transform.localPosition = _baseLocalPosition + offset;
+            }
+            else
+            {
+                transform.localPosition = _baseLocalPosition;
+            }
+        }
+
+        public void TriggerShake(
+            float duration = 0.2f,
+            float magnitude = 0.5f)
         {
             _shakeDuration = duration;
             _shakeMagnitude = magnitude;
+            _shakeTime = duration;
         }
     }
 }

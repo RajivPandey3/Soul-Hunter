@@ -32,6 +32,16 @@ namespace SoulHunter.Gameplay.Weapons
 
         private void Awake()
         {
+            // Learning Comment:
+            // Infinite Recursion Safeguard:
+            // Agar ye script kisi spawned boomerang projectile par lag gayi ho, toh turant disable karein
+            // taaki projectile ke andar se مزید weapons na paida hon.
+            if (GetComponent<BoomerangProjectile>() != null || (transform.parent != null && transform.parent.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() == null))
+            {
+                enabled = false;
+                return;
+            }
+
             _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
             _enemyLayerMask = LayerMask.GetMask("Enemy");
         }
@@ -51,6 +61,16 @@ namespace SoulHunter.Gameplay.Weapons
         private void ThrowCross()
         {
             if (_crossPrefab == null || WeaponPoolManager.Instance == null) return;
+
+            // Learning Comment:
+            // Self-Reference Guard:
+            // Agar prefab mein galti se weapon khud ko hi projectile assign kar de,
+            // to ye condition infinite instantiation aur Unity freeze ko 100% block kar deti hai.
+            if (_crossPrefab == gameObject || _crossPrefab.GetComponent<CrossWeapon>() != null)
+            {
+                Debug.LogError("[CrossWeapon] Infinite loop blocked! _crossPrefab cannot be CrossWeapon itself.");
+                return;
+            }
 
             // Sabse nazdeek ka dushman dhoondho O(1) performance ke sath
             int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, 15f, _hits, _enemyLayerMask);

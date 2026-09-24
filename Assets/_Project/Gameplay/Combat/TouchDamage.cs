@@ -35,8 +35,9 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         private Dictionary<IDamageable, ContactInfo> _targets = new Dictionary<IDamageable, ContactInfo>();
+        private readonly List<IDamageable> _targetKeysSnapshot = new List<IDamageable>();
 
-        private void OnEnable() { _targets.Clear(); }
+        private void OnEnable() { _targets.Clear(); _targetKeysSnapshot.Clear(); }
 
         private void OnCollisionEnter(Collision collision)
         {
@@ -57,7 +58,7 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
-        private void OnDisable() { _targets.Clear(); } 
+        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); } 
         
         private void OnCollisionExit(Collision collision)
         {
@@ -82,17 +83,27 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (_targets.Count == 0) return;
 
-            List<IDamageable> deadTargets = null;
-
-            foreach (var kvp in _targets)
+            // Learning Comment:
+            // Dictionary ko direct foreach mein iterate karte waqt agar TakeDamage() ke natijay mein
+            // target mar jaye ya OnTriggerExit/ClearContact call ho jaye,
+            // toh "InvalidOperationException: Collection was modified" crash trigger hota hai.
+            // Is liye pehle keys ka pre-allocated snapshot banate hain aur safe indexed for-loop chalate hain.
+            _targetKeysSnapshot.Clear();
+            foreach (var key in _targets.Keys)
             {
-                var target = kvp.Key;
-                var info = kvp.Value;
+                _targetKeysSnapshot.Add(key);
+            }
+
+            for (int i = 0; i < _targetKeysSnapshot.Count; i++)
+            {
+                var target = _targetKeysSnapshot[i];
+
+                // Agar pichle kisi target ke damage callback mein ye target remove ho chuka ho toh safe skip karein
+                if (!_targets.TryGetValue(target, out var info)) continue;
 
                 if (target == null || target.Equals(null) || info.TargetTransform == null)
                 {
-                    if (deadTargets == null) deadTargets = new List<IDamageable>();
-                    deadTargets.Add(target);
+                    _targets.Remove(target);
                     continue;
                 }
 
@@ -109,15 +120,11 @@ namespace SoulHunter.Gameplay.Combat
                         SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordDamage(SourceWeaponName, Mathf.RoundToInt(_damageAmount));
                     }
                     
-                    info.Timer = _damageInterval;
-                }
-            }
-
-            if (deadTargets != null)
-            {
-                foreach (var dead in deadTargets)
-                {
-                    _targets.Remove(dead);
+                    // Learning Comment: TakeDamage() ke baad check karein ke target abhi bhi _targets mein hai ya OnTriggerExit se remove ho chuka hai
+                    if (_targets.TryGetValue(target, out var stillActiveInfo))
+                    {
+                        stillActiveInfo.Timer = _damageInterval;
+                    }
                 }
             }
         }

@@ -15,7 +15,7 @@ namespace SoulHunter.Gameplay.Combat
         public float DamageAmount = 10f;
         public float AttackCooldown = 1.5f;
 
-        private float _timer;
+        [System.NonSerialized] private float _timer;
         private DamageCaster _damageCaster;
 
         protected virtual void Awake()

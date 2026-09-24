@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7cb466918804554a8583fee0d91289d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _crossPrefab: {fileID: 8767656658600148067}
+  _crossPrefab: {fileID: 100102498769088332, guid: d06eb93709c624d43a49fde8575009db, type: 3}
   _cooldown: 3
   _speed: 12
   _returnTime: 1

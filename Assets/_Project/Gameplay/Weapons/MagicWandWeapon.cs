@@ -16,7 +16,12 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private float _projectileSpeed = 20f;
         [SerializeField] private int _damage = 10;
         private const float ShotInterval = 0.1f;
-        private float _timer;
+        // Learning Comment:
+        // Base class AutoAttackWeapon mein pehle se `_timer` field majood hai.
+        // Derived class mein same field name hone se Unity serialization conflict error deta hai:
+        // "The same field name is serialized multiple times in the class or its parent class: Base(MagicWandWeapon) _timer"
+        // Isliye isko `_cooldownTimer` rename kiya aur [System.NonSerialized] mark kiya.
+        [System.NonSerialized] private float _cooldownTimer;
         private float _shotTimer;
         private int _remainingShots;
         private PlayerStats _stats;
@@ -38,7 +43,7 @@ namespace SoulHunter.Gameplay.Weapons
             _releaseHandler = ReleaseProjectile;
         }
 
-        private void OnDisable() { _remainingShots = 0; _timer = 0f; _shotTimer = 0f; }
+        private void OnDisable() { _remainingShots = 0; _cooldownTimer = 0f; _shotTimer = 0f; }
         private void ReleaseProjectile(Projectile projectile) { _activeProjectiles.Remove(projectile); }
         private void OnDestroy()
         {
@@ -54,8 +59,8 @@ namespace SoulHunter.Gameplay.Weapons
             if (Time.deltaTime <= 0f) return;
             if (_remainingShots == 0)
             {
-                _timer -= Time.deltaTime;
-                if (_timer > 0f || FindClosestEnemy() == null || _projectilePrefab == null) return;
+                _cooldownTimer -= Time.deltaTime;
+                if (_cooldownTimer > 0f || FindClosestEnemy() == null || _projectilePrefab == null) return;
                 _remainingShots = ShotCount;
                 _shotTimer = 0f;
             }
@@ -70,7 +75,7 @@ namespace SoulHunter.Gameplay.Weapons
                 emittedThisFrame++;
                 _shotTimer += ShotInterval;
             }
-            if (_remainingShots == 0) _timer = EffectiveCooldown;
+            if (_remainingShots == 0) _cooldownTimer = EffectiveCooldown;
         }
 
         private void FireWand()

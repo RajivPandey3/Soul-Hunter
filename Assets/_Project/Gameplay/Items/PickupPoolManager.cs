@@ -12,9 +12,27 @@ namespace SoulHunter.Gameplay.Pickups
     public class AutoReturnToPool : MonoBehaviour
     {
         public Stack<GameObject> TargetPool;
+        private bool _isReturned = false;
+
+        public void ResetForReuse()
+        {
+            _isReturned = false;
+        }
+
+        private void OnEnable()
+        {
+            _isReturned = false;
+        }
+
         private void OnDisable()
         {
-            if (TargetPool != null) TargetPool.Push(gameObject);
+            // Learning Comment:
+            // Guard against duplicate stack entries when SetActive(false) is called multiple times.
+            if (TargetPool != null && !_isReturned)
+            {
+                _isReturned = true;
+                TargetPool.Push(gameObject);
+            }
         }
     }
 

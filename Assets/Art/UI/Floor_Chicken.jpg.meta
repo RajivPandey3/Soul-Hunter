@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Floor_Chicken_0: -8608535540412278260
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

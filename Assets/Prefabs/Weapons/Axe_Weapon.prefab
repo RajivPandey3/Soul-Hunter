@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a58a71ad05a66c4687c3b05acb887fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _axePrefab: {fileID: 5529983867789336766}
+  _axePrefab: {fileID: 3969582324266140904, guid: d8d4d7b54429e2443be0c86244914fb6, type: 3}
   _cooldown: 2
   _upwardForce: 15
   _forwardForce: 5

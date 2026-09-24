@@ -464,7 +464,10 @@ namespace SoulHunter.Tests.EditMode
         private GameObject SpawnWaterZone(SantaWaterWeapon weapon, Vector3 position)
         {
             var beforeObjects = new HashSet<GameObject>();
-            foreach (var td in Object.FindObjectsOfType<TouchDamage>())
+            // Learning Comment:
+            // Unity 2023+ / Unity 6 mein FindObjectsOfType obsolete ho chuka hai.
+            // Fast execution aur sorting overhead se bachne ke liye FindObjectsByType(FindObjectsSortMode.None) use karte hain.
+            foreach (var td in Object.FindObjectsByType<TouchDamage>(FindObjectsSortMode.None))
             {
                 if (td != null) beforeObjects.Add(td.gameObject);
             }
@@ -474,7 +477,7 @@ namespace SoulHunter.Tests.EditMode
             spawnMethod?.Invoke(weapon, new object[] { position });
 
             GameObject spawnedZone = null;
-            foreach (var td in Object.FindObjectsOfType<TouchDamage>())
+            foreach (var td in Object.FindObjectsByType<TouchDamage>(FindObjectsSortMode.None))
             {
                 if (td != null && !beforeObjects.Contains(td.gameObject))
                 {

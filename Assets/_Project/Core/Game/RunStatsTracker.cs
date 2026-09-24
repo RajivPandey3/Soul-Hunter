@@ -21,10 +21,38 @@ namespace SoulHunter.Gameplay.Core
         // Weapon Name -> Total Damage
         private Dictionary<string, int> _weaponDamageStats = new Dictionary<string, int>();
 
+        /// <summary>
+        /// Learning Comment:
+        /// Har naye match mein pichle run ke kills aur weapon damage stats ko clear karna zaroori hai.
+        /// </summary>
+        public void ResetStats()
+        {
+            TotalKills = 0;
+            TotalGoldCollected = 0;
+            _weaponDamageStats.Clear();
+            OnKillsChanged?.Invoke(0);
+        }
+
         private void Awake()
         {
-            if (Instance == null) Instance = this;
-            else Destroy(gameObject);
+            if (Instance == null)
+            {
+                Instance = this;
+                ResetStats();
+            }
+            else if (Instance != this)
+            {
+                Instance.ResetStats();
+                Destroy(gameObject);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         public void AddKill()

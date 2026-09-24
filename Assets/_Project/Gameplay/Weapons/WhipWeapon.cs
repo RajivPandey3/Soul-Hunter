@@ -94,8 +94,11 @@ namespace SoulHunter.Gameplay.Weapons
                 }
             }
 
-            // (Future: Yahan par hum ek shadow scythe (whip) ka visual effect (VFX) dikhayenge)
-            Debug.Log($"[Shadow Scythe] Slashed {hitsCount} enemies!");
+            // Learning Comment: Har frame empty swing log karne se console choke ho jata hai.
+            if (hitsCount > 0)
+            {
+                Debug.Log($"[Shadow Scythe] Slashed {hitsCount} enemies!");
+            }
         }
 
         private void OnDrawGizmosSelected()

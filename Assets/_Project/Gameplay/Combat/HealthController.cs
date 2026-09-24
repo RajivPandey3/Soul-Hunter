@@ -164,7 +164,13 @@ namespace SoulHunter.Gameplay.Combat
         private void Die()
         {
             OnDied?.Invoke();
-            Debug.Log($"[HealthController] {gameObject.name} has died.");
+            // Learning Comment:
+            // Generic cloned enemies (horde) ke marne par Debug.Log karne se Unity console freeze ho jata tha.
+            // Ab sirf unique entities (jaise Player ya Boss) ka death log hoga.
+            if (!gameObject.name.Contains("(Clone)"))
+            {
+                Debug.Log($"[HealthController] {gameObject.name} has died.");
+            }
             
             // Basic death logic (Disable object)
             if (_keepAliveAfterDeath)

@@ -29,6 +29,9 @@ namespace SoulHunter.Gameplay.UI
             }
         }
 
+        private const int MAX_POPUPS = 25;
+        private int _recycleIndex = 0;
+
         public void ShowDamage(int amount, Vector3 position)
         {
             if (_damagePopupPrefab == null) return;
@@ -38,18 +41,28 @@ namespace SoulHunter.Gameplay.UI
             // Pool mein se koi chhipa hua popup dhoondho
             for (int i = 0; i < _popupPool.Count; i++)
             {
-                if (!_popupPool[i].activeInHierarchy)
+                if (_popupPool[i] != null && !_popupPool[i].activeInHierarchy)
                 {
                     popupToSpawn = _popupPool[i];
                     break;
                 }
             }
 
-            // Agar koi nahi mila toh naya banao
+            // Learning Comment:
+            // Capped UI Pool: Agar 50-100 dushman ek sath marein toh 100 naye UI Canvas/TMP
+            // allocate karne ke bajaye hum max 25 popups recycle karte hain taake frame drops na hon.
             if (popupToSpawn == null)
             {
-                popupToSpawn = Instantiate(_damagePopupPrefab);
-                _popupPool.Add(popupToSpawn);
+                if (_popupPool.Count < MAX_POPUPS)
+                {
+                    popupToSpawn = Instantiate(_damagePopupPrefab);
+                    _popupPool.Add(popupToSpawn);
+                }
+                else
+                {
+                    _recycleIndex = (_recycleIndex + 1) % _popupPool.Count;
+                    popupToSpawn = _popupPool[_recycleIndex];
+                }
             }
 
             // Popup ko chalu karo

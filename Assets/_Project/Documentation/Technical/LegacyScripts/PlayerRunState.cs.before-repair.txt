@@ -26,22 +26,28 @@ namespace SoulHunter.Gameplay.Player
         }
 
         public void UpdatePhysics(ref SoulHunter.Gameplay.Physics.EnvironmentData envData)
-        {
-            Vector3 movement = new Vector3(_controller.CurrentMoveInput.x, 0, _controller.CurrentMoveInput.y) * _speed;
-            
-            // Adjust movement based on ground slope if grounded
-            if (envData.IsGrounded && envData.GroundAngle > 5f)
-            {
-                movement = Vector3.ProjectOnPlane(movement, envData.GroundNormal);
-            }
-            
-            _controller.Rigidbody.linearVelocity = new Vector3(movement.x, _controller.Rigidbody.linearVelocity.y, movement.z);
-            
-            if (_controller.Animator != null)
-            {
-                _controller.Animator.UpdateSpeed(movement.magnitude);
-            }
-        }
+{
+    Vector3 movement = _controller.GetCameraRelativeMovement(
+        _controller.CurrentMoveInput
+    ) * _speed;
+
+    // Adjust movement based on ground slope if grounded
+    if (envData.IsGrounded && envData.GroundAngle > 5f)
+    {
+        movement = Vector3.ProjectOnPlane(movement, envData.GroundNormal);
+    }
+
+    _controller.Rigidbody.linearVelocity = new Vector3(
+        movement.x,
+        _controller.Rigidbody.linearVelocity.y,
+        movement.z
+    );
+
+    if (_controller.Animator != null)
+    {
+        _controller.Animator.UpdateSpeed(movement.magnitude);
+    }
+}
 
         public void Exit()
         {

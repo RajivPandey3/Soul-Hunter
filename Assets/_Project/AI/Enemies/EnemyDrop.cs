@@ -36,19 +36,18 @@ namespace SoulHunter.Gameplay.AI
 
         private void HandleDeath()
         {
-            var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
-            var stats = player != null ? player.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>() : null;
+            // Learning Comment:
+            // Performance Optimization: Dushmano ki bheed (horde) marne par FindFirstObjectByType
+            // call karne se game lag/freeze ho jati thi. Ab hum O(1) PlayerController.Instance use karte hain.
+            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+            var stats = player != null ? player.Stats : null;
             float luck = stats != null ? Mathf.Max(1f, stats.Luck) : 1f;
 
             var vfxManager = SoulHunter.Gameplay.VFX.VFXPoolManager.Instance;
-            if (vfxManager == null)
+            if (vfxManager != null)
             {
-                // Kuch showcase/level scenes mein VFX_Systems object nahi hota.
-                // Blood effect kabhi silently skip na ho, isliye safe runtime fallback.
-                var vfxRoot = new GameObject("VFX_Systems_Runtime");
-                vfxManager = vfxRoot.AddComponent<SoulHunter.Gameplay.VFX.VFXPoolManager>();
+                vfxManager.PlayEnemyDeathVFX(transform.position);
             }
-            vfxManager.PlayEnemyDeathVFX(transform.position);
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {

@@ -22,7 +22,7 @@ namespace SoulHunter.Gameplay.UI
         }
         private void UpdateTime(int seconds)
         {
-            if (_timeText != null) _timeText.text = $"{seconds / 60:00}:{seconds % 60:00}";
+            if (_timeText != null) _timeText.text = $"Time: {seconds / 60:00}:{seconds % 60:00}";
         }
     }
 }

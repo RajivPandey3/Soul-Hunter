@@ -21,16 +21,59 @@ namespace SoulHunter.Gameplay.VFX
         private List<GameObject> _enemyDeathPool = new List<GameObject>();
         private List<GameObject> _chestOpenPool = new List<GameObject>();
 
+        private static Material _sharedParticleMaterial;
+        private const int MAX_POOL_CAPACITY = 25;
+        private int _reuseIndex = 0;
+
+        private static Material GetSharedMaterial()
+        {
+            if (_sharedParticleMaterial == null)
+            {
+                var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") 
+                             ?? Shader.Find("Particles/Standard Unlit") 
+                             ?? Shader.Find("Sprites/Default");
+                if (shader != null)
+                {
+                    _sharedParticleMaterial = new Material(shader) { hideFlags = HideFlags.DontSave };
+                }
+            }
+            return _sharedParticleMaterial;
+        }
+
         private void Awake()
         {
-            if (Instance == null) Instance = this;
-            else Destroy(gameObject);
+            if (Instance == null)
+            {
+                Instance = this;
+                // Prewarm a small pool to avoid frame spikes during intense combat
+                PrewarmPool(ref _enemyDeathPool, EnemyDeathVFXPrefab, Color.red, 15, 10);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
+        private void PrewarmPool(ref List<GameObject> pool, GameObject prefab, Color fallbackColor, short burstCount, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                GameObject obj = CreateNewVFX(prefab, fallbackColor, burstCount);
+                obj.SetActive(false);
+                pool.Add(obj);
+            }
         }
 
         public void PlayEnemyDeathVFX(Vector3 position)
         {
             // Khoon (Red) ka effect
             GameObject vfx = GetOrCreateVFX(ref _enemyDeathPool, EnemyDeathVFXPrefab, position, Color.red, 15);
+            if (vfx == null) return;
             vfx.SetActive(true);
             var particles = vfx.GetComponentInChildren<ParticleSystem>();
             if (particles != null) { particles.Clear(true); particles.Play(true); }
@@ -40,40 +83,70 @@ namespace SoulHunter.Gameplay.VFX
         {
             // Sunehri chamak (Yellow) ka effect
             GameObject vfx = GetOrCreateVFX(ref _chestOpenPool, ChestOpenVFXPrefab, position, Color.yellow, 50);
+            if (vfx == null) return;
             vfx.SetActive(true);
             var particles = vfx.GetComponentInChildren<ParticleSystem>();
             if (particles != null) { particles.Clear(true); particles.Play(true); }
         }
 
+        /// <summary>
+        /// Learning Comment:
+        /// Memory-Safe Pooling:
+        /// 1. Inactive object reuse karta hai.
+        /// 2. Agar koi inactive na ho aur capacity bachi ho toh naya object banata hai.
+        /// 3. Agar pool full ho (25+) toh sabse purane ko foran recycle karta hai taake
+        /// 80+ enemies marne par bhi memory spike na ho aur game kabbhi crash/hang na kare.
+        /// </summary>
         private GameObject GetOrCreateVFX(ref List<GameObject> pool, GameObject prefab, Vector3 position, Color fallbackColor, short burstCount)
         {
             for (int i = 0; i < pool.Count; i++)
             {
-                if (!pool[i].activeInHierarchy)
+                if (pool[i] != null && !pool[i].activeInHierarchy)
                 {
                     pool[i].transform.position = position;
                     return pool[i];
                 }
             }
 
+            // Pool capacity limit check
+            if (pool.Count < MAX_POOL_CAPACITY)
+            {
+                GameObject newObj = CreateNewVFX(prefab, fallbackColor, burstCount);
+                newObj.transform.position = position;
+                pool.Add(newObj);
+                return newObj;
+            }
+
+            // Pool full hone par oldest active object ko reuse karein
+            _reuseIndex = (_reuseIndex + 1) % pool.Count;
+            GameObject recycled = pool[_reuseIndex];
+            if (recycled != null)
+            {
+                recycled.transform.position = position;
+                var ps = recycled.GetComponentInChildren<ParticleSystem>();
+                if (ps != null) ps.Clear(true);
+                return recycled;
+            }
+
+            return null;
+        }
+
+        private GameObject CreateNewVFX(GameObject prefab, Color fallbackColor, short burstCount)
+        {
             GameObject newObj = null;
             if (prefab != null)
             {
-                newObj = Instantiate(prefab, position, Quaternion.identity, transform);
+                newObj = Instantiate(prefab, transform.position, Quaternion.identity, transform);
                 if (newObj.GetComponent<VFXAutoDisable>() == null)
                     newObj.AddComponent<VFXAutoDisable>();
             }
             else
             {
-                // Jadu! Bina asset ke Code se Particle System banana!
                 newObj = new GameObject("Procedural_Particle_VFX");
-                newObj.transform.position = position;
+                newObj.transform.position = transform.position;
                 newObj.transform.SetParent(transform);
-                
+
                 var ps = newObj.AddComponent<ParticleSystem>();
-                // Unity 6 may start a newly-added ParticleSystem before its
-                // serialized module values are configured. Stop and clear it
-                // first so changing duration/lifetime cannot assert at runtime.
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 var main = ps.main;
                 main.duration = 0.5f;
@@ -83,23 +156,26 @@ namespace SoulHunter.Gameplay.VFX
                 main.startColor = fallbackColor;
                 main.loop = false;
                 main.playOnAwake = false;
-                
+
                 var emission = ps.emission;
                 emission.rateOverTime = 0;
-                emission.SetBursts(new ParticleSystem.Burst[]{ new ParticleSystem.Burst(0f, burstCount) });
-                
+                emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, burstCount) });
+
                 var shape = ps.shape;
                 shape.shapeType = ParticleSystemShapeType.Sphere;
                 shape.radius = 0.5f;
-                
-                // Ek renderer lagana zaroori hai default material ke sath
+
+                // Shared Material use karein taaki lakhoon unmanaged material copies na banein
                 var renderer = newObj.GetComponent<ParticleSystemRenderer>();
-                renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
-                
+                var sharedMat = GetSharedMaterial();
+                if (sharedMat != null)
+                {
+                    renderer.sharedMaterial = sharedMat;
+                }
+
                 newObj.AddComponent<VFXAutoDisable>();
             }
 
-            pool.Add(newObj);
             return newObj;
         }
     }

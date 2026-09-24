@@ -42,8 +42,30 @@ namespace SoulHunter.Gameplay.Player
                 return _moveSpeed * (_stats != null ? _stats.MoveSpeedMultiplier : 1f) * _campaignMovementMultiplier;
             }
         }
+        public static PlayerController Instance { get; private set; }
+        public PlayerStats Stats => _stats != null ? _stats : (_stats = GetComponent<PlayerStats>());
+
         public Rigidbody Rigidbody { get; private set; }
-        public Vector2 CurrentMoveInput { get; private set; }
+        private Vector2 _eventBusInput;
+
+        /// <summary>
+        /// Learning Comment:
+        /// Robust Movement Input:
+        /// 1. Primary: EventBus se aane wala input (Clean Architecture).
+        /// 2. Fallback: Hardware polling (WASD/Arrows) agar game start par Game View focus na ho ya event drop ho jaye.
+        /// Is tarah player pehle frame se hi bina kisi rukawat ke move kar sakega.
+        /// </summary>
+        public Vector2 CurrentMoveInput
+        {
+            get
+            {
+                if (_eventBusInput.sqrMagnitude > 0.001f)
+                    return _eventBusInput;
+
+                return PollDirectInput();
+            }
+            private set => _eventBusInput = value;
+        }
         public SoulHunter.Gameplay.Animation.EntityAnimator Animator { get; private set; }
         public bool IsDashing { get; private set; }
 
@@ -91,6 +113,7 @@ namespace SoulHunter.Gameplay.Player
 
         private void Awake()
         {
+            Instance = this;
             Rigidbody = GetComponent<Rigidbody>();
             // Physics movement ko render frames ke beech smooth rakho.
             Rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
@@ -101,16 +124,30 @@ namespace SoulHunter.Gameplay.Player
 
         private void Start()
         {
+            // Learning Comment:
+            // 1. Unpause: Agar pichle session/menu se timeScale 0 reh gaya ho,
+            // to physics aur movement ko unfreeze karne ke liye timeScale reset karein.
+            if (Time.timeScale <= 0f)
+            {
+                Time.timeScale = 1f;
+            }
+
             var infiniteMap = FindFirstObjectByType<SoulHunter.Gameplay.Environment.InfiniteMap>();
             if (infiniteMap != null)
             {
                 infiniteMap.SetPlayer(transform);
             }
 
+            // Learning Comment:
+            // 2. Standalone Editor Fallback:
+            // Agar developer ne Bootstrap scene ke bajaye seedha Gameplay scene play kiya ho,
+            // to services auto-bootstrap ho jayein taaki controller crash na kare.
             if (GameServices.Instance == null)
             {
-                Debug.LogError("[PlayerController] GameServices.Instance is NULL! The Bootstrapper must run first.");
-                return;
+                Debug.LogWarning("[PlayerController] GameServices.Instance was NULL! Auto-bootstrapping fallback services for standalone play.");
+                var services = new GameServices();
+                var installer = new SoulHunter.Core.Bootstrap.BootstrapInstaller(services);
+                installer.Install();
             }
 
             LoadVisualModel();
@@ -120,6 +157,7 @@ namespace SoulHunter.Gameplay.Player
             if (_eventBus == null)
             {
                 Debug.LogError("[PlayerController] EventBus is NULL in GameServices!");
+                ChangeState(new PlayerIdleState(this));
                 return;
             }
 
@@ -160,6 +198,8 @@ namespace SoulHunter.Gameplay.Player
 
         private void OnDestroy()
         {
+            if (Instance == this) Instance = null;
+
             if (_eventBus != null)
             {
                 if (_onMoveEventHandler != null) _eventBus.Unsubscribe(_onMoveEventHandler);
@@ -278,6 +318,36 @@ namespace SoulHunter.Gameplay.Player
             _currentState?.Exit();
             _currentState = newState;
             _currentState?.Enter();
+        }
+
+        /// <summary>
+        /// Learning Comment:
+        /// Hardware Direct Polling Fallback:
+        /// Game start hone par agar Game View focused na ho ya New Input System event drop ho jaye,
+        /// ye method seedha hardware keyboard/joystick se direct input le kar responsive movement deta hai.
+        /// </summary>
+        private Vector2 PollDirectInput()
+        {
+            Vector2 direct = Vector2.zero;
+
+            // Direct keyboard keys check (WASD & Arrows)
+            if (UnityEngine.Input.GetKey(KeyCode.W) || UnityEngine.Input.GetKey(KeyCode.UpArrow)) direct.y += 1f;
+            if (UnityEngine.Input.GetKey(KeyCode.S) || UnityEngine.Input.GetKey(KeyCode.DownArrow)) direct.y -= 1f;
+            if (UnityEngine.Input.GetKey(KeyCode.A) || UnityEngine.Input.GetKey(KeyCode.LeftArrow)) direct.x -= 1f;
+            if (UnityEngine.Input.GetKey(KeyCode.D) || UnityEngine.Input.GetKey(KeyCode.RightArrow)) direct.x += 1f;
+
+            // Joysticks / Axes fallback
+            if (direct.sqrMagnitude < 0.001f)
+            {
+                float h = UnityEngine.Input.GetAxisRaw("Horizontal");
+                float v = UnityEngine.Input.GetAxisRaw("Vertical");
+                if (Mathf.Abs(h) > 0.05f || Mathf.Abs(v) > 0.05f)
+                {
+                    direct = new Vector2(h, v);
+                }
+            }
+
+            return direct.sqrMagnitude > 1f ? direct.normalized : direct;
         }
 
         private void LoadVisualModel()
