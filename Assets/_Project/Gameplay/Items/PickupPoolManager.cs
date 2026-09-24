@@ -211,13 +211,17 @@ namespace SoulHunter.Gameplay.Pickups
         private void PrewarmPool(Stack<GameObject> pool, GameObject prefab, int count)
         {
             if (prefab == null || count <= 0) return;
-            while (pool.Count < count)
+            // Bounded, so a pool that fails to fill can never spin forever.
+            for (int missing = count - pool.Count; missing > 0; missing--)
             {
                 var instance = Instantiate(prefab, transform);
                 var autoReturn = instance.GetComponent<AutoReturnToPool>();
                 if (autoReturn == null) autoReturn = instance.AddComponent<AutoReturnToPool>();
                 autoReturn.TargetPool = pool;
-                instance.SetActive(false);
+                // Deactivating fires OnDisable, which returns the object to the pool.
+                // Copies of an inactive template (the gold coin) never fire it, so push them directly.
+                if (instance.activeSelf) instance.SetActive(false);
+                else pool.Push(instance);
             }
         }
     }

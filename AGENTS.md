@@ -141,7 +141,7 @@ Each level's Enemy, Elite and Boss gameplay prefab now has its own EnemyData ass
 
 Elites spawn from `Assets/Prefabs/Enemies/Gameplay/SH10_L01`–`L10_EliteGameplay.prefab`, built like the enemy gameplay prefabs with the elite model as the `SH10_Visual` child. `SH10_Lxx_Elite.prefab` stays a visual-only model used by the showcase scenes.
 
-The stat values are provisional balance numbers. `EnemyDataWiringTests` covers the wiring; treat it as unverified until those tests and a runtime run pass.
+The stat values are provisional balance numbers. `EnemyDataWiringTests` covers the wiring and passed (T) on 2026-09-24; elite and boss behaviour in play is still unverified (R).
 
 ### Bible prefab defect
 
@@ -173,6 +173,18 @@ JSON persistence exists, but robust general schema migration and corrupt-save re
 ### Documentation
 
 Some older status documents are stale or contradictory. Current owner decisions and verified evidence outrank stale status text.
+
+### Validation run 2026-09-24
+
+Commits `0beae7f`..`6f3f9c2` plus the pickup-pool fix were validated in an isolated workspace (`D:\SoulHunter-Validation\editmode-20260924-134853\`, which keeps the results XML and logs), with `Library` copied from the canonical project:
+
+- `C` compile: 0 errors (the pixel-perfect package did not fail with the copied `Library`);
+- `T` EditMode: 182/182 passed;
+- `R` PlayMode: 5/5 passed (bootstrap, chest flow, game over/restart, time freeze, Wandering Merchant), 0 exceptions logged.
+
+The first PlayMode run crashed Unity: the gold coin pool's prewarm loop never filled because copies of its inactive template never fire `OnDisable`. Fixed in `PickupPoolManager.PrewarmPool` and covered by `PickupPoolPrewarmTests`.
+
+Still `UNKNOWN`: manual play of the new systems (level-up screen layout, elites, gold, evolutions, boss-advance), audio, `V`, `P` and `B`.
 
 ---
 
