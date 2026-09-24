@@ -42,6 +42,20 @@ namespace SoulHunter.Gameplay.Core
 
         public bool IsBanished(UpgradeData.UpgradeType type) => _banishedTypes.Contains(type);
 
+        public const int BaseChoiceCount = 3;
+        private int _currentChoiceCount = BaseChoiceCount;
+
+        /// <summary>
+        /// VS rule: the chance of a 4th level-up choice is 1 - 1/Luck (0% at Luck 1, 50% at Luck 2).
+        /// <paramref name="roll01"/> is a uniform random value in [0, 1).
+        /// </summary>
+        public static int ChoiceCountForLuck(float luck, float roll01)
+        {
+            if (luck <= 1f) return BaseChoiceCount;
+            float fourthChance = 1f - 1f / luck;
+            return roll01 < fourthChance ? BaseChoiceCount + 1 : BaseChoiceCount;
+        }
+
         private void Awake()
         {
             RerollsLeft = Mathf.Max(0, _startingRerolls);
@@ -123,9 +137,13 @@ namespace SoulHunter.Gameplay.Core
     Debug.Log($"[LevelUpManager] >>> Preparing level-up UI | pending={_pendingLevelUps}");
 
     // IMPORTANT: generate choices BEFORE pausing.
-    Debug.Log("[LevelUpManager] >>> Calling GetRandomValidUpgrades(3)");
+    // VS rule: Luck gives a chance of a 4th choice, rolled once per level-up.
+    var stats = _playerController != null ? _playerController.Stats : null;
+    _currentChoiceCount = ChoiceCountForLuck(stats != null ? stats.Luck : 1f, Random.value);
 
-    List<UpgradeData> choices = GetRandomValidUpgrades(3);
+    Debug.Log($"[LevelUpManager] >>> Calling GetRandomValidUpgrades({_currentChoiceCount})");
+
+    List<UpgradeData> choices = GetRandomValidUpgrades(_currentChoiceCount);
 
     Debug.Log($"[LevelUpManager] <<< GetRandomValidUpgrades returned | count={choices.Count}");
 
@@ -188,7 +206,7 @@ namespace SoulHunter.Gameplay.Core
         {
             if (!_isLevelUpActive || RerollsLeft <= 0) return false;
             RerollsLeft--;
-            PresentChoicesOrPayOut(GetRandomValidUpgrades(3));
+            PresentChoicesOrPayOut(GetRandomValidUpgrades(_currentChoiceCount));
             return true;
         }
 
@@ -212,7 +230,7 @@ namespace SoulHunter.Gameplay.Core
             BanishesLeft--;
             _banishedTypes.Add(upgrade.Type);
             Debug.Log($"[LevelUpManager] Banished {upgrade.Type} for this run.");
-            PresentChoicesOrPayOut(GetRandomValidUpgrades(3));
+            PresentChoicesOrPayOut(GetRandomValidUpgrades(_currentChoiceCount));
             return true;
         }
 

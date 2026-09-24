@@ -87,6 +87,7 @@ namespace SoulHunter.Gameplay.UI
     _currentChoices = choices;
     _banishMode = false;
     EnsureActionButtons();
+    EnsureCardCount(choices.Count);
 
     Debug.Log($"[LevelUpUI] Panel={_levelUpPanel} | PanelActive={(_levelUpPanel != null && _levelUpPanel.activeSelf)}");
     Debug.Log($"[LevelUpUI] Buttons array null={_upgradeButtons == null} | count={(_upgradeButtons != null ? _upgradeButtons.Length : -1)}");
@@ -287,6 +288,41 @@ namespace SoulHunter.Gameplay.UI
             if (_rerollButton == null) _rerollButton = FindActionButton(bar, "Reroll_Button");
             if (_skipButton == null) _skipButton = FindActionButton(bar, "Skip_Button");
             if (_banishButton == null) _banishButton = FindActionButton(bar, "Banish_Button");
+        }
+
+        /// <summary>
+        /// Luck can deal a 4th choice, but the panel only ships 3 cards. Clone the last card for any
+        /// missing ones (reusing an existing clone by name, so a second LevelUpUI shares it).
+        /// Extra cards are hidden on rounds with fewer choices by the normal card loop.
+        /// </summary>
+        private void EnsureCardCount(int count)
+        {
+            if (_upgradeButtons == null || _upgradeButtons.Length >= count) return;
+
+            Button template = null;
+            for (int i = _upgradeButtons.Length - 1; i >= 0 && template == null; i--)
+                template = _upgradeButtons[i];
+            if (template == null) return;
+
+            Transform container = template.transform.parent;
+            var cards = new List<Button>(_upgradeButtons);
+            for (int i = cards.Count; i < count; i++)
+            {
+                string cardName = $"Upgrade_Button_{i}";
+                Transform existing = container.Find(cardName);
+                Button card = existing != null ? existing.GetComponent<Button>() : null;
+                if (card == null)
+                {
+                    card = Instantiate(template, container, false);
+                    card.name = cardName;
+                    card.onClick = new Button.ButtonClickedEvent();
+                    // Keep the new card with the others, above the action row.
+                    card.transform.SetSiblingIndex(template.transform.GetSiblingIndex() + 1);
+                }
+                cards.Add(card);
+                template = card;
+            }
+            _upgradeButtons = cards.ToArray();
         }
 
         private static void CreateActionButton(Button template, Transform parent, string name)

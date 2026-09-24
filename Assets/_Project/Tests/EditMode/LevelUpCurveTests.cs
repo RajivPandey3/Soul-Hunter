@@ -66,6 +66,18 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(experience.CurrentXP, Is.EqualTo(0));
         }
 
+        [TestCase(1.0f, 0.0f, 3)]    // Luck 1: never a 4th choice
+        [TestCase(0.5f, 0.0f, 3)]    // Luck below 1 never removes a choice
+        [TestCase(1.1f, 0.09f, 4)]   // 1 - 1/1.1 = ~9.1%
+        [TestCase(1.1f, 0.10f, 3)]
+        [TestCase(2.0f, 0.49f, 4)]   // 1 - 1/2 = 50%
+        [TestCase(2.0f, 0.50f, 3)]
+        public void ChoiceCountForLuck_GivesFourthChoiceAtOneMinusInverseLuck(float luck, float roll, int expected)
+        {
+            // Learning Comment: VS rule: 4th choice ka chance 1 - 1/Luck hai.
+            Assert.That(LevelUpManager.ChoiceCountForLuck(luck, roll), Is.EqualTo(expected));
+        }
+
         private UpgradeData Upgrade(UpgradeData.UpgradeType type)
         {
             var upgrade = ScriptableObject.CreateInstance<UpgradeData>();
