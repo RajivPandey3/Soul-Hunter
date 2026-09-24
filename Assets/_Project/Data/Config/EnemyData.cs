@@ -18,7 +18,11 @@ namespace SoulHunter.Gameplay.Data
         public int DamageToPlayer = 5;
         public float DropChanceGem = 95f;
         public float DropChanceChicken = 5f;
-        
+        [Tooltip("% chance (before Luck) to drop a gold coin on death")]
+        public float DropChanceGold = 2f;
+        [Tooltip("Gold in each dropped coin, before Greed")]
+        public int GoldValue = 1;
+
         [Tooltip("Agar sach hai, toh ye dushman (Boss) marne par Chest (Khazana) giraega")]
         public bool DropsChest = false;
     }

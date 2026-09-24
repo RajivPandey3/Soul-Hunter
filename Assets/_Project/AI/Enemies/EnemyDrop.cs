@@ -16,6 +16,9 @@ namespace SoulHunter.Gameplay.AI
         [Tooltip("Chicken drop hone ka chance (0 se 100)")]
         public float ChickenDropChance = 5f;
         public bool DropsChest = false;
+        [Tooltip("Gold coin drop hone ka chance (0 se 100), Luck se badhta hai")]
+        public float GoldDropChance = 2f;
+        public int GoldValue = 1;
 
         private HealthController _health;
 
@@ -85,6 +88,18 @@ namespace SoulHunter.Gameplay.AI
                 {
                     pickupPool.SpawnTimeFreeze(transform.position);
                     Debug.Log("[EnemyDrop] Rare Drop: Time Freeze (Orologion)!");
+                }
+            }
+
+            // Gold coin (independent roll, Luck se badhta hai; value par Greed pickup ke waqt lagta hai)
+            float goldRoll = Random.Range(0f, 100f);
+            if (goldRoll <= Mathf.Min(100f, GoldDropChance * luck))
+            {
+                var pickupPool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+                if (pickupPool != null)
+                {
+                    // Nudge the coin aside so it does not sit exactly on the gem.
+                    pickupPool.SpawnGold(transform.position + new Vector3(0.6f, 0f, 0f), GoldValue);
                 }
             }
 

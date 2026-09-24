@@ -45,6 +45,8 @@ namespace SoulHunter.Gameplay.Pickups
         [SerializeField] private GameObject _chestPrefab;
         [SerializeField] private GameObject _magnetPrefab;
         [SerializeField] private GameObject _timeFreezePrefab;
+        [Tooltip("Coin model; GoldPickup and a trigger collider are added at runtime if missing")]
+        [SerializeField] private GameObject _goldCoinPrefab;
         [SerializeField, Min(0)] private int _prewarmPerPickupType = 32;
 
         private Stack<GameObject> _gemPool = new Stack<GameObject>();
@@ -52,6 +54,7 @@ namespace SoulHunter.Gameplay.Pickups
         private Stack<GameObject> _chestPool = new Stack<GameObject>();
         private Stack<GameObject> _magnetPool = new Stack<GameObject>();
         private Stack<GameObject> _timeFreezePool = new Stack<GameObject>();
+        private Stack<GameObject> _goldPool = new Stack<GameObject>();
 
         [SerializeField] private SoulHunter.Gameplay.Core.ChestLogicController _chestLogicController;
         [SerializeField] private SoulHunter.Gameplay.UI.ChestUI _chestUI;
@@ -73,6 +76,8 @@ namespace SoulHunter.Gameplay.Pickups
             if (_timeFreezePrefab == null)
                 _timeFreezePrefab = CreateFallbackPickup<TimeFreezePickup>("Orologion_Pickup_Fallback", Color.blue);
 
+            _goldCoinPrefab = PrepareGoldTemplate(_goldCoinPrefab);
+
             // Prewarm the common reward path so the first enemy wave does not
             // trigger a burst of Instantiate/GC work on low-power devices.
             PrewarmPool(_gemPool, _xpGemPrefab, _prewarmPerPickupType);
@@ -80,6 +85,7 @@ namespace SoulHunter.Gameplay.Pickups
             PrewarmPool(_chestPool, _chestPrefab, Mathf.Min(4, _prewarmPerPickupType));
             PrewarmPool(_magnetPool, _magnetPrefab, Mathf.Min(4, _prewarmPerPickupType));
             PrewarmPool(_timeFreezePool, _timeFreezePrefab, Mathf.Min(4, _prewarmPerPickupType));
+            PrewarmPool(_goldPool, _goldCoinPrefab, Mathf.Min(8, _prewarmPerPickupType));
         }
 
         public void SpawnGem(Vector3 position)
@@ -107,6 +113,45 @@ namespace SoulHunter.Gameplay.Pickups
             SpawnFromPool(_timeFreezePool, _timeFreezePrefab, position);
         }
 
+        public void SpawnGold(Vector3 position, int value)
+        {
+            var coin = SpawnFromPool(_goldPool, _goldCoinPrefab, position);
+            var gold = coin != null ? coin.GetComponent<GoldPickup>() : null;
+            if (gold != null) gold.Value = value;
+        }
+
+        /// <summary>
+        /// The coin prefab is a visual model. Build an inactive runtime template with a trigger
+        /// collider and GoldPickup instead of modifying the prefab asset.
+        /// </summary>
+        private GameObject PrepareGoldTemplate(GameObject coinPrefab)
+        {
+            if (coinPrefab != null && coinPrefab.GetComponent<GoldPickup>() != null) return coinPrefab;
+
+            GameObject template;
+            if (coinPrefab != null)
+            {
+                template = Instantiate(coinPrefab, transform);
+                template.name = coinPrefab.name + "_Pickup";
+            }
+            else
+            {
+                template = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                template.name = "Gold_Pickup_Fallback";
+                template.transform.SetParent(transform);
+                template.transform.localScale = Vector3.one * 0.4f;
+                var renderer = template.GetComponent<Renderer>();
+                if (renderer != null) renderer.material.color = new Color(1f, 0.8f, 0.1f);
+            }
+            template.SetActive(false);
+
+            var collider = template.GetComponent<Collider>();
+            if (collider == null) collider = template.AddComponent<SphereCollider>();
+            collider.isTrigger = true;
+            template.AddComponent<GoldPickup>();
+            return template;
+        }
+
         private GameObject CreateFallbackPickup<T>(string objectName, Color color) where T : Pickup
         {
             var fallback = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -121,9 +166,9 @@ namespace SoulHunter.Gameplay.Pickups
             return fallback;
         }
 
-        private void SpawnFromPool(Stack<GameObject> pool, GameObject prefab, Vector3 position)
+        private GameObject SpawnFromPool(Stack<GameObject> pool, GameObject prefab, Vector3 position)
         {
-            if (prefab == null) return;
+            if (prefab == null) return null;
 
             GameObject objToSpawn = null;
             if (pool.Count > 0)
@@ -160,6 +205,7 @@ namespace SoulHunter.Gameplay.Pickups
 
             var pickup = objToSpawn.GetComponent<Pickup>();
             if (pickup != null) pickup.ResetPickup();
+            return objToSpawn;
         }
 
         private void PrewarmPool(Stack<GameObject> pool, GameObject prefab, int count)

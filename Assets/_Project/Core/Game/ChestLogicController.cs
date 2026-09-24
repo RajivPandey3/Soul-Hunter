@@ -1,6 +1,5 @@
 using UnityEngine;
 using SoulHunter.Gameplay.Combat;
-using SoulHunter.Core.Services;
 using System.Collections.Generic;
 using System.Text;
 
@@ -82,12 +81,13 @@ namespace SoulHunter.Gameplay.Core
                 return message.ToString();
             }
 
-            // 3. Agar aur kuch upgrade karne ko nahi hai, toh Rich ban jao (Gold)
-            if (GameServices.Instance != null && GameServices.Instance.TryGet<EconomyService>(out var economy))
+            // 3. Agar aur kuch upgrade karne ko nahi hai, toh Rich ban jao (Gold, Greed ke saath)
+            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+            int gold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(GoldWhenEmpty, player != null ? player.Stats : null);
+            if (gold > 0)
             {
-                economy.AddGold(GoldWhenEmpty);
-                Debug.Log($"[ChestLogicController] Chest se {GoldWhenEmpty} Gold mile! Total: {economy.CurrentGold}");
-                return $"You Found a Chest!\n\n<color=yellow>Gold: +{GoldWhenEmpty}</color>";
+                Debug.Log($"[ChestLogicController] Chest se {gold} Gold mile!");
+                return $"You Found a Chest!\n\n<color=yellow>Gold: +{gold}</color>";
             }
 
             return "Chest Empty!";

@@ -253,9 +253,7 @@ namespace SoulHunter.Gameplay.Core
             var health = _playerController != null ? _playerController.GetComponent<HealthController>() : null;
             if (health != null) health.Heal(MaxedOutHealAmount);
 
-            var services = SoulHunter.Core.Services.GameServices.Instance;
-            if (services != null && services.TryGet<SoulHunter.Core.Services.EconomyService>(out var economy))
-                economy.AddGold(MaxedOutGoldAmount);
+            SoulHunter.Gameplay.Pickups.GoldRewards.Grant(MaxedOutGoldAmount, _playerController != null ? _playerController.Stats : null);
         }
 
         private void ResumeGameplay()

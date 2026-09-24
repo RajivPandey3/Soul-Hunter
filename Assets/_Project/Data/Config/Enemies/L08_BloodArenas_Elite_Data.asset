@@ -18,4 +18,6 @@ MonoBehaviour:
   DamageToPlayer: 18
   DropChanceGem: 95
   DropChanceChicken: 10
+  DropChanceGold: 25
+  GoldValue: 10
   DropsChest: 0
