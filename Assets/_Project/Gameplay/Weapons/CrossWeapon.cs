@@ -8,8 +8,9 @@ namespace SoulHunter.Gameplay.Weapons
     /// VS = SH Rule: Cross weapon (Boomerang) sabse nazdeek wale dushman ki taraf jata hai,
     /// thodi door aage jaa kar wapas ghoomta hai (boomerang effect), aur raste mein sabko katta hai.
     /// Is script ke do hisse hain: (1) Weapon Spawner, (2) Boomerang Projectile logic (jo aage chal kar hum projectile me shift kar sakte hain).
+    /// Level table (1-8): L2/L5/L8 damage, L3/L6 area + speed, L4/L7 ek aur cross.
     /// </summary>
-    public class CrossWeapon : MonoBehaviour
+    public class CrossWeapon : AutoAttackWeapon
     {
         [Tooltip("Cross ka 3D model/prefab jisme Rigidbody aur TouchDamage laga ho")]
         [SerializeField] private GameObject _crossPrefab;
@@ -25,12 +26,18 @@ namespace SoulHunter.Gameplay.Weapons
 
         [SerializeField] private int _damage = 20;
 
-        private float _timer;
-        private SoulHunter.Gameplay.Player.PlayerStats _stats;
+        public override int MaxLevel => 8;
+        /// <summary>Crosses per attack from levels (before the Amount stat).</summary>
+        public int LevelCrossCount { get; private set; } = 1;
+        /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
+        public float LevelAreaMultiplier { get; private set; } = 1f;
+        /// <summary>Speed bonus from levels (multiplies the projectile Speed stat).</summary>
+        public float LevelSpeedMultiplier { get; private set; } = 1f;
+
         private Collider[] _hits = new Collider[50];
         private int _enemyLayerMask;
 
-        private void Awake()
+        protected override void Awake()
         {
             // Learning Comment:
             // Infinite Recursion Safeguard:
@@ -42,20 +49,31 @@ namespace SoulHunter.Gameplay.Weapons
                 return;
             }
 
-            _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
+            base.Awake();
             _enemyLayerMask = LayerMask.GetMask("Enemy");
+            // Damage and cooldown live in the base fields so levelling and
+            // Shadow Kael's mirroring can scale them.
+            DamageAmount = _damage;
+            AttackCooldown = _cooldown;
         }
 
-        private void Update()
+        public override void LevelUp()
         {
-            _timer -= Time.deltaTime;
-            
-            if (_timer <= 0f)
+            if (CurrentLevel >= MaxLevel) return;
+            CurrentLevel++;
+            switch (CurrentLevel)
             {
-                ThrowCross();
-                float currentCooldown = _stats != null ? _cooldown * _stats.Cooldown : _cooldown;
-                _timer = currentCooldown;
+                case 3:
+                case 6: LevelAreaMultiplier += 0.1f; LevelSpeedMultiplier += 0.25f; break;
+                case 4:
+                case 7: LevelCrossCount++; break;
+                default: DamageAmount += 10f; break; // 2, 5, 8
             }
+        }
+
+        protected override void Attack()
+        {
+            ThrowCross();
         }
 
         private void ThrowCross()
@@ -96,7 +114,7 @@ namespace SoulHunter.Gameplay.Weapons
             }
 
             // VS rule: Amount throws extra crosses fanned around the aim direction.
-            int amount = 1 + (_stats != null ? Mathf.Max(0, _stats.Amount) : 0);
+            int amount = LevelCrossCount + ExtraAmount;
             for (int i = 0; i < amount; i++)
             {
                 float spread = amount > 1 ? Mathf.Lerp(-15f, 15f, i / (float)(amount - 1)) : 0f;
@@ -106,8 +124,8 @@ namespace SoulHunter.Gameplay.Weapons
 
         private void ThrowSingleCross(Vector3 direction)
         {
-            float area = _stats != null ? Mathf.Max(0.1f, _stats.Area) : 1f;
-            float speed = _stats != null ? Mathf.Max(0.1f, _stats.ProjectileSpeed) : 1f;
+            float area = AreaMultiplier * LevelAreaMultiplier;
+            float speed = SpeedMultiplier * LevelSpeedMultiplier;
 
             // Cross ko pool se nikalo
             GameObject crossObj = WeaponPoolManager.Instance.GetFromPool(_crossPrefab, transform.position, Quaternion.identity);
@@ -115,7 +133,7 @@ namespace SoulHunter.Gameplay.Weapons
             crossObj.transform.localScale = _crossPrefab.transform.localScale * area;
 
             // Cross par Damage set karo
-            int actualDamage = _stats != null ? Mathf.RoundToInt(_damage * _stats.Might) : _damage;
+            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
             
             var projectileDamage = crossObj.GetComponent<ProjectileDamage>();
             if (projectileDamage == null)

@@ -8,13 +8,14 @@ namespace SoulHunter.Gameplay.Weapons
     /// VS = SH Rule: Whip weapon hamesha horizontally attack karta hai (left ya right).
     /// Ye ek rectangular box area mein aaye hue sabhi dushmano ko ek saath damage deta hai.
     /// Isme koi goli (projectile) travel nahi karti, ye instant hit (OverlapBox) karta hai.
+    /// Level table (1-8): L2 dusri taraf ek aur whip, L3-L8 damage, L4/L6 area.
     /// </summary>
-    public class WhipWeapon : MonoBehaviour
+    public class WhipWeapon : AutoAttackWeapon
     {
         [Header("Soul Hunter Theme: Shadow Scythe (Whip)")]
         [Tooltip("Whip ka attack kitni door tak jayega")]
         [SerializeField] private float _attackRange = 4f;
-        
+
         [Tooltip("Whip ka hitbox kitna chouda (wide) hoga")]
         [SerializeField] private float _attackWidth = 1.5f;
 
@@ -41,36 +42,55 @@ namespace SoulHunter.Gameplay.Weapons
             set => _enemyLayer = value;
         }
 
-        private float _timer;
-        private Collider[] _hitsBuffer = new Collider[50]; // Limits piercing to 50 enemies per whip, zero GC allocation
-        private SoulHunter.Gameplay.Player.PlayerStats _stats;
+        public override int MaxLevel => 8;
+        /// <summary>Whips per attack from levels (before the Amount stat).</summary>
+        public int LevelWhipCount { get; private set; } = 1;
+        /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
+        public float LevelAreaMultiplier { get; private set; } = 1f;
 
-        private void Awake()
+        private Collider[] _hitsBuffer = new Collider[50]; // Limits piercing to 50 enemies per whip, zero GC allocation
+
+        protected override void Awake()
         {
-            _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
+            base.Awake();
+            // Damage and cooldown live in the base fields so levelling and
+            // Shadow Kael's mirroring can scale them.
+            DamageAmount = _damage;
+            AttackCooldown = _cooldown;
         }
 
-        private void Update()
+        public override void LevelUp()
         {
-            _timer -= Time.deltaTime;
-            
-            if (_timer <= 0f)
+            if (CurrentLevel >= MaxLevel) return;
+            CurrentLevel++;
+            switch (CurrentLevel)
             {
-                FireWhip();
-                float currentCooldown = _stats != null ? _cooldown * _stats.Cooldown : _cooldown;
-                _timer = currentCooldown;
+                case 2: LevelWhipCount++; break;
+                case 4:
+                case 6: DamageAmount += 5f; LevelAreaMultiplier += 0.1f; break;
+                default: DamageAmount += 5f; break; // 3, 5, 7, 8
             }
         }
 
-        private void FireWhip()
+        protected override void Attack()
         {
-            float sign = Mathf.Sign(transform.root.localScale.x);
+            // The second whip strikes the opposite side, then they alternate.
+            float facing = Mathf.Sign(transform.root.localScale.x);
+            int whips = LevelWhipCount + ExtraAmount;
+            for (int i = 0; i < whips; i++)
+            {
+                FireWhip(i % 2 == 0 ? facing : -facing);
+            }
+        }
+
+        private void FireWhip(float sign)
+        {
             Vector3 attackDirection = new Vector3(sign, 0, 0);
 
-            float areaMult = _stats != null ? _stats.Area : 1f;
+            float areaMult = AreaMultiplier * LevelAreaMultiplier;
             float actualRange = _attackRange * areaMult;
             float actualWidth = _attackWidth * areaMult;
-            int actualDamage = _stats != null ? Mathf.RoundToInt(_damage * _stats.Might) : _damage;
+            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
 
             // Box ka center point nikalna (player se thoda aage)
             Vector3 boxCenter = transform.position + (attackDirection * (actualRange / 2f));
@@ -108,7 +128,7 @@ namespace SoulHunter.Gameplay.Weapons
             Vector3 attackDirection = new Vector3(sign, 0, 0);
             Vector3 boxCenter = transform.position + (attackDirection * (_attackRange / 2f));
             Vector3 halfExtents = new Vector3(_attackRange / 2f, 1f, _attackWidth / 2f);
-            
+
             Gizmos.DrawWireCube(boxCenter, halfExtents * 2);
         }
     }

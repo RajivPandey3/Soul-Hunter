@@ -7,25 +7,29 @@ namespace SoulHunter.Gameplay.Weapons
     /// Learning Comment:
     /// VS = SH Rule: Axe weapon umeed se uthta hai (Parabola arc) aur wapas neeche girti hai.
     /// Ye script simply ek Axe Projectile banati hai aur usay upar ki taraf dhakka (force) deti hai.
+    /// Level table (1-8): L2/L5 ek aur axe, L3/L6/L8 damage, L4/L7 area.
     /// </summary>
-    public class AxeWeapon : MonoBehaviour
+    public class AxeWeapon : AutoAttackWeapon
     {
         [Tooltip("Axe ki tasveer/mesh jisme Rigidbody laga ho")]
         [SerializeField] private GameObject _axePrefab;
-        
+
         [Tooltip("Kitni der baad agla axe fainka jayega")]
         [SerializeField] private float _cooldown = 2f;
 
         [Tooltip("Hawa mein kitna upar aur aage jayega")]
         [SerializeField] private float _upwardForce = 15f;
         [SerializeField] private float _forwardForce = 5f;
-        
+
         [SerializeField] private int _damage = 25;
 
-        private float _timer;
-        private SoulHunter.Gameplay.Player.PlayerStats _stats;
+        public override int MaxLevel => 8;
+        /// <summary>Axes per attack from levels (before the Amount stat).</summary>
+        public int LevelAxeCount { get; private set; } = 1;
+        /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
+        public float LevelAreaMultiplier { get; private set; } = 1f;
 
-        private void Awake()
+        protected override void Awake()
         {
             // Learning Comment:
             // Infinite Recursion Safeguard:
@@ -36,19 +40,30 @@ namespace SoulHunter.Gameplay.Weapons
                 return;
             }
 
-            _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
+            base.Awake();
+            // Damage and cooldown live in the base fields so levelling and
+            // Shadow Kael's mirroring can scale them.
+            DamageAmount = _damage;
+            AttackCooldown = _cooldown;
         }
 
-        private void Update()
+        public override void LevelUp()
         {
-            _timer -= Time.deltaTime;
-            
-            if (_timer <= 0f)
+            if (CurrentLevel >= MaxLevel) return;
+            CurrentLevel++;
+            switch (CurrentLevel)
             {
-                ThrowAxe();
-                float currentCooldown = _stats != null ? _cooldown * _stats.Cooldown : _cooldown;
-                _timer = currentCooldown;
+                case 2:
+                case 5: LevelAxeCount++; break;
+                case 4:
+                case 7: LevelAreaMultiplier += 0.2f; break;
+                default: DamageAmount += 15f; break; // 3, 6, 8
             }
+        }
+
+        protected override void Attack()
+        {
+            ThrowAxe();
         }
 
         private void ThrowAxe()
@@ -64,7 +79,7 @@ namespace SoulHunter.Gameplay.Weapons
             }
 
             // VS rule: Amount throws extra axes, each a little further forward.
-            int amount = 1 + (_stats != null ? Mathf.Max(0, _stats.Amount) : 0);
+            int amount = LevelAxeCount + ExtraAmount;
             for (int i = 0; i < amount; i++) ThrowSingleAxe(1f + i * 0.35f);
         }
 
@@ -73,10 +88,9 @@ namespace SoulHunter.Gameplay.Weapons
             // Axe banao O(1) performance ke sath
             GameObject axeObj = WeaponPoolManager.Instance.GetFromPool(_axePrefab, transform.position, Quaternion.identity);
             if (axeObj == null) return;
-            float area = _stats != null ? Mathf.Max(0.1f, _stats.Area) : 1f;
-            axeObj.transform.localScale = _axePrefab.transform.localScale * area;
-            
-            int actualDamage = _stats != null ? Mathf.RoundToInt(_damage * _stats.Might) : _damage;
+            axeObj.transform.localScale = _axePrefab.transform.localScale * (AreaMultiplier * LevelAreaMultiplier);
+
+            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
 
             var projectileDamage = axeObj.GetComponent<ProjectileDamage>();
             if (projectileDamage == null)
@@ -94,9 +108,8 @@ namespace SoulHunter.Gameplay.Weapons
                 rb.angularVelocity = Vector3.zero;
 
                 float sign = Mathf.Sign(transform.root.localScale.x);
-                float speed = _stats != null ? Mathf.Max(0.1f, _stats.ProjectileSpeed) : 1f;
-                Vector3 throwDirection = new Vector3(sign * _forwardForce * forwardScale, _upwardForce, 0) * speed;
-                
+                Vector3 throwDirection = new Vector3(sign * _forwardForce * forwardScale, _upwardForce, 0) * SpeedMultiplier;
+
                 rb.AddForce(throwDirection, ForceMode.VelocityChange);
                 rb.AddTorque(new Vector3(0, 0, -sign * 10f), ForceMode.VelocityChange);
             }

@@ -8,8 +8,9 @@ namespace SoulHunter.Gameplay.Weapons
     /// Learning Comment:
     /// VS = SH Rule: Bible weapon player ke gird (orbit) mein ghoomti hai.
     /// Ye continuously rotate karti hai, aur jo dushman beech mein aaye usey damage karti hai.
+    /// Level table (1-8): L2/L5/L8 ek aur bible, L3/L6 area + speed, L4/L7 damage.
     /// </summary>
-    public class BibleWeapon : MonoBehaviour
+    public class BibleWeapon : AutoAttackWeapon
     {
         [Tooltip("Bible ka asli chhota 3D model (prefab) yahan assign karein")]
         [SerializeField] private GameObject _biblePrefab;
@@ -28,22 +29,46 @@ namespace SoulHunter.Gameplay.Weapons
         private float _currentAngle = 0f;
         private List<GameObject> _activeBibles = new List<GameObject>();
 
+        public override int MaxLevel => 8;
+        /// <summary>Extra bibles from levels (before the Amount stat).</summary>
+        public int LevelBookCount { get; private set; }
+        /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
+        public float LevelAreaMultiplier { get; private set; } = 1f;
+        /// <summary>Spin-speed bonus from levels (multiplies the projectile Speed stat).</summary>
+        public float LevelSpeedMultiplier { get; private set; } = 1f;
+
         // VS rule: Amount adds bibles, Area widens the orbit and book size,
         // projectile Speed spins faster and Might raises damage.
-        private SoulHunter.Gameplay.Player.PlayerStats _stats;
         private int _spawnedCount;
         private float _spawnedDamage;
         private float _spawnedArea;
         private float _statsCheckTimer;
 
-        private int DesiredCount => _bibleCount + (_stats != null ? Mathf.Max(0, _stats.Amount) : 0);
-        private float AreaMultiplier => _stats != null ? Mathf.Max(0.1f, _stats.Area) : 1f;
-        private float SpeedMultiplier => _stats != null ? Mathf.Max(0.1f, _stats.ProjectileSpeed) : 1f;
-        private float ScaledDamage => _damage * (_stats != null ? _stats.Might : 1f);
+        private int DesiredCount => _bibleCount + LevelBookCount + ExtraAmount;
+        private float BibleArea => AreaMultiplier * LevelAreaMultiplier;
+        private float BibleSpeed => SpeedMultiplier * LevelSpeedMultiplier;
+        private float BibleDamage => ScaledDamage(DamageAmount);
 
-        private void Awake()
+        protected override void Awake()
         {
-            _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
+            base.Awake();
+            // Damage lives in the base field so levelling and Shadow Kael's
+            // mirroring can scale it.
+            DamageAmount = _damage;
+        }
+
+        public override void LevelUp()
+        {
+            if (CurrentLevel >= MaxLevel) return;
+            CurrentLevel++;
+            switch (CurrentLevel)
+            {
+                case 3:
+                case 6: LevelAreaMultiplier += 0.25f; LevelSpeedMultiplier += 0.3f; break;
+                case 4:
+                case 7: DamageAmount += 6f; break;
+                default: LevelBookCount++; break; // 2, 5, 8
+            }
         }
 
         private void OnEnable()
@@ -63,8 +88,8 @@ namespace SoulHunter.Gameplay.Weapons
             ClearBibles(); // Purani bibles delete karo
 
             _spawnedCount = DesiredCount;
-            _spawnedDamage = ScaledDamage;
-            _spawnedArea = AreaMultiplier;
+            _spawnedDamage = BibleDamage;
+            _spawnedArea = BibleArea;
             for (int i = 0; i < _spawnedCount; i++)
             {
                 // Instantiate at our position initially
@@ -117,7 +142,8 @@ namespace SoulHunter.Gameplay.Weapons
             _activeBibles.Clear();
         }
 
-        private void Update()
+        // Bibles orbit continuously, so this replaces the base timed attack.
+        protected override void Update()
         {
             if (_activeBibles.Count == 0) return;
 
@@ -127,8 +153,8 @@ namespace SoulHunter.Gameplay.Weapons
             {
                 _statsCheckTimer = 0.25f;
                 if (DesiredCount != _spawnedCount ||
-                    !Mathf.Approximately(ScaledDamage, _spawnedDamage) ||
-                    !Mathf.Approximately(AreaMultiplier, _spawnedArea))
+                    !Mathf.Approximately(BibleDamage, _spawnedDamage) ||
+                    !Mathf.Approximately(BibleArea, _spawnedArea))
                 {
                     SpawnBibles();
                     if (_activeBibles.Count == 0) return;
@@ -136,7 +162,7 @@ namespace SoulHunter.Gameplay.Weapons
             }
 
             // Angle badhao
-            _currentAngle += _rotationSpeed * SpeedMultiplier * Time.deltaTime;
+            _currentAngle += _rotationSpeed * BibleSpeed * Time.deltaTime;
             
             // Bibles ki position update karo (Trigonometry: Sin/Cos)
             UpdateBiblePositions();

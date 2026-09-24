@@ -8,19 +8,20 @@ namespace SoulHunter.Gameplay.Weapons
     /// VS = SH Rule: Garlic weapon. Ye player ke aas paas ek aura (circle) banata hai.
     /// Har X seconds mein us aura ke andar aane wale sabhi dushmano ko damage lagta hai.
     /// Ye kisi ko point nahi karta, bas area of effect (AoE) mein damage deta hai.
+    /// Level table (1-8): har level damage; L2/L4/L6/L8 area, L3/L5/L7 tez interval.
     /// </summary>
-    public class GarlicWeapon : MonoBehaviour
+    public class GarlicWeapon : AutoAttackWeapon
     {
         [Header("Soul Hunter Theme: Aura of Death (Garlic)")]
         [Tooltip("Kitne meter ke daayre (radius) mein aura asar karega")]
         [SerializeField] private float _damageRadius = 2.5f;
-        
+
         [Tooltip("Har kitne second mein aura damage dega")]
         [SerializeField] private float _damageInterval = 1f;
-        
+
         [Tooltip("Ek baar mein kitna damage padega")]
         [SerializeField] private int _damageAmount = 5;
-        
+
         [SerializeField] private LayerMask _enemyLayer;
 
         /// <summary>
@@ -40,37 +41,48 @@ namespace SoulHunter.Gameplay.Weapons
             set => _enemyLayer = value;
         }
 
-        private float _timer;
-        private Collider[] _hitsBuffer = new Collider[200]; // 100% VS Quality: Zero Garbage Allocation
-        private SoulHunter.Gameplay.Player.PlayerStats _stats;
+        public override int MaxLevel => 8;
+        /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
+        public float LevelAreaMultiplier { get; private set; } = 1f;
 
-        private void Awake()
+        private Collider[] _hitsBuffer = new Collider[200]; // 100% VS Quality: Zero Garbage Allocation
+
+        protected override void Awake()
         {
-            _stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
+            base.Awake();
+            // Damage and interval live in the base fields so levelling and
+            // Shadow Kael's mirroring can scale them.
+            DamageAmount = _damageAmount;
+            AttackCooldown = _damageInterval;
         }
 
-        private void Update()
+        public override void LevelUp()
         {
-            _timer -= Time.deltaTime;
-            
-            // Har X second ke baad aas-paas ke dushmano par hamla karo
-            if (_timer <= 0f)
+            if (CurrentLevel >= MaxLevel) return;
+            CurrentLevel++;
+            switch (CurrentLevel)
             {
-                ApplyDamageToEnemies();
-                float currentCooldown = _stats != null ? _damageInterval * _stats.Cooldown : _damageInterval;
-                _timer = currentCooldown;
+                case 2: LevelAreaMultiplier += 0.4f; DamageAmount += 2f; break;
+                case 3:
+                case 7: AttackCooldown *= 0.9f; DamageAmount += 1f; break;
+                case 5: AttackCooldown *= 0.9f; DamageAmount += 2f; break;
+                default: LevelAreaMultiplier += 0.2f; DamageAmount += 1f; break; // 4, 6, 8
             }
+        }
+
+        protected override void Attack()
+        {
+            ApplyDamageToEnemies();
         }
 
         private void ApplyDamageToEnemies()
         {
-            float areaMult = _stats != null ? _stats.Area : 1f;
-            float actualRadius = _damageRadius * areaMult;
-            int actualDamage = _stats != null ? Mathf.RoundToInt(_damageAmount * _stats.Might) : _damageAmount;
+            float actualRadius = _damageRadius * AreaMultiplier * LevelAreaMultiplier;
+            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
 
             // Player ke center se ek bada gola (Sphere) phek kar usme aaye dushmano ko dhoondho (NonAlloc for max performance)
             int hitsCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, actualRadius, _hitsBuffer, _enemyLayer);
-            
+
             for (int i = 0; i < hitsCount; i++)
             {
                 var damageable = _hitsBuffer[i].GetComponentInParent<IDamageable>();

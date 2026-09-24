@@ -24,7 +24,6 @@ namespace SoulHunter.Gameplay.Combat
         public virtual float BaseRechargeCooldown => Mathf.Max(0.1f, AttackCooldown - TimingUpgrades * 0.5f);
         public float EffectiveRechargeCooldown => BaseRechargeCooldown * CooldownMultiplier;
         public virtual float BlockGraceSeconds => _blockGraceSeconds + TimingUpgrades * 0.2f;
-        private float CooldownMultiplier => _stats != null ? Mathf.Max(0.1f, _stats.Cooldown) : 1f;
         public event Action<DamagePacket> OnBlocked;
 
         protected override void Awake()
