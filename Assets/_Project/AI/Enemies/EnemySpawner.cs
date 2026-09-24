@@ -156,7 +156,8 @@ namespace SoulHunter.Gameplay.AI
                         SpawnEnemy(elitePressure ? _stageElitePrefab : (phase.EnemyPrefab != null ? phase.EnemyPrefab : _stageEnemyPrefab));
                     }
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
-                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure);
+                    // VS rule: Curse makes enemies arrive more often.
+                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / CurrentCurse());
                 }
             }
         }
@@ -262,8 +263,9 @@ namespace SoulHunter.Gameplay.AI
             }
             bossObj.SetActive(true);
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger
+            float curse = CurrentCurse();
             bossObj.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
-                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier);
+                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse);
             ConfigureStageDamageRule(bossObj);
 
             // LEVEL 10 REQUIREMENT: Shadow Kael Boss Controller
@@ -281,9 +283,9 @@ namespace SoulHunter.Gameplay.AI
                 // Stage boss EnemyData is authoritative. Fallback bosses built from
                 // ordinary enemy prefabs keep the stage formula, not enemy health.
                 var bossData = bossController != null && basePrefab == _stageBossPrefab ? bossController.Data : null;
-                health.Initialize(bossData != null
+                health.Initialize(ScaleHealthByCurse(bossData != null
                     ? bossData.MaxHealth
-                    : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage);
+                    : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage, curse));
                 health.KnockbackResistance = 1f; // Immune to knockback
                 
                 if (!_bossCallbacks.Contains(health))
@@ -341,16 +343,35 @@ namespace SoulHunter.Gameplay.AI
             var enemyController = enemyToSpawn.GetComponent<EnemyController>();
             if (enemyController != null) enemyController.Target = _playerTransform;
             enemyToSpawn.SetActive(true);
+            float curse = CurrentCurse();
             enemyToSpawn.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
-                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier);
+                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse);
             ConfigureStageDamageRule(enemyToSpawn);
             
             var health = enemyToSpawn.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null)
             {
-                health.ResetHealth();
+                // VS rule: Curse makes enemies tougher. Always scale from the EnemyData value so
+                // pooled enemies never compound it; enemies without data keep their own max health.
+                var data = enemyController != null ? enemyController.Data : null;
+                if (data != null) health.Initialize(ScaleHealthByCurse(data.MaxHealth, curse));
+                else health.ResetHealth();
             }
         }
+
+        private SoulHunter.Gameplay.Player.PlayerStats _playerStats;
+
+        /// <summary>The player's Curse (1 = none). VS: Curse raises enemy health, speed and spawn rate.</summary>
+        private float CurrentCurse()
+        {
+            if (_playerTransform == null) return 1f;
+            if (_playerStats == null || _playerStats.transform != _playerTransform)
+                _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
+            return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
+        }
+
+        public static int ScaleHealthByCurse(int baseHealth, float curse) =>
+            Mathf.Max(1, Mathf.RoundToInt(baseHealth * Mathf.Max(0.1f, curse)));
 
         private void ConfigureStageDamageRule(GameObject enemyObject)
         {
