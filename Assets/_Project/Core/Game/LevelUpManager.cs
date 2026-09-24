@@ -25,8 +25,29 @@ namespace SoulHunter.Gameplay.Core
         private int _pendingLevelUps = 0;
         private bool _isLevelUpActive = false;
 
+        // VS rule: Reroll naye choices deta hai, Skip level-up chhod deta hai, Banish item ko
+        // is run ke liye pool se hata deta hai. Starting charges provisional hain (baad mein
+        // meta shop / character se aayenge).
+        [Header("Level-up actions (charges per run)")]
+        [SerializeField] private int _startingRerolls = 2;
+        [SerializeField] private int _startingSkips = 2;
+        [SerializeField] private int _startingBanishes = 2;
+
+        public int RerollsLeft { get; private set; }
+        public int SkipsLeft { get; private set; }
+        public int BanishesLeft { get; private set; }
+        public bool IsLevelUpActive => _isLevelUpActive;
+
+        private readonly HashSet<UpgradeData.UpgradeType> _banishedTypes = new HashSet<UpgradeData.UpgradeType>();
+
+        public bool IsBanished(UpgradeData.UpgradeType type) => _banishedTypes.Contains(type);
+
         private void Awake()
         {
+            RerollsLeft = Mathf.Max(0, _startingRerolls);
+            SkipsLeft = Mathf.Max(0, _startingSkips);
+            BanishesLeft = Mathf.Max(0, _startingBanishes);
+
             // Learning Comment:
             // "Read First, Match Later" aur Self-Healing pattern:
             // Agar Inspector mein references unlinked / null reh jayein, toh scene se dynamically dhoond kar bind karein.
@@ -159,6 +180,56 @@ namespace SoulHunter.Gameplay.Core
             }
             
             Debug.Log($"[LevelUpManager] Acquired Upgrade: {upgrade.UpgradeName}");
+            CompleteCurrentLevelUp();
+        }
+
+        /// <summary>Offers a fresh set of choices for the current level-up. Returns false when not allowed.</summary>
+        public bool Reroll()
+        {
+            if (!_isLevelUpActive || RerollsLeft <= 0) return false;
+            RerollsLeft--;
+            PresentChoicesOrPayOut(GetRandomValidUpgrades(3));
+            return true;
+        }
+
+        /// <summary>Gives up the current level-up without taking anything. Returns false when not allowed.</summary>
+        public bool Skip()
+        {
+            if (!_isLevelUpActive || SkipsLeft <= 0) return false;
+            SkipsLeft--;
+            Debug.Log("[LevelUpManager] Level-up skipped.");
+            CompleteCurrentLevelUp();
+            return true;
+        }
+
+        /// <summary>
+        /// Removes an item from the pool for the rest of the run (level-ups and chests),
+        /// then re-rolls the current choices. Returns false when not allowed.
+        /// </summary>
+        public bool Banish(UpgradeData upgrade)
+        {
+            if (!_isLevelUpActive || BanishesLeft <= 0 || upgrade == null) return false;
+            BanishesLeft--;
+            _banishedTypes.Add(upgrade.Type);
+            Debug.Log($"[LevelUpManager] Banished {upgrade.Type} for this run.");
+            PresentChoicesOrPayOut(GetRandomValidUpgrades(3));
+            return true;
+        }
+
+        private void PresentChoicesOrPayOut(List<UpgradeData> choices)
+        {
+            if (choices.Count == 0)
+            {
+                // Banishing the last available item: pay out like a maxed-out level-up.
+                GrantMaxedOutReward();
+                CompleteCurrentLevelUp();
+                return;
+            }
+            OnLevelUpUIRound?.Invoke(choices);
+        }
+
+        private void CompleteCurrentLevelUp()
+        {
             _pendingLevelUps = Mathf.Max(0, _pendingLevelUps - 1);
 
             // Agar aur level ups pending hain toh agla round dikhao, warna game resume karo
@@ -206,7 +277,7 @@ namespace SoulHunter.Gameplay.Core
                 // one would be rejected by WeaponManager and waste the level-up.
                 if (currentLvl == up.Level - 1 && up.Level <= _weaponManager.GetMaxWeaponLevel(up.Type) &&
                     !(currentLvl == 0 && WeaponManager.IsStagePassive(up.Type)) &&
-                    _weaponManager.HasSlotFor(up.Type))
+                    _weaponManager.HasSlotFor(up.Type) && !_banishedTypes.Contains(up.Type))
                 {
                     validUpgrades.Add(up);
                 }

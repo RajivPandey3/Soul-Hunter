@@ -11,12 +11,21 @@ namespace SoulHunter.Gameplay.UI
     /// Learning Comment:
     /// VS = SH Rule: Level up par game pause hota hai aur 3 random cards aate hain.
     /// Ye script buttons par random upgrades set karti hai aur click hone par WeaponManager ko bhejti hai.
+    /// Reroll / Skip / Banish buttons: agar Inspector mein assign na hon toh pehle upgrade button ko
+    /// clone karke cards ke neeche ek row mein bana diye jaate hain.
     /// </summary>
     public class LevelUpUI : MonoBehaviour
     {
         [SerializeField] private SoulHunter.Gameplay.Core.LevelUpManager _levelUpManager;
         [SerializeField] private GameObject _levelUpPanel;
         [SerializeField] private Button[] _upgradeButtons;
+        [SerializeField] private Button _rerollButton;
+        [SerializeField] private Button _skipButton;
+        [SerializeField] private Button _banishButton;
+
+        private const string ActionBarName = "LevelUp_ActionBar";
+        private List<UpgradeData> _currentChoices = new List<UpgradeData>();
+        private bool _banishMode;
 
         private void Awake()
         {
@@ -75,6 +84,10 @@ namespace SoulHunter.Gameplay.UI
         return;
     }
 
+    _currentChoices = choices;
+    _banishMode = false;
+    EnsureActionButtons();
+
     Debug.Log($"[LevelUpUI] Panel={_levelUpPanel} | PanelActive={(_levelUpPanel != null && _levelUpPanel.activeSelf)}");
     Debug.Log($"[LevelUpUI] Buttons array null={_upgradeButtons == null} | count={(_upgradeButtons != null ? _upgradeButtons.Length : -1)}");
 
@@ -106,30 +119,14 @@ namespace SoulHunter.Gameplay.UI
                 $"[LevelUpUI] Button {i} -> {chosenUpgrade.UpgradeName} Lv.{chosenUpgrade.Level}"
             );
 
-            TextMeshProUGUI btnText =
-                _upgradeButtons[i].GetComponentInChildren<TextMeshProUGUI>(true);
-
-            if (btnText != null)
-            {
-                btnText.text =
-                    $"{chosenUpgrade.UpgradeName} (Lv {chosenUpgrade.Level})";
-            }
-            else
-            {
-                var legacyText =
-                    _upgradeButtons[i].GetComponentInChildren<Text>(true);
-
-                if (legacyText != null)
-                    legacyText.text =
-                        $"{chosenUpgrade.UpgradeName} (Lv {chosenUpgrade.Level})";
-            }
+            SetButtonLabel(_upgradeButtons[i], CardLabel(chosenUpgrade));
 
             _upgradeButtons[i].onClick.RemoveAllListeners();
 
             UpgradeData finalUpgrade = chosenUpgrade;
 
             _upgradeButtons[i].onClick.AddListener(
-                () => OnUpgradeSelected(finalUpgrade)
+                () => OnCardClicked(finalUpgrade)
             );
 
             Debug.Log($"[LevelUpUI] Button {i} configured successfully");
@@ -141,6 +138,9 @@ namespace SoulHunter.Gameplay.UI
     }
 
     Debug.Log("[LevelUpUI] All buttons configured");
+
+    BindActionButtons();
+    RefreshActionButtons();
 
     if (_levelUpPanel != null)
     {
@@ -158,6 +158,150 @@ namespace SoulHunter.Gameplay.UI
 
     Debug.Log("[LevelUpUI] <<< ShowLevelUpScreen EXIT");
 }
+
+        private string CardLabel(UpgradeData upgrade)
+        {
+            string label = $"{upgrade.UpgradeName} (Lv {upgrade.Level})";
+            return _banishMode ? $"Banish: {label}" : label;
+        }
+
+        private static void SetButtonLabel(Button button, string label)
+        {
+            if (button == null) return;
+            var tmpText = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (tmpText != null) { tmpText.text = label; return; }
+            var legacyText = button.GetComponentInChildren<Text>(true);
+            if (legacyText != null) legacyText.text = label;
+        }
+
+        private void OnCardClicked(UpgradeData upgrade)
+        {
+            if (_banishMode)
+            {
+                _banishMode = false;
+                if (_levelUpManager != null) _levelUpManager.Banish(upgrade);
+                HidePanelIfLevelUpFinished();
+                return;
+            }
+            OnUpgradeSelected(upgrade);
+        }
+
+        private void OnRerollClicked()
+        {
+            _banishMode = false;
+            if (_levelUpManager != null) _levelUpManager.Reroll();
+            HidePanelIfLevelUpFinished();
+        }
+
+        private void OnSkipClicked()
+        {
+            if (_levelUpManager == null || _levelUpManager.SkipsLeft <= 0) return;
+            // Close first so a queued level-up can reopen the panel cleanly.
+            if (_levelUpPanel != null) _levelUpPanel.SetActive(false);
+            _levelUpManager.Skip();
+        }
+
+        private void OnBanishClicked()
+        {
+            if (_levelUpManager == null) return;
+            if (!_banishMode && _levelUpManager.BanishesLeft <= 0) return;
+            // Banish is a two-step action: arm it, then click the card to remove.
+            _banishMode = !_banishMode;
+            for (int i = 0; i < _upgradeButtons.Length && i < _currentChoices.Count; i++)
+                SetButtonLabel(_upgradeButtons[i], CardLabel(_currentChoices[i]));
+            RefreshActionButtons();
+        }
+
+        private void HidePanelIfLevelUpFinished()
+        {
+            if (_levelUpPanel != null && _levelUpManager != null && !_levelUpManager.IsLevelUpActive)
+                _levelUpPanel.SetActive(false);
+        }
+
+        private void BindActionButtons()
+        {
+            if (_rerollButton != null) { _rerollButton.onClick.RemoveAllListeners(); _rerollButton.onClick.AddListener(OnRerollClicked); }
+            if (_skipButton != null) { _skipButton.onClick.RemoveAllListeners(); _skipButton.onClick.AddListener(OnSkipClicked); }
+            if (_banishButton != null) { _banishButton.onClick.RemoveAllListeners(); _banishButton.onClick.AddListener(OnBanishClicked); }
+        }
+
+        private void RefreshActionButtons()
+        {
+            if (_levelUpManager == null) return;
+            if (_rerollButton != null)
+            {
+                SetButtonLabel(_rerollButton, $"Reroll ({_levelUpManager.RerollsLeft})");
+                _rerollButton.interactable = _levelUpManager.RerollsLeft > 0;
+            }
+            if (_skipButton != null)
+            {
+                SetButtonLabel(_skipButton, $"Skip ({_levelUpManager.SkipsLeft})");
+                _skipButton.interactable = _levelUpManager.SkipsLeft > 0;
+            }
+            if (_banishButton != null)
+            {
+                SetButtonLabel(_banishButton, _banishMode ? "Cancel Banish" : $"Banish ({_levelUpManager.BanishesLeft})");
+                _banishButton.interactable = _banishMode || _levelUpManager.BanishesLeft > 0;
+            }
+        }
+
+        /// <summary>
+        /// Builds the Reroll / Skip / Banish row under the upgrade cards by cloning the first card,
+        /// unless the buttons are assigned in the Inspector. The row is created once and shared,
+        /// so a second LevelUpUI on the same panel reuses it.
+        /// </summary>
+        private void EnsureActionButtons()
+        {
+            if (_rerollButton != null && _skipButton != null && _banishButton != null) return;
+
+            Button template = null;
+            foreach (var button in _upgradeButtons)
+                if (button != null) { template = button; break; }
+            if (template == null) return;
+
+            Transform container = template.transform.parent;
+            Transform bar = container.Find(ActionBarName);
+            if (bar == null)
+            {
+                var templateRect = (RectTransform)template.transform;
+                var barObject = new GameObject(ActionBarName, typeof(RectTransform));
+                barObject.layer = template.gameObject.layer;
+                bar = barObject.transform;
+                bar.SetParent(container, false);
+                bar.SetAsLastSibling();
+                ((RectTransform)bar).sizeDelta = templateRect.sizeDelta;
+
+                var layout = barObject.AddComponent<HorizontalLayoutGroup>();
+                layout.spacing = 24f;
+                layout.childControlWidth = true;
+                layout.childControlHeight = true;
+                layout.childForceExpandWidth = true;
+                layout.childForceExpandHeight = true;
+                barObject.AddComponent<LayoutElement>().preferredHeight = templateRect.sizeDelta.y;
+
+                CreateActionButton(template, bar, "Reroll_Button");
+                CreateActionButton(template, bar, "Skip_Button");
+                CreateActionButton(template, bar, "Banish_Button");
+            }
+
+            if (_rerollButton == null) _rerollButton = FindActionButton(bar, "Reroll_Button");
+            if (_skipButton == null) _skipButton = FindActionButton(bar, "Skip_Button");
+            if (_banishButton == null) _banishButton = FindActionButton(bar, "Banish_Button");
+        }
+
+        private static void CreateActionButton(Button template, Transform parent, string name)
+        {
+            Button clone = Instantiate(template, parent, false);
+            clone.name = name;
+            clone.gameObject.SetActive(true);
+            clone.onClick = new Button.ButtonClickedEvent(); // drop any listeners copied from the card
+        }
+
+        private static Button FindActionButton(Transform bar, string name)
+        {
+            Transform child = bar.Find(name);
+            return child != null ? child.GetComponent<Button>() : null;
+        }
 
         private void OnUpgradeSelected(UpgradeData selectedUpgrade)
         {
