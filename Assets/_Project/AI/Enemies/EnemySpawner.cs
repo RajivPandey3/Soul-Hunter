@@ -32,6 +32,9 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField, Min(1f)] private float _chestEliteHealthMultiplier = 5f;
         [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
         private int _chestElitesSpawned;
+        private System.Collections.Generic.IReadOnlyList<StageEventEntry> _stageEvents;
+        private int _nextStageEvent;
+        private readonly List<(Vector3 position, Vector3 direction)> _formation = new List<(Vector3 position, Vector3 direction)>();
 
         [Header("Straggler relocation (VS rule)")]
         [Tooltip("Non-boss enemies further than this from the player are moved back onto the spawn ring ahead of them")]
@@ -98,6 +101,8 @@ namespace SoulHunter.Gameplay.AI
             _stageTimePassed = 0f;
             _timer = 0f;
             _chestElitesSpawned = 0;
+            _stageEvents = _currentWave.GetEvents();
+            _nextStageEvent = 0;
             int stageIndex = Mathf.Clamp(stageNum - 1, 0, 9);
             _stageEnemyPrefab = stageIndex < _stageEnemyPrefabs.Count && _stageEnemyPrefabs[stageIndex] != null
                 ? _stageEnemyPrefabs[stageIndex] : _currentWave.EnemyPrefab;
@@ -149,6 +154,14 @@ namespace SoulHunter.Gameplay.AI
             {
                 _chestElitesSpawned++;
                 SpawnChestElite();
+            }
+
+            // VS stage events: scripted formations on the stage clock, before the boss.
+            while (_stageEvents != null && _nextStageEvent < _stageEvents.Count &&
+                   _stageEvents[_nextStageEvent].TimeSeconds <= _stageTimePassed)
+            {
+                var stageEvent = _stageEvents[_nextStageEvent++];
+                if (stageEvent.TimeSeconds < bossStartTime) RunStageEvent(stageEvent, level, phase);
             }
 
             if (EnemyController.ActiveEnemies.Count >= _maxAliveEnemies) return;
@@ -207,7 +220,8 @@ namespace SoulHunter.Gameplay.AI
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
                 var enemy = enemies[i];
-                if (enemy == null || _bossControllers.Contains(enemy)) continue;
+                // Event fliers follow their own path and leave on their own.
+                if (enemy == null || _bossControllers.Contains(enemy) || enemy.IsFlying) continue;
 
                 Vector3 offset = enemy.transform.position - playerPos;
                 offset.y = 0f;
@@ -395,6 +409,69 @@ namespace SoulHunter.Gameplay.AI
             if (_playerStats == null || _playerStats.transform != _playerTransform)
                 _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
             return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
+        }
+
+        /// <summary>
+        /// Spawns one stage event's formation around the player and sends every member along its
+        /// fixed path. Returns the spawned enemies. Not blocked by the enemy cap (like chest elites).
+        /// </summary>
+        private List<EnemyController> RunStageEvent(StageEventEntry stageEvent, CampaignLevelDefinition level, WavePhase phase)
+        {
+            var spawned = new List<EnemyController>();
+            if (_playerTransform == null || stageEvent == null) return spawned;
+
+            Vector2 random = Random.insideUnitCircle.normalized;
+            var direction = new Vector3(random.x, 0f, random.y);
+            BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, _spawnRadius, _formation);
+            foreach (var (position, flyDirection) in _formation)
+            {
+                var enemyObject = SpawnEnemy(PickSwarmPrefab(level, phase));
+                var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
+                if (enemy == null) continue;
+                enemyObject.transform.position = position;
+                enemy.StartFlyingMode(flyDirection);
+                spawned.Add(enemy);
+            }
+            Debug.Log($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
+            return spawned;
+        }
+
+        /// <summary>
+        /// Start positions and flight directions for a stage event, on the ground plane at the
+        /// player's height. <paramref name="direction"/> is the travel direction for Swarm and Wall.
+        /// </summary>
+        public static void BuildFormation(StageEventType type, int count, Vector3 player, Vector3 direction, float radius,
+            List<(Vector3 position, Vector3 direction)> results)
+        {
+            results.Clear();
+            count = Mathf.Max(1, count);
+            direction.y = 0f;
+            direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+            var across = new Vector3(-direction.z, 0f, direction.x);
+            // Swarm and Wall start just outside the spawn ring on the far side and cross the player's position.
+            var start = player - direction * (radius + 5f);
+
+            for (int i = 0; i < count; i++)
+            {
+                switch (type)
+                {
+                    case StageEventType.Swarm:
+                        // Tight cluster on a sunflower spiral: even spacing without random overlaps.
+                        float r = 3f * Mathf.Sqrt((i + 0.5f) / count);
+                        float a = i * 2.39996f;
+                        results.Add((start + across * (Mathf.Cos(a) * r) + direction * (Mathf.Sin(a) * r), direction));
+                        break;
+                    case StageEventType.Wall:
+                        const float spacing = 1.5f;
+                        results.Add((start + across * ((i - (count - 1) * 0.5f) * spacing), direction));
+                        break;
+                    default: // ClosingRing
+                        float angle = i * Mathf.PI * 2f / count;
+                        var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                        results.Add((player + outward * radius, -outward));
+                        break;
+                }
+            }
         }
 
         private int CurrentPlayerLevel()

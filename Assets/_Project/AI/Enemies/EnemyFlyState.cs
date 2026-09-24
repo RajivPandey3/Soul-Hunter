@@ -4,58 +4,58 @@ namespace SoulHunter.Gameplay.AI
 {
     /// <summary>
     /// Learning Comment:
-    /// Vampire Survivors ke 'Bat Swarm' event ke liye.
-    /// Is state mein dushman player ko chase nahi karta, balki ek seedhi line mein fly karta hai.
+    /// Vampire Survivors stage events (swarm, wall, closing ring) ke liye.
+    /// Is state mein dushman player ko chase nahi karta, balki ek seedhi line mein fly karta hai,
+    /// aur kuch der baad bina drop ke pool mein wapas chala jata hai (screen se nikal gaya).
     /// </summary>
     public class EnemyFlyState : IEnemyState
     {
-        private readonly EnemyController _controller;
-        private Vector3 _flyDirection;
-        private float _aliveTimer = 0f;
+        public const float DefaultLifetimeSeconds = 15f;
+        public const float SpeedMultiplier = 1.5f;
 
-        public EnemyFlyState(EnemyController controller, Vector3 direction)
+        private readonly EnemyController _controller;
+        private readonly Vector3 _flyDirection;
+        private readonly float _lifetime;
+        private float _aliveTimer;
+
+        public Vector3 Direction => _flyDirection;
+
+        public EnemyFlyState(EnemyController controller, Vector3 direction, float lifetime = DefaultLifetimeSeconds)
         {
             _controller = controller;
-            _flyDirection = direction.normalized;
+            direction.y = 0f;
+            _flyDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+            _lifetime = lifetime;
         }
 
         public void Enter()
         {
             _aliveTimer = 0f;
-            // Ghost mode - takraye nahi balki guzar jaye
-            if (_controller.GetComponent<Collider>() != null)
-            {
-                _controller.GetComponent<Collider>().isTrigger = true;
-            }
+            // Enemy bodies are always triggers (EnemyController.Awake), so fliers pass
+            // through each other and the player. The old Exit made the collider solid again,
+            // which would have turned every pooled flier into a wall on reuse.
+            _controller.FaceDirection(_flyDirection);
         }
 
         public void UpdateLogic()
         {
             _aliveTimer += Time.deltaTime;
-            // 15 seconds ke baad agar screen se guzar jaye toh khud ko pool mein bhej de ya disable kar de
-            if (_aliveTimer > 15f)
-            {
-                _controller.gameObject.SetActive(false);
-            }
+            // Screen se guzar gaya: bina kill/drop ke pool mein wapas.
+            if (_aliveTimer > _lifetime) _controller.gameObject.SetActive(false);
         }
 
         public void UpdatePhysics(ref SoulHunter.Gameplay.Physics.EnvironmentData envData)
         {
-            // Seedha tezi se fly karo (Ignore player)
-            _controller.Rigidbody.linearVelocity = _flyDirection * (_controller.MoveSpeed * 1.5f);
-            
-            if (_controller.Animator != null)
-            {
-                _controller.Animator.UpdateSpeed(1f);
-            }
+            // Seedha fly karo (player ko ignore), ground plane par hi.
+            var velocity = _flyDirection * (_controller.MoveSpeed * SpeedMultiplier);
+            velocity.y = _controller.Rigidbody.linearVelocity.y;
+            _controller.Rigidbody.linearVelocity = velocity;
+
+            if (_controller.Animator != null) _controller.Animator.UpdateSpeed(1f);
         }
 
         public void Exit()
         {
-            if (_controller.GetComponent<Collider>() != null)
-            {
-                _controller.GetComponent<Collider>().isTrigger = false; // Reset
-            }
         }
     }
 }

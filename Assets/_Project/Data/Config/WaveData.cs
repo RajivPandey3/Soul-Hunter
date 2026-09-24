@@ -17,6 +17,26 @@ namespace SoulHunter.Gameplay.Data
         [Min(0)] public int MinimumEnemies;
     }
 
+    /// <summary>VS-style scripted formations. Event enemies ignore the player and fly a fixed path.</summary>
+    public enum StageEventType
+    {
+        /// <summary>A tight cluster flies across the player's position from one side.</summary>
+        Swarm,
+        /// <summary>A line of enemies, side by side, sweeps across the player's position.</summary>
+        Wall,
+        /// <summary>A circle around the player flies inward, closes, and opens out the other side.</summary>
+        ClosingRing
+    }
+
+    [System.Serializable]
+    public sealed class StageEventEntry
+    {
+        [Tooltip("Stage time (seconds) when the event starts. Events at or after the boss time never run.")]
+        public float TimeSeconds;
+        public StageEventType Type;
+        [Min(1)] public int Count = 16;
+    }
+
     /// <summary>
     /// Learning Comment:
     /// Kami #1 Fix: Wave System (Vampire Survivors).
@@ -52,6 +72,32 @@ namespace SoulHunter.Gameplay.Data
         [Tooltip("Agar empty ho toh 5-minute pressure phases runtime par automatically use hongi.")]
         public List<WavePhase> Phases = new List<WavePhase>();
         [System.NonSerialized] private WavePhase[] _fallbackPhases;
+
+        [Header("Stage events")]
+        [Tooltip("Scripted formations. If empty, a default schedule runs at 2:30, 7:30, 12:30, 17:30 and 22:30.")]
+        public List<StageEventEntry> Events = new List<StageEventEntry>();
+        [System.NonSerialized] private List<StageEventEntry> _fallbackEvents;
+
+        /// <summary>Events in time order; the default schedule when none are authored. Provisional balance.</summary>
+        public IReadOnlyList<StageEventEntry> GetEvents()
+        {
+            if (Events != null && Events.Count > 0)
+            {
+                var sorted = new List<StageEventEntry>(Events);
+                sorted.RemoveAll(e => e == null);
+                sorted.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
+                return sorted;
+            }
+            // Between the 5-minute chest elites, cycling through every formation.
+            return _fallbackEvents ??= new List<StageEventEntry>
+            {
+                new StageEventEntry { TimeSeconds = 150f, Type = StageEventType.Swarm, Count = 20 },
+                new StageEventEntry { TimeSeconds = 450f, Type = StageEventType.Wall, Count = 16 },
+                new StageEventEntry { TimeSeconds = 750f, Type = StageEventType.ClosingRing, Count = 16 },
+                new StageEventEntry { TimeSeconds = 1050f, Type = StageEventType.Swarm, Count = 24 },
+                new StageEventEntry { TimeSeconds = 1350f, Type = StageEventType.Wall, Count = 20 }
+            };
+        }
 
         public WavePhase GetPhase(float elapsedSeconds)
         {

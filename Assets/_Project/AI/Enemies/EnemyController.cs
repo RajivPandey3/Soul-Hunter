@@ -112,6 +112,9 @@ namespace SoulHunter.Gameplay.AI
             }
         }
 
+        /// <summary>True while a stage event flies this enemy along a fixed path.</summary>
+        public bool IsFlying => _currentState is EnemyFlyState;
+
         public void StartFlyingMode(Vector3 direction)
         {
             ChangeState(new EnemyFlyState(this, direction));
@@ -142,9 +145,14 @@ namespace SoulHunter.Gameplay.AI
 
         private void FaceTarget()
         {
-            if (_visualRoot == null || Target == null) return;
+            // Fliers keep facing their path, set once by FaceDirection.
+            if (_visualRoot == null || Target == null || IsFlying) return;
+            FaceDirection(Target.position - transform.position);
+        }
 
-            Vector3 direction = Target.position - transform.position;
+        public void FaceDirection(Vector3 direction)
+        {
+            if (_visualRoot == null) return;
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f) return;
             direction.Normalize();
