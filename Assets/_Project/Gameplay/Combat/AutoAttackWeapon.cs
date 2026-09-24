@@ -37,6 +37,14 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
+        /// <summary>
+        /// Tag this weapon's damage zones must hit: enemies, unless a boss holds it (Shadow Kael's mirrored
+        /// copies), which must hit the player. TouchDamage defaults to "Player" (it was written for enemy
+        /// contact damage), so every weapon that adds one must set this or it hurts its own holder.
+        /// </summary>
+        protected string HostileTag =>
+            GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>() != null ? "Player" : "Enemy";
+
         protected float MightMultiplier => OwnerStats != null ? OwnerStats.Might : 1f;
         protected float CooldownMultiplier => OwnerStats != null ? OwnerStats.Cooldown : 1f;
         protected float AreaMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Area) : 1f;

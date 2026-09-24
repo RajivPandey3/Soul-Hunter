@@ -58,12 +58,14 @@ namespace SoulHunter.Gameplay.Combat
             
             damageDealer.DamageAmount = RollDamage(50f); // High base damage
             damageDealer.SourceWeaponName = "Bloody Tear";
+            damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the whip hurt its own holder
             
             // Critical hit & Heal logic simulation
             var allEnemies = EnemyController.ActiveEnemies;
             bool hitEnemy = false;
             foreach(var enemy in allEnemies)
             {
+                if (enemy == null) continue; // destroyed enemies can linger in the static list
                 if (Vector3.Distance(whip.transform.position, enemy.transform.position) < 3f * AreaMultiplier)
                 {
                     hitEnemy = true;

@@ -155,6 +155,10 @@ Validated 2026-09-24: `BiblePrefabTests` (T) and the full PlayMode suite with 0 
 
 `Whip_Weapon.prefab` shipped with an empty `_enemyLayer`, so the Whip never hit anything. It surfaced once character starting weapons were fixed (Antonio starts with the Whip). `WhipWeapon` (and `GarlicWeapon`, defensively) now default an empty mask to the Enemy layer. Validated by `PlayerLoadoutPlayModeTests` (R): Antonio is visible, starts with the Whip, and the Whip damages an adjacent enemy.
 
+### Weapon self-damage defect
+
+`TouchDamage.TargetTag` defaults to "Player" (it was written for enemy contact damage). Song of Mana and Bloody Tear never changed it, so their beams/whips damaged the player; Aria (Song of Mana) died within seconds of starting. All TouchDamage weapons now use `AutoAttackWeapon.HostileTag`: "Enemy", or "Player" when a boss holds the weapon (Shadow Kael's mirror). Validated by `WeaponTargetingTests` (T) and `PlayerLoadoutPlayModeTests` (R: Aria takes no damage from her own beam).
+
 ### Audio
 
 No scene contains an `AudioManager`; it now creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Enemy-hit, death and music audio are still missing.

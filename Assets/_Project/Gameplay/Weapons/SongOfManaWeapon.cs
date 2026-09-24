@@ -32,6 +32,7 @@ namespace SoulHunter.Gameplay.Combat
             damageDealer.DamageAmount = ScaledDamage(DamageAmount);
             damageDealer.DamageInterval = 0.3f; // Hits multiple times
             damageDealer.SourceWeaponName = "Song Of Mana";
+            damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the beam hurt its own holder
             
             var lifetime = beam.GetComponent<PooledLifetime>();
             if (lifetime != null) lifetime.Arm(_beamDuration * DurationMultiplier);

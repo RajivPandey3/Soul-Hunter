@@ -68,5 +68,42 @@ namespace SoulHunter.Tests.PlayMode
                     GameServices.Instance.Get<SaveService>().CurrentData.SelectedCharacterName = previousSelection;
             }
         }
+
+        [UnityTest]
+        public IEnumerator Aria_SongOfManaBeam_DoesNotHurtThePlayer()
+        {
+            // Aria starts with Song of Mana, whose beam used TouchDamage's default "Player" target and
+            // killed its own holder within seconds.
+            var load = SceneManager.LoadSceneAsync("Bootstrap");
+            Assert.IsNotNull(load, "Bootstrap is not in Build Settings.");
+            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
+            var save = GameServices.Instance.Get<SaveService>();
+            string previousSelection = save.CurrentData.SelectedCharacterName;
+            save.CurrentData.SelectedCharacterName = "Aria";
+            try
+            {
+                GameServices.Instance.Get<SoulHunter.Core.Scenes.SceneService>().LoadSceneAsync("Main_Gameplay");
+                yield return WaitForFreshGameplay(previousPlayer: null);
+
+                var player = PlayerController.Instance;
+                var health = player.GetComponent<HealthController>();
+                Assert.IsNotNull(player.GetComponentInChildren<SongOfManaWeapon>(), "Aria's Song of Mana was not spawned. " + Errors());
+
+                TouchDamage beam = null;
+                yield return WaitUntilRealtime(() => (beam = player.GetComponentInChildren<TouchDamage>()) != null, "the Song of Mana beam");
+                Assert.That(beam.TargetTag, Is.EqualTo("Enemy"), "The beam must hit enemies, not the player.");
+
+                // Enemies spawn 15+ units away, so nothing else can reach the player this quickly.
+                int startHealth = health.CurrentHealth;
+                float until = Time.realtimeSinceStartup + 1.5f;
+                while (Time.realtimeSinceStartup < until) yield return null;
+                Assert.That(health.CurrentHealth, Is.EqualTo(startHealth), "The player took damage while only its own beam was active. " + Errors());
+            }
+            finally
+            {
+                if (GameServices.Instance != null)
+                    GameServices.Instance.Get<SaveService>().CurrentData.SelectedCharacterName = previousSelection;
+            }
+        }
     }
 }

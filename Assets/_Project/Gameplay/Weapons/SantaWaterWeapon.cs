@@ -60,7 +60,7 @@ namespace SoulHunter.Gameplay.Combat
             // Learning Comment:
             // Santa Water ground zone Enemy tag ko target karta hai aur DamageType.Holy emit karta hai
             // taaki Level 7 ke spectral ghosts isse damage le sakein (GDD & AGENTS.md Section 5).
-            damageDealer.TargetTag = "Enemy";
+            damageDealer.TargetTag = HostileTag;
             damageDealer.DamageType = DamageType.Holy;
             
             // Zone 3 seconds tak zameen pe rahega
