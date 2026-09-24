@@ -1,1 +1,0 @@
-return UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).Select(t => new { name=t.name, active=t.gameObject.activeSelf, components=t.GetComponents<Component>().Select(c => c == null ? "MISSING" : c.GetType().FullName).ToArray() }).ToArray();

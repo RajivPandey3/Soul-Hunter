@@ -1,5 +1,0 @@
-if(UnityEditor.EditorApplication.isPlaying)throw new System.Exception("Edit mode required");
-var enemy=UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.GameObject>("Assets/Prefabs/Weapons/Enemy_Entity.prefab");if(!enemy)throw new System.Exception("Missing gameplay enemy prefab");
-int fixedCount=0;var names=new System.Collections.Generic.List<string>();
-foreach(var guid in UnityEditor.AssetDatabase.FindAssets("t:WaveData",new[]{"Assets"})){var path=UnityEditor.AssetDatabase.GUIDToAssetPath(guid);var asset=UnityEditor.AssetDatabase.LoadAssetAtPath<SoulHunter.Gameplay.Data.WaveData>(path);if(!asset)continue;var so=new UnityEditor.SerializedObject(asset);var p=so.FindProperty("EnemyPrefab");if(p==null)p=so.FindProperty("_enemyPrefab");if(p==null)throw new System.Exception("WaveData prefab field missing: "+path);if(p.objectReferenceValue!=enemy){p.objectReferenceValue=enemy;so.ApplyModifiedPropertiesWithoutUndo();fixedCount++;}names.Add(path);}
-UnityEditor.AssetDatabase.SaveAssets();return new{waveAssets=names.Count,changed=fixedCount,enemy=enemy.name};

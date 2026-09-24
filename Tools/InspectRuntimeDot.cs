@@ -1,1 +1,0 @@
-var e=UnityEngine.GameObject.Find("DOT_TEST");var s=e?e.GetComponent<SoulHunter.Gameplay.Combat.StatusEffectController>():null;return new{exists=e!=null,status=s!=null,enabled=s!=null&&s.isActiveAndEnabled,health=e?e.GetComponent<SoulHunter.Gameplay.Combat.HealthController>().CurrentHealth:-1};

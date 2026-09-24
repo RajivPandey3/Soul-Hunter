@@ -1,1 +1,0 @@
-return UnityEditor.EditorApplication.delayCall == null ? new string[0] : UnityEditor.EditorApplication.delayCall.GetInvocationList().Select(d => d.Method.DeclaringType.FullName + "::" + d.Method.Name).ToArray();

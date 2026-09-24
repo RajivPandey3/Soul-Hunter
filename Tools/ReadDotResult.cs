@@ -1,1 +1,0 @@
-var e=UnityEngine.Object.FindObjectsByType<SoulHunter.Gameplay.AI.EnemyController>(UnityEngine.FindObjectsSortMode.None).FirstOrDefault();return e==null?"no enemy":e.GetComponent<SoulHunter.Gameplay.Combat.HealthController>().CurrentHealth.ToString();

@@ -1,1 +1,0 @@
-{"name":"SoulHunter.Editor","references":["SoulHunter.Foundation","SoulHunter.Gameplay","SoulHunter.UI","Unity.TextMeshPro","Unity.ugui","Unity.InputSystem"],"includePlatforms":["Editor"]}

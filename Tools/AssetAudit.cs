@@ -1,2 +1,0 @@
-var paths = UnityEditor.AssetDatabase.GetAllAssetPaths().Where(p=>p.StartsWith("Assets/") && (p.EndsWith(".prefab") || p.EndsWith(".asset"))).ToArray();
-return paths.Select(p=>new {path=p, assets=UnityEditor.AssetDatabase.LoadAllAssetsAtPath(p).Where(o=>o!=null).Select(o=>new {o.name,type=o.GetType().FullName,missing=o is GameObject g ? g.GetComponentsInChildren<Transform>(true).Sum(t=>UnityEditor.GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)):0}).ToArray()}).ToArray();

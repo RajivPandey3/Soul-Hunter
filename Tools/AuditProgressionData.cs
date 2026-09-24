@@ -1,3 +1,0 @@
-var upgrades=UnityEditor.AssetDatabase.FindAssets("t:UpgradeData",new[]{"Assets"}).Select(UnityEditor.AssetDatabase.GUIDToAssetPath).Select(p=>UnityEditor.AssetDatabase.LoadAssetAtPath<SoulHunter.Gameplay.Combat.UpgradeData>(p)).Select(u=>new{u.name,u.Level,type=u.Type.ToString()}).ToArray();
-var controllers=UnityEditor.AssetDatabase.FindAssets("t:AnimatorController",new[]{"Assets"}).Select(UnityEditor.AssetDatabase.GUIDToAssetPath).Select(p=>UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(p)).Select(c=>new{c.name,clips=c.animationClips.Select(a=>a.name).ToArray(),parameters=c.parameters.Select(p=>p.name).ToArray()}).ToArray();
-return new{upgrades,controllers};

@@ -1,1 +1,0 @@
-var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();var rows=scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).Select(t=>t.gameObject).Where(g=>g.GetComponent<SoulHunter.Gameplay.UI.DamagePopupManager>()!=null).Select(g=>g.name+" active="+g.activeSelf);return string.Join(" | ",rows);

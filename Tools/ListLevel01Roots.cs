@@ -1,1 +1,0 @@
-var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();return string.Join("\n",scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<UnityEngine.Transform>(true)).Select(t=>t.name).Distinct().OrderBy(n=>n));
