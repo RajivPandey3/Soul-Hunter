@@ -10,6 +10,8 @@ namespace SoulHunter.Gameplay.Combat
         public float KnifeSpeed = 15f;
 
         private int _knivesPerAttack = 1;
+        /// <summary>Enemies each knife passes through (VS: +1 at levels 5 and 8).</summary>
+        public int Pierce { get; private set; } = 1;
         private PlayerController _player;
 
         protected override void Awake()
@@ -25,6 +27,7 @@ namespace SoulHunter.Gameplay.Combat
 
             if (CurrentLevel % 2 == 0) _knivesPerAttack++;
             if (CurrentLevel == 5) AttackCooldown -= 0.2f;
+            if (CurrentLevel == 5 || CurrentLevel == 8) Pierce++;
         }
 
         protected override void Attack()
@@ -51,7 +54,7 @@ namespace SoulHunter.Gameplay.Combat
 
 
                 var proj = knife.GetComponent<Projectile>();
-                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(DamageAmount), 2f);
+                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(DamageAmount), 2f, pierce: Pierce);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";

@@ -12,6 +12,9 @@ namespace SoulHunter.Gameplay.Combat
 
         public override void LevelUp() {}
 
+        // VS: Death Spiral scythes pass through every enemy in their path.
+        private const int UnlimitedPierce = 9999;
+
         protected override void Attack()
         {
             if (ScythePrefab == null) return;
@@ -33,7 +36,7 @@ namespace SoulHunter.Gameplay.Combat
                 var proj = scythe.GetComponent<Projectile>();
                 if (proj == null) proj = scythe.AddComponent<Projectile>();
                 // Pierces everything
-                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(60f), 6f);
+                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(60f), 6f, pierce: UnlimitedPierce);
                 
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = scythe.AddComponent<ProjectileDamage>();

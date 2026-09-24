@@ -72,7 +72,8 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
-        public void Initialize(Vector3 direction, float speed, float damage, float lifetime, DamageType damageType = DamageType.Normal, string sourceWeaponName = null)
+        /// <param name="pierce">Enemies this projectile can hit before it disappears (VS pierce). Default 1.</param>
+        public void Initialize(Vector3 direction, float speed, float damage, float lifetime, DamageType damageType = DamageType.Normal, string sourceWeaponName = null, int pierce = 1)
         {
             _sourceWeaponName = sourceWeaponName;
             _speed = speed;
@@ -82,7 +83,7 @@ namespace SoulHunter.Gameplay.Combat
             _currentLifetime = lifetime;
             _bounceCount = 0;
             _maxBounces = ArcanaManager.Instance != null ? ArcanaManager.Instance.ProjectileBounceCount : 0;
-            ConfigureContacts(1, _maxBounces, false);
+            ConfigureContacts(pierce, _maxBounces, false);
             transform.forward = direction;
         }
 
