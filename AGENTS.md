@@ -56,23 +56,6 @@ Canonical project:
 
 `D:\Unity Projects\Soul-Hunter`
 
-Automation root:
-
-`D:\SoulHunter-Automation`
-
-Verified external source baseline:
-
-`D:\SoulHunter-Automation\Baselines\SOUL-HUNTER-SOURCE-BASELINE-20260911-155232\project`
-
-Verified selected-source baseline identity:
-
-- file count: `3837`
-- SHA-256 aggregate digest: `9f0af6e9d0925258aeb8ccc34273915a27e16eb4dffe572b313e1196e5683ec8`
-- branch at capture: `main`
-- HEAD at capture: `78d82fa90abbcdae4321c9b716ac2f7145c4e00e`
-
-The external baseline is a verified snapshot of the selected authoritative source/governance roots. Do not describe it as a complete disaster-recovery image of every repository file.
-
 ### Safety rules
 
 - Do not run `git reset`, `git clean`, destructive checkout/restore, forced rebase, or delete large file sets without explicit owner approval.
@@ -217,7 +200,7 @@ Current project editor:
 
 `D:\6000.0.36f1\Editor\Unity.exe`
 
-An isolated fresh import was performed from the verified external source baseline.
+An isolated fresh import was performed from an external source snapshot captured 2026-09-11 (that snapshot is no longer available).
 
 Observed result:
 
@@ -263,15 +246,30 @@ The broad Requirement -> Acceptance matrix exists, but final row-by-row reconcil
 
 ---
 
-## 11. Automation System
+## 11. Development Workflow
 
-Automation architecture:
+For a normal requested task:
 
-**SOUL HUNTER AUTONOMOUS DEVELOPMENT SYSTEM v1.0**
+1. Read this `AGENTS.md`.
+2. Inspect only the files/systems relevant to the task.
+3. Confirm the requirement and acceptance criteria.
+4. Check for direct conflicts with approved decisions.
+5. Choose the correct agent/tool.
+6. Prefer an isolated workspace for risky or broad mutations.
+7. Implement the smallest coherent change.
+8. Validate at the evidence levels actually required by the change.
+9. Report failures/unknowns truthfully.
+10. Record evidence and checkpoint only after acceptance.
 
-Core flow:
+Do **not** perform a full-project audit before every feature, bug fix, UI change, asset task, or refactor.
 
-`Objective -> Requirement/DOT -> Conflict Check -> DAG -> Routing -> Permission/Resource Gate -> Isolated Workspace -> Execute -> Validate -> Evidence -> Acceptance -> Retry/Recover/Escalate -> Checkpoint -> Next Task`
+Escalate to the owner only when:
+
+- requirements genuinely conflict;
+- a destructive action is necessary;
+- permissions must expand;
+- a product/design choice has no authoritative answer;
+- acceptance cannot be reached without an owner decision.
 
 ### DOT
 
@@ -301,62 +299,9 @@ Irrelevant dimensions may be explicitly `NOT_APPLICABLE`.
 
 Code complete does not automatically mean DOT complete.
 
-### Agent routing
-
-Default routing:
-
-- architecture / requirements / coordination -> ASTRA
-- C# / algorithms / refactors / deterministic tests -> Codex
-- scenes / prefabs / Inspector / serialized Unity work -> Antigravity
-- filesystem / processes / workspaces / logs -> PowerShell
-- Git mechanics -> Git / PowerShell
-- deterministic compile / test / build / runtime validation -> Unity CLI
-
-Mixed tasks should be decomposed by capability.
-
-No worker may expand its own permissions.
-
-### Automation current status
-
-- accepted implementation: `99%`
-- tasks: `40/41 DONE`
-- final task: `SYS-041`
-- final isolated E2E remains pending because of genuine Codex usage quota
-- do not bypass that quota gate
-- do not claim the automation system is 100% / final until the AcceptanceEngine receives the final required PASS evidence
-
-Automation being 99% does not block normal owner-authorized Soul Hunter work that does not require the missing Codex E2E proof.
-
 ---
 
-## 12. Development Workflow
-
-For a normal requested task:
-
-1. Read this `AGENTS.md`.
-2. Inspect only the files/systems relevant to the task.
-3. Confirm the requirement and acceptance criteria.
-4. Check for direct conflicts with approved decisions.
-5. Choose the correct agent/tool.
-6. Prefer an isolated workspace for risky or broad mutations.
-7. Implement the smallest coherent change.
-8. Validate at the evidence levels actually required by the change.
-9. Report failures/unknowns truthfully.
-10. Record evidence and checkpoint only after acceptance.
-
-Do **not** perform a full-project audit before every feature, bug fix, UI change, asset task, or refactor.
-
-Escalate to the owner only when:
-
-- requirements genuinely conflict;
-- a destructive action is necessary;
-- permissions must expand;
-- a product/design choice has no authoritative answer;
-- acceptance cannot be reached without an owner decision.
-
----
-
-## 13. Asset / Art Workflow
+## 12. Asset / Art Workflow
 
 Installed/useful local capability already confirmed:
 
@@ -378,7 +323,7 @@ Install additional tools only when they materially improve the active task.
 
 ---
 
-## 14. Current Operating Direction
+## 13. Current Operating Direction
 
 The expensive full static audit has already been completed.
 
@@ -391,16 +336,15 @@ Pending broader verification work may continue in parallel when useful:
 - clean editor/package compile baseline;
 - final requirement-to-acceptance reconciliation;
 - representative runtime/build/performance acceptance;
-- `SYS-041` automation E2E after Codex quota becomes available.
 
 These pending items are not a reason to endlessly postpone ordinary, explicitly authorized development work.
 
 ---
 
-## 15. Non-Negotiable Truth Rule
+## 14. Non-Negotiable Truth Rule
 
 Optimize for truth, not for a positive verdict.
 
 A truthful `FAIL`, `UNKNOWN`, or `BLOCKED` is better than a false `PASS`.
 
-Do not claim a feature, build, performance target, tool, automation phase, or release state is complete unless the required evidence exists.
+Do not claim a feature, build, performance target, tool, or release state is complete unless the required evidence exists.
