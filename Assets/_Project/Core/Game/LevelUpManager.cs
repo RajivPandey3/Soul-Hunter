@@ -281,15 +281,34 @@ namespace SoulHunter.Gameplay.Core
                 }
             }
             
-            // Shuffle and pick
+            // Rarity-weighted pick without duplicates (VS rule: rare items show up less often)
             List<UpgradeData> result = new List<UpgradeData>();
             while (result.Count < count && validUpgrades.Count > 0)
             {
-                int index = Random.Range(0, validUpgrades.Count);
+                int index = PickWeightedIndex(validUpgrades, Random.value);
                 result.Add(validUpgrades[index]);
                 validUpgrades.RemoveAt(index); // Ensure no duplicates
             }
             return result;
+        }
+
+        /// <summary>
+        /// Picks an index with probability proportional to each upgrade's rarity weight.
+        /// <paramref name="roll01"/> is a uniform random value in [0, 1).
+        /// </summary>
+        public static int PickWeightedIndex(List<UpgradeData> upgrades, float roll01)
+        {
+            int total = 0;
+            foreach (var up in upgrades) total += Mathf.Max(0, UpgradeRarity.GetWeight(up.Type));
+            if (total <= 0) return Mathf.Clamp(Mathf.FloorToInt(roll01 * upgrades.Count), 0, upgrades.Count - 1);
+
+            float target = roll01 * total;
+            for (int i = 0; i < upgrades.Count; i++)
+            {
+                target -= Mathf.Max(0, UpgradeRarity.GetWeight(upgrades[i].Type));
+                if (target < 0f) return i;
+            }
+            return upgrades.Count - 1;
         }
 
         public List<UpgradeData> GetRandomValidUpgradesForChest()
