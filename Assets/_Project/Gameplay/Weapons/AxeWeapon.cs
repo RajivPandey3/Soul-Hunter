@@ -18,9 +18,8 @@ namespace SoulHunter.Gameplay.Weapons
         [Tooltip("Kitni der baad agla axe fainka jayega")]
         [SerializeField] private float _cooldown = 2f;
 
-        [Tooltip("Hawa mein kitna upar aur aage jayega")]
-        [SerializeField] private float _upwardForce = 15f;
-        [SerializeField] private float _forwardForce = 5f;
+        [Tooltip("Ground speed of a thrown axe (before the projectile Speed stat). Provisional.")]
+        [SerializeField] private float _groundSpeed = 12f;
 
         [SerializeField] private int _damage = 25;
 
@@ -111,7 +110,10 @@ namespace SoulHunter.Gameplay.Weapons
                 // Owner decision: throw toward the nearest enemy (facing side when none), still in an upward arc.
                 float sign = Mathf.Sign(transform.root.localScale.x);
                 Vector3 aim = AimDirection(new Vector3(sign, 0f, 0f));
-                Vector3 throwDirection = (aim * (_forwardForce * forwardScale) + Vector3.up * _upwardForce) * SpeedMultiplier;
+                // Top-down adaptation: VS's axe arcs up the *screen*. Built as a 3D height arc it flew
+                // ~7 units over nearby enemies and landed ~15 units away. Fly along the ground instead.
+                rb.useGravity = false;
+                Vector3 throwDirection = aim * (_groundSpeed * forwardScale * SpeedMultiplier);
 
                 rb.AddForce(throwDirection, ForceMode.VelocityChange);
                 rb.AddTorque(Vector3.Cross(aim, Vector3.up) * 10f, ForceMode.VelocityChange); // tumble end over end along the throw

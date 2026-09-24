@@ -78,14 +78,16 @@ namespace SoulHunter.Gameplay.Weapons
 
         private void OnDisable()
         {
-            ClearBibles();
+            // Unity forbids reparenting while this object is being deactivated (scene unload, or the
+            // Bible evolving into Unholy Vespers), so only hide the books here; they are children anyway.
+            ClearBibles(detach: false);
         }
 
         private void SpawnBibles()
         {
             if (_biblePrefab == null) return;
 
-            ClearBibles(); // Purani bibles delete karo
+            ClearBibles(detach: true); // Purani bibles delete karo
 
             _spawnedCount = DesiredCount;
             _spawnedDamage = BibleDamage;
@@ -104,6 +106,13 @@ namespace SoulHunter.Gameplay.Weapons
                 var touchDamage = newBible.GetComponent<TouchDamage>();
                 if (touchDamage == null)
                 {
+                    // TouchDamage requires a Collider and the SH10_Bible model has none, so AddComponent
+                    // returned null and the next line threw. Give the book a trigger first.
+                    if (newBible.GetComponent<Collider>() == null)
+                    {
+                        var trigger = newBible.AddComponent<SphereCollider>();
+                        trigger.isTrigger = true;
+                    }
                     touchDamage = newBible.AddComponent<TouchDamage>();
                     touchDamage.DamageInterval = 0.5f; // Har aadhe second baad dobara damage de sakta hai
                 }
@@ -129,13 +138,13 @@ namespace SoulHunter.Gameplay.Weapons
                 Mathf.Approximately(parent.z, 0f) ? worldScale.z : worldScale.z / parent.z);
         }
 
-        private void ClearBibles()
+        private void ClearBibles(bool detach)
         {
             foreach (var bible in _activeBibles)
             {
                 if (bible != null)
                 {
-                    bible.transform.SetParent(null);
+                    if (detach) bible.transform.SetParent(null);
                     bible.SetActive(false);
                 }
             }

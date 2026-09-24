@@ -161,6 +161,14 @@ Validated 2026-09-24: `BiblePrefabTests` (T) and the full PlayMode suite with 0 
 
 `Whip_Weapon.prefab` shipped with an empty `_enemyLayer`, so the Whip never hit anything. It surfaced once character starting weapons were fixed (Antonio starts with the Whip). `WhipWeapon` (and `GarlicWeapon`, defensively) now default an empty mask to the Enemy layer. Validated by `PlayerLoadoutPlayModeTests` (R): Antonio is visible, starts with the Whip, and the Whip damages an adjacent enemy.
 
+### All-character sweep (2026-09-24)
+
+`CharacterSweepPlayModeTests` plays every catalog character (13) in the real game with the spawner off and checks: model visible, starting weapon equipped, it damages an enemy 3 units away, the player loses no health, and no errors are logged. All 13 pass. The first run found three more defects, now fixed:
+
+- Bible (Lumina): the `SH10_Bible` book model has no collider, so adding `TouchDamage` (which requires one) returned null and threw `NullReferenceException`. Books now get a trigger collider first.
+- Bible: disabling the weapon (scene unload, or evolving into Unholy Vespers) reparented its books while deactivating, which Unity rejects with an error. Books are now only hidden on disable.
+- Axe (Gideon): Vampire Survivors' up-the-screen arc had been built as a 3D height arc, so axes flew ~7 units over nearby enemies and landed ~15 units away. Axes now fly along the ground toward the target (gravity off, still spinning); speed 12 is provisional.
+
 ### Weapon self-damage defect
 
 `TouchDamage.TargetTag` defaults to "Player" (it was written for enemy contact damage). Song of Mana and Bloody Tear never changed it, so their beams/whips damaged the player; Aria (Song of Mana) died within seconds of starting. All TouchDamage weapons now use `AutoAttackWeapon.HostileTag`: "Enemy", or "Player" when a boss holds the weapon (Shadow Kael's mirror). Validated by `WeaponTargetingTests` (T) and `PlayerLoadoutPlayModeTests` (R: Aria takes no damage from her own beam).
