@@ -852,8 +852,8 @@ MonoBehaviour:
   _magnetPrefab: {fileID: 2984942668396759097, guid: 64b4f649601a55c4fbea5b4dfbb24507, type: 3}
   _timeFreezePrefab: {fileID: 2984942668396759097, guid: 1234567890abcdef1234567890abcdef, type: 3}
   _prewarmPerPickupType: 32
-  _chestLogicController: {fileID: 0}
-  _chestUI: {fileID: 0}
+  _chestLogicController: {fileID: 2018371213}
+  _chestUI: {fileID: 819978282}
   _playerController: {fileID: 0}
 --- !u!114 &308318047
 MonoBehaviour:
