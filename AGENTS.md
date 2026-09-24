@@ -283,6 +283,22 @@ Escalate to the owner only when:
 - a product/design choice has no authoritative answer;
 - acceptance cannot be reached without an owner decision.
 
+### Bug fixes must use the Unity CLI (owner rule, 2026-09-24)
+
+Every Soul Hunter bug fix is reproduced and verified with the Unity command-line test runner. Reading code or compiling outside Unity (`dotnet build`) is not enough: several bugs (the pickup-pool startup hang, the Whip's empty enemy mask, the Bible `InvalidCastException`, weapon self-damage) only showed up in real Unity runs.
+
+For each bug fix:
+
+1. Add or extend an EditMode or PlayMode test that reproduces the bug.
+2. Run it against an isolated copy of the project, never the canonical path (the owner's editor keeps it open; never delete its lock or close it):
+   - copy `Assets`, `Packages`, `ProjectSettings` and `Library` to a folder under `D:\SoulHunter-Validation\` (copying `Library` avoids the pixel-perfect package compile failure seen on fresh imports), then sync changed files into it;
+   - `D:\6000.0.36f1\Editor\Unity.exe -batchmode -nographics -projectPath <copy> -runTests -testPlatform EditMode -testResults <run>\editmode-results.xml -logFile <run>\editor-edit.log`
+   - `D:\6000.0.36f1\Editor\Unity.exe -batchmode -projectPath <copy> -runTests -testPlatform PlayMode -testResults <run>\playmode-results.xml -logFile <run>\editor-play.log`
+3. Always run both suites: scene-startup bugs are invisible to EditMode.
+4. Report the pass counts, compile errors and exceptions logged; commit only when both suites pass.
+
+PlayMode tests boot the real game and share the canonical save file (`AppData/LocalLow/Nimrita Games/Soul Hunter/soulhunter_save.json`); tests must not write it deliberately.
+
 ### DOT
 
 DOT means **Detail-Oriented Total Implementation**.
