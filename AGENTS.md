@@ -30,7 +30,7 @@ When sources disagree, use this order:
 5. Current project documentation.
 6. External games, tutorials, marketplace content, conventions, or references.
 
-Owner decision (2026-09-24): Soul Hunter is a Vampire Survivors-style game with its own story. Vampire Survivors is the reference for core gameplay: the run loop, controls, weapon/passive/evolution structure, level-up choices, enemy waves, pickups, chests, and overall game feel should match it. Where Vampire Survivors and a Soul Hunter owner decision differ (for example the Level 3, 7 and 10 decisions below), the Soul Hunter decision wins.
+Owner decision (2026-09-24): Soul Hunter is a Vampire Survivors-style game with its own story. Vampire Survivors is the reference for core gameplay: the run loop, controls, weapon/passive/evolution structure, level-up choices, enemy waves, pickups, chests, and overall game feel should match it. Where Vampire Survivors and a Soul Hunter owner decision differ (for example the run structure and the Level 3, 7 and 10 decisions below), the Soul Hunter decision wins.
 
 Match mechanics and feel only. Do not copy Vampire Survivors code, decompiled or extracted game data, art, audio, text, or character/item names. Soul Hunter's story, characters, names, and art stay its own.
 
@@ -103,6 +103,12 @@ Authoritative behavior:
 Shadow Kael mirrors the player's combat loadout. At encounter start, the relevant player weapon/stat loadout must be captured and represented by the boss according to the implementation contract.
 
 The currently observed generic boss implementation is incomplete relative to this requirement.
+
+### Run structure
+
+Owner decision (2026-09-24): one run plays through all 10 levels in order. This intentionally differs from Vampire Survivors' separate per-stage runs.
+
+Do not split the campaign into separate per-level runs or add a Reaper-style run end without a new owner decision.
 
 ---
 
