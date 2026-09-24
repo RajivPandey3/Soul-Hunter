@@ -21,6 +21,10 @@ namespace SoulHunter.Gameplay.AI
         public int GoldValue = 1;
 
         private HealthController _health;
+        private bool _dropsChestThisLife;
+
+        /// <summary>Makes this enemy drop a chest the next time it dies (timed chest elites). Cleared when it respawns.</summary>
+        public void DropChestThisLife() => _dropsChestThisLife = true;
 
         private void Awake()
         {
@@ -29,6 +33,7 @@ namespace SoulHunter.Gameplay.AI
 
         private void OnEnable()
         {
+            _dropsChestThisLife = false;
             _health.OnDied += HandleDeath;
         }
 
@@ -57,7 +62,7 @@ namespace SoulHunter.Gameplay.AI
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill();
             }
 
-            if (DropsChest)
+            if (DropsChest || _dropsChestThisLife)
             {
                 if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                 {

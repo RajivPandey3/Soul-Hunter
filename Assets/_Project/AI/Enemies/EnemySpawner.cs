@@ -25,6 +25,14 @@ namespace SoulHunter.Gameplay.AI
         [Tooltip("Most enemies spawned in one frame while refilling the wave's enemy minimum")]
         [SerializeField, Min(1)] private int _maxMinimumTopUpPerFrame = 8;
 
+        [Header("Chest elites (VS rule)")]
+        [Tooltip("A chest-carrying elite arrives every this many seconds of stage time, before the boss. Provisional.")]
+        [SerializeField, Min(0f)] private float _chestEliteIntervalSeconds = 300f;
+        [Tooltip("Chest elite health = its EnemyData.MaxHealth x this (then Curse). Provisional.")]
+        [SerializeField, Min(1f)] private float _chestEliteHealthMultiplier = 5f;
+        [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
+        private int _chestElitesSpawned;
+
         [Header("Straggler relocation (VS rule)")]
         [Tooltip("Non-boss enemies further than this from the player are moved back onto the spawn ring ahead of them")]
         [SerializeField] private float _relocateDistance = 40f;
@@ -89,6 +97,7 @@ namespace SoulHunter.Gameplay.AI
             _isBossAlive = false;
             _stageTimePassed = 0f;
             _timer = 0f;
+            _chestElitesSpawned = 0;
             int stageIndex = Mathf.Clamp(stageNum - 1, 0, 9);
             _stageEnemyPrefab = stageIndex < _stageEnemyPrefabs.Count && _stageEnemyPrefabs[stageIndex] != null
                 ? _stageEnemyPrefabs[stageIndex] : _currentWave.EnemyPrefab;
@@ -133,6 +142,13 @@ namespace SoulHunter.Gameplay.AI
                 _bossSpawnedForCurrentWave = SpawnBoss(
                     _stageBossPrefab != null ? _stageBossPrefab : (_bossPrefab != null ? _bossPrefab : _stageEnemyPrefab));
                 return;
+            }
+
+            // Like the boss, a chest elite is never blocked by a full arena.
+            if (_chestElitesSpawned < ChestElitesDue(_stageTimePassed, _chestEliteIntervalSeconds, bossStartTime))
+            {
+                _chestElitesSpawned++;
+                SpawnChestElite();
             }
 
             if (EnemyController.ActiveEnemies.Count >= _maxAliveEnemies) return;
@@ -292,8 +308,9 @@ namespace SoulHunter.Gameplay.AI
                 // Stage boss EnemyData is authoritative. Fallback bosses built from
                 // ordinary enemy prefabs keep the stage formula, not enemy health.
                 var bossData = bossController != null && basePrefab == _stageBossPrefab ? bossController.Data : null;
+                // VS rule: boss health scales with the player's level, so a strong build still gets a fight.
                 health.Initialize(ScaleHealthByCurse(bossData != null
-                    ? bossData.MaxHealth
+                    ? bossData.HealthForPlayerLevel(CurrentPlayerLevel())
                     : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage, curse));
                 health.KnockbackResistance = 1f; // Immune to knockback
                 
@@ -314,9 +331,9 @@ namespace SoulHunter.Gameplay.AI
             return true;
         }
 
-        private void SpawnEnemy(GameObject prefab)
+        private GameObject SpawnEnemy(GameObject prefab)
         {
-            if (prefab == null || _playerTransform == null) return;
+            if (prefab == null || _playerTransform == null) return null;
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             float randomDist = Random.Range(_spawnRadius, _spawnRadius + 10f);
             
@@ -366,6 +383,7 @@ namespace SoulHunter.Gameplay.AI
                 if (data != null) health.Initialize(ScaleHealthByCurse(data.MaxHealth, curse));
                 else health.ResetHealth();
             }
+            return enemyToSpawn;
         }
 
         private SoulHunter.Gameplay.Player.PlayerStats _playerStats;
@@ -377,6 +395,44 @@ namespace SoulHunter.Gameplay.AI
             if (_playerStats == null || _playerStats.transform != _playerTransform)
                 _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
             return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
+        }
+
+        private int CurrentPlayerLevel()
+        {
+            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+            var experience = player != null ? player.GetComponent<SoulHunter.Gameplay.Player.PlayerExperience>() : null;
+            return experience != null ? experience.CurrentLevel : 1;
+        }
+
+        /// <summary>
+        /// How many chest elites are due by <paramref name="stageTime"/>: one every
+        /// <paramref name="interval"/> seconds, only before the stage boss arrives.
+        /// </summary>
+        public static int ChestElitesDue(float stageTime, float interval, float bossStartSeconds)
+        {
+            if (interval <= 0f) return 0;
+            float lastTime = Mathf.Min(stageTime, bossStartSeconds - 0.001f);
+            return Mathf.Max(0, Mathf.FloorToInt(lastTime / interval));
+        }
+
+        /// <summary>
+        /// VS rule: strong enemies arrive at fixed times and always drop a chest (the main source
+        /// of evolutions). Uses the stage elite (or the stage enemy) with extra health.
+        /// </summary>
+        private GameObject SpawnChestElite()
+        {
+            var prefab = _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
+            var elite = SpawnEnemy(prefab);
+            if (elite == null) return null;
+
+            elite.transform.localScale *= _chestEliteSizeMultiplier;
+            var data = elite.GetComponent<EnemyController>()?.Data;
+            var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            if (health != null && data != null)
+                health.Initialize(ScaleHealthByCurse(Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier), CurrentCurse()));
+            elite.GetComponent<EnemyDrop>()?.DropChestThisLife();
+            Debug.Log($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
+            return elite;
         }
 
         public static int ScaleHealthByCurse(int baseHealth, float curse) =>

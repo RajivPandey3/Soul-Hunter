@@ -185,6 +185,17 @@ A second write-up (VS Stage 2, Inlaid Library) was reviewed under the same direc
 
 Not adopted: Stage 2 unlocking at player level 20 (conflicts with the one-run 10-level structure); Inlaid Library's wave tables, enemy/item/relic names and ×1.25 speed (VS game data, and taken from the fan wiki rather than poncle); its corridor and left/right spawning (Soul Hunter Level 2 is The Dark Forest). Stage events (wall/swarm/self-destruct enemies), destructibles, stage-placed items and Hyper mode are candidate features that need owner direction before they are built.
 
+### Boss level scaling and chest elites (owner decisions, 2026-09-24)
+
+Found while reviewing the VS Stage 4/5 write-ups: bosses had fixed health (1000 x stage) although one run keeps levelling across 10 stages, and only stage bosses dropped chests (~10 per run), so evolutions were rare. The owner chose:
+
+- **Boss HP x player level:** `EnemyData.HealthPerPlayerLevel` (> 0 means max health = it x player level, then Curse). All ten stage boss assets use 50, which reproduces the old values if the player gains ~20 levels per stage; provisional balance. Shadow Kael scales too, on top of mirroring the loadout.
+- **Timed chest elites:** every `_chestEliteIntervalSeconds` (300 s) of stage time before the boss (5/10/15/20 min), `EnemySpawner` spawns the stage elite with 5x health and 1.5x size that always drops a chest (`EnemyDrop.DropChestThisLife`, cleared on respawn so pooled reuse never drops extra chests). Not blocked by the enemy cap. Values provisional.
+
+Validated by `BossScalingAndChestEliteTests` (T) and `ChestEliteAndBossPlayModeTests` (R); EditMode 246/246, PlayMode 23/23. Balance and feel in real play are unverified.
+
+Stage 3-5 write-ups (Dairy Plant, Gallo Tower, Cappella Magna) added no other adoptable official mechanics; their stage data, names, unlock levels and Hyper/Hurry modes are VS content or conflict with the run structure. Candidate features still awaiting owner direction: stage events (swarm/wall/closing ring/shooting ring), step-on traps that trigger events, environmental weapons (rail cart), telegraphed strikes, invulnerable timed stalkers, stage-placed items, teleport points.
+
 ### Audio
 
 No scene contains an `AudioManager`; it now creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Enemy-hit, death and music audio are still missing.

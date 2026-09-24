@@ -19,3 +19,4 @@ MonoBehaviour:
   DropChanceGem: 95
   DropChanceChicken: 0
   DropsChest: 1
+  HealthPerPlayerLevel: 50
