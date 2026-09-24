@@ -92,16 +92,9 @@ namespace SoulHunter.Gameplay.Combat
                 var saveSvc = SoulHunter.Core.Services.GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
                 if (saveSvc != null && !string.IsNullOrEmpty(saveSvc.CurrentData.SelectedCharacterName))
                 {
-                    string heroName = saveSvc.CurrentData.SelectedCharacterName;
-                    var chars = Resources.LoadAll<CharacterData>("Characters");
-                    foreach (var c in chars)
-                    {
-                        if (c.CharacterName == heroName)
-                        {
-                            startWeapon = c.StartingWeapon;
-                            break;
-                        }
-                    }
+                    // Characters live in the content catalog; there is no Resources/Characters folder.
+                    var character = GameContentCatalog.FindCharacterExact(saveSvc.CurrentData.SelectedCharacterName);
+                    if (character != null) startWeapon = character.StartingWeapon;
                 }
             }
 

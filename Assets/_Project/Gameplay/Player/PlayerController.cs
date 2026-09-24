@@ -136,6 +136,8 @@ namespace SoulHunter.Gameplay.Player
                 Time.timeScale = 1f;
             }
 
+            ApplySelectedCharacterStats();
+
             var infiniteMap = FindFirstObjectByType<SoulHunter.Gameplay.Environment.InfiniteMap>();
             if (infiniteMap != null)
             {
@@ -230,6 +232,25 @@ namespace SoulHunter.Gameplay.Player
             {
                 ChangeState(new PlayerAttackState(this));
             }
+        }
+
+        /// <summary>
+        /// VS rule: the chosen character's starting max health and stat modifiers apply to the run.
+        /// Exact match only, so an unknown or missing selection keeps the default stats.
+        /// </summary>
+        private void ApplySelectedCharacterStats()
+        {
+            if (GameServices.Instance == null) return;
+            var saveSvc = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            if (saveSvc == null || saveSvc.CurrentData == null) return;
+
+            var character = SoulHunter.Gameplay.Data.GameContentCatalog.FindCharacterExact(saveSvc.CurrentData.SelectedCharacterName);
+            if (character == null) return;
+
+            var stats = Stats;
+            if (stats != null) stats.ApplyCharacter(character);
+            var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            if (health != null && character.BaseMaxHealth > 0) health.Initialize(character.BaseMaxHealth);
         }
 
         private void OnDashEvent(PlayerDashEvent dashEvent)

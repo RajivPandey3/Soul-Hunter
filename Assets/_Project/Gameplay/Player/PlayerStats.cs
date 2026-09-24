@@ -54,6 +54,24 @@ namespace SoulHunter.Gameplay.Player
             SyncArmor();
         }
 
+        private bool _characterApplied;
+
+        /// <summary>
+        /// VS rule: each character starts with its own stat modifiers. Applied once, on top of
+        /// meta-shop bonuses (1.0 = no change). Move speed is not applied: the character assets
+        /// mix absolute speeds and multipliers, so it needs an owner decision first.
+        /// </summary>
+        public void ApplyCharacter(SoulHunter.Gameplay.Data.CharacterData character)
+        {
+            if (character == null || _characterApplied) return;
+            _characterApplied = true;
+            Might += character.StartingMight - 1f;
+            Area += character.StartingArea - 1f;
+            Cooldown = Mathf.Max(0.1f, Cooldown + (character.StartingCooldown - 1f));
+            Armor += character.StartingArmor;
+            SyncArmor();
+        }
+
         // Armor is applied by HealthController, so push every change to it.
         private void SyncArmor()
         {

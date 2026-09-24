@@ -174,6 +174,10 @@ JSON persistence exists, but robust general schema migration and corrupt-save re
 
 Some older status documents are stale or contradictory. Current owner decisions and verified evidence outrank stale status text.
 
+### Character move speed data defect
+
+`CharacterData.BaseMoveSpeed` mixes conventions: Kael (4), Antonio (3) and Elaria (3.5) look like absolute speeds, the other ten characters (0.8-1.3) look like multipliers, while the player's base speed is 5. It is therefore not applied; the other character stats (max health, Might, Area, Cooldown, Armor, starting weapon) are. Needs an owner decision on the convention before move speed can be applied.
+
 ### Validation run 2026-09-24
 
 Commits `0beae7f`..`6f3f9c2` plus the pickup-pool fix were validated in an isolated workspace (`D:\SoulHunter-Validation\editmode-20260924-134853\`, which keeps the results XML and logs), with `Library` copied from the canonical project:
