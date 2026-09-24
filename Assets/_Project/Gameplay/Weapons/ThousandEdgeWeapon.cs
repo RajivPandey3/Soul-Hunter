@@ -5,6 +5,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class ThousandEdgeWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         public GameObject KnifePrefab;
         public float KnifeSpeed = 25f;
 
@@ -48,7 +49,7 @@ namespace SoulHunter.Gameplay.Combat
 
                 var proj = knife.GetComponent<Projectile>();
                 if (proj == null) proj = knife.AddComponent<Projectile>();
-                proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, ScaledDamage(35f), 3f);
+                proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(35f), 3f);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();

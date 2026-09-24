@@ -5,6 +5,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class KnifeWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [SerializeField] private GameObject _projectilePrefab;
         public float KnifeSpeed = 15f;
 
@@ -50,7 +51,7 @@ namespace SoulHunter.Gameplay.Combat
 
 
                 var proj = knife.GetComponent<Projectile>();
-                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 2f);
+                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(DamageAmount), 2f);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";

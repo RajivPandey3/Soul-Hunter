@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class CrossWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Tooltip("Cross ka 3D model/prefab jisme Rigidbody aur TouchDamage laga ho")]
         [SerializeField] private GameObject _crossPrefab;
         
@@ -133,7 +134,7 @@ namespace SoulHunter.Gameplay.Weapons
             crossObj.transform.localScale = _crossPrefab.transform.localScale * area;
 
             // Cross par Damage set karo
-            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
+            int actualDamage = Mathf.RoundToInt(RollDamage(DamageAmount));
             
             var projectileDamage = crossObj.GetComponent<ProjectileDamage>();
             if (projectileDamage == null)

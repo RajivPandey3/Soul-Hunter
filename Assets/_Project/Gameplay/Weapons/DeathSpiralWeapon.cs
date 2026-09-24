@@ -4,6 +4,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class DeathSpiralWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Header("Death Spiral Settings (Evolved Axe)")]
         public GameObject ScythePrefab; 
         public float ExpansionSpeed = 8f; 
@@ -32,7 +33,7 @@ namespace SoulHunter.Gameplay.Combat
                 var proj = scythe.GetComponent<Projectile>();
                 if (proj == null) proj = scythe.AddComponent<Projectile>();
                 // Pierces everything
-                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, ScaledDamage(60f), 6f);
+                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(60f), 6f);
                 
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = scythe.AddComponent<ProjectileDamage>();

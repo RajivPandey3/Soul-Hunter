@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class AxeWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Tooltip("Axe ki tasveer/mesh jisme Rigidbody laga ho")]
         [SerializeField] private GameObject _axePrefab;
 
@@ -90,7 +91,7 @@ namespace SoulHunter.Gameplay.Weapons
             if (axeObj == null) return;
             axeObj.transform.localScale = _axePrefab.transform.localScale * (AreaMultiplier * LevelAreaMultiplier);
 
-            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
+            int actualDamage = Mathf.RoundToInt(RollDamage(DamageAmount));
 
             var projectileDamage = axeObj.GetComponent<ProjectileDamage>();
             if (projectileDamage == null)

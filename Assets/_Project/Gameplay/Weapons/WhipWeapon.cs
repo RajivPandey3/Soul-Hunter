@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class WhipWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Header("Soul Hunter Theme: Shadow Scythe (Whip)")]
         [Tooltip("Whip ka attack kitni door tak jayega")]
         [SerializeField] private float _attackRange = 4f;
@@ -90,7 +91,7 @@ namespace SoulHunter.Gameplay.Weapons
             float areaMult = AreaMultiplier * LevelAreaMultiplier;
             float actualRange = _attackRange * areaMult;
             float actualWidth = _attackWidth * areaMult;
-            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
+            int actualDamage = Mathf.RoundToInt(RollDamage(DamageAmount));
 
             // Box ka center point nikalna (player se thoda aage)
             Vector3 boxCenter = transform.position + (attackDirection * (actualRange / 2f));

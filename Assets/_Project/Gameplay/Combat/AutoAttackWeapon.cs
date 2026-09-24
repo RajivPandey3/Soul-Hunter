@@ -47,6 +47,24 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>Base damage scaled by Might.</summary>
         protected float ScaledDamage(float baseDamage) => baseDamage * MightMultiplier;
 
+        /// <summary>
+        /// VS rule: some weapons can land critical hits; Luck multiplies the chance. 0 = cannot crit.
+        /// Provisional values; crit weapons override this.
+        /// </summary>
+        protected virtual float BaseCritChance => 0f;
+        public const float CritDamageMultiplier = 2f;
+
+        public static bool IsCrit(float baseChance, float luck, float roll01) =>
+            baseChance > 0f && roll01 < Mathf.Clamp01(baseChance * Mathf.Max(0f, luck));
+
+        /// <summary>Damage for one hit or projectile: Might-scaled, doubled on a critical hit.</summary>
+        protected float RollDamage(float baseDamage)
+        {
+            float damage = ScaledDamage(baseDamage);
+            float luck = OwnerStats != null ? OwnerStats.Luck : 1f;
+            return IsCrit(BaseCritChance, luck, Random.value) ? damage * CritDamageMultiplier : damage;
+        }
+
         /// <summary>Scales a spawned effect by Area, relative to its prefab's own scale (safe for pooled objects).</summary>
         protected void ApplyArea(GameObject instance, GameObject prefab)
         {

@@ -6,6 +6,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class BloodyTearWeapon : AutoAttackWeapon
     {
+        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Header("Bloody Tear Settings (Evolved Whip)")]
         public GameObject WhipVisualPrefab; 
         public float HealAmount = 8f; 
@@ -55,7 +56,7 @@ namespace SoulHunter.Gameplay.Combat
             var damageDealer = whip.GetComponent<TouchDamage>();
             if (damageDealer == null) damageDealer = whip.AddComponent<TouchDamage>();
             
-            damageDealer.DamageAmount = ScaledDamage(50f); // High base damage
+            damageDealer.DamageAmount = RollDamage(50f); // High base damage
             damageDealer.SourceWeaponName = "Bloody Tear";
             
             // Critical hit & Heal logic simulation
