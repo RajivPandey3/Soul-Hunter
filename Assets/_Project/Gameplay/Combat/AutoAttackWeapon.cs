@@ -52,12 +52,25 @@ namespace SoulHunter.Gameplay.Combat
         protected float SpeedMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f;
         protected int ExtraAmount => OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0;
 
-        /// <summary>Nearest live enemy on the ground plane within maxRange, or null.</summary>
+        /// <summary>
+        /// Nearest live enemy on the ground plane within maxRange, or null. For a boss's mirrored copy
+        /// (Shadow Kael) the "enemy" is the player, so its weapons aim at the player, not its own minions.
+        /// </summary>
         protected Transform FindNearestEnemy(float maxRange = float.MaxValue)
         {
             Transform nearest = null;
             float bestSqr = maxRange * maxRange;
             Vector3 origin = transform.position;
+
+            if (GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>() != null)
+            {
+                var player = PlayerController.Instance;
+                if (player == null) return null;
+                Vector3 toPlayer = player.transform.position - origin;
+                toPlayer.y = 0f;
+                return toPlayer.sqrMagnitude <= bestSqr ? player.transform : null;
+            }
+
             var enemies = SoulHunter.Gameplay.AI.EnemyController.ActiveEnemies;
             for (int i = 0; i < enemies.Count; i++)
             {
@@ -77,6 +90,25 @@ namespace SoulHunter.Gameplay.Combat
             Vector3 direction = target.position - transform.position;
             direction.y = 0f;
             return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+        }
+
+        /// <summary>
+        /// Owner decision: attacks fire toward the nearest enemy. Returns the flat direction to it, or
+        /// <paramref name="fallback"/> (flattened) when there is no enemy, so weapons keep their old behaviour then.
+        /// </summary>
+        protected Vector3 AimDirection(Vector3 fallback, float maxRange = float.MaxValue)
+        {
+            Transform target = FindNearestEnemy(maxRange);
+            if (target != null) return FlatDirectionTo(target);
+            fallback.y = 0f;
+            return fallback.sqrMagnitude > 0.0001f ? fallback.normalized : Vector3.forward;
+        }
+
+        /// <summary>A random flat unit direction, for weapons whose no-enemy fallback is random.</summary>
+        protected static Vector3 RandomFlatDirection()
+        {
+            Vector2 random = Random.insideUnitCircle.normalized;
+            return random.sqrMagnitude > 0f ? new Vector3(random.x, 0f, random.y) : Vector3.forward;
         }
 
         /// <summary>Base damage scaled by Might.</summary>

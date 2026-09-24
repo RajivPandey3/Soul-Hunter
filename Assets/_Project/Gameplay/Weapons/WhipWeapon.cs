@@ -78,18 +78,19 @@ namespace SoulHunter.Gameplay.Weapons
 
         protected override void Attack()
         {
+            // Owner decision: lash toward the nearest enemy (facing side when none).
             // The second whip strikes the opposite side, then they alternate.
             float facing = Mathf.Sign(transform.root.localScale.x);
+            Vector3 aim = AimDirection(new Vector3(facing, 0f, 0f));
             int whips = LevelWhipCount + ExtraAmount;
             for (int i = 0; i < whips; i++)
             {
-                FireWhip(i % 2 == 0 ? facing : -facing);
+                FireWhip(i % 2 == 0 ? aim : -aim);
             }
         }
 
-        private void FireWhip(float sign)
+        private void FireWhip(Vector3 attackDirection)
         {
-            Vector3 attackDirection = new Vector3(sign, 0, 0);
 
             float areaMult = AreaMultiplier * LevelAreaMultiplier;
             float actualRange = _attackRange * areaMult;
@@ -99,9 +100,11 @@ namespace SoulHunter.Gameplay.Weapons
             // Box ka center point nikalna (player se thoda aage)
             Vector3 boxCenter = transform.position + (attackDirection * (actualRange / 2f));
             Vector3 halfExtents = new Vector3(actualRange / 2f, 1f, actualWidth / 2f);
+            // The box is long along local X; turn it to face the lash direction.
+            Quaternion boxRotation = Quaternion.FromToRotation(Vector3.right, attackDirection);
 
             // NonAlloc for 100% performance (no garbage generation)
-            int hitsCount = UnityEngine.Physics.OverlapBoxNonAlloc(boxCenter, halfExtents, _hitsBuffer, Quaternion.identity, _enemyLayer);
+            int hitsCount = UnityEngine.Physics.OverlapBoxNonAlloc(boxCenter, halfExtents, _hitsBuffer, boxRotation, _enemyLayer);
 
             for (int i = 0; i < hitsCount; i++)
             {

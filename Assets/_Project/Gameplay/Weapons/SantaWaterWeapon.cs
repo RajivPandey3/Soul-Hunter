@@ -35,8 +35,11 @@ namespace SoulHunter.Gameplay.Combat
             for (int i = 0; i < _zonesPerAttack + ExtraAmount; i++)
             {
                 // Random position near player
-                Vector2 randomOffset = Random.insideUnitCircle * DropRadius;
-                Vector3 dropPosition = transform.position + new Vector3(randomOffset.x, 0f, randomOffset.y);
+                // Owner decision: aim at the nearest enemy; drop on it (extra flasks land close by), random around the player when none.
+                Transform nearest = FindNearestEnemy(DropRadius * 2f);
+                Vector2 randomOffset = Random.insideUnitCircle * (nearest != null ? (i == 0 ? 0f : 1.5f) : DropRadius);
+                Vector3 centre = nearest != null ? new Vector3(nearest.position.x, transform.position.y, nearest.position.z) : transform.position;
+                Vector3 dropPosition = centre + new Vector3(randomOffset.x, 0f, randomOffset.y);
                 
                 SpawnWaterZone(dropPosition);
             }

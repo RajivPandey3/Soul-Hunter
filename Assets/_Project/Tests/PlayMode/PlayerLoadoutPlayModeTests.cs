@@ -15,8 +15,8 @@ namespace SoulHunter.Tests.PlayMode
 {
     /// <summary>
     /// Plays as a character whose starting weapon is the Whip (Antonio) and checks what the player sees:
-    /// the character model is visible, the starting weapon is the Whip, and the Whip damages an enemy
-    /// on the side it swings. Guards the Whip prefab's empty enemy mask (it never hit anything).
+    /// the character model is visible, the starting weapon is the Whip, and the Whip damages the
+    /// nearest enemy even off its old facing axis. Guards the Whip prefab's empty enemy mask (it never hit anything).
     /// </summary>
     public class PlayerLoadoutPlayModeTests : GameplayPlayModeTestBase
     {
@@ -49,17 +49,17 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.IsNotNull(whip, "Antonio's starting Whip was not spawned. " + Errors());
                 Assert.That(whip.TargetLayer.value, Is.EqualTo(LayerMask.GetMask("Enemy")), "Whip must target the Enemy layer.");
 
-                // 3. The Whip damages an enemy on the side it swings (first swing faces the player's facing).
+                // 3. The Whip aims at the nearest enemy: place one straight ahead (+Z), off the old
+                //    facing axis (X) the Whip used to be locked to, and it must still be hit.
                 var spawner = Object.FindFirstObjectByType<EnemySpawner>();
                 var enemyPrefabs = GetPrivateField<List<GameObject>>(spawner, "_stageEnemyPrefabs");
                 Assert.That(enemyPrefabs, Is.Not.Null.And.Not.Empty);
-                float facing = Mathf.Sign(player.transform.root.localScale.x);
-                var enemy = Object.Instantiate(enemyPrefabs[0], player.transform.position + new Vector3(facing * 2f, 0f, 0f), Quaternion.identity);
+                var enemy = Object.Instantiate(enemyPrefabs[0], player.transform.position + new Vector3(0f, 0f, 2f), Quaternion.identity);
                 var enemyHealth = enemy.GetComponent<HealthController>();
                 int startHealth = enemyHealth.CurrentHealth;
 
                 yield return WaitUntilRealtime(() => enemyHealth == null || enemyHealth.CurrentHealth < startHealth,
-                    "the Whip to damage an enemy next to the player");
+                    "the Whip to damage the nearest enemy (straight ahead)");
                 if (enemy != null) Object.Destroy(enemy);
             }
             finally

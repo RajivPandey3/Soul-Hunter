@@ -114,7 +114,9 @@ Do not split the campaign into separate per-level runs or add a Reaper-style run
 
 ### Weapon aiming
 
-Owner decision (2026-09-24): the player's attacks should fire toward the nearest enemy. Applied so far to Song of Mana, which now fires piercing Magic shots at the nearest enemy (Vampire Survivors' version is a vertical beam around the player). Whether the rule extends to facing-based weapons (Knife, Thousand Edge, Whip, Axe) is not yet decided.
+Owner decision (2026-09-24): all of the player's directional attacks fire toward the nearest enemy (`AutoAttackWeapon.AimDirection`), falling back to each weapon's previous direction when there is no enemy. This intentionally differs from Vampire Survivors, where Knife, Whip, Axe and others follow facing or random directions. Applied to Song of Mana (piercing Magic shots), Knife, Thousand Edge, Whip, Bloody Tear, Axe, Fire Wand, Holy Wand, Gun (one arm aimed, 4-way pattern kept), Cherry Bomb, Death Spiral (first scythe aimed), Bone, Runetracer, Clock Lancet, Santa Water (flask lands on the target) and Lightning Ring (nearest enemies first). Non-directional weapons are unchanged (Garlic, Bible, Laurel, Pentagram, Peachone). A boss's mirrored copy aims at the player. Validated by `WeaponAimingTests` (T) and `PlayerLoadoutPlayModeTests` (R); Axe is code-reviewed only (its throw needs a physics step).
+
+Gun, Cherry Bomb and Death Spiral previously built directions as `Vector2`, which became (x, y, 0) and fired vertically instead of across the ground; they now aim on the ground plane.
 
 ---
 

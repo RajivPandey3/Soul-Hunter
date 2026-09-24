@@ -27,8 +27,10 @@ namespace SoulHunter.Gameplay.Combat
             if (WhipVisualPrefab == null) return;
             
             // Whip logic but with lifesteal
-            FireWhip(Vector3.right);
-            FireWhip(Vector3.left);
+            // Owner decision: aim at the nearest enemy; the second lash covers the opposite side.
+            Vector3 aim = AimDirection(Vector3.right);
+            FireWhip(aim);
+            FireWhip(-aim);
         }
 
         private void FireWhip(Vector3 direction)
@@ -39,6 +41,8 @@ namespace SoulHunter.Gameplay.Combat
                 : Instantiate(WhipVisualPrefab, spawnPosition, Quaternion.identity, transform);
             if (whip == null) return;
             ApplyArea(whip, WhipVisualPrefab);
+            // The whip's hitbox is long along local X; turn it to face the aim direction.
+            whip.transform.rotation = Quaternion.FromToRotation(Vector3.right, direction);
             whip.transform.SetParent(transform);
 
             // TouchDamage requires a Collider. Some generated SH10 visual

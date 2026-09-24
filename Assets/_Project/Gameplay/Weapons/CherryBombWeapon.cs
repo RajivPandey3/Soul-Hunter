@@ -22,7 +22,8 @@ namespace SoulHunter.Gameplay.Combat
 
             for (int i = 0; i < _amount + ExtraAmount; i++)
             {
-                Vector2 randomDir = Random.insideUnitCircle.normalized;
+                // Owner decision: aim at the nearest enemy; random when none. On the ground plane (a Vector2 here sent bombs vertically).
+                Vector3 randomDir = Quaternion.Euler(0f, (i - (_amount + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
                 GameObject bomb = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(BombPrefab, transform.position, Quaternion.identity)
                     : Instantiate(BombPrefab, transform.position, Quaternion.identity);

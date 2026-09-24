@@ -39,6 +39,7 @@ namespace SoulHunter.Gameplay.Combat
             if (moveDir.sqrMagnitude < 0.001f)
                 moveDir = _player.transform.localScale.x < 0f ? Vector3.left : Vector3.right;
             else moveDir.Normalize();
+            moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 
             for (int i = 0; i < _knivesPerAttack + ExtraAmount; i++)
             {

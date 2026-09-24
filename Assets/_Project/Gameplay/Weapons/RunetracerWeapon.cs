@@ -22,7 +22,8 @@ namespace SoulHunter.Gameplay.Combat
 
             for (int i = 0; i < _amount + ExtraAmount; i++)
             {
-                Vector2 randomDir = Random.insideUnitCircle.normalized;
+                // Owner decision: aim at the nearest enemy; random when none. Extra runes fan out.
+                Vector3 aim = Quaternion.Euler(0f, (i - (_amount + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
                 GameObject rune = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(RunePrefab, transform.position, Quaternion.identity)
                     : Instantiate(RunePrefab, transform.position, Quaternion.identity);
@@ -35,7 +36,7 @@ namespace SoulHunter.Gameplay.Combat
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.FreezePositionY;
                 // Bouncing logic usually handled by 3D physics material on the prefab
-                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * (Speed * SpeedMultiplier);
+                rb.linearVelocity = aim * (Speed * SpeedMultiplier);
 
                 var damageDealer = rune.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();

@@ -51,15 +51,31 @@ namespace SoulHunter.Gameplay.Combat
 
             for (int i = 0; i < strikesThisTurn; i++)
             {
-                int randomIndex = Random.Range(0, validTargets.Count);
-                EnemyController target = validTargets[randomIndex];
-                validTargets.RemoveAt(randomIndex); // Ek dushman pe 2 bijliyan na giren
+                // Owner decision: aim at the nearest enemy; strike the nearest remaining enemies first.
+                int nearestIndex = NearestIndex(validTargets);
+                if (nearestIndex < 0) break;
+                EnemyController target = validTargets[nearestIndex];
+                validTargets.RemoveAt(nearestIndex); // Ek dushman pe 2 bijliyan na giren
 
                 if (Vector3.Distance(transform.position, target.transform.position) <= StrikeRadius)
                 {
                     SpawnLightning(target.transform.position);
                 }
             }
+        }
+
+        private int NearestIndex(List<EnemyController> candidates)
+        {
+            int best = -1;
+            float bestSqr = float.MaxValue;
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                if (candidates[i] == null) continue;
+                Vector3 offset = candidates[i].transform.position - transform.position;
+                offset.y = 0f;
+                if (offset.sqrMagnitude < bestSqr) { bestSqr = offset.sqrMagnitude; best = i; }
+            }
+            return best;
         }
 
         private void SpawnLightning(Vector3 position)

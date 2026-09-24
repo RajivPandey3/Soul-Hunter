@@ -20,23 +20,11 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (ProjectilePrefab == null) return;
 
-            EnemyController closestEnemy = null;
-            float minDistance = float.MaxValue;
-            var allEnemies = EnemyController.ActiveEnemies;
-            
-            foreach (var enemy in allEnemies)
-            {
-                float dist = Vector3.Distance(transform.position, enemy.transform.position);
-                if (dist < minDistance)
-                {
-                    minDistance = dist;
-                    closestEnemy = enemy;
-                }
-            }
-
+            // Shared null-safe search (the old loop crashed on destroyed entries in ActiveEnemies).
+            Transform closestEnemy = FindNearestEnemy();
             if (closestEnemy == null) return;
 
-            Vector3 aimDir = (closestEnemy.transform.position - transform.position).normalized;
+            Vector3 aimDir = FlatDirectionTo(closestEnemy); // on the ground plane
             // Amount adds extra shots, fanned slightly around the target direction.
             int shots = 1 + ExtraAmount;
             for (int i = 0; i < shots; i++)

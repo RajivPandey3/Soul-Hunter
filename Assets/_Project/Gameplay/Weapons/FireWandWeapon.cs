@@ -38,11 +38,12 @@ namespace SoulHunter.Gameplay.Combat
             for (int i = 0; i < _fireballsPerAttack + ExtraAmount; i++)
             {
                 // Fire wand hamesha completely random enemy ko target karta hai (VS rule)
-                EnemyController target = allEnemies[Random.Range(0, allEnemies.Count)];
-
-                if (Vector3.Distance(transform.position, target.transform.position) <= FireRange)
+                // Owner decision: aim at the nearest enemy; extra fireballs fan out around it.
+                Transform target = FindNearestEnemy(FireRange);
+                if (target != null)
                 {
-                    ShootFireball(target.transform.position);
+                    Vector3 fan = Quaternion.Euler(0f, (i - (_fireballsPerAttack + ExtraAmount - 1) * 0.5f) * 8f, 0f) * FlatDirectionTo(target);
+                    ShootFireball(transform.position + fan * 10f);
                 }
             }
         }

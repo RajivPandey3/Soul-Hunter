@@ -21,7 +21,8 @@ namespace SoulHunter.Gameplay.Combat
         {
             // 12 clock positions (0 = up, 1 = up-right, etc.)
             float angle = _currentDirectionIndex * (360f / 12f);
-            Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.forward;
+            // Owner decision: aim at the nearest enemy; the clock sweep when none.
+            Vector3 direction = AimDirection(Quaternion.Euler(0, angle, 0) * Vector3.forward);
 
             _currentDirectionIndex = (_currentDirectionIndex + 1) % 12;
 

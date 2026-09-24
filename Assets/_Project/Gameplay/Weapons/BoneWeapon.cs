@@ -21,7 +21,8 @@ namespace SoulHunter.Gameplay.Combat
 
             for (int i = 0; i < _amount + ExtraAmount; i++)
             {
-                Vector2 randomDir = Random.insideUnitCircle.normalized;
+                // Owner decision: aim at the nearest enemy; random when none. Extra bones fan out.
+                Vector3 aim = Quaternion.Euler(0f, (i - (_amount + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
                 GameObject bone = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(BonePrefab, transform.position, Quaternion.identity)
                     : Instantiate(BonePrefab, transform.position, Quaternion.identity);
@@ -34,7 +35,7 @@ namespace SoulHunter.Gameplay.Combat
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.FreezePositionY;
                 // Bone bounces heavily, relies on physics material
-                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * (ThrowSpeed * SpeedMultiplier);
+                rb.linearVelocity = aim * (ThrowSpeed * SpeedMultiplier);
 
                 var damageDealer = bone.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = bone.AddComponent<ProjectileDamage>();

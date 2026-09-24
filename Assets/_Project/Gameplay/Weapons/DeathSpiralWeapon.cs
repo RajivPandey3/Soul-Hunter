@@ -20,12 +20,14 @@ namespace SoulHunter.Gameplay.Combat
             if (ScythePrefab == null) return;
 
             int scytheCount = _scytheCount + ExtraAmount;
+            Vector3 aim = AimDirection(Vector3.forward);
             float angleStep = 360f / scytheCount;
 
             for (int i = 0; i < scytheCount; i++)
             {
                 float currentAngle = i * angleStep;
-                Vector2 shootDir = Quaternion.Euler(0, 0, currentAngle) * Vector2.up;
+                // Ring on the ground plane (a Vector2 here fired scythes vertically), first scythe at the nearest enemy.
+                Vector3 shootDir = Quaternion.Euler(0f, currentAngle, 0f) * aim;
                 
                 GameObject scythe = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(ScythePrefab, transform.position, Quaternion.identity)

@@ -108,11 +108,13 @@ namespace SoulHunter.Gameplay.Weapons
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
 
+                // Owner decision: throw toward the nearest enemy (facing side when none), still in an upward arc.
                 float sign = Mathf.Sign(transform.root.localScale.x);
-                Vector3 throwDirection = new Vector3(sign * _forwardForce * forwardScale, _upwardForce, 0) * SpeedMultiplier;
+                Vector3 aim = AimDirection(new Vector3(sign, 0f, 0f));
+                Vector3 throwDirection = (aim * (_forwardForce * forwardScale) + Vector3.up * _upwardForce) * SpeedMultiplier;
 
                 rb.AddForce(throwDirection, ForceMode.VelocityChange);
-                rb.AddTorque(new Vector3(0, 0, -sign * 10f), ForceMode.VelocityChange);
+                rb.AddTorque(Vector3.Cross(aim, Vector3.up) * 10f, ForceMode.VelocityChange); // tumble end over end along the throw
             }
 
             // 5 second baad axe wapas pool mein chala jayega (Destroy nahi hoga)
