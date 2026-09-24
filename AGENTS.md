@@ -1,11 +1,11 @@
-# AGENTS.md — Soul Hunter Autonomous Development Operating Contract
+# AGENTS.md — Soul Hunter Development Operating Contract
 
 **Project:** Soul Hunter  
 **Canonical project root:** `D:\Unity Projects\Soul-Hunter`  
 **Unity:** `6000.0.36f1` (`9fe3b5f71dbb`)  
 **Primary platform:** Steam / Windows  
 **Secondary platform:** Android  
-**Status date:** 2026-09-11
+**Status date:** 2026-09-24
 
 ---
 
@@ -30,7 +30,9 @@ When sources disagree, use this order:
 5. Current project documentation.
 6. External games, tutorials, marketplace content, conventions, or references.
 
-External survivor-style games are inspiration only. Soul Hunter is its own Survivor Roguelite and has no mandatory 1:1 parity or DLC-parity requirement.
+Owner decision (2026-09-24): Soul Hunter is a Vampire Survivors-style game with its own story. Vampire Survivors is the reference for core gameplay: the run loop, controls, weapon/passive/evolution structure, level-up choices, enemy waves, pickups, chests, and overall game feel should match it. Where Vampire Survivors and a Soul Hunter owner decision differ (for example the Level 3, 7 and 10 decisions below), the Soul Hunter decision wins.
+
+Match mechanics and feel only. Do not copy Vampire Survivors code, decompiled or extracted game data, art, audio, text, or character/item names. Soul Hunter's story, characters, names, and art stay its own.
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 
@@ -65,8 +67,6 @@ Canonical project:
 - Never delete Unity lock files or kill a Unity process merely to bypass a lock.
 - Do not deploy or publish without explicit authorization.
 - Preserve evidence for meaningful accepted changes.
-
-The current implementation is highly divergent from old HEAD and must not be treated as recoverable from HEAD alone.
 
 ---
 
@@ -127,23 +127,21 @@ Do not claim performance acceptance without representative profiling.
 
 Treat the following as known risks until corrected and revalidated.
 
-### EnemyData reference defect
+### Shared EnemyData defect
 
-22 active enemy/boss prefabs were observed referencing missing GUID:
+22 enemy/boss prefabs (the `SH10_L01`–`L10` Enemy/Boss Gameplay prefabs and `Enemy_Entity.prefab`) reference GUID `01217a48f2e5cb44588556a395026c0a`.
 
-`01217a48f2e5cb44588556a395026c0a`
+That GUID now resolves to `Assets/_Project/Data/Config/Bat_Enemy_Data.asset`, the only EnemyData asset in the project, so every enemy and boss shares the Bat data.
 
-No current active `Assets` meta was found defining that GUID in the verified audit snapshot.
-
-Do not downgrade this to `UNKNOWN`; it is a known serialized-data defect.
+Treat this as a known data defect until each enemy/boss has its own data or per-prefab overrides are proven.
 
 ### Bible prefab defect
 
-`Bible_Weapon.prefab` was observed with `_biblePrefab` referencing its own root object.
+`Bible_Weapon.prefab` previously had `_biblePrefab` referencing its own root object, and historical runtime evidence included Bible-related exceptions.
 
-Historical runtime evidence included Bible-related exceptions.
+`_biblePrefab` now references `SH10_Bible.prefab` (static fix only).
 
-Treat Bible acquisition/use as high risk until repaired and validated with a zero-exception runtime scenario.
+Treat Bible acquisition/use as high risk until validated with a zero-exception runtime scenario.
 
 ### Audio
 
@@ -170,31 +168,7 @@ Some older status documents are stale or contradictory. Current owner decisions 
 
 ---
 
-## 8. Build / Setup Tooling
-
-`Assets/_Project/Tools/Build/` source coverage has been audited.
-
-Status:
-
-**SOURCE AUDITED / EXECUTION UNVERIFIED / HARDENING REQUIRED**
-
-Known risks include:
-
-- inactive-object searches may create duplicates;
-- hard-coded tag/layer assumptions;
-- `UI` tag precondition inconsistency;
-- broad `PrefabUtility.ApplyPrefabInstance` mutations;
-- fuzzy/unsorted asset discovery;
-- reflection-based private-field assignment;
-- missing dependencies can produce warnings or silent returns while scripts still print completion messages.
-
-A success log from these builders is not acceptance evidence.
-
-Execute these tools only in an isolated workspace until deterministic/idempotent behavior and exact serialized deltas are proven.
-
----
-
-## 9. Unity Validation Status
+## 8. Unity Validation Status
 
 Current project editor:
 
@@ -219,7 +193,7 @@ Therefore:
 
 ---
 
-## 10. Requirement / Acceptance Rules
+## 9. Requirement / Acceptance Rules
 
 Evidence classes:
 
@@ -246,7 +220,7 @@ The broad Requirement -> Acceptance matrix exists, but final row-by-row reconcil
 
 ---
 
-## 11. Development Workflow
+## 10. Development Workflow
 
 For a normal requested task:
 
@@ -301,7 +275,7 @@ Code complete does not automatically mean DOT complete.
 
 ---
 
-## 12. Asset / Art Workflow
+## 11. Asset / Art Workflow
 
 Installed/useful local capability already confirmed:
 
@@ -323,7 +297,7 @@ Install additional tools only when they materially improve the active task.
 
 ---
 
-## 13. Current Operating Direction
+## 12. Current Operating Direction
 
 The expensive full static audit has already been completed.
 
@@ -335,13 +309,13 @@ Pending broader verification work may continue in parallel when useful:
 
 - clean editor/package compile baseline;
 - final requirement-to-acceptance reconciliation;
-- representative runtime/build/performance acceptance;
+- representative runtime/build/performance acceptance.
 
 These pending items are not a reason to endlessly postpone ordinary, explicitly authorized development work.
 
 ---
 
-## 14. Non-Negotiable Truth Rule
+## 13. Non-Negotiable Truth Rule
 
 Optimize for truth, not for a positive verdict.
 
