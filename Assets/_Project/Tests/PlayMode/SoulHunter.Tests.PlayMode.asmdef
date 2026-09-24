@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "SoulHunter.Foundation",
-        "SoulHunter.Gameplay"
+        "SoulHunter.Gameplay",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

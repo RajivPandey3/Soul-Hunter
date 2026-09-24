@@ -3548,10 +3548,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -800
       objectReference: {fileID: 0}
-    - target: {fileID: 6128094643742474057, guid: 87616376efeb1bc4991480c6829627c0, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6135202265415916780, guid: 87616376efeb1bc4991480c6829627c0, type: 3}
       propertyPath: m_Name
       value: HUD_Canvas
