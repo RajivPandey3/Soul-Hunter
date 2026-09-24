@@ -59,6 +59,8 @@ namespace SoulHunter.Gameplay.Weapons
         protected override void Awake()
         {
             base.Awake();
+            // An empty mask would make the aura hit nothing (the Whip prefab shipped that way).
+            if (_enemyLayer.value == 0) _enemyLayer = LayerMask.GetMask("Enemy");
             // Damage and interval live in the base fields so levelling and
             // Shadow Kael's mirroring can scale them.
             DamageAmount = _damageAmount;

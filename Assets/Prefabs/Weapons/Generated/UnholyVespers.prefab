@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2400775a59ab39543bf9aec06b802c8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _biblePrefab: {fileID: 100100000, guid: a80ae5410877ce4499b99db58f444c04, type: 3}
+  _biblePrefab: {fileID: 5068360835409548677, guid: a80ae5410877ce4499b99db58f444c04, type: 3}
   _bibleCount: 4
   _radius: 3.5
   _rotationSpeed: 240

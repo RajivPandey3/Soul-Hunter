@@ -54,6 +54,9 @@ namespace SoulHunter.Gameplay.Weapons
         protected override void Awake()
         {
             base.Awake();
+            // Whip_Weapon.prefab ships with an empty mask, so the hitbox found nothing and the
+            // whip never hit. Default to the Enemy layer; Shadow Kael's mirror still overrides it.
+            if (_enemyLayer.value == 0) _enemyLayer = LayerMask.GetMask("Enemy");
             // Damage and cooldown live in the base fields so levelling and
             // Shadow Kael's mirroring can scale them.
             DamageAmount = _damage;

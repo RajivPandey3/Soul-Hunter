@@ -147,9 +147,13 @@ The stat values are provisional balance numbers. `EnemyDataWiringTests` covers t
 
 `Bible_Weapon.prefab` previously had `_biblePrefab` referencing its own root object, and historical runtime evidence included Bible-related exceptions.
 
-`_biblePrefab` now references `SH10_Bible.prefab` (static fix only).
+`_biblePrefab` then pointed at `SH10_Bible.prefab` with fileID `100100000` (the prefab asset, not its root GameObject), so spawning books still threw `InvalidCastException` (seen 2026-09-24 when a PlayMode chest reward granted the Bible). Fixed in `Bible_Weapon.prefab` and `UnholyVespers.prefab` to the root GameObject (`5068360835409548677`); no other field in the project used that fileID form.
 
-Treat Bible acquisition/use as high risk until validated with a zero-exception runtime scenario.
+Validated 2026-09-24: `BiblePrefabTests` (T) and the full PlayMode suite with 0 exceptions (R). Bible behaviour in hands-on play is still unverified.
+
+### Whip enemy mask defect
+
+`Whip_Weapon.prefab` shipped with an empty `_enemyLayer`, so the Whip never hit anything. It surfaced once character starting weapons were fixed (Antonio starts with the Whip). `WhipWeapon` (and `GarlicWeapon`, defensively) now default an empty mask to the Enemy layer. Validated by `PlayerLoadoutPlayModeTests` (R): Antonio is visible, starts with the Whip, and the Whip damages an adjacent enemy.
 
 ### Audio
 
