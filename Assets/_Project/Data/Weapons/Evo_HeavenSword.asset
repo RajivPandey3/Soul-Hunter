@@ -15,6 +15,6 @@ MonoBehaviour:
   BaseWeapon: 7
   BaseWeaponMaxLevel: 8
   RequiredPassive: 30
-  EvolvedWeaponPrefab: {fileID: 0}
+  EvolvedWeaponPrefab: {fileID: 8767656658600148067, guid: 777884340a904346b4a46e4636bbaa41, type: 3}
   EvolvedName: Evo_HeavenSword
   EvolvedIcon: {fileID: 0}

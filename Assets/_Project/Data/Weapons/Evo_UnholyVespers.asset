@@ -15,6 +15,6 @@ MonoBehaviour:
   BaseWeapon: 6
   BaseWeaponMaxLevel: 8
   RequiredPassive: 25
-  EvolvedWeaponPrefab: {fileID: 0}
+  EvolvedWeaponPrefab: {fileID: 3724841545492313711, guid: df1c58b06b2444ba854f6c063ce86555, type: 3}
   EvolvedName: Evo_UnholyVespers
   EvolvedIcon: {fileID: 0}
