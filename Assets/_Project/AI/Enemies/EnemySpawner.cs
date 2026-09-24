@@ -22,6 +22,8 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField] private int _maxAliveEnemies = 300;
         [SerializeField] private int _prewarmPerEnemyType = 32;
         [SerializeField] private int _prewarmPerBossType = 1;
+        [Tooltip("Most enemies spawned in one frame while refilling the wave's enemy minimum")]
+        [SerializeField, Min(1)] private int _maxMinimumTopUpPerFrame = 8;
 
         [Header("Straggler relocation (VS rule)")]
         [Tooltip("Non-boss enemies further than this from the player are moved back onto the spawn ring ahead of them")]
@@ -148,18 +150,25 @@ namespace SoulHunter.Gameplay.AI
                     int groupSize = Mathf.Max(1, _currentWave.EnemiesPerSpawn + phase.EnemiesPerSpawnBonus + fiveMinutePressure);
                     int availableSlots = Mathf.Max(0, _maxAliveEnemies - EnemyController.ActiveEnemies.Count);
                     int spawnCount = Mathf.Min(groupSize, availableSlots);
-                    for (int i = 0; i < spawnCount; i++)
-                    {
-                        bool eliteOnly = level.Signature == SoulHunter.Gameplay.Data.CampaignSignature.BloodArenas;
-                        bool elitePressure = _stageElitePrefab != null &&
-                            (eliteOnly || (CurrentEliteChance(level, _stageTimePassed) + phase.EliteChanceBonus > Random.value));
-                        SpawnEnemy(elitePressure ? _stageElitePrefab : (phase.EnemyPrefab != null ? phase.EnemyPrefab : _stageEnemyPrefab));
-                    }
+                    for (int i = 0; i < spawnCount; i++) SpawnEnemy(PickSwarmPrefab(level, phase));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
                     // VS rule: Curse makes enemies arrive more often.
                     _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / CurrentCurse());
                 }
+
+                // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
+                // interval does not empty the screen; the horde is refilled straight away.
+                int missing = Mathf.Min(phase.MinimumEnemies, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
+                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) SpawnEnemy(PickSwarmPrefab(level, phase));
             }
+        }
+
+        private GameObject PickSwarmPrefab(SoulHunter.Gameplay.Data.CampaignLevelDefinition level, WavePhase phase)
+        {
+            bool eliteOnly = level.Signature == SoulHunter.Gameplay.Data.CampaignSignature.BloodArenas;
+            bool elitePressure = _stageElitePrefab != null &&
+                (eliteOnly || (CurrentEliteChance(level, _stageTimePassed) + phase.EliteChanceBonus > Random.value));
+            return elitePressure ? _stageElitePrefab : (phase.EnemyPrefab != null ? phase.EnemyPrefab : _stageEnemyPrefab);
         }
 
         /// <summary>

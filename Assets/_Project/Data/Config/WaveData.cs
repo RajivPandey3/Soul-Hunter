@@ -13,6 +13,8 @@ namespace SoulHunter.Gameplay.Data
         [Range(0f, 1f)] public float EliteChanceBonus;
         public GameObject EnemyPrefab;
         public bool IsBossPhase;
+        [Tooltip("VS enemy minimum: the swarm is topped up straight away whenever fewer enemies are alive (0 = off)")]
+        [Min(0)] public int MinimumEnemies;
     }
 
     /// <summary>
@@ -39,6 +41,12 @@ namespace SoulHunter.Gameplay.Data
         
         [Tooltip("Kya ye ek Boss hai? (Agar haan, toh ye sirf ek baar spawn hoga)")]
         public bool IsBossWave = false;
+
+        [Header("Enemy minimum (automatic phases)")]
+        [Tooltip("Enemies kept alive during the first automatic 5-minute phase. Provisional balance value.")]
+        [Min(0)] public int MinimumEnemies = 30;
+        [Tooltip("Added to the minimum for each later automatic phase. Provisional balance value.")]
+        [Min(0)] public int MinimumEnemiesPerPhase = 20;
 
         [Header("Optional VS-style timed phases")]
         [Tooltip("Agar empty ho toh 5-minute pressure phases runtime par automatically use hongi.")]
@@ -75,7 +83,8 @@ namespace SoulHunter.Gameplay.Data
                         EnemiesPerSpawnBonus = i,
                         EliteChanceBonus = i * 0.04f,
                         EnemyPrefab = EnemyPrefab,
-                        IsBossPhase = IsBossWave
+                        IsBossPhase = IsBossWave,
+                        MinimumEnemies = MinimumEnemies + i * MinimumEnemiesPerPhase
                     };
                 }
             }

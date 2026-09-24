@@ -179,6 +179,12 @@ Pause menu, level-up, chest, Wandering Merchant, game over, Soul Burst hit-stop 
 
 This came from a review of an external "Vampire Survivors engine" write-up (owner direction: adopt what is officially documented, follow the rest). Officially documented mechanics were already present statically (time survival, hordes, levelled weapons, gems that never despawn, persistent gold power-ups). Of the engineering recommendations, pooling (`WeaponPoolManager`, `PickupPoolManager`), data-driven enemies (`EnemyData`), damage data (`DamagePacket`), death events (`HealthController.OnDied`), multi-level-up and a stage clock already existed; the missing run-state/pause arbitration is what `GameTime` adds.
 
+### Enemy minimum (2026-09-24)
+
+A second write-up (VS Stage 2, Inlaid Library) was reviewed under the same direction. Adopted: the VS "enemy minimum". Each wave phase has `MinimumEnemies`, and `EnemySpawner` refills the swarm up to it immediately (at most `_maxMinimumTopUpPerFrame` = 8 per frame), on top of the interval spawns; before this the horde only grew by one group per interval, so fast killing emptied the screen. The automatic 5-minute phases use `WaveData.MinimumEnemies` (30) + `MinimumEnemiesPerPhase` (20) per phase: 30/50/70/90/110, provisional balance. Validated by `EnemyMinimumTests` (T) and `EnemyMinimumPlayModeTests` (R: opening horde reaches the minimum and refills after a full wipe); EditMode 237/237, PlayMode 21/21. Feel and performance at these counts are unverified (`V`, `P`).
+
+Not adopted: Stage 2 unlocking at player level 20 (conflicts with the one-run 10-level structure); Inlaid Library's wave tables, enemy/item/relic names and ×1.25 speed (VS game data, and taken from the fan wiki rather than poncle); its corridor and left/right spawning (Soul Hunter Level 2 is The Dark Forest). Stage events (wall/swarm/self-destruct enemies), destructibles, stage-placed items and Hyper mode are candidate features that need owner direction before they are built.
+
 ### Audio
 
 No scene contains an `AudioManager`; it now creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Enemy-hit, death and music audio are still missing.
