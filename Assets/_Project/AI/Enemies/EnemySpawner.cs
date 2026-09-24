@@ -22,6 +22,16 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField] private int _maxAliveEnemies = 300;
         [SerializeField] private int _prewarmPerEnemyType = 32;
         [SerializeField] private int _prewarmPerBossType = 1;
+
+        [Header("Straggler relocation (VS rule)")]
+        [Tooltip("Non-boss enemies further than this from the player are moved back onto the spawn ring ahead of them")]
+        [SerializeField] private float _relocateDistance = 40f;
+        [SerializeField, Min(0.05f)] private float _relocateCheckInterval = 0.5f;
+        [Tooltip("Relocated enemies land within this many degrees either side of the player's heading")]
+        [SerializeField, Range(0f, 180f)] private float _relocateSpreadDegrees = 60f;
+        private float _nextRelocateCheck;
+        private Rigidbody _playerBody;
+        private readonly HashSet<EnemyController> _bossControllers = new HashSet<EnemyController>();
         
         private Transform _playerTransform;
         private float _timer;
@@ -101,6 +111,9 @@ namespace SoulHunter.Gameplay.AI
                 _nextPlayerLookupTime = Time.time + 0.25f;
             }
             if (_playerTransform == null || _currentWave == null) return;
+
+            // Runs during boss fights too, so the swarm never piles up off-screen.
+            RelocateStragglers();
             if (_isBossAlive) return;
 
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
@@ -146,6 +159,69 @@ namespace SoulHunter.Gameplay.AI
             }
         }
 
+        /// <summary>
+        /// VS rule: enemies left far behind are not wasted. Every check, any non-boss enemy beyond
+        /// _relocateDistance is moved onto the spawn ring in front of the player, keeping its health.
+        /// </summary>
+        private void RelocateStragglers()
+        {
+            if (Time.time < _nextRelocateCheck) return;
+            _nextRelocateCheck = Time.time + _relocateCheckInterval;
+
+            Vector3 playerPos = _playerTransform.position;
+            float maxDistanceSqr = _relocateDistance * _relocateDistance;
+            // Land inside the trigger distance, or enemies would be relocated again at once.
+            float minRadius = Mathf.Min(_spawnRadius, _relocateDistance * 0.5f);
+            float maxRadius = Mathf.Min(_spawnRadius + 10f, _relocateDistance * 0.9f);
+            Vector3 heading = PlayerHeading();
+
+            var enemies = EnemyController.ActiveEnemies;
+            for (int i = enemies.Count - 1; i >= 0; i--)
+            {
+                var enemy = enemies[i];
+                if (enemy == null || _bossControllers.Contains(enemy)) continue;
+
+                Vector3 offset = enemy.transform.position - playerPos;
+                offset.y = 0f;
+                if (offset.sqrMagnitude <= maxDistanceSqr) continue;
+
+                enemy.transform.position = ComputeRelocationPoint(playerPos, heading, _relocateSpreadDegrees,
+                    minRadius, maxRadius, Random.value, Random.value);
+                if (enemy.Rigidbody != null) enemy.Rigidbody.linearVelocity = Vector3.zero;
+            }
+        }
+
+        private Vector3 PlayerHeading()
+        {
+            if (_playerBody == null || _playerBody.transform != _playerTransform)
+                _playerBody = _playerTransform.GetComponent<Rigidbody>();
+
+            Vector3 velocity = _playerBody != null ? _playerBody.linearVelocity : Vector3.zero;
+            velocity.y = 0f;
+            if (velocity.sqrMagnitude > 0.01f) return velocity.normalized;
+
+            // Standing still: no "ahead", so pick any direction.
+            Vector2 random = Random.insideUnitCircle.normalized;
+            return random.sqrMagnitude > 0f ? new Vector3(random.x, 0f, random.y) : Vector3.forward;
+        }
+
+        /// <summary>
+        /// A point on the ring [minRadius, maxRadius] around the player, within spreadDegrees either side
+        /// of heading. angleRoll01 and radiusRoll01 are uniform random values in [0, 1].
+        /// </summary>
+        public static Vector3 ComputeRelocationPoint(Vector3 playerPos, Vector3 heading, float spreadDegrees,
+            float minRadius, float maxRadius, float angleRoll01, float radiusRoll01)
+        {
+            heading.y = 0f;
+            heading = heading.sqrMagnitude > 0f ? heading.normalized : Vector3.forward;
+            float angle = Mathf.Lerp(-spreadDegrees, spreadDegrees, angleRoll01);
+            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * heading;
+            float radius = Mathf.Lerp(minRadius, maxRadius, radiusRoll01);
+            Vector3 point = playerPos + direction * radius;
+            point.y = playerPos.y;
+            return point;
+        }
+
         private float CurrentEliteChance(SoulHunter.Gameplay.Data.CampaignLevelDefinition level, float time)
         {
             if (level.Signature == SoulHunter.Gameplay.Data.CampaignSignature.BloodArenas) return 1f;
@@ -177,7 +253,11 @@ namespace SoulHunter.Gameplay.AI
             }
             bossObj.transform.position = spawnPos;
             var bossController = bossObj.GetComponent<EnemyController>();
-            if (bossController != null) bossController.Target = _playerTransform;
+            if (bossController != null)
+            {
+                bossController.Target = _playerTransform;
+                _bossControllers.Add(bossController); // bosses are never relocated
+            }
             bossObj.SetActive(true);
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger
             bossObj.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
