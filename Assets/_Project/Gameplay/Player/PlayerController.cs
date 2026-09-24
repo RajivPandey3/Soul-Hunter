@@ -236,6 +236,9 @@ namespace SoulHunter.Gameplay.Player
             }
         }
 
+        private readonly System.Collections.Generic.HashSet<SoulHunter.Gameplay.Combat.IDamageable> _dashDamaged =
+            new System.Collections.Generic.HashSet<SoulHunter.Gameplay.Combat.IDamageable>();
+
         private IEnumerator DashCoroutine()
         {
             IsDashing = true;
@@ -256,6 +259,8 @@ namespace SoulHunter.Gameplay.Player
             // 2. Damage Buffer for Soul Reap Dash
             Collider[] dashHits = _dashHits;
             int enemyLayer = LayerMask.GetMask("Enemy");
+            // Each enemy takes the dash hit once per dash, not once per frame.
+            _dashDamaged.Clear();
 
             float elapsed = 0;
             while(elapsed < _dashDuration)
@@ -269,7 +274,7 @@ namespace SoulHunter.Gameplay.Player
                 {
                     if (dashHits[i] == null) continue;
                     var damageable = dashHits[i].GetComponentInParent<SoulHunter.Gameplay.Combat.IDamageable>();
-                    if (damageable != null)
+                    if (damageable != null && _dashDamaged.Add(damageable))
                     {
                         // Dash deals fixed 50 damage
                         damageable.TakeDamage(new SoulHunter.Gameplay.Combat.DamagePacket(50, transform.position, dashDirection));

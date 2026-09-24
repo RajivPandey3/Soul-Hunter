@@ -15,6 +15,6 @@ MonoBehaviour:
   BaseWeapon: 2
   BaseWeaponMaxLevel: 8
   RequiredPassive: 28
-  EvolvedWeaponPrefab: {fileID: 5737434468981683643, guid: 755516ac901c45d4c9f7c65b093c8830, type: 3}
+  EvolvedWeaponPrefab: {fileID: 0}
   EvolvedName: Evo_SoulEater
   EvolvedIcon: {fileID: 0}

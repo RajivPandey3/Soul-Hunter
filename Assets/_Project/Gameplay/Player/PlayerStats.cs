@@ -51,6 +51,15 @@ namespace SoulHunter.Gameplay.Player
                     Debug.Log("[PlayerStats] Meta Progression Loaded! Player is stronger.");
                 }
             }
+            SyncArmor();
+        }
+
+        // Armor is applied by HealthController, so push every change to it.
+        private void SyncArmor()
+        {
+            var health = GetComponent<HealthController>();
+            if (health == null) health = GetComponentInParent<HealthController>();
+            if (health != null) health.Armor = Armor;
         }
 
         public void AddMight(float amount) { Might += amount; }
@@ -58,7 +67,7 @@ namespace SoulHunter.Gameplay.Player
         public void AddArea(float amount) { Area += amount; }
         public void AddMoveSpeed(float amount) { MoveSpeedMultiplier += amount; }
 
-        public void AddArmor(int amount) { Armor += amount; }
+        public void AddArmor(int amount) { Armor += amount; SyncArmor(); }
         public void AddLuck(float amount) { Luck += amount; }
         public void AddGreed(float amount) { Greed += amount; }
         public void AddCurse(float amount) { Curse += amount; }

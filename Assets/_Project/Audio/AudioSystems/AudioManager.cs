@@ -28,6 +28,23 @@ namespace SoulHunter.Gameplay.Audio
         
         private AudioSource[] _sfxSources;
 
+        private const string ResourcePath = "AudioManager";
+
+        // No scene contains an AudioManager, so create the one from Resources
+        // once scene objects (and GameServices) have woken up.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void EnsureInstance()
+        {
+            if (Instance != null) return;
+            var prefab = Resources.Load<GameObject>(ResourcePath);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[AudioManager] Resources/{ResourcePath} prefab not found; the game will be silent.");
+                return;
+            }
+            Instantiate(prefab).name = prefab.name;
+        }
+
         private void Awake()
         {
             if (Instance == null)

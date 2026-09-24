@@ -110,8 +110,10 @@ namespace SoulHunter.Gameplay.Core
 
     if (choices.Count == 0)
     {
-        Debug.LogWarning("[LevelUpManager] No valid upgrades available. Cancelling level-up menu.");
-        _pendingLevelUps = 0;
+        // VS rule: once every item is maxed, a level-up still pays out
+        // (floor chicken heal + gold) instead of being thrown away.
+        Debug.Log($"[LevelUpManager] No valid upgrades available. Granting {_pendingLevelUps} maxed-out reward(s).");
+        for (; _pendingLevelUps > 0; _pendingLevelUps--) GrantMaxedOutReward();
         _isLevelUpActive = false;
         ResumeGameplay();
         return;
@@ -172,6 +174,19 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
+        public const int MaxedOutHealAmount = 30;
+        public const int MaxedOutGoldAmount = 25;
+
+        private void GrantMaxedOutReward()
+        {
+            var health = _playerController != null ? _playerController.GetComponent<HealthController>() : null;
+            if (health != null) health.Heal(MaxedOutHealAmount);
+
+            var services = SoulHunter.Core.Services.GameServices.Instance;
+            if (services != null && services.TryGet<SoulHunter.Core.Services.EconomyService>(out var economy))
+                economy.AddGold(MaxedOutGoldAmount);
+        }
+
         private void ResumeGameplay()
         {
             Time.timeScale = 1f;
@@ -187,8 +202,11 @@ namespace SoulHunter.Gameplay.Core
             {
                 // Logic: Agar Upgrade Level 1 hai, toh player ke paas wo Level 0 par hona chahiye.
                 int currentLvl = _weaponManager.GetWeaponLevel(up.Type);
+                // New items are only offered while a slot is free; otherwise picking
+                // one would be rejected by WeaponManager and waste the level-up.
                 if (currentLvl == up.Level - 1 && up.Level <= _weaponManager.GetMaxWeaponLevel(up.Type) &&
-                    !(currentLvl == 0 && WeaponManager.IsStagePassive(up.Type)))
+                    !(currentLvl == 0 && WeaponManager.IsStagePassive(up.Type)) &&
+                    _weaponManager.HasSlotFor(up.Type))
                 {
                     validUpgrades.Add(up);
                 }

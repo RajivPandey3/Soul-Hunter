@@ -247,6 +247,18 @@ namespace SoulHunter.Gameplay.Combat
             return null;
         }
 
+        /// <summary>
+        /// True when an item the player does not own yet still fits in a free
+        /// weapon or passive slot. Owned items can always be levelled.
+        /// </summary>
+        public bool HasSlotFor(UpgradeData.UpgradeType type)
+        {
+            if (GetWeaponLevel(type) > 0) return true;
+            return IsWeaponType(type)
+                ? GetActiveWeaponsCount() < _maxWeaponSlots
+                : GetPassiveCount() < _maxPassiveSlots;
+        }
+
         public int GetPassiveCount()
         {
             int count = 0;
@@ -331,7 +343,39 @@ namespace SoulHunter.Gameplay.Combat
             var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
             Transform spawnTarget = player != null ? player.transform : transform;
             
-            // 1. Check Unions first
+            // 1. Check Evolutions first. A pending evolution must not lose its
+            // base weapon to a union that happens to be checked earlier.
+            if (_availableEvolutions != null)
+            {
+                foreach (var evo in _availableEvolutions)
+                {
+                    if (evo == null || evo.EvolvedWeaponPrefab == null || _evolvedWeapons.Contains(evo.BaseWeapon) ||
+                        _unionConsumedWeapons.Contains(evo.BaseWeapon)) continue;
+
+                    if (evo.RequirementsMet(this))
+                    {
+                        // Evolution criteria met!
+                        _evolvedWeapons.Add(evo.BaseWeapon);
+                        
+                        // Old weapon disable karo
+                        DisableOldWeapon(evo.BaseWeapon);
+                        
+                        // Naya Evolved weapon Instantiate ya Enable karo
+                        if (evo.EvolvedWeaponPrefab != null)
+                        {
+                            var newWep = Instantiate(evo.EvolvedWeaponPrefab, spawnTarget);
+                            newWep.SetActive(true);
+                            ApplyWeaponLevel(newWep, evo.BaseWeaponMaxLevel);
+                        }
+
+                        evolvedWeaponName = evo.EvolvedName;
+                        Debug.Log($"[WeaponManager] EVOLUTION SUCCESS! {evo.BaseWeapon} evolved into {evo.EvolvedName}!");
+                        return true;
+                    }
+                }
+            }
+
+            // 2. Check Unions
             if (_availableUnions != null)
             {
                 foreach (var union in _availableUnions)
@@ -363,37 +407,6 @@ namespace SoulHunter.Gameplay.Combat
 
                         evolvedWeaponName = union.UnionName;
                         Debug.Log($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName}!");
-                        return true;
-                    }
-                }
-            }
-
-            // 2. Check Evolutions
-            if (_availableEvolutions != null)
-            {
-                foreach (var evo in _availableEvolutions)
-                {
-                    if (evo == null || evo.EvolvedWeaponPrefab == null || _evolvedWeapons.Contains(evo.BaseWeapon) ||
-                        _unionConsumedWeapons.Contains(evo.BaseWeapon)) continue;
-
-                    if (evo.RequirementsMet(this))
-                    {
-                        // Evolution criteria met!
-                        _evolvedWeapons.Add(evo.BaseWeapon);
-                        
-                        // Old weapon disable karo
-                        DisableOldWeapon(evo.BaseWeapon);
-                        
-                        // Naya Evolved weapon Instantiate ya Enable karo
-                        if (evo.EvolvedWeaponPrefab != null)
-                        {
-                            var newWep = Instantiate(evo.EvolvedWeaponPrefab, spawnTarget);
-                            newWep.SetActive(true);
-                            ApplyWeaponLevel(newWep, evo.BaseWeaponMaxLevel);
-                        }
-
-                        evolvedWeaponName = evo.EvolvedName;
-                        Debug.Log($"[WeaponManager] EVOLUTION SUCCESS! {evo.BaseWeapon} evolved into {evo.EvolvedName}!");
                         return true;
                     }
                 }

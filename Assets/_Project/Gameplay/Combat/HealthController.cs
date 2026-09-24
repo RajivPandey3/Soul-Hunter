@@ -23,6 +23,8 @@ namespace SoulHunter.Gameplay.Combat
         public event Action OnDamaged; // For Hit Flash VFX
         public Func<DamagePacket, bool> DamageInterceptor { get; set; }
         public Func<int, int> DamageModifier { get; set; }
+        /// <summary>Flat damage reduction per hit. The player's PlayerStats keeps this in sync.</summary>
+        public int Armor { get; set; }
 
         public bool IsInvincible { get; set; } = false;
         private bool _keepAliveAfterDeath;
@@ -73,6 +75,8 @@ namespace SoulHunter.Gameplay.Combat
 
                 incomingDamage = Mathf.Max(1, Mathf.RoundToInt(incomingDamage * enemy.GetDamageMultiplier(packet.Type)));
             }
+            // VS rule: each point of Armor removes 1 damage from every hit, but a hit always deals at least 1.
+            if (Armor > 0) incomingDamage = Mathf.Max(1, incomingDamage - Armor);
             if (DamageModifier != null) incomingDamage = Mathf.Max(0, DamageModifier(incomingDamage));
             if (incomingDamage == 0) return;
             _currentHealth -= incomingDamage;

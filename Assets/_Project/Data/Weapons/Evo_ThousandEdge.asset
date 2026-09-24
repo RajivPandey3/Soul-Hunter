@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 120d34e42236e7a42a35b4196ffc89b0, type: 3}
-  m_Name: Evo_HeavenSword
+  m_Name: Evo_ThousandEdge
   m_EditorClassIdentifier: 
-  BaseWeapon: 7
+  BaseWeapon: 14
   BaseWeaponMaxLevel: 8
-  RequiredPassive: 30
-  EvolvedWeaponPrefab: {fileID: 0}
-  EvolvedName: Evo_HeavenSword
+  RequiredPassive: 13
+  EvolvedWeaponPrefab: {fileID: 4091178045547908142, guid: da9184200fe27a24a8b388d567c63194, type: 3}
+  EvolvedName: Evo_ThousandEdge
   EvolvedIcon: {fileID: 0}

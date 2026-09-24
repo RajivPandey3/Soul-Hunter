@@ -145,9 +145,9 @@ Treat Bible acquisition/use as high risk until validated with a zero-exception r
 
 ### Audio
 
-`AudioManager.cs` exists, but deterministic serialized/runtime ownership was not proven.
+No scene contains an `AudioManager`; it now creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Enemy-hit, death and music audio are still missing.
 
-Treat AudioManager integration as `UNKNOWN / HIGH RISK`, not as accepted.
+Treat audio as `UNKNOWN / HIGH RISK` until sound is confirmed in a runtime run.
 
 ### Accessibility
 
