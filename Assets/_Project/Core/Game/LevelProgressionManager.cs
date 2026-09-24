@@ -36,6 +36,8 @@ namespace SoulHunter.Gameplay.Core
         public CampaignLevelDefinition CurrentLevel => CampaignLevelCatalog.Get(CurrentStage);
         public float StageElapsedTime { get; private set; }
         public bool IsBossWindow => StageElapsedTime >= CurrentLevel.BossStartSeconds;
+        /// <summary>True between a stage being cleared and the next one starting.</summary>
+        public bool IsStageTransitioning => _stageTransitionQueued;
 
         public event Action<int> OnStageStarted;
         public event Action<int> OnStageCleared;
@@ -111,14 +113,21 @@ namespace SoulHunter.Gameplay.Core
             if (_bossDefeated || _gameWon) return;
             _bossDefeated = true;
             Debug.Log($"[LevelProgressionManager] Boss of Stage {CurrentStage} Defeated!");
-            Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} continues until the full 30-minute limit.");
+            // Owner decision: killing the stage boss clears the stage and moves the run on.
+            // The boss's chest is already on the ground and survives the transition.
+            CompleteStage("its boss was defeated");
         }
 
         private void CompleteStageAfterSurvival()
         {
-            if (_stageTransitionQueued) return;
+            CompleteStage("it was survived for the full 30 minutes");
+        }
+
+        private void CompleteStage(string reason)
+        {
+            if (_stageTransitionQueued || _gameWon) return;
             _stageTransitionQueued = true;
-            Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} survived for the full 30 minutes.");
+            Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} cleared because {reason}.");
             WipeArena();
             OnStageCleared?.Invoke(CurrentStage);
 

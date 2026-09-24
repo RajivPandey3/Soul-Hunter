@@ -108,6 +108,8 @@ The currently observed generic boss implementation is incomplete relative to thi
 
 Owner decision (2026-09-24): one run plays through all 10 levels in order. This intentionally differs from Vampire Survivors' separate per-stage runs.
 
+Killing a stage's boss clears that stage and starts the next one after a short transition; a stage whose boss is still alive ends at its 30-minute limit. Killing the Level 10 boss wins the run.
+
 Do not split the campaign into separate per-level runs or add a Reaper-style run end without a new owner decision.
 
 ---

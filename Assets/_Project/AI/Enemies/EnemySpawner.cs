@@ -117,6 +117,8 @@ namespace SoulHunter.Gameplay.AI
             if (_isBossAlive) return;
 
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            // The arena was just wiped; keep it empty until the next stage starts.
+            if (progression.IsStageTransitioning) return;
             var level = progression.CurrentLevel;
             _stageTimePassed = progression.StageElapsedTime;
             float bossStartTime = level.BossStartSeconds;
