@@ -52,6 +52,33 @@ namespace SoulHunter.Gameplay.Combat
         protected float SpeedMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f;
         protected int ExtraAmount => OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0;
 
+        /// <summary>Nearest live enemy on the ground plane within maxRange, or null.</summary>
+        protected Transform FindNearestEnemy(float maxRange = float.MaxValue)
+        {
+            Transform nearest = null;
+            float bestSqr = maxRange * maxRange;
+            Vector3 origin = transform.position;
+            var enemies = SoulHunter.Gameplay.AI.EnemyController.ActiveEnemies;
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                var enemy = enemies[i];
+                if (enemy == null || !enemy.isActiveAndEnabled) continue;
+                Vector3 offset = enemy.transform.position - origin;
+                offset.y = 0f;
+                float sqr = offset.sqrMagnitude;
+                if (sqr < bestSqr) { bestSqr = sqr; nearest = enemy.transform; }
+            }
+            return nearest;
+        }
+
+        /// <summary>Flat (ground-plane) unit direction from this weapon to target; forward if on top of it.</summary>
+        protected Vector3 FlatDirectionTo(Transform target)
+        {
+            Vector3 direction = target.position - transform.position;
+            direction.y = 0f;
+            return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+        }
+
         /// <summary>Base damage scaled by Might.</summary>
         protected float ScaledDamage(float baseDamage) => baseDamage * MightMultiplier;
 

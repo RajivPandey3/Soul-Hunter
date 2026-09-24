@@ -70,10 +70,10 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Aria_SongOfManaBeam_DoesNotHurtThePlayer()
+        public IEnumerator Aria_SongOfMana_FiresAtAndHitsTheNearestEnemy()
         {
-            // Aria starts with Song of Mana, whose beam used TouchDamage's default "Player" target and
-            // killed its own holder within seconds.
+            // Aria starts with Song of Mana. It used to spawn a tiny damage zone on the player (which also
+            // hurt the player); it now fires piercing magic shots at the nearest enemy.
             var load = SceneManager.LoadSceneAsync("Bootstrap");
             Assert.IsNotNull(load, "Bootstrap is not in Build Settings.");
             yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
@@ -86,18 +86,20 @@ namespace SoulHunter.Tests.PlayMode
                 yield return WaitForFreshGameplay(previousPlayer: null);
 
                 var player = PlayerController.Instance;
-                var health = player.GetComponent<HealthController>();
                 Assert.IsNotNull(player.GetComponentInChildren<SongOfManaWeapon>(), "Aria's Song of Mana was not spawned. " + Errors());
 
-                TouchDamage beam = null;
-                yield return WaitUntilRealtime(() => (beam = player.GetComponentInChildren<TouchDamage>()) != null, "the Song of Mana beam");
-                Assert.That(beam.TargetTag, Is.EqualTo("Enemy"), "The beam must hit enemies, not the player.");
+                // Put an enemy off to the side; Song of Mana must fire at it (nearest enemy) and hit it.
+                var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+                var enemyPrefabs = GetPrivateField<List<GameObject>>(spawner, "_stageEnemyPrefabs");
+                var enemy = Object.Instantiate(enemyPrefabs[0], player.transform.position + new Vector3(0f, 0f, 6f), Quaternion.identity);
+                var touch = enemy.GetComponent<TouchDamage>();
+                if (touch != null) touch.enabled = false; // keep this check about Song of Mana only
 
-                // Enemies spawn 15+ units away, so nothing else can reach the player this quickly.
-                int startHealth = health.CurrentHealth;
-                float until = Time.realtimeSinceStartup + 1.5f;
-                while (Time.realtimeSinceStartup < until) yield return null;
-                Assert.That(health.CurrentHealth, Is.EqualTo(startHealth), "The player took damage while only its own beam was active. " + Errors());
+                var stats = SoulHunter.Gameplay.Core.RunStatsTracker.Instance;
+                Assert.IsNotNull(stats, "RunStatsTracker missing. " + Errors());
+                yield return WaitUntilRealtime(() => stats.GetWeaponStats().TryGetValue("Song Of Mana", out int dealt) && dealt > 0,
+                    "Song of Mana to damage the nearest enemy");
+                if (enemy != null) Object.Destroy(enemy);
             }
             finally
             {

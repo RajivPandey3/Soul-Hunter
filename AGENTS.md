@@ -112,6 +112,10 @@ Killing a stage's boss clears that stage and starts the next one after a short t
 
 Do not split the campaign into separate per-level runs or add a Reaper-style run end without a new owner decision.
 
+### Weapon aiming
+
+Owner decision (2026-09-24): the player's attacks should fire toward the nearest enemy. Applied so far to Song of Mana, which now fires piercing Magic shots at the nearest enemy (Vampire Survivors' version is a vertical beam around the player). Whether the rule extends to facing-based weapons (Knife, Thousand Edge, Whip, Axe) is not yet decided.
+
 ---
 
 ## 6. Performance Contract
