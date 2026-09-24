@@ -63,8 +63,18 @@ namespace SoulHunter.Gameplay.Weapons
                 return;
             }
 
+            // VS rule: Amount throws extra axes, each a little further forward.
+            int amount = 1 + (_stats != null ? Mathf.Max(0, _stats.Amount) : 0);
+            for (int i = 0; i < amount; i++) ThrowSingleAxe(1f + i * 0.35f);
+        }
+
+        private void ThrowSingleAxe(float forwardScale)
+        {
             // Axe banao O(1) performance ke sath
             GameObject axeObj = WeaponPoolManager.Instance.GetFromPool(_axePrefab, transform.position, Quaternion.identity);
+            if (axeObj == null) return;
+            float area = _stats != null ? Mathf.Max(0.1f, _stats.Area) : 1f;
+            axeObj.transform.localScale = _axePrefab.transform.localScale * area;
             
             int actualDamage = _stats != null ? Mathf.RoundToInt(_damage * _stats.Might) : _damage;
 
@@ -84,7 +94,8 @@ namespace SoulHunter.Gameplay.Weapons
                 rb.angularVelocity = Vector3.zero;
 
                 float sign = Mathf.Sign(transform.root.localScale.x);
-                Vector3 throwDirection = new Vector3(sign * _forwardForce, _upwardForce, 0);
+                float speed = _stats != null ? Mathf.Max(0.1f, _stats.ProjectileSpeed) : 1f;
+                Vector3 throwDirection = new Vector3(sign * _forwardForce * forwardScale, _upwardForce, 0) * speed;
                 
                 rb.AddForce(throwDirection, ForceMode.VelocityChange);
                 rb.AddTorque(new Vector3(0, 0, -sign * 10f), ForceMode.VelocityChange);

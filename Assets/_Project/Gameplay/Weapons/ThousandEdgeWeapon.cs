@@ -33,22 +33,27 @@ namespace SoulHunter.Gameplay.Combat
                 moveDir = _player.transform.localScale.x < 0f ? Vector3.left : Vector3.right;
             else moveDir.Normalize();
 
-            Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * moveDir;
-            Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
+            // Amount adds knives per volley.
+            for (int i = 0; i < 1 + ExtraAmount; i++)
+            {
+                Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * moveDir;
+                Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
 
-            GameObject knife = WeaponPoolManager.Instance != null
-                ? WeaponPoolManager.Instance.GetFromPool(KnifePrefab, spawnPos, Quaternion.identity)
-                : Instantiate(KnifePrefab, spawnPos, Quaternion.identity);
-            if (knife == null) return;
-            knife.transform.forward = spreadDir;
+                GameObject knife = WeaponPoolManager.Instance != null
+                    ? WeaponPoolManager.Instance.GetFromPool(KnifePrefab, spawnPos, Quaternion.identity)
+                    : Instantiate(KnifePrefab, spawnPos, Quaternion.identity);
+                if (knife == null) continue;
+                ApplyArea(knife, KnifePrefab);
+                knife.transform.forward = spreadDir;
 
-            var proj = knife.GetComponent<Projectile>();
-            if (proj == null) proj = knife.AddComponent<Projectile>();
-            proj.Initialize(spreadDir, KnifeSpeed, 35f, 3f);
+                var proj = knife.GetComponent<Projectile>();
+                if (proj == null) proj = knife.AddComponent<Projectile>();
+                proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, ScaledDamage(35f), 3f);
 
-            var damageDealer = knife.GetComponent<ProjectileDamage>();
-            if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
-            damageDealer.SourceWeaponName = "Thousand Edge";
+                var damageDealer = knife.GetComponent<ProjectileDamage>();
+                if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
+                damageDealer.SourceWeaponName = "Thousand Edge";
+            }
         }
     }
 }

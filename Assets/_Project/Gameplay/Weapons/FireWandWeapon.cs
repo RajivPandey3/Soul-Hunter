@@ -35,7 +35,7 @@ namespace SoulHunter.Gameplay.Combat
             var allEnemies = EnemyController.ActiveEnemies;
             if (allEnemies.Count == 0) return;
 
-            for (int i = 0; i < _fireballsPerAttack; i++)
+            for (int i = 0; i < _fireballsPerAttack + ExtraAmount; i++)
             {
                 // Fire wand hamesha completely random enemy ko target karta hai (VS rule)
                 EnemyController target = allEnemies[Random.Range(0, allEnemies.Count)];
@@ -54,11 +54,12 @@ namespace SoulHunter.Gameplay.Combat
                 ? WeaponPoolManager.Instance.GetFromPool(FireballPrefab, transform.position, Quaternion.identity)
                 : Instantiate(FireballPrefab, transform.position, Quaternion.identity);
             if (fireball == null) return;
+            ApplyArea(fireball, FireballPrefab);
             
             var proj = fireball.GetComponent<Projectile>();
             if (proj == null) proj = fireball.AddComponent<Projectile>();
             
-            proj.Initialize(fireDir, ProjectileSpeed, DamageAmount, 3f);
+            proj.Initialize(fireDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 3f);
             
             var damageDealer = fireball.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = fireball.AddComponent<ProjectileDamage>();

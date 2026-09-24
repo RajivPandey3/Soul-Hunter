@@ -31,7 +31,7 @@ namespace SoulHunter.Gameplay.Combat
 
             foreach (var dir in directions)
             {
-                for (int i = 0; i < _bulletsPerShot; i++)
+                for (int i = 0; i < _bulletsPerShot + ExtraAmount; i++)
                 {
                     // Slight spread
                     Vector2 spreadDir = Quaternion.Euler(0, 0, Random.Range(-5f, 5f)) * dir;
@@ -39,10 +39,11 @@ namespace SoulHunter.Gameplay.Combat
                         ? WeaponPoolManager.Instance.GetFromPool(BulletPrefab, transform.position, Quaternion.identity)
                         : Instantiate(BulletPrefab, transform.position, Quaternion.identity);
                     if (bullet == null) continue;
+                    ApplyArea(bullet, BulletPrefab);
                     
                     var proj = bullet.GetComponent<Projectile>();
                     if (proj == null) proj = bullet.AddComponent<Projectile>();
-                    proj.Initialize(spreadDir, 20f, DamageAmount, 2f);
+                    proj.Initialize(spreadDir, 20f * SpeedMultiplier, ScaledDamage(DamageAmount), 2f);
                     
                     var damageDealer = bullet.GetComponent<ProjectileDamage>();
                     if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();

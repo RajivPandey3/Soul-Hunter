@@ -32,17 +32,18 @@ namespace SoulHunter.Gameplay.Combat
                     : Instantiate(FreezeBeamPrefab, transform.position, Quaternion.LookRotation(direction));
                 if (beam != null)
                 {
+                    ApplyArea(beam, FreezeBeamPrefab);
                     var lifetime = beam.GetComponent<PooledLifetime>();
                     if (lifetime != null) lifetime.Arm(0.5f);
                     else Destroy(beam, 0.5f);
                 }
             }
 
-            int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, 20f);
+            int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, 20f * AreaMultiplier);
             for (int i = 0; i < count; i++)
             {
                 var enemy = _hits[i].collider.GetComponentInParent<EnemyController>();
-                if (enemy != null) enemy.ChangeState(new EnemyFrozenState(enemy, _freezeDuration));
+                if (enemy != null) enemy.ChangeState(new EnemyFrozenState(enemy, _freezeDuration * DurationMultiplier));
             }
         }
     }

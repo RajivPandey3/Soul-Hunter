@@ -24,17 +24,18 @@ namespace SoulHunter.Gameplay.Combat
                 ? WeaponPoolManager.Instance.GetFromPool(VerticalBeamPrefab, transform.position, Quaternion.identity)
                 : Instantiate(VerticalBeamPrefab, transform.position, Quaternion.identity);
             if (beam == null) return;
+            ApplyArea(beam, VerticalBeamPrefab);
             beam.transform.SetParent(transform); // Moves with player
             
             var damageDealer = beam.GetComponent<TouchDamage>();
             if (damageDealer == null) damageDealer = beam.AddComponent<TouchDamage>();
-            damageDealer.DamageAmount = DamageAmount;
+            damageDealer.DamageAmount = ScaledDamage(DamageAmount);
             damageDealer.DamageInterval = 0.3f; // Hits multiple times
             damageDealer.SourceWeaponName = "Song Of Mana";
             
             var lifetime = beam.GetComponent<PooledLifetime>();
-            if (lifetime != null) lifetime.Arm(_beamDuration);
-            else Destroy(beam, _beamDuration);
+            if (lifetime != null) lifetime.Arm(_beamDuration * DurationMultiplier);
+            else Destroy(beam, _beamDuration * DurationMultiplier);
         }
     }
 }

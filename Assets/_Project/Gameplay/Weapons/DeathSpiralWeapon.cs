@@ -15,9 +15,10 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (ScythePrefab == null) return;
 
-            float angleStep = 360f / _scytheCount;
+            int scytheCount = _scytheCount + ExtraAmount;
+            float angleStep = 360f / scytheCount;
 
-            for (int i = 0; i < _scytheCount; i++)
+            for (int i = 0; i < scytheCount; i++)
             {
                 float currentAngle = i * angleStep;
                 Vector2 shootDir = Quaternion.Euler(0, 0, currentAngle) * Vector2.up;
@@ -26,11 +27,12 @@ namespace SoulHunter.Gameplay.Combat
                     ? WeaponPoolManager.Instance.GetFromPool(ScythePrefab, transform.position, Quaternion.identity)
                     : Instantiate(ScythePrefab, transform.position, Quaternion.identity);
                 if (scythe == null) continue;
+                ApplyArea(scythe, ScythePrefab);
                 
                 var proj = scythe.GetComponent<Projectile>();
                 if (proj == null) proj = scythe.AddComponent<Projectile>();
                 // Pierces everything
-                proj.Initialize(shootDir, ExpansionSpeed, 60f, 6f);
+                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, ScaledDamage(60f), 6f);
                 
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = scythe.AddComponent<ProjectileDamage>();

@@ -36,7 +36,7 @@ namespace SoulHunter.Gameplay.Combat
                 moveDir = _player.transform.localScale.x < 0f ? Vector3.left : Vector3.right;
             else moveDir.Normalize();
 
-            for (int i = 0; i < _knivesPerAttack; i++)
+            for (int i = 0; i < _knivesPerAttack + ExtraAmount; i++)
             {
                 Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-10f, 10f), 0) * moveDir;
                 Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
@@ -45,11 +45,12 @@ namespace SoulHunter.Gameplay.Combat
                     ? WeaponPoolManager.Instance.GetFromPool(_projectilePrefab, spawnPos, Quaternion.identity)
                     : Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
                 if (knife == null) continue;
+                ApplyArea(knife, _projectilePrefab);
                 knife.transform.forward = spreadDir;
 
 
                 var proj = knife.GetComponent<Projectile>();
-                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed, DamageAmount, 2f);
+                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 2f);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";

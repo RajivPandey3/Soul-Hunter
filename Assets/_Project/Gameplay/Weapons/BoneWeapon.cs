@@ -19,13 +19,14 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (BonePrefab == null) return;
 
-            for (int i = 0; i < _amount; i++)
+            for (int i = 0; i < _amount + ExtraAmount; i++)
             {
                 Vector2 randomDir = Random.insideUnitCircle.normalized;
                 GameObject bone = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(BonePrefab, transform.position, Quaternion.identity)
                     : Instantiate(BonePrefab, transform.position, Quaternion.identity);
                 if (bone == null) continue;
+                ApplyArea(bone, BonePrefab);
 
                 var rb = bone.GetComponent<Rigidbody>();
                 if (rb == null) rb = bone.AddComponent<Rigidbody>();
@@ -33,11 +34,11 @@ namespace SoulHunter.Gameplay.Combat
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.FreezePositionY;
                 // Bone bounces heavily, relies on physics material
-                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * ThrowSpeed;
+                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * (ThrowSpeed * SpeedMultiplier);
 
                 var damageDealer = bone.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = bone.AddComponent<ProjectileDamage>();
-                damageDealer.DamageAmount = DamageAmount;
+                damageDealer.DamageAmount = ScaledDamage(DamageAmount);
                 damageDealer.SourceWeaponName = "Bone";
 
                 var lifetime = bone.GetComponent<PooledLifetime>();

@@ -20,13 +20,14 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (RunePrefab == null) return;
 
-            for (int i = 0; i < _amount; i++)
+            for (int i = 0; i < _amount + ExtraAmount; i++)
             {
                 Vector2 randomDir = Random.insideUnitCircle.normalized;
                 GameObject rune = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(RunePrefab, transform.position, Quaternion.identity)
                     : Instantiate(RunePrefab, transform.position, Quaternion.identity);
                 if (rune == null) continue;
+                ApplyArea(rune, RunePrefab);
 
                 var rb = rune.GetComponent<Rigidbody>();
                 if (rb == null) rb = rune.AddComponent<Rigidbody>();
@@ -34,16 +35,16 @@ namespace SoulHunter.Gameplay.Combat
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.FreezePositionY;
                 // Bouncing logic usually handled by 3D physics material on the prefab
-                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * Speed;
+                rb.linearVelocity = new Vector3(randomDir.x, 0f, randomDir.y) * (Speed * SpeedMultiplier);
 
                 var damageDealer = rune.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
-                damageDealer.DamageAmount = DamageAmount;
+                damageDealer.DamageAmount = ScaledDamage(DamageAmount);
                 damageDealer.SourceWeaponName = "Runetracer";
 
                 var lifetime = rune.GetComponent<PooledLifetime>();
-                if (lifetime != null) lifetime.Arm(5f);
-                else Destroy(rune, 5f); // compatibility when no pool exists
+                if (lifetime != null) lifetime.Arm(5f * DurationMultiplier);
+                else Destroy(rune, 5f * DurationMultiplier); // compatibility when no pool exists
             }
         }
     }

@@ -95,8 +95,24 @@ namespace SoulHunter.Gameplay.Weapons
                 throwDirection.y = 0;
             }
 
+            // VS rule: Amount throws extra crosses fanned around the aim direction.
+            int amount = 1 + (_stats != null ? Mathf.Max(0, _stats.Amount) : 0);
+            for (int i = 0; i < amount; i++)
+            {
+                float spread = amount > 1 ? Mathf.Lerp(-15f, 15f, i / (float)(amount - 1)) : 0f;
+                ThrowSingleCross(Quaternion.Euler(0f, spread, 0f) * throwDirection);
+            }
+        }
+
+        private void ThrowSingleCross(Vector3 direction)
+        {
+            float area = _stats != null ? Mathf.Max(0.1f, _stats.Area) : 1f;
+            float speed = _stats != null ? Mathf.Max(0.1f, _stats.ProjectileSpeed) : 1f;
+
             // Cross ko pool se nikalo
             GameObject crossObj = WeaponPoolManager.Instance.GetFromPool(_crossPrefab, transform.position, Quaternion.identity);
+            if (crossObj == null) return;
+            crossObj.transform.localScale = _crossPrefab.transform.localScale * area;
 
             // Cross par Damage set karo
             int actualDamage = _stats != null ? Mathf.RoundToInt(_damage * _stats.Might) : _damage;
@@ -112,7 +128,7 @@ namespace SoulHunter.Gameplay.Weapons
             var boomerangLogic = crossObj.GetComponent<BoomerangProjectile>();
             if (boomerangLogic == null) boomerangLogic = crossObj.AddComponent<BoomerangProjectile>();
             
-            boomerangLogic.Initialize(throwDirection, _speed, _returnTime);
+            boomerangLogic.Initialize(direction, _speed * speed, _returnTime);
         }
     }
 

@@ -32,7 +32,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (WaterZonePrefab == null) return;
 
-            for (int i = 0; i < _zonesPerAttack; i++)
+            for (int i = 0; i < _zonesPerAttack + ExtraAmount; i++)
             {
                 // Random position near player
                 Vector2 randomOffset = Random.insideUnitCircle * DropRadius;
@@ -48,12 +48,13 @@ namespace SoulHunter.Gameplay.Combat
                 ? WeaponPoolManager.Instance.GetFromPool(WaterZonePrefab, position, Quaternion.identity)
                 : Instantiate(WaterZonePrefab, position, Quaternion.identity);
             if (zone == null) return;
+            ApplyArea(zone, WaterZonePrefab);
             
             // TouchDamage laga denge taake zone me jo bhi aaye use lagatar damage ho
             var damageDealer = zone.GetComponent<TouchDamage>();
             if (damageDealer == null) damageDealer = zone.AddComponent<TouchDamage>();
             
-            damageDealer.DamageAmount = DamageAmount;
+            damageDealer.DamageAmount = ScaledDamage(DamageAmount);
             damageDealer.DamageInterval = 0.5f; // Har adhe second baad dubara damage
             damageDealer.SourceWeaponName = "Santa Water";
             // Learning Comment:
@@ -64,8 +65,8 @@ namespace SoulHunter.Gameplay.Combat
             
             // Zone 3 seconds tak zameen pe rahega
             var lifetime = zone.GetComponent<PooledLifetime>();
-            if (lifetime != null) lifetime.Arm(3f);
-            else if (Application.isPlaying) Destroy(zone, 3f);
+            if (lifetime != null) lifetime.Arm(3f * DurationMultiplier);
+            else if (Application.isPlaying) Destroy(zone, 3f * DurationMultiplier);
         }
     }
 }

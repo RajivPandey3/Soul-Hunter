@@ -47,7 +47,7 @@ namespace SoulHunter.Gameplay.Combat
             _targetBuffer.AddRange(allEnemies);
             List<EnemyController> validTargets = _targetBuffer;
             
-            int strikesThisTurn = Mathf.Min(_strikesPerAttack, validTargets.Count);
+            int strikesThisTurn = Mathf.Min(_strikesPerAttack + ExtraAmount, validTargets.Count);
 
             for (int i = 0; i < strikesThisTurn; i++)
             {
@@ -68,11 +68,12 @@ namespace SoulHunter.Gameplay.Combat
                 ? WeaponPoolManager.Instance.GetFromPool(LightningStrikePrefab, position, Quaternion.identity)
                 : Instantiate(LightningStrikePrefab, position, Quaternion.identity);
             if (strike == null) return;
+            ApplyArea(strike, LightningStrikePrefab);
             
             var damageDealer = strike.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = strike.AddComponent<ProjectileDamage>();
             
-            damageDealer.DamageAmount = DamageAmount;
+            damageDealer.DamageAmount = ScaledDamage(DamageAmount);
             damageDealer.SourceWeaponName = "Lightning Ring";
             
             // Bijli 0.5 sec baad khud gayab ho jayegi

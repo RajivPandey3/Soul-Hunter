@@ -39,17 +39,18 @@ namespace SoulHunter.Gameplay.Combat
 
         private IEnumerator BombingRun()
         {
-            for (int i = 0; i < _bombsPerAttack; i++)
+            for (int i = 0; i < _bombsPerAttack + ExtraAmount; i++)
             {
                 Vector3 dropPos = BirdVisual.transform.position;
                 GameObject bomb = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(BombPrefab, dropPos, Quaternion.identity)
                     : Instantiate(BombPrefab, dropPos, Quaternion.identity);
                 if (bomb == null) continue;
+                ApplyArea(bomb, BombPrefab);
                 
                 var damageDealer = bomb.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
-                damageDealer.DamageAmount = DamageAmount;
+                damageDealer.DamageAmount = ScaledDamage(DamageAmount);
                 damageDealer.SourceWeaponName = "Peachone";
                 
                 var lifetime = bomb.GetComponent<PooledLifetime>();
