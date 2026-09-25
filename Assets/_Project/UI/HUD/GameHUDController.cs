@@ -56,6 +56,8 @@ namespace SoulHunter.Gameplay.UI
             {
                 _playerHealth.OnHealthChanged += UpdateHealthBar;
                 UpdateHealthBar(_playerHealth.CurrentHealth, _playerHealth.MaxHealth);
+                // VS: a small HP bar under the hero instead of a strip across the bottom of the screen.
+                HealthBarFollow.Attach(_healthSlider, _playerHealth.transform);
 
                 // VS-style low-HP feedback: pulsing red tint at 30% HP or below.
                 var lowHealthWarning = GetComponent<LowHealthWarning>();

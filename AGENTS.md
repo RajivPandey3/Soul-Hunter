@@ -357,9 +357,18 @@ The Whip had no visual at all; each lash now plays a slash arc along the attack 
 
 The owner also asked for a VS-style level-up screen, found while playing in the editor. Cards were white buttons with internal names ("SongOfMana Lv.2 (Lv 2)") and placeholder descriptions. `LevelUpUI.StyleCard` now shows the icon, a readable name (`UpgradeText.DisplayName`), a NEW!/Level N tag and a description. Weapons that are new describe what they do (Soul Hunter wording from each weapon's code); passives show their real per-level effect from `WeaponManager.ApplyUpgrade`. Descriptions written in the asset are kept. Old TMP and legacy `Text` labels are hidden, the cards use the focus colours, and Reroll/Skip/Banish are dark with white text.
 
-The HP bar strip was left unchanged (the owner did not pick it).
+The HP bar strip was left unchanged in that change. The owner later asked for the HP bar under the player (2026-09-26); see below.
 
 Validated by `WeaponVfxTests` (T, Slash included) and `WeaponSweepPlayModeTests` (R: the Whip shows its slash; the level-up cards show an icon, a name without "Lv", a NEW!/Level tag, a real description and no stray labels). Both suites pass: EditMode 344/344, PlayMode 64/64, save unchanged (`D:\SoulHunter-Validation\run-20260925-vfx2\`). Editor play runs `autoplay-editor-02` and `-03` had 0 errors, and their screenshots were checked (partial `V`).
+
+### HP bar under the player (owner request, 2026-09-26)
+
+The player's health bar was a red strip across the whole bottom of the screen. It is now a small VS-style bar (96x11 canvas units, dark background, red fill) just under the hero's feet. `HealthBarFollow` (attached by `GameHUDController`) reuses the same HUD slider, reparents it to the root canvas (drawn under the menus) and moves it every `LateUpdate`, after `CameraFollow`. It is not interactable and hides its handle. Validated by `PlayerPresentationPlayModeTests.HealthBar_IsSmall_AndFollowsUnderTheHero` (R: narrower than 15% of the screen, centred on the feet and just below them while walking, full at start). Both suites pass: EditMode 344/344, PlayMode 65/65, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-hpbar\`). Editor play runs `autoplay-editor-04` and `-05` had 0 errors (`-05`: 3 min as Kael, level 14, 750 kills, min 65 FPS), and their screenshots show the bar under the hero (partial `V`).
+
+Seen in `autoplay-editor-05`, not fixed yet:
+- Some level-up icons have their file name drawn into the image (Whip "VFX_SlashArc", Candelabrador "Lamp_Post.png", Attractorb "VFX_Portal.png").
+- Reroll/Skip/Banish text shows red, not white.
+- The HUD "LEVEL UP" label overlaps the stage name.
 
 ### Validation run 2026-09-24
 

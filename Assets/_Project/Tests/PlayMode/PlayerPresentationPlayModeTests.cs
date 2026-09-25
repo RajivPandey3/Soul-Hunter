@@ -76,6 +76,32 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator HealthBar_IsSmall_AndFollowsUnderTheHero()
+        {
+            // VS: a small HP bar under the hero (it was a red strip across the whole bottom of the screen).
+            yield return BootAsKael();
+            var bar = Object.FindFirstObjectByType<SoulHunter.Gameplay.UI.HealthBarFollow>();
+            Assert.IsNotNull(bar, "The HUD health bar does not follow the hero. " + Errors());
+            var player = PlayerController.Instance;
+            MoveInput.SetValue(player, new Vector2(1f, 0.5f));
+            yield return WaitSeconds(1.2f);
+            MoveInput.SetValue(player, Vector2.zero);
+            yield return null;
+
+            var rect = (RectTransform)bar.transform;
+            var canvas = bar.GetComponentInParent<Canvas>().rootCanvas;
+            float scale = canvas.scaleFactor;
+            Assert.That(rect.rect.width * scale, Is.LessThan(Screen.width * 0.15f), "The bar is small.");
+            var cam = Camera.main;
+            Vector3 feet = cam.WorldToScreenPoint(bar.FeetPosition());
+            Vector2 barTop = RectTransformUtility.WorldToScreenPoint(canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera, rect.position);
+            Assert.That(Mathf.Abs(barTop.x - feet.x), Is.LessThan(8f), "Centred under the hero.");
+            Assert.That(feet.y - barTop.y, Is.InRange(0f, 40f * scale), "Just below the hero's feet.");
+            Assert.That(bar.GetComponent<UnityEngine.UI.Slider>().value, Is.EqualTo(1f).Within(0.001f), "Full health shows a full bar.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator StageLight_CastsSoftenedShadows()
         {
             yield return BootAsKael();
