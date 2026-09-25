@@ -23,7 +23,7 @@ namespace SoulHunter.Gameplay.Pickups
                 var enemy = allEnemies[i];
                 if (enemy == null) continue;
                 // Bosses ko shayad freeze nahi hona chahiye, par VS mein bosses bhi slow ya freeze ho jate hain.
-                enemy.ChangeState(new EnemyFrozenState(enemy, _freezeDuration));
+                enemy.Freeze(_freezeDuration);
             }
             
             // Add a screen flash or shake if we want juice

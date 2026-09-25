@@ -39,6 +39,7 @@ namespace SoulHunter.Tests.PlayMode
             yield return BootIntoGameplay();
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             spawner.enabled = false; // only the events under test spawn
+            DisablePlayerWeapons(); // a formation crossing the player was sometimes killed mid-check (flaky "did not move")
             var level = LevelProgressionManager.Instance.CurrentLevel;
             var phase = GetPrivateField<WaveData>(spawner, "_currentWave").GetPhase(0f);
             var run = typeof(EnemySpawner).GetMethod("RunStageEvent", Private);
@@ -66,6 +67,60 @@ namespace SoulHunter.Tests.PlayMode
                 foreach (var e in spawned) e.gameObject.SetActive(false);
             }
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator FrozenFliers_ResumeTheirPath_AfterTimeFreeze()
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            DisablePlayerWeapons();
+            var level = LevelProgressionManager.Instance.CurrentLevel;
+            var phase = GetPrivateField<WaveData>(spawner, "_currentWave").GetPhase(0f);
+            var entry = new StageEventEntry { Type = StageEventType.Wall, Count = 6 };
+            var spawned = (List<EnemyController>)typeof(EnemySpawner).GetMethod("RunStageEvent", Private)
+                .Invoke(spawner, new object[] { entry, level, phase });
+            var directions = spawned.Select(FlyDirection).ToArray();
+
+            foreach (var e in spawned) e.Freeze(0.5f);
+            var frozenAt = spawned.Select(e => e.transform.position).ToArray();
+            for (int i = 0; i < 10; i++) yield return new WaitForFixedUpdate();
+            for (int i = 0; i < spawned.Count; i++)
+            {
+                var drift = spawned[i].transform.position - frozenAt[i];
+                drift.y = 0f;
+                Assert.That(drift.magnitude, Is.LessThan(0.05f), $"Member {i} moved while frozen.");
+                Assert.That(spawned[i].IsFlying, $"Member {i} is still a stage-event flier while frozen (not relocated).");
+            }
+
+            yield return WaitUntilRealtime(() => spawned.All(e => GetPrivateField<IEnemyState>(e, "_currentState") is EnemyFlyState),
+                "the freeze to end");
+            var resumedAt = spawned.Select(e => e.transform.position).ToArray();
+            for (int i = 0; i < 20; i++) yield return new WaitForFixedUpdate();
+            for (int i = 0; i < spawned.Count; i++)
+            {
+                Assert.That(Vector3.Angle(FlyDirection(spawned[i]), directions[i]), Is.LessThan(0.1f), $"Member {i} changed course.");
+                var moved = spawned[i].transform.position - resumedAt[i];
+                moved.y = 0f;
+                Assert.That(Vector3.Angle(moved, directions[i]), Is.LessThan(5f), $"Member {i} chases instead of flying its path.");
+                Assert.That(moved.magnitude, Is.GreaterThan(0.5f), $"Member {i} did not resume.");
+            }
+            foreach (var e in spawned) e.gameObject.SetActive(false);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        private static Vector3 FlyDirection(EnemyController enemy)
+        {
+            var state = GetPrivateField<IEnemyState>(enemy, "_currentState");
+            if (state is EnemyFrozenState frozen) state = frozen.ResumeState;
+            return ((EnemyFlyState)state).Direction;
+        }
+
+        private static void DisablePlayerWeapons()
+        {
+            foreach (var weapon in Object.FindObjectsByType<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(FindObjectsSortMode.None))
+                weapon.gameObject.SetActive(false);
         }
 
         private static int Fliers() => EnemyController.ActiveEnemies.Count(e => e != null && e.IsFlying);

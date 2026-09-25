@@ -45,7 +45,7 @@ namespace SoulHunter.Gameplay.Combat
             for (int i = 0; i < count; i++)
             {
                 var enemy = _hits[i].collider.GetComponentInParent<EnemyController>();
-                if (enemy != null) enemy.ChangeState(new EnemyFrozenState(enemy, _freezeDuration * DurationMultiplier));
+                if (enemy != null) enemy.Freeze(_freezeDuration * DurationMultiplier);
             }
         }
     }

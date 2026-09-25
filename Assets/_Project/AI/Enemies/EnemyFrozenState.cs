@@ -6,7 +6,8 @@ namespace SoulHunter.Gameplay.AI
     /// <summary>
     /// Learning Comment:
     /// Time Freeze (Orologion) state. Dushman apni jagah barf ki tarah jam jayega.
-    /// 10 Seconds ke baad wapas apni purani aadat (Chase) par laut aayega.
+    /// Freeze khatam hone par wapas apni purani aadat par: stage-event flier apne raaste par, baaki Chase.
+    /// Use EnemyController.Freeze, which remembers the state to resume.
     /// </summary>
     public class EnemyFrozenState : IEnemyState
     {
@@ -14,10 +15,14 @@ namespace SoulHunter.Gameplay.AI
         private float _freezeDuration;
         private float _timer;
 
-        public EnemyFrozenState(EnemyController controller, float duration)
+        /// <summary>State to return to when the freeze ends; null means chase.</summary>
+        public IEnemyState ResumeState { get; }
+
+        public EnemyFrozenState(EnemyController controller, float duration, IEnemyState resumeState = null)
         {
             _controller = controller;
             _freezeDuration = duration;
+            ResumeState = resumeState;
         }
 
         public void Enter()
@@ -38,8 +43,8 @@ namespace SoulHunter.Gameplay.AI
             _timer += Time.deltaTime;
             if (_timer >= _freezeDuration)
             {
-                // Unfreeze and go back to chase
-                _controller.ChangeState(new EnemyChaseState(_controller));
+                // Unfreeze: resume the stage-event flight, otherwise go back to chase.
+                _controller.ChangeState(ResumeState ?? new EnemyChaseState(_controller));
             }
         }
 

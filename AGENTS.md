@@ -135,6 +135,16 @@ Android is secondary. Detailed Android device tiers and budgets remain a later p
 
 Do not claim performance acceptance without representative profiling.
 
+Performance smoke test (2026-09-25): `PerformanceBenchmark` runs in a player build launched with `-sh-benchmark <results.json>` (never in a normal launch). It switches to Medium with V-Sync off, renders the 3D view at 1080p's pixel count (URP render scale when the window is smaller), plays as an invincible Kael who keeps walking, takes the first level-up choice and closes chests, and measures 30 s after an 8 s warm-up in three segments. The Windows build (`SoulHunterBuildRunner`, 132 MB, built in the isolated copy) was run on this machine, which is the low-end reference (i5-8350U, UHD 620, 16 GB), in a 1366x768 window rendered at 1920x1080:
+
+| Segment | Enemies | Avg FPS | 1% low FPS | Frames > 33 ms |
+|---|---|---|---|---|
+| Stage 1 opening | 30 | 226-233 | 152-160 | 0 |
+| Stage 1 at 20:30 | 117-184 | 121-141 | 84-88 | 1 |
+| Stage 10 at 20:30 | ~300 | 85-88 | 45-51 | 0-1 |
+
+Results are in `D:\SoulHunter-Validation\run-20260925-gaps2\bench1080-1.json` and `-2.json`; the save file was unchanged. The very first launch also had one 152 ms hitch in Stage 10 (likely first-run shader or cache work); it did not repeat. This is partial `P` evidence: 30 s segments, not a full 30-minute run, UI drawn at 768p, V-Sync off, 16 GB instead of 8 GB, and no Android device. The Standalone default quality in `QualitySettings` is still Ultra.
+
 ---
 
 ## 7. Known Current Defects / Risks
@@ -200,7 +210,7 @@ Stage 3-5 write-ups (Dairy Plant, Gallo Tower, Cappella Magna) added no other ad
 
 VS-style scripted formations on the stage clock, in all 10 levels, using that stage's enemies (`PickSwarmPrefab`, so Blood Arenas stays elite-only and elites can appear): `Swarm` (tight cluster crossing the player's position), `Wall` (line across the travel direction, 1.5 apart) and `ClosingRing` (circle at the spawn radius flying inward, so it closes and opens out). Members use `EnemyFlyState`: fixed path at 1.5x speed, facing their path, not relocated as stragglers, returned to the pool without drops after 15 s. `WaveData.Events` holds authored events; empty means the default schedule 2:30 Swarm 20, 7:30 Wall 16, 12:30 Ring 16, 17:30 Swarm 24, 22:30 Wall 20 (between the 5-minute chest elites, before the boss). Events are not blocked by the enemy cap. Counts/times are provisional.
 
-`EnemyFlyState` existed unused and its `Exit` set the collider solid, which would have made every pooled flier a wall; fixed (enemy bodies stay triggers). Known limitation: a Time Freeze sends fliers to the chase state afterwards.
+`EnemyFlyState` existed unused and its `Exit` set the collider solid, which would have made every pooled flier a wall; fixed (enemy bodies stay triggers). A Time Freeze or Clock Lancet hit used to send fliers to the chase state afterwards; now `EnemyController.Freeze` remembers the flight, so a frozen flier stays in place, is not relocated as a straggler and resumes its path and lifetime when the freeze ends (`StageEventPlayModeTests.FrozenFliers_ResumeTheirPath_AfterTimeFreeze`, R, 2026-09-25). The occasional "member did not move" failure of `EveryFormation_FliesItsPath` came from the player's starting weapon killing members that crossed the player; the test now disables the player's weapons.
 
 Validated by `StageEventTests` (T) and `StageEventPlayModeTests` (R: the 2:30 swarm fires on the stage clock; every formation flies; pooled fliers stay triggers); EditMode 251/251, PlayMode 25/25. Look and feel in real play unverified.
 
@@ -227,7 +237,13 @@ Validated by `AccessibilityTests` (T) and `AccessibilityPlayModeTests` (R: optio
 
 ### Persistence
 
-JSON persistence exists, but robust general schema migration and corrupt-save recovery were not proven.
+Hardened 2026-09-25 (`SaveService`, `GameData.SaveVersion`):
+- Saves are atomic: written to `.tmp`, then swapped in with `File.Replace`, keeping the last good save as `.prev`. A failed write (locked file, full disk) logs, returns false and leaves the last good save; it no longer throws into gameplay.
+- A damaged save (unparsable, cut off mid-write, empty or zero-filled) is copied to `.bak` and removed, and the `.prev` save is restored; only without a usable `.prev` does the game start fresh. A missing save with a `.prev` (crash between write and swap) is restored too.
+- Schema versioning: `GameData.CurrentVersion` = 1; files without the field load as version 0 and are migrated (v0 -> v1: Antonio -> Corvan in the selected, unlocked and owned characters, duplicates removed). Every load also repairs impossible values (negative gold or levels, NaN/out-of-range volumes, bad window mode or resolution index, null lists). A save from a newer build is kept at its version with a warning.
+- A `-sh-benchmark` launch uses a throw-away save in `temporaryCachePath`.
+
+Validated by `SaveServiceTests` (T: atomic save and `.prev`, three kinds of damage restored from `.prev`, fresh start without `.prev`, missing save restored, legacy v0 migration, value repair, locked-file write failure) and both suites (EditMode 293/293, PlayMode 39/39, save file untouched, `D:\SoulHunter-Validation\run-20260925-gaps2\`). Not tested: a real power cut, or Android storage.
 
 ### Documentation
 

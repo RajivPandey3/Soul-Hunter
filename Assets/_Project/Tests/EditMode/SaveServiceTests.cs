@@ -49,5 +49,172 @@ namespace SoulHunter.Tests.EditMode
                 Directory.Delete(directory, true);
             }
         }
+
+        // Learning Comment: Save kabhi aadha na likha jaye, aur kharab save par pichla achha save wapas mile.
+        private static string NewDirectory()
+        {
+            string directory = Path.Combine(Application.temporaryCachePath, nameof(SaveServiceTests), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            return directory;
+        }
+
+        private static SaveService Loaded(string path)
+        {
+            var service = new SaveService(path);
+            service.Initialize();
+            return service;
+        }
+
+        private static void WriteSave(string path, int gold, int version = GameData.CurrentVersion)
+        {
+            var data = new GameData { Currency = gold, SettingsMigrated = true, SaveVersion = version };
+            File.WriteAllText(path, JsonUtility.ToJson(data, true));
+        }
+
+        [Test]
+        public void Save_IsAtomic_AndKeepsThePreviousSave()
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                WriteSave(path, 100);
+                var service = Loaded(path);
+                service.CurrentData.Currency = 250;
+                Assert.That(service.SaveGame(), Is.True);
+
+                Assert.That(File.Exists(path + ".tmp"), Is.False, "No temp file is left behind.");
+                Assert.That(Loaded(path).CurrentData.Currency, Is.EqualTo(250));
+                var previous = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(path + ".prev"), previous);
+                Assert.That(previous.Currency, Is.EqualTo(100), "The previous save is kept as .prev.");
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
+        [TestCase("{\"Currency\": 999, \"Selected")] // cut off mid-write
+        [TestCase("")]                               // empty file
+        [TestCase("\0\0\0\0\0\0\0\0")]               // zero-filled after a power loss
+        public void DamagedSave_IsBackedUp_AndThePreviousSaveIsRestored(string damaged)
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                WriteSave(path + ".prev", 400);
+                File.WriteAllText(path, damaged);
+                byte[] damagedBytes = File.ReadAllBytes(path);
+
+                LogAssert.Expect(LogType.Error, new Regex(@"\[SaveService\] Save file corrupted or unreadable\. Restored the previous save\."));
+                var service = Loaded(path);
+
+                Assert.That(service.CurrentData.Currency, Is.EqualTo(400), "Progress comes back from the previous save.");
+                Assert.That(File.ReadAllBytes(path + ".bak"), Is.EqualTo(damagedBytes), "The damaged file is preserved.");
+                Assert.That(service.SaveGame(), Is.True);
+                var previous = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(path + ".prev"), previous);
+                Assert.That(previous.Currency, Is.EqualTo(400), "Saving again does not rotate the damaged file into .prev.");
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
+        [Test]
+        public void DamagedSave_WithoutAPreviousSave_StartsFresh()
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                File.WriteAllText(path, "");
+                LogAssert.Expect(LogType.Error, new Regex(@"\[SaveService\] Save file corrupted or unreadable\. Creating fresh GameData\."));
+                var service = Loaded(path);
+                Assert.That(service.CurrentData.Currency, Is.EqualTo(0));
+                Assert.That(service.CurrentData.SaveVersion, Is.EqualTo(GameData.CurrentVersion));
+                Assert.That(File.Exists(path + ".bak"), Is.True);
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
+        [Test]
+        public void MissingSave_WithAPreviousSave_IsRestored()
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                WriteSave(path + ".prev", 70); // a crash between writing and replacing
+                LogAssert.Expect(LogType.Warning, new Regex(@"Save file missing; restored the previous save"));
+                Assert.That(Loaded(path).CurrentData.Currency, Is.EqualTo(70));
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
+        [Test]
+        public void LegacySave_IsMigrated_ToTheCurrentVersion()
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                // A save written before versioning: no SaveVersion field, and the old character name.
+                File.WriteAllText(path, "{\"Currency\": 55, \"SettingsMigrated\": true, \"SelectedCharacterName\": \"Antonio\", " +
+                                        "\"UnlockedCharacters\": [\"Antonio\", \"Corvan\"], \"OwnedCharacters\": [\"Kael\", \"Antonio\"]}");
+                var data = Loaded(path).CurrentData;
+                Assert.That(data.SaveVersion, Is.EqualTo(GameData.CurrentVersion));
+                Assert.That(data.Currency, Is.EqualTo(55));
+                Assert.That(data.SelectedCharacterName, Is.EqualTo("Corvan"));
+                Assert.That(data.UnlockedCharacters, Is.EqualTo(new[] { "Corvan" }));
+                Assert.That(data.OwnedCharacters, Is.EqualTo(new[] { "Kael", "Corvan" }));
+                Assert.That(data.MusicVolume, Is.EqualTo(1f), "Fields missing from an old save keep their defaults.");
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
+        [Test]
+        public void Migrate_RepairsImpossibleValues()
+        {
+            var data = new GameData
+            {
+                SaveVersion = GameData.CurrentVersion, Currency = -5, MasterVolume = float.NaN, MusicVolume = 3f, SfxVolume = -1f,
+                HighScoreTime = float.PositiveInfinity, MetaMightLevel = -2, WindowMode = 9, ResolutionIndex = -7,
+                SelectedCharacterName = "", OwnedCharacters = null, UnlockedCharacters = null, InputBindingOverrides = null
+            };
+            SaveService.Migrate(data);
+            Assert.That(data.Currency, Is.EqualTo(0));
+            Assert.That(data.MasterVolume, Is.EqualTo(1f));
+            Assert.That(data.MusicVolume, Is.EqualTo(1f));
+            Assert.That(data.SfxVolume, Is.EqualTo(0f));
+            Assert.That(data.HighScoreTime, Is.EqualTo(0f));
+            Assert.That(data.MetaMightLevel, Is.EqualTo(0));
+            Assert.That(data.WindowMode, Is.EqualTo(0));
+            Assert.That(data.ResolutionIndex, Is.EqualTo(-1));
+            Assert.That(data.SelectedCharacterName, Is.EqualTo("Kael"));
+            Assert.That(data.OwnedCharacters, Is.Not.Null);
+            Assert.That(data.UnlockedCharacters, Is.Not.Null);
+            Assert.That(data.InputBindingOverrides, Is.EqualTo(""));
+        }
+
+        [Test]
+        public void FailedWrite_KeepsTheLastGoodSave_AndDoesNotThrow()
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                WriteSave(path, 30);
+                var service = Loaded(path);
+                service.CurrentData.Currency = 31;
+                bool saved;
+                using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None)) // e.g. locked by antivirus
+                {
+                    LogAssert.Expect(LogType.Error, new Regex(@"\[SaveService\] Could not write the save; the last good save is kept\."));
+                    saved = service.SaveGame();
+                }
+                Assert.That(saved, Is.False);
+                Assert.That(Loaded(path).CurrentData.Currency, Is.EqualTo(30));
+                Assert.That(File.Exists(path + ".tmp"), Is.False);
+            }
+            finally { Directory.Delete(directory, true); }
+        }
     }
 }

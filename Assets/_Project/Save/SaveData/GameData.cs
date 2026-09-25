@@ -12,6 +12,14 @@ namespace SoulHunter.Core.Persistence
     [Serializable]
     public class GameData
     {
+        /// <summary>Save schema version this build writes. Raise it and add a step to SaveService.Migrate when the format changes.</summary>
+        public const int CurrentVersion = 1;
+
+        /// <summary>
+        /// Schema version of this save. No initializer on purpose: a file written before versioning has no such
+        /// field, so it loads as 0 and is migrated. Fresh saves get CurrentVersion from SaveService.
+        /// </summary>
+        public int SaveVersion;
         public int PlayerHealth;
         public Vector3 PlayerPosition;
         public int Currency;

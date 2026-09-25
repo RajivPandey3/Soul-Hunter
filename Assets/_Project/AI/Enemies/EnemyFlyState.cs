@@ -26,11 +26,11 @@ namespace SoulHunter.Gameplay.AI
             direction.y = 0f;
             _flyDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
             _lifetime = lifetime;
+            _aliveTimer = 0f; // not reset in Enter: a flier resumed after a Time Freeze keeps its lifetime
         }
 
         public void Enter()
         {
-            _aliveTimer = 0f;
             // Enemy bodies are always triggers (EnemyController.Awake), so fliers pass
             // through each other and the player. The old Exit made the collider solid again,
             // which would have turned every pooled flier into a wall on reuse.

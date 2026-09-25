@@ -130,8 +130,20 @@ namespace SoulHunter.Gameplay.AI
             }
         }
 
-        /// <summary>True while a stage event flies this enemy along a fixed path.</summary>
-        public bool IsFlying => _currentState is EnemyFlyState;
+        /// <summary>True while a stage event flies this enemy along a fixed path (also while frozen mid-flight).</summary>
+        public bool IsFlying => _currentState is EnemyFlyState ||
+                                (_currentState is EnemyFrozenState frozen && frozen.ResumeState is EnemyFlyState);
+
+        /// <summary>
+        /// Time Freeze / Clock Lancet: stop in place, then carry on with what the enemy was doing. A stage-event
+        /// flier resumes its path (and its lifetime); everyone else chases again.
+        /// </summary>
+        public void Freeze(float duration)
+        {
+            var resume = _currentState is EnemyFrozenState frozen ? frozen.ResumeState
+                : _currentState is EnemyFlyState ? _currentState : null;
+            ChangeState(new EnemyFrozenState(this, duration, resume));
+        }
 
         public void StartFlyingMode(Vector3 direction)
         {
