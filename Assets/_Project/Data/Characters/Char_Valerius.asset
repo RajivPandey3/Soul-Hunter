@@ -23,3 +23,6 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  LevelBonus: 2
+  LevelBonusEveryLevels: 5
+  LevelBonusAmount: 1

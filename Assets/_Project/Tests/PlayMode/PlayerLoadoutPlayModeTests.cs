@@ -14,22 +14,22 @@ using SoulHunter.Gameplay.Weapons;
 namespace SoulHunter.Tests.PlayMode
 {
     /// <summary>
-    /// Plays as a character whose starting weapon is the Whip (Antonio) and checks what the player sees:
+    /// Plays as a character whose starting weapon is the Whip (Corvan) and checks what the player sees:
     /// the character model is visible, the starting weapon is the Whip, and the Whip damages the
     /// nearest enemy even off its old facing axis. Guards the Whip prefab's empty enemy mask (it never hit anything).
     /// </summary>
     public class PlayerLoadoutPlayModeTests : GameplayPlayModeTestBase
     {
         [UnityTest]
-        public IEnumerator Antonio_IsVisible_StartsWithWhip_AndWhipDamagesEnemies()
+        public IEnumerator Corvan_IsVisible_StartsWithWhip_AndWhipDamagesEnemies()
         {
-            // Boot to the menu, pick Antonio in memory only (never written to the save file), then play.
+            // Boot to the menu, pick Corvan in memory only (never written to the save file), then play.
             var load = SceneManager.LoadSceneAsync("Bootstrap");
             Assert.IsNotNull(load, "Bootstrap is not in Build Settings.");
             yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
             var save = GameServices.Instance.Get<SaveService>();
             string previousSelection = save.CurrentData.SelectedCharacterName;
-            save.CurrentData.SelectedCharacterName = "Antonio";
+            save.CurrentData.SelectedCharacterName = "Corvan";
             try
             {
                 GameServices.Instance.Get<SoulHunter.Core.Scenes.SceneService>().LoadSceneAsync("Main_Gameplay");
@@ -44,9 +44,9 @@ namespace SoulHunter.Tests.PlayMode
                         visible.Add(renderer.name);
                 Assert.That(visible, Is.Not.Empty, "Player has no enabled, non-empty renderer, so it is invisible. " + Errors());
 
-                // 2. Antonio starts with the Whip.
+                // 2. Corvan starts with the Whip.
                 var whip = player.GetComponentInChildren<WhipWeapon>();
-                Assert.IsNotNull(whip, "Antonio's starting Whip was not spawned. " + Errors());
+                Assert.IsNotNull(whip, "Corvan's starting Whip was not spawned. " + Errors());
                 Assert.That(whip.TargetLayer.value, Is.EqualTo(LayerMask.GetMask("Enemy")), "Whip must target the Enemy layer.");
 
                 // 3. The Whip aims at the nearest enemy: place one straight ahead (+Z), off the old

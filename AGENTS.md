@@ -159,7 +159,7 @@ Validated 2026-09-24: `BiblePrefabTests` (T) and the full PlayMode suite with 0 
 
 ### Whip enemy mask defect
 
-`Whip_Weapon.prefab` shipped with an empty `_enemyLayer`, so the Whip never hit anything. It surfaced once character starting weapons were fixed (Antonio starts with the Whip). `WhipWeapon` (and `GarlicWeapon`, defensively) now default an empty mask to the Enemy layer. Validated by `PlayerLoadoutPlayModeTests` (R): Antonio is visible, starts with the Whip, and the Whip damages an adjacent enemy.
+`Whip_Weapon.prefab` shipped with an empty `_enemyLayer`, so the Whip never hit anything. It surfaced once character starting weapons were fixed (Antonio, now Corvan, starts with the Whip). `WhipWeapon` (and `GarlicWeapon`, defensively) now default an empty mask to the Enemy layer. Validated by `PlayerLoadoutPlayModeTests` (R): Corvan is visible, starts with the Whip, and the Whip damages an adjacent enemy.
 
 ### All-character sweep (2026-09-24)
 
@@ -227,9 +227,16 @@ JSON persistence exists, but robust general schema migration and corrupt-save re
 
 Some older status documents are stale or contradictory. Current owner decisions and verified evidence outrank stale status text.
 
-### Character move speed data defect
+### Character stat blocks and VS-style select screen (owner request, 2026-09-25)
 
-`CharacterData.BaseMoveSpeed` mixes conventions: Kael (4), Antonio (3) and Elaria (3.5) look like absolute speeds, the other ten characters (0.8-1.3) look like multipliers, while the player's base speed is 5. It is therefore not applied; the other character stats (max health, Might, Area, Cooldown, Armor, starting weapon) are. Needs an owner decision on the convention before move speed can be applied.
+Owner decisions (2026-09-25): every character gets the full VS stat block, every ability its description promises must be real, and the character select screen follows VS. `CharacterData.BaseMoveSpeed` is a **multiplier** (1.0 = the player's base speed 5); Kael, Corvan and Elaria were 4/3/3.5 and are now 1.0. Antonio (a VS character name and description) was renamed **Corvan, The Grave Warden** (`Char_Corvan.asset`, same GUID; a save that still says "Antonio" falls back to the default character).
+
+- Data: `CharacterData` adds Recovery, Speed, Duration, Amount, Revival, Magnet, Luck, Growth, Greed and Curse, a level-up bonus (`LevelBonus` every N levels) and special abilities (crit multiplier, extra projectile bounces, low-health speed bonus, starting shield). `PlayerStats.ApplyCharacter` applies all of it; `CharacterStatSheet` computes character + gold power-ups for the screen and uses the same numbers.
+- Abilities now backed by data (values provisional): Aria Growth +20%, Draven Amount +2, Gideon Area +50% (his Might 1.5 is kept), Isolde Cooldown -15%, Kaelen crits 3x, Lumina Recovery 1 HP/s, Rurik up to +50% speed at 0 HP, Seraphina +3 bounces (Magic Wand and Song of Mana only; other projectile weapons deal damage through `ProjectileDamage`), Sylas 10 s starting shield (no VFX), Valerius +1 Armor every 5 levels, Corvan +10% Might every 10 levels.
+- Screen: `CharacterSelectionUI` builds the layout at runtime inside the scene's existing panel: a grid of character cards (keyboard/gamepad focus selects), a stats panel on the left with bonuses highlighted, the selected character's info and starting weapon, and Confirm. Prev/Next are hidden.
+- Known gaps: 12 of 13 characters share the placeholder portrait `Player_Down.png`, and weapon `UpgradeData` assets have no icons, so cards show no weapon icon. No gold counter, stage list or co-op (the stage list does not apply to the one-run structure).
+
+Validated by `CharacterStatBlockTests` (T) and `CharacterSelectionPlayModeTests` (R: a card for each character; clicking one shows its full stat block; Sylas starts shielded with the multiplier move speed); EditMode 262/262, PlayMode 27/27, 0 exceptions (`D:\SoulHunter-Validation\run-20260925-charselect\`). A batchmode screenshot of the screen at 1920x1080 was checked (partial `V`); hands-on feel and balance are unverified.
 
 ### Validation run 2026-09-24
 

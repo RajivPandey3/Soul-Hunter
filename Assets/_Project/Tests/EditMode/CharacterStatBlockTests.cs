@@ -1,0 +1,239 @@
+using System.Linq;
+using System.Reflection;
+using NUnit.Framework;
+using SoulHunter.Gameplay.Combat;
+using SoulHunter.Gameplay.Data;
+using SoulHunter.Gameplay.Player;
+using UnityEngine;
+
+namespace SoulHunter.Tests.EditMode
+{
+    /// <summary>
+    /// Learning Comment: CharacterStatBlockTests verifies the VS-style character stat block: every stat
+    /// applies in play, the select screen's sheet matches it (character + gold power-ups), level-up
+    /// bonuses and special abilities work, and every character's description ability is real data.
+    /// </summary>
+    public class CharacterStatBlockTests
+    {
+        private GameObject _object;
+        private CharacterData _character;
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (_object != null) Object.DestroyImmediate(_object);
+            if (_character != null) Object.DestroyImmediate(_character);
+        }
+
+        private PlayerStats CreatePlayer()
+        {
+            _object = new GameObject("Player");
+            _object.AddComponent<HealthController>().Initialize(100);
+            _object.AddComponent<PlayerExperience>();
+            return _object.AddComponent<PlayerStats>();
+        }
+
+        private static CharacterData Catalog(string name)
+        {
+            var character = GameContentCatalog.FindCharacterExact(name);
+            Assert.That(character, Is.Not.Null, $"{name} catalog mein nahi hai.");
+            return character;
+        }
+
+        [Test]
+        public void ApplyCharacter_AppliesTheWholeStatBlock()
+        {
+            // Learning Comment: VS ki tarah har stat (sirf Might/Area nahi) run mein lagu ho.
+            var stats = CreatePlayer();
+            _character = ScriptableObject.CreateInstance<CharacterData>();
+            _character.BaseMoveSpeed = 1.2f;
+            _character.StartingRecovery = 0.5f;
+            _character.StartingSpeed = 1.1f;
+            _character.StartingDuration = 1.3f;
+            _character.StartingAmount = 2;
+            _character.StartingRevivals = 1;
+            _character.StartingMagnet = 1.5f;
+            _character.StartingLuck = 1.2f;
+            _character.StartingGrowth = 1.2f;
+            _character.StartingGreed = 1.4f;
+            _character.StartingCurse = 1.1f;
+
+            stats.ApplyCharacter(_character);
+            stats.ApplyCharacter(_character); // must not stack
+
+            Assert.That(stats.MoveSpeedMultiplier, Is.EqualTo(1.2f).Within(0.001f));
+            Assert.That(stats.Regen, Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(stats.ProjectileSpeed, Is.EqualTo(1.1f).Within(0.001f));
+            Assert.That(stats.Duration, Is.EqualTo(1.3f).Within(0.001f));
+            Assert.That(stats.Amount, Is.EqualTo(2));
+            Assert.That(stats.Revivals, Is.EqualTo(1));
+            Assert.That(stats.Magnet, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(stats.Luck, Is.EqualTo(1.2f).Within(0.001f));
+            Assert.That(stats.ExpBonus, Is.EqualTo(1.2f).Within(0.001f));
+            Assert.That(stats.Greed, Is.EqualTo(1.4f).Within(0.001f));
+            Assert.That(stats.Curse, Is.EqualTo(1.1f).Within(0.001f));
+        }
+
+        [Test]
+        public void StatSheet_AddsGoldPowerUps_AndFormatsLikeVS()
+        {
+            // Learning Comment: Select screen wahi stats dikhaye jin se run shuru hoga (character + power-ups).
+            var isolde = Catalog("Isolde");
+            var sheet = CharacterStatSheet.Build(isolde, metaMight: 2, metaArmor: 1, metaGreed: 1, metaRevival: 1);
+            Assert.That(sheet.Might, Is.EqualTo(isolde.StartingMight + 0.2f).Within(0.001f));
+            Assert.That(sheet.Armor, Is.EqualTo(isolde.StartingArmor + 1));
+            Assert.That(sheet.Greed, Is.EqualTo(isolde.StartingGreed + 0.2f).Within(0.001f));
+            Assert.That(sheet.Revivals, Is.EqualTo(1));
+
+            var rows = sheet.DisplayRows().ToDictionary(r => r.Label);
+            Assert.That(rows.Keys, Is.EquivalentTo(new[] { "Max Health", "Recovery", "Armor", "Move Speed", "Might", "Speed",
+                "Duration", "Area", "Cooldown", "Amount", "Revival", "Magnet", "Luck", "Growth", "Greed", "Curse" }));
+            Assert.That(rows["Cooldown"].Value, Is.EqualTo("-15%"));
+            Assert.That(rows["Cooldown"].Changed, Is.True);
+            Assert.That(rows["Armor"].Value, Is.EqualTo("+1"));
+            Assert.That(rows["Revival"].Value, Is.EqualTo("+1"));
+            Assert.That(rows["Area"].Value, Is.EqualTo("-"));
+            Assert.That(rows["Area"].Changed, Is.False);
+
+            var draven = CharacterStatSheet.Build(Catalog("Draven")).DisplayRows().ToDictionary(r => r.Label);
+            Assert.That(draven["Amount"].Value, Is.EqualTo("+2"));
+            var lumina = CharacterStatSheet.Build(Catalog("Lumina")).DisplayRows().ToDictionary(r => r.Label);
+            Assert.That(lumina["Recovery"].Value, Is.EqualTo("1.0"));
+        }
+
+        [Test]
+        public void StatSheet_MatchesWhatPlayerStatsApplies()
+        {
+            // Learning Comment: Screen par dikhne wale numbers aur game ke asli numbers ek hi hon.
+            foreach (var character in GameContentCatalog.Load().Characters.Where(c => c != null))
+            {
+                var stats = CreatePlayer();
+                stats.ApplyCharacter(character);
+                var sheet = CharacterStatSheet.Build(character);
+                string n = character.CharacterName;
+                Assert.That(stats.Might, Is.EqualTo(sheet.Might).Within(0.001f), n);
+                Assert.That(stats.Area, Is.EqualTo(sheet.Area).Within(0.001f), n);
+                Assert.That(stats.Cooldown, Is.EqualTo(sheet.Cooldown).Within(0.001f), n);
+                Assert.That(stats.Armor, Is.EqualTo(sheet.Armor), n);
+                Assert.That(stats.MoveSpeedMultiplier, Is.EqualTo(sheet.MoveSpeed).Within(0.001f), n);
+                Assert.That(stats.Regen, Is.EqualTo(sheet.Recovery).Within(0.001f), n);
+                Assert.That(stats.Amount, Is.EqualTo(sheet.Amount), n);
+                Assert.That(stats.ExpBonus, Is.EqualTo(sheet.Growth).Within(0.001f), n);
+                Object.DestroyImmediate(_object);
+            }
+        }
+
+        [Test]
+        public void LevelBonus_GrantsAtEveryNthLevel_ThroughLevelUps()
+        {
+            // Learning Comment: Corvan ko har 10 level par +10% Might mile, beech ke levels par nahi.
+            var stats = CreatePlayer();
+            stats.ApplyCharacter(Catalog("Corvan"));
+            float start = stats.Might;
+            var experience = _object.GetComponent<PlayerExperience>();
+
+            while (experience.CurrentLevel < 9) experience.AddXP(experience.XPToNextLevel);
+            Assert.That(stats.Might, Is.EqualTo(start).Within(0.001f), "Level 9 tak bonus nahi.");
+            experience.AddXP(experience.XPToNextLevel);
+            Assert.That(experience.CurrentLevel, Is.EqualTo(10));
+            Assert.That(stats.Might, Is.EqualTo(start + 0.1f).Within(0.001f), "Level 10 par +10% Might.");
+        }
+
+        [Test]
+        public void LevelBonus_ArmorEveryFifthLevel()
+        {
+            // Learning Comment: Valerius ko har 5 level par +1 Armor.
+            var stats = CreatePlayer();
+            stats.ApplyCharacter(Catalog("Valerius"));
+            int start = stats.Armor;
+            for (int level = 2; level <= 10; level++) stats.ApplyLevelBonus(level);
+            Assert.That(stats.Armor, Is.EqualTo(start + 2));
+            Assert.That(_object.GetComponent<HealthController>().Armor, Is.EqualTo(start + 2));
+        }
+
+        [Test]
+        public void LowHealthSpeed_GrowsAsHealthDrops()
+        {
+            // Learning Comment: Rurik jitna zakhmi, utna tez.
+            var stats = CreatePlayer();
+            stats.ApplyCharacter(Catalog("Rurik"));
+            Assert.That(stats.LowHealthSpeedFactor(100, 100), Is.EqualTo(1f).Within(0.001f));
+            Assert.That(stats.LowHealthSpeedFactor(50, 100), Is.EqualTo(1.25f).Within(0.001f));
+            Assert.That(stats.LowHealthSpeedFactor(0, 100), Is.EqualTo(1.5f).Within(0.001f));
+        }
+
+        [Test]
+        public void StartingShield_BlocksDamage_UntilItExpires()
+        {
+            // Learning Comment: Sylas ki shield ke dauran koi hit HP na kaate.
+            var stats = CreatePlayer();
+            stats.ApplyCharacter(Catalog("Sylas"));
+            Assert.That(stats.StartingShieldSeconds, Is.GreaterThan(0f));
+            var health = _object.GetComponent<HealthController>();
+
+            health.ShieldedUntil = Time.time + stats.StartingShieldSeconds;
+            health.TakeDamage(new DamagePacket(30, Vector3.zero, Vector3.zero));
+            Assert.That(health.CurrentHealth, Is.EqualTo(100));
+
+            health.ShieldedUntil = Time.time - 1f;
+            health.TakeDamage(new DamagePacket(30, Vector3.zero, Vector3.zero));
+            Assert.That(health.CurrentHealth, Is.EqualTo(70));
+        }
+
+        [Test]
+        public void CritMultiplier_IsTheCharacters_OrTheDefault()
+        {
+            // Learning Comment: Kaelen ke crits 3x, baaki sab ke 2x.
+            Assert.That(AutoAttackWeapon.CritMultiplierFor(null), Is.EqualTo(2f));
+            var stats = CreatePlayer();
+            Assert.That(AutoAttackWeapon.CritMultiplierFor(stats), Is.EqualTo(2f));
+            stats.ApplyCharacter(Catalog("Kaelen"));
+            Assert.That(AutoAttackWeapon.CritMultiplierFor(stats), Is.EqualTo(3f));
+        }
+
+        [Test]
+        public void Projectile_AddBounces_AddsBouncesAndHits()
+        {
+            // Learning Comment: Seraphina ke projectiles 3 baar zyada bounce karein.
+            _object = new GameObject("Projectile", typeof(Rigidbody), typeof(SphereCollider));
+            var projectile = _object.AddComponent<Projectile>();
+            projectile.ConfigureContacts(1, 0, false);
+            projectile.AddBounces(3);
+            var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+            Assert.That((int)typeof(Projectile).GetField("_maxBounces", flags).GetValue(projectile), Is.EqualTo(3));
+            Assert.That((int)typeof(Projectile).GetField("_remainingHits", flags).GetValue(projectile), Is.EqualTo(4));
+            Assert.That(Catalog("Seraphina").ExtraProjectileBounces, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void EveryDescriptionAbility_IsBackedByData()
+        {
+            // Learning Comment: Description jo wada kare, data mein wahi ho.
+            Assert.That(Catalog("Aria").StartingGrowth, Is.EqualTo(1.2f).Within(0.001f));
+            Assert.That(Catalog("Draven").StartingAmount, Is.EqualTo(2));
+            Assert.That(Catalog("Gideon").StartingArea, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(Catalog("Isolde").StartingCooldown, Is.EqualTo(0.85f).Within(0.001f));
+            Assert.That(Catalog("Kaelen").CritDamageMultiplier, Is.EqualTo(3f));
+            Assert.That(Catalog("Lumina").StartingRecovery, Is.EqualTo(1f));
+            Assert.That(Catalog("Rurik").LowHealthSpeedBonus, Is.GreaterThan(0f));
+            Assert.That(Catalog("Sylas").StartingShieldSeconds, Is.GreaterThan(0f));
+            var valerius = Catalog("Valerius");
+            Assert.That(valerius.LevelBonus, Is.EqualTo(CharacterData.LevelBonusStat.Armor));
+            Assert.That(valerius.LevelBonusEveryLevels, Is.EqualTo(5));
+            var corvan = Catalog("Corvan");
+            Assert.That(corvan.LevelBonus, Is.EqualTo(CharacterData.LevelBonusStat.Might));
+            Assert.That(corvan.LevelBonusEveryLevels, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void MoveSpeed_IsAMultiplier_ForEveryCharacter_AndNoVSNames()
+        {
+            // Learning Comment: Owner decision 2026-09-25: move speed multiplier hai (1.0 = base speed).
+            foreach (var character in GameContentCatalog.Load().Characters.Where(c => c != null))
+            {
+                Assert.That(character.BaseMoveSpeed, Is.InRange(0.5f, 2f), $"{character.CharacterName} move speed multiplier nahi lagta.");
+                Assert.That(character.CharacterName, Is.Not.EqualTo("Antonio"), "VS character ka naam copy nahi karna.");
+            }
+        }
+    }
+}

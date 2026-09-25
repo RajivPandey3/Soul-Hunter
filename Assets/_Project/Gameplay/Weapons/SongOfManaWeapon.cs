@@ -47,6 +47,7 @@ namespace SoulHunter.Gameplay.Combat
             // Duration stretches how far the shot travels before it fades.
             projectile.Initialize(direction, _shotSpeed * SpeedMultiplier, ScaledDamage(DamageAmount),
                 _beamDuration * DurationMultiplier, DamageType.Magic, "Song Of Mana", _shotPierce);
+            projectile.AddBounces(ExtraBounces);
         }
     }
 }

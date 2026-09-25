@@ -44,10 +44,10 @@ namespace SoulHunter.Gameplay.Player
                 var saveService = SoulHunter.Core.Services.GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
                 if (saveService != null && saveService.CurrentData != null)
                 {
-                    Might += (saveService.CurrentData.MetaMightLevel * 0.1f);
-                    Armor += saveService.CurrentData.MetaArmorLevel;
-                    Greed += (saveService.CurrentData.MetaGreedLevel * 0.2f);
-                    Revivals += saveService.CurrentData.MetaRevivalLevel;
+                    Might += saveService.CurrentData.MetaMightLevel * CharacterStatSheet.MightPerMetaLevel;
+                    Armor += saveService.CurrentData.MetaArmorLevel * CharacterStatSheet.ArmorPerMetaLevel;
+                    Greed += saveService.CurrentData.MetaGreedLevel * CharacterStatSheet.GreedPerMetaLevel;
+                    Revivals += saveService.CurrentData.MetaRevivalLevel * CharacterStatSheet.RevivalsPerMetaLevel;
                     Debug.Log("[PlayerStats] Meta Progression Loaded! Player is stronger.");
                 }
             }
@@ -55,21 +55,91 @@ namespace SoulHunter.Gameplay.Player
         }
 
         private bool _characterApplied;
+        private SoulHunter.Gameplay.Data.CharacterData _character;
+        private PlayerExperience _experience;
+
+        /// <summary>Critical hit damage multiplier (VS default 2x; some characters crit harder).</summary>
+        public float CritDamageMultiplier { get; private set; } = 2f;
+        /// <summary>Extra bounces added to the holder's projectiles.</summary>
+        public int ExtraProjectileBounces { get; private set; }
+        /// <summary>Extra move speed at 0 HP, scaling linearly from full HP (0.5 = +50%).</summary>
+        public float LowHealthSpeedBonus { get; private set; }
+        /// <summary>Seconds of damage immunity granted when the run starts.</summary>
+        public float StartingShieldSeconds { get; private set; }
 
         /// <summary>
-        /// VS rule: each character starts with its own stat modifiers. Applied once, on top of
-        /// meta-shop bonuses (1.0 = no change). Move speed is not applied: the character assets
-        /// mix absolute speeds and multipliers, so it needs an owner decision first.
+        /// VS rule: each character starts with its own stat block. Applied once, on top of
+        /// meta-shop bonuses (multipliers: 1.0 = no change; flat stats: 0 = no change).
+        /// Also arms the character's level-up bonus and special abilities.
         /// </summary>
         public void ApplyCharacter(SoulHunter.Gameplay.Data.CharacterData character)
         {
             if (character == null || _characterApplied) return;
             _characterApplied = true;
+            _character = character;
             Might += character.StartingMight - 1f;
             Area += character.StartingArea - 1f;
             Cooldown = Mathf.Max(0.1f, Cooldown + (character.StartingCooldown - 1f));
             Armor += character.StartingArmor;
+            MoveSpeedMultiplier = Mathf.Max(0.1f, MoveSpeedMultiplier + (character.BaseMoveSpeed - 1f));
+            Regen += character.StartingRecovery;
+            ProjectileSpeed = Mathf.Max(0.1f, ProjectileSpeed + (character.StartingSpeed - 1f));
+            Duration = Mathf.Max(0.1f, Duration + (character.StartingDuration - 1f));
+            Amount += character.StartingAmount;
+            Revivals += character.StartingRevivals;
+            Magnet = Mathf.Max(0.1f, Magnet + (character.StartingMagnet - 1f));
+            Luck += character.StartingLuck - 1f;
+            ExpBonus = Mathf.Max(0.1f, ExpBonus + (character.StartingGrowth - 1f));
+            Greed += character.StartingGreed - 1f;
+            Curse = Mathf.Max(0.1f, Curse + (character.StartingCurse - 1f));
+            CritDamageMultiplier = Mathf.Max(1f, character.CritDamageMultiplier);
+            ExtraProjectileBounces = Mathf.Max(0, character.ExtraProjectileBounces);
+            LowHealthSpeedBonus = Mathf.Max(0f, character.LowHealthSpeedBonus);
+            StartingShieldSeconds = Mathf.Max(0f, character.StartingShieldSeconds);
             SyncArmor();
+
+            if (_experience == null) _experience = GetComponent<PlayerExperience>();
+            if (_experience != null) _experience.OnLevelUp += HandleLevelUp;
+        }
+
+        private void OnDestroy()
+        {
+            if (_experience != null) _experience.OnLevelUp -= HandleLevelUp;
+        }
+
+        private void HandleLevelUp(int level) => ApplyLevelBonus(level);
+
+        /// <summary>
+        /// VS rule: some characters grow a stat at every Nth level (e.g. +10% Might every 10 levels).
+        /// Called once per level gained.
+        /// </summary>
+        public void ApplyLevelBonus(int level)
+        {
+            var c = _character;
+            if (c == null || c.LevelBonus == SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.None) return;
+            if (level <= 0 || level % Mathf.Max(1, c.LevelBonusEveryLevels) != 0) return;
+            float amount = c.LevelBonusAmount;
+            switch (c.LevelBonus)
+            {
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Might: AddMight(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Armor: AddArmor(Mathf.RoundToInt(amount)); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Area: AddArea(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Cooldown: ReduceCooldown(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.MaxHealth: AddMaxHealth(Mathf.RoundToInt(amount)); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Recovery: AddRegen(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Luck: AddLuck(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Growth: AddExpBonus(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.Greed: AddGreed(amount); break;
+                case SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.MoveSpeed: AddMoveSpeed(amount); break;
+            }
+        }
+
+        /// <summary>Move speed multiplier from the low-health bonus: 1 at full HP, 1 + bonus at 0 HP.</summary>
+        public float LowHealthSpeedFactor(int currentHealth, int maxHealth)
+        {
+            if (LowHealthSpeedBonus <= 0f || maxHealth <= 0) return 1f;
+            float missing = 1f - Mathf.Clamp01((float)currentHealth / maxHealth);
+            return 1f + LowHealthSpeedBonus * missing;
         }
 
         // Armor is applied by HealthController, so push every change to it.

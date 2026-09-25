@@ -33,6 +33,14 @@ namespace SoulHunter.Gameplay.Combat
         private bool _blockedByWalls;
         private readonly System.Collections.Generic.Dictionary<IDamageable, float> _recentHits = new();
 
+        /// <summary>Adds bounces on top of the current configuration (a character's extra bounces).</summary>
+        public void AddBounces(int extra)
+        {
+            if (extra <= 0) return;
+            _maxBounces += extra;
+            _remainingHits += extra;
+        }
+
         public void ConfigureContacts(int pierce, int bounces, bool blockedByWalls)
         {
             _maxBounces = Mathf.Max(0, bounces);

@@ -6,6 +6,7 @@
         "UnityEditor.TestRunner",
         "SoulHunter.Foundation",
         "SoulHunter.Gameplay",
+        "SoulHunter.UI",
         "UnityEngine.UI",
         "Unity.TextMeshPro"
     ],

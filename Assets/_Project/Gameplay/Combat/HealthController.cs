@@ -35,6 +35,9 @@ namespace SoulHunter.Gameplay.Combat
         public float PostHitInvulnerability { get; set; }
         private float _hitInvulnerableUntil = -1f;
         public bool IsHitInvulnerable => Time.time < _hitInvulnerableUntil;
+        /// <summary>Time (Time.time) until which every hit is blocked: a character's starting shield.</summary>
+        public float ShieldedUntil { get; set; } = -1f;
+        public bool IsShielded => Time.time < ShieldedUntil;
         private bool _keepAliveAfterDeath;
 
         private void Awake()
@@ -64,6 +67,7 @@ namespace SoulHunter.Gameplay.Combat
         public void TakeDamage(DamagePacket packet)
         {
             if (_currentHealth <= 0 || IsInvincible) return; // Already dead or invincible
+            if (IsShielded) return; // starting shield blocks every hit
             if (IsHitInvulnerable && !packet.IgnoresHitInvulnerability) return; // brief immunity after the last hit
             if (packet.Amount <= 0 || (DamageInterceptor != null && DamageInterceptor(packet))) return;
 

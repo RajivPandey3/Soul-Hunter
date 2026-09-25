@@ -18,7 +18,7 @@ MonoBehaviour:
   CharacterModelPrefab: {fileID: 1995043602901482061, guid: 32fe81666ca50484a9853bf52f76ec89, type: 3}
   StartingWeapon: 0
   BaseMaxHealth: 70
-  BaseMoveSpeed: 3.5
+  BaseMoveSpeed: 1
   StartingMight: 1.2
   StartingArea: 1
   StartingCooldown: 1

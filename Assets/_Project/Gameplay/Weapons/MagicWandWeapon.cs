@@ -103,7 +103,7 @@ namespace SoulHunter.Gameplay.Weapons
             projectile.Initialize(direction, speed, damage, 3f, DamageType.Magic, "Magic Wand");
             var arcana = ArcanaManager.Instance;
             int bounces = arcana != null && arcana.HasArcana(ArcanaData.ArcanaType.WaltzOfPearls) ? 3 : 0;
-            projectile.ConfigureContacts(Pierce, bounces, true);
+            projectile.ConfigureContacts(Pierce, bounces + ExtraBounces, true);
             _activeProjectiles.Add(projectile);
             projectile.Deactivated += _releaseHandler;
             // Gemini and Iron Blue Will do not apply to Magic Wand.

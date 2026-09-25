@@ -51,6 +51,8 @@ namespace SoulHunter.Gameplay.Combat
         protected float DurationMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Duration) : 1f;
         protected float SpeedMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f;
         protected int ExtraAmount => OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0;
+        /// <summary>Extra projectile bounces from the holder's character (e.g. Seraphina).</summary>
+        protected int ExtraBounces => OwnerStats != null ? Mathf.Max(0, OwnerStats.ExtraProjectileBounces) : 0;
 
         /// <summary>
         /// Nearest live enemy on the ground plane within maxRange, or null. For a boss's mirrored copy
@@ -121,6 +123,9 @@ namespace SoulHunter.Gameplay.Combat
         protected virtual float BaseCritChance => 0f;
         public const float CritDamageMultiplier = 2f;
 
+        /// <summary>Critical hit multiplier for a holder: its character's (e.g. Kaelen 3x), else the VS default 2x.</summary>
+        public static float CritMultiplierFor(PlayerStats stats) => stats != null ? stats.CritDamageMultiplier : CritDamageMultiplier;
+
         public static bool IsCrit(float baseChance, float luck, float roll01) =>
             baseChance > 0f && roll01 < Mathf.Clamp01(baseChance * Mathf.Max(0f, luck));
 
@@ -129,7 +134,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             float damage = ScaledDamage(baseDamage);
             float luck = OwnerStats != null ? OwnerStats.Luck : 1f;
-            return IsCrit(BaseCritChance, luck, Random.value) ? damage * CritDamageMultiplier : damage;
+            return IsCrit(BaseCritChance, luck, Random.value) ? damage * CritMultiplierFor(OwnerStats) : damage;
         }
 
         /// <summary>Scales a spawned effect by Area, relative to its prefab's own scale (safe for pooled objects).</summary>

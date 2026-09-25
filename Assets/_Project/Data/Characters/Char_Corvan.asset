@@ -10,16 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3261ac544a4dde64b81e1f50940665a9, type: 3}
-  m_Name: Char_Antonio
+  m_Name: Char_Corvan
   m_EditorClassIdentifier: 
-  CharacterName: Antonio
-  Description: Khatarnak hunter. Gains 10% Might every 10 levels.
+  CharacterName: Corvan
+  Description: The Grave Warden. Gains +10% Might every 10 levels.
   CharacterIcon: {fileID: -7139592808081743327, guid: b7724fefa5d4a2e44af319777e7eac29, type: 3}
   CharacterModelPrefab: {fileID: 1995043602901482061, guid: 32fe81666ca50484a9853bf52f76ec89, type: 3}
   StartingWeapon: 1
   BaseMaxHealth: 100
-  BaseMoveSpeed: 3
+  BaseMoveSpeed: 1
   StartingMight: 1
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  LevelBonus: 1
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1

@@ -41,9 +41,16 @@ namespace SoulHunter.Gameplay.Player
             get
             {
                 if (_stats == null) _stats = GetComponent<PlayerStats>();
-                return _moveSpeed * (_stats != null ? _stats.MoveSpeedMultiplier : 1f) * _campaignMovementMultiplier;
+                float speed = _moveSpeed * (_stats != null ? _stats.MoveSpeedMultiplier : 1f) * _campaignMovementMultiplier;
+                if (_stats != null && _stats.LowHealthSpeedBonus > 0f)
+                {
+                    if (_health == null) _health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+                    if (_health != null) speed *= _stats.LowHealthSpeedFactor(_health.CurrentHealth, _health.MaxHealth);
+                }
+                return speed;
             }
         }
+        private SoulHunter.Gameplay.Combat.HealthController _health;
         public static PlayerController Instance { get; private set; }
         public PlayerStats Stats => _stats != null ? _stats : (_stats = GetComponent<PlayerStats>());
 
@@ -251,6 +258,8 @@ namespace SoulHunter.Gameplay.Player
             if (stats != null) stats.ApplyCharacter(character);
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && character.BaseMaxHealth > 0) health.Initialize(character.BaseMaxHealth);
+            if (health != null && stats != null && stats.StartingShieldSeconds > 0f)
+                health.ShieldedUntil = Time.time + stats.StartingShieldSeconds;
         }
 
         private void OnDashEvent(PlayerDashEvent dashEvent)
