@@ -44,10 +44,16 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             var options = OptionsMenuUI.Current;
             Assert.IsNotNull(options, "Options screen opened. " + Errors());
-            var names = options.GetComponentsInChildren<Selectable>().Select(s => s.name).ToList();
-            foreach (var option in new[] { "Flashing VFX", "Damage Numbers", "Screen Shake", "Fullscreen", "Pause When Unfocused" })
+            // VS sections (Sound, Display, Gameplay, Controls) with the VS options, plus remapping and pause-on-focus-loss.
+            Assert.That(options.TabButtons.Select(t => t.name), Is.EqualTo(new[] { "Tab_Sound", "Tab_Display", "Tab_Gameplay", "Tab_Controls" }));
+            var names = options.GetComponentsInChildren<Selectable>(true).Select(s => s.name).ToList();
+            foreach (var option in new[] { "Window Mode", "Resolution", "V-Sync", "Flashing VFX", "Disable Blood", "Screen Shake",
+                                           "Damage Numbers", "Show Stage Progression", "Visible Joystick", "Pause When Unfocused", "Reset Controls" })
                 Assert.That(names, Does.Contain(option), $"Options has {option}.");
-            Assert.That(options.GetComponentsInChildren<Slider>().Length, Is.EqualTo(2), "Sounds and Music sliders.");
+            Assert.That(options.GetComponentsInChildren<Slider>(true).Length, Is.EqualTo(2), "Sounds and Music sliders.");
+            options.ShowTab(2); // Gameplay
+            yield return null;
+            Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("Damage Numbers"), "Opening a section focuses its first option.");
             foreach (var binding in new[] { "Dash_<Keyboard>", "Dash_<Gamepad>", "Ultimate_<Gamepad>", "Pause_<Gamepad>", "Move_<Keyboard>" })
                 Assert.That(names.Any(n => n.StartsWith(binding)), Is.True, $"Options can remap {binding}.");
             yield return null;
@@ -127,6 +133,63 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNull(merchant.ShopUI);
             Assert.That(GameTime.IsPaused, Is.False);
             Object.Destroy(merchant.gameObject);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator Hud_StageProgression_ReadableLabels_DisableBlood_AndTouchControls()
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            if (spawner != null) spawner.enabled = false;
+            var data = GameSettings.Data;
+            bool progression = data.ShowStageProgression, blood = data.DisableBlood, joystick = data.VisibleJoystick;
+            try
+            {
+                // Stage progression label (VS "Show stage progression").
+                var hud = Object.FindFirstObjectByType<HudReadability>();
+                Assert.IsNotNull(hud, "HUD readability helper attached. " + Errors());
+                Assert.That(hud.StageLabel.text, Does.StartWith("Stage 1/10"));
+                Assert.That(hud.StageLabel.gameObject.activeInHierarchy, Is.True);
+                data.ShowStageProgression = false; GameSettings.NotifyChanged();
+                Assert.That(hud.StageLabel.gameObject.activeSelf, Is.False, "Option off hides it.");
+                data.ShowStageProgression = true; GameSettings.NotifyChanged();
+
+                // HUD labels are white (they were dark blue on the dark ground).
+                var hudController = Object.FindFirstObjectByType<GameHUDController>();
+                foreach (var name in new[] { "_goldText", "_killText" })
+                {
+                    var label = GetPrivateField<TMPro.TextMeshProUGUI>(hudController, name);
+                    Assert.That(label.color, Is.EqualTo(Color.white), $"{name} is readable.");
+                }
+
+                // Disable Blood: Blood Arenas floor stains use the plain floor material.
+                LevelProgressionManager.Instance.StartStage(8);
+                yield return null;
+                var map = Object.FindFirstObjectByType<SoulHunter.Gameplay.Environment.InfiniteMap>();
+                bool HasBlood() => map.ChunkAt(1, 1).GetComponentsInChildren<Renderer>()
+                    .SelectMany(r => r.sharedMaterials).Any(m => m != null && m.name.EndsWith("_Blood"));
+                Assert.That(HasBlood(), Is.True, "Blood Arenas floor shows stains by default.");
+                data.DisableBlood = true; GameSettings.NotifyChanged();
+                Assert.That(HasBlood(), Is.False, "Disable Blood removes them.");
+                data.DisableBlood = false; GameSettings.NotifyChanged();
+                Assert.That(HasBlood(), Is.True, "and turning it back on restores them.");
+
+                // Visible Joystick: on-screen stick and buttons drive the virtual gamepad.
+                var touch = Object.FindFirstObjectByType<TouchControlsUI>();
+                Assert.IsNotNull(touch, "Touch controls attached. " + Errors());
+                Assert.That(touch.Root.activeSelf, Is.EqualTo(Application.isMobilePlatform), "Hidden on desktop by default.");
+                data.VisibleJoystick = true; GameSettings.NotifyChanged();
+                yield return null;
+                Assert.That(touch.Root.activeSelf, Is.True);
+                Assert.IsNotNull(touch.Root.GetComponentInChildren<UnityEngine.InputSystem.OnScreen.OnScreenStick>());
+                Assert.That(touch.Root.GetComponentsInChildren<UnityEngine.InputSystem.OnScreen.OnScreenButton>().Length, Is.EqualTo(2), "Dash and Pause.");
+            }
+            finally
+            {
+                data.ShowStageProgression = progression; data.DisableBlood = blood; data.VisibleJoystick = joystick;
+                GameSettings.NotifyChanged();
+            }
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

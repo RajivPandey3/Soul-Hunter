@@ -8,6 +8,7 @@ namespace SoulHunter.Gameplay.UI
     public class TimerUI : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _timeText;
+        public TextMeshProUGUI TimeText => _timeText;
         private GameSessionManager _session;
         private void Start()
         {

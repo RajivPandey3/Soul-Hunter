@@ -12,10 +12,11 @@ using SoulHunter.Core.Services;
 namespace SoulHunter.Gameplay.UI
 {
     /// <summary>
-    /// VS-style Options screen, opened from the main menu and the pause menu: Sounds and Music volume,
-    /// Flashing VFX, Damage Numbers, Screen Shake, Fullscreen, Pause When Unfocused, and control remapping
-    /// for keyboard and controller. Fully usable with keyboard or controller; Esc / B closes it. Changes
-    /// apply at once and are saved when the screen closes. Built at runtime on its own overlay canvas.
+    /// VS-style Options screen (sections as on the VS wiki options page), opened from the main menu and the
+    /// pause menu. Sound: Sounds, Music. Display: Window Mode, Resolution, V-Sync, Flashing VFX, Disable Blood,
+    /// Screen Shake. Gameplay: Damage Numbers, Show Stage Progression, Visible Joystick, Pause When Unfocused.
+    /// Controls: keyboard and controller remapping. Fully usable with keyboard or controller; Esc / B closes it.
+    /// Changes apply at once and are saved when the screen closes. Built at runtime on its own overlay canvas.
     /// </summary>
     public sealed class OptionsMenuUI : MonoBehaviour
     {
@@ -69,11 +70,15 @@ namespace SoulHunter.Gameplay.UI
             bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
                         (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
             if (back) Close();
-            // Keep keyboard/controller focus inside the screen.
-            if (EventSystem.current != null && _selectables.Count > 0 &&
+            // Keep keyboard/controller focus inside the screen (on the open section).
+            if (EventSystem.current != null && _tabButtons.Count > 0 &&
                 (EventSystem.current.currentSelectedGameObject == null ||
-                 !EventSystem.current.currentSelectedGameObject.transform.IsChildOf(transform)))
-                EventSystem.current.SetSelectedGameObject(_selectables[0].gameObject);
+                 !EventSystem.current.currentSelectedGameObject.transform.IsChildOf(transform) ||
+                 !EventSystem.current.currentSelectedGameObject.activeInHierarchy))
+            {
+                var items = _tabItems[_currentTab];
+                EventSystem.current.SetSelectedGameObject(items.Count > 0 ? items[0].gameObject : _tabButtons[_currentTab].gameObject);
+            }
         }
 
         /// <summary>Saves the options (including remapped controls) and closes the screen.</summary>
@@ -101,46 +106,109 @@ namespace SoulHunter.Gameplay.UI
             Text("Title", panel, new Vector2(0f, 0.92f), new Vector2(1f, 0.99f), "Options", 44f, TextAlignmentOptions.Center).color = AccentColor;
 
             var data = GameSettings.Data;
-            float y = 0.9f;
-            const float row = 0.044f; // 7 options + controls title + 7 control rows + buttons fit the panel
-            AddSlider(panel, ref y, row, "Sounds", () => GameSettings.SfxVolume, v => { if (data != null) data.SfxVolume = v; });
-            AddSlider(panel, ref y, row, "Music", () => GameSettings.MusicVolume, v => { if (data != null) data.MusicVolume = v; });
-            AddToggle(panel, ref y, row, "Flashing VFX", () => GameSettings.FlashingVfx, v => { if (data != null) data.FlashingVfx = v; });
-            AddToggle(panel, ref y, row, "Damage Numbers", () => GameSettings.DamageNumbers, v => { if (data != null) data.DamageNumbers = v; });
-            AddToggle(panel, ref y, row, "Screen Shake", () => GameSettings.ScreenShake, v => { if (data != null) data.ScreenShake = v; });
-            AddToggle(panel, ref y, row, "Fullscreen", () => GameSettings.Fullscreen, v => { if (data != null) data.Fullscreen = v; });
-            AddToggle(panel, ref y, row, "Pause When Unfocused", () => GameSettings.PauseOnFocusLoss, v => { if (data != null) data.PauseOnFocusLoss = v; });
+            // VS groups its options in sections; one tab per section.
+            string[] sections = { "Sound", "Display", "Gameplay", "Controls" };
+            for (int i = 0; i < sections.Length; i++)
+            {
+                int index = i;
+                var tab = AddButton(panel, new Vector2(0.05f + i * 0.2275f, 0.83f), new Vector2(0.255f + i * 0.2275f, 0.9f), sections[i], () => ShowTab(index));
+                tab.name = "Tab_" + sections[i];
+                _tabButtons.Add(tab);
+            }
+            const float row = 0.1f;
 
-            y -= row * 0.4f;
-            // Column headers sit over the binding columns (row columns 0.3-0.6 and 0.63-0.93 of a 0.05-0.95 line).
-            Text("ControlsTitle", panel, new Vector2(0.05f, y - row), new Vector2(0.32f, y), "Controls", 26f, TextAlignmentOptions.Left).color = AccentColor;
-            Text("KeyboardTitle", panel, new Vector2(0.32f, y - row), new Vector2(0.59f, y), "Keyboard", 26f, TextAlignmentOptions.Center).color = AccentColor;
-            Text("ControllerTitle", panel, new Vector2(0.617f, y - row), new Vector2(0.887f, y), "Controller", 26f, TextAlignmentOptions.Center).color = AccentColor;
-            y -= row;
+            // Sound
+            var sound = BeginTab("Sound", panel);
+            float y = 1f;
+            AddSlider(sound, ref y, row, "Sounds", () => GameSettings.SfxVolume, v => { if (data != null) data.SfxVolume = v; });
+            AddSlider(sound, ref y, row, "Music", () => GameSettings.MusicVolume, v => { if (data != null) data.MusicVolume = v; });
+
+            // Display
+            var display = BeginTab("Display", panel);
+            y = 1f;
+            AddCycle(display, ref y, row, "Window Mode", () => GameSettings.WindowMode, () => SoulHunter.Gameplay.Core.DisplaySettingsApplier.WindowModeNames.Length,
+                i => SoulHunter.Gameplay.Core.DisplaySettingsApplier.WindowModeNames[i], i => { if (data != null) data.WindowMode = i; });
+            // Resolution cycles Native, then every resolution the display supports.
+            AddCycle(display, ref y, row, "Resolution", () => GameSettings.ResolutionIndex + 1, () => SoulHunter.Gameplay.Core.DisplaySettingsApplier.Resolutions().Count + 1,
+                i => SoulHunter.Gameplay.Core.DisplaySettingsApplier.ResolutionLabel(i - 1), i => { if (data != null) data.ResolutionIndex = i - 1; });
+            AddToggle(display, ref y, row, "V-Sync", () => GameSettings.VSync, v => { if (data != null) data.VSync = v; });
+            AddToggle(display, ref y, row, "Flashing VFX", () => GameSettings.FlashingVfx, v => { if (data != null) data.FlashingVfx = v; });
+            AddToggle(display, ref y, row, "Disable Blood", () => GameSettings.DisableBlood, v => { if (data != null) data.DisableBlood = v; });
+            AddToggle(display, ref y, row, "Screen Shake", () => GameSettings.ScreenShake, v => { if (data != null) data.ScreenShake = v; });
+
+            // Gameplay
+            var gameplay = BeginTab("Gameplay", panel);
+            y = 1f;
+            AddToggle(gameplay, ref y, row, "Damage Numbers", () => GameSettings.DamageNumbers, v => { if (data != null) data.DamageNumbers = v; });
+            AddToggle(gameplay, ref y, row, "Show Stage Progression", () => GameSettings.ShowStageProgression, v => { if (data != null) data.ShowStageProgression = v; });
+            AddToggle(gameplay, ref y, row, "Visible Joystick", () => GameSettings.VisibleJoystick, v => { if (data != null) data.VisibleJoystick = v; });
+            AddToggle(gameplay, ref y, row, "Pause When Unfocused", () => GameSettings.PauseOnFocusLoss, v => { if (data != null) data.PauseOnFocusLoss = v; });
+
+            // Controls: headers over the binding columns (0.3-0.6 and 0.63-0.93 of a 0.02-0.98 line).
+            var controls = BeginTab("Controls", panel);
+            const float controlRow = 0.095f;
+            y = 1f;
+            Text("ControlsTitle", controls, new Vector2(0.02f, y - controlRow), new Vector2(0.3f, y), "Controls", 26f, TextAlignmentOptions.Left).color = AccentColor;
+            Text("KeyboardTitle", controls, new Vector2(0.308f, y - controlRow), new Vector2(0.596f, y), "Keyboard", 26f, TextAlignmentOptions.Center).color = AccentColor;
+            Text("ControllerTitle", controls, new Vector2(0.625f, y - controlRow), new Vector2(0.913f, y), "Controller", 26f, TextAlignmentOptions.Center).color = AccentColor;
+            y -= controlRow;
             if (_input != null && _input.Actions != null)
             {
                 var move = _input.Actions.FindAction(InputService.MoveAction);
                 foreach (var part in new[] { "up", "down", "left", "right" })
-                    AddBindingRow(panel, ref y, row, "Move " + char.ToUpper(part[0]) + part.Substring(1), move, CompositePart(move, part), -1);
+                    AddBindingRow(controls, ref y, controlRow, "Move " + char.ToUpper(part[0]) + part.Substring(1), move, CompositePart(move, part), -1);
                 foreach (var name in new[] { InputService.DashAction, InputService.UltimateAction, InputService.PauseAction })
                 {
                     var action = _input.Actions.FindAction(name);
-                    AddBindingRow(panel, ref y, row, name, action, BindingIndex(action, "<Keyboard>"), BindingIndex(action, "<Gamepad>"));
+                    AddBindingRow(controls, ref y, controlRow, name, action, BindingIndex(action, "<Keyboard>"), BindingIndex(action, "<Gamepad>"));
                 }
             }
-
-            y -= row * 0.3f;
-            var reset = AddButton(panel, new Vector2(0.1f, y - row), new Vector2(0.45f, y), "Reset Controls", () =>
+            var reset = AddButton(controls, new Vector2(0.3f, y - controlRow), new Vector2(0.7f, y - 0.01f), "Reset Controls", () =>
             {
                 _input?.ResetBindings();
                 RefreshAll();
             });
-            var back = AddButton(panel, new Vector2(0.55f, y - row), new Vector2(0.9f, y), "Back", Close);
+            reset.name = "Reset Controls";
+            _building.Add(reset);
             _selectables.Add(reset);
+
+            var back = AddButton(panel, new Vector2(0.35f, 0.03f), new Vector2(0.65f, 0.1f), "Back", Close);
+            back.name = "Back";
             _selectables.Add(back);
 
             RefreshAll();
-            if (EventSystem.current != null && _selectables.Count > 0) EventSystem.current.SetSelectedGameObject(_selectables[0].gameObject);
+            ShowTab(0);
+        }
+
+        // ---------- sections ----------
+
+        private readonly List<RectTransform> _tabs = new List<RectTransform>();
+        private readonly List<List<Selectable>> _tabItems = new List<List<Selectable>>();
+        private readonly List<Button> _tabButtons = new List<Button>();
+        private List<Selectable> _building = new List<Selectable>();
+        private int _currentTab;
+
+        public int CurrentTab => _currentTab;
+        public IReadOnlyList<Button> TabButtons => _tabButtons;
+
+        private RectTransform BeginTab(string name, RectTransform panel)
+        {
+            var tab = Rect(name, panel, new Vector2(0.03f, 0.13f), new Vector2(0.97f, 0.81f));
+            _tabs.Add(tab);
+            _building = new List<Selectable>();
+            _tabItems.Add(_building);
+            return tab;
+        }
+
+        /// <summary>Shows one section and focuses its first control (keyboard/controller friendly).</summary>
+        public void ShowTab(int index)
+        {
+            _currentTab = Mathf.Clamp(index, 0, _tabs.Count - 1);
+            for (int i = 0; i < _tabs.Count; i++) _tabs[i].gameObject.SetActive(i == _currentTab);
+            for (int i = 0; i < _tabButtons.Count; i++)
+                _tabButtons[i].GetComponentInChildren<TextMeshProUGUI>().color = i == _currentTab ? AccentColor : Color.white;
+            var first = _tabItems[_currentTab].Count > 0 ? _tabItems[_currentTab][0] : null;
+            if (first != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(first.gameObject);
         }
 
         private void RefreshAll()
@@ -178,6 +246,7 @@ namespace SoulHunter.Gameplay.UI
             });
             _refreshers.Add(() => { slider.SetValueWithoutNotify(get()); value.text = Mathf.RoundToInt(get() * 100f) + "%"; });
             _selectables.Add(slider);
+            _building.Add(slider);
         }
 
         private void AddToggle(RectTransform panel, ref float y, float row, string label, Func<bool> get, Action<bool> set)
@@ -195,6 +264,26 @@ namespace SoulHunter.Gameplay.UI
             _refreshers.Add(() => { state.text = get() ? "ON" : "OFF"; state.color = get() ? AccentColor : Color.white; });
             button.name = label;
             _selectables.Add(button);
+            _building.Add(button);
+        }
+
+        /// <summary>A button that steps through a list of choices (VS Window Mode, Resolution).</summary>
+        private void AddCycle(RectTransform panel, ref float y, float row, string label, Func<int> get, Func<int> count,
+            Func<int, string> labelFor, Action<int> set)
+        {
+            var line = Line(panel, ref y, row, label);
+            var button = AddButton(line, new Vector2(0.45f, 0.08f), new Vector2(0.95f, 0.92f), "", () =>
+            {
+                int n = Mathf.Max(1, count());
+                set((Mathf.Clamp(get(), 0, n - 1) + 1) % n);
+                GameSettings.NotifyChanged();
+                RefreshAll();
+            });
+            var text = button.GetComponentInChildren<TextMeshProUGUI>();
+            _refreshers.Add(() => text.text = labelFor(Mathf.Clamp(get(), 0, Mathf.Max(1, count()) - 1)));
+            button.name = label;
+            _selectables.Add(button);
+            _building.Add(button);
         }
 
         private void AddBindingRow(RectTransform panel, ref float y, float row, string label, InputAction action, int keyboardIndex, int gamepadIndex)
@@ -215,6 +304,7 @@ namespace SoulHunter.Gameplay.UI
             _refreshers.Add(() => label.text = action.GetBindingDisplayString(index));
             button.name = $"{action.name}_{device}";
             _selectables.Add(button);
+            _building.Add(button);
         }
 
         /// <summary>VS "remap controls": waits for the next key or button of the same device type.</summary>
@@ -287,7 +377,7 @@ namespace SoulHunter.Gameplay.UI
 
         private RectTransform Line(RectTransform panel, ref float y, float row, string label)
         {
-            var line = Rect(label, panel, new Vector2(0.05f, y - row), new Vector2(0.95f, y));
+            var line = Rect(label, panel, new Vector2(0.02f, y - row), new Vector2(0.98f, y));
             line.gameObject.AddComponent<Image>().color = RowColor;
             Text("Label", line, new Vector2(0.02f, 0f), new Vector2(0.44f, 1f), label, 24f, TextAlignmentOptions.Left);
             y -= row * 1.08f;

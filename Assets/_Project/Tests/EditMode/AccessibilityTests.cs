@@ -40,8 +40,11 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(data.Currency, Is.EqualTo(5));
             Assert.That(data.MusicVolume, Is.EqualTo(1f));
             Assert.That(data.SfxVolume, Is.EqualTo(1f));
-            Assert.That(data.FlashingVfx && data.DamageNumbers && data.ScreenShake && data.Fullscreen && data.PauseOnFocusLoss, Is.True);
+            Assert.That(data.FlashingVfx && data.DamageNumbers && data.ScreenShake && data.PauseOnFocusLoss && data.VSync && data.ShowStageProgression, Is.True);
             Assert.That(data.InputBindingOverrides, Is.Empty);
+            Assert.That(data.WindowMode, Is.EqualTo(0), "Fullscreen Window by default.");
+            Assert.That(data.ResolutionIndex, Is.EqualTo(-1), "Native resolution by default.");
+            Assert.That(data.DisableBlood || data.VisibleJoystick, Is.False);
         }
 
         [Test]

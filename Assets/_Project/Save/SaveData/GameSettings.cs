@@ -5,9 +5,9 @@ namespace SoulHunter.Core.Persistence
 {
     /// <summary>
     /// The player's options (VS-style options screen): volumes, flashing VFX, damage numbers, screen shake,
-    /// fullscreen and pause-on-focus-loss. Stored in GameData; defaults apply when there is no save
-    /// (e.g. isolated tests). Systems read these each time they need them, so a change applies at once;
-    /// listeners that cache values subscribe to Changed.
+    /// window mode, resolution, V-Sync, blood, stage progression, touch joystick and pause-on-focus-loss.
+    /// Stored in GameData; defaults apply when there is no save (e.g. isolated tests). Systems read these
+    /// each time they need them, so a change applies at once; listeners that cache values subscribe to Changed.
     /// </summary>
     public static class GameSettings
     {
@@ -27,7 +27,12 @@ namespace SoulHunter.Core.Persistence
         public static bool FlashingVfx => Data == null || Data.FlashingVfx;
         public static bool DamageNumbers => Data == null || Data.DamageNumbers;
         public static bool ScreenShake => Data == null || Data.ScreenShake;
-        public static bool Fullscreen => Data == null || Data.Fullscreen;
+        public static int WindowMode => Data != null ? Data.WindowMode : 0;
+        public static int ResolutionIndex => Data != null ? Data.ResolutionIndex : -1;
+        public static bool VSync => Data == null || Data.VSync;
+        public static bool DisableBlood => Data != null && Data.DisableBlood;
+        public static bool ShowStageProgression => Data == null || Data.ShowStageProgression;
+        public static bool VisibleJoystick => Data != null && Data.VisibleJoystick;
         public static bool PauseOnFocusLoss => Data == null || Data.PauseOnFocusLoss;
 
         /// <summary>Tells listeners (audio, screen mode) that an option changed.</summary>

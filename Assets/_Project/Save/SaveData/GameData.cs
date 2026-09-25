@@ -24,7 +24,15 @@ namespace SoulHunter.Core.Persistence
         public bool FlashingVfx = true;
         public bool DamageNumbers = true;
         public bool ScreenShake = true;
-        public bool Fullscreen = true;
+        /// <summary>VS Window Mode: 0 Fullscreen Window, 1 Exclusive Fullscreen, 2 Maximised Window, 3 Windowed.</summary>
+        public int WindowMode = 0;
+        /// <summary>Index into the distinct screen resolutions; -1 = the display's native resolution.</summary>
+        public int ResolutionIndex = -1;
+        public bool VSync = true;
+        public bool DisableBlood = false;
+        public bool ShowStageProgression = true;
+        /// <summary>On-screen touch joystick (VS "Visible Joysticks"); always shown on mobile.</summary>
+        public bool VisibleJoystick = false;
         public bool PauseOnFocusLoss = true;
         /// <summary>Input System binding overrides (remapped controls) as JSON; empty = defaults.</summary>
         public string InputBindingOverrides = "";

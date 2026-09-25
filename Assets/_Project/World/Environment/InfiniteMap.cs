@@ -41,6 +41,7 @@ namespace SoulHunter.Gameplay.Environment
 
         private void Start()
         {
+            SoulHunter.Core.Persistence.GameSettings.Changed += HandleSettingsChanged;
             _progression = FindFirstObjectByType<LevelProgressionManager>();
             if (_progression != null) _progression.OnStageStarted += HandleStageStarted;
             BuildChunks(FloorForStage(_progression != null ? _progression.CurrentStage : 1));
@@ -48,6 +49,7 @@ namespace SoulHunter.Gameplay.Environment
 
         private void OnDestroy()
         {
+            SoulHunter.Core.Persistence.GameSettings.Changed -= HandleSettingsChanged;
             if (_progression != null) _progression.OnStageStarted -= HandleStageStarted;
         }
 
@@ -71,6 +73,7 @@ namespace SoulHunter.Gameplay.Environment
             }
             if (floorPrefab == CurrentFloorPrefab && _chunks[1, 1] != null) return;
 
+            _originalMaterials.Clear(); // every tile is replaced below
             // Keep the grid where it is (around the player) and only swap the tiles.
             Vector3 center = _chunks[1, 1] != null ? _chunks[1, 1].transform.position : Vector3.zero;
             for (int x = 0; x < 3; x++)
@@ -83,10 +86,38 @@ namespace SoulHunter.Gameplay.Environment
                     if (_chunks[x, z] != null) Destroy(_chunks[x, z]);
                     GameObject newChunk = Instantiate(floorPrefab, spawnPos, RandomQuarterTurn(), transform);
                     newChunk.SetActive(true);
+                    ApplyBloodSetting(newChunk);
                     _chunks[x, z] = newChunk;
                 }
             }
             CurrentFloorPrefab = floorPrefab;
+        }
+
+        // VS "Disable blood": the Blood Arenas floor draws its stains with a *_Blood material; with the option on,
+        // those parts use the floor's *_Base material instead (and switch back when it is turned off).
+        private readonly System.Collections.Generic.Dictionary<Renderer, Material[]> _originalMaterials =
+            new System.Collections.Generic.Dictionary<Renderer, Material[]>();
+
+        private void HandleSettingsChanged()
+        {
+            foreach (var chunk in _chunks) if (chunk != null) ApplyBloodSetting(chunk);
+        }
+
+        public void ApplyBloodSetting(GameObject chunk)
+        {
+            bool hide = SoulHunter.Core.Persistence.GameSettings.DisableBlood;
+            foreach (var renderer in chunk.GetComponentsInChildren<Renderer>())
+            {
+                if (!_originalMaterials.TryGetValue(renderer, out var original))
+                    _originalMaterials[renderer] = original = renderer.sharedMaterials;
+                Material plain = System.Array.Find(original, m => m != null && m.name.EndsWith("_Base"));
+                if (plain == null || !System.Array.Exists(original, m => m != null && m.name.EndsWith("_Blood"))) continue;
+                var materials = (Material[])original.Clone();
+                if (hide)
+                    for (int i = 0; i < materials.Length; i++)
+                        if (materials[i] != null && materials[i].name.EndsWith("_Blood")) materials[i] = plain;
+                renderer.sharedMaterials = materials;
+            }
         }
 
         private static Quaternion RandomQuarterTurn() => Quaternion.Euler(0f, 90f * Random.Range(0, 4), 0f);

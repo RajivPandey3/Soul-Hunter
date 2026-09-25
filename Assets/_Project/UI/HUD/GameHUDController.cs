@@ -44,6 +44,13 @@ namespace SoulHunter.Gameplay.UI
             // VS pause menu (Resume / Options / Quit) on the GameSystemManager panel.
             PauseMenuUI.Attach(SoulHunter.Gameplay.Core.GameSystemManager.Instance);
 
+            // Readable HUD labels (they were dark blue on the dark ground) and the stage progression label.
+            var readability = GetComponent<HudReadability>();
+            if (readability == null) readability = gameObject.AddComponent<HudReadability>();
+            var timer = FindFirstObjectByType<TimerUI>();
+            readability.Setup(_goldText, _killText, timer != null ? timer.TimeText : null);
+            if (GetComponent<TouchControlsUI>() == null) gameObject.AddComponent<TouchControlsUI>(); // touch stick (mobile / Visible Joystick)
+
             // Health Bar setup
             if (_playerHealth != null)
             {
