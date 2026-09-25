@@ -53,6 +53,8 @@ namespace SoulHunter.Gameplay.Core
             {
                 Instance = this;
                 ResetSession();
+                // VS rule: characters unlock during runs; the session owns the tracker so every run has one.
+                if (GetComponent<CharacterUnlockTracker>() == null) gameObject.AddComponent<CharacterUnlockTracker>();
             }
             else if (Instance != this)
             {

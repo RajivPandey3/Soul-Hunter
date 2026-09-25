@@ -43,19 +43,63 @@ namespace SoulHunter.UI
         [SerializeField] private Color _selectedCardColor = new Color(0.86f, 0.66f, 0.22f, 1f);
         [SerializeField] private Color _bonusColor = new Color(1f, 0.85f, 0.25f, 1f);
 
+        [SerializeField] private Color _lockedPortraitColor = new Color(0f, 0f, 0f, 0.9f);
+
         private int _currentIndex = 0;
         private readonly List<Button> _cards = new List<Button>();
         private readonly List<Image> _cardBackgrounds = new List<Image>();
+        private readonly List<Image> _cardPortraits = new List<Image>();
+        private readonly List<TextMeshProUGUI> _cardBadges = new List<TextMeshProUGUI>();
         private Image _weaponIconDisplay;
         private TextMeshProUGUI _weaponNameText;
+        private TextMeshProUGUI _goldText;
+        private TextMeshProUGUI _confirmLabel;
+        private TextMeshProUGUI _filterButtonLabel;
+        private TextMeshProUGUI _filterCountText;
+        private readonly List<Toggle> _stageToggles = new List<Toggle>();
         private ScrollRect _gridScroll;
         private Dictionary<UpgradeData.UpgradeType, UpgradeData> _weaponInfo;
+        private EconomyService _economy;
+
+        // VS-style character filter: by the stage each character comes from.
+        private bool _filterOn;
+        private readonly bool[] _stageShown = { true, true, true, true, true, true, true, true, true, true };
 
         public int SelectedIndex => _currentIndex;
         public CharacterData SelectedCharacter =>
             _availableCharacters != null && _currentIndex >= 0 && _currentIndex < _availableCharacters.Count ? _availableCharacters[_currentIndex] : null;
         public IReadOnlyList<Button> Cards => _cards;
         public TextMeshProUGUI StatsText => _statsText;
+        public string ConfirmText => _confirmLabel != null ? _confirmLabel.text : null;
+        public bool ConfirmInteractable => _selectAndPlayButton != null && _selectAndPlayButton.interactable;
+        public string GoldText => _goldText != null ? _goldText.text : null;
+        public string BadgeText(int index) => index >= 0 && index < _cardBadges.Count ? _cardBadges[index].text : null;
+        public bool FilterOn => _filterOn;
+        public string FilterCountText => _filterCountText != null ? _filterCountText.text : null;
+        public IReadOnlyList<Toggle> StageToggles => _stageToggles;
+
+        /// <summary>Turns the stage filter on or off (VS "FILTER: ON/OFF").</summary>
+        public void SetFilter(bool on)
+        {
+            _filterOn = on;
+            UpdateUI();
+        }
+
+        /// <summary>Shows or hides the characters that come from a stage while the filter is on.</summary>
+        public void SetStageShown(int stage, bool shown)
+        {
+            if (stage < 1 || stage > _stageShown.Length) return;
+            _stageShown[stage - 1] = shown;
+            if (stage - 1 < _stageToggles.Count && _stageToggles[stage - 1].isOn != shown) _stageToggles[stage - 1].SetIsOnWithoutNotify(shown);
+            UpdateUI();
+        }
+
+        public bool IsCardShown(int index) =>
+            index >= 0 && index < _availableCharacters.Count &&
+            (!_filterOn || _stageShown[Mathf.Clamp(_availableCharacters[index].OriginStage, 1, _stageShown.Length) - 1]);
+
+        /// <summary>Redraws everything from the current save data (after an unlock or purchase).</summary>
+        public void Refresh() => UpdateUI();
 
         private void Start()
         {
@@ -68,6 +112,7 @@ namespace SoulHunter.UI
             _availableCharacters.RemoveAll(c => c == null);
 
             _currentIndex = Mathf.Max(0, _availableCharacters.FindIndex(c => c.CharacterName == SavedSelection()));
+            if (GameServices.Instance != null && GameServices.Instance.TryGet(out _economy)) _economy.OnGoldChanged += HandleGoldChanged;
             BuildLayout();
 
             if (_availableCharacters.Count > 0)
@@ -85,7 +130,10 @@ namespace SoulHunter.UI
             if (_nextButton) _nextButton.onClick.RemoveListener(NextCharacter);
             if (_prevButton) _prevButton.onClick.RemoveListener(PrevCharacter);
             if (_selectAndPlayButton) _selectAndPlayButton.onClick.RemoveListener(ConfirmSelectionAndStart);
+            if (_economy != null) _economy.OnGoldChanged -= HandleGoldChanged;
         }
+
+        private void HandleGoldChanged(int _) => UpdateUI();
 
         private void Update()
         {
@@ -121,13 +169,51 @@ namespace SoulHunter.UI
             if (_currentIndex < 0 || _currentIndex >= _availableCharacters.Count) return;
 
             CharacterData charData = _availableCharacters[_currentIndex];
+            var data = SaveData();
+            bool unlocked = CharacterUnlocks.IsUnlocked(charData, data);
+            bool owned = CharacterUnlocks.IsOwned(charData, data);
 
             if (_characterNameText) _characterNameText.text = charData.CharacterName;
-            if (_characterDescriptionText) _characterDescriptionText.text = charData.Description;
+            if (_characterDescriptionText)
+            {
+                _characterDescriptionText.text = unlocked
+                    ? charData.Description
+                    : $"<b>LOCKED</b>\nUnlock: {CharacterUnlocks.ConditionText(charData)}";
+                if (unlocked && !owned) _characterDescriptionText.text += $"\n<b>Unlocked!</b> Buy for {charData.GoldPrice} gold.";
+            }
             if (_characterIconDisplay)
             {
                 _characterIconDisplay.sprite = charData.CharacterIcon;
                 _characterIconDisplay.preserveAspect = true;
+                _characterIconDisplay.color = unlocked ? Color.white : _lockedPortraitColor;
+            }
+
+            // Cards: silhouette + LOCKED, price when buyable, filter by origin stage.
+            for (int i = 0; i < _cards.Count; i++)
+            {
+                var card = _availableCharacters[i];
+                bool cardUnlocked = CharacterUnlocks.IsUnlocked(card, data);
+                bool cardOwned = CharacterUnlocks.IsOwned(card, data);
+                if (i < _cardPortraits.Count && _cardPortraits[i] != null) _cardPortraits[i].color = cardUnlocked ? Color.white : _lockedPortraitColor;
+                if (i < _cardBadges.Count && _cardBadges[i] != null)
+                    _cardBadges[i].text = !cardUnlocked ? "LOCKED" : cardOwned ? "" : $"{card.GoldPrice} G";
+                _cards[i].gameObject.SetActive(IsCardShown(i));
+            }
+
+            // Confirm plays an owned character, buys an unlocked one, and is disabled for a locked one.
+            int gold = _economy != null ? _economy.CurrentGold : 0;
+            if (_goldText) _goldText.text = $"Gold: {gold}";
+            if (_selectAndPlayButton)
+                _selectAndPlayButton.interactable = owned || (unlocked && gold >= charData.GoldPrice);
+            if (_confirmLabel)
+                _confirmLabel.text = owned ? "Confirm" : unlocked ? $"Buy ({charData.GoldPrice} G)" : "Locked";
+
+            if (_filterButtonLabel) _filterButtonLabel.text = _filterOn ? "FILTER: ON" : "FILTER: OFF";
+            if (_filterCountText)
+            {
+                int shown = 0;
+                foreach (bool s in _stageShown) if (s) shown++;
+                _filterCountText.text = $"{shown}/{_stageShown.Length}";
             }
 
             var weapon = WeaponInfo(charData.StartingWeapon);
@@ -180,6 +266,19 @@ namespace SoulHunter.UI
             if (_availableCharacters.Count == 0) return;
 
             CharacterData charData = _availableCharacters[_currentIndex];
+
+            // VS rule: a locked character cannot be picked; an unlocked one is bought first, then confirmed.
+            var data = SaveData();
+            if (!CharacterUnlocks.IsOwned(charData, data))
+            {
+                if (_economy != null && CharacterUnlocks.TryBuy(charData, data, _economy.SpendGold))
+                {
+                    GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>()?.SaveGame();
+                    Debug.Log($"[CharacterSelection] Bought {charData.CharacterName} for {charData.GoldPrice} gold.");
+                }
+                UpdateUI();
+                return;
+            }
 
             // Save selected character name to GameData
             if (GameServices.Instance != null)
@@ -326,8 +425,55 @@ namespace SoulHunter.UI
             if (_selectAndPlayButton != null)
             {
                 Place((RectTransform)_selectAndPlayButton.transform, root, new Vector2(0.76f, 0.08f), new Vector2(0.95f, 0.19f));
-                var label = _selectAndPlayButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (label != null) label.text = "Confirm";
+                _confirmLabel = _selectAndPlayButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (_confirmLabel != null) _confirmLabel.text = "Confirm";
+            }
+
+            // Top left: gold, which buys unlocked characters.
+            _goldText = CreateText("Gold_Text", root, new Vector2(0.03f, 0.9f), new Vector2(0.25f, 0.97f), "", TextAlignmentOptions.Left, 18f, 40f);
+            _goldText.color = _bonusColor;
+
+            // Right: VS-style character filter by the stage each character comes from.
+            BuildFilterPanel(root);
+        }
+
+        private void BuildFilterPanel(RectTransform root)
+        {
+            var toggleButton = CreatePanel("FilterButton", root, new Vector2(0.76f, 0.82f), new Vector2(0.95f, 0.88f));
+            toggleButton.GetComponent<Image>().color = new Color(0.12f, 0.2f, 0.75f, 1f);
+            var filterButton = toggleButton.gameObject.AddComponent<Button>();
+            filterButton.targetGraphic = toggleButton.GetComponent<Image>();
+            filterButton.onClick.AddListener(() => SetFilter(!_filterOn));
+            _filterButtonLabel = CreateText("Label", toggleButton, Vector2.zero, Vector2.one, "FILTER: OFF", TextAlignmentOptions.Center, 14f, 24f);
+
+            var list = CreatePanel("StageFilter", root, new Vector2(0.76f, 0.22f), new Vector2(0.95f, 0.8f));
+            _filterCountText = CreateText("Count", list, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.99f), "", TextAlignmentOptions.Center, 14f, 30f);
+            int stages = _stageShown.Length;
+            float rowHeight = 0.88f / stages;
+            for (int stage = 1; stage <= stages; stage++)
+            {
+                float top = 0.89f - (stage - 1) * rowHeight;
+                var row = CreateRect($"Stage_{stage}", list, new Vector2(0.05f, top - rowHeight), new Vector2(0.97f, top));
+                var box = CreateRect("Box", row, new Vector2(0f, 0.18f), new Vector2(0.1f, 0.82f));
+                var boxImage = box.gameObject.AddComponent<Image>();
+                boxImage.color = new Color(0.32f, 0.32f, 0.4f, 1f);
+                var check = CreateRect("Check", box, new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f));
+                var checkImage = check.gameObject.AddComponent<Image>();
+                checkImage.color = _bonusColor; // gold tick = shown
+                checkImage.raycastTarget = false;
+                var toggle = row.gameObject.AddComponent<Toggle>();
+                toggle.targetGraphic = boxImage;
+                toggle.graphic = checkImage;
+                toggle.isOn = _stageShown[stage - 1];
+                int s = stage;
+                toggle.onValueChanged.AddListener(on => SetStageShown(s, on));
+                // One fixed size for every row (auto-size would give each name its own size).
+                var label = CreateText("Label", row, new Vector2(0.14f, 0f), new Vector2(1f, 1f),
+                    CampaignLevelCatalog.Get(stage).Name, TextAlignmentOptions.Left, 17f, 17f);
+                label.enableAutoSizing = false;
+                label.fontSize = 17f;
+                label.overflowMode = TextOverflowModes.Ellipsis;
+                _stageToggles.Add(toggle);
             }
         }
 
@@ -345,12 +491,16 @@ namespace SoulHunter.UI
             focus.Selected = SelectCharacter;
 
             CreateText("Name", card, new Vector2(0.05f, 0.76f), new Vector2(0.95f, 0.97f), character.CharacterName, TextAlignmentOptions.TopLeft, 12f, 24f);
-            CreateImage("Portrait", card, new Vector2(0.05f, 0.05f), new Vector2(0.6f, 0.74f), character.CharacterIcon);
+            var portrait = CreateImage("Portrait", card, new Vector2(0.05f, 0.05f), new Vector2(0.6f, 0.74f), character.CharacterIcon);
             var weapon = WeaponInfo(character.StartingWeapon);
             CreateImage("Weapon", card, new Vector2(0.62f, 0.05f), new Vector2(0.95f, 0.42f), weapon != null ? weapon.Icon : null);
+            var badge = CreateText("Badge", card, new Vector2(0.55f, 0.45f), new Vector2(0.97f, 0.74f), "", TextAlignmentOptions.Right, 10f, 20f);
+            badge.color = _bonusColor;
 
             _cards.Add(button);
             _cardBackgrounds.Add(background);
+            _cardPortraits.Add(portrait);
+            _cardBadges.Add(badge);
         }
 
         private RectTransform PanelRoot()

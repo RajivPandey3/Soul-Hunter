@@ -67,5 +67,22 @@ namespace SoulHunter.Gameplay.Data
         public float StartingShieldSeconds = 0f;
         [Tooltip("Shown around the player while the starting shield lasts (blinks near the end).")]
         public GameObject ShieldVisualPrefab;
+
+        /// <summary>VS rule: characters unlock by meeting a condition in a run, then are bought with gold.</summary>
+        public enum UnlockCondition { None, ClearStage, SurviveInStage, ReachPlayerLevel, KillsInRun, WeaponLevel }
+
+        [Header("Unlock (VS rule)")]
+        [Tooltip("Level this character comes from; the select screen filter groups characters by it.")]
+        [Range(1, 10)] public int OriginStage = 1;
+        [Tooltip("None = available from the start.")]
+        public UnlockCondition Unlock = UnlockCondition.None;
+        [Tooltip("ClearStage / SurviveInStage: the stage number.")]
+        public int UnlockStage = 1;
+        [Tooltip("SurviveInStage: seconds. ReachPlayerLevel: level. KillsInRun: kills. WeaponLevel: weapon level.")]
+        public float UnlockTarget;
+        [Tooltip("WeaponLevel: the weapon.")]
+        public UpgradeData.UpgradeType UnlockWeapon;
+        [Tooltip("Gold to buy once unlocked; 0 = free.")]
+        [Min(0)] public int GoldPrice;
     }
 }

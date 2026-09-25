@@ -94,6 +94,83 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator SelectScreen_ShowsLockedBuyableAndOwnedCharacters_AndFiltersByStage()
+        {
+            var load = SceneManager.LoadSceneAsync("Bootstrap");
+            Assert.IsNotNull(load, "Bootstrap is not in Build Settings.");
+            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
+            Object.FindFirstObjectByType<MainMenuNavigation>().ShowCharacters();
+            yield return null;
+            var ui = Object.FindFirstObjectByType<CharacterSelectionUI>();
+            var data = GameServices.Instance.Get<SaveService>().CurrentData;
+
+            // In memory only, never saved: Gideon unlocked but not bought, no gold.
+            var unlockedBefore = data.UnlockedCharacters; var ownedBefore = data.OwnedCharacters; int goldBefore = data.Currency;
+            data.UnlockedCharacters = new System.Collections.Generic.List<string> { "Gideon" };
+            data.OwnedCharacters = new System.Collections.Generic.List<string>();
+            data.Currency = 0;
+            try
+            {
+                ui.Refresh();
+                var names = GameContentCatalog.Load().Characters.Where(c => c != null).Select(c => c.CharacterName).ToList();
+                Assert.That(ui.BadgeText(names.IndexOf("Kael")), Is.Empty, "Kael is owned.");
+                Assert.That(ui.BadgeText(names.IndexOf("Gideon")), Is.EqualTo($"{GameContentCatalog.FindCharacterExact("Gideon").GoldPrice} G"));
+                Assert.That(ui.BadgeText(names.IndexOf("Draven")), Is.EqualTo("LOCKED"));
+                Assert.That(ui.GoldText, Is.EqualTo("Gold: 0"));
+
+                ui.SelectCharacter(names.IndexOf("Draven"));
+                Assert.That(ui.ConfirmText, Is.EqualTo("Locked"));
+                Assert.That(ui.ConfirmInteractable, Is.False, "A locked character cannot be picked.");
+                ui.SelectCharacter(names.IndexOf("Gideon"));
+                Assert.That(ui.ConfirmText, Does.StartWith("Buy"));
+                Assert.That(ui.ConfirmInteractable, Is.False, "Not enough gold to buy.");
+                ui.SelectCharacter(names.IndexOf("Kael"));
+                Assert.That(ui.ConfirmText, Is.EqualTo("Confirm"));
+                Assert.That(ui.ConfirmInteractable, Is.True);
+
+                // Filter: hiding stage 2 hides the characters that come from it, only while the filter is on.
+                ui.SetStageShown(2, false);
+                Assert.That(ui.Cards.All(c => c.gameObject.activeSelf), Is.True, "Filter off shows everyone.");
+                ui.SetFilter(true);
+                Assert.That(ui.FilterCountText, Is.EqualTo("9/10"));
+                for (int i = 0; i < names.Count; i++)
+                {
+                    bool fromStage2 = GameContentCatalog.FindCharacterExact(names[i]).OriginStage == 2;
+                    Assert.That(ui.Cards[i].gameObject.activeSelf, Is.EqualTo(!fromStage2), $"{names[i]} filter visibility.");
+                }
+                Assert.That(ui.StageToggles[1].isOn, Is.False);
+                ui.SetFilter(false);
+                Assert.That(ui.Cards.All(c => c.gameObject.activeSelf), Is.True);
+                Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+            }
+            finally
+            {
+                data.UnlockedCharacters = unlockedBefore; data.OwnedCharacters = ownedBefore; data.Currency = goldBefore;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Run_HasAnUnlockTracker_ThatFollowsStageProgress()
+        {
+            yield return BootIntoGameplay();
+            var tracker = SoulHunter.Gameplay.Core.GameSessionManager.Instance.GetComponent<SoulHunter.Gameplay.Core.CharacterUnlockTracker>();
+            Assert.IsNotNull(tracker, "The session owns a character unlock tracker. " + Errors());
+            var progress = tracker.CurrentProgress();
+            Assert.That(progress.Stage, Is.EqualTo(1));
+            Assert.That(progress.PlayerLevel, Is.GreaterThanOrEqualTo(1));
+            Assert.That(progress.WeaponLevel, Is.Not.Null);
+
+            // Clearing stage 1 unlocks nobody, so nothing is written to the save file.
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            typeof(SoulHunter.Gameplay.Core.LevelProgressionManager)
+                .GetMethod("CompleteStage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .Invoke(progression, new object[] { "test" });
+            yield return null;
+            Assert.That(tracker.HighestClearedStage, Is.EqualTo(1), "Stage clears are tracked. " + Errors());
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator Seraphina_ProjectilesBounceThreeExtraTimes()
         {
             var load = SceneManager.LoadSceneAsync("Bootstrap");

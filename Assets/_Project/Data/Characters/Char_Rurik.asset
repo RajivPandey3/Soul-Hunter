@@ -41,3 +41,9 @@ MonoBehaviour:
   LowHealthSpeedBonus: 0.5
   StartingShieldSeconds: 0
   ShieldVisualPrefab: {fileID: 0}
+  OriginStage: 8
+  Unlock: 1
+  UnlockStage: 8
+  UnlockTarget: 0
+  UnlockWeapon: 0
+  GoldPrice: 2500

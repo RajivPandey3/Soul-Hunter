@@ -29,6 +29,10 @@ namespace SoulHunter.Core.Persistence
         public string SelectedCharacterName;
         public List<string> UnlockedAchievements = new List<string>();
 
+        // --- Characters (VS rule: meet a character's unlock condition, then buy it with gold) ---
+        public List<string> UnlockedCharacters = new List<string>();
+        public List<string> OwnedCharacters = new List<string>();
+
         public GameData()
         {
             // Default values for a new save
