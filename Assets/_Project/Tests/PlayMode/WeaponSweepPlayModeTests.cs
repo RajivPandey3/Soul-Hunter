@@ -103,9 +103,41 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(vfx.PooledCount(VfxKind.EnemyDeath), Is.GreaterThan(0), "A killed enemy shows a death effect.");
 
+            // Kael starts with the Whip, which had no visual: each lash now shows the slash arc.
+            float lashDeadline = Time.realtimeSinceStartup + 5f;
+            while (vfx.PooledCount(VfxKind.Slash) == 0 && Time.realtimeSinceStartup < lashDeadline) yield return null;
+            Assert.That(vfx.PooledCount(VfxKind.Slash), Is.GreaterThan(0), "The Whip shows its slash arc.");
+
             player.GetComponent<PlayerExperience>().AddXP(100000);
             yield return null;
             Assert.That(vfx.PooledCount(VfxKind.LevelUp), Is.GreaterThan(0), "Levelling up shows its effect.");
+
+            // VS-style level-up cards: icon, readable name, NEW!/Level tag and a real description.
+            float cardDeadline = Time.realtimeSinceStartup + 3f;
+            SoulHunter.Gameplay.UI.LevelUpUI ui = null;
+            while (Time.realtimeSinceStartup < cardDeadline)
+            {
+                ui = Object.FindObjectsByType<SoulHunter.Gameplay.UI.LevelUpUI>(FindObjectsSortMode.None).FirstOrDefault(u => u.isActiveAndEnabled);
+                if (ui != null && ui.GetComponentsInChildren<TMPro.TextMeshProUGUI>().Any(t => t.name == SoulHunter.Gameplay.UI.LevelUpUI.TitleName)) break;
+                yield return null;
+            }
+            var titles = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None)
+                .Where(t => t.isActiveAndEnabled && t.name == SoulHunter.Gameplay.UI.LevelUpUI.TitleName).ToList();
+            Assert.That(titles, Is.Not.Empty, "The level-up screen shows styled cards. " + Errors());
+            foreach (var title in titles)
+            {
+                var card = title.transform.parent;
+                Assert.That(title.text, Does.Not.Contain("Lv"), "Readable name, not the internal \"X Lv.N\".");
+                var tag = card.Find(SoulHunter.Gameplay.UI.LevelUpUI.TagName).GetComponent<TMPro.TextMeshProUGUI>().text;
+                Assert.That(tag == "NEW!" || tag.StartsWith("Level "), $"Tag was '{tag}'.");
+                var description = card.Find(SoulHunter.Gameplay.UI.LevelUpUI.DescriptionName).GetComponent<TMPro.TextMeshProUGUI>().text;
+                Assert.That(description, Does.Not.Match(@"upgrade level \d"), "A real description, not the placeholder.");
+                Assert.That(card.Find(SoulHunter.Gameplay.UI.LevelUpUI.IconName).GetComponent<UnityEngine.UI.Image>().sprite, Is.Not.Null, "Card icon.");
+                // Only the card's own texts show (old TMP and legacy Text labels showed through the first version).
+                var stray = card.GetComponentsInChildren<TMPro.TextMeshProUGUI>().Where(t => !t.name.StartsWith("Card_")).Select(t => t.text)
+                    .Concat(card.GetComponentsInChildren<UnityEngine.UI.Text>().Select(t => t.text)).ToList();
+                Assert.That(stray, Is.Empty, "Stray labels on the card: " + string.Join(", ", stray));
+            }
             var effects = vfx.GetComponentsInChildren<ParticleSystem>(true);
             Assert.That(effects, Is.Not.Empty);
             Assert.That(effects.All(p => p.GetComponent<ParticleSystemRenderer>().sharedMaterial != null), "Every effect has its material.");

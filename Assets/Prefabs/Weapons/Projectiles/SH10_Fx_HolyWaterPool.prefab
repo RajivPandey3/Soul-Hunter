@@ -4838,7 +4838,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 61b1ffb72ef86be4c978aa554cb8af07, type: 2}
+  - {fileID: 2100000, guid: d0a81fec90a6a8e4aa1cd7c69fc40866, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9821,6 +9821,7 @@ GameObject:
   - component: {fileID: 2478988384002736911}
   - component: {fileID: 4853732595309164206}
   - component: {fileID: 5857217657442279600}
+  - component: {fileID: 3081771549052314716}
   m_Layer: 0
   m_Name: Rim
   m_TagString: Untagged
@@ -9896,6 +9897,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &3081771549052314716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7580840168944182242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db286d8cda4a93a44be94bced52dd7b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Axis: {x: 0, y: 0, z: 1}
+  DegreesPerSecond: 40
 --- !u!1 &9108049167474988430
 GameObject:
   m_ObjectHideFlags: 0

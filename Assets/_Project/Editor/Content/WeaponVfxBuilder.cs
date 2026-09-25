@@ -31,6 +31,9 @@ namespace SoulHunter.Editor.Content
         private const string ParticleShader = "SoulHunter/VFX/Particle";
 
         private static Material _soft, _star, _ring, _smoke, _beam;
+        // Owner-approved VFX v2 sprites (build_vfx_textures.py, 2026-09-25).
+        private static Material _circle, _impact, _wisp, _flame, _slash;
+        public const string SpriteFolder = "Assets/Art/Textures/VFX";
         private static Mesh _sphere, _cube, _quad;
 
         [MenuItem("Soul Hunter/Content/Build Weapon VFX")]
@@ -74,6 +77,15 @@ namespace SoulHunter.Editor.Content
             _star = ParticleMaterial("SH10_Vfx_Star", star, additive: true);
             _ring = ParticleMaterial("SH10_Vfx_Ring", ring, additive: true);
             _smoke = ParticleMaterial("SH10_Vfx_Smoke", smoke, additive: false);
+
+            // VFX v2: the approved Soul Hunter sprites replace the plain stars and rings everywhere.
+            _star = ParticleMaterial("SH10_Vfx2_Sparkle", Sprite2("sparkle"), additive: true);
+            _ring = ParticleMaterial("SH10_Vfx2_ShockRing", Sprite2("shock_ring"), additive: true);
+            _circle = ParticleMaterial("SH10_Vfx2_MagicCircle", Sprite2("magic_circle"), additive: true);
+            _impact = ParticleMaterial("SH10_Vfx2_ImpactStar", Sprite2("impact_star"), additive: true);
+            _wisp = ParticleMaterial("SH10_Vfx2_SoulWisp", Sprite2("soul_wisp"), additive: true);
+            _flame = ParticleMaterial("SH10_Vfx2_SoulFlame", Sprite2("soul_flame"), additive: true);
+            _slash = ParticleMaterial("SH10_Vfx2_SlashArc", Sprite2("slash_arc"), additive: true);
         }
 
         private static Texture2D Texture(string name, System.Func<float, float, float> alpha)
@@ -95,6 +107,20 @@ namespace SoulHunter.Editor.Content
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.mipmapEnabled = true;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>A VFX v2 sprite from build_vfx_textures.py (generated into SpriteFolder).</summary>
+        private static Texture2D Sprite2(string name)
+        {
+            string path = $"{SpriteFolder}/SH10_Vfx2_{name}.png";
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer))
+                throw new FileNotFoundException("Run build_vfx_textures.py into " + SpriteFolder, path);
+            importer.alphaIsTransparency = true;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.mipmapEnabled = true;
+            importer.maxTextureSize = 256;
             importer.SaveAndReimport();
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
@@ -159,6 +185,8 @@ namespace SoulHunter.Editor.Content
             public float StretchLength = 2.5f;
             public bool HorizontalBillboard;
             public int MaxParticles = 60;
+            public bool RandomRotation = true;   // off for sprites with a direction (wisp tails, flames)
+            public float Spin;                   // degrees per second (magic circles turn)
         }
 
         private static ParticleSystem AddParticles(Transform parent, Ps s, Vector3 localPosition = default)
@@ -177,7 +205,13 @@ namespace SoulHunter.Editor.Content
             main.startSpeed = new ParticleSystem.MinMaxCurve(s.Speed.x, s.Speed.y);
             main.startSize = new ParticleSystem.MinMaxCurve(s.Size.x, s.Size.y);
             main.startColor = new ParticleSystem.MinMaxGradient(s.ColorA, s.ColorB);
-            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startRotation = s.RandomRotation ? new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f) : new ParticleSystem.MinMaxCurve(0f);
+            if (s.Spin != 0f)
+            {
+                var spin = ps.rotationOverLifetime;
+                spin.enabled = true;
+                spin.z = new ParticleSystem.MinMaxCurve(s.Spin * Mathf.Deg2Rad);
+            }
             main.gravityModifier = s.Gravity;
             main.simulationSpace = s.World ? ParticleSystemSimulationSpace.World : ParticleSystemSimulationSpace.Local;
             main.scalingMode = ParticleSystemScalingMode.Hierarchy;
@@ -257,13 +291,13 @@ namespace SoulHunter.Editor.Content
             }
 
             var hit = new GameObject("VFX_HitSpark");
-            AddParticles(hit.transform, new Ps { Name = "Flash", Material = _soft, Burst = 1, Lifetime = new Vector2(0.08f, 0.08f), Speed = Vector2.zero, Size = new Vector2(0.9f, 1.1f), ColorA = new Color(1f, 1f, 1f, 0.7f), ColorB = new Color(1f, 0.95f, 0.8f, 0.7f), Duration = 0.2f, MaxParticles = 2 });
+            AddParticles(hit.transform, new Ps { Name = "Flash", Material = _impact, Burst = 1, Lifetime = new Vector2(0.1f, 0.1f), Speed = Vector2.zero, Size = new Vector2(1.1f, 1.4f), ColorA = new Color(1f, 1f, 1f, 0.7f), ColorB = new Color(1f, 0.95f, 0.8f, 0.7f), Duration = 0.2f, MaxParticles = 2 });
             AddParticles(hit.transform, new Ps { Name = "Sparks", Material = _soft, Burst = 6, Lifetime = new Vector2(0.12f, 0.25f), Speed = new Vector2(4f, 8f), Size = new Vector2(0.08f, 0.14f), ColorA = Color.white, ColorB = new Color(1f, 0.85f, 0.4f), Stretch = true, Duration = 0.3f, MaxParticles = 12 });
             library.HitSpark = SaveVfx(hit, VfxFolder);
 
             var death = new GameObject("VFX_EnemyDeath");
             AddParticles(death.transform, new Ps { Name = "Puff", Material = _soft, Burst = 10, Lifetime = new Vector2(0.35f, 0.6f), Speed = new Vector2(1f, 2.5f), Size = new Vector2(0.4f, 0.8f), ColorA = new Color(0.6f, 0.4f, 1f, 0.8f), ColorB = new Color(0.35f, 0.8f, 1f, 0.8f), EndColor = new Color(0.2f, 0.4f, 0.9f, 0f), SizeCurve = Grow(0.8f, 1.5f), Radius = 0.3f, MaxParticles = 16 });
-            AddParticles(death.transform, new Ps { Name = "Wisps", Material = _star, Burst = 5, Lifetime = new Vector2(0.6f, 0.9f), Speed = new Vector2(0.3f, 1f), Size = new Vector2(0.2f, 0.35f), ColorA = Soul, ColorB = Color.white, Velocity = new Vector3(0f, 2.5f, 0f), Radius = 0.3f, MaxParticles = 8 });
+            AddParticles(death.transform, new Ps { Name = "Wisps", Material = _wisp, Burst = 4, Lifetime = new Vector2(0.6f, 0.9f), Speed = new Vector2(0.2f, 0.6f), Size = new Vector2(0.5f, 0.8f), ColorA = Soul, ColorB = new Color(0.7f, 0.6f, 1f), Velocity = new Vector3(0f, 2.8f, 0f), Radius = 0.3f, MaxParticles = 8, RandomRotation = false });
             library.EnemyDeath = SaveVfx(death, VfxFolder);
 
             library.GemPickup = SaveVfx(Sparkle("VFX_GemPickup", new Color(0.4f, 0.95f, 1f)), VfxFolder);
@@ -281,11 +315,19 @@ namespace SoulHunter.Editor.Content
             library.ChestOpen = SaveVfx(chest, VfxFolder);
 
             var level = new GameObject("VFX_LevelUp");
+            AddParticles(level.transform, new Ps { Name = "Circle", Material = _circle, Burst = 1, Lifetime = new Vector2(0.9f, 0.9f), Speed = Vector2.zero, Size = new Vector2(5f, 5f), ColorA = new Color(0.6f, 0.45f, 1f, 1f), SizeCurve = Grow(0.3f, 1f), HorizontalBillboard = true, MaxParticles = 2, RandomRotation = false, Spin = 120f }, new Vector3(0f, 0.08f, 0f));
             AddParticles(level.transform, new Ps { Name = "Ring", Material = _ring, Burst = 1, Lifetime = new Vector2(0.55f, 0.55f), Speed = Vector2.zero, Size = new Vector2(6f, 6f), ColorA = new Color(0.5f, 0.9f, 1f, 0.9f), SizeCurve = Grow(0.1f, 1f), HorizontalBillboard = true, MaxParticles = 2 }, new Vector3(0f, 0.1f, 0f));
             AddParticles(level.transform, new Ps { Name = "Pillar", Material = _star, Burst = 30, Lifetime = new Vector2(0.6f, 1f), Speed = new Vector2(0f, 0.4f), Size = new Vector2(0.2f, 0.4f), ColorA = new Color(0.5f, 0.9f, 1f), ColorB = Gold, Velocity = new Vector3(0f, 4f, 0f), Shape = ParticleSystemShapeType.Circle, Radius = 0.8f, MaxParticles = 40 });
             library.LevelUp = SaveVfx(level, VfxFolder);
 
             library.Explosion = SaveVfx(Explosion("VFX_Explosion", new Color(1f, 0.6f, 0.2f), 1f), VfxFolder);
+
+            // The Whip had no visual: a slash arc lying on the ground, played along the lash (VFXPoolManager.Play with rotation).
+            var slash = new GameObject("VFX_Slash");
+            var arc = Core(slash.transform, "Arc", _quad, _slash, Vector3.one * 3f, new Vector3(90f, 0f, 0f));
+            var fade = slash.AddComponent<VfxQuadFade>();
+            fade.Tint = new Color(0.8f, 0.92f, 1f, 1f);
+            library.Slash = SaveVfx(slash, VfxFolder);
             EditorUtility.SetDirty(library);
             return library;
         }
@@ -301,8 +343,9 @@ namespace SoulHunter.Editor.Content
         private static GameObject Explosion(string name, Color fire, float scale)
         {
             var go = new GameObject(name);
-            AddParticles(go.transform, new Ps { Name = "Flash", Material = _soft, Burst = 1, Lifetime = new Vector2(0.12f, 0.12f), Speed = Vector2.zero, Size = new Vector2(3f * scale, 3f * scale), ColorA = new Color(1f, 0.9f, 0.6f, 0.9f), MaxParticles = 2 }, new Vector3(0f, 0.5f, 0f));
-            AddParticles(go.transform, new Ps { Name = "Fire", Material = _soft, Burst = 18, Lifetime = new Vector2(0.3f, 0.5f), Speed = new Vector2(2f * scale, 5f * scale), Size = new Vector2(0.5f * scale, 1f * scale), ColorA = new Color(1f, 0.9f, 0.4f), ColorB = fire, EndColor = new Color(0.8f, 0.2f, 0.05f, 0f), SizeCurve = Grow(1f, 0.3f), Radius = 0.3f * scale, MaxParticles = 24 }, new Vector3(0f, 0.5f, 0f));
+            AddParticles(go.transform, new Ps { Name = "Shock", Material = _ring, Burst = 1, Lifetime = new Vector2(0.35f, 0.35f), Speed = Vector2.zero, Size = new Vector2(4.5f * scale, 4.5f * scale), ColorA = new Color(1f, 0.75f, 0.35f, 0.9f), SizeCurve = Grow(0.15f, 1f), HorizontalBillboard = true, MaxParticles = 2 }, new Vector3(0f, 0.1f, 0f));
+            AddParticles(go.transform, new Ps { Name = "Flash", Material = _impact, Burst = 1, Lifetime = new Vector2(0.12f, 0.12f), Speed = Vector2.zero, Size = new Vector2(3f * scale, 3f * scale), ColorA = new Color(1f, 0.9f, 0.6f, 0.9f), MaxParticles = 2 }, new Vector3(0f, 0.5f, 0f));
+            AddParticles(go.transform, new Ps { Name = "Fire", Material = _flame, RandomRotation = false, Burst = 18, Lifetime = new Vector2(0.3f, 0.5f), Speed = new Vector2(2f * scale, 5f * scale), Size = new Vector2(0.5f * scale, 1f * scale), ColorA = new Color(1f, 0.9f, 0.4f), ColorB = fire, EndColor = new Color(0.8f, 0.2f, 0.05f, 0f), SizeCurve = Grow(1f, 0.3f), Radius = 0.3f * scale, MaxParticles = 24 }, new Vector3(0f, 0.5f, 0f));
             AddParticles(go.transform, new Ps { Name = "Smoke", Material = _smoke, Burst = 8, Lifetime = new Vector2(0.6f, 0.9f), Speed = new Vector2(0.5f, 1.5f), Size = new Vector2(1f * scale, 1.6f * scale), ColorA = new Color(0.2f, 0.18f, 0.2f, 0.7f), ColorB = new Color(0.35f, 0.3f, 0.3f, 0.6f), EndColor = new Color(0.3f, 0.3f, 0.3f, 0f), SizeCurve = Grow(0.6f, 1.3f), Velocity = new Vector3(0f, 1f, 0f), Radius = 0.4f * scale, MaxParticles = 10 }, new Vector3(0f, 0.5f, 0f));
             AddParticles(go.transform, new Ps { Name = "Sparks", Material = _soft, Burst = 10, Lifetime = new Vector2(0.2f, 0.4f), Speed = new Vector2(6f * scale, 10f * scale), Size = new Vector2(0.08f, 0.14f), ColorA = Color.white, ColorB = new Color(1f, 0.8f, 0.3f), Stretch = true, MaxParticles = 12 }, new Vector3(0f, 0.5f, 0f));
             return go;
@@ -407,7 +450,7 @@ namespace SoulHunter.Editor.Content
             root = NewWeaponObject("SH10_Proj_Fireball", Body.Flying, 0.35f);
             Core(root.transform, "Core", _sphere, CoreMaterial("SH10_Core_Fire", new Color(1f, 0.85f, 0.4f)), Vector3.one * 0.34f);
             Halo(root.transform, new Color(1f, 0.5f, 0.1f), 1.1f);
-            AddParticles(root.transform, new Ps { Name = "Flames", Material = _soft, Loop = true, World = true, Rate = 60f, Lifetime = new Vector2(0.2f, 0.35f), Speed = new Vector2(0.2f, 0.8f), Size = new Vector2(0.35f, 0.5f), ColorA = new Color(1f, 0.8f, 0.3f), ColorB = new Color(1f, 0.45f, 0.1f), EndColor = new Color(0.7f, 0.1f, 0.05f, 0f), Radius = 0.12f, MaxParticles = 40 });
+            AddParticles(root.transform, new Ps { Name = "Flames", Material = _flame, Loop = true, World = true, Rate = 45f, RandomRotation = false, Velocity = new Vector3(0f, 1.2f, 0f), Lifetime = new Vector2(0.2f, 0.35f), Speed = new Vector2(0.1f, 0.4f), Size = new Vector2(0.45f, 0.65f), ColorA = new Color(1f, 0.8f, 0.3f), ColorB = new Color(1f, 0.45f, 0.1f), EndColor = new Color(0.7f, 0.1f, 0.05f, 0f), Radius = 0.12f, MaxParticles = 40 });
             Save(root);
 
             var holy = new Color(1f, 0.92f, 0.6f);
@@ -484,7 +527,10 @@ namespace SoulHunter.Editor.Content
             var pool = Core(root.transform, "Pool", _quad, _soft, Vector3.one * 3.4f, new Vector3(90f, 0f, 0f), new Vector3(0f, 0.05f, 0f));
             pool.GetComponent<MeshRenderer>().sharedMaterial = ParticleTint("SH10_Vfx_Pool", _soft, new Color(0.35f, 0.65f, 1f, 0.75f));
             var rim = Core(root.transform, "Rim", _quad, _ring, Vector3.one * 3.2f, new Vector3(90f, 0f, 0f), new Vector3(0f, 0.06f, 0f));
-            rim.GetComponent<MeshRenderer>().sharedMaterial = ParticleTint("SH10_Vfx_PoolRim", _ring, new Color(0.7f, 0.9f, 1f, 0.9f));
+            rim.GetComponent<MeshRenderer>().sharedMaterial = ParticleTint("SH10_Vfx_PoolRim", _circle, new Color(0.5f, 0.8f, 1f, 0.9f));
+            var rimSpin = rim.AddComponent<VfxSpin>();
+            rimSpin.Axis = Vector3.forward; // the quad lies flat: its local Z is the world up axis
+            rimSpin.DegreesPerSecond = 40f;
             AddParticles(root.transform, new Ps { Name = "Bubbles", Material = _soft, Loop = true, Rate = 16f, Lifetime = new Vector2(0.5f, 0.8f), Speed = Vector2.zero, Size = new Vector2(0.15f, 0.3f), ColorA = water, ColorB = Color.white, Velocity = new Vector3(0f, 1f, 0f), Shape = ParticleSystemShapeType.Circle, Radius = 1.3f, MaxParticles = 20 });
             AddParticles(root.transform, new Ps { Name = "Splash", Material = _star, Burst = 16, Lifetime = new Vector2(0.3f, 0.5f), Speed = new Vector2(2f, 4f), Size = new Vector2(0.15f, 0.25f), ColorA = water, ColorB = Color.white, Gravity = 1f, Shape = ParticleSystemShapeType.Hemisphere, Radius = 0.3f, MaxParticles = 20 });
             Save(root);
@@ -502,7 +548,7 @@ namespace SoulHunter.Editor.Content
             line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             line.numCornerVertices = 2;
             boltGo.AddComponent<LightningBolt>();
-            AddParticles(root.transform, new Ps { Name = "Flash", Material = _soft, Burst = 1, Lifetime = new Vector2(0.15f, 0.15f), Speed = Vector2.zero, Size = new Vector2(2.4f, 2.4f), ColorA = new Color(0.8f, 0.9f, 1f, 0.9f), MaxParticles = 2 }, new Vector3(0f, 0.3f, 0f));
+            AddParticles(root.transform, new Ps { Name = "Flash", Material = _impact, Burst = 1, Lifetime = new Vector2(0.15f, 0.15f), Speed = Vector2.zero, Size = new Vector2(2.6f, 2.6f), ColorA = new Color(0.8f, 0.9f, 1f, 0.9f), MaxParticles = 2 }, new Vector3(0f, 0.3f, 0f));
             AddParticles(root.transform, new Ps { Name = "Sparks", Material = _soft, Burst = 10, Lifetime = new Vector2(0.15f, 0.3f), Speed = new Vector2(4f, 8f), Size = new Vector2(0.08f, 0.14f), ColorA = Color.white, ColorB = new Color(0.6f, 0.8f, 1f), Stretch = true, MaxParticles = 12 }, new Vector3(0f, 0.3f, 0f));
             Save(root);
 
@@ -518,6 +564,7 @@ namespace SoulHunter.Editor.Content
 
             root = NewWeaponObject("SH10_Fx_Pentagram", Body.VisualOnly, 0f);
             AddParticles(root.transform, new Ps { Name = "Flash", Material = _soft, Burst = 1, Lifetime = new Vector2(0.3f, 0.3f), Speed = Vector2.zero, Size = new Vector2(28f, 28f), ColorA = new Color(1f, 1f, 0.9f, 0.5f), MaxParticles = 2 }, new Vector3(0f, 1f, 0f));
+            AddParticles(root.transform, new Ps { Name = "Circle", Material = _circle, Burst = 1, Lifetime = new Vector2(1.2f, 1.2f), Speed = Vector2.zero, Size = new Vector2(30f, 30f), ColorA = new Color(1f, 0.9f, 0.6f, 1f), SizeCurve = Grow(0.2f, 1f), HorizontalBillboard = true, MaxParticles = 2, RandomRotation = false, Spin = 60f }, new Vector3(0f, 0.2f, 0f));
             AddParticles(root.transform, new Ps { Name = "Ring", Material = _ring, Burst = 1, Lifetime = new Vector2(0.7f, 0.7f), Speed = Vector2.zero, Size = new Vector2(34f, 34f), ColorA = new Color(1f, 0.95f, 0.7f, 0.9f), SizeCurve = Grow(0.05f, 1f), HorizontalBillboard = true, MaxParticles = 2 }, new Vector3(0f, 0.2f, 0f));
             AddParticles(root.transform, new Ps { Name = "Stars", Material = _star, Burst = 60, Lifetime = new Vector2(0.5f, 1f), Speed = new Vector2(0f, 1f), Size = new Vector2(0.3f, 0.6f), ColorA = Color.white, ColorB = Gold, Velocity = new Vector3(0f, 2f, 0f), Radius = 12f, MaxParticles = 70 });
             Save(root);

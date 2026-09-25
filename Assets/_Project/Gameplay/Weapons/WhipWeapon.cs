@@ -103,6 +103,11 @@ namespace SoulHunter.Gameplay.Weapons
             // The box is long along local X; turn it to face the lash direction.
             Quaternion boxRotation = Quaternion.FromToRotation(Vector3.right, attackDirection);
 
+            // The Whip had no visual at all: show the approved slash arc across the lashed area.
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Slash,
+                transform.position + attackDirection * (actualRange * 0.35f) + Vector3.up * 0.6f,
+                Quaternion.LookRotation(attackDirection, Vector3.up), actualRange / 3f);
+
             // NonAlloc for 100% performance (no garbage generation)
             int hitsCount = UnityEngine.Physics.OverlapBoxNonAlloc(boxCenter, halfExtents, _hitsBuffer, boxRotation, _enemyLayer);
 

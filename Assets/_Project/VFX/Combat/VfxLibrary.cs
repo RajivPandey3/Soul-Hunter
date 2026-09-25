@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SoulHunter.Gameplay.VFX
 {
     /// <summary>Gameplay feedback effects played by VFXPoolManager.Play.</summary>
-    public enum VfxKind { HitSpark, EnemyDeath, GemPickup, GoldPickup, Heal, ChestOpen, LevelUp, Explosion }
+    public enum VfxKind { HitSpark, EnemyDeath, GemPickup, GoldPickup, Heal, ChestOpen, LevelUp, Explosion, Slash }
 
     /// <summary>
     /// Learning Comment: Saare gameplay VFX prefabs ek jagah (Resources/VfxLibrary.asset). VfxBuilder (editor) inhe
@@ -22,6 +22,7 @@ namespace SoulHunter.Gameplay.VFX
         public GameObject ChestOpen;
         public GameObject LevelUp;
         public GameObject Explosion;
+        public GameObject Slash;
 
         public GameObject Get(VfxKind kind) => kind switch
         {
@@ -33,6 +34,7 @@ namespace SoulHunter.Gameplay.VFX
             VfxKind.ChestOpen => ChestOpen,
             VfxKind.LevelUp => LevelUp,
             VfxKind.Explosion => Explosion,
+            VfxKind.Slash => Slash,
             _ => null,
         };
     }

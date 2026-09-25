@@ -345,6 +345,22 @@ Owner flow: online samples first, then approval. The CC0 samples were rejected i
 
 Validated by `PickupV2Tests` (T: tier thresholds, approved models and materials per tier, chest model, elite and boss XP) and `WeaponSweepPlayModeTests.Gems_AndCoins_ShowTheirTierByValue` (R). Both suites: EditMode 344/344, PlayMode 64/64, save unchanged (`D:\SoulHunter-Validation\run-20260925-pickups\`). In-game screenshots were checked (partial `V`). From the 55-degree camera, the chest shows mostly its lid, with the skull and seam at the front.
 
+### VFX v2 sprites and VS-style level-up cards (owner-approved, 2026-09-26)
+
+The owner approved the VFX v2 concept sheet: eight Soul Hunter sprites made procedurally by `ArtSource/Generators/build_vfx_textures.py` (soul flame, slash arc, magic circle, impact star, soul wisp, lightning bolt, shockwave ring, sparkle), written to `Assets/Art/Textures/VFX/SH10_Vfx2_*.png`. `WeaponVfxBuilder` now uses them:
+- sparkles and shock rings everywhere;
+- a spinning magic circle on level-up, on Pentagram and on the Holy Water pool rim;
+- an impact star for hits and lightning, and soul wisps rising from dead enemies;
+- soul flames for fireballs and explosions (explosions also get a shockwave).
+
+The Whip had no visual at all; each lash now plays a slash arc along the attack and scaled to its area (`VfxKind.Slash`, `VfxQuadFade`, `VFXPoolManager.Play(kind, position, rotation, scale)`). Shadow Kael's mirrored Whip shows it too.
+
+The owner also asked for a VS-style level-up screen, found while playing in the editor. Cards were white buttons with internal names ("SongOfMana Lv.2 (Lv 2)") and placeholder descriptions. `LevelUpUI.StyleCard` now shows the icon, a readable name (`UpgradeText.DisplayName`), a NEW!/Level N tag and a description. Weapons that are new describe what they do (Soul Hunter wording from each weapon's code); passives show their real per-level effect from `WeaponManager.ApplyUpgrade`. Descriptions written in the asset are kept. Old TMP and legacy `Text` labels are hidden, the cards use the focus colours, and Reroll/Skip/Banish are dark with white text.
+
+The HP bar strip was left unchanged (the owner did not pick it).
+
+Validated by `WeaponVfxTests` (T, Slash included) and `WeaponSweepPlayModeTests` (R: the Whip shows its slash; the level-up cards show an icon, a name without "Lv", a NEW!/Level tag, a real description and no stray labels). Both suites pass: EditMode 344/344, PlayMode 64/64, save unchanged (`D:\SoulHunter-Validation\run-20260925-vfx2\`). Editor play runs `autoplay-editor-02` and `-03` had 0 errors, and their screenshots were checked (partial `V`).
+
 ### Validation run 2026-09-24
 
 Commits `0beae7f`..`6f3f9c2` plus the pickup-pool fix were validated in an isolated workspace (`D:\SoulHunter-Validation\editmode-20260924-134853\`, which keeps the results XML and logs), with `Library` copied from the canonical project:

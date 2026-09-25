@@ -20,3 +20,4 @@ MonoBehaviour:
   ChestOpen: {fileID: 5937656183911978745, guid: eb3d02c3ce79523469398f32d34a19a8, type: 3}
   LevelUp: {fileID: 6290129022103574728, guid: 786f0d32d66454643b465ec0098c70dd, type: 3}
   Explosion: {fileID: 4418474738003580358, guid: 154dde8086403964a9a003ec1fa97e0a, type: 3}
+  Slash: {fileID: 6758773054634831640, guid: b3bfcd04a910a304c8a7d1925ec1e79b, type: 3}

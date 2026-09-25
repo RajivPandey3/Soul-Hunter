@@ -120,7 +120,7 @@ namespace SoulHunter.Gameplay.UI
                 $"[LevelUpUI] Button {i} -> {chosenUpgrade.UpgradeName} Lv.{chosenUpgrade.Level}"
             );
 
-            SetButtonLabel(_upgradeButtons[i], CardLabel(chosenUpgrade));
+            StyleCard(_upgradeButtons[i], chosenUpgrade);
 
             _upgradeButtons[i].onClick.RemoveAllListeners();
 
@@ -169,10 +169,86 @@ namespace SoulHunter.Gameplay.UI
     Debug.Log("[LevelUpUI] <<< ShowLevelUpScreen EXIT");
 }
 
-        private string CardLabel(UpgradeData upgrade)
+        private static int OwnedLevel(UpgradeData upgrade)
         {
-            string label = $"{upgrade.UpgradeName} (Lv {upgrade.Level})";
-            return _banishMode ? $"Banish: {label}" : label;
+            var weapons = WeaponManager.Instance;
+            return weapons != null && upgrade != null ? weapons.GetWeaponLevel(upgrade.Type) : 0;
+        }
+
+        // ---------------------------------------------------------------- VS-style cards
+        // Owner request 2026-09-25: the cards were plain white buttons with internal names ("SongOfMana Lv.2 (Lv 2)").
+        // Each card now shows the upgrade's icon, a readable name, a NEW!/Level tag and what it does.
+
+        public const string IconName = "Card_Icon", TitleName = "Card_Title", TagName = "Card_Tag", DescriptionName = "Card_Description";
+        private static readonly Color TagGold = new Color(1f, 0.8f, 0.3f);
+        private static readonly Color BanishRed = new Color(1f, 0.35f, 0.3f);
+
+        private void StyleCard(Button card, UpgradeData upgrade)
+        {
+            if (card == null || upgrade == null) return;
+            var background = card.GetComponent<Image>();
+            if (background != null) OptionsMenuUI.ApplyFocusColors(card, background);
+            TMP_FontAsset font = null;
+            foreach (var label in card.GetComponentsInChildren<TextMeshProUGUI>(true))
+                if (!label.name.StartsWith("Card_"))
+                {
+                    font = label.font;
+                    label.gameObject.SetActive(false); // the old one-line label
+                }
+            // The scene's cards also carry old legacy Text labels ("Magic Wand (Level Up)") that showed through.
+            foreach (var legacy in card.GetComponentsInChildren<Text>(true))
+                legacy.gameObject.SetActive(false);
+            if (!card.gameObject.activeSelf) card.gameObject.SetActive(true);
+
+            var icon = CardPart<Image>(card.transform, IconName, new Vector2(0.012f, 0.1f), new Vector2(0.075f, 0.9f));
+            icon.sprite = upgrade.Icon;
+            icon.preserveAspect = true;
+            icon.enabled = upgrade.Icon != null;
+            icon.raycastTarget = false;
+
+            int owned = OwnedLevel(upgrade);
+            CardText(card.transform, TitleName, font, new Vector2(0.09f, 0.5f), new Vector2(0.8f, 0.95f), UpgradeText.DisplayName(upgrade),
+                44f, Color.white, TextAlignmentOptions.BottomLeft, FontStyles.Bold);
+            CardText(card.transform, TagName, font, new Vector2(0.8f, 0.5f), new Vector2(0.985f, 0.95f),
+                _banishMode ? "BANISH" : UpgradeText.Tag(upgrade, owned), 34f, _banishMode ? BanishRed : TagGold,
+                TextAlignmentOptions.BottomRight, FontStyles.Bold);
+            CardText(card.transform, DescriptionName, font, new Vector2(0.09f, 0.06f), new Vector2(0.985f, 0.5f),
+                UpgradeText.Describe(upgrade, owned), 30f, new Color(0.82f, 0.85f, 0.95f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
+        }
+
+        private static T CardPart<T>(Transform card, string name, Vector2 min, Vector2 max) where T : Component
+        {
+            var existing = card.Find(name);
+            GameObject go;
+            if (existing != null) go = existing.gameObject;
+            else
+            {
+                go = new GameObject(name, typeof(RectTransform));
+                go.layer = card.gameObject.layer;
+                var rect = (RectTransform)go.transform;
+                rect.SetParent(card, false);
+                rect.anchorMin = min;
+                rect.anchorMax = max;
+                rect.offsetMin = rect.offsetMax = Vector2.zero;
+            }
+            return go.GetComponent<T>() ?? go.AddComponent<T>();
+        }
+
+        private static void CardText(Transform card, string name, TMP_FontAsset font, Vector2 min, Vector2 max, string value,
+            float maxSize, Color color, TextAlignmentOptions alignment, FontStyles style)
+        {
+            var text = CardPart<TextMeshProUGUI>(card, name, min, max);
+            if (font != null) text.font = font;
+            text.text = value;
+            text.enableAutoSizing = true;
+            text.fontSizeMin = 14f;
+            text.fontSizeMax = maxSize;
+            text.color = color;
+            text.alignment = alignment;
+            text.fontStyle = style;
+            text.textWrappingMode = TextWrappingModes.Normal;
+            text.overflowMode = TextOverflowModes.Ellipsis;
+            text.raycastTarget = false;
         }
 
         private static void SetButtonLabel(Button button, string label)
@@ -218,7 +294,7 @@ namespace SoulHunter.Gameplay.UI
             // Banish is a two-step action: arm it, then click the card to remove.
             _banishMode = !_banishMode;
             for (int i = 0; i < _upgradeButtons.Length && i < _currentChoices.Count; i++)
-                SetButtonLabel(_upgradeButtons[i], CardLabel(_currentChoices[i]));
+                StyleCard(_upgradeButtons[i], _currentChoices[i]);
             RefreshActionButtons();
         }
 
@@ -238,6 +314,10 @@ namespace SoulHunter.Gameplay.UI
         private void RefreshActionButtons()
         {
             if (_levelUpManager == null) return;
+            foreach (var action in new[] { _rerollButton, _skipButton, _banishButton })
+                if (action != null)
+                    foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
+                        label.color = Color.white; // readable on the dark action buttons (was red)
             if (_rerollButton != null)
             {
                 SetButtonLabel(_rerollButton, $"Reroll ({_levelUpManager.RerollsLeft})");
@@ -292,6 +372,19 @@ namespace SoulHunter.Gameplay.UI
                 CreateActionButton(template, bar, "Reroll_Button");
                 CreateActionButton(template, bar, "Skip_Button");
                 CreateActionButton(template, bar, "Banish_Button");
+            }
+
+            // Smaller, dark action buttons under the cards (VS style), with the same focus colours.
+            var barLayout = bar.GetComponent<LayoutElement>();
+            if (barLayout != null) barLayout.preferredHeight = ((RectTransform)template.transform).sizeDelta.y * 0.55f;
+            foreach (var action in bar.GetComponentsInChildren<Button>(true))
+            {
+                var image = action.GetComponent<Image>();
+                if (image != null) OptionsMenuUI.ApplyFocusColors(action, image);
+                foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
+                    if (!label.name.StartsWith("Card_")) label.color = Color.white;
+                foreach (Transform part in action.transform)
+                    if (part.name.StartsWith("Card_")) part.gameObject.SetActive(false); // clones of a styled card
             }
 
             if (_rerollButton == null) _rerollButton = FindActionButton(bar, "Reroll_Button");

@@ -96,6 +96,13 @@ namespace SoulHunter.Tests.EditMode
             {
                 var prefab = library.Get(kind);
                 Assert.IsNotNull(prefab, $"{kind} missing.");
+                if (kind == VfxKind.Slash)
+                {
+                    // The Whip's slash arc is a sprite quad that fades itself out.
+                    Assert.IsNotNull(prefab.GetComponent<VfxQuadFade>(), "Slash fades and hides itself.");
+                    Assert.That(prefab.GetComponentInChildren<MeshRenderer>().sharedMaterial.GetTexture("_BaseMap").name, Does.Contain("slash_arc"));
+                    continue;
+                }
                 var systems = prefab.GetComponentsInChildren<ParticleSystem>(true);
                 Assert.That(systems, Is.Not.Empty, $"{kind} has no particles.");
                 Assert.That(systems.All(p => !p.main.loop), $"{kind} must end so the pool can reuse it.");
