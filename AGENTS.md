@@ -322,6 +322,21 @@ The first test version added 22 gold to the owner's real save (4482 -> 4504), be
 
 The owner then rejected the online CC0 samples shown (Kenney and Quaternius coins, gems and chests, and the Kenney Particle Pack). They asked for modern, Soul Hunter-style 3D assets and VFX, made in Blender or Unity or taken from the Unity Asset Store. Asset Store packs need the owner's account (My Assets); agents cannot download them.
 
+### Pickups v2: Soul Gems, Soul Coins, Soul Reliquary chest (owner-approved, 2026-09-25)
+
+Owner flow: online samples first, then approval. The CC0 samples were rejected in favour of "modern Soul Hunter-style" designs. `ArtSource/Generators/build_pickups_v2.py` builds them in Blender; concept renders are in `ArtSource/SH10_Pickups_v2/Previews`. The owner approved the close-ups:
+- Soul Gems in three tiers: a cyan shard, a violet cluster, and a crimson crystal with a gold band, each with a glowing core.
+- Soul Coins in bronze, silver and gold: reeded edge, bead ring, crescent and a soul flame.
+- The Soul Reliquary chest: curved lid, iron bands with rivets, a cyan soul-light seam, a skull with glowing eyes and a shield lock.
+
+`--export` writes `Assets/Art/Models/SH10_Pickup_*.fbx` and `materials.json`. `PickupV2Importer` (menu Soul Hunter/Content/Import Pickups v2) makes URP Lit materials (metals, and soul parts with emission), rebuilds `XP_Gem`, `SH10_Gold_Coin` and `Chest` with these models and a soft ground glow, and sets up `TieredVisual`:
+- Gem tier by XP: under 25 cyan, under 100 violet, else crimson.
+- Coin tier by gold: under 5 bronze, under 25 silver, else gold.
+
+`EnemyData.ExperienceValue` is new (10 for enemies, 50 for elites, 250 for bosses; provisional balance). `EnemyDrop` passes it to `PickupPoolManager.SpawnGem(position, value)`, so elites and bosses drop bigger gems. `WeaponVfxBuilder` no longer touches these three prefabs.
+
+Validated by `PickupV2Tests` (T: tier thresholds, approved models and materials per tier, chest model, elite and boss XP) and `WeaponSweepPlayModeTests.Gems_AndCoins_ShowTheirTierByValue` (R). Both suites: EditMode 344/344, PlayMode 64/64, save unchanged (`D:\SoulHunter-Validation\run-20260925-pickups\`). In-game screenshots were checked (partial `V`). From the 55-degree camera, the chest shows mostly its lid, with the skull and seam at the front.
+
 ### Validation run 2026-09-24
 
 Commits `0beae7f`..`6f3f9c2` plus the pickup-pool fix were validated in an isolated workspace (`D:\SoulHunter-Validation\editmode-20260924-134853\`, which keeps the results XML and logs), with `Library` copied from the canonical project:

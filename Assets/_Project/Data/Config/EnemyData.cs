@@ -23,6 +23,9 @@ namespace SoulHunter.Gameplay.Data
         [Tooltip("Gold in each dropped coin, before Greed")]
         public int GoldValue = 1;
 
+        [Tooltip("XP in the Soul Gem this enemy drops (VS: tougher enemies drop bigger gems). Provisional: 10 enemy, 50 elite, 250 boss")]
+        [Min(1)] public int ExperienceValue = 10;
+
         [Tooltip("Agar sach hai, toh ye dushman (Boss) marne par Chest (Khazana) giraega")]
         public bool DropsChest = false;
 

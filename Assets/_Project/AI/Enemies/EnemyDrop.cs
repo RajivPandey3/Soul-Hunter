@@ -19,6 +19,8 @@ namespace SoulHunter.Gameplay.AI
         [Tooltip("Gold coin drop hone ka chance (0 se 100), Luck se badhta hai")]
         public float GoldDropChance = 2f;
         public int GoldValue = 1;
+        [Tooltip("XP in the dropped Soul Gem; its colour and size follow it")]
+        public int GemValue = 10;
 
         private HealthController _health;
         private bool _dropsChestThisLife;
@@ -118,7 +120,7 @@ namespace SoulHunter.Gameplay.AI
             {
                 if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                 {
-                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position);
+                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position, GemValue);
                 }
             }
         }

@@ -607,12 +607,10 @@ namespace SoulHunter.Editor.Content
         {
             // The gameplay pickups wrapped their SH10 model in a placeholder cube that hid it (the yellow squares).
             // Visual scales: from the tilted camera the models read too small next to the 2-unit heroes.
-            HidePlaceholder("Assets/Prefabs/Items/XP_Gem.prefab", bob: 0.12f, spin: 120f, glow: new Color(0.1f, 0.45f, 0.5f), scale: 1.6f);
-            HidePlaceholder("Assets/Prefabs/Items/Chest.prefab", bob: 0.08f, spin: 45f, glow: new Color(0.25f, 0.18f, 0.05f), beacon: true, scale: 1.4f);
+            // XP gems, the chest and the gold coin now come from PickupV2Importer (owner-approved designs, 2026-09-25).
             HidePlaceholder("Assets/Prefabs/Items/HealthChiken.prefab", bob: 0.06f, spin: 60f, glow: Color.black, scale: 1.2f);
             HidePlaceholder("Assets/Prefabs/Items/Magnet_Pickup.prefab", bob: 0.1f, spin: 90f, glow: new Color(0.2f, 0.05f, 0.05f));
             HidePlaceholder("Assets/Prefabs/Items/TimeFreeze_Pickup.prefab", bob: 0.1f, spin: 90f, glow: new Color(0.05f, 0.3f, 0.35f));
-            PolishCoin("Assets/Prefabs/Items/SH10_Gold_Coin.prefab");
         }
 
         private static void HidePlaceholder(string path, float bob, float spin, Color glow, bool beacon = false, float scale = 1f)
@@ -648,59 +646,6 @@ namespace SoulHunter.Editor.Content
                 if (old != null) Object.DestroyImmediate(old.gameObject);
                 if (beacon)
                     AddParticles(contents.transform, new Ps { Name = "Beacon", Material = _star, Loop = true, Rate = 5f, Lifetime = new Vector2(0.8f, 1.2f), Speed = Vector2.zero, Size = new Vector2(0.15f, 0.3f), ColorA = Gold, ColorB = Color.white, Velocity = new Vector3(0f, 1.2f, 0f), Shape = ParticleSystemShapeType.Circle, Radius = 0.6f, MaxParticles = 10 });
-                PrefabUtility.SaveAsPrefabAsset(contents, path);
-            }
-            finally { PrefabUtility.UnloadPrefabContents(contents); }
-        }
-
-        /// <summary>The coin model lay flat, so from the camera it was a brown disc. It now stands up, spins and glows gold.</summary>
-        private static void PolishCoin(string path)
-        {
-            var contents = PrefabUtility.LoadPrefabContents(path);
-            try
-            {
-                var filter = contents.GetComponent<MeshFilter>();
-                var renderer = contents.GetComponent<MeshRenderer>();
-                Transform visual = contents.transform.Find("Visual");
-                if (visual == null && filter != null && renderer != null)
-                {
-                    var child = new GameObject("Visual");
-                    child.transform.SetParent(contents.transform, false);
-                    child.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    child.transform.localPosition = new Vector3(0f, 0.3f, 0f);
-                    child.AddComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
-                    var childRenderer = child.AddComponent<MeshRenderer>();
-                    childRenderer.sharedMaterials = renderer.sharedMaterials;
-                    visual = child.transform;
-                }
-                if (visual == null)
-                {
-                    // The coin model is a child of an empty root: stand it up under a pivot that bobs and spins.
-                    var model = contents.transform.Cast<Transform>().FirstOrDefault(t => t.GetComponentInChildren<Renderer>() != null);
-                    if (model != null)
-                    {
-                        var pivot = new GameObject("Visual").transform;
-                        pivot.SetParent(contents.transform, false);
-                        pivot.localScale = Vector3.one * 1.4f;
-                        pivot.localPosition = new Vector3(0f, 0.35f, 0f);
-                        pivot.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                        model.SetParent(pivot, false);
-                        visual = pivot;
-                    }
-                }
-                if (visual == null) throw new System.InvalidOperationException($"{path} has no coin mesh.");
-                if (renderer != null) renderer.enabled = false; // the flat root disc; the upright child is drawn
-                var motion = contents.GetComponent<PickupIdleMotion>() ?? contents.AddComponent<PickupIdleMotion>();
-                motion.Visual = visual;
-                motion.BobHeight = 0.08f;
-                motion.SpinDegreesPerSecond = 180f;
-                foreach (var mat in visual.GetComponentsInChildren<MeshRenderer>().SelectMany(r => r.sharedMaterials))
-                    if (mat != null && mat.HasProperty("_EmissionColor"))
-                    {
-                        mat.SetColor("_Color", new Color(1f, 0.78f, 0.25f));
-                        mat.SetColor("_EmissionColor", new Color(0.35f, 0.25f, 0.05f));
-                        EditorUtility.SetDirty(mat);
-                    }
                 PrefabUtility.SaveAsPrefabAsset(contents, path);
             }
             finally { PrefabUtility.UnloadPrefabContents(contents); }

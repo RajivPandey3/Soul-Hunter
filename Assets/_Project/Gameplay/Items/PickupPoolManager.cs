@@ -88,9 +88,19 @@ namespace SoulHunter.Gameplay.Pickups
             PrewarmPool(_goldPool, _goldCoinPrefab, Mathf.Min(8, _prewarmPerPickupType));
         }
 
-        public void SpawnGem(Vector3 position)
+        public const int DefaultGemValue = 10;
+
+        public void SpawnGem(Vector3 position) => SpawnGem(position, DefaultGemValue);
+
+        /// <summary>A Soul Gem worth <paramref name="value"/> XP; its tier model (cyan / violet / crimson) follows the value.</summary>
+        public void SpawnGem(Vector3 position, int value)
         {
-            SpawnFromPool(_gemPool, _xpGemPrefab, position);
+            var gem = SpawnFromPool(_gemPool, _xpGemPrefab, position);
+            if (gem == null) return;
+            var xp = gem.GetComponent<XPGem>();
+            if (xp != null) xp.XPValue = Mathf.Max(1, value);
+            var tier = gem.GetComponent<TieredVisual>();
+            if (tier != null) tier.SetValue(value);
         }
 
         public void SpawnChicken(Vector3 position)
@@ -118,6 +128,8 @@ namespace SoulHunter.Gameplay.Pickups
             var coin = SpawnFromPool(_goldPool, _goldCoinPrefab, position);
             var gold = coin != null ? coin.GetComponent<GoldPickup>() : null;
             if (gold != null) gold.Value = value;
+            var tier = coin != null ? coin.GetComponent<TieredVisual>() : null;
+            if (tier != null) tier.SetValue(value); // bronze / silver / gold
         }
 
         /// <summary>

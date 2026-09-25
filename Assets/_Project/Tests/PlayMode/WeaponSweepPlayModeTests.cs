@@ -111,5 +111,33 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(effects.All(p => p.GetComponent<ParticleSystemRenderer>().sharedMaterial != null), "Every effect has its material.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
-    }
+    
+        [UnityTest]
+        public IEnumerator Gems_AndCoins_ShowTheirTierByValue()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var pools = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+            var at = PlayerController.Instance.transform.position + new Vector3(8f, 0f, 8f);
+            foreach (var (value, tier) in new[] { (10, 0), (60, 1), (300, 2) })
+            {
+                pools.SpawnGem(at, value);
+                var gem = SoulHunter.Gameplay.Pickups.XPGem.ActiveGems.Last();
+                Assert.That(gem.XPValue, Is.EqualTo(value));
+                var visual = gem.GetComponent<SoulHunter.Gameplay.Pickups.TieredVisual>();
+                Assert.That(visual.CurrentTier, Is.EqualTo(tier), $"Gem worth {value} XP.");
+                Assert.That(visual.Tiers[tier].activeSelf, Is.True);
+                at += Vector3.right * 2f;
+            }
+            foreach (var (value, tier) in new[] { (1, 0), (10, 1), (50, 2) })
+            {
+                pools.SpawnGold(at, value);
+                yield return null;
+                var coin = Object.FindObjectsByType<SoulHunter.Gameplay.Pickups.GoldPickup>(FindObjectsSortMode.None).First(c => c.Value == value);
+                Assert.That(coin.GetComponent<SoulHunter.Gameplay.Pickups.TieredVisual>().CurrentTier, Is.EqualTo(tier), $"Coin worth {value} gold.");
+                at += Vector3.right * 2f;
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+}
 }

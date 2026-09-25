@@ -20,3 +20,4 @@ MonoBehaviour:
   DropChanceChicken: 0
   DropsChest: 1
   HealthPerPlayerLevel: 50
+  ExperienceValue: 250

@@ -20,4 +20,5 @@ MonoBehaviour:
   DropChanceChicken: 10
   DropChanceGold: 25
   GoldValue: 10
+  ExperienceValue: 50
   DropsChest: 0

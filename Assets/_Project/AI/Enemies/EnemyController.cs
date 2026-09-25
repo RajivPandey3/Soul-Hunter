@@ -73,6 +73,7 @@ namespace SoulHunter.Gameplay.AI
                     drop.ChickenDropChance = _enemyData.DropChanceChicken;
                     drop.GoldDropChance = _enemyData.DropChanceGold;
                     drop.GoldValue = _enemyData.GoldValue;
+                    drop.GemValue = _enemyData.ExperienceValue;
                     drop.DropsChest = _enemyData.DropsChest;
                 }
             }
