@@ -10,6 +10,7 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class FireWandWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         [Header("Fire Wand Settings")]
         public GameObject FireballPrefab; 
         public float ProjectileSpeed = 5f; // Slow speed

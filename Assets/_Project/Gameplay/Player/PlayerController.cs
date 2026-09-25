@@ -144,6 +144,8 @@ namespace SoulHunter.Gameplay.Player
             }
 
             ApplySelectedCharacterStats();
+            var hurtHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            if (hurtHealth != null) hurtHealth.OnDamaged += PlayHurtSound;
 
             var infiniteMap = FindFirstObjectByType<SoulHunter.Gameplay.Environment.InfiniteMap>();
             if (infiniteMap != null)
@@ -209,9 +211,18 @@ namespace SoulHunter.Gameplay.Player
             }
         }
 
+        // VS: the player hears every hit taken (throttled so a crowd does not drone).
+        private void PlayHurtSound()
+        {
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFXThrottled(audio.PlayerHurtSound, SoulHunter.Gameplay.Audio.AudioManager.PlayerHurtInterval, 0.8f);
+        }
+
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            var hurtHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            if (hurtHealth != null) hurtHealth.OnDamaged -= PlayHurtSound;
 
             if (_eventBus != null)
             {

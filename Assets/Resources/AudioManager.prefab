@@ -49,5 +49,30 @@ MonoBehaviour:
   EnemyHitSound: {fileID: 8300000, guid: 196540fc397aee74ba9be88d9412cae6, type: 3}
   ChestOpenSound: {fileID: 8300000, guid: 218a19d9433005b499426679c46ac102, type: 3}
   HealSound: {fileID: 8300000, guid: c55e4732388333c4792b26e94d27670e, type: 3}
+  EnemyDeathSound: {fileID: 8300000, guid: 653526689f3cb9a4e9869bd6b276509a, type: 3}
+  PlayerHurtSound: {fileID: 8300000, guid: c939c07b75ba5784096f14f4184fe0c0, type: 3}
+  GameOverSound: {fileID: 8300000, guid: c02b7783a75c97b458e837c8cd41c519, type: 3}
+  StageClearSound: {fileID: 8300000, guid: a6c4970754fc46040a073048eb328ea3, type: 3}
+  BossWarningSound: {fileID: 8300000, guid: 5c272e01d82dbad4b99810a7fbad9850, type: 3}
+  UIClickSound: {fileID: 8300000, guid: a46d6de438ff9c24190ac53c588eb69f, type: 3}
+  UIConfirmSound: {fileID: 8300000, guid: 9aa71d83a4a18ab4bb8b5da8bf634c9b, type: 3}
+  UnlockSound: {fileID: 8300000, guid: eb45cb1d254b8074eb337ac0d14fafeb, type: 3}
+  ShootSound: {fileID: 8300000, guid: 04f4fe7f941193a4f83426546eedc22e, type: 3}
+  SlashSound: {fileID: 8300000, guid: 67c7c6f95502b9b41acad207d4791bb7, type: 3}
+  MagicSound: {fileID: 8300000, guid: fa7266a28b1d5d4408196cd0000263c6, type: 3}
+  ExplosionSound: {fileID: 8300000, guid: e16aaeef1f3f29643a46175e62830137, type: 3}
+  MenuMusic: {fileID: 8300000, guid: e0bf00a9a457f72498040567206c1482, type: 3}
+  StageMusic:
+  - {fileID: 8300000, guid: 81eb4e4a06234e142b0ad8dd686e7632, type: 3}
+  - {fileID: 8300000, guid: eb2c82c2e8e65bd48a46b8745712e4ef, type: 3}
+  - {fileID: 8300000, guid: 7233ce0f045f5004b82b19e07d7ecbc4, type: 3}
+  - {fileID: 8300000, guid: e052a43325b12714387bb47bfff93136, type: 3}
+  - {fileID: 8300000, guid: 0c36013048d746142a702bc13d603e7a, type: 3}
+  - {fileID: 8300000, guid: e8986e2c5644337429f22d9a0858679a, type: 3}
+  - {fileID: 8300000, guid: 6ccefd8c66e27b242847226f7a13d672, type: 3}
+  - {fileID: 8300000, guid: 3aa19ee5ec98f9f4fb7f6e286f6332c9, type: 3}
+  - {fileID: 8300000, guid: c26570f47ad093846a78f96ac2fd100f, type: 3}
+  - {fileID: 8300000, guid: b58765bf12e73684ab5bbfd8840dd24e, type: 3}
+  MusicVolume: 0.45
   MasterVolume: 0.8
   _audioChannels: 10

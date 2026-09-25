@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class CrossWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
         protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Tooltip("Cross ka 3D model/prefab jisme Rigidbody aur TouchDamage laga ho")]
         [SerializeField] private GameObject _crossPrefab;

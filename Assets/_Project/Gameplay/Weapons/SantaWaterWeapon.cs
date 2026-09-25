@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class SantaWaterWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         [Header("Santa Water Settings")]
         public GameObject WaterZonePrefab; // Zone jo zameen pe fire/water damage dega
         public float DropRadius = 8f; // Kitne area me randomly bottle giregi

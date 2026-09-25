@@ -4,6 +4,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class CherryBombWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         public GameObject BombPrefab; 
         public GameObject ExplosionPrefab; // What spawns when it hits
         

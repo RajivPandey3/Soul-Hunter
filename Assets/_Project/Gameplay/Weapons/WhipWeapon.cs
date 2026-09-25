@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class WhipWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
         protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Header("Soul Hunter Theme: Shadow Scythe (Whip)")]
         [Tooltip("Whip ka attack kitni door tak jayega")]

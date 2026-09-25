@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class GarlicWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.None;
         [Header("Soul Hunter Theme: Aura of Death (Garlic)")]
         [Tooltip("Kitne meter ke daayre (radius) mein aura asar karega")]
         [SerializeField] private float _damageRadius = 2.5f;

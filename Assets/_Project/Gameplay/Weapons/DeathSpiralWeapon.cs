@@ -4,6 +4,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class DeathSpiralWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
         protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [Header("Death Spiral Settings (Evolved Axe)")]
         public GameObject ScythePrefab; 

@@ -97,10 +97,16 @@ namespace SoulHunter.Gameplay.AI
             if (audio != null) audio.PlaySFXThrottled(audio.EnemyHitSound, SoulHunter.Gameplay.Audio.AudioManager.EnemyHitInterval, 0.6f);
         }
 
+        private void PlayDeathSound()
+        {
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFXThrottled(audio.EnemyDeathSound, SoulHunter.Gameplay.Audio.AudioManager.EnemyDeathInterval, 0.5f);
+        }
+
         private void OnEnable()
         {
             if (_hitSoundHealth == null) _hitSoundHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            if (_hitSoundHealth != null) _hitSoundHealth.OnDamaged += PlayHitSound;
+            if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
             if (Rigidbody != null)
             {
@@ -112,7 +118,7 @@ namespace SoulHunter.Gameplay.AI
 
         private void OnDisable()
         {
-            if (_hitSoundHealth != null) _hitSoundHealth.OnDamaged -= PlayHitSound;
+            if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged -= PlayHitSound; _hitSoundHealth.OnDied -= PlayDeathSound; }
             ActiveEnemies.Remove(this);
             _currentState?.Exit();
             _currentState = null;

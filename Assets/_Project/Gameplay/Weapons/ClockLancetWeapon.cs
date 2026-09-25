@@ -5,6 +5,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class ClockLancetWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         public GameObject FreezeBeamPrefab;
         private int _currentDirectionIndex = 0; // Rotates 12 positions like a clock
         private float _freezeDuration = 3f;

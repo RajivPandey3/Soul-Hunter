@@ -137,6 +137,8 @@ namespace SoulHunter.Gameplay.Core
             text.text = $"New character unlocked: {character.CharacterName}!";
             text.raycastTarget = false;
             _noticeUntil = Time.unscaledTime + NoticeSeconds;
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFX(audio.UnlockSound);
         }
     }
 }

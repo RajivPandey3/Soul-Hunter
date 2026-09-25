@@ -5,6 +5,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class PentagramWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         public GameObject PentagramVFXPrefab; 
         
         private float _chanceToKeepGems = 0.1f; // Lv 1: deletes everything, barely keeps gems

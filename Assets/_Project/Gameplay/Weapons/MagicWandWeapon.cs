@@ -10,6 +10,7 @@ namespace SoulHunter.Gameplay.Weapons
 {
     public class MagicWandWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         [SerializeField] private GameObject _projectilePrefab;
         [SerializeField] private float _cooldown = 1.2f;
         [SerializeField] private float _range = 15f;

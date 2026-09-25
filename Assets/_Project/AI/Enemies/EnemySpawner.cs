@@ -276,6 +276,8 @@ namespace SoulHunter.Gameplay.AI
         {
             if (basePrefab == null || _playerTransform == null) return false;
             Debug.Log("[EnemySpawner] BOSS HAS APPEARED!");
+            var bossAudio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (bossAudio != null) bossAudio.PlaySFX(bossAudio.BossWarningSound, 0.9f);
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             Vector3 spawnPos = _playerTransform.position + new Vector3(randomDir.x * _spawnRadius, 0f, randomDir.y * _spawnRadius);
             

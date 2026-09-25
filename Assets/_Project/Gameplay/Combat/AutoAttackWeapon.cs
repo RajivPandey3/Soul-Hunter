@@ -156,6 +156,8 @@ namespace SoulHunter.Gameplay.Combat
             if (_timer <= 0f)
             {
                 Attack();
+                var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+                if (audio != null && FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None) audio.PlayWeaponSound(FireSound);
                 _timer = Mathf.Max(0.05f, AttackCooldown * CooldownMultiplier);
             }
         }
@@ -165,6 +167,9 @@ namespace SoulHunter.Gameplay.Combat
             CurrentLevel++;
             DamageAmount += 2f;
         }
+
+        /// <summary>Sound played each time this weapon attacks (VS: every weapon is heard). None for constant auras.</summary>
+        protected virtual SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Shoot;
 
         protected virtual void Attack()
         {

@@ -160,6 +160,7 @@ namespace SoulHunter.UI
         public void SelectCharacter(int index)
         {
             if (index < 0 || index >= _availableCharacters.Count) return;
+            if (index != _currentIndex) PlayUISound(false);
             _currentIndex = index;
             UpdateUI();
         }
@@ -265,6 +266,7 @@ namespace SoulHunter.UI
         {
             if (_availableCharacters.Count == 0) return;
 
+            PlayUISound(true);
             CharacterData charData = _availableCharacters[_currentIndex];
 
             // VS rule: a locked character cannot be picked; an unlocked one is bought first, then confirmed.
@@ -313,6 +315,12 @@ namespace SoulHunter.UI
             #else
                 Application.Quit();
             #endif
+        }
+
+        private static void PlayUISound(bool confirm)
+        {
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFX(confirm ? audio.UIConfirmSound : audio.UIClickSound);
         }
 
         // ---------- Data ----------

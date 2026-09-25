@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class LightningRingWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         [Header("Lightning Ring Settings")]
         public GameObject LightningStrikePrefab; // Bijli ka visual aur damage hitbox
         public float StrikeRadius = 15f; // Kitni door tak bijli gir sakti hai

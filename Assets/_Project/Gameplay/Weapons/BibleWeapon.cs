@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class BibleWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.None;
         [Tooltip("Bible ka asli chhota 3D model (prefab) yahan assign karein")]
         [SerializeField] private GameObject _biblePrefab;
 

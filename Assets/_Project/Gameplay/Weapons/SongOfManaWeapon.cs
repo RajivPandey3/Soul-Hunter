@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class SongOfManaWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         public GameObject VerticalBeamPrefab;
         private float _beamDuration = 1f;
 

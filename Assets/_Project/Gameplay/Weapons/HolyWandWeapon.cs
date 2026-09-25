@@ -5,6 +5,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class HolyWandWeapon : AutoAttackWeapon
     {
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         [Header("Holy Wand Settings (Evolved Magic Wand)")]
         public GameObject ProjectilePrefab; 
         public float ProjectileSpeed = 25f; 
