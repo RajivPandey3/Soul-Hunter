@@ -12,6 +12,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Blocker
+    second: {fileID: 2100000, guid: a404b788a65ed644785ce5ec48ab82b3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L03_Floor_Cobble
     second: {fileID: 2100000, guid: e2130b3623df5bb4899a51703bb27111, type: 2}
   - first:
@@ -19,6 +24,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L03_Floor_CobbleDark
     second: {fileID: 2100000, guid: b3ae5e040cc80c04080fd08e6ef89913, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Crop
+    second: {fileID: 2100000, guid: 199877116669b294799d477a0271128f, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -39,6 +49,56 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L03_Floor_Hay
     second: {fileID: 2100000, guid: 3f392645ecc760f4d8df138e3b7daa13, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Leaves
+    second: {fileID: 2100000, guid: 5172ed5829fec1b40bf0d25b8842295c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Moss
+    second: {fileID: 2100000, guid: 8de5560743338734dbff7eaab0ff4f50, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Path
+    second: {fileID: 2100000, guid: f9f1aadf191982141900149da686e03c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_PathEdge
+    second: {fileID: 2100000, guid: 0313829b26f83614a99b2f385b69197b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Roof
+    second: {fileID: 2100000, guid: 2cc63e068afacde4fa221ec0dd696160, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Stone
+    second: {fileID: 2100000, guid: de3cd719ca2a2044383debc40fe6468d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Tuft
+    second: {fileID: 2100000, guid: e76bdbf5167772e41ac3f2b1376cccb9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Wall
+    second: {fileID: 2100000, guid: 92879d9b9f549a845b0b3ee927b2eace, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Water
+    second: {fileID: 2100000, guid: f1f1f1c27a5f68b4ea84a57d58d89ebf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Wood
+    second: {fileID: 2100000, guid: baa844c564bf52749872d5c16fbf8aab, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

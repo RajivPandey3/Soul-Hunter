@@ -12,6 +12,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L10_Floor_Blocker
+    second: {fileID: 2100000, guid: 7fdb68199e66281469d08306906a8ad1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L10_Floor_Glow
     second: {fileID: 2100000, guid: 949b6b32f30fa34489db74ad07c71b9d, type: 2}
   - first:
@@ -24,6 +29,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L10_Floor_PlateDark
     second: {fileID: 2100000, guid: 64dee3960e68c984bb952e24d1f13b0d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L10_Floor_Vein
+    second: {fileID: 2100000, guid: 57ee309d3701af14ab4d164888c07458, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

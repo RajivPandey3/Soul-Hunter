@@ -12,8 +12,23 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Blocker
+    second: {fileID: 2100000, guid: 64ec857de6631da4783de653c27ad6cc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Dark
+    second: {fileID: 2100000, guid: 20e56473cda06ce4988b0352b74b5499, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L05_Floor_Glow
     second: {fileID: 2100000, guid: 1c01d80e68f198846948f53105efee64, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Hay
+    second: {fileID: 2100000, guid: a13f959c043f4ab4fb4cc3fdf5fd4bb0, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -32,6 +47,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Plank
+    second: {fileID: 2100000, guid: e5a8ecd2ab94e9f4bbc434ff74b6216a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L05_Floor_Puddle
     second: {fileID: 2100000, guid: 8a850bbfd80944a48bb348ed38752709, type: 2}
   - first:
@@ -39,6 +59,21 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L05_Floor_Reed
     second: {fileID: 2100000, guid: 7820e1dc1bb535a4381794a343c6c861, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Soil
+    second: {fileID: 2100000, guid: a47ac54f85407fd4ca9057be0f78015c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Water
+    second: {fileID: 2100000, guid: 6946be2b38aa66141afa4f50eed600fe, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L05_Floor_Wood
+    second: {fileID: 2100000, guid: a9a86f61cff5296499b7e7d161f7b795, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

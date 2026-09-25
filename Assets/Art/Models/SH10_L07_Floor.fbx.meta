@@ -12,6 +12,16 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Blocker
+    second: {fileID: 2100000, guid: 3f2b69803f514cf46813a3167f87546b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Dark
+    second: {fileID: 2100000, guid: c2585207149f31244a224c2f10372226, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L07_Floor_Foam
     second: {fileID: 2100000, guid: c0c3bbeaef8c0f84c92dc99173ebeea4, type: 2}
   - first:
@@ -19,6 +29,16 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L07_Floor_Glow
     second: {fileID: 2100000, guid: 1994f70dd01c0a140932fb089df4952d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Leaves
+    second: {fileID: 2100000, guid: 68418b9b354a7cd4eb8b7735e4b6cc4f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Plank
+    second: {fileID: 2100000, guid: 96873c997dc385d4db822b9df2a8463d, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -32,8 +52,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Water
+    second: {fileID: 2100000, guid: 064a05d7ca628f345b8bed08be5c3c9b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L07_Floor_WetSand
     second: {fileID: 2100000, guid: 7362ace07cacb04449d52a9827077f2b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Wood
+    second: {fileID: 2100000, guid: f9c4257224c915f4288571716c0fce5a, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

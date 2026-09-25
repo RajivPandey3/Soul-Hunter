@@ -1,0 +1,662 @@
+[
+  {
+    "name": "SH10_L01_Floor",
+    "level": 1,
+    "title": "The Cursed Graveyard",
+    "size": 20.0,
+    "triangles": 3194,
+    "obstacles": 28,
+    "model": "Assets/Art/Models/SH10_L01_Floor.fbx",
+    "materials": {
+      "SH10_L01_Floor_Base": [
+        0.2,
+        0.26,
+        0.15
+      ],
+      "SH10_L01_Floor_Path": [
+        0.44,
+        0.34,
+        0.22
+      ],
+      "SH10_L01_Floor_Soil": [
+        0.26,
+        0.2,
+        0.14
+      ],
+      "SH10_L01_Floor_DeadGrass": [
+        0.3,
+        0.34,
+        0.18
+      ],
+      "SH10_L01_Floor_Tuft": [
+        0.36,
+        0.42,
+        0.2
+      ],
+      "SH10_L01_Floor_Stone": [
+        0.52,
+        0.52,
+        0.56
+      ],
+      "SH10_L01_Floor_Bone": [
+        0.78,
+        0.76,
+        0.62
+      ],
+      "SH10_L01_Floor_Roof": [
+        0.22,
+        0.22,
+        0.28
+      ],
+      "SH10_L01_Floor_Dark": [
+        0.06,
+        0.06,
+        0.08
+      ],
+      "SH10_L01_Floor_Glow": [
+        0.25,
+        0.95,
+        0.9
+      ],
+      "SH10_L01_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L01_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ]
+    }
+  },
+  {
+    "name": "SH10_L02_Floor",
+    "level": 2,
+    "title": "The Dark Forest",
+    "size": 20.0,
+    "triangles": 3592,
+    "obstacles": 27,
+    "model": "Assets/Art/Models/SH10_L02_Floor.fbx",
+    "materials": {
+      "SH10_L02_Floor_Base": [
+        0.2,
+        0.42,
+        0.16
+      ],
+      "SH10_L02_Floor_Path": [
+        0.56,
+        0.43,
+        0.26
+      ],
+      "SH10_L02_Floor_Soil": [
+        0.4,
+        0.3,
+        0.18
+      ],
+      "SH10_L02_Floor_Grass2": [
+        0.28,
+        0.52,
+        0.2
+      ],
+      "SH10_L02_Floor_Moss": [
+        0.16,
+        0.34,
+        0.13
+      ],
+      "SH10_L02_Floor_Tuft": [
+        0.32,
+        0.58,
+        0.22
+      ],
+      "SH10_L02_Floor_Flower1": [
+        0.95,
+        0.85,
+        0.3
+      ],
+      "SH10_L02_Floor_Flower2": [
+        0.9,
+        0.45,
+        0.65
+      ],
+      "SH10_L02_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ],
+      "SH10_L02_Floor_Leaves": [
+        0.1,
+        0.4,
+        0.16
+      ],
+      "SH10_L02_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L02_Floor_Hay": [
+        0.78,
+        0.62,
+        0.32
+      ]
+    }
+  },
+  {
+    "name": "SH10_L03_Floor",
+    "level": 3,
+    "title": "The Forgotten Village",
+    "size": 20.0,
+    "triangles": 2085,
+    "obstacles": 14,
+    "model": "Assets/Art/Models/SH10_L03_Floor.fbx",
+    "materials": {
+      "SH10_L03_Floor_Base": [
+        0.32,
+        0.52,
+        0.22
+      ],
+      "SH10_L03_Floor_Path": [
+        0.62,
+        0.5,
+        0.32
+      ],
+      "SH10_L03_Floor_PathEdge": [
+        0.52,
+        0.42,
+        0.26
+      ],
+      "SH10_L03_Floor_Moss": [
+        0.26,
+        0.44,
+        0.18
+      ],
+      "SH10_L03_Floor_Grass2": [
+        0.38,
+        0.58,
+        0.26
+      ],
+      "SH10_L03_Floor_Crop": [
+        0.55,
+        0.4,
+        0.2
+      ],
+      "SH10_L03_Floor_Tuft": [
+        0.42,
+        0.64,
+        0.26
+      ],
+      "SH10_L03_Floor_Flower2": [
+        0.85,
+        0.4,
+        0.4
+      ],
+      "SH10_L03_Floor_Flower1": [
+        0.95,
+        0.9,
+        0.4
+      ],
+      "SH10_L03_Floor_Wall": [
+        0.8,
+        0.72,
+        0.58
+      ],
+      "SH10_L03_Floor_Roof": [
+        0.7,
+        0.24,
+        0.18
+      ],
+      "SH10_L03_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ],
+      "SH10_L03_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L03_Floor_Stone": [
+        0.52,
+        0.52,
+        0.56
+      ],
+      "SH10_L03_Floor_Water": [
+        0.2,
+        0.45,
+        0.7
+      ],
+      "SH10_L03_Floor_Hay": [
+        0.86,
+        0.72,
+        0.34
+      ],
+      "SH10_L03_Floor_Leaves": [
+        0.18,
+        0.48,
+        0.2
+      ]
+    }
+  },
+  {
+    "name": "SH10_L04_Floor",
+    "level": 4,
+    "title": "The Ruined Castle",
+    "size": 20.0,
+    "triangles": 2798,
+    "obstacles": 24,
+    "model": "Assets/Art/Models/SH10_L04_Floor.fbx",
+    "materials": {
+      "SH10_L04_Floor_Base": [
+        0.2,
+        0.2,
+        0.24
+      ],
+      "SH10_L04_Floor_Flag": [
+        0.5,
+        0.5,
+        0.55
+      ],
+      "SH10_L04_Floor_FlagDark": [
+        0.4,
+        0.4,
+        0.46
+      ],
+      "SH10_L04_Floor_Carpet": [
+        0.62,
+        0.1,
+        0.12
+      ],
+      "SH10_L04_Floor_Trim": [
+        0.85,
+        0.66,
+        0.25
+      ],
+      "SH10_L04_Floor_Moss": [
+        0.28,
+        0.4,
+        0.2
+      ],
+      "SH10_L04_Floor_Stone": [
+        0.52,
+        0.52,
+        0.56
+      ],
+      "SH10_L04_Floor_Pillar": [
+        0.62,
+        0.62,
+        0.66
+      ],
+      "SH10_L04_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  {
+    "name": "SH10_L05_Floor",
+    "level": 5,
+    "title": "The Crimson Swamp",
+    "size": 20.0,
+    "triangles": 2232,
+    "obstacles": 18,
+    "model": "Assets/Art/Models/SH10_L05_Floor.fbx",
+    "materials": {
+      "SH10_L05_Floor_Base": [
+        0.34,
+        0.16,
+        0.15
+      ],
+      "SH10_L05_Floor_Plank": [
+        0.52,
+        0.36,
+        0.22
+      ],
+      "SH10_L05_Floor_Dark": [
+        0.06,
+        0.06,
+        0.08
+      ],
+      "SH10_L05_Floor_MudDark": [
+        0.24,
+        0.1,
+        0.1
+      ],
+      "SH10_L05_Floor_Mud": [
+        0.42,
+        0.2,
+        0.18
+      ],
+      "SH10_L05_Floor_Reed": [
+        0.45,
+        0.4,
+        0.2
+      ],
+      "SH10_L05_Floor_Soil": [
+        0.28,
+        0.14,
+        0.12
+      ],
+      "SH10_L05_Floor_Water": [
+        0.4,
+        0.06,
+        0.12
+      ],
+      "SH10_L05_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L05_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ],
+      "SH10_L05_Floor_Hay": [
+        0.66,
+        0.52,
+        0.3
+      ]
+    }
+  },
+  {
+    "name": "SH10_L06_Floor",
+    "level": 6,
+    "title": "The Frozen Peaks",
+    "size": 20.0,
+    "triangles": 2777,
+    "obstacles": 25,
+    "model": "Assets/Art/Models/SH10_L06_Floor.fbx",
+    "materials": {
+      "SH10_L06_Floor_Base": [
+        0.86,
+        0.9,
+        0.95
+      ],
+      "SH10_L06_Floor_Ice": [
+        0.6,
+        0.8,
+        0.96
+      ],
+      "SH10_L06_Floor_SnowShade": [
+        0.74,
+        0.82,
+        0.92
+      ],
+      "SH10_L06_Floor_Snow": [
+        0.96,
+        0.98,
+        1.0
+      ],
+      "SH10_L06_Floor_Rock": [
+        0.34,
+        0.38,
+        0.46
+      ],
+      "SH10_L06_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ],
+      "SH10_L06_Floor_Leaves": [
+        0.14,
+        0.36,
+        0.3
+      ],
+      "SH10_L06_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L06_Floor_Glow": [
+        0.45,
+        0.85,
+        1.0
+      ]
+    }
+  },
+  {
+    "name": "SH10_L07_Floor",
+    "level": 7,
+    "title": "The Sea of Lost Souls",
+    "size": 20.0,
+    "triangles": 2196,
+    "obstacles": 18,
+    "model": "Assets/Art/Models/SH10_L07_Floor.fbx",
+    "materials": {
+      "SH10_L07_Floor_Base": [
+        0.1,
+        0.28,
+        0.36
+      ],
+      "SH10_L07_Floor_Plank": [
+        0.46,
+        0.34,
+        0.24
+      ],
+      "SH10_L07_Floor_Dark": [
+        0.06,
+        0.06,
+        0.08
+      ],
+      "SH10_L07_Floor_WetSand": [
+        0.08,
+        0.22,
+        0.3
+      ],
+      "SH10_L07_Floor_Sand": [
+        0.16,
+        0.36,
+        0.42
+      ],
+      "SH10_L07_Floor_Glow": [
+        0.25,
+        0.95,
+        0.9
+      ],
+      "SH10_L07_Floor_Glow2": [
+        0.8,
+        0.4,
+        1.0
+      ],
+      "SH10_L07_Floor_Water": [
+        0.18,
+        0.7,
+        0.82
+      ],
+      "SH10_L07_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L07_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ],
+      "SH10_L07_Floor_Leaves": [
+        0.45,
+        0.25,
+        0.8
+      ],
+      "SH10_L07_Floor_Leaves2": [
+        0.15,
+        0.7,
+        0.75
+      ]
+    }
+  },
+  {
+    "name": "SH10_L08_Floor",
+    "level": 8,
+    "title": "The Blood Arenas",
+    "size": 20.0,
+    "triangles": 1955,
+    "obstacles": 14,
+    "model": "Assets/Art/Models/SH10_L08_Floor.fbx",
+    "materials": {
+      "SH10_L08_Floor_Base": [
+        0.68,
+        0.52,
+        0.36
+      ],
+      "SH10_L08_Floor_Path": [
+        0.6,
+        0.46,
+        0.32
+      ],
+      "SH10_L08_Floor_SandDark": [
+        0.56,
+        0.42,
+        0.28
+      ],
+      "SH10_L08_Floor_Line": [
+        0.86,
+        0.76,
+        0.6
+      ],
+      "SH10_L08_Floor_Sand": [
+        0.76,
+        0.6,
+        0.42
+      ],
+      "SH10_L08_Floor_Blood": [
+        0.55,
+        0.04,
+        0.05
+      ],
+      "SH10_L08_Floor_Stone": [
+        0.52,
+        0.52,
+        0.56
+      ],
+      "SH10_L08_Floor_Pillar": [
+        0.7,
+        0.64,
+        0.56
+      ],
+      "SH10_L08_Floor_Trim": [
+        0.75,
+        0.76,
+        0.8
+      ],
+      "SH10_L08_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L08_Floor_Wood": [
+        0.36,
+        0.22,
+        0.12
+      ]
+    }
+  },
+  {
+    "name": "SH10_L09_Floor",
+    "level": 9,
+    "title": "The Throne of Death",
+    "size": 20.0,
+    "triangles": 2136,
+    "obstacles": 19,
+    "model": "Assets/Art/Models/SH10_L09_Floor.fbx",
+    "materials": {
+      "SH10_L09_Floor_Base": [
+        0.08,
+        0.05,
+        0.1
+      ],
+      "SH10_L09_Floor_Marble": [
+        0.3,
+        0.24,
+        0.38
+      ],
+      "SH10_L09_Floor_MarbleDark": [
+        0.2,
+        0.16,
+        0.28
+      ],
+      "SH10_L09_Floor_Carpet": [
+        0.52,
+        0.05,
+        0.14
+      ],
+      "SH10_L09_Floor_Gold": [
+        0.9,
+        0.7,
+        0.25
+      ],
+      "SH10_L09_Floor_Stone": [
+        0.52,
+        0.52,
+        0.56
+      ],
+      "SH10_L09_Floor_Pillar": [
+        0.44,
+        0.38,
+        0.52
+      ],
+      "SH10_L09_Floor_Trim": [
+        0.9,
+        0.7,
+        0.25
+      ],
+      "SH10_L09_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "SH10_L09_Floor_Dark": [
+        0.06,
+        0.06,
+        0.08
+      ],
+      "SH10_L09_Floor_Glow": [
+        0.95,
+        0.45,
+        1.0
+      ]
+    }
+  },
+  {
+    "name": "SH10_L10_Floor",
+    "level": 10,
+    "title": "The Soul Core",
+    "size": 20.0,
+    "triangles": 2684,
+    "obstacles": 19,
+    "model": "Assets/Art/Models/SH10_L10_Floor.fbx",
+    "materials": {
+      "SH10_L10_Floor_Base": [
+        0.04,
+        0.06,
+        0.09
+      ],
+      "SH10_L10_Floor_PlateDark": [
+        0.1,
+        0.16,
+        0.22
+      ],
+      "SH10_L10_Floor_Plate": [
+        0.16,
+        0.24,
+        0.32
+      ],
+      "SH10_L10_Floor_Vein": [
+        0.15,
+        0.85,
+        0.9
+      ],
+      "SH10_L10_Floor_Glow": [
+        0.3,
+        1.0,
+        1.0
+      ],
+      "SH10_L10_Floor_Blocker": [
+        1.0,
+        0.0,
+        1.0
+      ]
+    }
+  }
+]

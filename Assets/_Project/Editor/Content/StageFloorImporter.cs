@@ -11,7 +11,8 @@ namespace SoulHunter.Editor.Content
     /// <summary>
     /// Wires the Blender stage floors (ArtSource/Generators/build_grounds.py) into the game:
     /// imports each SH10_Lxx_Floor.fbx with faceted materials from the generator's manifest,
-    /// builds Assets/Prefabs/Environment/SH10_Lxx_Floor.prefab (tile + one flat BoxCollider) and
+    /// builds Assets/Prefabs/Environment/SH10_Lxx_Floor.prefab (tile + one flat BoxCollider; the
+    /// hidden _Blockers mesh becomes the obstacle MeshCollider on the Obstacle layer) and
     /// fills GameContentCatalog.StageFloors, which InfiniteMap tiles for the current stage.
     /// Menu: Soul Hunter/Content/Import Stage Floors, or CLI:
     /// -executeMethod SoulHunter.Editor.Content.StageFloorImporter.ImportAll -quit
@@ -24,7 +25,9 @@ namespace SoulHunter.Editor.Content
         public const string MaterialFolder = "Assets/Art/Materials";
         public const string PrefabFolder = "Assets/Prefabs/Environment";
         public const string CatalogPath = "Assets/Resources/GameContent.asset";
+        public const string ObstacleLayerName = "Obstacle";
         private const string ShaderName = "SoulHunter/Review/FacetedPreview";
+        private const string SourceFolder = "SH10_Floors_v02";
 
         public static string FloorName(int stage) => $"SH10_L{stage:00}_Floor";
 
@@ -32,6 +35,7 @@ namespace SoulHunter.Editor.Content
         public static void ImportAll()
         {
             var colors = LoadManifest();
+            if (LayerMask.NameToLayer(ObstacleLayerName) < 0) throw new System.InvalidOperationException("Add the Obstacle layer first.");
             var floors = new GameObject[Stages];
             for (int stage = 1; stage <= Stages; stage++)
             {
@@ -47,7 +51,7 @@ namespace SoulHunter.Editor.Content
 
         private static Dictionary<string, Color> LoadManifest()
         {
-            string path = Path.Combine(Path.GetDirectoryName(Application.dataPath), "ArtSource", "SH10_Floors_v01", "manifest.json");
+            string path = Path.Combine(Path.GetDirectoryName(Application.dataPath), "ArtSource", SourceFolder, "manifest.json");
             if (!File.Exists(path)) throw new FileNotFoundException("Run build_grounds.py first.", path);
             var colors = new Dictionary<string, Color>();
             var inv = System.Globalization.CultureInfo.InvariantCulture;
@@ -66,6 +70,12 @@ namespace SoulHunter.Editor.Content
             importer.animationType = ModelImporterAnimationType.None;
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
             var shader = Shader.Find(ShaderName);
+            // Materials of an earlier floor version that the current manifest no longer uses.
+            foreach (string guid in AssetDatabase.FindAssets(floor + "_ t:Material", new[] { MaterialFolder }))
+            {
+                string stale = AssetDatabase.GUIDToAssetPath(guid);
+                if (!colors.ContainsKey(Path.GetFileNameWithoutExtension(stale))) AssetDatabase.DeleteAsset(stale);
+            }
             foreach (var entry in colors.Where(c => c.Key.StartsWith(floor + "_")))
             {
                 string matPath = $"{MaterialFolder}/{entry.Key}.mat";
@@ -91,10 +101,21 @@ namespace SoulHunter.Editor.Content
             {
                 var tile = (GameObject)PrefabUtility.InstantiatePrefab(fbx);
                 tile.transform.SetParent(root.transform, false);
-                // One flat collider for the whole tile: decor is visual only and never blocks movement.
+                // One flat collider for the whole walkable tile.
                 var collider = root.AddComponent<BoxCollider>();
                 collider.center = new Vector3(0f, -0.1f, 0f);
                 collider.size = new Vector3(TileSize, 0.2f, TileSize);
+                // Obstacles block the player through the simple, hidden blocker boxes only. Enemies are
+                // triggers and projectiles ignore the Obstacle layer, so only the player is blocked.
+                int obstacleLayer = LayerMask.NameToLayer(ObstacleLayerName);
+                foreach (var child in tile.GetComponentsInChildren<Transform>(true))
+                {
+                    if (child.name == floor + "_Obstacles") child.gameObject.layer = obstacleLayer;
+                    if (child.name != floor + "_Blockers") continue;
+                    child.gameObject.layer = obstacleLayer;
+                    child.GetComponent<MeshRenderer>().enabled = false;
+                    child.gameObject.AddComponent<MeshCollider>().sharedMesh = child.GetComponent<MeshFilter>().sharedMesh;
+                }
                 foreach (var renderer in root.GetComponentsInChildren<Renderer>())
                 {
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

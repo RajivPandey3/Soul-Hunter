@@ -12,6 +12,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L06_Floor_Blocker
+    second: {fileID: 2100000, guid: a252f311b3dc1294885d01edaa96769c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L06_Floor_Glow
     second: {fileID: 2100000, guid: 760c27e4026b08f4bb27f2c7a598e98c, type: 2}
   - first:
@@ -19,6 +24,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L06_Floor_Ice
     second: {fileID: 2100000, guid: a962bc9a8e6e494408b3ae6df555a1b3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L06_Floor_Leaves
+    second: {fileID: 2100000, guid: 8446b412d86fab641b35c13aaf6f79d8, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -34,6 +44,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L06_Floor_SnowShade
     second: {fileID: 2100000, guid: 8d24d458324093d458104c22a5e53355, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L06_Floor_Wood
+    second: {fileID: 2100000, guid: 1242cdd8472549a44927145a25c35b0e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

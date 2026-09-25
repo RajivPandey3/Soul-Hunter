@@ -80,20 +80,80 @@ namespace SoulHunter.Tests.PlayMode
             {
                 var scene = SceneManager.GetSceneAt(i);
                 if (!scene.isLoaded || !scene.name.EndsWith("_Showcase")) continue;
-                var active = scene.GetRootGameObjects()
+                // The showcase's props and still Enemy/Elite/Boss display models are hidden: the stage floor
+                // has its own obstacles, and the statues stood at the spawn point like enemies that never die.
+                var shown = scene.GetRootGameObjects()
                     .SelectMany(r => r.GetComponentsInChildren<Transform>())
-                    .Where(t => t.gameObject.activeInHierarchy && CampaignSceneConnector.IsShowcaseGround(t.name))
+                    .Where(t => t.gameObject.activeInHierarchy && t.name.StartsWith("SH10_L"))
                     .Select(t => t.name).ToList();
-                Assert.That(active, Is.Empty, $"{scene.name} ground overlaps the stage floor. " + Errors());
-                // The showcase also displays a still Enemy, Elite and Boss model; in play they stood at the
-                // spawn point looking like enemies that never move or die.
-                var statues = scene.GetRootGameObjects()
-                    .SelectMany(r => r.GetComponentsInChildren<Transform>())
-                    .Where(t => t.gameObject.activeInHierarchy &&
-                                System.Text.RegularExpressions.Regex.IsMatch(t.name, @"^SH10_L\d\d_(Enemy|Elite|Boss)"))
-                    .Select(t => t.name).ToList();
-                Assert.That(statues, Is.Empty, $"{scene.name} shows still enemy models in play. " + Errors());
+                Assert.That(shown, Is.Empty, $"{scene.name} shows showcase decor in play. " + Errors());
             }
+        }
+
+        [UnityTest]
+        public IEnumerator StageObstacles_BlockThePlayer()
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            if (spawner != null) spawner.enabled = false;
+            yield return WaitSeconds(1f);
+            var player = PlayerController.Instance;
+            int mask = 1 << LayerMask.NameToLayer("Obstacle");
+
+            // Find an obstacle face and a free spot 3 units in front of it, then walk straight into the face.
+            Vector3 start = default, direction = default;
+            const float distance = 3f;
+            bool found = false;
+            var origin = player.transform.position;
+            for (int x = -8; x <= 8 && !found; x += 2)
+                for (int z = -8; z <= 8 && !found; z += 2)
+                    for (int a = 0; a < 8 && !found; a++)
+                    {
+                        var probe = new Vector3(origin.x + x, origin.y + 0.5f, origin.z + z);
+                        var dir = Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward;
+                        if (!Physics.Raycast(probe, dir, out var hit, 8f, mask) || Mathf.Abs(hit.normal.y) > 0.1f) continue;
+                        var normal = new Vector3(hit.normal.x, 0f, hit.normal.z).normalized;
+                        var spot = new Vector3(hit.point.x, origin.y, hit.point.z) + normal * distance;
+                        // Blockers are mesh colliders, so a sphere wholly inside one is not reported: also look down on the spot.
+                        if (Physics.CheckSphere(spot + Vector3.up, 1f, mask) ||
+                            Physics.Raycast(spot + Vector3.up * 20f, Vector3.down, 21f, mask)) continue;
+                        // A flat face wider than the player, so it cannot slide round the edge (it may round a small one, as in VS).
+                        var side = Vector3.Cross(Vector3.up, normal) * 0.55f; // wider than the 0.8 capsule
+                        bool flat = true;
+                        foreach (var offset in new[] { Vector3.zero, side, -side })
+                            flat &= Physics.Raycast(spot + offset + Vector3.up * 0.5f, -normal, out var faceHit, 5f, mask) &&
+                                    Mathf.Abs(faceHit.distance - distance) < 0.1f;
+                        if (!flat) continue;
+                        start = spot; direction = -normal; found = true;
+                    }
+            Assert.That(found, Is.True, "No stage obstacle near the player. " + Errors());
+
+            var body = player.Rigidbody;
+            body.position = start;
+            player.transform.position = start;
+            yield return new WaitForFixedUpdate();
+            // Walk into the obstacle: camera-relative input that points along the world direction.
+            var right = player.GetCameraRelativeMovement(Vector2.right);
+            var forward = player.GetCameraRelativeMovement(Vector2.up);
+            var input = new Vector2(Vector3.Dot(direction, right), Vector3.Dot(direction, forward)).normalized;
+            var field = typeof(PlayerController).GetField("_eventBusInput", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            field.SetValue(player, input);
+            float maxY = start.y;
+            for (float end = Time.realtimeSinceStartup + 2f; Time.realtimeSinceStartup < end;) // 5 units/s would carry the player far past the obstacle
+            {
+                yield return null;
+                maxY = Mathf.Max(maxY, player.transform.position.y);
+            }
+            field.SetValue(player, Vector2.zero);
+
+            var travelled = Vector3.ProjectOnPlane(player.transform.position - start, Vector3.up);
+            var state = typeof(PlayerController).GetField("_currentState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(player);
+            string info = $"maxY {maxY} faceBlocker {Physics.Raycast(start + Vector3.up * 0.5f, direction, out var face, 5f, mask)} {face.collider?.transform.parent?.name} bounds {face.collider?.bounds} start {start} dir {direction} input {input} now {player.transform.position} timeScale {Time.timeScale} " +
+                          $"state {state?.GetType().Name} kinematic {body.isKinematic} constraints {body.constraints} " +
+                          $"overlaps [{string.Join(", ", Physics.OverlapSphere(start + Vector3.up * 0.5f, 0.6f).Select(c => c.name + "/" + LayerMask.LayerToName(c.gameObject.layer)))}] ";
+            Assert.That(travelled.magnitude, Is.GreaterThan(0.5f), "The player walked. " + info + Errors());
+            Assert.That(Vector3.Dot(travelled, direction), Is.LessThan(distance), "The obstacle stopped the player. " + info + Errors());
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }
 }

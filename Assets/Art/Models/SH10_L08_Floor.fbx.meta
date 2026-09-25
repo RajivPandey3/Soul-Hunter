@@ -12,6 +12,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L08_Floor_Blocker
+    second: {fileID: 2100000, guid: e53f50f2fc75f5e43a662a0a25b8c355, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L08_Floor_Blood
     second: {fileID: 2100000, guid: 7ec2d4ce76a0d0c4687f08a8e0352926, type: 2}
   - first:
@@ -19,6 +24,16 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L08_Floor_Line
     second: {fileID: 2100000, guid: 9dbfb5e5b8f01fc4fa5003ef4230060b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L08_Floor_Path
+    second: {fileID: 2100000, guid: 2c289774077301a46ae3916dab28a023, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L08_Floor_Pillar
+    second: {fileID: 2100000, guid: 95ee30deef5312940b3507af651ed842, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -34,6 +49,21 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L08_Floor_Steel
     second: {fileID: 2100000, guid: b511a4ceaba16b748a6bfe10ba5b657f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L08_Floor_Stone
+    second: {fileID: 2100000, guid: 189f93f6ebf8d0e498f647a34154bd4d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L08_Floor_Trim
+    second: {fileID: 2100000, guid: c0259edc2abed44498f7ceaa301f7b7c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L08_Floor_Wood
+    second: {fileID: 2100000, guid: 1950db55022824842841885a491144a3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

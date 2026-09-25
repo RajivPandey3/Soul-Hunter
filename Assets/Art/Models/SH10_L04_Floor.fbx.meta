@@ -12,6 +12,16 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L04_Floor_Blocker
+    second: {fileID: 2100000, guid: a32ef22538f78fa438bc710f43289ebb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L04_Floor_Carpet
+    second: {fileID: 2100000, guid: c52241bd5d2d51a48aa7d5eb5d3627b2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L04_Floor_Flag
     second: {fileID: 2100000, guid: e2bea4b10b16b3f49a5de1236904d692, type: 2}
   - first:
@@ -29,6 +39,21 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: SH10_L04_Floor_Moss
     second: {fileID: 2100000, guid: 26e44cf1c717b0f4fae51d491ec481e3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L04_Floor_Pillar
+    second: {fileID: 2100000, guid: 9a02b0cfec5be754cb86cb09bf36d8f8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L04_Floor_Stone
+    second: {fileID: 2100000, guid: 98538d97c7894ba44b7b613a55b364d3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L04_Floor_Trim
+    second: {fileID: 2100000, guid: 857394983908ee84c941be951216194f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

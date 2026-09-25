@@ -36,19 +36,12 @@ namespace SoulHunter.Gameplay.Core
             _loadRoutine = StartCoroutine(LoadShowcase(sceneName));
         }
 
-        /// <summary>Showcase ground tiles are named SH10_Lxx_Ground (plus Unity's " (n)" suffix).</summary>
-        public static bool IsShowcaseGround(string objectName) =>
-            objectName.StartsWith("SH10_L") && objectName.Contains("_Ground");
-
         /// <summary>
-        /// The showcase also displays one still SH10_Lxx_Enemy, _Elite and _Boss model. In play they stood
-        /// at the spawn point looking like enemies that never move or die; real ones come from EnemySpawner.
+        /// Showcase objects that must not appear in the playable campaign: all of its SH10_Lxx_* models (props
+        /// and the still Enemy/Elite/Boss display models, which stood at the spawn point like enemies that never
+        /// move or die). Each stage floor carries its own obstacles (owner, 2026-09-25: remove the old decor).
         /// </summary>
-        public static bool IsShowcaseStatue(string objectName) =>
-            System.Text.RegularExpressions.Regex.IsMatch(objectName, @"^SH10_L\d\d_(Enemy|Elite|Boss)");
-
-        /// <summary>Showcase objects that must not appear in the playable campaign.</summary>
-        public static bool IsHiddenInPlay(string objectName) => IsShowcaseGround(objectName) || IsShowcaseStatue(objectName);
+        public static bool IsHiddenInPlay(string objectName) => objectName.StartsWith("SH10_L");
 
         private IEnumerator LoadShowcase(string sceneName)
         {
@@ -68,9 +61,8 @@ namespace SoulHunter.Gameplay.Core
             foreach (var levelCamera in _loadedScene.GetRootGameObjects())
                 foreach (var camera in levelCamera.GetComponentsInChildren<Camera>(true))
                     camera.enabled = false;
-            // InfiniteMap lays the stage floor everywhere; the showcase's own fixed 3x3
-            // ground would overlap it (z-fighting) and end at the showcase edge. Its still
-            // enemy/elite/boss display models are hidden too; the scenery props stay.
+            // InfiniteMap lays the stage floor, with its obstacles, everywhere; the showcase's
+            // props and display models would stand on top of it without blocking anything.
             foreach (var root in _loadedScene.GetRootGameObjects())
                 foreach (var node in root.GetComponentsInChildren<Transform>(true))
                     if (IsHiddenInPlay(node.name)) node.gameObject.SetActive(false);
