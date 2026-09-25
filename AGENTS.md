@@ -365,10 +365,12 @@ Validated by `WeaponVfxTests` (T, Slash included) and `WeaponSweepPlayModeTests`
 
 The player's health bar was a red strip across the whole bottom of the screen. It is now a small VS-style bar (96x11 canvas units, dark background, red fill) just under the hero's feet. `HealthBarFollow` (attached by `GameHUDController`) reuses the same HUD slider, reparents it to the root canvas (drawn under the menus) and moves it every `LateUpdate`, after `CameraFollow`. It is not interactable and hides its handle. Validated by `PlayerPresentationPlayModeTests.HealthBar_IsSmall_AndFollowsUnderTheHero` (R: narrower than 15% of the screen, centred on the feet and just below them while walking, full at start). Both suites pass: EditMode 344/344, PlayMode 65/65, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-hpbar\`). Editor play runs `autoplay-editor-04` and `-05` had 0 errors (`-05`: 3 min as Kael, level 14, 750 kills, min 65 FPS), and their screenshots show the bar under the hero (partial `V`).
 
-Seen in `autoplay-editor-05`, not fixed yet:
-- Some level-up icons have their file name drawn into the image (Whip "VFX_SlashArc", Candelabrador "Lamp_Post.png", Attractorb "VFX_Portal.png").
-- Reroll/Skip/Banish text shows red, not white.
-- The HUD "LEVEL UP" label overlaps the stage name.
+Seen in `autoplay-editor-05` and fixed (owner approved, 2026-09-26):
+- Eight `Assets/Art/UI` icon sprites had their file name drawn under the picture ("VFX_Slash.png", "Bone.png", "Crosshair.png", "Lamp_Post.png", "VFX_Portal.png", "VFX_Heal.png" and two small marks): sprite_40, 48, 88, 93, 77, 44, 35 and 102, used by Whip, Bone, Cherry Bomb, Gun, Candelabrador, Attractorb, Tiragisu and Skull O'Maniac. Only those label rows were cleared; the picture pixels are unchanged. `CharacterStatBlockTests.NoUpgradeIcon_ShowsAFileNameLabel` (T) failed on the old icons and passes now.
+- Reroll/Skip/Banish text was red: their label is a legacy `Text` copied from the card, and only TMP labels were turned white. `LevelUpUI.WhitenLabels` now turns both white.
+- The level-up panel's "LEVEL UP" text was drawn over the HUD stage name. `LevelUpUI.StyleHeading` shows a gold "LEVEL UP!" lower down, above the cards.
+
+`WeaponSweepPlayModeTests` (R) checks the white labels, and that the heading is above the cards and below the stage name. EditMode 345/345, PlayMode 65/65, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-uifix\`). Editor play `autoplay-editor-06` had 0 errors, and its level-up screenshot shows all three fixes (partial `V`).
 
 ### Validation run 2026-09-24
 

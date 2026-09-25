@@ -138,6 +138,31 @@ namespace SoulHunter.Tests.PlayMode
                     .Concat(card.GetComponentsInChildren<UnityEngine.UI.Text>().Select(t => t.text)).ToList();
                 Assert.That(stray, Is.Empty, "Stray labels on the card: " + string.Join(", ", stray));
             }
+            // Reroll / Skip / Banish: white labels (their label is a legacy Text, which stayed red).
+            foreach (var actionName in new[] { "Reroll_Button", "Skip_Button", "Banish_Button" })
+            {
+                var action = Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None).FirstOrDefault(b => b.isActiveAndEnabled && b.name == actionName);
+                Assert.That(action, Is.Not.Null, actionName);
+                var colours = action.GetComponentsInChildren<UnityEngine.UI.Text>().Select(t => t.color)
+                    .Concat(action.GetComponentsInChildren<TMPro.TextMeshProUGUI>().Where(t => !t.name.StartsWith("Card_")).Select(t => t.color)).ToList();
+                Assert.That(colours, Is.Not.Empty, actionName + " has a visible label.");
+                Assert.That(colours.All(c => c == Color.white), $"{actionName} label colours: {string.Join(", ", colours)}");
+            }
+            // The "LEVEL UP!" heading sits above the cards and below the HUD stage name (it was drawn over it).
+            var heading = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None)
+                .FirstOrDefault(t => t.isActiveAndEnabled && t.text == SoulHunter.Gameplay.UI.LevelUpUI.HeadingText);
+            Assert.That(heading, Is.Not.Null, "Level-up heading.");
+            heading.ForceMeshUpdate();
+            float headingTop = heading.transform.TransformPoint(heading.textBounds.max).y;
+            float cardsTop = titles.Max(t => { var c = new Vector3[4]; ((RectTransform)t.transform.parent).GetWorldCorners(c); return c[1].y; });
+            Assert.That(headingTop, Is.GreaterThan(cardsTop), "The heading sits above the cards.");
+            var stage = Object.FindFirstObjectByType<SoulHunter.Gameplay.UI.HudReadability>()?.StageLabel;
+            if (stage != null && stage.isActiveAndEnabled)
+            {
+                var corners = new Vector3[4];
+                stage.rectTransform.GetWorldCorners(corners);
+                Assert.That(headingTop, Is.LessThan(corners[0].y), "The heading does not overlap the stage name.");
+            }
             var effects = vfx.GetComponentsInChildren<ParticleSystem>(true);
             Assert.That(effects, Is.Not.Empty);
             Assert.That(effects.All(p => p.GetComponent<ParticleSystemRenderer>().sharedMaterial != null), "Every effect has its material.");

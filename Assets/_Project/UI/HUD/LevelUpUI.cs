@@ -88,6 +88,7 @@ namespace SoulHunter.Gameplay.UI
     _banishMode = false;
     EnsureActionButtons();
     EnsureCardCount(choices.Count);
+    StyleHeading();
 
     Debug.Log($"[LevelUpUI] Panel={_levelUpPanel} | PanelActive={(_levelUpPanel != null && _levelUpPanel.activeSelf)}");
     Debug.Log($"[LevelUpUI] Buttons array null={_upgradeButtons == null} | count={(_upgradeButtons != null ? _upgradeButtons.Length : -1)}");
@@ -254,8 +255,8 @@ namespace SoulHunter.Gameplay.UI
         private static void SetButtonLabel(Button button, string label)
         {
             if (button == null) return;
-            var tmpText = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (tmpText != null) { tmpText.text = label; return; }
+            foreach (var tmpText in button.GetComponentsInChildren<TextMeshProUGUI>(true))
+                if (!tmpText.name.StartsWith("Card_")) { tmpText.text = label; return; }
             var legacyText = button.GetComponentInChildren<Text>(true);
             if (legacyText != null) legacyText.text = label;
         }
@@ -315,9 +316,7 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_levelUpManager == null) return;
             foreach (var action in new[] { _rerollButton, _skipButton, _banishButton })
-                if (action != null)
-                    foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
-                        label.color = Color.white; // readable on the dark action buttons (was red)
+                WhitenLabels(action); // readable on the dark action buttons (was red)
             if (_rerollButton != null)
             {
                 SetButtonLabel(_rerollButton, $"Reroll ({_levelUpManager.RerollsLeft})");
@@ -381,8 +380,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 var image = action.GetComponent<Image>();
                 if (image != null) OptionsMenuUI.ApplyFocusColors(action, image);
-                foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
-                    if (!label.name.StartsWith("Card_")) label.color = Color.white;
+                WhitenLabels(action);
                 foreach (Transform part in action.transform)
                     if (part.name.StartsWith("Card_")) part.gameObject.SetActive(false); // clones of a styled card
             }
@@ -425,6 +423,44 @@ namespace SoulHunter.Gameplay.UI
                 template = card;
             }
             _upgradeButtons = cards.ToArray();
+        }
+
+        public const string HeadingText = "LEVEL UP!";
+
+        /// <summary>
+        /// The panel's "LEVEL UP" heading (a text beside the cards in ButtonContainer) was drawn at the top of the screen,
+        /// over the HUD stage name. It now sits at the bottom of its box, just above the cards, in gold (VS style).
+        /// </summary>
+        private void StyleHeading()
+        {
+            Button first = null;
+            foreach (var button in _upgradeButtons)
+                if (button != null) { first = button; break; }
+            if (first == null) return;
+            foreach (Transform child in first.transform.parent)
+            {
+                if (child.GetComponent<Button>() != null || !child.TryGetComponent<TextMeshProUGUI>(out var heading)) continue;
+                heading.text = HeadingText;
+                heading.alignment = TextAlignmentOptions.Bottom;
+                heading.enableAutoSizing = false;
+                heading.fontSize = 64f;
+                heading.fontStyle = FontStyles.Bold;
+                heading.color = TagGold;
+                heading.raycastTarget = false;
+            }
+        }
+
+        /// <summary>
+        /// The action buttons are clones of a card, whose label in HUD_Canvas is a red legacy Text; both TMP and legacy
+        /// labels are turned white (the hidden Card_ parts keep their own colours).
+        /// </summary>
+        private static void WhitenLabels(Button action)
+        {
+            if (action == null) return;
+            foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
+                if (!label.name.StartsWith("Card_")) label.color = Color.white;
+            foreach (var label in action.GetComponentsInChildren<Text>(true))
+                label.color = Color.white;
         }
 
         private static void CreateActionButton(Button template, Transform parent, string name)

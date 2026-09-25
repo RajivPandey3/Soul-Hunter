@@ -266,6 +266,41 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void NoUpgradeIcon_ShowsAFileNameLabel()
+        {
+            // Learning Comment: kuch Art/UI sprites ke neeche file ka naam likha tha ("VFX_Slash.png", "Lamp_Post.png"),
+            // jo level-up cards par dikhta tha (owner editor play, 2026-09-26). Label = picture ke neeche ek chhota alag block.
+            var textures = Resources.LoadAll<UpgradeData>("Upgrades").Where(u => u.Icon != null).Select(u => u.Icon.texture).Distinct();
+            foreach (var texture in textures)
+            {
+                string path = UnityEditor.AssetDatabase.GetAssetPath(texture);
+                var copy = new Texture2D(2, 2);
+                try
+                {
+                    Assert.That(copy.LoadImage(System.IO.File.ReadAllBytes(path)), path);
+                    Assert.That(LabelRowsAtBottom(copy), Is.EqualTo(0), $"{path} has a file-name label under the picture.");
+                }
+                finally { Object.DestroyImmediate(copy); }
+            }
+        }
+
+        /// <summary>Height of a small block at the bottom that is separated from the picture by empty rows (0 if none).</summary>
+        private static int LabelRowsAtBottom(Texture2D texture)
+        {
+            var pixels = texture.GetPixels32();
+            int w = texture.width, h = texture.height; // row 0 is the bottom
+            bool Filled(int row) { for (int x = 0; x < w; x++) if (pixels[row * w + x].a > 25) return true; return false; }
+            int start = 0;
+            while (start < h && !Filled(start)) start++;
+            int end = start;
+            while (end < h && Filled(end)) end++;
+            bool pictureAbove = false;
+            for (int row = end; row < h && !pictureAbove; row++) pictureAbove = Filled(row);
+            int height = end - start;
+            return start < h && pictureAbove && height <= 14 && height <= 0.25f * h ? end : 0;
+        }
+
+        [Test]
         public void EveryCharacter_HasItsOwnAnimatedHeroModel_AndPortrait()
         {
             // Learning Comment: Har character ka apna 3D model aur apni portrait ho; koi placeholder nahi.
