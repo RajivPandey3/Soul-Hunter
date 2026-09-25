@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  PentagramVFXPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  PentagramVFXPrefab: {fileID: 5826934018651772578, guid: 4edde4d0da69a1d4ba40fa43421c1c06, type: 3}
 --- !u!1001 &99264107325719503
 PrefabInstance:
   m_ObjectHideFlags: 0

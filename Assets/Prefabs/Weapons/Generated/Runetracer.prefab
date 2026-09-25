@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  RunePrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  RunePrefab: {fileID: 4578404262870357976, guid: 979e8e17e237dec4a88f9c0cf139e40f, type: 3}
   Speed: 8
 --- !u!1001 &4198447272130783926
 PrefabInstance:

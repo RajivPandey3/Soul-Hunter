@@ -157,11 +157,13 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void WithNoEnemies_KnifeFallsBackToItsOldDirection()
         {
-            // Learning Comment: Koi dushman na ho toh Knife pehle ki tarah chalti rahe (facing: +X).
+            // Learning Comment: Koi dushman na ho toh Knife hero ke face ki disha mein chale. Pehle yeh localScale.x
+            // (+-1 mirror) se +X/-X nikalta tha; ab hero mudta hai, isliye uski FacingDirection (shuru mein +Z).
             EnemyController.ActiveEnemies.Remove(_enemy);
+            var facing = _owner.GetComponent<PlayerController>().FacingDirection;
             var shots = FireAndCollect<KnifeWeapon>("_projectilePrefab");
             Assert.That(shots, Is.Not.Empty);
-            Assert.That(Vector3.Angle(Vector3.right, shots[0].transform.forward), Is.LessThan(12f));
+            Assert.That(Vector3.Angle(facing, shots[0].transform.forward), Is.LessThan(12f));
         }
     }
 }

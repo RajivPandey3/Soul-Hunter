@@ -40,10 +40,7 @@ namespace SoulHunter.Gameplay.Pickups
             if (_isCollected || !isActiveAndEnabled || Time.timeScale <= 0f) return;
             _isCollected = true;
 
-            if (SoulHunter.Gameplay.VFX.VFXPoolManager.Instance != null)
-            {
-                SoulHunter.Gameplay.VFX.VFXPoolManager.Instance.PlayChestOpenVFX(transform.position);
-            }
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position);
 
             // Chest UI aur Backend Logic Trigger karo
             string rewardMessage = "";

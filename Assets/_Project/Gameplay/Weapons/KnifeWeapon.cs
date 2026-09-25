@@ -37,7 +37,7 @@ namespace SoulHunter.Gameplay.Combat
             Vector3 moveDir = _player.Rigidbody.linearVelocity;
             moveDir.y = 0f;
             if (moveDir.sqrMagnitude < 0.001f)
-                moveDir = _player.transform.localScale.x < 0f ? Vector3.left : Vector3.right;
+                moveDir = HolderFacing;
             else moveDir.Normalize();
             moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 

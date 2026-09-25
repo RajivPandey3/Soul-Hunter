@@ -106,6 +106,19 @@ namespace SoulHunter.Gameplay.Combat
             return fallback.sqrMagnitude > 0.0001f ? fallback.normalized : Vector3.forward;
         }
 
+        /// <summary>
+        /// Where the holder faces, for "facing side when no enemy" fallbacks. The player used to mirror itself with
+        /// localScale.x = +-1 (read by several weapons); it now turns its model, so this reads its facing direction.
+        /// </summary>
+        protected Vector3 HolderFacing
+        {
+            get
+            {
+                var player = GetComponentInParent<PlayerController>();
+                return player != null ? player.FacingDirection : Vector3.right;
+            }
+        }
+
         /// <summary>A random flat unit direction, for weapons whose no-enemy fallback is random.</summary>
         protected static Vector3 RandomFlatDirection()
         {

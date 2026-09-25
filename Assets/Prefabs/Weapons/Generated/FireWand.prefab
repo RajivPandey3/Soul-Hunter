@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  FireballPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  FireballPrefab: {fileID: 7457182400913755663, guid: 632b4a2519df583458130d5ea74d623d, type: 3}
   ProjectileSpeed: 5
   FireRange: 15
 --- !u!1001 &3513488899330447620

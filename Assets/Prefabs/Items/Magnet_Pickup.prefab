@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 9106992732302465728}
   - component: {fileID: 4831217764022348222}
   - component: {fileID: 358089396229239409}
+  - component: {fileID: 3012453068489657629}
   m_Layer: 0
   m_Name: Magnet_Pickup
   m_TagString: Untagged
@@ -71,6 +72,22 @@ MonoBehaviour:
   _playerLayer:
     serializedVersion: 2
     m_Bits: 64
+--- !u!114 &3012453068489657629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2984942668396759097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73fa6819cb1f40e4e84edf65e4383476, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Visual: {fileID: 4864904589810315865}
+  BobHeight: 0.1
+  BobSpeed: 3
+  SpinDegreesPerSecond: 90
 --- !u!1001 &1270888367147521084
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -126,10 +143,30 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4690034843186778888, guid: 3fb74e4aca95cf2448bd5cd9d1178312, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1482143361411367808}
   m_SourcePrefab: {fileID: 100100000, guid: 3fb74e4aca95cf2448bd5cd9d1178312, type: 3}
 --- !u!4 &4864904589810315865 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5917878131780134501, guid: 3fb74e4aca95cf2448bd5cd9d1178312, type: 3}
   m_PrefabInstance: {fileID: 1270888367147521084}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &5815629173726332724 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4690034843186778888, guid: 3fb74e4aca95cf2448bd5cd9d1178312, type: 3}
+  m_PrefabInstance: {fileID: 1270888367147521084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1482143361411367808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5815629173726332724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dc23d5fbf355e843a21e808e3440d7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

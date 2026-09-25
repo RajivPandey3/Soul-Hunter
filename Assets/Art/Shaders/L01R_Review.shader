@@ -3,7 +3,7 @@
 // the main light with its shadows and casts shadows, keeping the old contrast: 0.38 ambient + 0.62 direct.
 Shader "SoulHunter/Review/FacetedPreview"
 {
-    Properties { _Color ("Color", Color) = (1,1,1,1) }
+    Properties { _Color ("Color", Color) = (1,1,1,1) _EmissionColor ("Glow", Color) = (0,0,0,0) }
     SubShader
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" "RenderPipeline"="UniversalPipeline" }
@@ -12,6 +12,7 @@ Shader "SoulHunter/Review/FacetedPreview"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _Color;
+            half4 _EmissionColor; // gems, coins and other pickups glow; black for everything else
         CBUFFER_END
         ENDHLSL
 
@@ -52,7 +53,7 @@ Shader "SoulHunter/Review/FacetedPreview"
             {
                 Light light = GetMainLight(TransformWorldToShadowCoord(i.positionWS));
                 half ndl = saturate(dot(normalize(i.normalWS), light.direction));
-                half3 rgb = _Color.rgb * (0.38h + 0.62h * ndl * light.shadowAttenuation) * light.color;
+                half3 rgb = _Color.rgb * (0.38h + 0.62h * ndl * light.shadowAttenuation) * light.color + _EmissionColor.rgb;
                 return half4(MixFog(rgb, i.fog), 1);
             }
             ENDHLSL

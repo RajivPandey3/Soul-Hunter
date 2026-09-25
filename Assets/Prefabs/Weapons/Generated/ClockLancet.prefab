@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  FreezeBeamPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  FreezeBeamPrefab: {fileID: 8195081743239547154, guid: bc980af651b7fb74cb7acfe90fb3c717, type: 3}
 --- !u!1001 &8290463043103513098
 PrefabInstance:
   m_ObjectHideFlags: 0

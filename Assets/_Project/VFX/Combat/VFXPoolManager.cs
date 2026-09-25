@@ -5,53 +5,44 @@ namespace SoulHunter.Gameplay.VFX
 {
     /// <summary>
     /// Learning Comment:
-    /// Option 4 (Visual Polish): Ye VFX Pool Manager hai.
-    /// Ye game me dhuaan aur khoon (particles) paida karta hai.
-    /// Khaas baat: Agar aapke paas Asset nahi hai, toh ye CODE KE ZARIYE 
-    /// Unity ka apna default Particle System bana dega jo 100% Commercial safe hai!
+    /// Gameplay VFX pool (hit sparks, enemy death, pickups, heal, chest, level-up, explosions). No scene contained this
+    /// manager, so its effects never played; it now creates itself in the active scene on first use and plays the
+    /// particle prefabs of Resources/VfxLibrary (built by VfxBuilder). Each kind has a capped pool, and very frequent
+    /// kinds are throttled, so a horde of 300 cannot flood the frame.
     /// </summary>
     public class VFXPoolManager : MonoBehaviour
     {
         public static VFXPoolManager Instance { get; private set; }
 
-        [Header("Optional: Apne khud ke VFX Prefabs dalein (Nahi dalenge toh Code khud banayega)")]
-        public GameObject EnemyDeathVFXPrefab;
-        public GameObject ChestOpenVFXPrefab;
-        
-        private List<GameObject> _enemyDeathPool = new List<GameObject>();
-        private List<GameObject> _chestOpenPool = new List<GameObject>();
+        private const int MaxPerKind = 32;
+        private static readonly float[] MinInterval = { 0.02f, 0.01f, 0.03f, 0.03f, 0.2f, 0f, 0f, 0f }; // by VfxKind
 
-        private static Material _sharedParticleMaterial;
-        private const int MAX_POOL_CAPACITY = 25;
-        private int _reuseIndex = 0;
+        private VfxLibrary _library;
+        private readonly Dictionary<VfxKind, List<GameObject>> _pools = new Dictionary<VfxKind, List<GameObject>>();
+        private readonly Dictionary<VfxKind, int> _reuseIndex = new Dictionary<VfxKind, int>();
+        private readonly float[] _lastPlayed = new float[8];
 
-        private static Material GetSharedMaterial()
+        /// <summary>The manager of the active scene, created on first use.</summary>
+        public static VFXPoolManager EnsureInstance()
         {
-            if (_sharedParticleMaterial == null)
-            {
-                var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") 
-                             ?? Shader.Find("Particles/Standard Unlit") 
-                             ?? Shader.Find("Sprites/Default");
-                if (shader != null)
-                {
-                    _sharedParticleMaterial = new Material(shader) { hideFlags = HideFlags.DontSave };
-                }
-            }
-            return _sharedParticleMaterial;
+            if (Instance != null) return Instance;
+            if (!Application.isPlaying) return null;
+            return new GameObject("VFXPoolManager").AddComponent<VFXPoolManager>();
+        }
+
+        /// <summary>Plays a feedback effect at a position (skipped while throttled or when the library is missing).</summary>
+        public static void Play(VfxKind kind, Vector3 position)
+        {
+            var manager = EnsureInstance();
+            if (manager != null) manager.PlayInternal(kind, position);
         }
 
         private void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                // Prewarm a small pool to avoid frame spikes during intense combat
-                PrewarmPool(ref _enemyDeathPool, EnemyDeathVFXPrefab, Color.red, 15, 10);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+            Instance = this;
+            _library = Resources.Load<VfxLibrary>(VfxLibrary.ResourcePath);
+            for (int i = 0; i < _lastPlayed.Length; i++) _lastPlayed[i] = -1f;
         }
 
         private void OnDestroy()
@@ -59,140 +50,69 @@ namespace SoulHunter.Gameplay.VFX
             if (Instance == this) Instance = null;
         }
 
-        private void PrewarmPool(ref List<GameObject> pool, GameObject prefab, Color fallbackColor, short burstCount, int count)
+        public void PlayEnemyDeathVFX(Vector3 position) => PlayInternal(VfxKind.EnemyDeath, position);
+        public void PlayChestOpenVFX(Vector3 position) => PlayInternal(VfxKind.ChestOpen, position);
+
+        /// <summary>Number of pooled instances of a kind (tests).</summary>
+        public int PooledCount(VfxKind kind) => _pools.TryGetValue(kind, out var pool) ? pool.Count : 0;
+
+        private void PlayInternal(VfxKind kind, Vector3 position)
         {
-            for (int i = 0; i < count; i++)
+            int k = (int)kind;
+            if (Time.time - _lastPlayed[k] < MinInterval[k]) return;
+            var prefab = _library != null ? _library.Get(kind) : null;
+            if (prefab == null) return;
+            _lastPlayed[k] = Time.time;
+
+            var vfx = GetOrCreate(kind, prefab);
+            if (vfx == null) return;
+            vfx.transform.SetPositionAndRotation(position, prefab.transform.rotation);
+            vfx.SetActive(true);
+            foreach (var particles in vfx.GetComponentsInChildren<ParticleSystem>())
             {
-                GameObject obj = CreateNewVFX(prefab, fallbackColor, burstCount);
-                obj.SetActive(false);
-                pool.Add(obj);
+                particles.Clear(false);
+                particles.Play(false);
             }
         }
 
-        public void PlayEnemyDeathVFX(Vector3 position)
+        private GameObject GetOrCreate(VfxKind kind, GameObject prefab)
         {
-            // Khoon (Red) ka effect
-            GameObject vfx = GetOrCreateVFX(ref _enemyDeathPool, EnemyDeathVFXPrefab, position, Color.red, 15);
-            if (vfx == null) return;
-            vfx.SetActive(true);
-            var particles = vfx.GetComponentInChildren<ParticleSystem>();
-            if (particles != null) { particles.Clear(true); particles.Play(true); }
-        }
-
-        public void PlayChestOpenVFX(Vector3 position)
-        {
-            // Sunehri chamak (Yellow) ka effect
-            GameObject vfx = GetOrCreateVFX(ref _chestOpenPool, ChestOpenVFXPrefab, position, Color.yellow, 50);
-            if (vfx == null) return;
-            vfx.SetActive(true);
-            var particles = vfx.GetComponentInChildren<ParticleSystem>();
-            if (particles != null) { particles.Clear(true); particles.Play(true); }
-        }
-
-        /// <summary>
-        /// Learning Comment:
-        /// Memory-Safe Pooling:
-        /// 1. Inactive object reuse karta hai.
-        /// 2. Agar koi inactive na ho aur capacity bachi ho toh naya object banata hai.
-        /// 3. Agar pool full ho (25+) toh sabse purane ko foran recycle karta hai taake
-        /// 80+ enemies marne par bhi memory spike na ho aur game kabbhi crash/hang na kare.
-        /// </summary>
-        private GameObject GetOrCreateVFX(ref List<GameObject> pool, GameObject prefab, Vector3 position, Color fallbackColor, short burstCount)
-        {
+            if (!_pools.TryGetValue(kind, out var pool)) _pools[kind] = pool = new List<GameObject>();
             for (int i = 0; i < pool.Count; i++)
+                if (pool[i] != null && !pool[i].activeSelf) return pool[i];
+
+            if (pool.Count < MaxPerKind)
             {
-                if (pool[i] != null && !pool[i].activeInHierarchy)
-                {
-                    pool[i].transform.position = position;
-                    return pool[i];
-                }
+                var created = Instantiate(prefab, transform);
+                created.SetActive(false);
+                if (created.GetComponent<VFXAutoDisable>() == null) created.AddComponent<VFXAutoDisable>();
+                pool.Add(created);
+                return created;
             }
 
-            // Pool capacity limit check
-            if (pool.Count < MAX_POOL_CAPACITY)
-            {
-                GameObject newObj = CreateNewVFX(prefab, fallbackColor, burstCount);
-                newObj.transform.position = position;
-                pool.Add(newObj);
-                return newObj;
-            }
-
-            // Pool full hone par oldest active object ko reuse karein
-            _reuseIndex = (_reuseIndex + 1) % pool.Count;
-            GameObject recycled = pool[_reuseIndex];
-            if (recycled != null)
-            {
-                recycled.transform.position = position;
-                var ps = recycled.GetComponentInChildren<ParticleSystem>();
-                if (ps != null) ps.Clear(true);
-                return recycled;
-            }
-
-            return null;
-        }
-
-        private GameObject CreateNewVFX(GameObject prefab, Color fallbackColor, short burstCount)
-        {
-            GameObject newObj = null;
-            if (prefab != null)
-            {
-                newObj = Instantiate(prefab, transform.position, Quaternion.identity, transform);
-                if (newObj.GetComponent<VFXAutoDisable>() == null)
-                    newObj.AddComponent<VFXAutoDisable>();
-            }
-            else
-            {
-                newObj = new GameObject("Procedural_Particle_VFX");
-                newObj.transform.position = transform.position;
-                newObj.transform.SetParent(transform);
-
-                var ps = newObj.AddComponent<ParticleSystem>();
-                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                var main = ps.main;
-                main.duration = 0.5f;
-                main.startLifetime = 0.5f;
-                main.startSpeed = 8f;
-                main.startSize = 0.3f;
-                main.startColor = fallbackColor;
-                main.loop = false;
-                main.playOnAwake = false;
-
-                var emission = ps.emission;
-                emission.rateOverTime = 0;
-                emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, burstCount) });
-
-                var shape = ps.shape;
-                shape.shapeType = ParticleSystemShapeType.Sphere;
-                shape.radius = 0.5f;
-
-                // Shared Material use karein taaki lakhoon unmanaged material copies na banein
-                var renderer = newObj.GetComponent<ParticleSystemRenderer>();
-                var sharedMat = GetSharedMaterial();
-                if (sharedMat != null)
-                {
-                    renderer.sharedMaterial = sharedMat;
-                }
-
-                newObj.AddComponent<VFXAutoDisable>();
-            }
-
-            return newObj;
+            // Full: recycle the oldest so a big wave never allocates more.
+            _reuseIndex.TryGetValue(kind, out int index);
+            index = (index + 1) % pool.Count;
+            _reuseIndex[kind] = index;
+            return pool[index];
         }
     }
 
-    /// <summary>
-    /// Ye choti script effect khatam hone par usko automatic chupa (disable) deti hai.
-    /// </summary>
+    /// <summary>Hides a pooled effect once all of its particles have died.</summary>
     public class VFXAutoDisable : MonoBehaviour
     {
-        private ParticleSystem _ps;
-        private void Awake() { _ps = GetComponentInChildren<ParticleSystem>(); }
-        private void Update() 
-        { 
-            if (_ps != null && !_ps.IsAlive(true)) 
-            {
-                gameObject.SetActive(false); 
-            }
+        private ParticleSystem[] _systems;
+        private float _startedAt;
+
+        private void Awake() { _systems = GetComponentsInChildren<ParticleSystem>(); }
+        private void OnEnable() { _startedAt = Time.time; }
+
+        private void Update()
+        {
+            if (Time.time - _startedAt < 0.05f) return;
+            for (int i = 0; i < _systems.Length; i++)
+                if (_systems[i] != null && _systems[i].IsAlive(false)) return;
+            gameObject.SetActive(false);
         }
     }
 }

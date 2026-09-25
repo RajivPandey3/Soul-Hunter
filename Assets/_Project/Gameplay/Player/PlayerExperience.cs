@@ -95,6 +95,7 @@ namespace SoulHunter.Gameplay.Player
                 XPToNextLevel = XPRequiredForLevel(CurrentLevel);
                 
                 // Event fire karo (Game pause karna aur Upgrade menu kholna aage banayenge)
+                SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.LevelUp, transform.position);
                 OnLevelUp?.Invoke(CurrentLevel);
                 Debug.Log($"[PlayerExperience] Level Up! New Level: {CurrentLevel}");
             }

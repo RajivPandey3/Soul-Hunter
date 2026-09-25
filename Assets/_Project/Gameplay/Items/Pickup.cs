@@ -34,6 +34,7 @@ namespace SoulHunter.Gameplay.Pickups
         {
             _isCollected = true;
             OnPickedUp(player);
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.GoldPickup, transform.position + Vector3.up * 0.5f);
 
             // Auto pool or destroy
             gameObject.SetActive(false);

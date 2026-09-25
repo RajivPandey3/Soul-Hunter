@@ -81,6 +81,7 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 SoulHunter.Gameplay.Audio.AudioManager.Instance.PlaySFX(SoulHunter.Gameplay.Audio.AudioManager.Instance.HealSound);
             }
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Heal, playerTransform.position);
 
             gameObject.SetActive(false);
         }

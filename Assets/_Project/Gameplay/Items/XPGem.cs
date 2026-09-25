@@ -70,6 +70,7 @@ namespace SoulHunter.Gameplay.Pickups
                 SoulHunter.Gameplay.Audio.AudioManager.Instance.PlaySFX(SoulHunter.Gameplay.Audio.AudioManager.Instance.GemPickupSound);
             }
             
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.GemPickup, playerTransform.position + Vector3.up * 0.8f);
             gameObject.SetActive(false); // AutoReturnToPool will push it to stack automatically
         }
     }

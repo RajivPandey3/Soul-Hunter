@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  _projectilePrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  _projectilePrefab: {fileID: 1192744282758312269, guid: 3d40d511f32b3db4aad11ba911b65a4e, type: 3}
   _cooldown: 1.2
   _range: 15
   _projectileSpeed: 20

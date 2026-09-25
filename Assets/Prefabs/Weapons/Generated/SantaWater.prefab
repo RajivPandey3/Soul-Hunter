@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  WaterZonePrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  WaterZonePrefab: {fileID: 9108049167474988430, guid: 466537978abd15648b0046bdede263b8, type: 3}
   DropRadius: 8
 --- !u!1001 &5236900508676097780
 PrefabInstance:

@@ -290,6 +290,30 @@ The owner said the ground looked dated, the sound was not professional, the play
 
 Validated by `PlayerPresentationPlayModeTests` (R: camera pitch and centring; hero turns smoothly and is not mirrored; faces the enemy and plays the upper-body pose while the legs keep their state; stage light shadows; the horde has no shadows or off-screen animation), `HeroAttackLayerTests`, `RenderingSetupTests` and `Cc0AudioTests` (T), and both full suites: EditMode 301/301, PlayMode 42/42, 0 shader errors, save file untouched (`D:\SoulHunter-Validation\run-20260925-feel\`). Performance (Windows build, this machine = the i5-8350U / UHD 620 reference, 1080p pixel count, Medium): Stage 10 at 20:30 with ~300 enemies went from 85-88 FPS (2D renderer, top-down) to 48-57 FPS with shadows on everything. Turning off horde, projectile and pickup shadows, HDR and the always-on intermediate texture, and culling off-screen animation brought it to 76 FPS average and a 37.5 FPS 1% low. A run with ~170 enemies gave 111 FPS. Nobody has looked at it or listened to it in real play yet: `V` for the look, animation and mix is still unverified.
 
+### Projectiles, weapon effects, gameplay VFX and pickups (owner request, 2026-09-25)
+
+The owner said VFX, gems, chest, gold and bullets were not proper. Found:
+- Almost every weapon fired or placed the same orange sphere, `Bullet.prefab`: Magic Wand, Knife, Thousand Edge, Fire Wand, Holy Wand, Gun, Bone, Runetracer, Cherry Bomb (bomb and explosion), Song of Mana, Clock Lancet, Lightning Ring, Peachone, Pentagram and Santa Water. The Axe threw a cylinder and the Cross a magenta sphere (missing material).
+- `Bullet.prefab` carries a `Projectile` script (moves the object forward and blocks `ProjectileDamage`) and is scaled 0.2, so area weapons flew away with a 0.1-unit hit area. Santa Water pools, lightning strikes and Peachone blasts were affected, and Bone and Runetracer were dragged by it.
+- Peachone's `BirdVisual` was never assigned, so it never dropped a bomb, and its bird circled vertically (X-Y).
+- The gameplay pickups (`XP_Gem`, `Chest`, `HealthChiken`) drew a placeholder cube over their SH10 model: the yellow squares in play. The gold coin lay flat, reading as a brown disc.
+- No particle effect existed. `VFXPoolManager` was in no scene, so its death and chest effects never played.
+- Knife, Thousand Edge, Whip, Axe and Cross took their "facing side when no enemy" from the player's `localScale.x`. That stopped working when the hero stopped mirroring.
+
+Now, `WeaponVfxBuilder` (menu Soul Hunter/Content/Build Weapon VFX) generates everything from Unity meshes, the SH10 models, procedural textures and particle systems, using the `SoulHunter/VFX/Particle` shader (additive, or alpha for smoke):
+- **Weapon prefabs:** 18 prefabs in `Assets/Prefabs/Weapons/Projectiles`, each with the components its weapon code expects.
+  - Flying (moved by `Projectile`): magic bolt, fireball, holy bolt, gun tracer, thrown knife, Thousand Edge knife, mana shot, and a Cherry Bomb that explodes when its flight ends.
+  - Physics (Rigidbody velocity + `ProjectileDamage`): spinning bone, glowing rune, tumbling SH10 axe.
+  - Boomerang: a spinning SH10 cross.
+  - Zones that stay where they are placed, with hit areas the size of what is drawn: holy water pool (radius 1.4), lightning strike with a new jagged bolt each time (0.9), Peachone blast (0.9).
+  - Visual only: Pentagram flash, Clock Lancet freeze beam, Peachone bird.
+  - Weapon prefab fields are rewired, and no weapon references `Bullet`, `Axe_Model` or `Cross_Model` any more.
+- **Gameplay VFX:** `Resources/VfxLibrary` holds hit spark, enemy death (soul puff), gem pickup, gold pickup, heal, chest open, level-up and explosion. `VFXPoolManager` creates itself on first use, pools up to 32 of each kind and throttles frequent kinds. Hooks: enemy hit and death, XP gem, gold/magnet/freeze pickups, chicken, chest, level-up, Soul Burst.
+- **Pickups:** placeholder cubes hidden. Gem, chest, chicken, magnet, freeze and coin bob and turn (`PickupIdleMotion`, which moves only the visual child). Gems glow cyan and the coin stands up and glows gold, using a new `_EmissionColor` on the faceted shader. The chest has a gold sparkle beacon. Visuals were enlarged for the tilted camera: gem x1.6, chest x1.4, coin x1.4, chicken x1.2.
+- Peachone's bird now circles on the ground plane and drops blasts under itself. Every facing fallback reads `PlayerController.FacingDirection` (`AutoAttackWeapon.HolderFacing`).
+
+Validated by `WeaponVfxTests` (T: no placeholder references, components per weapon object, library complete and non-looping, pickups without cubes) and `WeaponSweepPlayModeTests` (R: each of the 19 weapons in the real game, never the placeholder objects. Every one hurts enemies 3 units away, Clock Lancet freezes them and Laurel is equipped; kills, hits and level-ups play their effects). Both full suites: EditMode 326/326, PlayMode 62/62, save untouched (`D:\SoulHunter-Validation\run-20260925-vfx\`). `WeaponAimingTests` now expects the knife fallback along the hero's facing, which starts up the screen (+Z); it was +X from the old mirroring. Benchmark (reference laptop, 1080p pixel count, ~300 enemies): 78-84 FPS average and a 43-48 FPS 1% low. In-game screenshots were checked (partial `V`). Look and feel in hands-on play are unverified; the effects are Soul Hunter's own and are not VS art.
+
 ### Validation run 2026-09-24
 
 Commits `0beae7f`..`6f3f9c2` plus the pickup-pool fix were validated in an isolated workspace (`D:\SoulHunter-Validation\editmode-20260924-134853\`, which keeps the results XML and logs), with `Library` copied from the canonical project:

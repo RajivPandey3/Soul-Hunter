@@ -81,8 +81,7 @@ namespace SoulHunter.Gameplay.Weapons
         {
             // Owner decision: lash toward the nearest enemy (facing side when none).
             // The second whip strikes the opposite side, then they alternate.
-            float facing = Mathf.Sign(transform.root.localScale.x);
-            Vector3 aim = AimDirection(new Vector3(facing, 0f, 0f));
+            Vector3 aim = AimDirection(HolderFacing);
             int whips = LevelWhipCount + ExtraAmount;
             for (int i = 0; i < whips; i++)
             {
@@ -132,8 +131,7 @@ namespace SoulHunter.Gameplay.Weapons
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(1f, 0f, 0f, 0.4f);
-            float sign = Mathf.Sign(transform.root.localScale.x);
-            Vector3 attackDirection = new Vector3(sign, 0, 0);
+            Vector3 attackDirection = Application.isPlaying ? HolderFacing : Vector3.right;
             Vector3 boxCenter = transform.position + (attackDirection * (_attackRange / 2f));
             Vector3 halfExtents = new Vector3(_attackRange / 2f, 1f, _attackWidth / 2f);
 

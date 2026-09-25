@@ -108,7 +108,7 @@ namespace SoulHunter.Gameplay.Weapons
                 }
             }
 
-            Vector3 throwDirection = transform.root.localScale.x > 0 ? Vector3.right : Vector3.left;
+            Vector3 throwDirection = HolderFacing;
             if (closestEnemy != null)
             {
                 throwDirection = (closestEnemy.position - transform.position).normalized;

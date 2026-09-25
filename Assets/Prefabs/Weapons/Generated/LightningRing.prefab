@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  LightningStrikePrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  LightningStrikePrefab: {fileID: 9071465984298431652, guid: 24646b678fdd82d4b865e62dde8d0e1c, type: 3}
   StrikeRadius: 15
 --- !u!1001 &341775157125144698
 PrefabInstance:

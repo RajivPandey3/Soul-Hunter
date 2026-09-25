@@ -14,15 +14,28 @@ namespace SoulHunter.Gameplay.Combat
         private int _bombsPerAttack = 1;
         private float _angle = 0f;
 
+        public const float BirdHeight = 1.6f;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            // BirdVisual was never assigned, so Attack() returned at once and Peachone never dropped a bomb.
+            // The prefab now names a bird prefab; the weapon flies its own instance of it.
+            if (BirdVisual != null && !BirdVisual.scene.IsValid())
+                BirdVisual = Instantiate(BirdVisual, transform.position, Quaternion.identity, transform);
+        }
+
         protected override void Update()
         {
             base.Update();
             if (BirdVisual != null)
             {
-                // Circle around player
+                // Circle around the player on the ground plane (it used to circle vertically, in X-Y).
                 _angle += Time.deltaTime * 50f;
-                Vector3 offset = new Vector3(Mathf.Cos(_angle * Mathf.Deg2Rad), Mathf.Sin(_angle * Mathf.Deg2Rad), 0) * CircleRadius;
-                BirdVisual.transform.position = transform.position + offset;
+                float rad = _angle * Mathf.Deg2Rad;
+                Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * CircleRadius;
+                BirdVisual.transform.position = transform.position + offset + Vector3.up * BirdHeight;
+                BirdVisual.transform.rotation = Quaternion.LookRotation(new Vector3(-Mathf.Sin(rad), 0f, Mathf.Cos(rad)));
             }
         }
 
@@ -43,7 +56,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             for (int i = 0; i < _bombsPerAttack + ExtraAmount; i++)
             {
-                Vector3 dropPos = BirdVisual.transform.position;
+                Vector3 dropPos = BirdVisual.transform.position - Vector3.up * BirdHeight; // blast on the ground under the bird
                 GameObject bomb = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(BombPrefab, dropPos, Quaternion.identity)
                     : Instantiate(BombPrefab, dropPos, Quaternion.identity);

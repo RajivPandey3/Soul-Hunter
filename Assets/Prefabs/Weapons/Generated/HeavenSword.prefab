@@ -45,7 +45,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7cb466918804554a8583fee0d91289d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _crossPrefab: {fileID: 100102498769088332, guid: d06eb93709c624d43a49fde8575009db, type: 3}
+  CurrentLevel: 1
+  DamageAmount: 10
+  AttackCooldown: 1.5
+  _crossPrefab: {fileID: 285971604370658771, guid: a93dc09815998f44788d3fc6edd50166, type: 3}
   _cooldown: 2
   _speed: 16
   _returnTime: 1

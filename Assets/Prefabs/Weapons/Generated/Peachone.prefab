@@ -48,8 +48,8 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  BirdVisual: {fileID: 0}
-  BombPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  BirdVisual: {fileID: 2299259504997630650, guid: 156535f1ba9316d49a51e775431de075, type: 3}
+  BombPrefab: {fileID: 3785088900147045623, guid: b74d58eb000c19a41bff8078fca2aa49, type: 3}
   CircleRadius: 3
 --- !u!1001 &8300329854285255074
 PrefabInstance:

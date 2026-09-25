@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c2d330b6f067db4dbd41ff4c5e0db39, type: 3}
+  m_Name: VfxLibrary
+  m_EditorClassIdentifier: 
+  HitSpark: {fileID: 3637931270944732113, guid: 6c0fa1b0667feb44ab8cd7a76e0f8511, type: 3}
+  EnemyDeath: {fileID: 5727914104058772024, guid: d4fa82f3473c0624585d75d1de4e8e82, type: 3}
+  GemPickup: {fileID: 6032564984371691050, guid: 365cf00d6e9e040488d09bc3700050d6, type: 3}
+  GoldPickup: {fileID: 3310058766994492668, guid: c4f43298ead3bab4095e713f7ea65b2e, type: 3}
+  Heal: {fileID: 7812737952360339805, guid: 666a80b1d55539d4ebc0ca8b1f6360a0, type: 3}
+  ChestOpen: {fileID: 5937656183911978745, guid: eb3d02c3ce79523469398f32d34a19a8, type: 3}
+  LevelUp: {fileID: 6290129022103574728, guid: 786f0d32d66454643b465ec0098c70dd, type: 3}
+  Explosion: {fileID: 4418474738003580358, guid: 154dde8086403964a9a003ec1fa97e0a, type: 3}

@@ -109,8 +109,8 @@ namespace SoulHunter.Gameplay.Weapons
                 rb.angularVelocity = Vector3.zero;
 
                 // Owner decision: throw toward the nearest enemy (facing side when none), still in an upward arc.
-                float sign = Mathf.Sign(transform.root.localScale.x);
-                Vector3 aim = AimDirection(new Vector3(sign, 0f, 0f));
+                // The player no longer mirrors itself (localScale.x stays 1), so fall back to where the hero faces.
+                Vector3 aim = AimDirection(HolderFacing);
                 // Top-down adaptation: VS's axe arcs up the *screen*. Built as a 3D height arc it flew
                 // ~7 units over nearby enemies and landed ~15 units away. Fly along the ground instead.
                 rb.useGravity = false;

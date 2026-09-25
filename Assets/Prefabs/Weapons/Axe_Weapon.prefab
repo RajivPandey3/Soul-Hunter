@@ -45,10 +45,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a58a71ad05a66c4687c3b05acb887fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _axePrefab: {fileID: 3969582324266140904, guid: d8d4d7b54429e2443be0c86244914fb6, type: 3}
+  CurrentLevel: 1
+  DamageAmount: 10
+  AttackCooldown: 1.5
+  _axePrefab: {fileID: 3781992811130695033, guid: 2c3769a94b901544cab38fba46c14cec, type: 3}
   _cooldown: 2
-  _upwardForce: 15
-  _forwardForce: 5
+  _groundSpeed: 12
   _damage: 25
 --- !u!1001 &7363985253211550730
 PrefabInstance:

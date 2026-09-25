@@ -48,7 +48,7 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  BulletPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  BulletPrefab: {fileID: 2259916499533006485, guid: 9dfa83e4803ac2b46b920fe47acb8d5b, type: 3}
   ShootCorners: 1
 --- !u!1001 &7876297237528370866
 PrefabInstance:

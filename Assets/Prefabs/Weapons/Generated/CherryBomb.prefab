@@ -48,8 +48,8 @@ MonoBehaviour:
   CurrentLevel: 1
   DamageAmount: 10
   AttackCooldown: 1.5
-  BombPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
-  ExplosionPrefab: {fileID: 8505605179430613185, guid: bbb0262511b2330408f3ca91f0907f5d, type: 3}
+  BombPrefab: {fileID: 7957268328218390563, guid: aaa9a2b64da70624fa69e4613333b4af, type: 3}
+  ExplosionPrefab: {fileID: 3785088900147045623, guid: b74d58eb000c19a41bff8078fca2aa49, type: 3}
 --- !u!1001 &8448948770542032752
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -90,10 +90,7 @@ namespace SoulHunter.Gameplay.Combat
             Debug.Log("<color=red>[Soul Burst] BOOOOOOM! SCREEN WIPE!</color>");
             
             // Screen Shake / VFX would go here
-            if (SoulHunter.Gameplay.VFX.VFXPoolManager.Instance != null)
-            {
-                SoulHunter.Gameplay.VFX.VFXPoolManager.Instance.PlayChestOpenVFX(transform.position); // Placeholder VFX
-            }
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Explosion, transform.position);
 
             // Zero Garbage SphereCast
             int hitCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, _explosionRadius, _hitsBuffer, _enemyLayer);

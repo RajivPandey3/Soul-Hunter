@@ -51,11 +51,7 @@ namespace SoulHunter.Gameplay.AI
             var stats = player != null ? player.Stats : null;
             float luck = stats != null ? Mathf.Max(1f, stats.Luck) : 1f;
 
-            var vfxManager = SoulHunter.Gameplay.VFX.VFXPoolManager.Instance;
-            if (vfxManager != null)
-            {
-                vfxManager.PlayEnemyDeathVFX(transform.position);
-            }
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {

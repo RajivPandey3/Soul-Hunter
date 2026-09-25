@@ -102,6 +102,7 @@ namespace SoulHunter.Gameplay.AI
         {
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFXThrottled(audio.EnemyHitSound, SoulHunter.Gameplay.Audio.AudioManager.EnemyHitInterval, 0.6f);
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.HitSpark, transform.position + Vector3.up * 1f);
         }
 
         private void PlayDeathSound()
@@ -136,6 +137,9 @@ namespace SoulHunter.Gameplay.AI
                 Rigidbody.angularVelocity = Vector3.zero;
             }
         }
+
+        /// <summary>True while a Time Freeze or Clock Lancet holds this enemy.</summary>
+        public bool IsFrozen => _currentState is EnemyFrozenState;
 
         /// <summary>Only bosses cast shadows (EnemySpawner turns them on); the horde does not, for performance.</summary>
         public void SetCastsShadows(bool cast)
