@@ -40,6 +40,16 @@ namespace SoulHunter.Gameplay.Core
         public static bool IsShowcaseGround(string objectName) =>
             objectName.StartsWith("SH10_L") && objectName.Contains("_Ground");
 
+        /// <summary>
+        /// The showcase also displays one still SH10_Lxx_Enemy, _Elite and _Boss model. In play they stood
+        /// at the spawn point looking like enemies that never move or die; real ones come from EnemySpawner.
+        /// </summary>
+        public static bool IsShowcaseStatue(string objectName) =>
+            System.Text.RegularExpressions.Regex.IsMatch(objectName, @"^SH10_L\d\d_(Enemy|Elite|Boss)");
+
+        /// <summary>Showcase objects that must not appear in the playable campaign.</summary>
+        public static bool IsHiddenInPlay(string objectName) => IsShowcaseGround(objectName) || IsShowcaseStatue(objectName);
+
         private IEnumerator LoadShowcase(string sceneName)
         {
             if (string.IsNullOrEmpty(sceneName)) yield break;
@@ -59,10 +69,11 @@ namespace SoulHunter.Gameplay.Core
                 foreach (var camera in levelCamera.GetComponentsInChildren<Camera>(true))
                     camera.enabled = false;
             // InfiniteMap lays the stage floor everywhere; the showcase's own fixed 3x3
-            // ground would overlap it (z-fighting) and end at the showcase edge.
+            // ground would overlap it (z-fighting) and end at the showcase edge. Its still
+            // enemy/elite/boss display models are hidden too; the scenery props stay.
             foreach (var root in _loadedScene.GetRootGameObjects())
                 foreach (var node in root.GetComponentsInChildren<Transform>(true))
-                    if (IsShowcaseGround(node.name)) node.gameObject.SetActive(false);
+                    if (IsHiddenInPlay(node.name)) node.gameObject.SetActive(false);
             Debug.Log($"[CampaignSceneConnector] Connected {_loadedScene.name} to playable campaign.");
         }
     }

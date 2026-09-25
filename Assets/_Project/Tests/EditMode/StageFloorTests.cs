@@ -51,5 +51,16 @@ namespace SoulHunter.Tests.EditMode
         {
             Assert.That(CampaignSceneConnector.IsShowcaseGround(objectName), Is.EqualTo(expected));
         }
+
+        [TestCase("SH10_L01_Enemy", true)]
+        [TestCase("SH10_L05_Elite", true)]
+        [TestCase("SH10_L10_Boss", true)]
+        [TestCase("SH10_L02_Pine", false)]
+        [TestCase("SH10_L01_Crypt", false)]
+        public void ShowcaseStatues_AreHiddenInPlay_SceneryStays(string objectName, bool hidden)
+        {
+            // Learning Comment: Showcase ke khade enemy putle game mein na dikhen; baaki sajawat rahe.
+            Assert.That(CampaignSceneConnector.IsHiddenInPlay(objectName), Is.EqualTo(hidden));
+        }
     }
 }

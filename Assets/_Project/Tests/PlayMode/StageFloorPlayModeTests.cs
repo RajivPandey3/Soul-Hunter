@@ -85,6 +85,14 @@ namespace SoulHunter.Tests.PlayMode
                     .Where(t => t.gameObject.activeInHierarchy && CampaignSceneConnector.IsShowcaseGround(t.name))
                     .Select(t => t.name).ToList();
                 Assert.That(active, Is.Empty, $"{scene.name} ground overlaps the stage floor. " + Errors());
+                // The showcase also displays a still Enemy, Elite and Boss model; in play they stood at the
+                // spawn point looking like enemies that never move or die.
+                var statues = scene.GetRootGameObjects()
+                    .SelectMany(r => r.GetComponentsInChildren<Transform>())
+                    .Where(t => t.gameObject.activeInHierarchy &&
+                                System.Text.RegularExpressions.Regex.IsMatch(t.name, @"^SH10_L\d\d_(Enemy|Elite|Boss)"))
+                    .Select(t => t.name).ToList();
+                Assert.That(statues, Is.Empty, $"{scene.name} shows still enemy models in play. " + Errors());
             }
         }
     }
