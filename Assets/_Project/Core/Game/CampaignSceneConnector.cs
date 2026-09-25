@@ -36,6 +36,10 @@ namespace SoulHunter.Gameplay.Core
             _loadRoutine = StartCoroutine(LoadShowcase(sceneName));
         }
 
+        /// <summary>Showcase ground tiles are named SH10_Lxx_Ground (plus Unity's " (n)" suffix).</summary>
+        public static bool IsShowcaseGround(string objectName) =>
+            objectName.StartsWith("SH10_L") && objectName.Contains("_Ground");
+
         private IEnumerator LoadShowcase(string sceneName)
         {
             if (string.IsNullOrEmpty(sceneName)) yield break;
@@ -54,6 +58,11 @@ namespace SoulHunter.Gameplay.Core
             foreach (var levelCamera in _loadedScene.GetRootGameObjects())
                 foreach (var camera in levelCamera.GetComponentsInChildren<Camera>(true))
                     camera.enabled = false;
+            // InfiniteMap lays the stage floor everywhere; the showcase's own fixed 3x3
+            // ground would overlap it (z-fighting) and end at the showcase edge.
+            foreach (var root in _loadedScene.GetRootGameObjects())
+                foreach (var node in root.GetComponentsInChildren<Transform>(true))
+                    if (IsShowcaseGround(node.name)) node.gameObject.SetActive(false);
             Debug.Log($"[CampaignSceneConnector] Connected {_loadedScene.name} to playable campaign.");
         }
     }

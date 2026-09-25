@@ -7,6 +7,8 @@ namespace SoulHunter.Gameplay.Data
     {
         public CharacterData[] Characters;
         public UpgradeData[] Upgrades;
+        [UnityEngine.Tooltip("Floor tile per stage (index 0 = Level 1), used by InfiniteMap.")]
+        public GameObject[] StageFloors;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
 
         /// <summary>Old saves may still name a renamed character (Antonio became Corvan on 2026-09-25).</summary>

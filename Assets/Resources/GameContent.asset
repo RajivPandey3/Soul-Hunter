@@ -316,3 +316,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3c23fa6bfb65ee442800020eb29b056b, type: 2}
   - {fileID: 11400000, guid: b0ffde88748a3f04cac08da24d78b16e, type: 2}
   - {fileID: 11400000, guid: 7d0ef5c5d6989f54e80f37310dbcf2c7, type: 2}
+  StageFloors:
+  - {fileID: 3173154883157961624, guid: 83c2ff14bbbe57641bea102b4c48834a, type: 3}
+  - {fileID: 1439071939555785894, guid: 1e6312b99115d1b41b8f8b632c2f60d1, type: 3}
+  - {fileID: 1059059865747739296, guid: 246ee0b57fface34b8a50f7a19ad022f, type: 3}
+  - {fileID: 4384079298280480869, guid: e733ee7aa997f524b84a03b6addbfa58, type: 3}
+  - {fileID: 3047368031183456493, guid: 6a376c918e3336a409ee35f5800244a1, type: 3}
+  - {fileID: 6292315805018988969, guid: 2cf1c589ea55a834d85625fc8e6ee089, type: 3}
+  - {fileID: 3975147643099040731, guid: 71ca33fc068fbe74892bf9edb265ca12, type: 3}
+  - {fileID: 1396327021201846101, guid: a0ae29b4583afc94cbac0a413fd57944, type: 3}
+  - {fileID: 41472951783947860, guid: 58cce38284c33e74492184f1a7b7701a, type: 3}
+  - {fileID: 7649708441699079349, guid: 742d17b83abcfac4c826bbd9f808778d, type: 3}
