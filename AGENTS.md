@@ -322,6 +322,14 @@ The first test version added 22 gold to the owner's real save (4482 -> 4504), be
 
 The owner then rejected the online CC0 samples shown (Kenney and Quaternius coins, gems and chests, and the Kenney Particle Pack). They asked for modern, Soul Hunter-style 3D assets and VFX, made in Blender or Unity or taken from the Unity Asset Store. Asset Store packs need the owner's account (My Assets); agents cannot download them.
 
+Editor play (owner request, 2026-09-25: "play it yourself in the Unity Editor"): `AutoplayEditorLauncher` has the menu items Soul Hunter/Autoplay/Play 3 (or 10) Minutes In Editor, and a CLI mode (`-executeMethod SoulHunter.Editor.Autoplay.AutoplayEditorLauncher.RunFromCommandLine -sh-autoplay <folder> -sh-autoplay-exit`). It opens Bootstrap and enters Play Mode with the bot; editor screenshots use the Game view with the UI. First editor run, on the isolated copy in a GUI editor for 3 min as Kael: level 14, 797 kills, 88 gold, 0 errors, min 57 FPS, save unchanged (`D:\SoulHunter-Validation\autoplay-editor-01\`).
+
+Seen while playing:
+- The level-up screen is unfinished next to VS: plain white buttons with red internal type names ("SongOfMana Lv.2 (Lv 2)"), no icon, description or NEW tag.
+- The player HP bar is a red strip across the whole bottom of the screen instead of a small bar under the hero.
+
+Flaky: one full PlayMode run stopped once in the Loading scene while booting (`WeaponSweep` Peachone), and the next test threw a NullReferenceException. The fixture then passed 21/21 twice.
+
 ### Pickups v2: Soul Gems, Soul Coins, Soul Reliquary chest (owner-approved, 2026-09-25)
 
 Owner flow: online samples first, then approval. The CC0 samples were rejected in favour of "modern Soul Hunter-style" designs. `ArtSource/Generators/build_pickups_v2.py` builds them in Blender; concept renders are in `ArtSource/SH10_Pickups_v2/Previews`. The owner approved the close-ups:

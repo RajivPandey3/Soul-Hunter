@@ -86,8 +86,24 @@ namespace SoulHunter.Gameplay.Core
         private static void StartIfRequested()
         {
             string output = ArgValue(Argument);
-            if (string.IsNullOrEmpty(output)) return;
             var inv = CultureInfo.InvariantCulture;
+#if UNITY_EDITOR
+            // Editor menu (Soul Hunter/Autoplay): the request survives the Play Mode domain reload in SessionState.
+            string request = UnityEditor.SessionState.GetString("SH_Autoplay_Request", "");
+            if (string.IsNullOrEmpty(output) && !string.IsNullOrEmpty(request))
+            {
+                UnityEditor.SessionState.EraseString("SH_Autoplay_Request");
+                var parts = request.Split('|');
+                Launch(new Settings
+                {
+                    OutputFolder = parts[0],
+                    Minutes = parts.Length > 1 && float.TryParse(parts[1], NumberStyles.Float, inv, out var minutes) ? minutes : 3f,
+                    Character = parts.Length > 2 ? parts[2] : "Kael",
+                });
+                return;
+            }
+#endif
+            if (string.IsNullOrEmpty(output)) return;
             var settings = new Settings
             {
                 OutputFolder = output,
@@ -333,8 +349,8 @@ namespace SoulHunter.Gameplay.Core
             string file = Path.Combine(Config.OutputFolder, "shots", $"{_shots.Count:000}_{name}.png");
             _shots.Add(Path.GetFileName(file));
             // No WaitForEndOfFrame: it never resumes in a batchmode editor, which hung the report.
-            // CaptureScreenshot already captures at the end of the frame.
-            if (!Application.isEditor)
+            // CaptureScreenshot already captures at the end of the frame (a player, or the editor's Game view, with UI).
+            if (!Application.isBatchMode)
             {
                 ScreenCapture.CaptureScreenshot(file);
                 yield break;
@@ -410,7 +426,13 @@ namespace SoulHunter.Gameplay.Core
             File.WriteAllText(Path.Combine(Config.OutputFolder, "summary.json"), summary);
             Debug.Log($"[AutoplayBot] Finished ({reason}). Report in {Config.OutputFolder}");
             yield return new WaitForSecondsRealtime(0.5f);
-            if (Config.QuitWhenDone && !Application.isEditor) Application.Quit();
+            if (!Config.QuitWhenDone) yield break;
+#if UNITY_EDITOR
+            if (HasArg("-sh-autoplay-exit")) UnityEditor.EditorApplication.Exit(0);
+            else UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         private static string Escape(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", " ").Replace("\r", " ");
