@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Whip Lv.1
   Description: Whip upgrade level 1.
-  Icon: {fileID: 0}
+  Icon: {fileID: -8349577252986738125, guid: 91488db1dd4d2124ca1a24bbd4e41c94, type: 3}
   Type: 1
   Level: 1

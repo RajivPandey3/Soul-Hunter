@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Bone Lv.2
   Description: Bone upgrade level 2.
-  Icon: {fileID: 0}
+  Icon: {fileID: 8628547636436244734, guid: fea9b2c30a51a1a4880cc587eab6979a, type: 3}
   Type: 19
   Level: 2

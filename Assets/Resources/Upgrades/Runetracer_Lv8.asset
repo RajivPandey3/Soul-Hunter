@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Runetracer Lv.8
   Description: Runetracer upgrade level 8.
-  Icon: {fileID: 0}
+  Icon: {fileID: 658483851337776300, guid: b69ec6d02b67fd642bcd2179ab653c78, type: 3}
   Type: 15
   Level: 8

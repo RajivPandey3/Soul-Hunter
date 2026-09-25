@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Pentagram Lv.7
   Description: Pentagram upgrade level 7.
-  Icon: {fileID: 0}
+  Icon: {fileID: -6118171906269593483, guid: 23f1deeb219db204eb984e1b287a3990, type: 3}
   Type: 16
   Level: 7

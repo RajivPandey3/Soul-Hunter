@@ -15,6 +15,6 @@ MonoBehaviour:
   UpgradeName: Cross_Wand_Lv1
   Description: Acts like a boomerang, returning after a delay. (Dushman ki taraf
     ja kar boomerang ki tarah wapas aata hai aur dono taraf se kaat'ta hai.)
-  Icon: {fileID: 0}
+  Icon: {fileID: 6203059290615345688, guid: 3505075ec2b93d34d86ad6a535864442, type: 3}
   Type: 7
   Level: 1

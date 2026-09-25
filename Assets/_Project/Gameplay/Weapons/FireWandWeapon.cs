@@ -61,6 +61,7 @@ namespace SoulHunter.Gameplay.Combat
             if (proj == null) proj = fireball.AddComponent<Projectile>();
             
             proj.Initialize(fireDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 3f);
+            proj.AddBounces(ExtraBounces);
             
             var damageDealer = fireball.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = fireball.AddComponent<ProjectileDamage>();

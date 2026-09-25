@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Gun Lv.6
   Description: Gun upgrade level 6.
-  Icon: {fileID: 0}
+  Icon: {fileID: 477055348758461996, guid: 7d4359b8ddc1cf94db8b593f66e4d0ae, type: 3}
   Type: 23
   Level: 6

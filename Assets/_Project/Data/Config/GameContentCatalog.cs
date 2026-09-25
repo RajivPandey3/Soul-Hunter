@@ -8,6 +8,10 @@ namespace SoulHunter.Gameplay.Data
         public CharacterData[] Characters;
         public UpgradeData[] Upgrades;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
+
+        /// <summary>Old saves may still name a renamed character (Antonio became Corvan on 2026-09-25).</summary>
+        public static string CurrentName(string name) => name == "Antonio" ? "Corvan" : name;
+
         /// <summary>
         /// Exact match only (CharacterName, asset name, or "Char_" + name); null when not found.
         /// Use this for gameplay data (stats, starting weapon) so an unknown name never borrows
@@ -16,6 +20,7 @@ namespace SoulHunter.Gameplay.Data
         public static CharacterData FindCharacterExact(string name)
         {
             if (string.IsNullOrEmpty(name)) return null;
+            name = CurrentName(name);
             var catalog = Load();
             if (catalog == null || catalog.Characters == null) return null;
             foreach (var character in catalog.Characters)
@@ -25,6 +30,7 @@ namespace SoulHunter.Gameplay.Data
 
         public static CharacterData FindCharacter(string name)
         {
+            name = CurrentName(name);
             var catalog = Load();
             if (catalog == null || catalog.Characters == null) return null;
             foreach (var character in catalog.Characters)

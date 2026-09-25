@@ -225,7 +225,7 @@ namespace SoulHunter.UI
             return save != null ? save.CurrentData : null;
         }
 
-        private static string SavedSelection() => SaveData()?.SelectedCharacterName;
+        private static string SavedSelection() => GameContentCatalog.CurrentName(SaveData()?.SelectedCharacterName);
 
         private UpgradeData WeaponInfo(UpgradeData.UpgradeType type)
         {

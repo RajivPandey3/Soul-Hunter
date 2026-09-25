@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Pummarola Lv.7
   Description: Pummarola upgrade level 7.
-  Icon: {fileID: 0}
+  Icon: {fileID: -6625864876067820037, guid: b47a1664c6a27014a8d0e24855a5ffab, type: 3}
   Type: 28
   Level: 7

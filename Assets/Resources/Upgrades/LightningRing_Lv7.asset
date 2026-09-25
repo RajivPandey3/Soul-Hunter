@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: LightningRing Lv.7
   Description: LightningRing upgrade level 7.
-  Icon: {fileID: 0}
+  Icon: {fileID: 7898527009763241430, guid: 42058cf485fe1804ea767dcf932f6fb8, type: 3}
   Type: 8
   Level: 7

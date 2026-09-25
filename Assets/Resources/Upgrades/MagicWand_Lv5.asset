@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: MagicWand Lv.5
   Description: Increases base damage by 10.
-  Icon: {fileID: 0}
+  Icon: {fileID: 1395071446575585912, guid: b5f8aa21578b8e84ab39971b395b07f9, type: 3}
   Type: 0
   Level: 5

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: SkullOManiac Lv.6
   Description: SkullOManiac upgrade level 6.
-  Icon: {fileID: 0}
+  Icon: {fileID: 6968413500004054039, guid: 3c28eea5e26f940439c059d9888861a4, type: 3}
   Type: 32
   Level: 6

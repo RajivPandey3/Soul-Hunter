@@ -24,3 +24,4 @@ MonoBehaviour:
   StartingCooldown: 1
   StartingArmor: 0
   StartingShieldSeconds: 10
+  ShieldVisualPrefab: {fileID: 8614413424618206056, guid: 5a7637e431712a64a8520e1a70da2b40, type: 3}

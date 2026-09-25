@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: ClockLancet Lv.8
   Description: ClockLancet upgrade level 8.
-  Icon: {fileID: 0}
+  Icon: {fileID: -7440709273541419159, guid: da1d3b3b1b12bc84cacefd73df9aa0bb, type: 3}
   Type: 17
   Level: 8

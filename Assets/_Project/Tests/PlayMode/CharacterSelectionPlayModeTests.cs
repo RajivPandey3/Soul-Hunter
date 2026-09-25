@@ -77,7 +77,43 @@ namespace SoulHunter.Tests.PlayMode
                 int before = health.CurrentHealth;
                 health.TakeDamage(new DamagePacket(20, player.transform.position, Vector3.zero) { IgnoresHitInvulnerability = true });
                 Assert.That(health.CurrentHealth, Is.EqualTo(before), "Shield blocks the hit. " + Errors());
+
+                var visual = player.GetComponentInChildren<StartingShieldVisual>();
+                Assert.IsNotNull(visual, "Sylas's shield is visible while it lasts. " + Errors());
+                Assert.IsNotNull(visual.Visual, "Shield visual model spawned. " + Errors());
+                health.ShieldedUntil = Time.time - 1f; // end the shield now
+                yield return null;
+                yield return null;
+                Assert.IsNull(player.GetComponentInChildren<StartingShieldVisual>(), "Shield visual is removed when the shield ends.");
                 Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+            }
+            finally
+            {
+                save.CurrentData.SelectedCharacterName = previousSelection;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Seraphina_ProjectilesBounceThreeExtraTimes()
+        {
+            var load = SceneManager.LoadSceneAsync("Bootstrap");
+            Assert.IsNotNull(load, "Bootstrap is not in Build Settings.");
+            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
+            var save = GameServices.Instance.Get<SaveService>();
+            string previousSelection = save.CurrentData.SelectedCharacterName;
+            save.CurrentData.SelectedCharacterName = "Seraphina"; // in memory only, never saved
+            try
+            {
+                GameServices.Instance.Get<SoulHunter.Core.Scenes.SceneService>().LoadSceneAsync("Main_Gameplay");
+                yield return WaitForFreshGameplay(previousPlayer: null);
+
+                // Her starting weapon fires at the horde; every live shot must carry her 3 extra bounces.
+                var field = typeof(Projectile).GetField("_maxBounces", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                Projectile shot = null;
+                yield return WaitUntilRealtime(() =>
+                    (shot = Object.FindObjectsByType<Projectile>(FindObjectsSortMode.None).FirstOrDefault(p => p.isActiveAndEnabled)) != null,
+                    "Seraphina's first projectile");
+                Assert.That((int)field.GetValue(shot), Is.GreaterThanOrEqualTo(3), "Seraphina's projectile has her 3 extra bounces. " + Errors());
             }
             finally
             {

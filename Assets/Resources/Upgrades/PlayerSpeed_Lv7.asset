@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: PlayerSpeed Lv.7
   Description: PlayerSpeed upgrade level 7.
-  Icon: {fileID: 0}
+  Icon: {fileID: 2255866367331030390, guid: 5dc1dcbda5f8d56469e7185e12f7076d, type: 3}
   Type: 3
   Level: 7

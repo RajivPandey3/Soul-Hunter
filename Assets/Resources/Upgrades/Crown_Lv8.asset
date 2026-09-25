@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Crown Lv.8
   Description: Crown upgrade level 8.
-  Icon: {fileID: 0}
+  Icon: {fileID: 6849961437476997493, guid: bd811006775bf4d4a9b14a12078e63f1, type: 3}
   Type: 31
   Level: 8

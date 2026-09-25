@@ -34,6 +34,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (proj == null) proj = bomb.AddComponent<Projectile>();
                 
                 proj.Initialize(randomDir, 7f * SpeedMultiplier, ScaledDamage(DamageAmount), 4f);
+                proj.AddBounces(ExtraBounces);
                 
                 // Note: Needs a specialized collision script to spawn ExplosionPrefab on bounce.
                 // This is a simplified projectile implementation.

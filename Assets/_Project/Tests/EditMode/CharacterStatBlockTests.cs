@@ -212,6 +212,8 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(Catalog("Aria").StartingGrowth, Is.EqualTo(1.2f).Within(0.001f));
             Assert.That(Catalog("Draven").StartingAmount, Is.EqualTo(2));
             Assert.That(Catalog("Gideon").StartingArea, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(Catalog("Gideon").StartingMight, Is.EqualTo(1f).Within(0.001f), "Gideon ki description sirf Area ka wada karti hai.");
+            Assert.That(Catalog("Sylas").ShieldVisualPrefab, Is.Not.Null, "Sylas ki shield dikhni chahiye.");
             Assert.That(Catalog("Isolde").StartingCooldown, Is.EqualTo(0.85f).Within(0.001f));
             Assert.That(Catalog("Kaelen").CritDamageMultiplier, Is.EqualTo(3f));
             Assert.That(Catalog("Lumina").StartingRecovery, Is.EqualTo(1f));
@@ -223,6 +225,44 @@ namespace SoulHunter.Tests.EditMode
             var corvan = Catalog("Corvan");
             Assert.That(corvan.LevelBonus, Is.EqualTo(CharacterData.LevelBonusStat.Might));
             Assert.That(corvan.LevelBonusEveryLevels, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void LegacyAntonioSave_ResolvesToCorvan()
+        {
+            // Learning Comment: Purane save mein "Antonio" ho to bhi Corvan mile, default nahi.
+            Assert.That(GameContentCatalog.FindCharacterExact("Antonio"), Is.SameAs(Catalog("Corvan")));
+            Assert.That(GameContentCatalog.CurrentName("Kael"), Is.EqualTo("Kael"));
+        }
+
+        [Test]
+        public void StartingShieldVisual_AppearsOnlyWhileShielded()
+        {
+            // Learning Comment: Shield ke dauran visual dikhe; shield na ho to kuch na bane.
+            CreatePlayer();
+            var health = _object.GetComponent<HealthController>();
+            var prefab = new GameObject("ShieldPrefab");
+            try
+            {
+                Assert.That(StartingShieldVisual.Attach(health, prefab), Is.Null, "Shield nahi to visual nahi.");
+                health.ShieldedUntil = Time.time + 10f;
+                var shield = StartingShieldVisual.Attach(health, prefab);
+                Assert.That(shield, Is.Not.Null);
+                Assert.That(shield.transform.parent, Is.SameAs(_object.transform));
+                Assert.That(shield.Visual, Is.Not.Null);
+                Assert.That(shield.Visual.activeSelf, Is.True);
+            }
+            finally { Object.DestroyImmediate(prefab); }
+        }
+
+        [Test]
+        public void EveryUpgrade_HasAnIcon()
+        {
+            // Learning Comment: Select screen cards aur HUD slots mein har weapon/passive ka icon dikhe.
+            var upgrades = Resources.LoadAll<UpgradeData>("Upgrades");
+            Assert.That(upgrades, Is.Not.Empty);
+            foreach (var upgrade in upgrades)
+                Assert.That(upgrade.Icon, Is.Not.Null, $"{upgrade.name} ka icon nahi hai.");
         }
 
         [Test]

@@ -15,6 +15,6 @@ MonoBehaviour:
   UpgradeName: Garlic_Wand_Lv1
   Description: Damages enemies around you. (Player ke aas-paas aane wale har dushman
     ko jalata hai.)
-  Icon: {fileID: 0}
+  Icon: {fileID: -1942978020547984136, guid: 68bfc11e490c5c54cab679f2635dc410, type: 3}
   Type: 2
   Level: 1

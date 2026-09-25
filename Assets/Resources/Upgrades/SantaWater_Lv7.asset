@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: SantaWater Lv.7
   Description: SantaWater upgrade level 7.
-  Icon: {fileID: 0}
+  Icon: {fileID: 4417556809098773341, guid: d98b5964a95327944b29bbffae77ab52, type: 3}
   Type: 10
   Level: 7

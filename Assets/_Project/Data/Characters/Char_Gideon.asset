@@ -19,7 +19,7 @@ MonoBehaviour:
   StartingWeapon: 5
   BaseMaxHealth: 200
   BaseMoveSpeed: 0.8
-  StartingMight: 1.5
+  StartingMight: 1
   StartingArea: 1.5
   StartingCooldown: 1
   StartingArmor: 0

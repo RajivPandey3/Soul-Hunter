@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Peachone Lv.8
   Description: Peachone upgrade level 8.
-  Icon: {fileID: 0}
+  Icon: {fileID: -5696232168332645895, guid: 44b7f02a1062bc94f932c20773e61330, type: 3}
   Type: 20
   Level: 8

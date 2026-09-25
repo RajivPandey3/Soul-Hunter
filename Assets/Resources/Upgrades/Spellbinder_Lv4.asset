@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Spellbinder Lv.4
   Description: Spellbinder upgrade level 4.
-  Icon: {fileID: 0}
+  Icon: {fileID: -2084348082026221834, guid: e93ec3b06206aea42a0e9ee86739adaa, type: 3}
   Type: 25
   Level: 4

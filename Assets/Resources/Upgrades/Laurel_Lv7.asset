@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Laurel Lv.7
   Description: Adds one shield charge slot.
-  Icon: {fileID: 0}
+  Icon: {fileID: -1251007986208197992, guid: b1d5d1dc69b110244b5b8170b6cc8554, type: 3}
   Type: 18
   Level: 7

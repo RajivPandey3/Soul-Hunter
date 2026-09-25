@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: MaxHealth Lv.6
   Description: MaxHealth upgrade level 6.
-  Icon: {fileID: 0}
+  Icon: {fileID: 7638726196213528408, guid: cb5b16d7ffaef6d4592f582d49bbdf46, type: 3}
   Type: 4
   Level: 6

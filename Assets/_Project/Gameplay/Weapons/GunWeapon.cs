@@ -47,6 +47,7 @@ namespace SoulHunter.Gameplay.Combat
                     var proj = bullet.GetComponent<Projectile>();
                     if (proj == null) proj = bullet.AddComponent<Projectile>();
                     proj.Initialize(spreadDir, 20f * SpeedMultiplier, ScaledDamage(DamageAmount), 2f);
+                    proj.AddBounces(ExtraBounces);
                     
                     var damageDealer = bullet.GetComponent<ProjectileDamage>();
                     if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();

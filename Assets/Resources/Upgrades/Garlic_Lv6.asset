@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Garlic Lv.6
   Description: Garlic upgrade level 6.
-  Icon: {fileID: 0}
+  Icon: {fileID: -1942978020547984136, guid: 68bfc11e490c5c54cab679f2635dc410, type: 3}
   Type: 2
   Level: 6

@@ -65,5 +65,7 @@ namespace SoulHunter.Gameplay.Data
         public float LowHealthSpeedBonus = 0f;
         [Tooltip("Seconds of full damage immunity when the run starts.")]
         public float StartingShieldSeconds = 0f;
+        [Tooltip("Shown around the player while the starting shield lasts (blinks near the end).")]
+        public GameObject ShieldVisualPrefab;
     }
 }

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: CherryBomb Lv.4
   Description: CherryBomb upgrade level 4.
-  Icon: {fileID: 0}
+  Icon: {fileID: 6046647134197512536, guid: 52c77657319c59d4d9fad1e7fab8331c, type: 3}
   Type: 22
   Level: 4

@@ -259,7 +259,10 @@ namespace SoulHunter.Gameplay.Player
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && character.BaseMaxHealth > 0) health.Initialize(character.BaseMaxHealth);
             if (health != null && stats != null && stats.StartingShieldSeconds > 0f)
+            {
                 health.ShieldedUntil = Time.time + stats.StartingShieldSeconds;
+                StartingShieldVisual.Attach(health, character.ShieldVisualPrefab);
+            }
         }
 
         private void OnDashEvent(PlayerDashEvent dashEvent)

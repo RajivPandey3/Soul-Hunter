@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Knife Lv.4
   Description: Knife upgrade level 4.
-  Icon: {fileID: 0}
+  Icon: {fileID: -6282676865250185422, guid: 4fd171ae17f1e344dae3c78a09161621, type: 3}
   Type: 14
   Level: 4

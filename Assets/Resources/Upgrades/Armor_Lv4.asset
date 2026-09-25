@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Armor Lv.4
   Description: Armor upgrade level 4.
-  Icon: {fileID: 0}
+  Icon: {fileID: 8253109200740065530, guid: b773fcd2cbdb700418211d5c27850b8c, type: 3}
   Type: 27
   Level: 4

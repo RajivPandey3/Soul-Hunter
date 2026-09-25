@@ -15,6 +15,6 @@ MonoBehaviour:
   UpgradeName: Axe_WandLv1
   Description: Throws an axe upwards in a high arc. (Hawa mein upar ki taraf kulhadi
     fekta hai jo dushmano ko cheerte hue girti hai.)
-  Icon: {fileID: 0}
+  Icon: {fileID: -8072591114664276155, guid: 404ba1ad26a96ee42ab45d75e2b5776a, type: 3}
   Type: 5
   Level: 1

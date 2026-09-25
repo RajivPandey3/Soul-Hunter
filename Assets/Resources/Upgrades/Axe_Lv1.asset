@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Axe Lv.1
   Description: Axe upgrade level 1.
-  Icon: {fileID: 0}
+  Icon: {fileID: -8072591114664276155, guid: 404ba1ad26a96ee42ab45d75e2b5776a, type: 3}
   Type: 5
   Level: 1

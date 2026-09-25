@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: FireWand Lv.2
   Description: FireWand upgrade level 2.
-  Icon: {fileID: 0}
+  Icon: {fileID: 3887494039375579144, guid: 67ed2576a98aa8d469c7edd25077c560, type: 3}
   Type: 9
   Level: 2

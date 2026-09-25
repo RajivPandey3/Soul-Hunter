@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Bracer Lv.5
   Description: Bracer upgrade level 5.
-  Icon: {fileID: 0}
+  Icon: {fileID: 7628034302274340188, guid: 372d0bb142277fa4299255d447b73a03, type: 3}
   Type: 13
   Level: 5

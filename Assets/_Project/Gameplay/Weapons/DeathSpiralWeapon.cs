@@ -39,6 +39,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (proj == null) proj = scythe.AddComponent<Projectile>();
                 // Pierces everything
                 proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(60f), 6f, pierce: UnlimitedPierce);
+                proj.AddBounces(ExtraBounces);
                 
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = scythe.AddComponent<ProjectileDamage>();

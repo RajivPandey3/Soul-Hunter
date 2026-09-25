@@ -56,6 +56,7 @@ namespace SoulHunter.Gameplay.Combat
 
                 var proj = knife.GetComponent<Projectile>();
                 if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(DamageAmount), 2f, pierce: Pierce);
+                if (proj != null) proj.AddBounces(ExtraBounces);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";

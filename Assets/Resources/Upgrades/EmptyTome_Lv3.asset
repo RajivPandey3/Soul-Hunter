@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: EmptyTome Lv.3
   Description: EmptyTome upgrade level 3.
-  Icon: {fileID: 0}
+  Icon: {fileID: -8680214568290428914, guid: b9462c0600ad4b746a5103982ea0bff8, type: 3}
   Type: 11
   Level: 3

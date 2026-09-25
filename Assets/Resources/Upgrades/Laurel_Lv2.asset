@@ -15,6 +15,6 @@ MonoBehaviour:
   UpgradeName: Laurel Lv.2
   Description: Reduces base recharge by 0.5 seconds; adds 0.2 seconds of protection
     after a block.
-  Icon: {fileID: 0}
+  Icon: {fileID: -1251007986208197992, guid: b1d5d1dc69b110244b5b8170b6cc8554, type: 3}
   Type: 18
   Level: 2
