@@ -206,9 +206,9 @@ Validated by `StageEventTests` (T) and `StageEventPlayModeTests` (R: the 2:30 sw
 
 ### Audio
 
-No scene contains an `AudioManager`; it now creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Enemy-hit, death and music audio are still missing.
+No scene contains an `AudioManager`; it creates itself from `Assets/Resources/AudioManager.prefab` at startup (`RuntimeInitializeOnLoadMethod`). Found 2026-09-25: that prefab was hand-written YAML with corrupted file IDs, which Unity imported as a DefaultAsset, so `Resources.Load` returned null, no AudioManager ever existed and the game had no sound at all (every PlayMode log showed "prefab not found"). Rebuilt with Unity's prefab writer (`AudioManagerPrefabBuilder`, same GUID). Enemy hits now play `EnemyHit` (throttled to one per 0.06 s via `PlaySFXThrottled`). Validated by `AudioPlayModeTests` (R: one listener, all five effects assigned and not silent, hitting an enemy plays EnemyHit); batchmode cannot confirm speakers, so hearing it is still unverified.
 
-Treat audio as `UNKNOWN / HIGH RISK` until sound is confirmed in a runtime run.
+Still missing (no clips exist): music, enemy death, player hurt, game over, weapon and UI sounds.
 
 ### Accessibility
 

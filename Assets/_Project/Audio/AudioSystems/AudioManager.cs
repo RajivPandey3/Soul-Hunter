@@ -28,6 +28,10 @@ namespace SoulHunter.Gameplay.Audio
         
         private AudioSource[] _sfxSources;
 
+        /// <summary>The clip PlaySFX was last asked to play (tests read this; batchmode may not output sound).</summary>
+        public AudioClip LastClip { get; private set; }
+        public int PlayedCount { get; private set; }
+
         private const string ResourcePath = "AudioManager";
 
         // No scene contains an AudioManager, so create the one from Resources
@@ -83,9 +87,26 @@ namespace SoulHunter.Gameplay.Audio
             }
         }
 
+        /// <summary>Minimum seconds between two enemy-hit sounds; a horde takes hundreds of hits a second.</summary>
+        public const float EnemyHitInterval = 0.06f;
+        private readonly System.Collections.Generic.Dictionary<AudioClip, float> _lastPlayed = new System.Collections.Generic.Dictionary<AudioClip, float>();
+
+        /// <summary>Plays clip unless it already played less than minInterval (unscaled) seconds ago.</summary>
+        public bool PlaySFXThrottled(AudioClip clip, float minInterval, float volumeMultiplier = 1f)
+        {
+            if (clip == null) return false;
+            float now = Time.unscaledTime;
+            if (_lastPlayed.TryGetValue(clip, out float last) && now - last < minInterval) return false;
+            _lastPlayed[clip] = now;
+            PlaySFX(clip, volumeMultiplier);
+            return true;
+        }
+
         public void PlaySFX(AudioClip clip, float volumeMultiplier = 1f)
         {
             if (clip == null) return;
+            LastClip = clip;
+            PlayedCount++;
 
             // Khali speaker (AudioSource) dhoondho
             for (int i = 0; i < _sfxSources.Length; i++)
