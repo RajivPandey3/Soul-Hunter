@@ -400,7 +400,7 @@ namespace SoulHunter.Gameplay.Player
 
             // 2. Read selected hero name from SaveService
             var saveSvc = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
-            string heroName = "Hero_1_0"; // Default Fallback agar save delete ho chuki ho
+            string heroName = "Kael"; // Default Fallback agar save delete ho chuki ho
 
             if (saveSvc != null && !string.IsNullOrEmpty(saveSvc.CurrentData.SelectedCharacterName))
             {

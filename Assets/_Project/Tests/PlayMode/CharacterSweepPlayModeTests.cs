@@ -75,6 +75,9 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(models.Select(m => m.name), Is.EqualTo(new[] { heroModel.name }),
                     $"{characterName}: the player should show exactly its own model. " + Errors());
                 Assert.IsNotNull(player.Animator, $"{characterName}: the hero model has no EntityAnimator, so run/attack never play. " + Errors());
+                var sprites = player.GetComponentsInChildren<SpriteRenderer>()
+                    .Where(s => s.enabled && s.sprite != null).Select(s => s.name).ToList();
+                Assert.That(sprites, Is.Empty, $"{characterName}: an old sprite visual is still drawn next to the hero model. " + Errors());
 
                 // 2. Starting weapon equipped.
                 var weapons = Object.FindFirstObjectByType<WeaponManager>();
