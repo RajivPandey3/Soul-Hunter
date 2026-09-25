@@ -31,13 +31,15 @@ namespace SoulHunter.Core.Persistence
         }
 
         /// <summary>
-        /// A performance benchmark run (-sh-benchmark, see PerformanceBenchmark) plays with a fresh throw-away save,
+        /// A performance benchmark (-sh-benchmark) or autoplay (-sh-autoplay) run plays with a fresh throw-away save,
         /// so it neither reads nor changes the player's progress.
         /// </summary>
         private static string BenchmarkSavePath()
         {
-            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-sh-benchmark") < 0) return null;
-            string path = Path.Combine(Application.temporaryCachePath, "benchmark_save.json");
+            var args = System.Environment.GetCommandLineArgs();
+            bool benchmark = System.Array.IndexOf(args, "-sh-benchmark") >= 0;
+            if (!benchmark && System.Array.IndexOf(args, "-sh-autoplay") < 0) return null; // AutoplayBot plays on a throw-away save too
+            string path = Path.Combine(Application.temporaryCachePath, benchmark ? "benchmark_save.json" : "autoplay_save.json");
             foreach (string file in new[] { path, path + ".prev", path + ".tmp" })
                 if (File.Exists(file)) File.Delete(file);
             return path;
@@ -66,6 +68,17 @@ namespace SoulHunter.Core.Persistence
             CurrentData.HighScoreTime = survivalTime;
             SaveGame();
         }
+
+        /// <summary>
+        /// Sends every later save to another file (the current data is kept in memory, nothing is written now).
+        /// Tools that play the game (AutoplayBot) use it so the player's real progress is never changed.
+        /// </summary>
+        public void UseFile(string path)
+        {
+            if (!string.IsNullOrEmpty(path)) _filePath = path;
+        }
+
+        public string FilePath => _filePath;
 
         /// <summary>The previous good save, kept by every successful save (".prev").</summary>
         public string PreviousPath => _filePath + ".prev";
