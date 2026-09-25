@@ -85,6 +85,16 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(weapons.GetWeaponLevel(character.StartingWeapon), Is.GreaterThanOrEqualTo(1),
                     $"{characterName}: starting weapon {character.StartingWeapon} was not equipped. " + Errors());
 
+                // 2b. VS rule: the run starts with that one weapon only (others come from level-ups and chests).
+                var otherLevels = System.Enum.GetValues(typeof(UpgradeData.UpgradeType)).Cast<UpgradeData.UpgradeType>()
+                    .Where(t => t != character.StartingWeapon && weapons.GetWeaponLevel(t) > 0).ToList();
+                Assert.That(otherLevels, Is.Empty, $"{characterName}: started with extra weapons/items. " + Errors());
+                var activeWeapons = Object.FindObjectsByType<AutoAttackWeapon>(FindObjectsSortMode.None)
+                    .Where(w => w.isActiveAndEnabled && w.GetComponentInParent<EnemyController>() == null)
+                    .Select(w => w.GetType().Name).ToList();
+                Assert.That(activeWeapons.Count, Is.EqualTo(1),
+                    $"{characterName}: exactly one player weapon should be active at start, found: {string.Join(", ", activeWeapons)}. " + Errors());
+
                 // 3. It damages a nearby, harmless enemy.
                 var enemyPrefabs = GetPrivateField<List<GameObject>>(spawner, "_stageEnemyPrefabs");
                 Assert.That(enemyPrefabs, Is.Not.Null.And.Not.Empty);
