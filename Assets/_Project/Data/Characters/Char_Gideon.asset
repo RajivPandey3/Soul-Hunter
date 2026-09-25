@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Gideon
   Description: The Brute. Area of attacks increased by 50%.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 4841224244229858963, guid: 00b626b90c37f0047b79e25970a60595, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: eac642cc3a7461c43b727b7a81edea8c, type: 3}
+  CharacterModelPrefab: {fileID: 4339828676140970432, guid: 41a71dec9df884141a7b261834175b36, type: 3}
   StartingWeapon: 5
   BaseMaxHealth: 200
   BaseMoveSpeed: 0.8
@@ -23,3 +23,21 @@ MonoBehaviour:
   StartingArea: 1.5
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
+  ExtraProjectileBounces: 0
+  LowHealthSpeedBonus: 0
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

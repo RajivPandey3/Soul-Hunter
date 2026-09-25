@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Corvan
   Description: The Grave Warden. Gains +10% Might every 10 levels.
-  CharacterIcon: {fileID: -7139592808081743327, guid: b7724fefa5d4a2e44af319777e7eac29, type: 3}
-  CharacterModelPrefab: {fileID: 1995043602901482061, guid: 32fe81666ca50484a9853bf52f76ec89, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: dee93cc4e94e60844b6bfb6c9c060632, type: 3}
+  CharacterModelPrefab: {fileID: 8576403778292490880, guid: 9f7e5af2f7570724cb9ab6da343e9d4d, type: 3}
   StartingWeapon: 1
   BaseMaxHealth: 100
   BaseMoveSpeed: 1
@@ -23,6 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
   LevelBonus: 1
   LevelBonusEveryLevels: 10
   LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
+  ExtraProjectileBounces: 0
+  LowHealthSpeedBonus: 0
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

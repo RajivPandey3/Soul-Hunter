@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Kaelen
   Description: The Demon Hunter. Critical hits deal 3x damage.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 2121634881224937064, guid: a9dac4c70492ebf4a858237b0660c6ff, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: 5a299813640708343bfe80a11243fe02, type: 3}
+  CharacterModelPrefab: {fileID: 4916428418560152852, guid: 0fc4596db195e214497a6a9f39d3291c, type: 3}
   StartingWeapon: 7
   BaseMaxHealth: 110
   BaseMoveSpeed: 1.15
@@ -23,4 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
   CritDamageMultiplier: 3
+  ExtraProjectileBounces: 0
+  LowHealthSpeedBonus: 0
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

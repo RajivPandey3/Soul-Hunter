@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Seraphina
   Description: Master of Arcane. Projectiles bounce 3 extra times.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 2597573463525021273, guid: ef0f4aeb912a85d48bbc2300a8d07083, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: 25a6b92b0a09a0248b4100dafe693ce9, type: 3}
+  CharacterModelPrefab: {fileID: 4650574624491855704, guid: 7eadcfa57d9bbf5479882894bbf28e66, type: 3}
   StartingWeapon: 0
   BaseMaxHealth: 80
   BaseMoveSpeed: 1.1
@@ -23,4 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
   ExtraProjectileBounces: 3
+  LowHealthSpeedBonus: 0
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

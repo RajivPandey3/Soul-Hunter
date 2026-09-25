@@ -1,0 +1,575 @@
+[
+  {
+    "name": "SH10_Hero_Gideon",
+    "character": "Gideon",
+    "model": "Assets/Art/Models/SH10_Hero_Gideon.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Gideon.blend",
+    "triangles": 844,
+    "materials": {
+      "SH10_Hero_Gideon_Armor": [
+        0.36,
+        0.2,
+        0.11
+      ],
+      "SH10_Hero_Gideon_Cloth": [
+        0.3,
+        0.09,
+        0.04
+      ],
+      "SH10_Hero_Gideon_Soul": [
+        1.0,
+        0.5,
+        0.1
+      ],
+      "SH10_Hero_Gideon_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Gideon_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Gideon_Hair": [
+        0.25,
+        0.12,
+        0.05
+      ],
+      "SH10_Hero_Gideon_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_Hero_Gideon_Trim": [
+        0.52,
+        0.48,
+        0.42
+      ],
+      "SH10_Hero_Gideon_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Corvan",
+    "character": "Corvan",
+    "model": "Assets/Art/Models/SH10_Hero_Corvan.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Corvan.blend",
+    "triangles": 1380,
+    "materials": {
+      "SH10_Hero_Corvan_Armor": [
+        0.25,
+        0.17,
+        0.1
+      ],
+      "SH10_Hero_Corvan_Cloth": [
+        0.1,
+        0.09,
+        0.07
+      ],
+      "SH10_Hero_Corvan_Soul": [
+        0.1,
+        0.85,
+        0.8
+      ],
+      "SH10_Hero_Corvan_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Corvan_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Corvan_Hair": [
+        0.2,
+        0.2,
+        0.22
+      ],
+      "SH10_Hero_Corvan_Trim": [
+        0.55,
+        0.36,
+        0.12
+      ],
+      "SH10_Hero_Corvan_Accent": [
+        0.7,
+        0.1,
+        0.1
+      ],
+      "SH10_Hero_Corvan_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Aria",
+    "character": "Aria",
+    "model": "Assets/Art/Models/SH10_Hero_Aria.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Aria.blend",
+    "triangles": 784,
+    "materials": {
+      "SH10_Hero_Aria_Armor": [
+        0.42,
+        0.28,
+        0.15
+      ],
+      "SH10_Hero_Aria_Cloth": [
+        0.1,
+        0.45,
+        0.2
+      ],
+      "SH10_Hero_Aria_Soul": [
+        0.45,
+        0.85,
+        1.0
+      ],
+      "SH10_Hero_Aria_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Aria_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Aria_Hair": [
+        0.55,
+        0.25,
+        0.08
+      ],
+      "SH10_Hero_Aria_Accent": [
+        0.85,
+        0.12,
+        0.12
+      ],
+      "SH10_Hero_Aria_Trim": [
+        0.85,
+        0.62,
+        0.2
+      ],
+      "SH10_Hero_Aria_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Draven",
+    "character": "Draven",
+    "model": "Assets/Art/Models/SH10_Hero_Draven.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Draven.blend",
+    "triangles": 1016,
+    "materials": {
+      "SH10_Hero_Draven_Armor": [
+        0.07,
+        0.07,
+        0.09
+      ],
+      "SH10_Hero_Draven_Cloth": [
+        0.18,
+        0.02,
+        0.05
+      ],
+      "SH10_Hero_Draven_Soul": [
+        0.95,
+        0.08,
+        0.08
+      ],
+      "SH10_Hero_Draven_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Draven_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Draven_Accent": [
+        0.7,
+        0.1,
+        0.1
+      ],
+      "SH10_Hero_Draven_Trim": [
+        0.38,
+        0.38,
+        0.42
+      ],
+      "SH10_Hero_Draven_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Isolde",
+    "character": "Isolde",
+    "model": "Assets/Art/Models/SH10_Hero_Isolde.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Isolde.blend",
+    "triangles": 842,
+    "materials": {
+      "SH10_Hero_Isolde_Armor": [
+        0.18,
+        0.1,
+        0.22
+      ],
+      "SH10_Hero_Isolde_Cloth": [
+        0.3,
+        0.07,
+        0.4
+      ],
+      "SH10_Hero_Isolde_Soul": [
+        0.4,
+        1.0,
+        0.3
+      ],
+      "SH10_Hero_Isolde_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Isolde_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Isolde_Hair": [
+        0.08,
+        0.04,
+        0.1
+      ],
+      "SH10_Hero_Isolde_Trim": [
+        0.15,
+        0.55,
+        0.28
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Kaelen",
+    "character": "Kaelen",
+    "model": "Assets/Art/Models/SH10_Hero_Kaelen.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Kaelen.blend",
+    "triangles": 820,
+    "materials": {
+      "SH10_Hero_Kaelen_Armor": [
+        0.1,
+        0.1,
+        0.12
+      ],
+      "SH10_Hero_Kaelen_Cloth": [
+        0.5,
+        0.05,
+        0.05
+      ],
+      "SH10_Hero_Kaelen_Soul": [
+        1.0,
+        0.35,
+        0.1
+      ],
+      "SH10_Hero_Kaelen_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Kaelen_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Kaelen_Trim": [
+        0.72,
+        0.72,
+        0.76
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Lumina",
+    "character": "Lumina",
+    "model": "Assets/Art/Models/SH10_Hero_Lumina.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Lumina.blend",
+    "triangles": 1036,
+    "materials": {
+      "SH10_Hero_Lumina_Armor": [
+        0.8,
+        0.76,
+        0.62
+      ],
+      "SH10_Hero_Lumina_Cloth": [
+        0.88,
+        0.87,
+        0.82
+      ],
+      "SH10_Hero_Lumina_Soul": [
+        1.0,
+        0.85,
+        0.3
+      ],
+      "SH10_Hero_Lumina_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Lumina_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Lumina_Hair": [
+        0.9,
+        0.75,
+        0.35
+      ],
+      "SH10_Hero_Lumina_Trim": [
+        0.9,
+        0.7,
+        0.25
+      ],
+      "SH10_Hero_Lumina_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Elaria",
+    "character": "Elaria",
+    "model": "Assets/Art/Models/SH10_Hero_Elaria.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Elaria.blend",
+    "triangles": 1004,
+    "materials": {
+      "SH10_Hero_Elaria_Armor": [
+        0.2,
+        0.22,
+        0.35
+      ],
+      "SH10_Hero_Elaria_Cloth": [
+        0.1,
+        0.18,
+        0.58
+      ],
+      "SH10_Hero_Elaria_Soul": [
+        0.3,
+        0.8,
+        1.0
+      ],
+      "SH10_Hero_Elaria_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Elaria_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Elaria_Trim": [
+        0.75,
+        0.78,
+        0.85
+      ],
+      "SH10_Hero_Elaria_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Rurik",
+    "character": "Rurik",
+    "model": "Assets/Art/Models/SH10_Hero_Rurik.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Rurik.blend",
+    "triangles": 996,
+    "materials": {
+      "SH10_Hero_Rurik_Armor": [
+        0.3,
+        0.3,
+        0.32
+      ],
+      "SH10_Hero_Rurik_Cloth": [
+        0.14,
+        0.3,
+        0.14
+      ],
+      "SH10_Hero_Rurik_Soul": [
+        0.9,
+        0.2,
+        0.1
+      ],
+      "SH10_Hero_Rurik_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Rurik_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Rurik_Hair": [
+        0.7,
+        0.3,
+        0.08
+      ],
+      "SH10_Hero_Rurik_Bone": [
+        0.58,
+        0.57,
+        0.4
+      ],
+      "SH10_Hero_Rurik_Accent": [
+        0.4,
+        0.26,
+        0.14
+      ],
+      "SH10_Hero_Rurik_Trim": [
+        0.36,
+        0.22,
+        0.12
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Seraphina",
+    "character": "Seraphina",
+    "model": "Assets/Art/Models/SH10_Hero_Seraphina.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Seraphina.blend",
+    "triangles": 1056,
+    "materials": {
+      "SH10_Hero_Seraphina_Armor": [
+        0.6,
+        0.62,
+        0.7
+      ],
+      "SH10_Hero_Seraphina_Cloth": [
+        0.55,
+        0.2,
+        0.62
+      ],
+      "SH10_Hero_Seraphina_Soul": [
+        1.0,
+        0.35,
+        0.85
+      ],
+      "SH10_Hero_Seraphina_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Seraphina_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Seraphina_Hair": [
+        0.92,
+        0.92,
+        0.96
+      ],
+      "SH10_Hero_Seraphina_Trim": [
+        0.85,
+        0.85,
+        0.92
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Sylas",
+    "character": "Sylas",
+    "model": "Assets/Art/Models/SH10_Hero_Sylas.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Sylas.blend",
+    "triangles": 1472,
+    "materials": {
+      "SH10_Hero_Sylas_Armor": [
+        0.12,
+        0.08,
+        0.2
+      ],
+      "SH10_Hero_Sylas_Cloth": [
+        0.05,
+        0.03,
+        0.09
+      ],
+      "SH10_Hero_Sylas_Soul": [
+        0.62,
+        0.22,
+        1.0
+      ],
+      "SH10_Hero_Sylas_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Sylas_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Sylas_Trim": [
+        0.3,
+        0.2,
+        0.45
+      ]
+    }
+  },
+  {
+    "name": "SH10_Hero_Valerius",
+    "character": "Valerius",
+    "model": "Assets/Art/Models/SH10_Hero_Valerius.fbx",
+    "source": "ArtSource/SH10_Heroes_v01/Blender/SH10_Hero_Valerius.blend",
+    "triangles": 876,
+    "materials": {
+      "SH10_Hero_Valerius_Armor": [
+        0.62,
+        0.64,
+        0.68
+      ],
+      "SH10_Hero_Valerius_Cloth": [
+        0.1,
+        0.15,
+        0.45
+      ],
+      "SH10_Hero_Valerius_Soul": [
+        0.4,
+        0.7,
+        1.0
+      ],
+      "SH10_Hero_Valerius_Dark": [
+        0.055,
+        0.075,
+        0.095
+      ],
+      "SH10_Hero_Valerius_Skin": [
+        0.62,
+        0.45,
+        0.34
+      ],
+      "SH10_Hero_Valerius_Trim": [
+        0.85,
+        0.65,
+        0.2
+      ],
+      "SH10_Hero_Valerius_Accent": [
+        0.8,
+        0.08,
+        0.08
+      ],
+      "SH10_Hero_Valerius_Wood": [
+        0.16,
+        0.095,
+        0.065
+      ]
+    }
+  }
+]

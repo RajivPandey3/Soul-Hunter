@@ -66,6 +66,16 @@ namespace SoulHunter.Tests.PlayMode
                     r.enabled && r.gameObject.activeInHierarchy && r.bounds.size.sqrMagnitude > 0.0001f);
                 Assert.IsTrue(visible, $"{characterName}: player has no visible renderer. " + Errors());
 
+                // 1b. It is the character's own hero model (not Kael's, which Player.prefab carries), and it animates.
+                var heroModel = character.CharacterModelPrefab;
+                Assert.IsNotNull(heroModel, $"{characterName} has no model prefab.");
+                var models = new List<Transform>();
+                foreach (Transform child in player.transform)
+                    if (child.gameObject.activeInHierarchy && child.GetComponentInChildren<SkinnedMeshRenderer>() != null) models.Add(child);
+                Assert.That(models.Select(m => m.name), Is.EqualTo(new[] { heroModel.name }),
+                    $"{characterName}: the player should show exactly its own model. " + Errors());
+                Assert.IsNotNull(player.Animator, $"{characterName}: the hero model has no EntityAnimator, so run/attack never play. " + Errors());
+
                 // 2. Starting weapon equipped.
                 var weapons = Object.FindFirstObjectByType<WeaponManager>();
                 Assert.IsNotNull(weapons, "WeaponManager missing. " + Errors());

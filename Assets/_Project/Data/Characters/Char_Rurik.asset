@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Rurik
   Description: The Wild Berserker. Moves faster as health gets lower.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 5325818282781160896, guid: 49b856117ab4c4140a7537ee53a660e5, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: 073e8883aa63cd24bbb104d0559b1396, type: 3}
+  CharacterModelPrefab: {fileID: 7921870675881226978, guid: 7377b43859104dc47b8b4e48253269c8, type: 3}
   StartingWeapon: 19
   BaseMaxHealth: 130
   BaseMoveSpeed: 1.2
@@ -23,4 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
+  ExtraProjectileBounces: 0
   LowHealthSpeedBonus: 0.5
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

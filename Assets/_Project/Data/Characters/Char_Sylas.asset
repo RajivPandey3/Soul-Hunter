@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Sylas
   Description: The Void Walker. Starts with a temporary shield.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 6893770946817019709, guid: 0d93bb43667c24248ad7f52b7034a10b, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: 3670766ee2c09f149a47260b357e2258, type: 3}
+  CharacterModelPrefab: {fileID: 3937785872240879214, guid: cce9f3b2ff9aeec46a3b873154e4576e, type: 3}
   StartingWeapon: 15
   BaseMaxHealth: 100
   BaseMoveSpeed: 1.1
@@ -23,5 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
+  ExtraProjectileBounces: 0
+  LowHealthSpeedBonus: 0
   StartingShieldSeconds: 10
   ShieldVisualPrefab: {fileID: 8614413424618206056, guid: 5a7637e431712a64a8520e1a70da2b40, type: 3}

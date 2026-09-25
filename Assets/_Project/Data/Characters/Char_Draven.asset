@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Draven
   Description: The Silent Assassin. Fires 2 extra projectiles.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 8612953536612588024, guid: e908776bdf7888e4d9ca76cf63859ba6, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: 6016d9ca9887c24448a3d20e6d4b8cb2, type: 3}
+  CharacterModelPrefab: {fileID: 7328828210668660313, guid: 77978b359f23ba1489c238e37a054b08, type: 3}
   StartingWeapon: 14
   BaseMaxHealth: 100
   BaseMoveSpeed: 1.3
@@ -23,4 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 1
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
   StartingAmount: 2
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
+  ExtraProjectileBounces: 0
+  LowHealthSpeedBonus: 0
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

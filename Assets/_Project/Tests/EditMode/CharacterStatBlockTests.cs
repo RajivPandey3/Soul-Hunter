@@ -266,6 +266,28 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EveryCharacter_HasItsOwnAnimatedHeroModel_AndPortrait()
+        {
+            // Learning Comment: Har character ka apna 3D model aur apni portrait ho; koi placeholder nahi.
+            var characters = GameContentCatalog.Load().Characters.Where(c => c != null).ToList();
+            foreach (var character in characters)
+            {
+                string n = character.CharacterName;
+                var model = character.CharacterModelPrefab;
+                Assert.That(model, Is.Not.Null, $"{n} model.");
+                Assert.That(model.GetComponentInChildren<SkinnedMeshRenderer>(true), Is.Not.Null, $"{n} ka model 3D hero nahi hai.");
+                var animator = model.GetComponentInChildren<Animator>(true);
+                Assert.That(animator, Is.Not.Null, $"{n} Animator.");
+                Assert.That(animator.runtimeAnimatorController, Is.Not.Null, $"{n} animator controller.");
+                Assert.That(model.GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>(true), Is.Not.Null, $"{n} EntityAnimator.");
+                Assert.That(character.CharacterIcon, Is.Not.Null, $"{n} portrait.");
+                Assert.That(character.CharacterIcon.texture.name, Does.StartWith("Portrait_"), $"{n} ki portrait abhi bhi placeholder hai.");
+            }
+            Assert.That(characters.Select(c => c.CharacterModelPrefab).Distinct().Count(), Is.EqualTo(characters.Count), "Har character ka model alag ho.");
+            Assert.That(characters.Select(c => c.CharacterIcon).Distinct().Count(), Is.EqualTo(characters.Count), "Har character ki portrait alag ho.");
+        }
+
+        [Test]
         public void MoveSpeed_IsAMultiplier_ForEveryCharacter_AndNoVSNames()
         {
             // Learning Comment: Owner decision 2026-09-25: move speed multiplier hai (1.0 = base speed).

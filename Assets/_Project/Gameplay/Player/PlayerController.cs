@@ -398,14 +398,6 @@ namespace SoulHunter.Gameplay.Player
             var meshRenderer = GetComponent<MeshRenderer>();
             if (meshRenderer != null) meshRenderer.enabled = false;
 
-            // A level-specific 3D visual may already be attached to the gameplay root.
-            // Keep the authored visual and do not spawn the legacy character visual again.
-            if (GetComponentInChildren<SkinnedMeshRenderer>(true) != null)
-            {
-                Animator = GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
-                return;
-            }
-
             // 2. Read selected hero name from SaveService
             var saveSvc = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
             string heroName = "Hero_1_0"; // Default Fallback agar save delete ho chuki ho
@@ -419,16 +411,50 @@ namespace SoulHunter.Gameplay.Player
             var charData = SoulHunter.Gameplay.Data.GameContentCatalog.FindCharacter(heroName) ?? Resources.Load<SoulHunter.Gameplay.Data.CharacterData>($"Characters/{heroName}") ??
                            Resources.Load<SoulHunter.Gameplay.Data.CharacterData>($"Characters/Char_{heroName}");
 
+            // A 3D visual may already be attached to the gameplay root (Player.prefab carries Kael).
+            // A character with its own 3D hero model replaces it; otherwise the authored visual stays.
+            var authored = AuthoredVisual();
+            if (authored != null)
+            {
+                var heroModel = charData != null ? charData.CharacterModelPrefab : null;
+                if (heroModel != null && heroModel.GetComponentInChildren<SkinnedMeshRenderer>(true) != null)
+                {
+                    var hero = Instantiate(heroModel, transform);
+                    hero.name = heroModel.name;
+                    hero.transform.SetLocalPositionAndRotation(authored.localPosition, authored.localRotation);
+                    hero.transform.localScale = authored.localScale;
+                    authored.gameObject.SetActive(false);
+                    Destroy(authored.gameObject);
+                    var flash = GetComponent<SoulHunter.Gameplay.VFX.DamageFlash>();
+                    if (flash != null) flash.RefreshRenderers();
+                    Animator = hero.GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
+                    return;
+                }
+                Animator = GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
+                return;
+            }
+
             if (charData != null && charData.CharacterModelPrefab != null)
                 {
                     // 4. Spawn the beautiful 2D Prefab inside the player root
                     var visualModel = Instantiate(charData.CharacterModelPrefab, transform);
+                    visualModel.name = charData.CharacterModelPrefab.name;
                     visualModel.transform.localPosition = Vector3.zero;
 
                     // 5. Connect the new Animator to our Controller
                     Animator = visualModel.GetComponent<SoulHunter.Gameplay.Animation.EntityAnimator>()
                                ?? GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
                 }
+        }
+
+        /// <summary>The direct child that holds the authored 3D model (a SkinnedMeshRenderer), or null.</summary>
+        private Transform AuthoredVisual()
+        {
+            var skinned = GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skinned == null) return null;
+            var node = skinned.transform;
+            while (node.parent != null && node.parent != transform) node = node.parent;
+            return node.parent == transform ? node : null;
         }
     }
 }

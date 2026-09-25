@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Isolde
   Description: The Cursed Witch. Weapon cooldown is reduced by 15%.
-  CharacterIcon: {fileID: -4093428871323346006, guid: f40a739c62a451647ab0645de52778f1, type: 3}
-  CharacterModelPrefab: {fileID: 4349882109357435851, guid: 06ee31dd602e65d4a9a46ec28d79705a, type: 3}
+  CharacterIcon: {fileID: 21300000, guid: 1128604f5a0ddf74fb92df52b9d6b7ed, type: 3}
+  CharacterModelPrefab: {fileID: 8313680820750072316, guid: 090c1387898385f4299c98cd80667fe8, type: 3}
   StartingWeapon: 10
   BaseMaxHealth: 90
   BaseMoveSpeed: 1
@@ -23,3 +23,21 @@ MonoBehaviour:
   StartingArea: 1
   StartingCooldown: 0.85
   StartingArmor: 0
+  StartingRecovery: 0
+  StartingSpeed: 1
+  StartingDuration: 1
+  StartingAmount: 0
+  StartingRevivals: 0
+  StartingMagnet: 1
+  StartingLuck: 1
+  StartingGrowth: 1
+  StartingGreed: 1
+  StartingCurse: 1
+  LevelBonus: 0
+  LevelBonusEveryLevels: 10
+  LevelBonusAmount: 0.1
+  CritDamageMultiplier: 2
+  ExtraProjectileBounces: 0
+  LowHealthSpeedBonus: 0
+  StartingShieldSeconds: 0
+  ShieldVisualPrefab: {fileID: 0}

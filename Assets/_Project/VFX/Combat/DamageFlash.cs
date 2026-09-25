@@ -48,6 +48,22 @@ namespace SoulHunter.Gameplay.VFX
             }
         }
 
+        /// <summary>
+        /// Re-collects the model renderers after the visual was swapped at runtime (the player's
+        /// selected character model replaces the authored one).
+        /// </summary>
+        public void RefreshRenderers()
+        {
+            if (_renderer != null) return;
+            _isFlashing = false; // old renderers may already be destroyed
+            _renderers.Clear();
+            foreach (var candidate in GetComponentsInChildren<Renderer>(true))
+            {
+                if (candidate.enabled && candidate.gameObject.activeInHierarchy && !(candidate is ParticleSystemRenderer))
+                    _renderers.Add(candidate);
+            }
+        }
+
         private void Start()
         {
             var health = GetComponent<HealthController>();
