@@ -6,6 +6,8 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class LaurelWeapon : AutoAttackWeapon
     {
+        protected override bool ShowsAttackPose => false; // an orbit/aura/area weapon: no swing toward enemies
+
         public GameObject ShieldVisualPrefab;
         [SerializeField, Min(0f)] private float _blockGraceSeconds = 0.2f;
         private GameObject _activeShield;

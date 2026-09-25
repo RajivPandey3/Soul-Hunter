@@ -301,7 +301,7 @@ namespace SoulHunter.Gameplay.Player
 
             if (dashDirection == Vector3.zero)
             {
-                dashDirection = transform.localScale.x > 0 ? Vector3.right : Vector3.left;
+                dashDirection = FacingDirection;
             }
 
             // 2. Damage Buffer for Soul Reap Dash
@@ -345,14 +345,80 @@ namespace SoulHunter.Gameplay.Player
         private void Update()
         {
             _currentState?.UpdateLogic();
+            UpdateFacing();
+        }
 
-            // Face the direction of movement
-            if (CurrentMoveInput.x != 0)
+        // --- Facing (3D model turns smoothly; the old code mirrored the model with localScale.x = +-1) ---
+        public const float AttackFacingSeconds = 0.45f;
+        public const float AttackPoseInterval = 0.6f; // matches the ~0.6 s upper-body pose (PlayerAnimatorSetup.AttackSpeed)
+        private const float TurnSharpness = 18f;
+        private Transform _visual;
+        private Quaternion _visualBaseRotation = Quaternion.identity;
+        private float _attackFacingUntil = -1f;
+        private float _nextAttackPose;
+        private Vector3 _attackDirection = Vector3.forward;
+
+        /// <summary>Flat direction the player's model faces (starts facing up the screen).</summary>
+        public Vector3 FacingDirection { get; private set; } = Vector3.forward;
+
+        /// <summary>
+        /// A weapon just fired: face the enemy it aimed at for a moment (zero = no enemy, keep facing) and play
+        /// the attack pose on the upper body, at most every AttackPoseInterval so several weapons do not spam it.
+        /// </summary>
+        public void ShowWeaponAttack(Vector3 towardEnemy)
+        {
+            towardEnemy.y = 0f;
+            if (towardEnemy.sqrMagnitude > 0.0001f)
             {
-                // Flips the whole player object (best for 2D sprites, works for 3D too)
-                float sign = Mathf.Sign(CurrentMoveInput.x);
-                transform.localScale = new Vector3(sign, 1, 1);
+                _attackDirection = towardEnemy.normalized;
+                _attackFacingUntil = Time.time + AttackFacingSeconds;
             }
+            if (Animator != null && Time.time >= _nextAttackPose)
+            {
+                Animator.TriggerAttack();
+                _nextAttackPose = Time.time + AttackPoseInterval;
+            }
+        }
+
+        private void UpdateFacing()
+        {
+            Vector3 desired = FacingDirection;
+            if (Time.time < _attackFacingUntil) desired = _attackDirection;
+            else if (CurrentMoveInput.sqrMagnitude > 0.01f)
+            {
+                var move = GetCameraRelativeMovement(CurrentMoveInput);
+                move.y = 0f;
+                if (move.sqrMagnitude > 0.0001f) desired = move.normalized;
+            }
+            FacingDirection = desired;
+            if (_visual == null) return;
+            var target = Quaternion.LookRotation(desired, Vector3.up) * _visualBaseRotation;
+            _visual.localRotation = Quaternion.Slerp(_visual.localRotation, target, 1f - Mathf.Exp(-TurnSharpness * Time.deltaTime));
+        }
+
+        /// <summary>
+        /// Remembers the rotation that makes the model face +Z (up the screen); turning is applied on top.
+        /// Models differ (Kael's authored visual faces +Z, the hero prefabs face -Z), so the model's front is
+        /// worked out from its legs (the attack pose moves the arms): front = (right thigh - left thigh) x up.
+        /// </summary>
+        private void BindVisual(Transform visual)
+        {
+            _visual = visual;
+            transform.localScale = Vector3.one;
+            if (visual == null) return;
+            _visualBaseRotation = visual.localRotation;
+            Transform left = null, right = null;
+            foreach (var bone in visual.GetComponentsInChildren<Transform>(true))
+            {
+                if (bone.name == "Thigh.L") left = bone;
+                else if (bone.name == "Thigh.R") right = bone;
+            }
+            if (left == null || right == null) return;
+            var front = Vector3.Cross(transform.InverseTransformVector(right.position - left.position), Vector3.up);
+            front.y = 0f;
+            if (front.sqrMagnitude < 0.0001f) return;
+            _visualBaseRotation = Quaternion.Inverse(Quaternion.LookRotation(front.normalized, Vector3.up)) * visual.localRotation;
+            visual.localRotation = _visualBaseRotation;
         }
 
         private void FixedUpdate()
@@ -439,9 +505,11 @@ namespace SoulHunter.Gameplay.Player
                     var flash = GetComponent<SoulHunter.Gameplay.VFX.DamageFlash>();
                     if (flash != null) flash.RefreshRenderers();
                     Animator = hero.GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
+                    BindVisual(hero.transform);
                     return;
                 }
                 Animator = GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
+                BindVisual(authored);
                 return;
             }
 
@@ -455,6 +523,7 @@ namespace SoulHunter.Gameplay.Player
                     // 5. Connect the new Animator to our Controller
                     Animator = visualModel.GetComponent<SoulHunter.Gameplay.Animation.EntityAnimator>()
                                ?? GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();
+                    BindVisual(visualModel.transform);
                 }
         }
 

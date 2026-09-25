@@ -45,10 +45,33 @@ def material(key):
     return materials[key]
 
 
+UV_SCALE = {'ground': 4.0, 'obstacles': 2.0}   # world units per texture repeat
+
+
+def box_uv(obj, scale):
+    """World-space box mapping: each face takes the two world axes across its dominant normal, so textures tile
+    seamlessly across the whole 20x20 tile and across neighbouring tiles (the tile is a whole number of repeats)."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    uv = bm.loops.layers.uv.verify()
+    m = obj.matrix_world
+    for face in bm.faces:
+        n = face.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        for loop in face.loops:
+            w = m @ loop.vert.co
+            if ax == 2: loop[uv].uv = (w.x / scale, w.y / scale)
+            elif ax == 1: loop[uv].uv = (w.x / scale, w.z / scale)
+            else: loop[uv].uv = (w.y / scale, w.z / scale)
+    bm.to_mesh(obj.data)
+    bm.free()
+
+
 def finish(obj, name, mat):
     obj.name = name
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
     obj.data.materials.append(material(mat))
+    if current[0] in UV_SCALE: box_uv(obj, UV_SCALE[current[0]])
     layers.setdefault(current[0], []).append(obj)
     return obj
 
@@ -473,6 +496,25 @@ def l10(rng):  # The Soul Core
     p.place(5, .55, pylon)
 
 
+# Stylized detail texture (build_ground_textures.py) for each palette key; None = plain colour.
+BASE_TEXTURE = {1: 'grass', 2: 'grass', 3: 'grass', 4: 'flagstone', 5: 'mud', 6: 'snow', 7: 'sand', 8: 'sand',
+                9: 'marble', 10: 'plates'}
+KEY_TEXTURE = dict(DeadGrass='grass', Grass2='grass', Moss='grass', Tuft='grass', Soil='dirt', Path='dirt', PathEdge='cobble',
+                   Crop='dirt', Flag='flagstone', FlagDark='flagstone', Carpet='carpet', Mud='mud', MudDark='mud',
+                   Plank='planks', Wood='planks', Snow='snow', SnowShade='snow', Ice='ice', Sand='sand', WetSand='sand',
+                   SandDark='sand', Line='sand', Marble='marble', MarbleDark='marble', Plate='plates', PlateDark='plates',
+                   Stone='stone', Rock='stone', Pillar='stone', Wall='stone', Leaves='leaves', Leaves2='leaves', Water='water',
+                   Roof='grain', Hay='grain', Reed='grain', Bone='grain', Crop2='dirt', Dark='grain')
+LEVEL_KEY_TEXTURE = {3: dict(Path='cobble'), 8: dict(Path='sand')}
+EMISSIVE = {'Glow', 'Glow2', 'Vein'}
+
+
+def texture_for(level, key):
+    if key == 'Blocker': return None
+    if key == 'Base': return BASE_TEXTURE[level]
+    return LEVEL_KEY_TEXTURE.get(level, {}).get(key) or KEY_TEXTURE.get(key)
+
+
 COMMON = dict(Blocker=(1.0, 0.0, 1.0), Dark=(.06, .06, .08), Wood=(.36, .22, .12), Stone=(.52, .52, .56), Glow=(.25, .95, .9),
               Hay=(.78, .62, .32))
 LEVELS = {
@@ -559,7 +601,9 @@ def build(level):
     print('FLOOR_DONE', asset, triangles, 'obstacles', counts['obstacles'], flush=True)
     return dict(name=asset, level=level, title=title, size=SIZE, triangles=triangles, obstacles=counts['obstacles'],
                 model=str(model.relative_to(ROOT)).replace('\\', '/'),
-                materials={asset + '_' + k: list(palette[k]) for k in materials})
+                materials={asset + '_' + k: list(palette[k]) for k in materials},
+                textures={asset + '_' + k: texture_for(level, k) for k in materials},
+                emissive=[asset + '_' + k for k in materials if k in EMISSIVE])
 
 
 if __name__ == '__main__':

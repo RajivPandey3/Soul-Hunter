@@ -3,16 +3,23 @@ using SoulHunter.Gameplay.Player;
 
 namespace SoulHunter.Gameplay.CameraSystem
 {
+    /// <summary>
+    /// Follows the player with a tilted top-down view (owner decision 2026-09-25: ~55 degrees instead of straight
+    /// down, so characters' bodies, attack swings and facing are visible). The camera stays locked on the player
+    /// as in VS; smoothing is frame-rate independent so it feels the same at 30 or 240 FPS.
+    /// </summary>
     public class CameraFollow : MonoBehaviour
     {
+        public const float DefaultPitch = 55f;
+
         [SerializeField] private Transform _target;
-        
-        // Learning Comment: Adjusted offset for a direct top-down view
-        [SerializeField] private Vector3 _offset = new Vector3(0, 20f, 0f);
-        [SerializeField] private float _smoothSpeed = 15f; // Increased for tighter following
-        
-        // Learning Comment: Added a toggle to enforce strict top-down rotation vs dynamic look-at
-        [SerializeField] private bool _strictTopDown = true;
+        [Tooltip("Degrees below the horizon; 90 = straight down.")]
+        [SerializeField, Range(30f, 90f)] private float _pitch = DefaultPitch;
+        [SerializeField] private float _distance = 30f;
+        [Tooltip("Higher = tighter follow. 0 = locked exactly on the player.")]
+        [SerializeField] private float _followSharpness = 25f;
+
+        public float Pitch => _pitch;
 
         private void Start()
         {
@@ -25,30 +32,25 @@ namespace SoulHunter.Gameplay.CameraSystem
                     _target = player.transform;
                 }
             }
+            if (_target != null) SnapToTarget();
         }
+
+        public void SnapToTarget()
+        {
+            transform.rotation = Quaternion.Euler(_pitch, 0f, 0f);
+            transform.position = DesiredPosition();
+        }
+
+        private Vector3 DesiredPosition() => _target.position - transform.rotation * Vector3.forward * _distance;
 
         private void LateUpdate()
         {
             if (_target == null) return;
-
-            Vector3 desiredPosition = _target.position + _offset;
-
-            // Learning Comment: Tighten the follow so procedural world edges aren't exposed by camera lag
-            transform.position = Vector3.Lerp(
-                transform.position,
-                desiredPosition,
-                _smoothSpeed * Time.deltaTime
-            );
-
-            // Learning Comment: Lock the rotation to look straight down (90 degrees on X axis) for top-down games
-            if (_strictTopDown)
-            {
-                transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            }
-            else
-            {
-                transform.LookAt(_target);
-            }
+            transform.rotation = Quaternion.Euler(_pitch, 0f, 0f);
+            Vector3 desired = DesiredPosition();
+            transform.position = _followSharpness <= 0f
+                ? desired
+                : Vector3.Lerp(transform.position, desired, 1f - Mathf.Exp(-_followSharpness * Time.unscaledDeltaTime));
         }
     }
 }

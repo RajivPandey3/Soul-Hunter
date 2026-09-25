@@ -45,6 +45,13 @@ namespace SoulHunter.Gameplay.AI
             // not form a physical wall that blocks backward movement.
             var bodyCollider = GetComponent<Collider>();
             if (bodyCollider != null) bodyCollider.isTrigger = true;
+            // Hundreds of skinned enemies casting shadows halved the frame rate on the low-end reference laptop
+            // (UHD 620); the hero, bosses and stage obstacles still cast them.
+            SetCastsShadows(false);
+            // Off-screen members of the horde do not need to animate (they only chase); up to ~300 skinned
+            // animators updating every frame were the largest CPU cost on the reference laptop.
+            foreach (var animator in GetComponentsInChildren<Animator>(true))
+                animator.cullingMode = AnimatorCullingMode.CullCompletely;
             Animator = GetComponentInChildren<EntityAnimator>();
             _visualRoot = transform.Find("SH10_Visual");
             _scanner = GetComponent<EnvironmentScanner>();
@@ -128,6 +135,13 @@ namespace SoulHunter.Gameplay.AI
                 Rigidbody.linearVelocity = Vector3.zero;
                 Rigidbody.angularVelocity = Vector3.zero;
             }
+        }
+
+        /// <summary>Only bosses cast shadows (EnemySpawner turns them on); the horde does not, for performance.</summary>
+        public void SetCastsShadows(bool cast)
+        {
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+                r.shadowCastingMode = cast ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         /// <summary>True while a stage event flies this enemy along a fixed path (also while frozen mid-flight).</summary>

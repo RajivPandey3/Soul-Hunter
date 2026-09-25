@@ -42,8 +42,23 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Flower1
+    second: {fileID: 2100000, guid: 3b21015d7cb4cef478bc87ac71cd4a46, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Flower2
+    second: {fileID: 2100000, guid: 49cf9fa6b919d0c4eaeb86ea2da12ebb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L03_Floor_Grass
     second: {fileID: 2100000, guid: b650d935ba450e743a3ed24bebfb21b9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L03_Floor_Grass2
+    second: {fileID: 2100000, guid: 1fa9e4b5cd0183e43a22e72abbe9980c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule

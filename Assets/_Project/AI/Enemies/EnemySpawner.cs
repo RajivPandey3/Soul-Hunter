@@ -301,6 +301,7 @@ namespace SoulHunter.Gameplay.AI
             {
                 bossController.Target = _playerTransform;
                 _bossControllers.Add(bossController); // bosses are never relocated
+                bossController.SetCastsShadows(true);
             }
             bossObj.SetActive(true);
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger

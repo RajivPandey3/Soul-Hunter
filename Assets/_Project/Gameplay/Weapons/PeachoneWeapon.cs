@@ -5,6 +5,8 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class PeachoneWeapon : AutoAttackWeapon
     {
+        protected override bool ShowsAttackPose => false; // an orbit/aura/area weapon: no swing toward enemies
+
         public GameObject BirdVisual; // Bird circling the player
         public GameObject BombPrefab; // The projectile dropped
         public float CircleRadius = 3f;

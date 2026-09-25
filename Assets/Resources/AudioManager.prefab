@@ -44,35 +44,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de7fc6587fe129a439a3db264d2a87a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GemPickupSound: {fileID: 8300000, guid: 41370b410956df44e975517d743175be, type: 3}
-  LevelUpSound: {fileID: 8300000, guid: 5521358fb564e3f4caf08bd07c4e77b2, type: 3}
-  EnemyHitSound: {fileID: 8300000, guid: 196540fc397aee74ba9be88d9412cae6, type: 3}
-  ChestOpenSound: {fileID: 8300000, guid: 218a19d9433005b499426679c46ac102, type: 3}
-  HealSound: {fileID: 8300000, guid: c55e4732388333c4792b26e94d27670e, type: 3}
-  EnemyDeathSound: {fileID: 8300000, guid: 653526689f3cb9a4e9869bd6b276509a, type: 3}
-  PlayerHurtSound: {fileID: 8300000, guid: c939c07b75ba5784096f14f4184fe0c0, type: 3}
-  GameOverSound: {fileID: 8300000, guid: c02b7783a75c97b458e837c8cd41c519, type: 3}
-  StageClearSound: {fileID: 8300000, guid: a6c4970754fc46040a073048eb328ea3, type: 3}
-  BossWarningSound: {fileID: 8300000, guid: 5c272e01d82dbad4b99810a7fbad9850, type: 3}
-  UIClickSound: {fileID: 8300000, guid: a46d6de438ff9c24190ac53c588eb69f, type: 3}
-  UIConfirmSound: {fileID: 8300000, guid: 9aa71d83a4a18ab4bb8b5da8bf634c9b, type: 3}
-  UnlockSound: {fileID: 8300000, guid: eb45cb1d254b8074eb337ac0d14fafeb, type: 3}
-  ShootSound: {fileID: 8300000, guid: 04f4fe7f941193a4f83426546eedc22e, type: 3}
-  SlashSound: {fileID: 8300000, guid: 67c7c6f95502b9b41acad207d4791bb7, type: 3}
-  MagicSound: {fileID: 8300000, guid: fa7266a28b1d5d4408196cd0000263c6, type: 3}
-  ExplosionSound: {fileID: 8300000, guid: e16aaeef1f3f29643a46175e62830137, type: 3}
-  MenuMusic: {fileID: 8300000, guid: e0bf00a9a457f72498040567206c1482, type: 3}
+  GemPickupSound: {fileID: 8300000, guid: ee3ba851fcd36744f804235049420c10, type: 3}
+  LevelUpSound: {fileID: 8300000, guid: 777cbd86ec4b39847846255d4cfc5480, type: 3}
+  EnemyHitSound: {fileID: 8300000, guid: 44d61366edd8323468140d76e5c9079a, type: 3}
+  ChestOpenSound: {fileID: 8300000, guid: 12d3f0cc4b19def4182e17eca40f83b9, type: 3}
+  HealSound: {fileID: 8300000, guid: 360511e4b536c884482c96199bcd84c4, type: 3}
+  EnemyDeathSound: {fileID: 8300000, guid: ce7d2883ddc473040a1b2bb688473ca1, type: 3}
+  PlayerHurtSound: {fileID: 8300000, guid: fd0a5a4dfbf37414682bc16407de35e4, type: 3}
+  GameOverSound: {fileID: 8300000, guid: a6f5e0e41c2a0fd44a9c3e098de97d4c, type: 3}
+  StageClearSound: {fileID: 8300000, guid: 8b7277cd1738d944b814e5dee03e2cda, type: 3}
+  BossWarningSound: {fileID: 8300000, guid: a59b15d577722614ebd5d133018c142d, type: 3}
+  UIClickSound: {fileID: 8300000, guid: 020a99da1b0dc1c4bb146a8584b46bcf, type: 3}
+  UIConfirmSound: {fileID: 8300000, guid: 47d023643089e0048bc3fd52262506b7, type: 3}
+  UnlockSound: {fileID: 8300000, guid: 6d12ea1aca4afce40b9c9133458e0dca, type: 3}
+  ShootSound: {fileID: 8300000, guid: c7a6bc88dec6a6a40a8bf51ef6b21564, type: 3}
+  SlashSound: {fileID: 8300000, guid: 80c6058fc7a6b7c45a6a251e01b47b0c, type: 3}
+  MagicSound: {fileID: 8300000, guid: cddbe851f09626346a253516a8e776f1, type: 3}
+  ExplosionSound: {fileID: 8300000, guid: d1528ce28df91ac44a848cb7c135817f, type: 3}
+  MenuMusic: {fileID: 8300000, guid: 506dfc43a7d1208469fc70877166fe5d, type: 3}
   StageMusic:
-  - {fileID: 8300000, guid: 81eb4e4a06234e142b0ad8dd686e7632, type: 3}
-  - {fileID: 8300000, guid: eb2c82c2e8e65bd48a46b8745712e4ef, type: 3}
-  - {fileID: 8300000, guid: 7233ce0f045f5004b82b19e07d7ecbc4, type: 3}
-  - {fileID: 8300000, guid: e052a43325b12714387bb47bfff93136, type: 3}
-  - {fileID: 8300000, guid: 0c36013048d746142a702bc13d603e7a, type: 3}
-  - {fileID: 8300000, guid: e8986e2c5644337429f22d9a0858679a, type: 3}
-  - {fileID: 8300000, guid: 6ccefd8c66e27b242847226f7a13d672, type: 3}
-  - {fileID: 8300000, guid: 3aa19ee5ec98f9f4fb7f6e286f6332c9, type: 3}
-  - {fileID: 8300000, guid: c26570f47ad093846a78f96ac2fd100f, type: 3}
-  - {fileID: 8300000, guid: b58765bf12e73684ab5bbfd8840dd24e, type: 3}
+  - {fileID: 8300000, guid: 023c77cab63822445bfc7788d5bd3ad6, type: 3}
+  - {fileID: 8300000, guid: 3c9de65989694274db228c37bc19a6a6, type: 3}
+  - {fileID: 8300000, guid: 0061a2f6846ef154da8c69eb63916b80, type: 3}
+  - {fileID: 8300000, guid: d571962943e35b84f877d7479d410aa3, type: 3}
+  - {fileID: 8300000, guid: 3699e989fe7258f4a8b43d3943dc47e3, type: 3}
+  - {fileID: 8300000, guid: cfe34cf7a9aa5b242aebb237fe8a34db, type: 3}
+  - {fileID: 8300000, guid: 4e58bc0060d9bca4791b98f0713b5424, type: 3}
+  - {fileID: 8300000, guid: bef35205d21c6774383a8934d3a13f85, type: 3}
+  - {fileID: 8300000, guid: c8437be27ab8c444084147556270d37e, type: 3}
+  - {fileID: 8300000, guid: 3c6e171c68ee63d42ac0e68339519b18, type: 3}
   MusicVolume: 0.45
   MasterVolume: 0.8
   _audioChannels: 10

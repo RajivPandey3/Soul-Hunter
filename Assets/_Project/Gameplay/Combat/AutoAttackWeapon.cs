@@ -155,11 +155,35 @@ namespace SoulHunter.Gameplay.Combat
 
             if (_timer <= 0f)
             {
+                ShowAttackOnHolder(); // before Attack(): the shot may kill the enemy it aimed at
                 Attack();
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
                 if (audio != null && FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None) audio.PlayWeaponSound(FireSound);
                 _timer = Mathf.Max(0.05f, AttackCooldown * CooldownMultiplier);
             }
+        }
+
+        /// <summary>
+        /// Weapons the player visibly swings, throws or casts toward enemies. Constant auras and orbits
+        /// (Garlic, Bible, Laurel, Pentagram, Peachone) do not play the attack pose or turn the player.
+        /// </summary>
+        protected virtual bool ShowsAttackPose => FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None;
+
+        private SoulHunter.Gameplay.Player.PlayerController _holder;
+        private bool _holderResolved;
+
+        /// <summary>The player turns to the nearest enemy and plays the attack pose when this weapon fires.</summary>
+        private void ShowAttackOnHolder()
+        {
+            if (!ShowsAttackPose) return;
+            if (!_holderResolved)
+            {
+                _holder = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerController>();
+                _holderResolved = true;
+            }
+            if (_holder == null) return;
+            var target = FindNearestEnemy();
+            _holder.ShowWeaponAttack(target != null ? FlatDirectionTo(target) : Vector3.zero);
         }
 
         public virtual void LevelUp()

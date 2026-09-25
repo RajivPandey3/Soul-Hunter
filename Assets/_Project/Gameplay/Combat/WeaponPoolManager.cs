@@ -69,6 +69,7 @@ namespace SoulHunter.Gameplay.Combat
             else
             {
                 objToSpawn = Instantiate(prefab);
+                NoShadows(objToSpawn);
                 var autoReturn = objToSpawn.AddComponent<SoulHunter.Gameplay.Pickups.AutoReturnToPool>();
                 autoReturn.TargetPool = pool;
                 objToSpawn.AddComponent<PooledLifetime>();
@@ -91,6 +92,16 @@ namespace SoulHunter.Gameplay.Combat
         public void SpawnProjectile(GameObject bulletPrefab, Vector3 position, Quaternion rotation)
         {
             GetFromPool(bulletPrefab, position, rotation);
+        }
+    
+        /// <summary>
+        /// Pooled projectiles and pickups do not cast shadows: hundreds of them at once cost too much on the low-end
+        /// reference GPU (UHD 620). The hero, bosses and stage obstacles cast them.
+        /// </summary>
+        public static void NoShadows(GameObject instance)
+        {
+            foreach (var r in instance.GetComponentsInChildren<Renderer>(true))
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
     }
 }

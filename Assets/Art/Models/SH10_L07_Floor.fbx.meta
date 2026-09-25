@@ -32,8 +32,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Glow2
+    second: {fileID: 2100000, guid: 4b079eb0628733d4badda2f682ac778b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_L07_Floor_Leaves
     second: {fileID: 2100000, guid: 68418b9b354a7cd4eb8b7735e4b6cc4f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SH10_L07_Floor_Leaves2
+    second: {fileID: 2100000, guid: 77a87536877042143b5db6922dd3d5e0, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule

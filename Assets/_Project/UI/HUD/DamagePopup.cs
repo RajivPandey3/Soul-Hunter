@@ -14,6 +14,8 @@ namespace SoulHunter.Gameplay.UI
         [SerializeField] private float _moveSpeed = 2f;
         [SerializeField] private float _lifeTime = 1f;
 
+        public const float WorldFontSize = 7f;
+
         private float _fadeSpeed;
         private Color _textColor;
         private float _timer;
@@ -23,6 +25,9 @@ namespace SoulHunter.Gameplay.UI
             if (_textMesh == null) _textMesh = GetComponent<TextMeshPro>();
 
             _textMesh.text = damageAmount.ToString();
+            // The prefab's 36 pt (~3.6 units) was sized for the old straight-down camera, which saw the text edge-on.
+            // Facing the tilted camera it must be small, VS-style: under half the hero's height.
+            _textMesh.fontSize = WorldFontSize;
             _textColor = _textMesh.color;
             _textColor.a = 1f; // Full visible
             _textMesh.color = _textColor;
@@ -33,8 +38,10 @@ namespace SoulHunter.Gameplay.UI
 
         private void Update()
         {
-            // Upar ki taraf udna
+            // Upar ki taraf udna, camera ki taraf mooh karke (tilted camera: flat text would look skewed)
             transform.position += Vector3.up * _moveSpeed * Time.deltaTime;
+            var cam = Camera.main;
+            if (cam != null) transform.rotation = cam.transform.rotation;
 
             // Gayab (Fade out) hona
             _timer -= Time.deltaTime;

@@ -68,7 +68,24 @@
         0.22,
         0.12
       ]
-    }
+    },
+    "textures": {
+      "SH10_L01_Floor_Base": "grass",
+      "SH10_L01_Floor_Path": "dirt",
+      "SH10_L01_Floor_Soil": "dirt",
+      "SH10_L01_Floor_DeadGrass": "grass",
+      "SH10_L01_Floor_Tuft": "grass",
+      "SH10_L01_Floor_Stone": "stone",
+      "SH10_L01_Floor_Bone": "grain",
+      "SH10_L01_Floor_Roof": "grain",
+      "SH10_L01_Floor_Dark": "grain",
+      "SH10_L01_Floor_Glow": null,
+      "SH10_L01_Floor_Blocker": null,
+      "SH10_L01_Floor_Wood": "planks"
+    },
+    "emissive": [
+      "SH10_L01_Floor_Glow"
+    ]
   },
   {
     "name": "SH10_L02_Floor",
@@ -139,7 +156,22 @@
         0.62,
         0.32
       ]
-    }
+    },
+    "textures": {
+      "SH10_L02_Floor_Base": "grass",
+      "SH10_L02_Floor_Path": "dirt",
+      "SH10_L02_Floor_Soil": "dirt",
+      "SH10_L02_Floor_Grass2": "grass",
+      "SH10_L02_Floor_Moss": "grass",
+      "SH10_L02_Floor_Tuft": "grass",
+      "SH10_L02_Floor_Flower1": null,
+      "SH10_L02_Floor_Flower2": null,
+      "SH10_L02_Floor_Wood": "planks",
+      "SH10_L02_Floor_Leaves": "leaves",
+      "SH10_L02_Floor_Blocker": null,
+      "SH10_L02_Floor_Hay": "grain"
+    },
+    "emissive": []
   },
   {
     "name": "SH10_L03_Floor",
@@ -235,7 +267,27 @@
         0.48,
         0.2
       ]
-    }
+    },
+    "textures": {
+      "SH10_L03_Floor_Base": "grass",
+      "SH10_L03_Floor_Path": "cobble",
+      "SH10_L03_Floor_PathEdge": "cobble",
+      "SH10_L03_Floor_Moss": "grass",
+      "SH10_L03_Floor_Grass2": "grass",
+      "SH10_L03_Floor_Crop": "dirt",
+      "SH10_L03_Floor_Tuft": "grass",
+      "SH10_L03_Floor_Flower2": null,
+      "SH10_L03_Floor_Flower1": null,
+      "SH10_L03_Floor_Wall": "stone",
+      "SH10_L03_Floor_Roof": "grain",
+      "SH10_L03_Floor_Wood": "planks",
+      "SH10_L03_Floor_Blocker": null,
+      "SH10_L03_Floor_Stone": "stone",
+      "SH10_L03_Floor_Water": "water",
+      "SH10_L03_Floor_Hay": "grain",
+      "SH10_L03_Floor_Leaves": "leaves"
+    },
+    "emissive": []
   },
   {
     "name": "SH10_L04_Floor",
@@ -291,7 +343,19 @@
         0.0,
         1.0
       ]
-    }
+    },
+    "textures": {
+      "SH10_L04_Floor_Base": "flagstone",
+      "SH10_L04_Floor_Flag": "flagstone",
+      "SH10_L04_Floor_FlagDark": "flagstone",
+      "SH10_L04_Floor_Carpet": "carpet",
+      "SH10_L04_Floor_Trim": null,
+      "SH10_L04_Floor_Moss": "grass",
+      "SH10_L04_Floor_Stone": "stone",
+      "SH10_L04_Floor_Pillar": "stone",
+      "SH10_L04_Floor_Blocker": null
+    },
+    "emissive": []
   },
   {
     "name": "SH10_L05_Floor",
@@ -357,7 +421,21 @@
         0.52,
         0.3
       ]
-    }
+    },
+    "textures": {
+      "SH10_L05_Floor_Base": "mud",
+      "SH10_L05_Floor_Plank": "planks",
+      "SH10_L05_Floor_Dark": "grain",
+      "SH10_L05_Floor_MudDark": "mud",
+      "SH10_L05_Floor_Mud": "mud",
+      "SH10_L05_Floor_Reed": "grain",
+      "SH10_L05_Floor_Soil": "dirt",
+      "SH10_L05_Floor_Water": "water",
+      "SH10_L05_Floor_Blocker": null,
+      "SH10_L05_Floor_Wood": "planks",
+      "SH10_L05_Floor_Hay": "grain"
+    },
+    "emissive": []
   },
   {
     "name": "SH10_L06_Floor",
@@ -413,7 +491,21 @@
         0.85,
         1.0
       ]
-    }
+    },
+    "textures": {
+      "SH10_L06_Floor_Base": "snow",
+      "SH10_L06_Floor_Ice": "ice",
+      "SH10_L06_Floor_SnowShade": "snow",
+      "SH10_L06_Floor_Snow": "snow",
+      "SH10_L06_Floor_Rock": "stone",
+      "SH10_L06_Floor_Wood": "planks",
+      "SH10_L06_Floor_Leaves": "leaves",
+      "SH10_L06_Floor_Blocker": null,
+      "SH10_L06_Floor_Glow": null
+    },
+    "emissive": [
+      "SH10_L06_Floor_Glow"
+    ]
   },
   {
     "name": "SH10_L07_Floor",
@@ -484,7 +576,25 @@
         0.7,
         0.75
       ]
-    }
+    },
+    "textures": {
+      "SH10_L07_Floor_Base": "sand",
+      "SH10_L07_Floor_Plank": "planks",
+      "SH10_L07_Floor_Dark": "grain",
+      "SH10_L07_Floor_WetSand": "sand",
+      "SH10_L07_Floor_Sand": "sand",
+      "SH10_L07_Floor_Glow": null,
+      "SH10_L07_Floor_Glow2": null,
+      "SH10_L07_Floor_Water": "water",
+      "SH10_L07_Floor_Blocker": null,
+      "SH10_L07_Floor_Wood": "planks",
+      "SH10_L07_Floor_Leaves": "leaves",
+      "SH10_L07_Floor_Leaves2": "leaves"
+    },
+    "emissive": [
+      "SH10_L07_Floor_Glow",
+      "SH10_L07_Floor_Glow2"
+    ]
   },
   {
     "name": "SH10_L08_Floor",
@@ -550,7 +660,21 @@
         0.22,
         0.12
       ]
-    }
+    },
+    "textures": {
+      "SH10_L08_Floor_Base": "sand",
+      "SH10_L08_Floor_Path": "sand",
+      "SH10_L08_Floor_SandDark": "sand",
+      "SH10_L08_Floor_Line": "sand",
+      "SH10_L08_Floor_Sand": "sand",
+      "SH10_L08_Floor_Blood": null,
+      "SH10_L08_Floor_Stone": "stone",
+      "SH10_L08_Floor_Pillar": "stone",
+      "SH10_L08_Floor_Trim": null,
+      "SH10_L08_Floor_Blocker": null,
+      "SH10_L08_Floor_Wood": "planks"
+    },
+    "emissive": []
   },
   {
     "name": "SH10_L09_Floor",
@@ -616,7 +740,23 @@
         0.45,
         1.0
       ]
-    }
+    },
+    "textures": {
+      "SH10_L09_Floor_Base": "marble",
+      "SH10_L09_Floor_Marble": "marble",
+      "SH10_L09_Floor_MarbleDark": "marble",
+      "SH10_L09_Floor_Carpet": "carpet",
+      "SH10_L09_Floor_Gold": null,
+      "SH10_L09_Floor_Stone": "stone",
+      "SH10_L09_Floor_Pillar": "stone",
+      "SH10_L09_Floor_Trim": null,
+      "SH10_L09_Floor_Blocker": null,
+      "SH10_L09_Floor_Dark": "grain",
+      "SH10_L09_Floor_Glow": null
+    },
+    "emissive": [
+      "SH10_L09_Floor_Glow"
+    ]
   },
   {
     "name": "SH10_L10_Floor",
@@ -657,6 +797,18 @@
         0.0,
         1.0
       ]
-    }
+    },
+    "textures": {
+      "SH10_L10_Floor_Base": "plates",
+      "SH10_L10_Floor_PlateDark": "plates",
+      "SH10_L10_Floor_Plate": "plates",
+      "SH10_L10_Floor_Vein": null,
+      "SH10_L10_Floor_Glow": null,
+      "SH10_L10_Floor_Blocker": null
+    },
+    "emissive": [
+      "SH10_L10_Floor_Vein",
+      "SH10_L10_Floor_Glow"
+    ]
   }
 ]

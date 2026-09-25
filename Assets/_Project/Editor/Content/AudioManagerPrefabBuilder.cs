@@ -55,16 +55,38 @@ namespace SoulHunter.Editor.Content
             Debug.Log($"[AudioManagerPrefabBuilder] Rebuilt {PrefabPath}: {AssetDatabase.GetMainAssetTypeAtPath(PrefabPath)?.Name}");
         }
 
+        /// <summary>CC0 recordings (install_cc0_audio.py) win over the older synthesised clips, which stay as a fallback.</summary>
+        public const string Cc0Folder = "Assets/_Project/Audio/CC0";
+
+        /// <summary>Music streams (a few MB each); effects are decompressed on load so a horde can play them at once.</summary>
+        private static void Configure(string path, bool music)
+        {
+            if (!(AssetImporter.GetAtPath(path) is AudioImporter importer)) return;
+            var settings = importer.defaultSampleSettings;
+            var load = music ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
+            if (settings.loadType == load && importer.loadInBackground == music) return;
+            settings.loadType = load;
+            settings.compressionFormat = AudioCompressionFormat.Vorbis;
+            settings.quality = music ? 0.6f : 0.8f;
+            importer.defaultSampleSettings = settings;
+            importer.loadInBackground = music;
+            importer.SaveAndReimport();
+        }
+
         private static AudioClip Music(string name)
         {
-            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/_Project/Audio/Music/{name}.wav");
+            Configure($"{Cc0Folder}/Music/{name}.ogg", music: true);
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>($"{Cc0Folder}/Music/{name}.ogg")
+                       ?? AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/_Project/Audio/Music/{name}.wav");
             if (clip == null) Debug.LogError($"[AudioManagerPrefabBuilder] Missing music {name}.wav (run Generate Retro Audio first)");
             return clip;
         }
 
         private static AudioClip Clip(string name)
         {
-            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>($"{SfxFolder}/{name}.wav");
+            Configure($"{Cc0Folder}/SFX/{name}.ogg", music: false);
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>($"{Cc0Folder}/SFX/{name}.ogg")
+                       ?? AssetDatabase.LoadAssetAtPath<AudioClip>($"{SfxFolder}/{name}.wav");
             if (clip == null) Debug.LogError($"[AudioManagerPrefabBuilder] Missing {SfxFolder}/{name}.wav");
             return clip;
         }

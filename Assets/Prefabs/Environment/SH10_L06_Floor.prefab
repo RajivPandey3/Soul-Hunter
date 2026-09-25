@@ -102,24 +102,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -4177190906244143757, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
-      propertyPath: m_CastShadows
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -4177190906244143757, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
-      propertyPath: m_ReceiveShadows
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: -3049345306641045687, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3049345306641045687, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
       propertyPath: m_CastShadows
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -3049345306641045687, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
-      propertyPath: m_ReceiveShadows
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -1520280121258563380, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
@@ -136,10 +124,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8437295512254635418, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
       propertyPath: m_CastShadows
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8437295512254635418, guid: f14323495dd73e8489fb354a03218b5d, type: 3}
-      propertyPath: m_ReceiveShadows
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

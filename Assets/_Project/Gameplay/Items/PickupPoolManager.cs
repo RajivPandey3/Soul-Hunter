@@ -178,6 +178,7 @@ namespace SoulHunter.Gameplay.Pickups
             else
             {
                 objToSpawn = Instantiate(prefab);
+                SoulHunter.Gameplay.Combat.WeaponPoolManager.NoShadows(objToSpawn);
                 var autoReturn = objToSpawn.AddComponent<AutoReturnToPool>();
                 autoReturn.TargetPool = pool;
             }
@@ -215,6 +216,7 @@ namespace SoulHunter.Gameplay.Pickups
             for (int missing = count - pool.Count; missing > 0; missing--)
             {
                 var instance = Instantiate(prefab, transform);
+                SoulHunter.Gameplay.Combat.WeaponPoolManager.NoShadows(instance);
                 var autoReturn = instance.GetComponent<AutoReturnToPool>();
                 if (autoReturn == null) autoReturn = instance.AddComponent<AutoReturnToPool>();
                 autoReturn.TargetPool = pool;

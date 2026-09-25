@@ -5,6 +5,8 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class PentagramWeapon : AutoAttackWeapon
     {
+        protected override bool ShowsAttackPose => false; // an orbit/aura/area weapon: no swing toward enemies
+
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         public GameObject PentagramVFXPrefab; 
         
