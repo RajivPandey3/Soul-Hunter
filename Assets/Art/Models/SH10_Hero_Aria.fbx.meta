@@ -17,6 +17,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: SH10_Hero_Aria_Bone
+    second: {fileID: 2100000, guid: a2d907d1e142fc44183b3fcb9f99800a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: SH10_Hero_Aria_Cloth
     second: {fileID: 2100000, guid: 469a68ee0c5acca498065a50fbd2f442, type: 2}
   - first:

@@ -288,6 +288,24 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EveryHeroModel_HoldsItsCharactersStartingWeapon()
+        {
+            // Learning Comment: Model ke haath mein wahi hathiyar ho jo character asal mein chalata hai.
+            string manifest = System.IO.File.ReadAllText(System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(Application.dataPath), "ArtSource", "SH10_Heroes_v01", "manifest.json"));
+            var held = System.Text.RegularExpressions.Regex.Matches(manifest, @"""character"":\s*""(\w+)"",\s*""weapon"":\s*""(\w+)""")
+                .Cast<System.Text.RegularExpressions.Match>()
+                .ToDictionary(m => "SH10_Hero_" + m.Groups[1].Value, m => m.Groups[2].Value);
+            foreach (var character in GameContentCatalog.Load().Characters.Where(c => c != null))
+            {
+                string model = character.CharacterModelPrefab.name;
+                Assert.That(held.ContainsKey(model), Is.True, $"{character.CharacterName}: {model} manifest mein nahi hai.");
+                Assert.That(held[model], Is.EqualTo(character.StartingWeapon.ToString()),
+                    $"{character.CharacterName} ke haath mein {held[model]} hai, par weapon {character.StartingWeapon} hai.");
+            }
+        }
+
+        [Test]
         public void MoveSpeed_IsAMultiplier_ForEveryCharacter_AndNoVSNames()
         {
             // Learning Comment: Owner decision 2026-09-25: move speed multiplier hai (1.0 = base speed).

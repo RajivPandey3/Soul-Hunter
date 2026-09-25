@@ -31,10 +31,10 @@ namespace SoulHunter.Editor.Content
         private const int PortraitSize = 256;
         private static readonly Color KeyColor = new Color(1f, 0f, 1f, 1f);
 
-        /// <summary>Character asset name -> hero model name (SH10_Hero_*, or SH10_Kael).</summary>
+        /// <summary>Character asset name -> hero model name (SH10_Hero_*).</summary>
         public static readonly Dictionary<string, string> CharacterModels = new Dictionary<string, string>
         {
-            { "Char_Kael", "SH10_Kael" },
+            { "Char_Kael", "SH10_Hero_Kael" },
             { "Char_Corvan", "SH10_Hero_Corvan" },
             { "Char_Aria", "SH10_Hero_Aria" },
             { "Char_Draven", "SH10_Hero_Draven" },
@@ -55,7 +55,7 @@ namespace SoulHunter.Editor.Content
             var palettes = LoadManifest();
             foreach (string model in CharacterModels.Values.Distinct())
             {
-                if (model != "SH10_Kael") ConfigureModel(model, palettes);
+                ConfigureModel(model, palettes);
                 BuildPrefab(model);
             }
             AssetDatabase.SaveAssets();
@@ -126,14 +126,6 @@ namespace SoulHunter.Editor.Content
                 animator.runtimeAnimatorController = controller;
                 animator.applyRootMotion = false;
                 if (instance.GetComponent<EntityAnimator>() == null) instance.AddComponent<EntityAnimator>();
-                if (model == "SH10_Kael")
-                {
-                    // Kael's faceted materials live as overrides on the original SH10_Kael prefab, not in the FBX.
-                    var original = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabFolder}/SH10_Kael.prefab");
-                    var source = original != null ? original.GetComponentInChildren<SkinnedMeshRenderer>(true) : null;
-                    var target = instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
-                    if (source != null && target != null) target.sharedMaterials = source.sharedMaterials;
-                }
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath(model));
             }
             finally

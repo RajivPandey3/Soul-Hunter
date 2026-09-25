@@ -27,29 +27,38 @@ BASE = {
 # name: palette overrides, bulk (limb/torso thickness), head style, body extras, right-hand prop, left-hand prop
 HEROES = {
     'Corvan': dict(pal=dict(Armor=(.25, .17, .10), Cloth=(.10, .09, .07), Trim=(.55, .36, .12), Hair=(.20, .20, .22)),
-                   bulk=1.05, head='wide_hat', body=['coat', 'scarf'], right='whip', left='lantern'),
+                   bulk=1.05, head='wide_hat', body=['coat', 'scarf'], weapon='Whip', left='lantern'),
     'Aria': dict(pal=dict(Armor=(.42, .28, .15), Cloth=(.10, .45, .20), Trim=(.85, .62, .20), Accent=(.85, .12, .12), Soul=(.45, .85, 1.0), Hair=(.55, .25, .08)),
-                 bulk=.9, head='feather_cap', body=['short_cape'], right='lute', left=None),
+                 bulk=.9, head='feather_cap', body=['short_cape', 'lute_back'], weapon='SongOfMana', left=None),
     'Draven': dict(pal=dict(Armor=(.07, .07, .09), Cloth=(.18, .02, .05), Trim=(.38, .38, .42), Soul=(.95, .08, .08)),
-                   bulk=.85, head='hood_mask', body=['scarf', 'belt_daggers'], right='knife', left='knife'),
+                   bulk=.85, head='hood_mask', body=['scarf', 'belt_daggers'], weapon='Knife', left='knife'),
     'Gideon': dict(pal=dict(Armor=(.36, .20, .11), Cloth=(.30, .09, .04), Trim=(.52, .48, .42), Soul=(1.0, .50, .10), Hair=(.25, .12, .05)),
-                   bulk=1.45, head='horned_cap', body=['big_pauldrons', 'belt'], right='axe', left=None),
+                   bulk=1.45, head='horned_cap', body=['big_pauldrons', 'belt'], weapon='Axe', left=None),
     'Isolde': dict(pal=dict(Armor=(.18, .10, .22), Cloth=(.30, .07, .40), Trim=(.15, .55, .28), Soul=(.40, 1.0, .30), Hair=(.08, .04, .10)),
-                   bulk=.9, head='witch_hat', body=['robe'], right='flask', left=None),
+                   bulk=.9, head='witch_hat', body=['robe'], weapon='SantaWater', left=None),
     'Kaelen': dict(pal=dict(Armor=(.10, .10, .12), Cloth=(.50, .05, .05), Trim=(.72, .72, .76), Soul=(1.0, .35, .10), Hair=(.08, .08, .08)),
-                   bulk=1.0, head='tricorn', body=['coat', 'crossbelt'], right='cross', left=None),
+                   bulk=1.0, head='tricorn', body=['coat', 'crossbelt'], weapon='Cross', left=None),
     'Lumina': dict(pal=dict(Armor=(.80, .76, .62), Cloth=(.88, .87, .82), Trim=(.90, .70, .25), Soul=(1.0, .85, .30), Hair=(.90, .75, .35)),
-                   bulk=.95, head='halo', body=['robe', 'tabard'], right='book', left=None),
+                   bulk=.95, head='halo', body=['robe', 'tabard'], weapon='Bible', left=None),
     'Elaria': dict(pal=dict(Armor=(.20, .22, .35), Cloth=(.10, .18, .58), Trim=(.75, .78, .85), Soul=(.30, .80, 1.0)),
-                   bulk=.9, head='deep_hood', body=['robe', 'orbit_crystals'], right='staff', left=None),
+                   bulk=.9, head='deep_hood', body=['robe', 'orbit_crystals'], weapon='MagicWand', left=None),
     'Rurik': dict(pal=dict(Armor=(.30, .30, .32), Cloth=(.14, .30, .14), Trim=(.36, .22, .12), Soul=(.90, .20, .10), Hair=(.70, .30, .08), Accent=(.40, .26, .14)),
-                  bulk=1.35, head='horned_helm', body=['fur', 'kilt'], right='bone_club', left=None),
+                  bulk=1.35, head='horned_helm', body=['fur', 'kilt'], weapon='Bone', left=None),
     'Seraphina': dict(pal=dict(Armor=(.60, .62, .70), Cloth=(.55, .20, .62), Trim=(.85, .85, .92), Soul=(1.0, .35, .85), Hair=(.92, .92, .96)),
-                      bulk=.85, head='tiara', body=['skirt', 'orbit_crystals'], right='wand', left=None),
+                      bulk=.85, head='tiara', body=['skirt', 'orbit_crystals'], weapon='MagicWand', left=None),
     'Sylas': dict(pal=dict(Armor=(.12, .08, .20), Cloth=(.05, .03, .09), Trim=(.30, .20, .45), Soul=(.62, .22, 1.0)),
-                  bulk=1.0, head='void_hood', body=['robe', 'void_rings'], right='rune', left=None),
+                  bulk=1.0, head='void_hood', body=['robe', 'void_rings'], weapon='Runetracer', left=None),
     'Valerius': dict(pal=dict(Armor=(.62, .64, .68), Cloth=(.10, .15, .45), Trim=(.85, .65, .20), Accent=(.80, .08, .08), Soul=(.40, .70, 1.0)),
-                     bulk=1.2, head='great_helm', body=['tabard', 'big_pauldrons'], right='sword', left='shield'),
+                     bulk=1.2, head='great_helm', body=['tabard', 'big_pauldrons'], weapon='Whip', left='shield'),
+    # Kael keeps the SH10_Kael look (build_campaign_pack rig_actor('Kael')) and now holds his Whip.
+    'Kael': dict(pal=dict(Armor=(0.13, 0.18, 0.23), Trim=(0.20, 0.25, 0.30), Cloth=(0.26, 0.035, 0.055)),
+                 bulk=1.0, custom='kael', weapon='Whip', left=None),
+}
+
+# The prop in the right hand is the character's starting weapon (UpgradeType name -> prop).
+WEAPON_PROP = {
+    'Whip': 'whip', 'SongOfMana': 'songbook', 'Knife': 'knife', 'Axe': 'axe', 'SantaWater': 'flask',
+    'Cross': 'cross', 'Bible': 'book', 'MagicWand': 'wand', 'Bone': 'bone_club', 'Runetracer': 'rune',
 }
 
 palette = dict(BASE)
@@ -149,6 +158,31 @@ def body(bulk):
         with bone('Forearm.' + side):
             limb('Forearm', (s * .50, 0, 1.12), (s * .50, -.1, .83), .095 * bulk, 'Armor')
             gem('Hand', HAND[side], (.075 * bulk, .075 * bulk, .08), 'Skin')
+
+
+def kael_body():
+    """SH10_Kael's own geometry (build_campaign_pack.rig_actor('Kael')): Armor = Iron, Trim = Slate."""
+    with bone('Spine'):
+        cone('Torso', (0, 0, 1.25), .23, .35, .50, 'Armor')
+        box('Breastplate', (0, -.24, 1.26), (.40, .08, .30), 'Trim', .025)
+        gem('SoulSeal', (0, -.30, 1.3), (.07, .04, .12), 'Soul')
+        box('Cape', (0, .23, 1.0), (.65, .07, 1.02), 'Cloth', .025)
+    with bone('Head'):
+        gem('Helmet', (0, 0, 1.75), (.23, .22, .28), 'Armor')
+        box('Visor', (0, -.21, 1.77), (.32, .045, .07), 'Dark', .025)
+        for x in [-.08, .08]:
+            box('Eye', (x, -.24, 1.77), (.06, .02, .035), 'Soul', 0)
+    for side, s in [('L', -1), ('R', 1)]:
+        with bone('Thigh.' + side):
+            limb('Thigh', (s * .18, 0, 1), (s * .18, 0, .58), .12, 'Armor')
+        with bone('Shin.' + side):
+            limb('Shin', (s * .18, 0, .58), (s * .18, 0, .18), .10, 'Armor')
+            box('Boot', (s * .18, -.09, .13), (.24, .4, .26), 'Dark', .025)
+        with bone('UpperArm.' + side):
+            gem('Pauldron', (s * .39, 0, 1.46), (.22, .23, .17), 'Armor')
+            limb('UpperArm', (s * .40, 0, 1.42), (s * .50, 0, 1.12), .10, 'Armor')
+        with bone('Forearm.' + side):
+            limb('Forearm', (s * .50, 0, 1.12), (s * .50, -.1, .83), .095, 'Armor')
 
 
 def face(eyes='Dark'):
@@ -280,6 +314,11 @@ def extras(items, bulk):
             with bone('Spine'):
                 for a in [.5, 2.6, 4.6]:
                     gem('Crystal', (.62 * math.cos(a), .45 * math.sin(a), 1.40 + .12 * math.sin(a * 2)), (.06, .06, .13), 'Soul')
+        elif item == 'lute_back':
+            with bone('Spine'):
+                gem('LuteBody', (.12, .30, 1.10), (.15, .06, .20), 'Wood')
+                limb('LuteNeck', (.12, .31, 1.26), (.26, .31, 1.62), .025, 'Trim')
+                gem('LuteSoul', (.12, .36, 1.10), (.04, .02, .04), 'Soul')
         elif item == 'void_rings':
             with bone('Spine'):
                 torus('VoidRing', (0, 0, 1.05), .48, .025, 'Soul', (.25, 0, 0))
@@ -321,6 +360,11 @@ def prop(kind, side):
             box('CrossStem', h + Vector((0, -.08, .05)), (.05, .05, .40), 'Trim', 0)
             box('CrossArm', h + Vector((0, -.08, .13)), (.26, .05, .05), 'Trim', 0)
             gem('CrossSoul', h + Vector((0, -.11, .13)), (.04, .02, .04), 'Soul')
+        elif kind == 'songbook':
+            box('SongBook', h + Vector((-.04, -.10, .05)), (.22, .14, .28), 'Cloth', .01)
+            box('Pages', h + Vector((-.04, -.10, .05)), (.18, .15, .24), 'Bone', 0)
+            gem('SongSeal', h + Vector((-.04, -.18, .05)), (.05, .02, .05), 'Soul')
+            gem('Note', h + Vector((-.02, -.12, .32)), (.035, .035, .05), 'Soul')
         elif kind == 'book':
             box('Book', h + Vector((-.04, -.10, .05)), (.24, .16, .30), 'Trim', .01)
             box('Pages', h + Vector((-.04, -.10, .05)), (.20, .17, .26), 'Bone', 0)
@@ -428,8 +472,11 @@ def build(name, spec):
     materials, parts, assignments = {}, [], {}
     palette.clear(); palette.update(BASE); palette.update(spec['pal'])
     bulk = spec['bulk']
-    body(bulk); head(spec['head']); extras(spec['body'], bulk)
-    prop(spec['right'], 'R'); prop(spec['left'], 'L')
+    if spec.get('custom') == 'kael':
+        kael_body()
+    else:
+        body(bulk); head(spec['head']); extras(spec['body'], bulk)
+    prop(WEAPON_PROP[spec['weapon']], 'R'); prop(spec['left'], 'L')
     rig_obj = rig()
     bpy.ops.object.select_all(action='DESELECT')
     for p in parts: p.select_set(True)
@@ -454,7 +501,7 @@ def build(name, spec):
                              bake_anim=True, bake_anim_use_nla_strips=False, bake_anim_use_all_actions=True)
     triangles = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
     print('HERO_DONE', asset, triangles, flush=True)
-    return dict(name=asset, character=name, model=str(model.relative_to(ROOT)).replace('\\', '/'),
+    return dict(name=asset, character=name, weapon=spec['weapon'], model=str(model.relative_to(ROOT)).replace('\\', '/'),
                 source=str(source.relative_to(ROOT)).replace('\\', '/'), triangles=triangles,
                 materials={asset + '_' + k: list(palette[k]) for k in materials})
 
