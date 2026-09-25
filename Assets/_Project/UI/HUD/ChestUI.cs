@@ -52,6 +52,8 @@ namespace SoulHunter.Gameplay.UI
             }
 
             if (_chestPanel != null) _chestPanel.SetActive(true);
+            if (_claimButton != null && UnityEngine.EventSystems.EventSystem.current != null) // keyboard/controller focus
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(_claimButton.gameObject);
         }
 
         private void CloseChest()

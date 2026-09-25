@@ -17,6 +17,17 @@ namespace SoulHunter.Core.Persistence
         public int Currency;
         public bool SettingsMigrated;
         public float MasterVolume = 1f;
+
+        // --- Options (VS-style options screen) ---
+        public float MusicVolume = 1f;
+        public float SfxVolume = 1f;
+        public bool FlashingVfx = true;
+        public bool DamageNumbers = true;
+        public bool ScreenShake = true;
+        public bool Fullscreen = true;
+        public bool PauseOnFocusLoss = true;
+        /// <summary>Input System binding overrides (remapped controls) as JSON; empty = defaults.</summary>
+        public string InputBindingOverrides = "";
         public float HighScoreTime;
 
         // --- Meta Progression (Power-Ups) ---

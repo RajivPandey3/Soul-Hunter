@@ -157,6 +157,15 @@ namespace SoulHunter.Gameplay.UI
         Debug.LogError("[LevelUpUI] _levelUpPanel is NULL!");
     }
 
+    // Keyboard/controller: focus the first card so a choice can be made without a mouse.
+    if (UnityEngine.EventSystems.EventSystem.current != null)
+        foreach (var card in _upgradeButtons)
+            if (card != null && card.gameObject.activeInHierarchy && card.interactable)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(card.gameObject);
+                break;
+            }
+
     Debug.Log("[LevelUpUI] <<< ShowLevelUpScreen EXIT");
 }
 

@@ -30,6 +30,10 @@ namespace SoulHunter.Core.Bootstrap
 
             InitializeServices();
 
+            // Remapped controls (Options) are stored in the save, which loads after InputService starts.
+            if (gameServices.TryGet(out SoulHunter.Core.Input.InputService input) && gameServices.TryGet(out SoulHunter.Core.Persistence.SaveService save))
+                input.LoadBindingOverrides(save.CurrentData != null ? save.CurrentData.InputBindingOverrides : null);
+
             Debug.Log("[BootstrapInstaller] Framework Installed.");
         }
 

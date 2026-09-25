@@ -86,6 +86,7 @@ namespace SoulHunter.Gameplay.Audio
                 AudioListener.volume = MasterVolume;
                 InitializeAudioChannels();
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
+                SoulHunter.Core.Persistence.GameSettings.Changed += RefreshVolumes;
                 HandleSceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
             }
             else
@@ -96,7 +97,17 @@ namespace SoulHunter.Gameplay.Audio
 
         private void OnDestroy()
         {
-            if (Instance == this) UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+            if (Instance == this)
+            {
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+                SoulHunter.Core.Persistence.GameSettings.Changed -= RefreshVolumes;
+            }
+        }
+
+        // Options changed: the looping music follows the new Music volume at once.
+        private void RefreshVolumes()
+        {
+            if (_musicSource != null) _musicSource.volume = MusicVolume * SoulHunter.Core.Persistence.GameSettings.MusicVolume;
         }
 
         // The menu has its own loop; stage music is started by StageAudio in gameplay.
@@ -112,7 +123,7 @@ namespace SoulHunter.Gameplay.Audio
             if (_musicSource == null || clip == null) return;
             if (_musicSource.clip == clip && _musicSource.isPlaying) return;
             _musicSource.clip = clip;
-            _musicSource.volume = MusicVolume;
+            _musicSource.volume = MusicVolume * SoulHunter.Core.Persistence.GameSettings.MusicVolume;
             _musicSource.Play();
         }
 
@@ -193,7 +204,7 @@ namespace SoulHunter.Gameplay.Audio
                 if (!_sfxSources[i].isPlaying)
                 {
                     _sfxSources[i].clip = clip;
-                    _sfxSources[i].volume = volumeMultiplier; // master volume is AudioListener.volume
+                    _sfxSources[i].volume = volumeMultiplier * SoulHunter.Core.Persistence.GameSettings.SfxVolume; // master volume is AudioListener.volume
                     _sfxSources[i].Play();
                     return;
                 }
@@ -201,7 +212,7 @@ namespace SoulHunter.Gameplay.Audio
             
             // Agar sab baj rahe hain, toh pehle wale ko rok kar naya bajao (ya ignore karo)
             _sfxSources[0].clip = clip;
-            _sfxSources[0].volume = volumeMultiplier;
+            _sfxSources[0].volume = volumeMultiplier * SoulHunter.Core.Persistence.GameSettings.SfxVolume;
             _sfxSources[0].Play();
         }
 

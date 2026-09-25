@@ -54,6 +54,7 @@ namespace SoulHunter.Gameplay.VFX
             float duration = 0.2f,
             float magnitude = 0.5f)
         {
+            if (!SoulHunter.Core.Persistence.GameSettings.ScreenShake) return; // Options: screen shake off
             _shakeDuration = duration;
             _shakeMagnitude = magnitude;
             _shakeTime = duration;

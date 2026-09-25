@@ -98,7 +98,8 @@ namespace SoulHunter.Gameplay.Combat
                 _hitInvulnerableUntil = Time.time + PostHitInvulnerability;
             
             // Kami #3 Fix: Damage Number dikhana
-            if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
+            // Options: damage numbers can be turned off (VS "Damage Numbers").
+            if (SoulHunter.Core.Persistence.GameSettings.DamageNumbers && SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
             {
                 // Thoda sa upar dikhate hain taaki enemy ke sir par aaye
                 Vector3 popupPos = transform.position + Vector3.up * 1.5f; 

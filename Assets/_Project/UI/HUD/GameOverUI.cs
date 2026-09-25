@@ -220,6 +220,8 @@ namespace SoulHunter.Gameplay.UI
                 _restartButton.transform.SetAsLastSibling(); // Ensure button is in front of panel backdrop
                 _restartButton.gameObject.SetActive(true);
                 _restartButton.interactable = true;
+                if (UnityEngine.EventSystems.EventSystem.current != null) // keyboard/controller focus
+                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(_restartButton.gameObject);
             }
         }
     }

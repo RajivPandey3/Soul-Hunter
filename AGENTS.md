@@ -210,14 +210,18 @@ No scene contains an `AudioManager`; it creates itself from `Assets/Resources/Au
 
 Missing audio was then synthesised in code (owner choice 2026-09-25, retro style, no external samples): `RetroAudioSynth` (menu Soul Hunter/Content/Generate Retro Audio) writes 12 effects (EnemyDeath, PlayerHurt, GameOver, StageClear, BossWarning, UIClick, UIConfirm, Unlock, Shoot, Slash, Magic, Explosion) and 11 music loops (menu + one per stage, each with its own key, tempo, scale and progression; loops end at silence so they repeat without a click), and adds a 3 ms fade-in to the five older effects that started with a click. `AudioManagerPrefabBuilder` wires them all into the prefab. Hooks: stage music and stage-clear / game-over / victory sounds via `StageAudio` (added by `GameSessionManager`), menu music on MainMenu, enemy death, player hurt (throttled), boss warning, unlock notice, UI click/confirm, and a fire sound per weapon (`AutoAttackWeapon.FireSound`: Shoot, Slash, Magic, Explosion, or None for Garlic and Bible; throttled). SFX volume no longer applies MasterVolume twice. Validated by `AudioPlayModeTests` (R: every clip assigned, effects audible, menu and per-stage music, weapon, hit, death, hurt and game-over sounds); EditMode 281/281, PlayMode 33/33 (`D:SoulHunter-Validationun-20260925-audio2`). Nobody has listened to it yet: how it sounds (`V`) and the mix are unverified.
 
-### Accessibility
+### Accessibility (owner decision 2026-09-25: follow the original VS options)
 
-Not currently evidenced as complete:
+Before: no options screen (only a master-volume slider inside the pause panel), fixed controls, no controller button for Dash/Ultimate/Pause, no focus on pause/level-up/game-over, a mouse-only IMGUI merchant shop, a dead Restart button, and no way to turn off shake, damage numbers or flashes.
 
-- rebindable controls
-- screen-shake toggle
-- damage-number toggle
-- color/readability options
+Now (VS-style, from memory of VS, not checked against a source):
+- `OptionsMenuUI` (main menu Options button and pause menu): Sounds and Music volume, Flashing VFX, Damage Numbers, Screen Shake, Fullscreen, Pause When Unfocused, and remapping of keyboard (Move WASD, Dash, Ultimate, Pause) and controller (Dash, Ultimate, Pause) bindings with Reset. Stored in `GameData` via `GameSettings`; remaps are saved by action name + binding index because Unity's JSON uses per-launch random binding IDs and would never reload.
+- Flashing VFX off: no hit flash, and the low-HP warning becomes a steady tint. Damage Numbers off hides combat numbers (merchant cost popups stay). Screen Shake off stops `CameraShake`.
+- Controller: Dash = A/Cross, Ultimate = Y/Triangle, Pause = Start, D-pad moves. Every screen focuses a control (menu, character select, pause, options, level-up, chest, game over, merchant), and focused controls turn orange (`OptionsMenuUI.ApplyFocusColors`; the old tint was invisible on dark buttons).
+- `PauseMenuUI`: Resume / Options / Quit (to main menu); `GameSystemManager` pauses on focus loss when the option is on.
+- The merchant shop is uGUI instead of IMGUI. Selected character cards also get an outline (not colour alone).
+
+Validated by `AccessibilityTests` (T) and `AccessibilityPlayModeTests` (R: options contents and focus, pause menu, controller Start pauses, focus-loss pause, merchant shop focus, switches turning off numbers/shake/flash); EditMode 284/284, PlayMode 36/36, save file untouched (`D:SoulHunter-Validationun-20260925-access`). Not done: text-size option and HUD text contrast (blue HUD text on dark ground); fullscreen only applies in builds.
 
 ### Persistence
 

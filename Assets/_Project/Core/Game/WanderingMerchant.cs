@@ -69,6 +69,7 @@ namespace SoulHunter.Gameplay.Core
         {
             _isShopOpen = true;
             SoulHunter.Core.Services.GameTime.Pause(this);
+            BuildShopUI();
         }
 
         // Learning Comment: Attempts to purchase a healing potion using harvested souls from EconomyService.
@@ -167,81 +168,107 @@ namespace SoulHunter.Gameplay.Core
             return true;
         }
 
-        private void OnGUI()
+        private enum Offer { Potion, Might, Armor, MaxHealth }
+
+        private GameObject _shopUI;
+        private TMPro.TextMeshProUGUI _soulsText;
+        /// <summary>The shop screen while open (uGUI, so keyboard and controller can use it).</summary>
+        public GameObject ShopUI => _shopUI;
+
+        // The shop was IMGUI (OnGUI), which only a mouse can use. It is now a uGUI screen with a focused
+        // first button, so keyboard and controller players can buy too.
+        private void BuildShopUI()
         {
-            if (!_isShopOpen) return;
+            if (_shopUI != null || !Application.isPlaying) return;
+            _shopUI = new GameObject("MerchantShop", typeof(RectTransform));
+            var canvas = _shopUI.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 900;
+            var scaler = _shopUI.AddComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            _shopUI.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
-            var boxStyle = new GUIStyle(GUI.skin.box);
-            boxStyle.fontSize = 22;
-            boxStyle.normal.textColor = Color.yellow;
-            boxStyle.alignment = TextAnchor.UpperCenter;
+            var panel = ShopRect("Panel", _shopUI.transform, new Vector2(0.3f, 0.18f), new Vector2(0.7f, 0.82f));
+            panel.gameObject.AddComponent<UnityEngine.UI.Image>().color = new Color(0.08f, 0.07f, 0.12f, 0.96f);
+            ShopText("Title", panel, new Vector2(0f, 0.87f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f).color = Color.yellow;
+            _soulsText = ShopText("Souls", panel, new Vector2(0f, 0.78f), new Vector2(1f, 0.87f), "", 28f);
 
-            int width = 460;
-            int height = 370;
-            Rect rect = new Rect((Screen.width - width) / 2f, (Screen.height - height) / 2f, width, height);
-            
-            GUI.Box(rect, "WANDERING MERCHANT", boxStyle);
+            var first = ShopButton(panel, 0.66f, $"Buy Potion (+{_healAmount} HP) for {_cost} Souls", () => Buy(Offer.Potion));
+            ShopButton(panel, 0.54f, $"Buy Might Blessing (+{Mathf.RoundToInt(_mightBonus * 100f)}% Might) for {_mightBlessingCost} Souls", () => Buy(Offer.Might));
+            ShopButton(panel, 0.42f, $"Buy Armor Blessing (+{_armorBonus} Armor) for {_armorBlessingCost} Souls", () => Buy(Offer.Armor));
+            ShopButton(panel, 0.30f, $"Buy Max Health Blessing (+{_maxHealthBonus} Max HP) for {_maxHealthBlessingCost} Souls", () => Buy(Offer.MaxHealth));
+            ShopButton(panel, 0.12f, "Leave", CloseShop);
+            RefreshSouls();
+            if (UnityEngine.EventSystems.EventSystem.current != null)
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(first.gameObject);
+        }
 
-            var buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.fontSize = 17;
+        private void DestroyShopUI()
+        {
+            if (_shopUI == null) return;
+            if (Application.isPlaying) Destroy(_shopUI); else DestroyImmediate(_shopUI);
+            _shopUI = null;
+        }
 
-            if (GameServices.Instance != null && GameServices.Instance.TryGet<EconomyService>(out var economy))
+        private void RefreshSouls()
+        {
+            if (_soulsText == null) return;
+            int souls = GameServices.Instance != null && GameServices.Instance.TryGet<EconomyService>(out var economy) ? economy.HarvestedSouls : 0;
+            _soulsText.text = $"Your Souls: {souls}";
+        }
+
+        private void Buy(Offer offer)
+        {
+            if (GameServices.Instance == null || !GameServices.Instance.TryGet<EconomyService>(out var economy)) return;
+            bool bought;
+            int cost;
+            switch (offer)
             {
-                GUI.Label(new Rect(rect.x + 20, rect.y + 40, rect.width - 40, 30), $"Your Souls: {economy.HarvestedSouls}", buttonStyle);
-
-                if (GUI.Button(new Rect(rect.x + 30, rect.y + 75, rect.width - 60, 40), $"Buy Potion (+{_healAmount} HP) for {_cost} Souls", buttonStyle))
-                {
-                    if (TryPurchase(economy))
-                    {
-                        if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
-                        {
-                            SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-_cost, transform.position + Vector3.up * 2f);
-                        }
-                        Destroy(gameObject);
-                    }
-                }
-
-                if (GUI.Button(new Rect(rect.x + 30, rect.y + 125, rect.width - 60, 40), $"Buy Might Blessing (+{Mathf.RoundToInt(_mightBonus * 100f)}% Might) for {_mightBlessingCost} Souls", buttonStyle))
-                {
-                    if (TryPurchaseBlessing(BlessingType.Might, economy))
-                    {
-                        if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
-                        {
-                            SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-_mightBlessingCost, transform.position + Vector3.up * 2f);
-                        }
-                        Destroy(gameObject);
-                    }
-                }
-
-                if (GUI.Button(new Rect(rect.x + 30, rect.y + 175, rect.width - 60, 40), $"Buy Armor Blessing (+{_armorBonus} Armor) for {_armorBlessingCost} Souls", buttonStyle))
-                {
-                    if (TryPurchaseBlessing(BlessingType.Armor, economy))
-                    {
-                        if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
-                        {
-                            SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-_armorBlessingCost, transform.position + Vector3.up * 2f);
-                        }
-                        Destroy(gameObject);
-                    }
-                }
-
-                if (GUI.Button(new Rect(rect.x + 30, rect.y + 225, rect.width - 60, 40), $"Buy Max Health Blessing (+{_maxHealthBonus} Max HP) for {_maxHealthBlessingCost} Souls", buttonStyle))
-                {
-                    if (TryPurchaseBlessing(BlessingType.MaxHealth, economy))
-                    {
-                        if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
-                        {
-                            SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-_maxHealthBlessingCost, transform.position + Vector3.up * 2f);
-                        }
-                        Destroy(gameObject);
-                    }
-                }
+                case Offer.Potion: bought = TryPurchase(economy); cost = _cost; break;
+                case Offer.Might: bought = TryPurchaseBlessing(BlessingType.Might, economy); cost = _mightBlessingCost; break;
+                case Offer.Armor: bought = TryPurchaseBlessing(BlessingType.Armor, economy); cost = _armorBlessingCost; break;
+                default: bought = TryPurchaseBlessing(BlessingType.MaxHealth, economy); cost = _maxHealthBlessingCost; break;
             }
+            if (!bought) { RefreshSouls(); return; }
+            if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
+                SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-cost, transform.position + Vector3.up * 2f);
+            Destroy(gameObject);
+        }
 
-            if (GUI.Button(new Rect(rect.x + 30, rect.y + 285, rect.width - 60, 40), "Leave", buttonStyle))
-            {
-                CloseShop();
-            }
+        private UnityEngine.UI.Button ShopButton(RectTransform panel, float top, string label, System.Action onClick)
+        {
+            var rect = ShopRect(label, panel, new Vector2(0.06f, top - 0.1f), new Vector2(0.94f, top));
+            var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();
+            var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();
+            button.targetGraphic = image;
+            SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
+            button.onClick.AddListener(() => onClick());
+            ShopText("Text", rect, Vector2.zero, Vector2.one, label, 24f);
+            return button;
+        }
+
+        private static RectTransform ShopRect(string name, Transform parent, Vector2 min, Vector2 max)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = min;
+            rect.anchorMax = max;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            return rect;
+        }
+
+        private static TMPro.TextMeshProUGUI ShopText(string name, Transform parent, Vector2 min, Vector2 max, string text, float size)
+        {
+            var label = ShopRect(name, parent, min, max).gameObject.AddComponent<TMPro.TextMeshProUGUI>();
+            label.text = text;
+            label.alignment = TMPro.TextAlignmentOptions.Center;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 14f;
+            label.fontSizeMax = size;
+            label.raycastTarget = false;
+            return label;
         }
 
         // Learning Comment: Closes the merchant shop and safely restores normal gameplay time flow (Time.timeScale = 1f).
@@ -249,6 +276,7 @@ namespace SoulHunter.Gameplay.Core
         {
             _isShopOpen = false;
             SoulHunter.Core.Services.GameTime.Resume(this);
+            DestroyShopUI();
         }
 
         // Learning Comment: When the merchant component or GameObject is disabled (e.g. stage transition or object pooling),
@@ -264,6 +292,7 @@ namespace SoulHunter.Gameplay.Core
         // Learning Comment: Ensures Time.timeScale is safely restored to 1f if the merchant is destroyed while the shop is open.
         private void OnDestroy()
         {
+            DestroyShopUI();
             if (_isShopOpen)
             {
                 SoulHunter.Core.Services.GameTime.Resume(this);

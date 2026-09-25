@@ -52,6 +52,14 @@ namespace SoulHunter.Gameplay.UI
         private void Update()
         {
             if (!IsWarning || _overlay == null) return;
+            if (!SoulHunter.Core.Persistence.GameSettings.FlashingVfx)
+            {
+                // Options: flashing VFX off keeps the warning as a steady tint instead of a pulse.
+                var steady = _tint;
+                steady.a = _maxAlpha * 0.6f;
+                _overlay.color = steady;
+                return;
+            }
             // Unscaled so the warning keeps pulsing on pause and level-up screens.
             float wave = (Mathf.Sin(Time.unscaledTime * _pulsesPerSecond * 2f * Mathf.PI) + 1f) * 0.5f;
             var color = _tint;

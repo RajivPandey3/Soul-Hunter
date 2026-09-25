@@ -23,6 +23,10 @@ namespace SoulHunter.Gameplay.Core
         public Slider VolumeSlider;
 
         private bool _isPaused = false;
+
+        public bool IsPaused => _isPaused;
+        /// <summary>Raised when the pause menu opens (true) or closes (false); the pause UI sets focus on it.</summary>
+        public event System.Action<bool> OnPauseChanged;
         private SoulHunter.Core.Persistence.SaveService _save;
         private SoulHunter.Core.Events.EventBus _eventBus;
         private SoulHunter.Core.Events.EventSubscription _pauseSubscription;
@@ -63,6 +67,31 @@ namespace SoulHunter.Gameplay.Core
             {
                 SoulHunter.Core.Services.GameTime.Resume(this); // Game wapas chala do
             }
+            OnPauseChanged?.Invoke(_isPaused);
+        }
+
+        public void Resume()
+        {
+            if (_isPaused) TogglePause();
+        }
+
+        /// <summary>Leaves the run for the main menu (VS pause menu "Quit").</summary>
+        public void QuitToMainMenu()
+        {
+            if (_isPaused) TogglePause();
+            SoulHunter.Core.Services.GameTime.ResetAll();
+            if (SoulHunter.Core.Services.GameServices.Instance != null &&
+                SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Scenes.SceneService scenes))
+                scenes.LoadSceneAsync("MainMenu");
+        }
+
+        // Options: pause when the window loses focus (alt-tab), unless another screen already paused the game.
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus || _isPaused || !SoulHunter.Core.Persistence.GameSettings.PauseOnFocusLoss) return;
+            if (SoulHunter.Core.Services.GameTime.IsPaused) return;
+            if (GameSessionManager.Instance == null || GameSessionManager.Instance.IsRunFinished) return;
+            TogglePause();
         }
 
         // ==========================================

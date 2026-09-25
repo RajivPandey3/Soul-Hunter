@@ -90,6 +90,7 @@ namespace SoulHunter.Gameplay.VFX
 
         private void TriggerFlash()
         {
+            if (!SoulHunter.Core.Persistence.GameSettings.FlashingVfx) return; // Options: flashing VFX off
             _flashTimer = _flashDuration;
             if (_isFlashing) return;
 

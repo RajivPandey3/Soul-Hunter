@@ -18,7 +18,42 @@ namespace SoulHunter.UI
             QuitButton.onClick.AddListener(Quit);
             foreach (var button in new[] { StartButton, PowerUpButton, CharacterBackButton, PowerUpBackButton, QuitButton })
                 if (button != null) button.onClick.AddListener(PlayClick);
+            OptionsButton = CreateOptionsButton();
             ShowHome();
+        }
+
+        /// <summary>VS main menu "Options": a copy of the Power Up button placed below it; Quit moves down one step.</summary>
+        public Button OptionsButton { get; private set; }
+
+        private Button CreateOptionsButton()
+        {
+            if (PowerUpButton == null) return null;
+            var copy = Instantiate(PowerUpButton.gameObject, PowerUpButton.transform.parent);
+            copy.name = "Options_Button";
+            var button = copy.GetComponent<Button>();
+            button.onClick = new Button.ButtonClickedEvent(); // drop the copied Power Up listeners
+            button.onClick.AddListener(PlayClick);
+            button.onClick.AddListener(() => SoulHunter.Gameplay.UI.OptionsMenuUI.Open(() => Focus(OptionsButton)));
+            foreach (var tmp in copy.GetComponentsInChildren<TMPro.TMP_Text>(true)) tmp.text = "Options";
+            foreach (var legacy in copy.GetComponentsInChildren<Text>(true)) legacy.text = "Options";
+
+            if (copy.transform.parent.GetComponent<LayoutGroup>() == null && StartButton != null)
+            {
+                var start = (RectTransform)StartButton.transform;
+                var powerUp = (RectTransform)PowerUpButton.transform;
+                var step = powerUp.anchoredPosition - start.anchoredPosition;
+                ((RectTransform)copy.transform).anchoredPosition = powerUp.anchoredPosition + step;
+                if (QuitButton != null && QuitButton.transform.parent == powerUp.parent)
+                    ((RectTransform)QuitButton.transform).anchoredPosition = powerUp.anchoredPosition + step * 2f;
+            }
+            copy.transform.SetSiblingIndex(PowerUpButton.transform.GetSiblingIndex() + 1);
+            return button;
+        }
+
+        private static void Focus(Selectable target)
+        {
+            if (target != null && UnityEngine.EventSystems.EventSystem.current != null)
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(target.gameObject);
         }
         private static void PlayClick()
         {
@@ -26,9 +61,10 @@ namespace SoulHunter.UI
             if (audio != null) audio.PlaySFX(audio.UIClickSound);
         }
 
-        public void ShowHome() { HomePanel.SetActive(true); CharacterPanel.SetActive(false); PowerUpPanel.SetActive(false); }
+        // Every screen focuses a button, so the menus work with keyboard and controller alone.
+        public void ShowHome() { HomePanel.SetActive(true); CharacterPanel.SetActive(false); PowerUpPanel.SetActive(false); Focus(StartButton); }
         public void ShowCharacters() { HomePanel.SetActive(false); CharacterPanel.SetActive(true); PowerUpPanel.SetActive(false); }
-        public void ShowPowerUps() { HomePanel.SetActive(false); CharacterPanel.SetActive(false); PowerUpPanel.SetActive(true); }
+        public void ShowPowerUps() { HomePanel.SetActive(false); CharacterPanel.SetActive(false); PowerUpPanel.SetActive(true); Focus(PowerUpBackButton); }
         private void Quit()
         {
             #if UNITY_EDITOR

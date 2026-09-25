@@ -49,6 +49,7 @@ namespace SoulHunter.UI
         private readonly List<Button> _cards = new List<Button>();
         private readonly List<Image> _cardBackgrounds = new List<Image>();
         private readonly List<Image> _cardPortraits = new List<Image>();
+        private readonly List<Outline> _cardOutlines = new List<Outline>();
         private readonly List<TextMeshProUGUI> _cardBadges = new List<TextMeshProUGUI>();
         private Image _weaponIconDisplay;
         private TextMeshProUGUI _weaponNameText;
@@ -229,6 +230,8 @@ namespace SoulHunter.UI
 
             for (int i = 0; i < _cardBackgrounds.Count; i++)
                 if (_cardBackgrounds[i] != null) _cardBackgrounds[i].color = i == _currentIndex ? _selectedCardColor : _cardColor;
+            for (int i = 0; i < _cardOutlines.Count; i++)
+                if (_cardOutlines[i] != null) _cardOutlines[i].enabled = i == _currentIndex;
             ScrollToSelected();
         }
 
@@ -508,6 +511,12 @@ namespace SoulHunter.UI
             _cards.Add(button);
             _cardBackgrounds.Add(background);
             _cardPortraits.Add(portrait);
+            // The selected card gets a white outline as well as its colour, so selection never depends on colour alone.
+            var outline = card.gameObject.AddComponent<Outline>();
+            outline.effectColor = Color.white;
+            outline.effectDistance = new Vector2(5f, -5f);
+            outline.enabled = false;
+            _cardOutlines.Add(outline);
             _cardBadges.Add(badge);
         }
 

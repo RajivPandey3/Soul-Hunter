@@ -3,7 +3,8 @@
     "rootNamespace": "SoulHunter.Tests.EditMode",
     "references": [
         "SoulHunter.Foundation",
-        "SoulHunter.Gameplay"
+        "SoulHunter.Gameplay",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor"

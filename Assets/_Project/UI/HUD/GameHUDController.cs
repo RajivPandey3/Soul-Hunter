@@ -41,6 +41,9 @@ namespace SoulHunter.Gameplay.UI
 
         private void Start()
         {
+            // VS pause menu (Resume / Options / Quit) on the GameSystemManager panel.
+            PauseMenuUI.Attach(SoulHunter.Gameplay.Core.GameSystemManager.Instance);
+
             // Health Bar setup
             if (_playerHealth != null)
             {
