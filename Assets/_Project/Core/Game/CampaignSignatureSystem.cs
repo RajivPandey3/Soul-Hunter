@@ -98,7 +98,7 @@ private void TrySubscribeToProgression()
             {
                 case CampaignSignature.ForgottenVillage:
                     Debug.Log("[CampaignSignatureSystem] Spawning Wandering Merchant");
-                    SpawnMerchant();
+                    StartCoroutine(SpawnMerchantOnNewGround());
                     break;
                 case CampaignSignature.RuinedCastle: CreateHazards(CampaignHazard.HazardType.Trap, 14, 7); break;
                 case CampaignSignature.CrimsonSwamp: CreateHazards(CampaignHazard.HazardType.Poison, 6, 9); break;
@@ -122,6 +122,17 @@ private void TrySubscribeToProgression()
                     return spot;
             }
             return playerPosition + new Vector3(distance, 0f, 0f);
+        }
+
+        /// <summary>
+        /// InfiniteMap swaps the stage floor on the same OnStageStarted event, in no fixed order. Wait one frame and
+        /// sync physics so the merchant's spot is checked against this stage's obstacles, not the last stage's.
+        /// </summary>
+        private System.Collections.IEnumerator SpawnMerchantOnNewGround()
+        {
+            yield return null;
+            UnityEngine.Physics.SyncTransforms();
+            SpawnMerchant();
         }
 
         private void SpawnMerchant()

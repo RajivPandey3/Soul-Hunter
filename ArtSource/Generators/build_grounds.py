@@ -29,7 +29,11 @@ SIZE = 20.0
 HALF = SIZE / 2
 PATH_HALF = 1.5        # paths are 3 units wide
 CENTER_CLEAR = 4.5     # no obstacle this close to the tile centre (spawn)
-EDGE_MARGIN = 0.4
+EDGE_MARGIN = 1.0      # half a walkway on each side of a tile seam, so neighbouring tiles never close a gap
+# Owner rule (2026-09-26): at least 70% of every stage must be open, walkable ground and the player must never get
+# stuck. VS stages are open ground with scattered, easy-to-pass obstacles. Two obstacles are at least this far apart,
+# so the player (capsule radius 0.4) always fits between them with room to spare.
+MIN_GAP = 1.8
 
 palette = {}
 materials = {}
@@ -119,10 +123,26 @@ def patch(name, x, y, radius, mat, rng, z=0.004, points=9, squash=1.0):
     return finish(obj, name, mat)
 
 
+blocker_log = []       # (x, y, w, d, rot) of every blocker box, for Placer's footprint check
+
+
 def blocker(x, y, w, d, rot=0.0, h=2.5):
     """Invisible collision box around an obstacle's footprint."""
+    blocker_log.append((x, y, w, d, rot))
     with layer('blockers'):
         box('Blocker', (x, y, h / 2), (w, d, h), 'Blocker', rot)
+
+
+def footprint_radius(cx, cy, boxes):
+    """Distance from (cx, cy) to the farthest corner of the given blocker boxes."""
+    far = 0.0
+    for bx, by, w, d, rot in boxes:
+        c, s = math.cos(rot), math.sin(rot)
+        for sx in (-.5, .5):
+            for sy in (-.5, .5):
+                px, py = bx + (sx * w) * c - (sy * d) * s, by + (sx * w) * s + (sy * d) * c
+                far = max(far, math.hypot(px - cx, py - cy))
+    return far
 
 
 # ---------- ground ----------
@@ -208,6 +228,7 @@ class Placer:
         self.taken = []
 
     def place(self, count, radius, build, gap=.4, tries=400):
+        gap = max(gap, MIN_GAP)
         placed = 0
         for _ in range(tries):
             if placed >= count:
@@ -219,9 +240,24 @@ class Placer:
                 continue
             if any(math.hypot(x - tx, y - ty) < r + tr + gap for tx, ty, tr in self.taken):
                 continue
-            self.taken.append((x, y, r))
+            counts = {k: len(v) for k, v in layers.items()}
+            logged = len(blocker_log)
             with layer('obstacles'):
                 build(x, y, r, self.rng)
+            # Many blocker boxes reach past r (square corners, walls, houses), which let two obstacles close a gap
+            # or a pocket. Re-check everything with the real footprint and undo the obstacle if it does not fit.
+            fr = max(r, footprint_radius(x, y, blocker_log[logged:]))
+            fits = (abs(x) + fr <= HALF - EDGE_MARGIN and abs(y) + fr <= HALF - EDGE_MARGIN
+                    and not in_path(x, y, fr + .3) and math.hypot(x, y) >= CENTER_CLEAR + fr
+                    and not any(math.hypot(x - tx, y - ty) < fr + tr + gap for tx, ty, tr in self.taken))
+            if not fits:
+                for key, objs in layers.items():
+                    for obj in objs[counts.get(key, 0):]:
+                        bpy.data.objects.remove(obj, do_unlink=True)
+                    del objs[counts.get(key, 0):]
+                del blocker_log[logged:]
+                continue
+            self.taken.append((x, y, fr))
             placed += 1
         return placed
 
@@ -578,6 +614,7 @@ def build(level):
     bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
     for m in list(bpy.data.materials): bpy.data.materials.remove(m)
     materials, layers = {}, {}
+    blocker_log.clear()
     current[0] = 'ground'
     palette.clear(); palette.update(COMMON); palette.update(colors)
     fn(random.Random(2000 + level))

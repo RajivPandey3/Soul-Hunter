@@ -402,6 +402,53 @@ Removed (`LegacyGroundRemover`): the 90 `SH10_Lxx_Ground` instances in the ten s
 
 Validated by `StageFloorTests` (T: floor and collider sizes, obstacle collider/layer/hidden boxes, >= 12 obstacles, spawn centre and paths open, collision matrix, old assets gone) and `StageFloorPlayModeTests` (R: no showcase decor in play; the player walking straight into an obstacle face is stopped, 10/10 repeated runs); EditMode 284/284, PlayMode 38/38, save file untouched (`D:\SoulHunter-Validation\ground-20260925\`). In-game screenshots of all 10 levels checked (partial `V`). The player can slide round a small obstacle's corner, as in VS. The camera looks straight down, so obstacles read mostly by their tops. Feel, density and performance in real play are unverified (`V`, `P`).
 
+### Open ground rule: 70% walkable, no traps (owner rule, 2026-09-26)
+
+Owner rule: at least 70% of every stage's ground must be open for the player, who kept getting stuck between obstacles. VS research (vampire.survivors.wiki stage pages) found:
+- Most stages are open ground with "very few obstacles" that "can be easily navigated around".
+- Only a few stages are corridors.
+- Walls block the player, but weapons pass over them.
+- The spawn area is open.
+
+The cause was `build_grounds.py`: obstacles stood only 0.15-0.8 units apart (the player is 0.8 wide) and many blocker boxes reached past their placement radius, so obstacles closed gaps and formed pockets.
+
+Now:
+- Obstacles keep a `MIN_GAP` of 1.8 between them and a 1.0 margin from every tile edge, so seams stay open.
+- `Placer` measures each obstacle's real blocker footprint (the farthest box corner) and removes an obstacle that does not fit.
+- Floors were regenerated (7-16 obstacles per tile, down from 14-31) and re-imported.
+
+`FloorWalkabilityTests` (T) samples each 20×20 tile on a 0.25 grid with the player's capsule plus 0.35 elbow room. Blocker interiors count as blocked (the MeshCollider is surfaces only). It flood-fills from the spawn and the tile edges, and requires ≥70% reachable ground and no trapped pockets.
+
+Reachable ground per level:
+
+| Level | Before | After |
+|---|---|---|
+| L01 | 67% | 78% |
+| L02 | 58% | 78% |
+| L03 | 68% | 77% |
+| L04 | 61% | 80% |
+| L05 | 72% | 80% |
+| L06 | 63% | 80% |
+| L07 | 61% | 82% |
+| L08 | 79% | 85% |
+| L09 | 75% | 79% |
+| L10 | 77% | 80% |
+
+The earlier "trapped" readings were blocker interiors. `StageFloorTests` now requires at least 6 obstacles per floor (it was 12).
+
+Found by the suites: the Wandering Merchant could stand on an obstacle. `CampaignSignatureSystem` checked its spot on the same `OnStageStarted` event on which `InfiniteMap` swaps floors, so it tested the previous stage's ground. It now spawns one frame later, after `Physics.SyncTransforms`.
+
+Validation:
+- EditMode 327/327, PlayMode 89/89, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-ground\`).
+- Editor play `autoplay-editor-16` (Stage 3, god mode, 3 min): 0 errors, min 51 FPS; the village shows wide lanes and the merchant on open grass (partial `V`).
+
+VS ground features Soul Hunter does not have yet (owner direction needed):
+- **Destructible light sources:** one spawn attempt per second just off-screen at 7.5-30% base chance (Luck raises it), at most 10 at once, 10 HP. They drop gold (weight 50), chicken (12), a coin bag (10) or rare items (weight 1-2).
+- **Fixed stage items:** placed 3-7 tiles from the start.
+- **Pressure-plate traps:** flat, 20 s or longer cooldown.
+
+None of these block movement.
+
 ### Look, feel and sound pass (owner request, 2026-09-25)
 
 The owner said the ground looked dated, the sound was not professional, the player was not smooth, attacks were not visible and the player should face the enemy when attacking. Owner choices: CC0 sound packs, a textured stylized ground, and a camera tilted to about 55 degrees.

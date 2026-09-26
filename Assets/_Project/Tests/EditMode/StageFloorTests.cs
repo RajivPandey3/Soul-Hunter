@@ -71,7 +71,8 @@ namespace SoulHunter.Tests.EditMode
 
                 var mesh = blocker.sharedMesh;
                 Assert.That(mesh, Is.Not.Null);
-                Assert.That(mesh.triangles.Length / 3, Is.GreaterThanOrEqualTo(12 * 12), $"{floor.name} has at least 12 obstacles.");
+                // Owner rule (2026-09-26): 70%+ open ground, VS-style scattered obstacles; the floors now carry 7-16.
+                Assert.That(mesh.triangles.Length / 3, Is.GreaterThanOrEqualTo(6 * 12), $"{floor.name} has at least 6 obstacles.");
                 foreach (var local in mesh.vertices)
                 {
                     var p = blocker.transform.TransformPoint(local) - floor.transform.position;
