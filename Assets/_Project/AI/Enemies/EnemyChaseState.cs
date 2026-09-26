@@ -47,8 +47,11 @@ namespace SoulHunter.Gameplay.AI
             {
                 Vector3 direction = (_controller.Target.position - _controller.transform.position).normalized;
                 direction.y = 0; // Keep movement horizontal
-                
-                Vector3 movement = direction * _controller.MoveSpeed;
+
+                // VS rule: the horde pushes itself apart into a wide crowd (it used to trail the player in single
+                // file). A crowded enemy is slowed, never sped past its own move speed.
+                Vector3 steering = direction + EnemyCrowd.Separation(_controller) * EnemyCrowd.Strength;
+                Vector3 movement = Vector3.ClampMagnitude(steering, 1f) * _controller.MoveSpeed;
 
                 // Adjust for slopes using EnvironmentData (Reusable logic!)
                 float yVel = _controller.Rigidbody.linearVelocity.y;
@@ -77,7 +80,9 @@ namespace SoulHunter.Gameplay.AI
             }
             else
             {
-                _controller.Rigidbody.linearVelocity = new Vector3(0, _controller.Rigidbody.linearVelocity.y, 0);
+                // Next to the player: stop, but still make room for the rest of the crowd around it.
+                Vector3 spread = EnemyCrowd.Separation(_controller) * (EnemyCrowd.Strength * _controller.MoveSpeed);
+                _controller.Rigidbody.linearVelocity = new Vector3(spread.x, _controller.Rigidbody.linearVelocity.y, spread.z);
                 if (_controller.Animator != null)
                 {
                     _controller.Animator.UpdateSpeed(0f);

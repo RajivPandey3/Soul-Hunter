@@ -263,6 +263,46 @@ A second write-up (VS Stage 2, Inlaid Library) was reviewed under the same direc
 
 Not adopted: Stage 2 unlocking at player level 20 (conflicts with the one-run 10-level structure); Inlaid Library's wave tables, enemy/item/relic names and ×1.25 speed (VS game data, and taken from the fan wiki rather than poncle); its corridor and left/right spawning (Soul Hunter Level 2 is The Dark Forest). Stage events (wall/swarm/self-destruct enemies), destructibles, stage-placed items and Hyper mode are candidate features that need owner direction before they are built.
 
+### Enemy crowd separation (owner report, 2026-09-26)
+
+The owner saw the horde chase the player in single file ("rail ka dabba"), where VS shows a wide crowd. Every enemy homed on the player at the same speed with trigger bodies and nothing kept them apart, so they merged onto one path. VS research (vampire.survivors.wiki; the crowd-pushing part comes from thin forum sources and memory) says enemies push each other into crowds.
+
+`EnemyCrowd` now gives each enemy a soft push away from the enemies it overlaps: 1 - distance / (sum of body radii), capped at length 1. Bodies stay triggers, so the horde never walls the player in. `EnemyChaseState` steers toward the player plus the push × 1.2 (provisional). A crowded enemy slows down but never goes faster than its move speed. Next to the player, enemies still make room for each other. Body radius is the collider radius × scale, so chest elites and bosses push from further out. Event fliers are left out.
+
+Cost: once per rendered frame, the horde is read into arrays, sorted into a flat grid and every push is computed in one pass. The first version took 7.8 ms per step for 300 packed enemies (editor debug scripts) and dropped Stage 10 editor play to 19-27 FPS. The array version takes ~1.15 ms there. `-sh-crowd-off` (or `EnemyCrowd.Enabled`) switches it off for A/B checks.
+
+Validation:
+- `EnemyCrowdTests` (T): push maths, stacked pairs part in opposite directions, far enemies unaffected, bigger bodies, and a timing budget.
+- `EnemyCrowdPlayModeTests` (R: 40 enemies chase a walking player). Old behaviour: width 0.07, 100% stacked. Now: width 0.98 (about four bodies side by side), 0% stacked.
+- EditMode 324/324, PlayMode 87/87, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-crowd\`).
+- Editor play `autoplay-editor-13` (Stage 1, 0 errors, min 55 FPS) and `-14` (Stage 10, god mode): the old line became a wide, dense crowd (partial `V`). `AutoplayBot` timed shots now skip paused screens; level-ups every ~15 s used to hide every shot.
+- Windows build benchmark (reference laptop, 1080p pixel count, Medium), Stage 10 at 20:30 with ~300 enemies:
+  - separation on: 68.2 / 79.4 FPS average, 1% low 32.9 / 61.1;
+  - separation off: 84.5 / 76.5 FPS average, 1% low 56.4 / 48.3.
+  - The runs are noisy. Separation looks to cost about 0-10% on average. Every run is above the 30 FPS hard minimum, but one 1% low (32.9) is close to it (partial `P`).
+
+Mistake during validation: the build ran without `SOULHUNTER_BUILD_OUTPUT_EXE` and overwrote `D:\Unity Builds\SoulHunter\` (created 2026-09-23). The benchmark copy lives in the run folder.
+
+Still to do (owner-approved plan, 2026-09-26):
+- Part 2: movement types (Homing, Floaty/wavy, Fixed Direction).
+- Part 3: a wave table per stage, with a minimum and interval per minute that rise and fall.
+- Part 4: patterns per stage, from the approved table:
+  - L1 all sides, slow homing, swarms;
+  - L2 all sides, Floaty, closing ring;
+  - L3 all sides blocked by houses, homing, wall;
+  - L4 mostly left/right, walls;
+  - L5 all sides, slow heavy crowd, fast straight swarms;
+  - L6 mostly top/bottom, fast homing;
+  - L7 Floaty ghosts, ghost swarms;
+  - L8 elites, rings;
+  - L9 mixed, walls and rings;
+  - L10 everything, densest.
+- Part 5: VS knockback (movement reversed for 120 ms).
+
+Each stage still has only one normal enemy type and one elite; new enemy models are Art section work.
+
+Not yet played by the owner.
+
 ### Boss level scaling and chest elites (owner decisions, 2026-09-24)
 
 Found while reviewing the VS Stage 4/5 write-ups: bosses had fixed health (1000 x stage) although one run keeps levelling across 10 stages, and only stage bosses dropped chests (~10 per run), so evolutions were rare. The owner chose:

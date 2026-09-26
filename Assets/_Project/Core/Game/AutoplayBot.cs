@@ -197,7 +197,8 @@ namespace SoulHunter.Gameplay.Core
                 _nextSteer = now + 0.1f;
                 Steer();
             }
-            if (now >= _nextShot)
+            // Timed shots show play, not a level-up or chest screen (level-ups came every ~15 s and hid every shot).
+            if (now >= _nextShot && !GameTime.IsPaused)
             {
                 _nextShot = now + Config.ShotInterval;
                 StartCoroutine(Shot($"t{Elapsed:0000}"));

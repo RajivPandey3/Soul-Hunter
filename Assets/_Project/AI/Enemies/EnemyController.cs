@@ -35,6 +35,15 @@ namespace SoulHunter.Gameplay.AI
         public float ChaseDistance = 500f; // Vampire Survivors enemies always chase
         public float AttackDistance = 1.5f;
 
+        private float _bodyRadius = 0.5f;
+        /// <summary>Flat body radius for crowd separation (collider radius x scale: chest elites and bosses are bigger).</summary>
+        public float CrowdRadius => _bodyRadius * Mathf.Abs(transform.lossyScale.x);
+        /// <summary>This physics step's push from the crowd, written by EnemyCrowd.Rebuild.</summary>
+        public Vector3 CrowdPush { get; set; }
+        private int _crowdId;
+        /// <summary>Instance id, cached (read for every enemy on every frame by EnemyCrowd).</summary>
+        public int CrowdId => _crowdId != 0 ? _crowdId : (_crowdId = GetInstanceID());
+
         public bool IsSpectral => _isSpectral;
         public SoulHunter.Gameplay.Data.EnemyData Data => _enemyData;
 
@@ -45,6 +54,10 @@ namespace SoulHunter.Gameplay.AI
             // not form a physical wall that blocks backward movement.
             var bodyCollider = GetComponent<Collider>();
             if (bodyCollider != null) bodyCollider.isTrigger = true;
+            _bodyRadius = bodyCollider is CapsuleCollider capsule ? capsule.radius
+                : bodyCollider is SphereCollider sphere ? sphere.radius
+                : bodyCollider is BoxCollider box ? 0.5f * Mathf.Max(box.size.x, box.size.z)
+                : 0.5f;
             // Hundreds of skinned enemies casting shadows halved the frame rate on the low-end reference laptop
             // (UHD 620); the hero, bosses and stage obstacles still cast them.
             SetCastsShadows(false);
