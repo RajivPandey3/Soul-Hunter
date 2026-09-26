@@ -301,8 +301,29 @@ Part 2 validation:
 - EditMode 326/326, PlayMode 89/89, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-movement\`).
 - Editor play `autoplay-editor-15` (Stage 2, god mode): 0 errors, min 49 FPS, enemies spread around the player (partial `V`). Only up to 39 enemies were alive at once on Stage 2 (Part 3).
 
-Still to do (owner-approved plan, 2026-09-26):
-- Part 3: a wave table per stage, with a minimum and interval per minute that rise and fall.
+Part 3, VS minute waves (2026-09-26):
+- Correction: every stage already had its own WaveData (spawn interval 1.0-0.35 s and group size 1-6, rising by stage), not one shared file as first reported. What they shared was the automatic shape: the minimum rose 30/50/70/90/110 every 5 minutes, never falling.
+- `WaveData.Minutes` (`MinuteWave`: minute, minimum, interval, elite bonus) is a VS minute table. `GetPhase` reads it when no Phases are authored, and `EnemySpawner` drops the 5-minute group growth when a table is present.
+- `WaveTables.Build` gives each stage a 25-minute table (the boss comes at 25:00), all numbers provisional:
+  - opening minimum 15 + 5 per stage, peak 150 + 16 per stage (at most 290);
+  - a fast build-up (t^0.6) with a ±12% swell that differs per stage;
+  - interval from 1.0× down to 0.4× the stage's `SpawnInterval`;
+  - every fifth minute, shifted per stage, is quiet: 30% of the minimum and 1.5× the interval, but 30-50% extra elite chance (VS: Mad Forest drops to 10 at 5:00 with tougher enemies).
+- Stage 1 opens 17, 39, 47, 50, 16 (quiet), 62 ..., close to VS Mad Forest (15, 30, 50, 40, ..., 10 at 5:00).
+- `WaveTableBuilder` (menu Soul Hunter/Content/Build Wave Tables) writes the tables into the 10 stage assets (`WaveTables.StageWaveAssets`).
+- Validation:
+  - `WaveTableTests` (T): the assets match the builder; every stage rises and has at least 3 quiet minutes with elites; stages differ; `GetPhase` reads the minute.
+  - `WaveTablePlayModeTests` (R): the horde swells to a busy minute's minimum; after a wipe in a quiet minute it refills only to the smaller one.
+  - EditMode 337/337, PlayMode 103/103, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-waves2\`).
+  - Editor play `autoplay-editor-21` (Stage 1, 6 min, god mode): the horde followed the table, 17 → 39 → 48 → 64 → 50 → 16 in the quiet 4:00 minute → 62 → 75, with 0 errors and min 75 FPS.
+- Seen, not changed (balance): that run had 229 kills and reached level 8 in 6 minutes; the run before the retune had 1432 kills and level 19. The XP pace changed and needs the balance pass.
+
+Also on 2026-09-26 (owner):
+- The Stage 4/5 damage discs were removed (`CampaignHazard` deleted; `PressurePlatePlayModeTests.CastleAndSwamp_HaveNoDamageDiscs_AroundTheStart`).
+- The save's Currency was set back from 16004 to 16002 (backup `soulhunter_save.before-gold-fix.json`).
+- `AutoplayBot` checks the chest panel with `!= null` (an unassigned `ChestUI._chestPanel` threw in editor play).
+
+Still to do (owner-approved plan, 2026-09-26): a wave table per stage, with a minimum and interval per minute that rise and fall.
 - Part 4: patterns per stage, from the approved table:
   - L1 all sides, slow homing, swarms;
   - L2 all sides, Floaty, closing ring;

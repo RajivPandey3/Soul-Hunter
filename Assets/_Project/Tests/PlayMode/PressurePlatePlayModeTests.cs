@@ -98,6 +98,45 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Owner (2026-09-26): the Ruined Castle and Crimson Swamp damage discs around the start are gone (VS floors never
+        /// hurt the player; plates start events instead). A player standing at the stage start takes no damage.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator CastleAndSwamp_HaveNoDamageDiscs_AroundTheStart([Values(4, 5)] int stage)
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            LevelProgressionManager.Instance.StartStage(stage);
+            yield return null;
+            yield return null;
+            foreach (var stray in EnemyController.ActiveEnemies.ToList())
+                if (stray != null) stray.gameObject.SetActive(false);
+            Assert.That(Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Where(t => t.name.StartsWith("Campaign_") && t.name.Contains("Hazard")),
+                Is.Empty, "No damage discs.");
+
+            var health = player.GetComponent<HealthController>();
+            int start = health.CurrentHealth;
+            float until = Time.time + 3f;
+            while (Time.time < until)
+            {
+                // Walk the ring where the discs used to be (10 units out).
+                float a = (until - Time.time) * 2f;
+                Vector3 to = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 10f;
+                to.y = player.transform.position.y;
+                player.Rigidbody.position = to;
+                player.transform.position = to;
+                yield return new WaitForFixedUpdate();
+                foreach (var stray in EnemyController.ActiveEnemies.ToList())
+                    if (stray != null) stray.gameObject.SetActive(false);
+            }
+            Assert.That(health.CurrentHealth, Is.EqualTo(start), "Nothing on the ground hurts the player.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         [UnityTest]
         public IEnumerator NextStage_ReplacesThePlates()
         {

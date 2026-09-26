@@ -18,3 +18,108 @@ MonoBehaviour:
   SpawnInterval: 0.5
   EnemiesPerSpawn: 4
   IsBossWave: 0
+  MinimumEnemies: 30
+  MinimumEnemiesPerPhase: 20
+  Minutes:
+  - Minute: 0
+    Minimum: 56
+    Interval: 0.5
+    EliteBonus: 0
+  - Minute: 1
+    Minimum: 86
+    Interval: 0.488
+    EliteBonus: 0
+  - Minute: 2
+    Minimum: 28
+    Interval: 0.712
+    EliteBonus: 0.46
+  - Minute: 3
+    Minimum: 98
+    Interval: 0.463
+    EliteBonus: 0
+  - Minute: 4
+    Minimum: 110
+    Interval: 0.45
+    EliteBonus: 0
+  - Minute: 5
+    Minimum: 132
+    Interval: 0.438
+    EliteBonus: 0
+  - Minute: 6
+    Minimum: 155
+    Interval: 0.425
+    EliteBonus: 0
+  - Minute: 7
+    Minimum: 51
+    Interval: 0.619
+    EliteBonus: 0.46
+  - Minute: 8
+    Minimum: 169
+    Interval: 0.4
+    EliteBonus: 0
+  - Minute: 9
+    Minimum: 160
+    Interval: 0.387
+    EliteBonus: 0
+  - Minute: 10
+    Minimum: 155
+    Interval: 0.375
+    EliteBonus: 0
+  - Minute: 11
+    Minimum: 165
+    Interval: 0.363
+    EliteBonus: 0
+  - Minute: 12
+    Minimum: 57
+    Interval: 0.525
+    EliteBonus: 0.46
+  - Minute: 13
+    Minimum: 214
+    Interval: 0.338
+    EliteBonus: 0
+  - Minute: 14
+    Minimum: 227
+    Interval: 0.325
+    EliteBonus: 0
+  - Minute: 15
+    Minimum: 222
+    Interval: 0.312
+    EliteBonus: 0
+  - Minute: 16
+    Minimum: 206
+    Interval: 0.3
+    EliteBonus: 0
+  - Minute: 17
+    Minimum: 59
+    Interval: 0.431
+    EliteBonus: 0.46
+  - Minute: 18
+    Minimum: 206
+    Interval: 0.275
+    EliteBonus: 0
+  - Minute: 19
+    Minimum: 233
+    Interval: 0.262
+    EliteBonus: 0
+  - Minute: 20
+    Minimum: 262
+    Interval: 0.25
+    EliteBonus: 0
+  - Minute: 21
+    Minimum: 275
+    Interval: 0.237
+    EliteBonus: 0
+  - Minute: 22
+    Minimum: 79
+    Interval: 0.337
+    EliteBonus: 0.46
+  - Minute: 23
+    Minimum: 244
+    Interval: 0.213
+    EliteBonus: 0
+  - Minute: 24
+    Minimum: 231
+    Interval: 0.2
+    EliteBonus: 0
+  Phases: []
+  Events: []

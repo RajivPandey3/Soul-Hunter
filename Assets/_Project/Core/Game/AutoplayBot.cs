@@ -347,7 +347,8 @@ namespace SoulHunter.Gameplay.Core
                     }
                 }
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
-                    if (panelField?.GetValue(chest) is GameObject panel && panel.activeSelf)
+                    // Unity's destroyed/unassigned objects pass an "is" check: test with != null before touching them.
+                    if (panelField?.GetValue(chest) is GameObject panel && panel != null && panel.activeSelf)
                     {
                         yield return Shot("chest");
                         Event("chest", "\"opened\": true");

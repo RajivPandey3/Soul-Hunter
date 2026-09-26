@@ -28,6 +28,21 @@ namespace SoulHunter.Gameplay.Data
         ClosingRing
     }
 
+    /// <summary>
+    /// VS wave (vampire.survivors.wiki, Enemies): one per minute, with its own enemy minimum and spawn interval. The
+    /// minimum rises and falls through a stage (Mad Forest drops from 40 to 10 at 5:00 but sends tougher enemies).
+    /// </summary>
+    [System.Serializable]
+    public sealed class MinuteWave
+    {
+        public int Minute;
+        [Min(0)] public int Minimum;
+        [Tooltip("Seconds between spawn ticks during this minute (before the level multiplier and Curse)")]
+        [Min(0.05f)] public float Interval = 1f;
+        [Tooltip("Extra elite chance this minute: a quiet minute with tougher enemies")]
+        [Range(0f, 1f)] public float EliteBonus;
+    }
+
     [System.Serializable]
     public sealed class StageEventEntry
     {
@@ -68,6 +83,13 @@ namespace SoulHunter.Gameplay.Data
         [Tooltip("Added to the minimum for each later automatic phase. Provisional balance value.")]
         [Min(0)] public int MinimumEnemiesPerPhase = 20;
 
+        [Header("VS minute table (built by WaveTableBuilder)")]
+        [Tooltip("One entry per minute; used when there are no authored Phases. Empty: the automatic 5-minute phases.")]
+        public List<MinuteWave> Minutes = new List<MinuteWave>();
+        [System.NonSerialized] private WavePhase[] _minutePhases;
+
+        public bool HasMinuteTable => (Phases == null || Phases.Count == 0) && Minutes != null && Minutes.Count > 0;
+
         [Header("Optional VS-style timed phases")]
         [Tooltip("Agar empty ho toh 5-minute pressure phases runtime par automatically use hongi.")]
         public List<WavePhase> Phases = new List<WavePhase>();
@@ -99,6 +121,38 @@ namespace SoulHunter.Gameplay.Data
             };
         }
 
+        /// <summary>The current minute's wave as a phase: its minimum, its interval (as a multiplier of SpawnInterval) and elite bonus.</summary>
+        private WavePhase MinutePhase(float elapsedSeconds)
+        {
+            if (_minutePhases == null || _minutePhases.Length != Minutes.Count)
+            {
+                var sorted = new List<MinuteWave>(Minutes);
+                sorted.RemoveAll(m => m == null);
+                sorted.Sort((a, b) => a.Minute.CompareTo(b.Minute));
+                Minutes = sorted;
+                _minutePhases = new WavePhase[sorted.Count];
+                for (int i = 0; i < sorted.Count; i++)
+                {
+                    var m = sorted[i];
+                    _minutePhases[i] = new WavePhase
+                    {
+                        PhaseName = $"Minute {m.Minute}",
+                        StartTimeInSeconds = m.Minute * 60f,
+                        SpawnIntervalMultiplier = m.Interval / Mathf.Max(0.05f, SpawnInterval),
+                        EnemiesPerSpawnBonus = 0,
+                        EliteChanceBonus = m.EliteBonus,
+                        EnemyPrefab = EnemyPrefab,
+                        IsBossPhase = IsBossWave,
+                        MinimumEnemies = m.Minimum
+                    };
+                }
+            }
+            int minute = Mathf.FloorToInt(Mathf.Max(0f, elapsedSeconds) / 60f);
+            int index = 0;
+            for (int i = 0; i < Minutes.Count; i++) if (Minutes[i].Minute <= minute) index = i;
+            return _minutePhases[index];
+        }
+
         public WavePhase GetPhase(float elapsedSeconds)
         {
             WavePhase selected = null;
@@ -113,6 +167,7 @@ namespace SoulHunter.Gameplay.Data
                 }
             }
             if (selected != null) return selected;
+            if (HasMinuteTable) return MinutePhase(elapsedSeconds);
 
             // Canonical fallback phases keep existing WaveData assets playable
             // while matching the escalating 30-minute survival rhythm.

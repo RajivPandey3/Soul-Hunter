@@ -181,7 +181,8 @@ namespace SoulHunter.Gameplay.AI
                 _timer -= Time.deltaTime;
                 if (_timer <= 0f)
                 {
-                    int fiveMinutePressure = Mathf.FloorToInt(_stageTimePassed / 300f);
+                    // A VS minute table sets the pace itself; the automatic phases add a group member every 5 minutes.
+                    int fiveMinutePressure = _currentWave.HasMinuteTable ? 0 : Mathf.FloorToInt(_stageTimePassed / 300f);
                     int groupSize = Mathf.Max(1, _currentWave.EnemiesPerSpawn + phase.EnemiesPerSpawnBonus + fiveMinutePressure);
                     int availableSlots = Mathf.Max(0, _maxAliveEnemies - EnemyController.ActiveEnemies.Count);
                     int spawnCount = Mathf.Min(groupSize, availableSlots);
