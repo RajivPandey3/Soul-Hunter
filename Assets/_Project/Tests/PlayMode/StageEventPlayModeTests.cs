@@ -27,9 +27,14 @@ namespace SoulHunter.Tests.PlayMode
             var progression = LevelProgressionManager.Instance;
             int fliersBefore = Fliers();
 
-            // Jump the stage clock to just after the first default event (2:30).
+            // Jump the stage clock to just after the stage's first event (2:30). Part 4 (2026-09-26): each stage
+            // authors its own events, so read the expected size from the stage's wave instead of the old default 20.
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            var first = GetPrivateField<WaveData>(spawner, "_currentWave").GetEvents()[0];
+            Assert.That(first.TimeSeconds, Is.EqualTo(150f));
+            Assert.That(first.Type, Is.EqualTo(StageEventType.Swarm), "The Cursed Graveyard opens with a swarm.");
             typeof(LevelProgressionManager).GetProperty("StageElapsedTime").GetSetMethod(true).Invoke(progression, new object[] { 151f });
-            yield return WaitUntilRealtime(() => Fliers() >= fliersBefore + 20, "the 2:30 swarm to spawn");
+            yield return WaitUntilRealtime(() => Fliers() >= fliersBefore + first.Count, "the 2:30 swarm to spawn");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

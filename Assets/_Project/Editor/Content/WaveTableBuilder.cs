@@ -21,10 +21,12 @@ namespace SoulHunter.Editor.Content
                 var wave = AssetDatabase.LoadAssetAtPath<WaveData>(StageWaves[i]);
                 if (wave == null) throw new System.IO.FileNotFoundException("Missing stage wave", StageWaves[i]);
                 wave.Minutes = WaveTables.Build(i + 1, wave.SpawnInterval);
+                wave.SpawnSide = WaveTables.SideFor(i + 1);
+                wave.Events = WaveTables.Events(i + 1);
                 EditorUtility.SetDirty(wave);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[WaveTableBuilder] Wrote the minute tables of all 10 stages.");
+            Debug.Log("[WaveTableBuilder] Wrote the minute tables, spawn sides and events of all 10 stages.");
         }
     }
 }

@@ -234,6 +234,9 @@ namespace SoulHunter.Gameplay.AI
                 offset.y = 0f;
                 if (offset.sqrMagnitude <= maxDistanceSqr) continue;
 
+                // Stragglers always re-enter ahead of the player, also on side-rule stages: those stages are not walled
+                // corridors (VS's Inlaid Library is), so side-only re-entry let a player running up or down leave the
+                // whole horde behind (editor play: 9 kills in 3 minutes on the Ruined Castle).
                 enemy.transform.position = ComputeRelocationPoint(playerPos, heading, _relocateSpreadDegrees,
                     minRadius, maxRadius, Random.value, Random.value);
                 if (enemy.Rigidbody != null) enemy.Rigidbody.linearVelocity = Vector3.zero;
@@ -355,14 +358,30 @@ namespace SoulHunter.Gameplay.AI
             return true;
         }
 
+        /// <summary>
+        /// A point on the spawn ring, from the stage's sides (Part 4: e.g. the Ruined Castle mostly left/right), and never
+        /// inside a stage obstacle (VS: solid structures block spawns from their direction). Falls back to the last try.
+        /// </summary>
+        private Vector3 PickSpawnPosition()
+        {
+            var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
+            float bias = _currentWave != null ? _currentWave.SideBias : 0f;
+            Vector3 spawnPos = _playerTransform.position;
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                Vector3 direction = WaveTables.SpawnDirection(side, bias, Random.value, Random.value, Random.value);
+                float distance = Random.Range(_spawnRadius, _spawnRadius + 10f);
+                spawnPos = _playerTransform.position + direction * distance;
+                spawnPos.y = _playerTransform.position.y;
+                if (SoulHunter.Gameplay.Pickups.GroundCheck.IsOpen(spawnPos, 0.6f)) break;
+            }
+            return spawnPos;
+        }
+
         private GameObject SpawnEnemy(GameObject prefab)
         {
             if (prefab == null || _playerTransform == null) return null;
-            Vector2 randomDir = Random.insideUnitCircle.normalized;
-            float randomDist = Random.Range(_spawnRadius, _spawnRadius + 10f);
-            
-            Vector3 spawnPos = _playerTransform.position + new Vector3(randomDir.x * randomDist, 0f, randomDir.y * randomDist);
-            spawnPos.y = _playerTransform.position.y; 
+            Vector3 spawnPos = PickSpawnPosition();
 
             // Initialize the pool stack for this specific prefab if it doesn't exist
             if (!_enemyPools.TryGetValue(prefab, out var pool))
@@ -447,8 +466,10 @@ namespace SoulHunter.Gameplay.AI
             var spawned = new List<EnemyController>();
             if (_playerTransform == null || stageEvent == null) return spawned;
 
-            Vector2 random = Random.insideUnitCircle.normalized;
-            var direction = new Vector3(random.x, 0f, random.y);
+            // The formation travels away from the side it comes from (Part 4: a stage's sides, e.g. castle walls
+            // sweep in from the left or right).
+            var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
+            var direction = -WaveTables.SpawnDirection(side, 1f, 0f, Random.value, Random.value);
             BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, _spawnRadius, _formation);
             foreach (var (position, flyDirection) in _formation)
             {
@@ -456,7 +477,7 @@ namespace SoulHunter.Gameplay.AI
                 var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
                 if (enemy == null) continue;
                 enemyObject.transform.position = position;
-                enemy.StartFlyingMode(flyDirection);
+                enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
                 spawned.Add(enemy);
             }
             Debug.Log($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");

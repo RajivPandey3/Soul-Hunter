@@ -43,6 +43,12 @@ namespace SoulHunter.Gameplay.Data
         [Range(0f, 1f)] public float EliteBonus;
     }
 
+    /// <summary>
+    /// Where a stage's enemies come from (VS: Mad Forest from all four sides, Inlaid Library only from the west and
+    /// east ends, Gallo Tower mostly from above and below). On screen, left/right is the world X axis and up/down Z.
+    /// </summary>
+    public enum SpawnSide { AllSides = 0, LeftRight = 1, TopBottom = 2 }
+
     [System.Serializable]
     public sealed class StageEventEntry
     {
@@ -50,6 +56,8 @@ namespace SoulHunter.Gameplay.Data
         public float TimeSeconds;
         public StageEventType Type;
         [Min(1)] public int Count = 16;
+        [Tooltip("Flight speed relative to the default event speed (1 = 1.5x the enemy's speed). VS swarms are fast.")]
+        [Min(0.2f)] public float Speed = 1f;
     }
 
     /// <summary>
@@ -82,6 +90,11 @@ namespace SoulHunter.Gameplay.Data
         [Min(0)] public int MinimumEnemies = 30;
         [Tooltip("Added to the minimum for each later automatic phase. Provisional balance value.")]
         [Min(0)] public int MinimumEnemiesPerPhase = 20;
+
+        [Header("Where enemies come from (built by WaveTableBuilder)")]
+        public SpawnSide SpawnSide = SpawnSide.AllSides;
+        [Tooltip("For LeftRight/TopBottom: share of spawns from those sides (the rest from anywhere). Provisional.")]
+        [Range(0f, 1f)] public float SideBias = 0.8f;
 
         [Header("VS minute table (built by WaveTableBuilder)")]
         [Tooltip("One entry per minute; used when there are no authored Phases. Empty: the automatic 5-minute phases.")]

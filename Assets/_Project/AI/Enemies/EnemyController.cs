@@ -177,9 +177,11 @@ namespace SoulHunter.Gameplay.AI
             ChangeState(new EnemyFrozenState(this, duration, resume));
         }
 
-        public void StartFlyingMode(Vector3 direction)
+        /// <param name="speed">Relative to the default event speed (1 = 1.5x the enemy's own speed).</param>
+        public void StartFlyingMode(Vector3 direction, float speed = 1f)
         {
-            ChangeState(new EnemyFlyState(this, direction));
+            ChangeState(new EnemyFlyState(this, direction, EnemyFlyState.DefaultLifetimeSeconds,
+                EnemyFlyState.SpeedMultiplier * Mathf.Max(0.2f, speed)));
         }
 
         /// <summary>This enemy's VS movement skill (Homing when it has no EnemyData).</summary>

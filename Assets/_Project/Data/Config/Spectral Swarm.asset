@@ -20,6 +20,8 @@ MonoBehaviour:
   IsBossWave: 0
   MinimumEnemies: 30
   MinimumEnemiesPerPhase: 20
+  SpawnSide: 0
+  SideBias: 0.8
   Minutes:
   - Minute: 0
     Minimum: 49
@@ -122,4 +124,24 @@ MonoBehaviour:
     Interval: 0.24
     EliteBonus: 0
   Phases: []
-  Events: []
+  Events:
+  - TimeSeconds: 150
+    Type: 0
+    Count: 16
+    Speed: 1
+  - TimeSeconds: 450
+    Type: 0
+    Count: 20
+    Speed: 1
+  - TimeSeconds: 750
+    Type: 0
+    Count: 24
+    Speed: 1
+  - TimeSeconds: 1050
+    Type: 2
+    Count: 28
+    Speed: 1
+  - TimeSeconds: 1350
+    Type: 0
+    Count: 32
+    Speed: 1

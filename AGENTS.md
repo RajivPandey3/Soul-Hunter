@@ -323,6 +323,23 @@ Also on 2026-09-26 (owner):
 - The save's Currency was set back from 16004 to 16002 (backup `soulhunter_save.before-gold-fix.json`).
 - `AutoplayBot` checks the chest panel with `!= null` (an unassigned `ChestUI._chestPanel` threw in editor play).
 
+Part 4, stage patterns (2026-09-26), following the approved table:
+- `WaveData.SpawnSide` / `SideBias`: L4 Ruined Castle spawns 80% from the left/right (world ±X), L6 Frozen Peaks 80% from above/below (±Z), within a 70° fan, and all other stages from all sides (`WaveTables.SideFor`, `SpawnDirection`). Stage-event formations come from the stage's sides too.
+- VS rule: a spawn never lands inside a stage obstacle; `PickSpawnPosition` tries up to 6 directions against `GroundCheck`.
+- Events are authored per stage by `WaveTables.Events`, written into `WaveData.Events` (all provisional):
+  - five events at 2:30 + 5-minute steps, counts 16 upward, 10 upward for the L8 elites;
+  - L1 swarms; L2 mostly closing rings; L3 mostly walls; L4 walls; L5 swarms at 1.8× event speed (`StageEventEntry.Speed`); L6 mostly swarms; L7 mostly (ghost) swarms; L8 rings; L9 walls and rings alternating;
+  - L10 every kind, nine events every 2:30, counts +8.
+- Pace (`CampaignLevelCatalog`): L5 speed 1.25 → 0.9 ("a slow, heavy horde and fast swarms"), L6 1.15 → 1.45. The L4 and L5 modifier texts no longer mention traps or poison zones.
+- Stragglers (beyond 40 units) still re-enter ahead of the player on every stage. On a side-rule stage, making them re-enter from the sides let a player who ran up or down leave the whole horde behind (editor play: 9 kills in 3 minutes on the Castle), because the Castle is not a walled corridor like VS's Inlaid Library. A real corridor (long walls on the Castle floor) would be an owner decision.
+- Validation:
+  - `StagePatternTests` (T): sides, events, assets and pace follow the table; the direction sampler keeps more than 75% to the sides.
+  - `StagePatternPlayModeTests` (R): Castle spawns more than 65% left/right; Peaks more than 65% above/below and fast; no village spawn inside a house; Swamp slow with fast swarms.
+  - `StageEventPlayModeTests.ScheduledSwarm_FiresOnTheStageClock` now reads the stage's authored first event (16, not the old default 20).
+  - EditMode 342/342, PlayMode 107/107, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-patterns3\`).
+  - Editor play `autoplay-editor-22` (Stage 4, god mode, 3 min): 0 errors, min 43 FPS, up to 233 enemies. The fleeing bot drags the horde into one blob behind itself, as in VS.
+- Seen, not changed: stage events are not capped, so a run can pass 300 enemies briefly (316 seen).
+
 Still to do (owner-approved plan, 2026-09-26): a wave table per stage, with a minimum and interval per minute that rise and fall.
 - Part 4: patterns per stage, from the approved table:
   - L1 all sides, slow homing, swarms;
