@@ -52,6 +52,7 @@ namespace SoulHunter.Gameplay.Combat
                     var damageDealer = bullet.GetComponent<ProjectileDamage>();
                     if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();
                     damageDealer.SourceWeaponName = "Gun";
+                    AimAtHostiles(bullet);
                 }
             }
         }

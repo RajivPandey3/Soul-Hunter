@@ -39,6 +39,14 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (LightningStrikePrefab == null) return;
 
+            // Shadow Kael's copy strikes the player (one strike: there is one target), never its own horde.
+            if (HeldByEnemy)
+            {
+                var player = FindNearestEnemy(StrikeRadius);
+                if (player != null) SpawnLightning(player.position);
+                return;
+            }
+
             // Screen par mojood dushman dhoondo
             var allEnemies = EnemyController.ActiveEnemies;
             if (allEnemies.Count == 0) return;
@@ -92,6 +100,7 @@ namespace SoulHunter.Gameplay.Combat
             
             damageDealer.DamageAmount = ScaledDamage(DamageAmount);
             damageDealer.SourceWeaponName = "Lightning Ring";
+            AimAtHostiles(strike);
             
             // Bijli 0.5 sec baad khud gayab ho jayegi
             var lifetime = strike.GetComponent<PooledLifetime>();

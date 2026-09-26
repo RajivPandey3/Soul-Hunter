@@ -21,6 +21,12 @@ namespace SoulHunter.Editor.Debugging
         [MenuItem(Menu + "10 (Soul Core, Shadow Kael)", true)]
         private static bool CanJump() => Application.isPlaying && LevelProgressionManager.Instance != null;
 
+        [MenuItem("Soul Hunter/Debug/Skip To Stage Boss")]
+        private static void SkipToBoss() => LevelProgressionManager.Instance.SkipToBoss();
+
+        [MenuItem("Soul Hunter/Debug/Skip To Stage Boss", true)]
+        private static bool CanSkip() => CanJump();
+
         private static void Jump(int stage)
         {
             LevelProgressionManager.Instance.StartStage(stage);

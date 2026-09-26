@@ -209,6 +209,24 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         private Dictionary<GameObject, GameObject> _spawnedWeapons = new Dictionary<GameObject, GameObject>();
+        // Prefab -> live instance of every weapon spawned on the player (base, evolved and union), in the order gained.
+        private readonly List<KeyValuePair<GameObject, GameObject>> _equippedWeapons = new List<KeyValuePair<GameObject, GameObject>>();
+
+        /// <summary>
+        /// The weapons the player is really using: each prefab with its live instance, skipping base weapons that an
+        /// evolution or union replaced. Shadow Kael mirrors this list.
+        /// </summary>
+        public List<KeyValuePair<GameObject, AutoAttackWeapon>> GetEquippedWeapons()
+        {
+            var equipped = new List<KeyValuePair<GameObject, AutoAttackWeapon>>();
+            foreach (var pair in _equippedWeapons)
+            {
+                if (pair.Key == null || pair.Value == null || !pair.Value.activeSelf) continue;
+                var weapon = pair.Value.GetComponent<AutoAttackWeapon>();
+                if (weapon != null) equipped.Add(new KeyValuePair<GameObject, AutoAttackWeapon>(pair.Key, weapon));
+            }
+            return equipped;
+        }
 
         public List<UpgradeData.UpgradeType> GetActiveWeaponTypes()
         {
@@ -296,6 +314,7 @@ namespace SoulHunter.Gameplay.Combat
                     GameObject newWeapon = Instantiate(weaponPrefab, player.transform);
                     newWeapon.SetActive(true);
                     _spawnedWeapons[weaponPrefab] = newWeapon;
+                    _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(weaponPrefab, newWeapon));
                     ApplyWeaponLevel(newWeapon, currentLevel);
                     Debug.Log($"[WeaponManager] {weaponPrefab.name} is now SPAWNED and ACTIVE on Player!");
                 }
@@ -308,7 +327,7 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
-        private void ApplyWeaponLevel(GameObject weaponObject, int targetLevel)
+        public static void ApplyWeaponLevel(GameObject weaponObject, int targetLevel)
         {
             if (weaponObject == null) return;
 
@@ -358,6 +377,7 @@ namespace SoulHunter.Gameplay.Combat
                         {
                             var newWep = Instantiate(evo.EvolvedWeaponPrefab, spawnTarget);
                             newWep.SetActive(true);
+                            _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(evo.EvolvedWeaponPrefab, newWep));
                             ApplyWeaponLevel(newWep, evo.BaseWeaponMaxLevel);
                         }
 
@@ -395,6 +415,7 @@ namespace SoulHunter.Gameplay.Combat
                         {
                             var newWep = Instantiate(union.UnionWeaponPrefab, spawnTarget);
                             newWep.SetActive(true);
+                            _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(union.UnionWeaponPrefab, newWep));
                             ApplyWeaponLevel(newWep, Mathf.Max(union.WeaponAMaxLevel, union.WeaponBMaxLevel));
                         }
 

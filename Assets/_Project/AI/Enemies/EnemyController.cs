@@ -169,8 +169,12 @@ namespace SoulHunter.Gameplay.AI
             ChangeState(new EnemyFlyState(this, direction));
         }
 
+        /// <summary>The multiplier last given to ApplyCampaignSpeed (stage speed x Curse).</summary>
+        public float CampaignSpeedMultiplier { get; private set; } = 1f;
+
         public void ApplyCampaignSpeed(float multiplier)
         {
+            CampaignSpeedMultiplier = Mathf.Max(0.1f, multiplier);
             MoveSpeed = _baseMoveSpeed * Mathf.Max(0.1f, multiplier);
         }
 

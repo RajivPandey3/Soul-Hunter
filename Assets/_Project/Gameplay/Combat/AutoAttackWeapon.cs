@@ -42,8 +42,46 @@ namespace SoulHunter.Gameplay.Combat
         /// copies), which must hit the player. TouchDamage defaults to "Player" (it was written for enemy
         /// contact damage), so every weapon that adds one must set this or it hurts its own holder.
         /// </summary>
-        protected string HostileTag =>
-            GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>() != null ? "Player" : "Enemy";
+        protected string HostileTag => HeldByEnemy ? "Player" : "Enemy";
+
+        private bool _heldByEnemy;
+        private bool _heldByEnemyResolved;
+
+        /// <summary>True when a boss holds this weapon (Shadow Kael's mirrored copy): it attacks the player, never enemies.</summary>
+        protected bool HeldByEnemy
+        {
+            get
+            {
+                if (!_heldByEnemyResolved)
+                {
+                    _heldByEnemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>() != null;
+                    _heldByEnemyResolved = true;
+                }
+                return _heldByEnemy;
+            }
+        }
+
+        private static readonly System.Collections.Generic.List<Projectile> ProjectileBuffer = new();
+        private static readonly System.Collections.Generic.List<ProjectileDamage> ProjectileDamageBuffer = new();
+        private static readonly System.Collections.Generic.List<TouchDamage> TouchDamageBuffer = new();
+
+        /// <summary>
+        /// Points an object this weapon spawned (projectile, thrown weapon, zone) at the holder's enemies. Pooled objects
+        /// are shared by the player's weapons and Shadow Kael's mirrored copies and keep the last setting, so every spawn
+        /// site calls this after setting the object up. Before this the boss's shots only ever hit enemies.
+        /// </summary>
+        protected void AimAtHostiles(GameObject spawned)
+        {
+            if (spawned == null) return;
+            bool targetsPlayer = HeldByEnemy;
+            string tag = HostileTag;
+            spawned.GetComponentsInChildren(true, ProjectileBuffer);
+            foreach (var projectile in ProjectileBuffer) projectile.TargetsPlayer = targetsPlayer;
+            spawned.GetComponentsInChildren(true, ProjectileDamageBuffer);
+            foreach (var damage in ProjectileDamageBuffer) damage.TargetTag = tag;
+            spawned.GetComponentsInChildren(true, TouchDamageBuffer);
+            foreach (var touch in TouchDamageBuffer) touch.TargetTag = tag;
+        }
 
         protected float MightMultiplier => OwnerStats != null ? OwnerStats.Might : 1f;
         protected float CooldownMultiplier => OwnerStats != null ? OwnerStats.Cooldown : 1f;
@@ -64,7 +102,7 @@ namespace SoulHunter.Gameplay.Combat
             float bestSqr = maxRange * maxRange;
             Vector3 origin = transform.position;
 
-            if (GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>() != null)
+            if (HeldByEnemy)
             {
                 var player = PlayerController.Instance;
                 if (player == null) return null;

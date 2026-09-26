@@ -107,6 +107,17 @@ namespace SoulHunter.Gameplay.Core
             OnStageStarted?.Invoke(CurrentStage);
         }
 
+        /// <summary>
+        /// Debug/QA: moves the stage clock to the boss's arrival (e.g. to meet Shadow Kael without playing 25 minutes).
+        /// The stage timer, boss window and later survival limit then run from there as usual.
+        /// </summary>
+        public void SkipToBoss()
+        {
+            if (_gameWon || StageElapsedTime >= CurrentLevel.BossStartSeconds) return;
+            StageElapsedTime = CurrentLevel.BossStartSeconds;
+            Debug.Log($"[LevelProgressionManager] Skipped Stage {CurrentStage} to its boss at {StageElapsedTime:0}s.");
+        }
+
         public void ReportBossDefeated()
         {
             if (_bossDefeated || _gameWon) return;

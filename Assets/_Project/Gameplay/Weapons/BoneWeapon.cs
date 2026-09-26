@@ -41,6 +41,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (damageDealer == null) damageDealer = bone.AddComponent<ProjectileDamage>();
                 damageDealer.DamageAmount = ScaledDamage(DamageAmount);
                 damageDealer.SourceWeaponName = "Bone";
+                AimAtHostiles(bone);
 
                 var lifetime = bone.GetComponent<PooledLifetime>();
                 if (lifetime != null) lifetime.Arm(6f);

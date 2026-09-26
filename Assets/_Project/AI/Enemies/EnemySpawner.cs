@@ -313,10 +313,10 @@ namespace SoulHunter.Gameplay.AI
             // LEVEL 10 REQUIREMENT: Shadow Kael Boss Controller
             if (SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.Number == 10)
             {
-                if (bossObj.GetComponent<ShadowKaelController>() == null)
-                {
-                    bossObj.AddComponent<ShadowKaelController>();
-                }
+                var shadowKael = bossObj.GetComponent<ShadowKaelController>();
+                if (shadowKael == null) shadowKael = bossObj.AddComponent<ShadowKaelController>();
+                // Encounter start: the loadout is captured now, not a frame later.
+                shadowKael.CaptureFrom(_playerTransform != null ? _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() : null);
             }
             
             var health = bossObj.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();

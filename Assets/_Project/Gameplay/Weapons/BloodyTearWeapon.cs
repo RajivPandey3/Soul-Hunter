@@ -68,7 +68,9 @@ namespace SoulHunter.Gameplay.Combat
             // Critical hit & Heal logic simulation
             var allEnemies = EnemyController.ActiveEnemies;
             bool hitEnemy = false;
-            foreach(var enemy in allEnemies)
+            // Shadow Kael's copy heals when it lashes the player, not when its own horde is near.
+            if (HeldByEnemy) hitEnemy = FindNearestEnemy(3f * AreaMultiplier) != null;
+            else foreach(var enemy in allEnemies)
             {
                 if (enemy == null) continue; // destroyed enemies can linger in the static list
                 if (Vector3.Distance(whip.transform.position, enemy.transform.position) < 3f * AreaMultiplier)

@@ -67,6 +67,7 @@ namespace SoulHunter.Gameplay.Combat
             var damageDealer = fireball.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = fireball.AddComponent<ProjectileDamage>();
             damageDealer.SourceWeaponName = "Fire Wand";
+            AimAtHostiles(fireball);
         }
     }
 }

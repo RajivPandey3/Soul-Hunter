@@ -41,6 +41,10 @@ namespace SoulHunter.Gameplay.Combat
                 }
             }
 
+            // Shadow Kael's mirrored copy: the ray starts inside the boss and would freeze it and its own horde.
+            // The player has no frozen state, so a boss-held lancet only shows its beam (owner decision pending).
+            if (GetComponentInParent<EnemyController>() != null) return;
+
             int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, 20f * AreaMultiplier);
             for (int i = 0; i < count; i++)
             {

@@ -45,7 +45,8 @@ namespace SoulHunter.Gameplay.Weapons
             // Infinite Recursion Safeguard:
             // Agar ye script kisi spawned boomerang projectile par lag gayi ho, toh turant disable karein
             // taaki projectile ke andar se مزید weapons na paida hon.
-            if (GetComponent<BoomerangProjectile>() != null || (transform.parent != null && transform.parent.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() == null))
+            if (GetComponent<BoomerangProjectile>() != null || (transform.parent != null && transform.parent.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() == null &&
+                                                                     transform.parent.GetComponent<SoulHunter.Gameplay.AI.EnemyController>() == null))
             {
                 enabled = false;
                 return;
@@ -93,7 +94,8 @@ namespace SoulHunter.Gameplay.Weapons
             }
 
             // Sabse nazdeek ka dushman dhoondho O(1) performance ke sath
-            int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, 15f, _hits, _enemyLayerMask);
+            // Shadow Kael's copy aims at the player, not at its own horde.
+            int count = HeldByEnemy ? 0 : UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, 15f, _hits, _enemyLayerMask);
             Transform closestEnemy = null;
             float minDistance = float.MaxValue;
 
@@ -108,6 +110,7 @@ namespace SoulHunter.Gameplay.Weapons
                 }
             }
 
+            if (HeldByEnemy) closestEnemy = FindNearestEnemy(15f);
             Vector3 throwDirection = HolderFacing;
             if (closestEnemy != null)
             {
@@ -143,6 +146,7 @@ namespace SoulHunter.Gameplay.Weapons
                 projectileDamage = crossObj.AddComponent<ProjectileDamage>();
             }
             projectileDamage.DamageAmount = actualDamage;
+            AimAtHostiles(crossObj);
 
             // Cross ko Boomerang ki tarah udao
             var boomerangLogic = crossObj.GetComponent<BoomerangProjectile>();

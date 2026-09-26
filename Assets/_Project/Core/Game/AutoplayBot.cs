@@ -34,6 +34,7 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-shots S     (default 10)  seconds between timed screenshots
     ///   -sh-autoplay-god                       invincible, for long visual tours
     ///   -sh-autoplay-gold N                    start with N gold (on the throw-away save), e.g. to try the merchant
+    ///   -sh-autoplay-boss-after S              after S seconds of play, skip the stage clock to its boss (e.g. Shadow Kael)
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -50,6 +51,8 @@ namespace SoulHunter.Gameplay.Core
             public bool God;
             /// <summary>Gold to start with; -1 keeps the save's gold.</summary>
             public int Gold = -1;
+            /// <summary>Seconds of play before the stage clock skips to the boss; -1 never.</summary>
+            public float BossAfterSeconds = -1f;
             public bool QuitWhenDone = true;
         }
 
@@ -117,6 +120,7 @@ namespace SoulHunter.Gameplay.Core
                 ShotInterval = float.TryParse(ArgValue("-sh-autoplay-shots"), NumberStyles.Float, inv, out var shots) ? shots : 10f,
                 God = HasArg("-sh-autoplay-god"),
                 Gold = int.TryParse(ArgValue("-sh-autoplay-gold"), out var gold) ? Mathf.Max(0, gold) : -1,
+                BossAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-boss-after"), NumberStyles.Float, inv, out var boss) ? Mathf.Max(0f, boss) : -1f,
             };
             Launch(settings);
         }
@@ -207,6 +211,8 @@ namespace SoulHunter.Gameplay.Core
         }
 
         private float Elapsed => Time.realtimeSinceStartup - _startedAt;
+        private bool _bossSkipped;
+        private bool _shadowKaelSeen;
 
         /// <summary>
         /// Steering: flee enemies (closer = much stronger), go for gems and chests, go for food when hurt, slide
@@ -317,6 +323,28 @@ namespace SoulHunter.Gameplay.Core
             while (!Finished)
             {
                 yield return new WaitForSecondsRealtime(0.4f);
+                if (Config.BossAfterSeconds >= 0f && !_bossSkipped && Elapsed >= Config.BossAfterSeconds)
+                {
+                    _bossSkipped = true;
+                    LevelProgressionManager.Instance.SkipToBoss();
+                    Event("boss-skip", $"\"stage\": {LevelProgressionManager.Instance.CurrentStage}");
+                }
+                var kael = FindFirstObjectByType<SoulHunter.Gameplay.AI.ShadowKaelController>();
+                if (kael != null && !_shadowKaelSeen)
+                {
+                    _shadowKaelSeen = true;
+                    var mirrored = kael.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true)
+                        .Select(w => $"\"{w.gameObject.name.Replace("(Clone)", "")}:{w.CurrentLevel}\"");
+                    Event("shadow-kael", $"\"might\": {kael.MirroredMight.ToString("0.00", CultureInfo.InvariantCulture)}, \"revivals\": {kael.MirroredRevivals}, \"weapons\": [{string.Join(", ", mirrored)}]");
+                    // A level-up or chest screen can open as the boss arrives: shoot the fight, not the menu.
+                    for (int i = 0; i < 3; i++)
+                    {
+                        while (GameTime.IsPaused && !Finished) yield return new WaitForSecondsRealtime(0.2f);
+                        yield return new WaitForSecondsRealtime(i == 0 ? 0.3f : 1.5f);
+                        if (kael == null || !kael.isActiveAndEnabled) break;
+                        yield return Shot($"shadow-kael-{i + 1}");
+                    }
+                }
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
                     if (panelField?.GetValue(chest) is GameObject panel && panel.activeSelf)
                     {

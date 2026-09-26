@@ -35,7 +35,9 @@ namespace SoulHunter.Gameplay.Weapons
             // Learning Comment:
             // Infinite Recursion Safeguard:
             // Agar ye script kisi spawned axe projectile par lag gayi ho, toh turant disable karein.
-            if (transform.parent != null && transform.parent.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() == null)
+            // Held by the player or by Shadow Kael (mirrored copy) is fine; anything else is a stray copy.
+            if (transform.parent != null && transform.parent.GetComponent<SoulHunter.Gameplay.Player.PlayerController>() == null &&
+                transform.parent.GetComponent<SoulHunter.Gameplay.AI.EnemyController>() == null)
             {
                 enabled = false;
                 return;
@@ -99,6 +101,7 @@ namespace SoulHunter.Gameplay.Weapons
                 projectileDamage = axeObj.AddComponent<ProjectileDamage>();
             }
             projectileDamage.DamageAmount = actualDamage;
+            AimAtHostiles(axeObj);
 
             // Rigidbody ko dhakka do
             Rigidbody rb = axeObj.GetComponent<Rigidbody>();

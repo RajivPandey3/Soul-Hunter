@@ -43,6 +43,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
                 damageDealer.DamageAmount = ScaledDamage(DamageAmount);
                 damageDealer.SourceWeaponName = "Runetracer";
+                AimAtHostiles(rune);
 
                 var lifetime = rune.GetComponent<PooledLifetime>();
                 if (lifetime != null) lifetime.Arm(5f * DurationMultiplier);

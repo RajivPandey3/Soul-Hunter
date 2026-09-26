@@ -91,6 +91,15 @@ namespace SoulHunter.Gameplay.Combat
         private void Pulse(int damage)
         {
             float radiusSquared = RetaliationRadius * RetaliationRadius;
+            if (HeldByEnemy)
+            {
+                // Shadow Kael's copy retaliates against the player, not its own horde (or itself).
+                var player = FindNearestEnemy(RetaliationRadius);
+                var playerHealth = player != null ? player.GetComponent<HealthController>() : null;
+                if (playerHealth != null) playerHealth.TakeDamage(new DamagePacket(damage, player.position, Vector3.zero));
+                OnRetaliation?.Invoke(damage);
+                return;
+            }
             // Iterate backwards: lethal damage removes the current registry entry.
             for (int i = EnemyController.ActiveEnemies.Count - 1; i >= 0; i--)
             {

@@ -134,7 +134,43 @@ Authoritative behavior:
 
 Shadow Kael mirrors the player's combat loadout. At encounter start, the relevant player weapon/stat loadout must be captured and represented by the boss according to the implementation contract.
 
-The currently observed generic boss implementation is incomplete relative to this requirement.
+Implementation (2026-09-26):
+- Capture: `EnemySpawner.SpawnBoss` calls `ShadowKaelController.CaptureFrom(player)` when the Stage 10 boss spawns. The copy is fixed from then on; later player upgrades do not reach the boss.
+- Stats: the boss gets its own `PlayerStats` copy (`PlayerStats.CopyFrom`, no second meta bonus), so every mirrored weapon scales like the player's own: Might, Cooldown, Area, Amount, Duration, Speed, Luck, crits and bounces. Armor reaches the boss's `HealthController` through that copy. Move speed multiplies the stage speed.
+- Weapons: `WeaponManager.GetEquippedWeapons()` lists the weapons the player is really using, at their levels: evolved and union weapons are included, and base weapons they replaced are left out. The boss is drawn 3x bigger, but its weapons keep the player's size.
+- Revivals: a lethal hit with mirrored revivals left restores the boss through `HealthController.TryPreventDeath` without firing `OnDied`. A revival no longer clears the stage, wins the run, drops a chest or counts as a kill.
+
+Defects found and fixed in the process:
+- The boss mirrored only Might, Cooldown and Area, by multiplying base numbers. Area was applied as the weapon's transform scale.
+- It mirrored a base weapon instead of its evolution.
+- Any revival fired `OnDied`, so Stage 10 cleared on the first "death".
+- 14 of 19 mirrored weapons never hurt the player:
+  - Pooled `Projectile`s ignored the player, and pooled `ProjectileDamage` kept the "Enemy" tag. `AutoAttackWeapon.AimAtHostiles` now retargets every spawned object, and `Projectile.TargetsPlayer` resets on reuse.
+  - Axe and Cross switched themselves off unless their parent was the player.
+  - Knife and Thousand Edge needed the player's body to aim.
+  - Magic Wand, Cross, Lightning Ring, Crimson Shroud and Bloody Tear picked targets from the enemy list.
+- A boss-held Pentagram wiped the boss's own horde and the boss itself, and a boss-held Clock Lancet froze them. Both now skip enemies.
+
+Owner decision pending: the player has no frozen state, and "wiping" the player is not a VS mechanic. So Shadow Kael's Clock Lancet only shows its beam, and his Pentagram only flashes.
+
+Tools: `LevelProgressionManager.SkipToBoss()` (menu Soul Hunter/Debug/Skip To Stage Boss, bot option `-sh-autoplay-boss-after S`). With it, the bot records a `shadow-kael` event listing the mirrored weapons, plus screenshots.
+
+Validation:
+- `ShadowKaelMirrorTests` (T): stat copy, evolved weapon, boss scale, armor, and a revival without `OnDied`.
+- `ShadowKaelPlayModeTests` (R, real Stage 10):
+  - the loadout is copied exactly and fixed at encounter start;
+  - each of the 19 weapons held by the boss hurts the player (Laurel, Clock Lancet and Pentagram excepted, as above) and never hurts or freezes the boss or its horde;
+  - a revival neither clears the stage nor wins the run, and the last death does.
+- EditMode 319/319 and PlayMode 86/86, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-shadowkael\`).
+- Editor play `autoplay-editor-11` and `-12` (Stage 10, god mode, boss after 90 s and 75 s): both times Shadow Kael copied the player's 6 weapons exactly (for example Whip, Gun, Fire Wand, Song of Mana, Axe Lv2, Lightning Ring), with 0 errors. A screenshot shows the boss's mirrored Lightning Ring striking the hero (partial `V`).
+- Shadow Kael uses the generic Level 10 boss model, not a dark copy of Kael (Art section).
+
+Seen, not changed:
+- The boss died in about 5 s at player level 6, because its health is 50 x player level (provisional balance).
+- A level-1 hero dropped into Stage 10 dies in about 11 s.
+- The GUI editor ran at 17-38 FPS with 300 Stage 10 enemies before the boss appeared (Performance section).
+
+Not yet played by the owner.
 
 ### Run structure
 

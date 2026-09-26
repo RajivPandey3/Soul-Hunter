@@ -34,6 +34,10 @@ namespace SoulHunter.Gameplay.Combat
                 }
             }
 
+            // Shadow Kael's copy would wipe its own horde and itself. Wiping the player is not a VS mechanic, so a
+            // boss-held Pentagram only flashes (owner decision pending).
+            if (HeldByEnemy) return;
+
             // Wipe all enemies on screen
             // KillSilently disables enemies immediately, and OnDisable removes
             // them from ActiveEnemies. Iterate backwards so that removal during

@@ -25,6 +25,11 @@ namespace SoulHunter.Gameplay.Combat
         public Func<int, int> DamageModifier { get; set; }
         /// <summary>Flat damage reduction per hit. The player's PlayerStats keeps this in sync.</summary>
         public int Armor { get; set; }
+        /// <summary>
+        /// Called on lethal damage before OnDied. Returning true means the owner revived (it called ReviveFromDeath),
+        /// so OnDied does not fire: a boss revival is not a kill (no stage clear, drops or kill count).
+        /// </summary>
+        public Func<bool> TryPreventDeath { get; set; }
 
         public bool IsInvincible { get; set; } = false;
 
@@ -184,6 +189,12 @@ namespace SoulHunter.Gameplay.Combat
 
         private void Die()
         {
+            if (TryPreventDeath != null && TryPreventDeath() && _currentHealth > 0)
+            {
+                _keepAliveAfterDeath = false;
+                StartCoroutine(EndRevivalInvulnerability());
+                return;
+            }
             OnDied?.Invoke();
             // Learning Comment:
             // Generic cloned enemies (horde) ke marne par Debug.Log karne se Unity console freeze ho jata tha.

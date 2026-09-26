@@ -38,6 +38,8 @@ namespace SoulHunter.Gameplay.Player
 
         private void Start()
         {
+            // A mirror (Shadow Kael) already holds the player's final numbers, meta bonuses included.
+            if (_isMirror) { SyncArmor(); return; }
             // Meta Progression load karein
             if (SoulHunter.Core.Services.GameServices.Instance != null)
             {
@@ -55,6 +57,24 @@ namespace SoulHunter.Gameplay.Player
         }
 
         private bool _characterApplied;
+        private bool _isMirror;
+
+        /// <summary>
+        /// Level 10: Shadow Kael carries a copy of the player's stats, so every mirrored weapon scales exactly as the
+        /// player's own (Might, Cooldown, Area, Amount, Duration, Speed, Luck, crits, bounces). The copy is taken once,
+        /// at encounter start, and does not re-apply meta bonuses or follow the player's later level-ups.
+        /// </summary>
+        public void CopyFrom(PlayerStats source)
+        {
+            _isMirror = true;
+            if (source == null) return;
+            Might = source.Might; Cooldown = source.Cooldown; Area = source.Area; MoveSpeedMultiplier = source.MoveSpeedMultiplier;
+            Armor = source.Armor; Luck = source.Luck; Greed = source.Greed; Curse = source.Curse; Revivals = source.Revivals;
+            Amount = source.Amount; Duration = source.Duration; Regen = source.Regen; Magnet = source.Magnet;
+            ExpBonus = source.ExpBonus; ProjectileSpeed = source.ProjectileSpeed; MaxHealthBonus = source.MaxHealthBonus;
+            CritDamageMultiplier = source.CritDamageMultiplier; ExtraProjectileBounces = source.ExtraProjectileBounces;
+            SyncArmor();
+        }
         private SoulHunter.Gameplay.Data.CharacterData _character;
         private PlayerExperience _experience;
 

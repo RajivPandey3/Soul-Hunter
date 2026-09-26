@@ -7,8 +7,9 @@ namespace SoulHunter.Gameplay.AI
 {
     /// <summary>
     /// Learning Comment:
-    /// Shadow Kael is the Level 10 Boss that mirrors the player's combat loadout at spawn.
-    /// This controller reads the player's stats and weapons at initialization.
+    /// Shadow Kael is the Level 10 Boss that mirrors the player's combat loadout at encounter start:
+    /// the player's stats (as a PlayerStats copy) and every weapon the player is using, at its level,
+    /// retargeted at the player. Mirrored revivals bring the boss back without counting as a kill.
     /// </summary>
     public class ShadowKaelController : MonoBehaviour
     {
@@ -21,125 +22,84 @@ namespace SoulHunter.Gameplay.AI
         public int MirroredRevivals;
 
         private HealthController _healthController;
+        private bool _captured;
+
+        /// <summary>The boss's copy of the player's stats, read by every mirrored weapon.</summary>
+        public PlayerStats MirroredStats { get; private set; }
 
         private void Start()
         {
-            var playerController = FindFirstObjectByType<PlayerController>();
+            if (!_captured) CaptureFrom(FindFirstObjectByType<PlayerController>());
+        }
+
+        /// <summary>
+        /// Encounter start: copies the player's stats and the weapons the player is really using (evolved and union
+        /// weapons included, replaced base weapons excluded) at their levels. The copy is fixed from then on.
+        /// EnemySpawner calls this as soon as the boss spawns; Start covers a boss placed any other way.
+        /// </summary>
+        public void CaptureFrom(PlayerController playerController)
+        {
+            if (_captured) return;
+            _captured = true;
+
+            PlayerStats stats = null;
+            WeaponManager weapons = null;
             if (playerController != null)
             {
-                var player = playerController.gameObject;
-                var stats = player.GetComponent<PlayerStats>();
-                if (stats != null)
-                {
-                    MirroredMight = stats.Might;
-                    MirroredCooldown = stats.Cooldown;
-                    MirroredArea = stats.Area;
-                    MirroredMoveSpeed = stats.MoveSpeedMultiplier;
-                    MirroredArmor = stats.Armor;
-                    MirroredRevivals = stats.Revivals;
-                }
-
-                var weapons = player.GetComponentInChildren<WeaponManager>();
-                if (weapons != null)
-                {
-                    MirroredWeaponCount = weapons.GetActiveWeaponsCount();
-                    Debug.Log($"[ShadowKael] Mirrored {MirroredWeaponCount} active weapons from player.");
-                    
-                    var activeWeaponTypes = weapons.GetActiveWeaponTypes();
-                    foreach (var type in activeWeaponTypes)
-                    {
-                        var prefab = weapons.GetWeaponObject(type);
-                        if (prefab != null)
-                        {
-                            var weaponInstance = Instantiate(prefab, this.transform);
-                            weaponInstance.SetActive(true);
-                            
-                            // Optionally set the weapon's level based on mirrored stats or player's level
-                            var autoAttackWeapon = weaponInstance.GetComponent<AutoAttackWeapon>();
-                            if (autoAttackWeapon != null)
-                            {
-                                int playerLevel = weapons.GetWeaponLevel(type);
-                                while (autoAttackWeapon.CurrentLevel < playerLevel)
-                                {
-                                    int previousLevel = autoAttackWeapon.CurrentLevel;
-                                    autoAttackWeapon.LevelUp();
-                                    if (autoAttackWeapon.CurrentLevel <= previousLevel)
-                                        break;
-                                }
-                                
-                                autoAttackWeapon.DamageAmount *= MirroredMight;
-                                autoAttackWeapon.AttackCooldown *= MirroredCooldown;
-                            }
-                            
-                            weaponInstance.transform.localScale *= MirroredArea;
-                            
-                            // Reconfigure mirrored weapon layers and targeting to attack Player
-                            ConfigureMirroredWeapon(weaponInstance);
-                        }
-                    }
-                }
-                
-                var enemyController = GetComponent<EnemyController>();
-                if (enemyController != null)
-                {
-                    enemyController.ApplyCampaignSpeed(MirroredMoveSpeed);
-                }
+                stats = playerController.GetComponent<PlayerStats>();
+                weapons = playerController.GetComponentInChildren<WeaponManager>();
+                if (weapons == null) weapons = WeaponManager.Instance;
             }
 
-            // Learning Comment:
-            // Attached HealthController ko setup karte hain:
-            // 1. DamageModifier ke zariye MirroredArmor ka flat damage reduction lagate hain (minimum 1 damage).
-            // 2. OnDied event subscribe karte hain taake lethal damage par revival consume ho sake.
+            // Stats first: mirrored weapons read them in Awake/OnEnable, like the player's own.
+            MirroredStats = GetComponent<PlayerStats>();
+            if (MirroredStats == null) MirroredStats = gameObject.AddComponent<PlayerStats>();
+            MirroredStats.CopyFrom(stats);
+            MirroredMight = MirroredStats.Might;
+            MirroredCooldown = MirroredStats.Cooldown;
+            MirroredArea = MirroredStats.Area;
+            MirroredMoveSpeed = MirroredStats.MoveSpeedMultiplier;
+            MirroredArmor = MirroredStats.Armor;
+            MirroredRevivals = MirroredStats.Revivals;
+
+            MirroredWeaponCount = 0;
+            if (weapons != null)
+            {
+                // The boss is drawn 3x bigger; its weapons keep the player's size.
+                float bossScale = Mathf.Max(0.01f, transform.lossyScale.x);
+                foreach (var pair in weapons.GetEquippedWeapons())
+                {
+                    var weaponInstance = Instantiate(pair.Key, transform);
+                    weaponInstance.transform.localScale = pair.Key.transform.localScale / bossScale;
+                    // Retarget before the weapon's first attack.
+                    ConfigureMirroredWeapon(weaponInstance);
+                    weaponInstance.SetActive(true);
+                    WeaponManager.ApplyWeaponLevel(weaponInstance, pair.Value.CurrentLevel);
+                    MirroredWeaponCount++;
+                }
+                Debug.Log($"[ShadowKael] Mirrored {MirroredWeaponCount} weapons from the player.");
+            }
+
+            var enemyController = GetComponent<EnemyController>();
+            if (enemyController != null)
+                enemyController.ApplyCampaignSpeed(enemyController.CampaignSpeedMultiplier * MirroredMoveSpeed);
+
+            // Armor reaches the boss's HealthController through the stats copy (PlayerStats.SyncArmor).
+            // Revivals: a lethal hit is survived without OnDied, so a revival never counts as the boss kill.
             _healthController = GetComponent<HealthController>();
-            if (_healthController != null)
-            {
-                _healthController.DamageModifier = ApplyArmorDamageReduction;
-                _healthController.OnDied -= HandleDeath;
-                _healthController.OnDied += HandleDeath;
-            }
-        }
-
-        private void OnDestroy()
-        {
-            // Learning Comment:
-            // Memory leak se bachne ke liye attached HealthController ke OnDied event se unsubscribe karte hain.
-            if (_healthController != null)
-            {
-                _healthController.OnDied -= HandleDeath;
-            }
+            if (_healthController != null) _healthController.TryPreventDeath = TryRevive;
         }
 
         /// <summary>
-        /// Learning Comment:
-        /// Applies flat armor damage reduction from MirroredArmor to incoming damage,
-        /// ensuring a minimum damage of 1 is always dealt.
+        /// Lethal hit: spends one mirrored revival and restores the boss (VS revival: half health), else lets it die.
         /// </summary>
-        public int ApplyArmorDamageReduction(int incomingDamage)
+        private bool TryRevive()
         {
-            return Mathf.Max(1, incomingDamage - MirroredArmor);
-        }
-
-        /// <summary>
-        /// Learning Comment:
-        /// Handles death event of Shadow Kael. If MirroredRevivals > 0,
-        /// decrements MirroredRevivals and calls HealthController.ReviveFromDeath()
-        /// to restore boss health and keep the boss alive.
-        /// </summary>
-        private void HandleDeath()
-        {
-            if (MirroredRevivals > 0)
-            {
-                MirroredRevivals--;
-                if (_healthController == null)
-                {
-                    _healthController = GetComponent<HealthController>();
-                }
-
-                if (_healthController != null)
-                {
-                    _healthController.ReviveFromDeath();
-                }
-            }
+            if (MirroredRevivals <= 0 || _healthController == null) return false;
+            MirroredRevivals--;
+            _healthController.ReviveFromDeath();
+            Debug.Log($"[ShadowKael] Revived; {MirroredRevivals} revivals left.");
+            return true;
         }
 
         /// <summary>

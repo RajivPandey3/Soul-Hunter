@@ -121,6 +121,7 @@ namespace SoulHunter.Gameplay.Weapons
                 touchDamage.DamageAmount = _spawnedDamage;
                 touchDamage.TargetTag = HostileTag;
                 touchDamage.SourceWeaponName = "Bible";
+                AimAtHostiles(newBible);
 
                 _activeBibles.Add(newBible);
             }

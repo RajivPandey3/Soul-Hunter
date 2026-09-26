@@ -42,6 +42,7 @@ namespace SoulHunter.Gameplay.Combat
                 var damageDealer = bomb.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
                 damageDealer.SourceWeaponName = "Cherry Bomb";
+                AimAtHostiles(bomb);
             }
         }
     }

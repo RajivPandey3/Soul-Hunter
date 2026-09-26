@@ -22,6 +22,8 @@ namespace SoulHunter.Gameplay.Combat
         private int _maxBounces;
         private string _sourceWeaponName;
         public event System.Action<Projectile> Deactivated;
+        /// <summary>Fired by a boss's mirrored weapon: hits only the player. Reset on every reuse from the pool.</summary>
+        public bool TargetsPlayer { get; set; }
 
         private void OnDisable()
         {
@@ -63,6 +65,7 @@ namespace SoulHunter.Gameplay.Combat
         private void OnEnable()
         {
             _sourceWeaponName = null;
+            TargetsPlayer = false;
             _currentLifetime = _lifetime;
             _bounceCount = 0;
             _maxBounces = ArcanaManager.Instance != null ? ArcanaManager.Instance.ProjectileBounceCount : 0;
@@ -98,8 +101,9 @@ namespace SoulHunter.Gameplay.Combat
         private void OnTriggerEnter(Collider other)
         {
             if (!isActiveAndEnabled) return;
-            // Apni goli se khud ko damage na ho
-            if (other.CompareTag("Player") || other.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerController>() != null) return;
+            // Apni goli se khud ko damage na ho: the player's shots skip the player; a boss's mirrored shots hit only the player.
+            bool isPlayer = other.CompareTag("Player") || other.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerController>() != null;
+            if (isPlayer != TargetsPlayer) return;
 
             var target = other.GetComponentInParent<IDamageable>();
             if (target != null)

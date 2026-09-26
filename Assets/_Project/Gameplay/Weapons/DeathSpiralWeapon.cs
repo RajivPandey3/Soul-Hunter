@@ -45,6 +45,7 @@ namespace SoulHunter.Gameplay.Combat
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = scythe.AddComponent<ProjectileDamage>();
                 damageDealer.SourceWeaponName = "Death Spiral";
+                AimAtHostiles(scythe);
             }
         }
     }

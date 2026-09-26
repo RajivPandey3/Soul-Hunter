@@ -21,7 +21,7 @@ namespace SoulHunter.Tests.EditMode
     /// 3. Attached EnemyController must apply the mirrored movement speed via ApplyCampaignSpeed.
     /// 4. All instantiated GameObjects must be properly cleaned up in TearDown to prevent hierarchy leaks.
     /// 5. Passive defense stats (Armor, Revivals) must be mirrored into MirroredArmor and MirroredRevivals.
-    /// 6. Attached HealthController must apply flat armor damage reduction via DamageModifier and handle death revivals.
+    /// 6. Mirrored Armor reaches the boss's HealthController through its stat copy; revivals restore it without OnDied.
     /// </summary>
     public class ShadowKaelMirrorTests
     {
@@ -254,32 +254,98 @@ namespace SoulHunter.Tests.EditMode
         }
 
         /// <summary>
-        /// Learning Comment:
-        /// Player weapon mirroring ke waqt stats multipliers (Might, Cooldown, Area) bhi
-        /// child weapon instance par sahi apply hote hain.
+        /// The boss carries a copy of the player's stats, so a mirrored weapon scales exactly as the player's own
+        /// (its base numbers stay untouched; the old version multiplied them, and missed Amount, Duration, Speed, Luck).
         /// </summary>
         [Test]
-        public void Start_AppliesMirroredStatsMultipliers_ToInstantiatedWeapon()
+        public void Start_MirroredWeapon_ReadsACopyOfThePlayersStats()
         {
             var wandPrefab = CreateMockWeaponPrefab("MockMagicWand", initialLevel: 1, baseDamage: 10f, baseCooldown: 2f);
             SetWeaponPrefab(_weaponManager, "_magicWandObject", wandPrefab);
 
-            _playerStats.AddMight(0.5f); // Might = 1.5
-            _playerStats.ReduceCooldown(0.2f); // Cooldown = 0.8
-            _playerStats.AddArea(0.4f); // Area = 1.4
+            _playerStats.AddMight(0.5f);
+            _playerStats.ReduceCooldown(0.2f);
+            _playerStats.AddArea(0.4f);
+            _playerStats.AddAmount(2);
+            _playerStats.AddDuration(0.3f);
+            _playerStats.AddProjectileSpeed(0.25f);
+            _playerStats.AddLuck(0.5f);
 
             _weaponManager.GiveWeapon(UpgradeData.UpgradeType.MagicWand, 1);
 
             InvokeStart(_shadowKaelController);
 
+            var copy = _shadowKaelController.MirroredStats;
+            Assert.That(copy, Is.Not.Null);
+            Assert.That(copy, Is.Not.SameAs(_playerStats));
+            Assert.That(copy.Might, Is.EqualTo(1.5f).Within(0.001f));
+            Assert.That(copy.Cooldown, Is.EqualTo(0.8f).Within(0.001f));
+            Assert.That(copy.Area, Is.EqualTo(1.4f).Within(0.001f));
+            Assert.That(copy.Amount, Is.EqualTo(2));
+            Assert.That(copy.Duration, Is.EqualTo(1.3f).Within(0.001f));
+            Assert.That(copy.ProjectileSpeed, Is.EqualTo(1.25f).Within(0.001f));
+            Assert.That(copy.Luck, Is.EqualTo(1.5f).Within(0.001f));
+
             var childWeapon = _shadowKaelObject.GetComponentInChildren<AutoAttackWeapon>();
             Assert.That(childWeapon, Is.Not.Null);
-            // Base level 1 damage = 10 * 1.5 = 15
-            Assert.That(childWeapon.DamageAmount, Is.EqualTo(15f).Within(0.001f));
-            // Base cooldown = 2 * 0.8 = 1.6
-            Assert.That(childWeapon.AttackCooldown, Is.EqualTo(1.6f).Within(0.001f));
-            // Local scale = Vector3.one * 1.4
-            Assert.That(childWeapon.transform.localScale.x, Is.EqualTo(1.4f).Within(0.001f));
+            Assert.That(childWeapon.GetComponentInParent<PlayerStats>(), Is.SameAs(copy), "The mirrored weapon must read the boss's stat copy.");
+            Assert.That(childWeapon.DamageAmount, Is.EqualTo(10f).Within(0.001f), "Base damage is not pre-multiplied (Might applies when it fires).");
+            Assert.That(childWeapon.AttackCooldown, Is.EqualTo(2f).Within(0.001f), "Base cooldown is not pre-multiplied.");
+
+            // The copy is fixed at encounter start: later player upgrades do not reach the boss.
+            _playerStats.AddMight(1f);
+            Assert.That(copy.Might, Is.EqualTo(1.5f).Within(0.001f));
+        }
+
+        /// <summary>The boss is drawn 3x bigger; its mirrored weapons keep the player's size.</summary>
+        [Test]
+        public void Start_MirroredWeapon_KeepsThePlayersSize_OnAScaledBoss()
+        {
+            var garlicPrefab = CreateMockWeaponPrefab("MockGarlic");
+            SetWeaponPrefab(_weaponManager, "_garlicWeaponObject", garlicPrefab);
+            _weaponManager.GiveWeapon(UpgradeData.UpgradeType.Garlic, 1);
+            _shadowKaelObject.transform.localScale = Vector3.one * 3f;
+
+            InvokeStart(_shadowKaelController);
+
+            var childWeapon = _shadowKaelObject.GetComponentInChildren<AutoAttackWeapon>();
+            Assert.That(childWeapon.transform.lossyScale.x, Is.EqualTo(garlicPrefab.transform.localScale.x).Within(0.001f));
+        }
+
+        /// <summary>
+        /// An evolved weapon replaces its base weapon on the player; the boss must mirror the evolution, not the base
+        /// (the old version mirrored every levelled type, so it got the base weapon back).
+        /// </summary>
+        [Test]
+        public void Start_MirrorsTheEvolvedWeapon_NotTheReplacedBaseWeapon()
+        {
+            var wandPrefab = CreateMockWeaponPrefab("MockMagicWand");
+            SetWeaponPrefab(_weaponManager, "_magicWandObject", wandPrefab);
+            var evolvedPrefab = CreateMockWeaponPrefab("MockHolyWand");
+            var evolution = ScriptableObject.CreateInstance<WeaponEvolutionData>();
+            evolution.BaseWeapon = UpgradeData.UpgradeType.MagicWand;
+            evolution.BaseWeaponMaxLevel = 2;
+            evolution.RequiredPassive = UpgradeData.UpgradeType.EmptyTome;
+            evolution.RequiredPassiveMaxLevel = 1;
+            evolution.EvolvedWeaponPrefab = evolvedPrefab;
+            evolution.EvolvedName = "Mock Holy Wand";
+            typeof(WeaponManager).GetField("_availableEvolutions", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(_weaponManager, new List<WeaponEvolutionData> { evolution });
+
+            _weaponManager.GiveWeapon(UpgradeData.UpgradeType.MagicWand, 2);
+            _weaponManager.GiveWeapon(UpgradeData.UpgradeType.EmptyTome, 1);
+            Assert.That(_weaponManager.TryEvolveWeapon(out _), Is.True, "Precondition: the wand evolves.");
+            // Evolved weapons spawn on the player; clean them up with the fixture.
+            foreach (var w in _playerObject.GetComponentsInChildren<AutoAttackWeapon>(true)) _cleanupList.Add(w.gameObject);
+
+            InvokeStart(_shadowKaelController);
+
+            var names = new List<string>();
+            foreach (var w in _shadowKaelObject.GetComponentsInChildren<AutoAttackWeapon>(true)) names.Add(w.gameObject.name);
+            Assert.That(_shadowKaelController.MirroredWeaponCount, Is.EqualTo(1));
+            Assert.That(names, Has.Count.EqualTo(1));
+            Assert.That(names[0], Does.StartWith("MockHolyWand"));
+            Object.DestroyImmediate(evolution);
         }
 
         #endregion
@@ -554,73 +620,55 @@ namespace SoulHunter.Tests.EditMode
         }
 
         /// <summary>
-        /// Learning Comment:
-        /// Test karta hai ke ApplyArmorDamageReduction incoming damage ko MirroredArmor se reduce karta hai,
-        /// aur agar incoming damage armor se barabar ya kam ho toh usay minimum 1 damage par clamp karta hai.
+        /// Mirrored Armor reaches the boss's HealthController through its stat copy: each point removes 1 damage per
+        /// hit, and a hit always deals at least 1 (VS rule, same as the player).
         /// </summary>
         [Test]
-        public void ApplyArmorDamageReduction_ReducesIncomingDamageByArmor_AndClampsToMinimumOfOne()
+        public void TakeDamage_MirroredArmor_ReducesEachHit_ToAMinimumOfOne()
         {
-            _shadowKaelController.MirroredArmor = 5;
-
-            // Jab incoming damage armor se zyada ho (20 - 5 = 15)
-            int reducedDamage = _shadowKaelController.ApplyArmorDamageReduction(20);
-            Assert.That(reducedDamage, Is.EqualTo(15),
-                "ApplyArmorDamageReduction should reduce incoming damage by MirroredArmor when damage exceeds armor.");
-
-            // Jab incoming damage exactly armor ke barabar ho (5 - 5 = 0 -> clamped to 1)
-            int equalDamage = _shadowKaelController.ApplyArmorDamageReduction(5);
-            Assert.That(equalDamage, Is.EqualTo(1),
-                "ApplyArmorDamageReduction should clamp to minimum of 1 when incoming damage equals armor.");
-
-            // Jab incoming damage armor se kam ho (3 - 5 = -2 -> clamped to 1)
-            int belowDamage = _shadowKaelController.ApplyArmorDamageReduction(3);
-            Assert.That(belowDamage, Is.EqualTo(1),
-                "ApplyArmorDamageReduction should clamp to minimum of 1 when incoming damage is below armor.");
-
-            // Jab incoming damage zero ho (0 - 5 = -5 -> clamped to 1)
-            int zeroDamage = _shadowKaelController.ApplyArmorDamageReduction(0);
-            Assert.That(zeroDamage, Is.EqualTo(1),
-                "ApplyArmorDamageReduction should clamp to minimum of 1 when incoming damage is zero.");
-        }
-
-        /// <summary>
-        /// Learning Comment:
-        /// Test karta hai ke attached HealthController par ShadowKaelController Start() ke dauran
-        /// DamageModifier wire karta hai, jo incoming damage par flat armor reduction lagata hai.
-        /// </summary>
-        [Test]
-        public void TakeDamage_AttachedHealthController_AppliesFlatArmorDamageReductionViaDamageModifier()
-        {
-            // Player stats mein armor add karte hain taake Start() ke zariye MirroredArmor capture ho
             const int armorValue = 4;
             _playerStats.AddArmor(armorValue);
 
-            // Start() invoke karne par _healthController.DamageModifier set ho jata hai
             InvokeStart(_shadowKaelController);
 
             Assert.That(_shadowKaelController.MirroredArmor, Is.EqualTo(armorValue));
-            Assert.That(_healthController.DamageModifier, Is.Not.Null,
-                "HealthController.DamageModifier must be configured by ShadowKaelController.Start().");
+            Assert.That(_healthController.Armor, Is.EqualTo(armorValue));
+            Assert.That(_healthController.DamageModifier, Is.Null, "Armor must not be applied twice.");
 
             _healthController.Initialize(100);
-
-            // Case 1: Damage > Armor (Damage amount 20, expected reduction: 20 - 4 = 16 damage taken, remaining HP: 84)
             _healthController.TakeDamage(new DamagePacket(20, Vector3.zero, Vector3.zero, DamageType.Normal));
-            Assert.That(_healthController.CurrentHealth, Is.EqualTo(84),
-                "HealthController should apply flat armor damage reduction via DamageModifier (100 - (20 - 4) = 84).");
-
-            // Case 2: Damage <= Armor (Damage amount 3 <= 4, clamped to min 1 damage taken, remaining HP: 83)
+            Assert.That(_healthController.CurrentHealth, Is.EqualTo(84));
             _healthController.TakeDamage(new DamagePacket(3, Vector3.zero, Vector3.zero, DamageType.Normal));
-            Assert.That(_healthController.CurrentHealth, Is.EqualTo(83),
-                "HealthController should clamp damage to minimum of 1 via DamageModifier when incoming damage is less than armor.");
+            Assert.That(_healthController.CurrentHealth, Is.EqualTo(83));
+        }
+
+        /// <summary>
+        /// A revival is not a kill: OnDied must not fire, or EnemySpawner reports the boss defeated and the run is won
+        /// while Shadow Kael gets back up (and drops, kill count and chest fire once per revival).
+        /// </summary>
+        [Test]
+        public void Revival_DoesNotFireOnDied_ButTheFinalDeathDoes()
+        {
+            _playerStats.AddRevival(1);
+            InvokeStart(_shadowKaelController);
+            _healthController.Initialize(100);
+            int deaths = 0;
+            _healthController.OnDied += () => deaths++;
+
+            _healthController.TakeDamage(new DamagePacket(500, Vector3.zero, Vector3.zero, DamageType.Normal));
+            Assert.That(deaths, Is.EqualTo(0), "The revival must not count as the boss's death.");
+            Assert.That(_healthController.CurrentHealth, Is.GreaterThan(0));
+
+            _healthController.IsInvincible = false;
+            _healthController.TakeDamage(new DamagePacket(500, Vector3.zero, Vector3.zero, DamageType.Normal));
+            Assert.That(deaths, Is.EqualTo(1), "The last death is the kill.");
         }
 
         /// <summary>
         /// Learning Comment:
         /// Test karta hai ke jab Shadow Kael lethal damage leta hai, toh attached HealthController
-        /// OnDied event fire karta hai, jisse HandleDeath trigger hota hai.
-        /// HandleDeath MirroredRevivals ko decrement karta hai aur HealthController.ReviveFromDeath
+        /// OnDied event fire karta hai, jisse TryRevive trigger hota hai (OnDied nahi).
+        /// TryRevive MirroredRevivals ko decrement karta hai aur HealthController.ReviveFromDeath
         /// ko call karke health restore karta hai aur boss ko zinda (active) rakhta hai.
         /// </summary>
         [Test]
@@ -643,7 +691,7 @@ namespace SoulHunter.Tests.EditMode
             // Assertions:
             // 1. MirroredRevivals decrement ho kar 1 ho jana chahiye
             Assert.That(_shadowKaelController.MirroredRevivals, Is.EqualTo(1),
-                "Lethal damage must trigger HandleDeath to decrement MirroredRevivals from 2 to 1.");
+                "Lethal damage must trigger TryRevive to decrement MirroredRevivals from 2 to 1.");
 
             // 2. HealthController.ReviveFromDeath health restore karta hai (50% of 100 = 50 HP)
             Assert.That(_healthController.CurrentHealth, Is.EqualTo(50),

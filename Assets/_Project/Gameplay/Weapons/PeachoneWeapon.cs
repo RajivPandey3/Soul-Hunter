@@ -67,6 +67,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
                 damageDealer.DamageAmount = ScaledDamage(DamageAmount);
                 damageDealer.SourceWeaponName = "Peachone";
+                AimAtHostiles(bomb);
                 
                 var lifetime = bomb.GetComponent<PooledLifetime>();
                 if (lifetime != null) lifetime.Arm(1.5f);

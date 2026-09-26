@@ -107,12 +107,14 @@ namespace SoulHunter.Gameplay.Weapons
             projectile.ConfigureContacts(Pierce, bounces + ExtraBounces, true);
             _activeProjectiles.Add(projectile);
             projectile.Deactivated += _releaseHandler;
+            AimAtHostiles(shot);
             // Gemini and Iron Blue Will do not apply to Magic Wand.
             OnProjectileFired?.Invoke(projectile);
         }
 
         private Transform FindClosestEnemy()
         {
+            if (HeldByEnemy) return FindNearestEnemy(_range); // Shadow Kael's copy aims at the player
             Transform closest = null;
             float nearestSquared = _range * _range;
             var enemies = EnemyController.ActiveEnemies;

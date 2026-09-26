@@ -66,6 +66,7 @@ namespace SoulHunter.Gameplay.Combat
             // taaki Level 7 ke spectral ghosts isse damage le sakein (GDD & AGENTS.md Section 5).
             damageDealer.TargetTag = HostileTag;
             damageDealer.DamageType = DamageType.Holy;
+            AimAtHostiles(zone);
             
             // Zone 3 seconds tak zameen pe rahega
             var lifetime = zone.GetComponent<PooledLifetime>();

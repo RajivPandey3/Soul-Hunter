@@ -106,7 +106,8 @@ namespace SoulHunter.Gameplay.Core
 
         private void ExecuteArcanaEffect(ArcanaData.ArcanaType type)
         {
-            var playerStats = FindFirstObjectByType<PlayerStats>();
+            // The player's stats, never Shadow Kael's mirrored copy.
+            var playerStats = PlayerController.Instance != null ? PlayerController.Instance.Stats : FindFirstObjectByType<PlayerStats>();
             if (playerStats == null) return;
 
             switch (type)

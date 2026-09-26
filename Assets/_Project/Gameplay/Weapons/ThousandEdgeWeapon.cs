@@ -26,9 +26,10 @@ namespace SoulHunter.Gameplay.Combat
 
         protected override void Attack()
         {
-            if (KnifePrefab == null || _player == null) return;
+            // Shadow Kael's mirrored copy has no player body: it throws toward its target (the player).
+            if (KnifePrefab == null) return;
 
-            Vector3 moveDir = _player.Rigidbody.linearVelocity;
+            Vector3 moveDir = _player != null ? _player.Rigidbody.linearVelocity : Vector3.zero;
             moveDir.y = 0f;
             if (moveDir.sqrMagnitude < 0.001f)
                 moveDir = HolderFacing;
@@ -56,6 +57,7 @@ namespace SoulHunter.Gameplay.Combat
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
                 damageDealer.SourceWeaponName = "Thousand Edge";
+                AimAtHostiles(knife);
             }
         }
     }

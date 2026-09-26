@@ -49,6 +49,7 @@ namespace SoulHunter.Gameplay.Combat
             projectile.Initialize(direction, _shotSpeed * SpeedMultiplier, ScaledDamage(DamageAmount),
                 _beamDuration * DurationMultiplier, DamageType.Magic, "Song Of Mana", _shotPierce);
             projectile.AddBounces(ExtraBounces);
+            AimAtHostiles(shot);
         }
     }
 }
