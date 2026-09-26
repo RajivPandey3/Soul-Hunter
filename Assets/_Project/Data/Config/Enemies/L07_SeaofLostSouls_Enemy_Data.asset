@@ -16,6 +16,9 @@ MonoBehaviour:
   MaxHealth: 50
   MoveSpeed: 3
   DamageToPlayer: 11
+  Movement: 1
+  FloatyWeave: 0.7
+  FloatyPeriodSeconds: 1.8
   DropChanceGem: 95
   DropChanceChicken: 5
   DropsChest: 0

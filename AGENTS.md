@@ -283,8 +283,25 @@ Validation:
 
 Mistake during validation: the build ran without `SOULHUNTER_BUILD_OUTPUT_EXE` and overwrote `D:\Unity Builds\SoulHunter\` (created 2026-09-23). The benchmark copy lives in the run folder.
 
+Part 2, movement types (2026-09-26):
+- `EnemyData.Movement` follows the VS movement skills (vampire.survivors.wiki, Enemies):
+  - `Homing` (default).
+  - `Floaty`: homes while weaving sideways by `FloatyWeave` (0.7) × sin over `FloatyPeriodSeconds` (1.8 s), with a random phase per enemy (provisional values).
+  - `FixedDirection`: when spawned, it aims at the player and keeps that line at its own speed. It is not relocated or pushed by the crowd, and it returns to the pool without drops once it has crossed the screen.
+- `EnemySpawner.SpawnEnemy` calls `EnemyController.BeginMovement()`. `EnemyFlyState` takes a speed multiplier: 1.5 for event formations, 1 for Fixed Direction.
+- Per the approved table, the normal enemies of L2 Dark Forest and L7 Sea of Lost Souls are Floaty. Everything else homes. Fixed Direction is ready but no stage uses it yet (Part 4).
+
+Found while testing Part 2:
+- `EnemySpawner` stopped following stage changes once it had been disabled: it unsubscribed in `OnDisable` and only `Start` subscribed again. Game code never disables it, but tests that disabled it kept the old stage's enemies and boss. It now unsubscribes in `OnDestroy`.
+- PlayMode tests read the owner's real save, which now selected Kaelen. Kaelen's starting weapon broke tests written for Kael (7 failures). `GameplayPlayModeTestBase.BootIntoGameplay` now plays as Kael and sends every save of the run to a throw-away file.
+
+Part 2 validation:
+- `EnemyMovementTests` (T): weave maths, and the approved movement per stage asset.
+- `EnemyMovementPlayModeTests` (R): Stage 1 enemy moved 0.00 sideways; Stage 2 Floaty enemy weaved 0.73-0.88 and both reached the player; a Fixed Direction enemy kept its line when the player stepped 5 units aside, then left.
+- EditMode 326/326, PlayMode 89/89, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-movement\`).
+- Editor play `autoplay-editor-15` (Stage 2, god mode): 0 errors, min 49 FPS, enemies spread around the player (partial `V`). Only up to 39 enemies were alive at once on Stage 2 (Part 3).
+
 Still to do (owner-approved plan, 2026-09-26):
-- Part 2: movement types (Homing, Floaty/wavy, Fixed Direction).
 - Part 3: a wave table per stage, with a minimum and interval per minute that rise and fall.
 - Part 4: patterns per stage, from the approved table:
   - L1 all sides, slow homing, swarms;

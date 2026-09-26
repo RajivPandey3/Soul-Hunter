@@ -9,6 +9,17 @@ namespace SoulHunter.Gameplay.Data
     /// Ye ek ScriptableObject hoga jo 'ScriptableObjects' folder mein save hoga.
     /// Isse designer bina code chhue naye dushman (zombie, bat, boss) bana sakta hai.
     /// </summary>
+    /// <summary>
+    /// VS enemy movement skills (vampire.survivors.wiki, Enemies): most enemies home on the player; "Floaty" ones move
+    /// in a wavy pattern; "Fixed Direction" ones pick a line when they appear and keep it, crossing the screen.
+    /// </summary>
+    public enum EnemyMovement
+    {
+        Homing = 0,
+        Floaty = 1,
+        FixedDirection = 2,
+    }
+
     [CreateAssetMenu(fileName = "New Enemy Data", menuName = "Soul Hunter/Data/Enemy Data")]
     public class EnemyData : ScriptableObject
     {
@@ -16,6 +27,13 @@ namespace SoulHunter.Gameplay.Data
         public int MaxHealth = 10;
         public float MoveSpeed = 3f;
         public int DamageToPlayer = 5;
+
+        [Tooltip("VS movement skill: Homing (default), Floaty (wavy), FixedDirection (straight line across the screen)")]
+        public EnemyMovement Movement = EnemyMovement.Homing;
+        [Tooltip("Floaty: sideways weave at its widest, as a fraction of the forward direction. Provisional")]
+        [Range(0f, 1.5f)] public float FloatyWeave = 0.7f;
+        [Tooltip("Floaty: seconds for one full weave left and right. Provisional")]
+        [Min(0.2f)] public float FloatyPeriodSeconds = 1.8f;
         public float DropChanceGem = 95f;
         public float DropChanceChicken = 5f;
         [Tooltip("% chance (before Luck) to drop a gold coin on death")]

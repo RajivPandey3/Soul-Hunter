@@ -73,6 +73,13 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load after Bootstrap");
             Assert.IsNotNull(GameServices.Instance, "GameServices should exist after Bootstrap.");
 
+            // Tests play as Kael whatever the owner last picked (their real save selected Kaelen on 2026-09-26, whose
+            // starting weapon broke tests written for Kael's Whip), and every save the run makes goes to a throw-away
+            // file, so the owner's save is never written. Tests that need another hero set it after this.
+            var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            save.UseFile(System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save.json"));
+            save.CurrentData.SelectedCharacterName = "Kael";
+
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             yield return WaitForFreshGameplay(previousPlayer: null);
         }

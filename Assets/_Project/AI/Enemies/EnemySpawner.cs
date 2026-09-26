@@ -83,9 +83,15 @@ namespace SoulHunter.Gameplay.AI
 
         private void OnDisable()
         {
+            StopAllCoroutines();
+        }
+
+        // Stage tracking lives as long as the spawner: a disabled spawner stops spawning (no Update) but must not keep
+        // the previous stage's enemies. It used to unsubscribe in OnDisable and never subscribe again (only Start does).
+        private void OnDestroy()
+        {
             var progression = FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelProgressionManager>();
             if (progression != null) progression.OnStageStarted -= HandleStageStarted;
-            StopAllCoroutines();
         }
 
         private void HandleStageStarted(int stageNum)
@@ -390,6 +396,8 @@ namespace SoulHunter.Gameplay.AI
             enemyToSpawn.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
                 SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse);
             ConfigureStageDamageRule(enemyToSpawn);
+            // VS movement skill: Floaty enemies weave, Fixed Direction ones take their line toward the player now.
+            if (enemyController != null) enemyController.BeginMovement();
             
             var health = enemyToSpawn.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null)

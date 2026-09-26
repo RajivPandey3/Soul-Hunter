@@ -16,12 +16,15 @@ namespace SoulHunter.Gameplay.AI
         private readonly EnemyController _controller;
         private readonly Vector3 _flyDirection;
         private readonly float _lifetime;
+        private readonly float _speedMultiplier;
         private float _aliveTimer;
 
         public Vector3 Direction => _flyDirection;
 
-        public EnemyFlyState(EnemyController controller, Vector3 direction, float lifetime = DefaultLifetimeSeconds)
+        /// <param name="speedMultiplier">Stage-event formations fly at 1.5x; a Fixed Direction enemy at its own speed (1).</param>
+        public EnemyFlyState(EnemyController controller, Vector3 direction, float lifetime = DefaultLifetimeSeconds, float speedMultiplier = SpeedMultiplier)
         {
+            _speedMultiplier = speedMultiplier;
             _controller = controller;
             direction.y = 0f;
             _flyDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
@@ -47,7 +50,7 @@ namespace SoulHunter.Gameplay.AI
         public void UpdatePhysics(ref SoulHunter.Gameplay.Physics.EnvironmentData envData)
         {
             // Seedha fly karo (player ko ignore), ground plane par hi.
-            var velocity = _flyDirection * (_controller.MoveSpeed * SpeedMultiplier);
+            var velocity = _flyDirection * (_controller.MoveSpeed * _speedMultiplier);
             velocity.y = _controller.Rigidbody.linearVelocity.y;
             _controller.Rigidbody.linearVelocity = velocity;
 

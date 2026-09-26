@@ -47,6 +47,7 @@ namespace SoulHunter.Gameplay.AI
             {
                 Vector3 direction = (_controller.Target.position - _controller.transform.position).normalized;
                 direction.y = 0; // Keep movement horizontal
+                if (_controller.Movement == SoulHunter.Gameplay.Data.EnemyMovement.Floaty) direction = Weave(direction);
 
                 // VS rule: the horde pushes itself apart into a wide crowd (it used to trail the player in single
                 // file). A crowded enemy is slowed, never sped past its own move speed.
@@ -92,6 +93,26 @@ namespace SoulHunter.Gameplay.AI
 
         public void Exit()
         {
+        }
+
+        /// <summary>VS "Floaty": home on the player while weaving side to side.</summary>
+        private Vector3 Weave(Vector3 direction)
+        {
+            var data = _controller.Data;
+            float weave = data != null ? data.FloatyWeave : 0.7f;
+            float period = data != null ? Mathf.Max(0.2f, data.FloatyPeriodSeconds) : 1.8f;
+            return FloatyDirection(direction, weave, period, Time.time, _controller.FloatyPhase);
+        }
+
+        /// <summary>Homing direction bent sideways by weave x sin(2 pi time / period + phase), normalised, on the ground.</summary>
+        public static Vector3 FloatyDirection(Vector3 homing, float weave, float periodSeconds, float time, float phase)
+        {
+            homing.y = 0f;
+            if (homing.sqrMagnitude < 0.0001f) return homing;
+            homing.Normalize();
+            Vector3 side = new Vector3(-homing.z, 0f, homing.x);
+            float swing = Mathf.Sin(time * 2f * Mathf.PI / Mathf.Max(0.2f, periodSeconds) + phase) * weave;
+            return (homing + side * swing).normalized;
         }
     }
 }

@@ -182,6 +182,34 @@ namespace SoulHunter.Gameplay.AI
             ChangeState(new EnemyFlyState(this, direction));
         }
 
+        /// <summary>This enemy's VS movement skill (Homing when it has no EnemyData).</summary>
+        public SoulHunter.Gameplay.Data.EnemyMovement Movement =>
+            _enemyData != null ? _enemyData.Movement : SoulHunter.Gameplay.Data.EnemyMovement.Homing;
+
+        /// <summary>Floaty enemies each start their weave at a different point, so a crowd does not sway in step.</summary>
+        public float FloatyPhase { get; private set; }
+
+        /// <summary>
+        /// Fixed Direction (VS): the enemy keeps the line it was given at its own speed, passes the player and leaves
+        /// (returned to the pool without drops once its course is over). Not relocated and not pushed by the crowd.
+        /// </summary>
+        public void StartFixedCourse(Vector3 direction, float lifetimeSeconds)
+        {
+            ChangeState(new EnemyFlyState(this, direction, Mathf.Max(1f, lifetimeSeconds), 1f));
+        }
+
+        /// <summary>Called by spawners once the enemy is placed, targeted and at its stage speed.</summary>
+        public void BeginMovement()
+        {
+            FloatyPhase = Random.value * Mathf.PI * 2f;
+            if (Movement != SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection || Target == null) return;
+            Vector3 toTarget = Target.position - transform.position;
+            toTarget.y = 0f;
+            // Long enough to cross the whole spawn ring and leave on the far side.
+            float lifetime = (toTarget.magnitude * 2f + 6f) / Mathf.Max(0.1f, MoveSpeed);
+            StartFixedCourse(toTarget, lifetime);
+        }
+
         /// <summary>The multiplier last given to ApplyCampaignSpeed (stage speed x Curse).</summary>
         public float CampaignSpeedMultiplier { get; private set; } = 1f;
 
