@@ -138,7 +138,7 @@ namespace SoulHunter.Gameplay.Pickups
             var pool = PickupPoolManager.Instance;
             foreach (var entry in StageItems.Plan(stage))
             {
-                Vector3 spot = GroundCheck.NearestOpen(origin + entry.Offset, 0.9f);
+                Vector3 spot = GroundCheck.NearestOpen(origin + CorridorOffset(entry.Offset), 0.9f);
                 spot.y = origin.y;
                 GameObject item = null;
                 switch (entry.Kind)
@@ -156,13 +156,26 @@ namespace SoulHunter.Gameplay.Pickups
 
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             if (catalog == null || catalog.RunePlate == null) return;
-            foreach (var offset in StageItems.PlateOffsets())
+            var plateOffsets = StageItems.PlateOffsets();
+            for (int i = 0; i < plateOffsets.Count; i++)
             {
+                // A corridor has no north or south: its plates lie along it, two each way.
+                Vector3 offset = SoulHunter.Gameplay.Data.StageCorridor.Active
+                    ? new Vector3((i < 2 ? 1f : -1f) * (i % 2 == 0 ? StageItems.PlateDistance : StageItems.PlateDistance * 1.4f), 0f, 0f)
+                    : plateOffsets[i];
                 Vector3 spot = GroundCheck.NearestOpen(origin + offset, 1.4f);
                 spot.y = origin.y;
                 var plate = Instantiate(catalog.RunePlate, spot, Quaternion.Euler(0f, 22.5f, 0f)).GetComponent<PressurePlate>();
                 if (plate != null) _plates.Add(plate);
             }
+        }
+
+        /// <summary>In a corridor the diagonal items lie along it instead, at the same distance, near a wall each.</summary>
+        private static Vector3 CorridorOffset(Vector3 offset)
+        {
+            if (!SoulHunter.Gameplay.Data.StageCorridor.Active) return offset;
+            return new Vector3(Mathf.Sign(offset.x) * offset.magnitude, 0f,
+                               Mathf.Sign(offset.z) * SoulHunter.Gameplay.Data.StageCorridor.HalfWidth * 0.45f);
         }
 
         /// <summary>Removes the items of the previous stage that were not picked up.</summary>

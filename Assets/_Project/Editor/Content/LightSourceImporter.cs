@@ -34,7 +34,12 @@ namespace SoulHunter.Editor.Content
         /// <summary>The Rune Plate is drawn 1.3x the Blender size (about 2.5 units across: easy to see, easy to step on).</summary>
         public const float PlateScale = 1.3f;
 
-        [MenuItem("Soul Hunter/Content/Import Stage Props (Soul Lantern, Rune Plate)")]
+        public const string WallModel = "Assets/Art/Models/SH10_Prop_CastleWall.fbx";
+        public const string WallPrefabPath = PrefabFolder + "/SH10_CastleWall.prefab";
+        /// <summary>Castle wall module: 20 long (X), 1.4 thick (Z), 3 tall; its collider blocks the player (Obstacle layer).</summary>
+        public static readonly Vector3 WallSize = new Vector3(20f, 3f, 1.4f);
+
+        [MenuItem("Soul Hunter/Content/Import Stage Props (Soul Lantern, Rune Plate, Castle Wall)")]
         public static void ImportAll()
         {
             if (!AssetDatabase.IsValidFolder(MaterialFolder)) AssetDatabase.CreateFolder("Assets/Art/Materials", "Props");
@@ -43,14 +48,16 @@ namespace SoulHunter.Editor.Content
             var looks = LoadLooks();
             ConfigureModel(Model, looks);
             ConfigureModel(PlateModel, looks);
+            ConfigureModel(WallModel, looks);
 
             var catalog = GameContentCatalog.Load();
             if (catalog == null) throw new System.InvalidOperationException("GameContentCatalog (Resources/GameContent) is missing.");
             catalog.SoulLantern = BuildPrefab();
             catalog.RunePlate = BuildPlatePrefab();
+            catalog.CastleWall = BuildWallPrefab();
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
-            Debug.Log("[LightSourceImporter] The Soul Lantern and the Rune Plate are in the game.");
+            Debug.Log("[LightSourceImporter] The Soul Lantern, the Rune Plate and the Castle Wall are in the game.");
         }
 
         private static void ConfigureModel(string model, Dictionary<string, Look> looks)
@@ -69,6 +76,39 @@ namespace SoulHunter.Editor.Content
         /// VS pressure plate: a flat trigger the player steps on (it never blocks and weapons ignore it: Default layer,
         /// untagged). PressurePlate starts a stage event and dims its runes while it recharges.
         /// </summary>
+        /// <summary>
+        /// The Ruined Castle corridor wall: a solid box collider on the Obstacle layer, which only the player collides
+        /// with (enemies, weapons and projectiles pass, as with every stage obstacle). CorridorWalls lines it up.
+        /// </summary>
+        private static GameObject BuildWallPrefab()
+        {
+            var root = new GameObject("SH10_CastleWall");
+            try
+            {
+                root.layer = LayerMask.NameToLayer(StageFloorImporter.ObstacleLayerName);
+                var box = root.AddComponent<BoxCollider>();
+                box.size = WallSize;
+                box.center = new Vector3(0f, WallSize.y / 2f, 0f);
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(WallModel));
+                visual.name = "Visual";
+                visual.transform.SetParent(root.transform, false);
+                var renderers = visual.GetComponentsInChildren<Renderer>();
+                foreach (var r in renderers) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                var bounds = renderers[0].bounds;
+                foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+                // The module is authored along Blender X; lay it along world X whichever way the FBX axes came in.
+                if (bounds.size.z > bounds.size.x) visual.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+                bounds = renderers[0].bounds;
+                foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+                visual.transform.localPosition = new Vector3(-bounds.center.x, -bounds.min.y, -bounds.center.z);
+                return PrefabUtility.SaveAsPrefabAsset(root, WallPrefabPath);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
         private static GameObject BuildPlatePrefab()
         {
             var root = new GameObject("SH10_RunePlate");

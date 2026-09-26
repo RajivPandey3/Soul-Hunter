@@ -53,6 +53,12 @@ namespace SoulHunter.Gameplay.Data
             }
         }
 
+        /// <summary>Corridor half-width per stage: the Ruined Castle is a walled corridor (owner, 2026-09-26); 0 = open.</summary>
+        public static float CorridorHalfWidth(int stage) => Mathf.Clamp(stage, 1, 10) == 4 ? 9f : 0f;
+
+        /// <summary>Share of spawns kept to the stage's sides: all of them in a corridor (VS: only from the ends).</summary>
+        public static float SideBiasFor(int stage) => CorridorHalfWidth(stage) > 0f ? 1f : 0.8f;
+
         /// <summary>Each stage's scripted formations (between the 5-minute chest elites, before the boss). Provisional.</summary>
         public static List<StageEventEntry> Events(int stage)
         {

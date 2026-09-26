@@ -88,7 +88,8 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 Vector2 viewport;
                 float along = Random.Range(-0.08f, 1.08f);
-                switch (Random.Range(0, 4))
+                // In a corridor only its two open ends are off-screen ground; top and bottom are behind the walls.
+                switch (Random.Range(0, SoulHunter.Gameplay.Data.StageCorridor.Active ? 2 : 4))
                 {
                     case 0: viewport = new Vector2(-0.08f, along); break;
                     case 1: viewport = new Vector2(1.08f, along); break;
@@ -108,6 +109,7 @@ namespace SoulHunter.Gameplay.Pickups
                     spot = playerPosition + new Vector3(dir.x, 0f, dir.y) * 16f;
                 }
                 spot.y = playerPosition.y;
+                spot = SoulHunter.Gameplay.Data.StageCorridor.Clamp(spot, 1.5f);
                 if (GroundCheck.IsOpen(spot, 0.8f)) return true;
             }
             spot = default;

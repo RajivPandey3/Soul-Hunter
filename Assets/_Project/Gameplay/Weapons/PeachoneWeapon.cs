@@ -66,6 +66,7 @@ namespace SoulHunter.Gameplay.Combat
                 var damageDealer = bomb.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
                 damageDealer.DamageAmount = ScaledDamage(DamageAmount);
+                damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
                 damageDealer.SourceWeaponName = "Peachone";
                 AimAtHostiles(bomb);
                 

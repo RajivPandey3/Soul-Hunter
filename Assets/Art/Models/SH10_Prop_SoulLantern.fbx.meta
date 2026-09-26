@@ -44,6 +44,21 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Plate_StoneDark
     second: {fileID: 2100000, guid: c17383c8f7afcf847bc9892d6d1f8046, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wall_Ember
+    second: {fileID: 2100000, guid: 176d894eca248c54fa1181fc9ab317d8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wall_Stone
+    second: {fileID: 2100000, guid: e0cc7187ce2d1e048af4b017bb7dee5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wall_StoneDark
+    second: {fileID: 2100000, guid: 490d96868fc8f264b8ce5c887f447413, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

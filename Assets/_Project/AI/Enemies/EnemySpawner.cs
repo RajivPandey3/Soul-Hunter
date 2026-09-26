@@ -109,6 +109,8 @@ namespace SoulHunter.Gameplay.AI
             _chestElitesSpawned = 0;
             _stageEvents = _currentWave.GetEvents();
             _nextStageEvent = 0;
+            // A corridor stage (the Ruined Castle) is walled along world X around where the player stands now.
+            StageCorridor.Begin(WaveTables.CorridorHalfWidth(stageNum), _playerTransform != null ? _playerTransform.position.z : 0f);
             int stageIndex = Mathf.Clamp(stageNum - 1, 0, 9);
             _stageEnemyPrefab = stageIndex < _stageEnemyPrefabs.Count && _stageEnemyPrefabs[stageIndex] != null
                 ? _stageEnemyPrefabs[stageIndex] : _currentWave.EnemyPrefab;
@@ -237,8 +239,8 @@ namespace SoulHunter.Gameplay.AI
                 // Stragglers always re-enter ahead of the player, also on side-rule stages: those stages are not walled
                 // corridors (VS's Inlaid Library is), so side-only re-entry let a player running up or down leave the
                 // whole horde behind (editor play: 9 kills in 3 minutes on the Ruined Castle).
-                enemy.transform.position = ComputeRelocationPoint(playerPos, heading, _relocateSpreadDegrees,
-                    minRadius, maxRadius, Random.value, Random.value);
+                enemy.transform.position = StageCorridor.Clamp(ComputeRelocationPoint(playerPos, heading, _relocateSpreadDegrees,
+                    minRadius, maxRadius, Random.value, Random.value));
                 if (enemy.Rigidbody != null) enemy.Rigidbody.linearVelocity = Vector3.zero;
             }
         }
@@ -289,7 +291,9 @@ namespace SoulHunter.Gameplay.AI
             var bossAudio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (bossAudio != null) bossAudio.PlaySFX(bossAudio.BossWarningSound, 0.9f);
             Vector2 randomDir = Random.insideUnitCircle.normalized;
-            Vector3 spawnPos = _playerTransform.position + new Vector3(randomDir.x * _spawnRadius, 0f, randomDir.y * _spawnRadius);
+            // In a corridor the boss walks in from one end, like everything else.
+            if (StageCorridor.Active) randomDir = new Vector2(randomDir.x >= 0f ? 1f : -1f, 0f);
+            Vector3 spawnPos = StageCorridor.Clamp(_playerTransform.position + new Vector3(randomDir.x * _spawnRadius, 0f, randomDir.y * _spawnRadius));
             
             // Spawn normal enemy but make it big and tanky to act as a boss
             if (!_bossPools.TryGetValue(basePrefab, out var bossPool))
@@ -373,6 +377,7 @@ namespace SoulHunter.Gameplay.AI
                 float distance = Random.Range(_spawnRadius, _spawnRadius + 10f);
                 spawnPos = _playerTransform.position + direction * distance;
                 spawnPos.y = _playerTransform.position.y;
+                spawnPos = StageCorridor.Clamp(spawnPos); // a corridor keeps its enemies between the walls
                 if (SoulHunter.Gameplay.Pickups.GroundCheck.IsOpen(spawnPos, 0.6f)) break;
             }
             return spawnPos;
@@ -476,7 +481,7 @@ namespace SoulHunter.Gameplay.AI
                 var enemyObject = SpawnEnemy(PickSwarmPrefab(level, phase));
                 var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
                 if (enemy == null) continue;
-                enemyObject.transform.position = position;
+                enemyObject.transform.position = StageCorridor.Clamp(position);
                 enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
                 spawned.Add(enemy);
             }

@@ -99,6 +99,7 @@ namespace SoulHunter.Gameplay.Combat
             if (damageDealer == null) damageDealer = strike.AddComponent<ProjectileDamage>();
             
             damageDealer.DamageAmount = ScaledDamage(DamageAmount);
+            damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
             damageDealer.SourceWeaponName = "Lightning Ring";
             AimAtHostiles(strike);
             

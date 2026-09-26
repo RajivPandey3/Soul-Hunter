@@ -22,6 +22,7 @@ namespace SoulHunter.Editor.Content
                 if (wave == null) throw new System.IO.FileNotFoundException("Missing stage wave", StageWaves[i]);
                 wave.Minutes = WaveTables.Build(i + 1, wave.SpawnInterval);
                 wave.SpawnSide = WaveTables.SideFor(i + 1);
+                wave.SideBias = WaveTables.SideBiasFor(i + 1);
                 wave.Events = WaveTables.Events(i + 1);
                 EditorUtility.SetDirty(wave);
             }

@@ -119,6 +119,7 @@ namespace SoulHunter.Gameplay.Weapons
                 }
                 
                 touchDamage.DamageAmount = _spawnedDamage;
+                touchDamage.DamageType = DamageType.Holy; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
                 touchDamage.TargetTag = HostileTag;
                 touchDamage.SourceWeaponName = "Bible";
                 AimAtHostiles(newBible);

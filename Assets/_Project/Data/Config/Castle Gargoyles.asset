@@ -21,7 +21,7 @@ MonoBehaviour:
   MinimumEnemies: 30
   MinimumEnemiesPerPhase: 20
   SpawnSide: 1
-  SideBias: 0.8
+  SideBias: 1
   Minutes:
   - Minute: 0
     Minimum: 27

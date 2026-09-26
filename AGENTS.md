@@ -124,6 +124,23 @@ Ghost / spectral enemies:
 - `Holy`, `Magic`, or explicitly tagged `Spectral` damage is valid;
 - existing Holy 2x vulnerability may remain a balance parameter unless changed by a later balance decision.
 
+Weapon damage types (owner chose "type by theme", 2026-09-26). Before this only Magic Wand, Song of Mana, Santa Water and Holy Wand could hurt ghosts:
+
+| Type | Weapons |
+|---|---|
+| Holy (2x on ghosts) | Cross, Bible, Santa Water, Holy Wand and their evolutions |
+| Magic | Magic Wand, Song of Mana, Fire Wand, Lightning Ring, Runetracer, Peachone |
+| Spectral | Soul Burst (the ultimate) |
+| Normal (passes through ghosts) | Whip, Knife, Axe, Bone, Gun, Cherry Bomb, Garlic and the rest |
+
+Pentagram erases enemies without a damage type, so it also clears ghosts. The ghost check is in `HealthController.TakeDamage` (`EnemyController.IsSpectral`); the L7 boss is a ghost too.
+
+Validation: `SpectralStagePlayModeTests` (R, real Stage 7): each Holy/Magic weapon hurts a ring of ghosts, each Normal weapon passes through them, Soul Burst reaches them, and the L7 boss ignores Normal damage and takes Holy at 2x. Results: see "Castle corridor" below (same run). That run also found and fixed Soul Burst's empty enemy mask: the ultimate had never hurt anything.
+
+Editor play `autoplay-editor-27` (Stage 7 jumped to at level 1, god mode, 3 min): 0 errors, min 39 FPS. With only Kael's Whip (Normal) there were 3 kills in the first 30 s while the ghost horde grew to 229-300 (ghosts take no knockback). Once Bible and Lightning Ring came from level-ups, their hits showed on the ghosts, reaching 1528 kills and level 20 (partial `V`). In the one-run campaign a player arrives at Stage 7 with more weapons; whether a Normal-only loadout should be this helpless is a balance question for the owner.
+
+Not yet played by the owner.
+
 ### Level 10
 
 Boss:
@@ -331,7 +348,7 @@ Part 4, stage patterns (2026-09-26), following the approved table:
   - L1 swarms; L2 mostly closing rings; L3 mostly walls; L4 walls; L5 swarms at 1.8× event speed (`StageEventEntry.Speed`); L6 mostly swarms; L7 mostly (ghost) swarms; L8 rings; L9 walls and rings alternating;
   - L10 every kind, nine events every 2:30, counts +8.
 - Pace (`CampaignLevelCatalog`): L5 speed 1.25 → 0.9 ("a slow, heavy horde and fast swarms"), L6 1.15 → 1.45. The L4 and L5 modifier texts no longer mention traps or poison zones.
-- Stragglers (beyond 40 units) still re-enter ahead of the player on every stage. On a side-rule stage, making them re-enter from the sides let a player who ran up or down leave the whole horde behind (editor play: 9 kills in 3 minutes on the Castle), because the Castle is not a walled corridor like VS's Inlaid Library. A real corridor (long walls on the Castle floor) would be an owner decision.
+- Stragglers (beyond 40 units) still re-enter ahead of the player on every stage. On a side-rule stage, making them re-enter from the sides let a player who ran up or down leave the whole horde behind (editor play: 9 kills in 3 minutes on the Castle), because the Castle was not yet a walled corridor like VS's Inlaid Library. The owner then approved a real corridor (see "Castle corridor" below).
 - Validation:
   - `StagePatternTests` (T): sides, events, assets and pace follow the table; the direction sampler keeps more than 75% to the sides.
   - `StagePatternPlayModeTests` (R): Castle spawns more than 65% left/right; Peaks more than 65% above/below and fast; no village spawn inside a house; Swamp slow with fast swarms.
@@ -354,6 +371,27 @@ Part 5, VS knockback (2026-09-26, vampire.survivors.wiki Knockback):
 The owner-approved crowd plan (Parts 1-5) is done. It is not yet played by the owner.
 
 Each stage still has only one normal enemy type and one elite; new enemy models are Art section work.
+
+Not yet played by the owner.
+
+### Castle corridor (owner-approved, 2026-09-26)
+
+L4 Ruined Castle is now a walled corridor like VS's Inlaid Library ("a long hallway ... that restricts movement to left and right"):
+- `StageCorridor` (Data/Config) holds the corridor: it runs along world X, centred on the player's Z when the stage starts, with an open half-width of `WaveTables.CorridorHalfWidth` (9 on Stage 4, 18 units wide; 0 = open ground). The next stage ends it.
+- `CorridorWalls` (added by `GameSessionManager`) lays 7 castle-wall modules of 20 units along each side and keeps them around the player, so the hallway never ends. The walls are on the `Obstacle` layer: they block the player only; enemies, weapons and projectiles pass over them.
+- Everything else keeps inside the corridor: enemy spawns, stragglers, stage events and the boss (from one end) in `EnemySpawner`; Soul Lanterns come only from the left and right screen edges; stage items lie along the corridor near a wall each, and the four Rune Plates lie along it, two each way.
+- Stage 4 spawns 100% from the ends (`WaveTables.SideBiasFor`, `Castle Gargoyles.asset` `SideBias` 1).
+- Model: `build_light_source.py` also builds the castle wall (crenellated stone with ember slits), imported by `LightSourceImporter` as `Assets/Prefabs/Props/SH10_CastleWall.prefab` (`GameContentCatalog.CastleWall`). **The design is not yet owner-approved.**
+
+Validation:
+- `CorridorTests` (T): only Stage 4 is a corridor, ends-only spawning, clamping, a solid 20-unit wall on the Obstacle layer.
+- `CorridorPlayModeTests` (R): the walls stop the player going up or down and follow it left and right; every enemy, item and plate is inside the corridor; leaving the Castle opens the ground again.
+- Together with Level 7's `SpectralStagePlayModeTests`: EditMode 349/349, PlayMode 133/133, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260927-l7corridor2\`).
+- The first run of that suite found that Soul Burst's `_enemyLayer` was empty in `Player.prefab` and `Main_Gameplay`, so the ultimate had never hurt any enemy. `SoulBurstController` now defaults an empty mask to the Enemy layer, as `WhipWeapon` does.
+
+Editor play `autoplay-editor-26` (Stage 4, god mode, 3 min, after the fixes): both walls on screen, the horde inside the hallway, 478 kills, level 13, 0 errors, min 63 FPS (partial `V`).
+
+Seen, not changed: in the earlier editor play `autoplay-editor-25` (Stage 4 jumped to at level 1, god mode) the bot pressed against a wall and kills nearly stopped after 20 s (61 → 74 by 3:00): level-1 weapons (10 damage) against 25-HP Castle enemies. Enemies that chase the player cross the walls, so some stood outside the corridor.
 
 Not yet played by the owner.
 

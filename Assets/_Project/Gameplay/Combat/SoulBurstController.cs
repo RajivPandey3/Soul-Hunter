@@ -28,6 +28,10 @@ namespace SoulHunter.Gameplay.Combat
 
         private void Start()
         {
+            // Player.prefab and Main_Gameplay ship with an empty mask, so the burst found nothing and never hurt an
+            // enemy (found by SpectralStagePlayModeTests, 2026-09-27). Default to the Enemy layer, as WhipWeapon does.
+            if (_enemyLayer.value == 0) _enemyLayer = LayerMask.GetMask("Enemy");
+
             if (GameServices.Instance != null)
             {
                 _eventBus = GameServices.Instance.Get<EventBus>();
@@ -105,7 +109,8 @@ namespace SoulHunter.Gameplay.Combat
                     damageable.TakeDamage(new DamagePacket(
                         _damageAmount,
                         _hitsBuffer[i].ClosestPoint(transform.position),
-                        (_hitsBuffer[i].transform.position - transform.position).normalized * 3f
+                        (_hitsBuffer[i].transform.position - transform.position).normalized * 3f,
+                        DamageType.Spectral // owner (2026-09-26, Level 7): the ultimate always reaches ghosts
                     ));
                 }
             }

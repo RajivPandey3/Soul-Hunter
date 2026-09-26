@@ -61,7 +61,7 @@ namespace SoulHunter.Gameplay.Combat
             var proj = fireball.GetComponent<Projectile>();
             if (proj == null) proj = fireball.AddComponent<Projectile>();
             
-            proj.Initialize(fireDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 3f);
+            proj.Initialize(fireDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 3f, DamageType.Magic, "Fire Wand"); // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
             proj.AddBounces(ExtraBounces);
             
             var damageDealer = fireball.GetComponent<ProjectileDamage>();

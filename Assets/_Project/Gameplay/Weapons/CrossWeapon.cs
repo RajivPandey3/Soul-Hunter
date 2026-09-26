@@ -146,6 +146,7 @@ namespace SoulHunter.Gameplay.Weapons
                 projectileDamage = crossObj.AddComponent<ProjectileDamage>();
             }
             projectileDamage.DamageAmount = actualDamage;
+            projectileDamage.DamageType = DamageType.Holy; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
             AimAtHostiles(crossObj);
 
             // Cross ko Boomerang ki tarah udao

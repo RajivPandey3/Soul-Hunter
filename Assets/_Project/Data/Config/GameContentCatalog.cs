@@ -13,6 +13,8 @@ namespace SoulHunter.Gameplay.Data
         public GameObject SoulLantern;
         /// <summary>VS pressure plate: the Rune Plate, which starts a stage event when stepped on (StageItemSpawner).</summary>
         public GameObject RunePlate;
+        /// <summary>The Ruined Castle corridor wall module (20 units long), laid by CorridorWalls.</summary>
+        public GameObject CastleWall;
         [UnityEngine.Tooltip("Level 3 Wandering Merchant (model, trigger and shop), spawned by CampaignSignatureSystem.")]
         public GameObject WanderingMerchant;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");

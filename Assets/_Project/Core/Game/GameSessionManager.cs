@@ -62,6 +62,9 @@ namespace SoulHunter.Gameplay.Core
                 // VS stage items: a passive, a weapon, a chicken and a Vacuum/Orologion a few tiles from each stage's start.
                 if (GetComponent<SoulHunter.Gameplay.Pickups.StageItemSpawner>() == null)
                     gameObject.AddComponent<SoulHunter.Gameplay.Pickups.StageItemSpawner>();
+                // Corridor stages (the Ruined Castle, as VS's Inlaid Library) are walled along their length.
+                if (GetComponent<SoulHunter.Gameplay.Environment.CorridorWalls>() == null)
+                    gameObject.AddComponent<SoulHunter.Gameplay.Environment.CorridorWalls>();
             }
             else if (Instance != this)
             {

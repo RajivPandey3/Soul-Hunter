@@ -27,6 +27,7 @@ mat, shade, link, mesh_obj = pv2.mat, pv2.shade, pv2.link, pv2.mesh_obj
 OUT = pv2.OUT
 ASSET = 'SH10_Prop_SoulLantern'
 PLATE = 'SH10_Prop_RunePlate'
+WALL = 'SH10_Prop_CastleWall'
 
 
 def cylinder(name, verts, radius, depth, z, material, top=None, bevel=0.0, smooth=False):
@@ -113,11 +114,48 @@ def rune_plate():
     return root
 
 
+def castle_wall():
+    """Ruined Castle corridor wall (owner, 2026-09-26; VS Inlaid Library's shelves as Soul Hunter castle walls).
+    A 20-unit module along X (tiles end to end), 1.4 thick, about 3 tall: plinth, block courses, buttresses every
+    5 units with ember braziers, and battlements."""
+    stone = mat('Wall_Stone', (0.36, 0.36, 0.4), rough=0.9)
+    dark = mat('Wall_StoneDark', (0.18, 0.18, 0.21), rough=0.9)
+    ember = mat('Wall_Ember', (1.0, 0.5, 0.15), emission=(1.0, 0.5, 0.15), strength=4.0)
+    root = link(bpy.data.objects.new('CastleWall', None))
+
+    def box(name, size, loc, material):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+        o = bpy.context.object
+        o.name = name
+        o.scale = size
+        shade(o, material).parent = root
+        return o
+
+    box('Plinth', (20.0, 1.6, 0.3), (0, 0, 0.15), dark)
+    box('Body', (20.0, 1.2, 2.3), (0, 0, 1.45), stone)
+    for row, z in enumerate((0.9, 1.5, 2.1)):
+        for side in (-1, 1):
+            box(f'Course{row}{side}', (20.0, 0.02, 0.05), (0, side * 0.61, z), dark)
+            for k in range(16):
+                x = -10 + 1.25 * k + (0.625 if row % 2 else 0.0)
+                if -10 < x < 10:
+                    box(f'Joint{row}{side}{k}', (0.05, 0.02, 0.6), (x, side * 0.61, z - 0.3), dark)
+    for k in range(4):
+        x = -7.5 + 5 * k
+        box(f'Buttress{k}', (1.0, 1.8, 2.5), (x, 0, 1.25), dark)
+        for side in (-1, 1):
+            box(f'Brazier{k}{side}', (0.35, 0.25, 0.2), (x, side * 1.0, 1.7), dark)
+            box(f'Ember{k}{side}', (0.24, 0.16, 0.14), (x, side * 1.02, 1.86), ember)
+    for k in range(16):
+        box(f'Merlon{k}', (0.7, 1.3, 0.5), (-9.375 + 1.25 * k, 0, 2.85), stone)
+    return root
+
+
 def export(project):
     models = os.path.join(project, 'Assets', 'Art', 'Models')
     os.makedirs(models, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    for asset, build in ((ASSET, soul_lantern), (PLATE, rune_plate)):
+    for asset, build in ((ASSET, soul_lantern), (PLATE, rune_plate), (WALL, castle_wall)):
         for o in list(bpy.data.objects):
             bpy.data.objects.remove(o, do_unlink=True)
         root = build()
@@ -156,5 +194,9 @@ elif __name__ == '__main__':
     plate.location = (-1.9, 0.4, 0)
     pv2.label('Soul Rune Plate', (-1.9, -0.8, 0.02), 0.13)
     pv2.render(pv2.camera('Plate', Vector((-1.9, 0.4, 0.05)), 3.2, lens=50, height=1.2), 'rune_plate_gamecam')
+    wall = castle_wall()
+    wall.location = (0, 6, 0)
+    pv2.render(pv2.camera('Wall', Vector((0, 6, 1.2)), 9.0, lens=40, height=1.2), 'castle_wall_gamecam')
+    pv2.render(pv2.camera('WallSide', Vector((0, 6, 1.4)), 7.0, lens=40, height=0.35), 'castle_wall_front')
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, 'soul_lantern.blend'))
     print('DONE', flush=True)

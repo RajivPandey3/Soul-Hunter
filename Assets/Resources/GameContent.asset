@@ -329,4 +329,5 @@ MonoBehaviour:
   - {fileID: 7649708441699079349, guid: 742d17b83abcfac4c826bbd9f808778d, type: 3}
   SoulLantern: {fileID: 3149460054527615107, guid: c59c7322910e96645a5b5802272ae513, type: 3}
   RunePlate: {fileID: 3497514117190942833, guid: fea7c1e7ffc2b71429faa695a33a31e7, type: 3}
+  CastleWall: {fileID: 7743129706177571048, guid: aee6ef17118c1494db259f373d583fff, type: 3}
   WanderingMerchant: {fileID: 4935854625492487647, guid: 6850f23122f6dd3479c45c5f56088130, type: 3}
