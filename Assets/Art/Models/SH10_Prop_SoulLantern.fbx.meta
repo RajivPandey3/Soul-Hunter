@@ -29,6 +29,21 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Lantern_StoneDark
     second: {fileID: 2100000, guid: 5658e531db3d65744b2d4382ad0a6bbb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plate_Rune
+    second: {fileID: 2100000, guid: 36bc67ddbea82514bb43b3072c47a91d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plate_Stone
+    second: {fileID: 2100000, guid: c1620fb77731f2a4fa6731bb8ae6aa9d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plate_StoneDark
+    second: {fileID: 2100000, guid: c17383c8f7afcf847bc9892d6d1f8046, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

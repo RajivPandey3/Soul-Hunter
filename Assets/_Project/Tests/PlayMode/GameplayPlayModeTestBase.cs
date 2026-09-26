@@ -26,6 +26,10 @@ namespace SoulHunter.Tests.PlayMode
         [SetUp]
         public void CaptureLogs()
         {
+            // Every test plays on a copy of the owner's save; nothing a test does (a picked-up coin, an unlock) can
+            // reach the real file. Tests that redirect again (UseFile) keep working.
+            SoulHunter.Core.Persistence.SaveService.TestSavePath =
+                System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save_copy.json");
             _errors.Clear();
             Application.logMessageReceived += CaptureErrors;
             // Report unrelated runtime errors in the failure message instead of

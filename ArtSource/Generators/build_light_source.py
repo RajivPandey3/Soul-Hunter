@@ -1,4 +1,5 @@
-"""Soul Hunter destructible light source - the Soul Lantern (VS "light source", owner request 2026-09-26).
+"""Soul Hunter stage props (owner request 2026-09-26, VS ground features): the Soul Lantern (VS "light source") and
+the Soul Rune Plate (VS pressure plate).
 
 A breakable stage prop: octagonal stone plinth, short column, a wrought-iron lantern cage with a pointed roof and a
 cyan soul flame inside (orange embers below it). Soul Hunter's own design; it reuses the pickups v2 materials,
@@ -25,6 +26,7 @@ _spec.loader.exec_module(pv2)
 mat, shade, link, mesh_obj = pv2.mat, pv2.shade, pv2.link, pv2.mesh_obj
 OUT = pv2.OUT
 ASSET = 'SH10_Prop_SoulLantern'
+PLATE = 'SH10_Prop_RunePlate'
 
 
 def cylinder(name, verts, radius, depth, z, material, top=None, bevel=0.0, smooth=False):
@@ -83,25 +85,56 @@ def soul_lantern():
     return root
 
 
+def rune_plate():
+    """VS pressure plate, Soul Hunter style: a low octagonal stone slab with a sunken ring of crimson runes."""
+    stone = mat('Plate_Stone', (0.3, 0.3, 0.34), rough=0.9)
+    stone_dark = mat('Plate_StoneDark', (0.14, 0.13, 0.16), rough=0.9)
+    rune = mat('Plate_Rune', (0.95, 0.18, 0.12), emission=(0.95, 0.18, 0.12), strength=5.0)
+    root = link(bpy.data.objects.new('RunePlate', None))
+    for p in (cylinder('Slab', 8, 0.95, 0.07, 0.0, stone, bevel=0.015),
+              cylinder('Inset', 8, 0.72, 0.02, 0.07, stone_dark),
+              cylinder('RuneCore', 16, 0.16, 0.02, 0.08, rune, smooth=True)):
+        p.parent = root
+    # Eight rune wedges on a ring, and eight short spokes: reads as a trap sigil from the tilted camera.
+    for k in range(8):
+        a = k * math.tau / 8
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(math.cos(a) * 0.5, math.sin(a) * 0.5, 0.095))
+        wedge = bpy.context.object
+        wedge.name = f'Rune{k}'
+        wedge.scale = (0.2, 0.07, 0.02)
+        wedge.rotation_euler = (0, 0, a + math.pi / 2)
+        shade(wedge, rune).parent = root
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(math.cos(a + math.pi / 8) * 0.3, math.sin(a + math.pi / 8) * 0.3, 0.09))
+        spoke = bpy.context.object
+        spoke.name = f'Spoke{k}'
+        spoke.scale = (0.2, 0.025, 0.012)
+        spoke.rotation_euler = (0, 0, a + math.pi / 8)
+        shade(spoke, rune).parent = root
+    return root
+
+
 def export(project):
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    root = soul_lantern()
-    root.name = ASSET
-    bpy.ops.object.select_all(action='DESELECT')
-    for o in [root] + list(root.children_recursive):
-        o.select_set(True)
     models = os.path.join(project, 'Assets', 'Art', 'Models')
     os.makedirs(models, exist_ok=True)
-    bpy.ops.export_scene.fbx(filepath=os.path.join(models, ASSET + '.fbx'), use_selection=True, object_types={'MESH', 'EMPTY'},
-                             use_mesh_modifiers=True, axis_forward='-Z', axis_up='Y', apply_unit_scale=True,
-                             apply_scale_options='FBX_SCALE_ALL')
-    pv2.remember_materials()
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    for asset, build in ((ASSET, soul_lantern), (PLATE, rune_plate)):
+        for o in list(bpy.data.objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        root = build()
+        root.name = asset
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in [root] + list(root.children_recursive):
+            o.select_set(True)
+        bpy.ops.export_scene.fbx(filepath=os.path.join(models, asset + '.fbx'), use_selection=True, object_types={'MESH', 'EMPTY'},
+                                 use_mesh_modifiers=True, axis_forward='-Z', axis_up='Y', apply_unit_scale=True,
+                                 apply_scale_options='FBX_SCALE_ALL')
+        pv2.remember_materials()
+        tris = sum(len(p.vertices) - 2 for o in root.children_recursive if o.type == 'MESH' for p in o.data.polygons)
+        print('EXPORT_DONE', asset, 'triangles', tris, flush=True)
     manifest = os.path.join(project, 'ArtSource', 'SH10_LightSource', 'materials.json')
     os.makedirs(os.path.dirname(manifest), exist_ok=True)
     with open(manifest, 'w', encoding='utf-8') as f:
         json.dump(pv2.MATERIALS, f, indent=2)
-    tris = sum(len(p.vertices) - 2 for o in root.children_recursive if o.type == 'MESH' for p in o.data.polygons)
-    print('EXPORT_DONE', ASSET, 'triangles', tris, flush=True)
 
 
 if __name__ == '__main__' and '--export' in sys.argv:
@@ -119,5 +152,9 @@ elif __name__ == '__main__':
     # The game camera looks down at about 55 degrees.
     pv2.render(pv2.camera('Game', Vector((0.3, 0, 0.5)), 5.0, lens=50, height=1.43), 'soul_lantern_gamecam')
     pv2.render(pv2.camera('Close', Vector((0, 0, 0.8)), 1.9, lens=50, height=0.35), 'soul_lantern_closeup')
+    plate = rune_plate()
+    plate.location = (-1.9, 0.4, 0)
+    pv2.label('Soul Rune Plate', (-1.9, -0.8, 0.02), 0.13)
+    pv2.render(pv2.camera('Plate', Vector((-1.9, 0.4, 0.05)), 3.2, lens=50, height=1.2), 'rune_plate_gamecam')
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, 'soul_lantern.blend'))
     print('DONE', flush=True)

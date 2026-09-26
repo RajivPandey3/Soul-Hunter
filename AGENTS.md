@@ -490,7 +490,24 @@ VS ground features: the owner chose "VS wala" (2026-09-26), built one at a time.
   - EditMode 331/331 and PlayMode 97/97, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-stageitems\`).
   - Editor play `autoplay-editor-18` (Stage 1, 3 min): 0 errors, min 68 FPS. The bot never walked out to the items, so they are not visually checked yet.
 
-Still to build: pressure-plate traps (flat, 20 s or longer cooldown, trigger an event). They do not block movement.
+**Pressure plates (Soul Rune Plate), done (2026-09-26):**
+- Rules (VS pressure plates, from the Gallo Tower, Dairy Plant and Boss Rash pages): a flat plate that starts a map event when stepped on, then waits at least 20 s. It never blocks movement.
+- Soul Hunter version: `StageItemSpawner` lays four Rune Plates per stage, 30 units straight N/E/S/W of the start, between the item diagonals, on open ground. The next stage removes them. Stepping on a ready plate:
+  - calls `EnemySpawner.TriggerStageEvent`, a random Swarm, Wall or Closing Ring of 16 of this stage's enemies (nothing during the boss or a stage transition);
+  - plays a warning sound and a burst;
+  - dims the plate's runes (MaterialPropertyBlock) for `CooldownSeconds` (20).
+- All stages have plates, with provisional distance and count.
+- Model: `build_light_source.py` now also builds the Rune Plate: an octagonal slab with a sunken ring of crimson runes, 308 triangles, drawn 1.3×, about 2.5 units across. `LightSourceImporter` (menu Soul Hunter/Content/Import Stage Props) builds `Assets/Prefabs/Props/SH10_RunePlate.prefab`, a Default-layer, untagged trigger (weapons ignore it), and sets `GameContentCatalog.RunePlate`. **The design is not yet owner-approved.**
+- Validation:
+  - `PressurePlateTests` (T): flat trigger, not an enemy, glowing runes, about 2.5 across; four plates straight out at 30.
+  - `PressurePlatePlayModeTests` (R): four plates on open ground; stepping on one sends a formation; stepping again while it recharges does nothing, and it fires again after the cooldown; Stage 2 replaces the plates.
+  - Editor play `autoplay-editor-19` (Stage 1, 3 min): the bot stepped on plates in real play (Closing Ring at 57 s, Swarm at 80 s, Closing Ring at 179 s), with 0 errors and min 55 FPS.
+- Old Soul Hunter hazards: grey and green cylinder "Trap" and "Poison" damage discs still sit in a ring around the start of Stage 4 and 5 (`CampaignSignatureSystem.CreateHazards`). They are not a VS mechanic. Whether to keep them is an owner decision.
+
+Found and fixed while validating the plates:
+- **The owner's real save was written by tests.** The isolated copy shares the game's `persistentDataPath`, and tests that boot on their own were not redirected. Once lanterns dropped gold in every run, a test run wrote the save twice (Currency ending at 16004; the value before was probably 16002). `SaveService.TestSavePath` now makes every PlayMode test (set in `GameplayPlayModeTestBase` and `BootstrapPlayModeTests`) play on a copy of the save. The next full run left the save's hash and timestamp unchanged.
+- `EnemySpawner.SpawnEnemy` skips pooled enemies that were destroyed elsewhere (the crowd test destroyed its strays; a plate event then got a destroyed enemy from the pool).
+- EditMode 333/333, PlayMode 100/100, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-plates\`).
 
 ### Look, feel and sound pass (owner request, 2026-09-25)
 

@@ -29,28 +29,79 @@ namespace SoulHunter.Editor.Content
 
         private sealed class Look { public Color Color; public float Metallic, Roughness, Strength; public Color Emission; }
 
-        [MenuItem("Soul Hunter/Content/Import Soul Lantern")]
+        public const string PlateModel = "Assets/Art/Models/SH10_Prop_RunePlate.fbx";
+        public const string PlatePrefabPath = PrefabFolder + "/SH10_RunePlate.prefab";
+        /// <summary>The Rune Plate is drawn 1.3x the Blender size (about 2.5 units across: easy to see, easy to step on).</summary>
+        public const float PlateScale = 1.3f;
+
+        [MenuItem("Soul Hunter/Content/Import Stage Props (Soul Lantern, Rune Plate)")]
         public static void ImportAll()
         {
             if (!AssetDatabase.IsValidFolder(MaterialFolder)) AssetDatabase.CreateFolder("Assets/Art/Materials", "Props");
             if (!AssetDatabase.IsValidFolder(PrefabFolder)) AssetDatabase.CreateFolder("Assets/Prefabs", "Props");
 
-            var importer = AssetImporter.GetAtPath(Model) as ModelImporter;
-            if (importer == null) throw new FileNotFoundException("Missing model (run build_light_source.py --export)", Model);
+            var looks = LoadLooks();
+            ConfigureModel(Model, looks);
+            ConfigureModel(PlateModel, looks);
+
+            var catalog = GameContentCatalog.Load();
+            if (catalog == null) throw new System.InvalidOperationException("GameContentCatalog (Resources/GameContent) is missing.");
+            catalog.SoulLantern = BuildPrefab();
+            catalog.RunePlate = BuildPlatePrefab();
+            EditorUtility.SetDirty(catalog);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[LightSourceImporter] The Soul Lantern and the Rune Plate are in the game.");
+        }
+
+        private static void ConfigureModel(string model, Dictionary<string, Look> looks)
+        {
+            var importer = AssetImporter.GetAtPath(model) as ModelImporter;
+            if (importer == null) throw new FileNotFoundException("Missing model (run build_light_source.py --export)", model);
             importer.importAnimation = false;
             importer.animationType = ModelImporterAnimationType.None;
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
-            foreach (var entry in LoadLooks())
+            foreach (var entry in looks)
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), entry.Key), LitMaterial(entry.Key, entry.Value));
             importer.SaveAndReimport();
+        }
 
-            var prefab = BuildPrefab();
-            var catalog = GameContentCatalog.Load();
-            if (catalog == null) throw new System.InvalidOperationException("GameContentCatalog (Resources/GameContent) is missing.");
-            catalog.SoulLantern = prefab;
-            EditorUtility.SetDirty(catalog);
-            AssetDatabase.SaveAssets();
-            Debug.Log("[LightSourceImporter] The Soul Lantern is in the game.");
+        /// <summary>
+        /// VS pressure plate: a flat trigger the player steps on (it never blocks and weapons ignore it: Default layer,
+        /// untagged). PressurePlate starts a stage event and dims its runes while it recharges.
+        /// </summary>
+        private static GameObject BuildPlatePrefab()
+        {
+            var root = new GameObject("SH10_RunePlate");
+            try
+            {
+                var body = root.AddComponent<Rigidbody>();
+                body.isKinematic = true;
+                body.useGravity = false;
+                var trigger = root.AddComponent<BoxCollider>();
+                trigger.isTrigger = true;
+                trigger.size = new Vector3(1.9f * PlateScale, 1.5f, 1.9f * PlateScale);
+                trigger.center = new Vector3(0f, 0.75f, 0f);
+                root.AddComponent<PressurePlate>();
+
+                var visual = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(PlateModel));
+                visual.name = "Visual";
+                visual.transform.SetParent(root.transform, false);
+                visual.transform.localScale = Vector3.one * PlateScale;
+                var renderers = visual.GetComponentsInChildren<Renderer>();
+                foreach (var r in renderers)
+                {
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; // flat on the ground
+                    r.receiveShadows = true;
+                }
+                var bounds = renderers[0].bounds;
+                foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+                visual.transform.localPosition = new Vector3(-bounds.center.x, -bounds.min.y, -bounds.center.z);
+                return PrefabUtility.SaveAsPrefabAsset(root, PlatePrefabPath);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
 
         private static GameObject BuildPrefab()

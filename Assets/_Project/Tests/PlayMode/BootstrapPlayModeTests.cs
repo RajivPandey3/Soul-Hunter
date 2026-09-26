@@ -10,6 +10,14 @@ namespace SoulHunter.Tests.PlayMode
 {
     public class BootstrapPlayModeTests
     {
+        [SetUp]
+        public void UseSaveCopy()
+        {
+            // Like every PlayMode test: play on a copy of the owner's save, never the real file.
+            SoulHunter.Core.Persistence.SaveService.TestSavePath =
+                System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save_copy.json");
+        }
+
         [UnityTest]
         public IEnumerator Bootstrap_InitializesGameServices_Successfully()
         {

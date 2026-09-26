@@ -34,8 +34,9 @@ namespace SoulHunter.Tests.PlayMode
             EnemyCrowd.Enabled = crowd;
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             spawner.enabled = false;
+            // Deactivate (back to the spawner's pools), not Destroy: pooled enemies are reused.
             foreach (var stray in EnemyController.ActiveEnemies.ToList())
-                if (stray != null) Object.Destroy(stray.gameObject);
+                if (stray != null) stray.gameObject.SetActive(false);
             var player = PlayerController.Instance;
             player.GetComponent<HealthController>().IsInvincible = true;
             foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);

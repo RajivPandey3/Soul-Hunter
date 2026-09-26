@@ -374,8 +374,10 @@ namespace SoulHunter.Gameplay.AI
             if (pool.Count > 0)
             {
                 enemyToSpawn = pool.Pop();
+                // A pooled enemy destroyed by something else (scene cleanup, a test) must not be handed out again.
+                while (enemyToSpawn == null && pool.Count > 0) enemyToSpawn = pool.Pop();
             }
-            else
+            if (enemyToSpawn == null)
             {
                 enemyToSpawn = Instantiate(prefab, spawnPos, Quaternion.identity);
                 var autoReturn = enemyToSpawn.AddComponent<SoulHunter.Gameplay.Pickups.AutoReturnToPool>();
@@ -420,6 +422,19 @@ namespace SoulHunter.Gameplay.AI
             if (_playerStats == null || _playerStats.transform != _playerTransform)
                 _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
             return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
+        }
+
+        /// <summary>
+        /// VS pressure plates start a map event on demand: this stage's formation of the given type, with this
+        /// stage's enemies, around the player. Returns the spawned enemies (empty during the boss or a transition).
+        /// </summary>
+        public List<EnemyController> TriggerStageEvent(StageEventType type, int count)
+        {
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            if (progression == null || progression.IsStageTransitioning || _isBossAlive || _currentWave == null)
+                return new List<EnemyController>();
+            var phase = _currentWave.GetPhase(progression.StageElapsedTime);
+            return RunStageEvent(new StageEventEntry { Type = type, Count = Mathf.Max(1, count) }, progression.CurrentLevel, phase);
         }
 
         /// <summary>

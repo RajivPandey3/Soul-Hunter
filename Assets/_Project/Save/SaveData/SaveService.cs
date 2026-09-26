@@ -21,10 +21,23 @@ namespace SoulHunter.Core.Persistence
             _filePath = filePath;
         }
 
+        /// <summary>
+        /// PlayMode tests set this before booting the game: the player's save is copied there and every read and write
+        /// uses the copy, so no test can change the real save (a stage lantern's gold coin once did). Null in the game.
+        /// </summary>
+        public static string TestSavePath;
+
         public void Initialize()
         {
             if (_filePath == null)
                 _filePath = BenchmarkSavePath() ?? Path.Combine(Application.persistentDataPath, "soulhunter_save.json");
+            if (!string.IsNullOrEmpty(TestSavePath) && TestSavePath != _filePath)
+            {
+                foreach (string file in new[] { TestSavePath, TestSavePath + ".prev", TestSavePath + ".tmp" })
+                    if (File.Exists(file)) File.Delete(file);
+                if (File.Exists(_filePath)) File.Copy(_filePath, TestSavePath);
+                _filePath = TestSavePath;
+            }
             LoadGame();
             MigrateSettings();
             Debug.Log("[SaveService] Initialized.");

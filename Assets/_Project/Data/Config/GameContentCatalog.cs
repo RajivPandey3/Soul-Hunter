@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.Data
         public GameObject[] StageFloors;
         /// <summary>VS light source: the Soul Lantern, a breakable prop that drops an item (LightSourceSpawner).</summary>
         public GameObject SoulLantern;
+        /// <summary>VS pressure plate: the Rune Plate, which starts a stage event when stepped on (StageItemSpawner).</summary>
+        public GameObject RunePlate;
         [UnityEngine.Tooltip("Level 3 Wandering Merchant (model, trigger and shop), spawned by CampaignSignatureSystem.")]
         public GameObject WanderingMerchant;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");

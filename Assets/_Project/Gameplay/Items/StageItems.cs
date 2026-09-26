@@ -39,6 +39,16 @@ namespace SoulHunter.Gameplay.Pickups
             UpgradeType.LightningRing, UpgradeType.Runetracer, UpgradeType.Bone, UpgradeType.Garlic, UpgradeType.Peachone,
         };
 
+        /// <summary>VS pressure plates: four Rune Plates straight N/E/S/W of the start, between the item diagonals. Provisional.</summary>
+        public const float PlateDistance = 30f;
+
+        public static List<Vector3> PlateOffsets()
+        {
+            var offsets = new List<Vector3>();
+            for (int i = 0; i < 4; i++) offsets.Add(Quaternion.Euler(0f, 90f * i, 0f) * Vector3.forward * PlateDistance);
+            return offsets;
+        }
+
         /// <summary>The four items of a stage (1-10), one per diagonal, turned a quarter per stage.</summary>
         public static List<Entry> Plan(int stage)
         {
@@ -85,14 +95,16 @@ namespace SoulHunter.Gameplay.Pickups
         }
     }
 
-    /// <summary>Places each stage's items when it starts and removes the previous stage's leftovers.</summary>
+    /// <summary>Places each stage's items and Rune Plates when it starts and removes the previous stage's.</summary>
     public class StageItemSpawner : MonoBehaviour
     {
         private readonly List<GameObject> _placed = new List<GameObject>();
+        private readonly List<PressurePlate> _plates = new List<PressurePlate>();
         private SoulHunter.Gameplay.Core.LevelProgressionManager _progression;
         private int _placedFor;
 
         public IReadOnlyList<GameObject> Placed => _placed;
+        public IReadOnlyList<PressurePlate> Plates => _plates;
 
         private void Start()
         {
@@ -141,6 +153,16 @@ namespace SoulHunter.Gameplay.Pickups
                 }
                 if (item != null) _placed.Add(item);
             }
+
+            var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            if (catalog == null || catalog.RunePlate == null) return;
+            foreach (var offset in StageItems.PlateOffsets())
+            {
+                Vector3 spot = GroundCheck.NearestOpen(origin + offset, 1.4f);
+                spot.y = origin.y;
+                var plate = Instantiate(catalog.RunePlate, spot, Quaternion.Euler(0f, 22.5f, 0f)).GetComponent<PressurePlate>();
+                if (plate != null) _plates.Add(plate);
+            }
         }
 
         /// <summary>Removes the items of the previous stage that were not picked up.</summary>
@@ -153,6 +175,8 @@ namespace SoulHunter.Gameplay.Pickups
                 else item.SetActive(false); // pooled pickups go back to their pools
             }
             _placed.Clear();
+            foreach (var plate in _plates) if (plate != null) Destroy(plate.gameObject);
+            _plates.Clear();
         }
     }
 
