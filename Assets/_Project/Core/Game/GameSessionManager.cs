@@ -56,6 +56,9 @@ namespace SoulHunter.Gameplay.Core
                 // VS rule: characters unlock during runs; the session owns the tracker so every run has one.
                 if (GetComponent<CharacterUnlockTracker>() == null) gameObject.AddComponent<CharacterUnlockTracker>();
                 if (GetComponent<StageAudio>() == null) gameObject.AddComponent<StageAudio>();
+                // VS light sources: breakable Soul Lanterns appear just off-screen and drop items.
+                if (GetComponent<SoulHunter.Gameplay.Pickups.LightSourceSpawner>() == null)
+                    gameObject.AddComponent<SoulHunter.Gameplay.Pickups.LightSourceSpawner>();
             }
             else if (Instance != this)
             {

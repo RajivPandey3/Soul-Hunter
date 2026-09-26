@@ -442,12 +442,33 @@ Validation:
 - EditMode 327/327, PlayMode 89/89, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-ground\`).
 - Editor play `autoplay-editor-16` (Stage 3, god mode, 3 min): 0 errors, min 51 FPS; the village shows wide lanes and the merchant on open grass (partial `V`).
 
-VS ground features Soul Hunter does not have yet (owner direction needed):
-- **Destructible light sources:** one spawn attempt per second just off-screen at 7.5-30% base chance (Luck raises it), at most 10 at once, 10 HP. They drop gold (weight 50), chicken (12), a coin bag (10) or rare items (weight 1-2).
-- **Fixed stage items:** placed 3-7 tiles from the start.
-- **Pressure-plate traps:** flat, 20 s or longer cooldown.
+VS ground features: the owner chose "VS wala" (2026-09-26), built one at a time.
 
-None of these block movement.
+**Light sources (Soul Lantern), done:**
+- Spawning (`LightSourceSpawner`, added by `GameSessionManager`):
+  - one attempt per second, while the game is not paused;
+  - chance is 10% × Luck, capped at 50%, with at most 10 lanterns at once (VS Mad Forest numbers used on every stage; provisional);
+  - a lantern appears just off-screen (8% past a screen edge, on the player's plane), never in or against an obstacle, and is recycled beyond 40 units.
+- The lantern (`LightSource`):
+  - has 10 HP and is tagged and layered "Enemy", so tag, layer and projectile weapons all break it;
+  - is not an `EnemyController`, so nothing aims at it, the horde ignores it and breaking it is not a kill;
+  - is a trigger, so it never blocks the player.
+- Drops (`LightSourceDrops`, the VS table limited to Soul Hunter's pickups):
+  - Gold Coin 50 (1 gold), Floor Chicken 12, Coin Bag 10 (10 gold);
+  - Vacuum/Magnet 2 from level 12, Orologion/Time Freeze 2 from level 4, Rich Coin Bag 1 from level 5 (100 gold);
+  - coin values are VS values from memory and provisional;
+  - Rosary, Nduja and the clovers have no Soul Hunter pickup and are left out;
+  - Luck does not change the drop weights yet (no source gives the formula).
+- Model: `ArtSource/Generators/build_light_source.py` (Blender, reuses the pickups v2 setup) builds a stone plinth with an open iron lantern cage and a cyan soul flame over orange embers. It has 690 triangles and stands about 1.3 units tall. Previews are in `ArtSource/SH10_LightSource/Previews`.
+  - `LightSourceImporter` (menu Soul Hunter/Content/Import Soul Lantern) makes URP Lit materials and a soft ground glow, builds `Assets/Prefabs/Props/SH10_SoulLantern.prefab` and sets `GameContentCatalog.SoulLantern`.
+  - **The model is not yet owner-approved.**
+- Validation:
+  - `LightSourceTests` (T): drop weights and level gates, chance × Luck with the cap, and the prefab setup.
+  - `LightSourcePlayModeTests` (R): lanterns appear off-screen and out of obstacles up to exactly 10; Whip, Garlic and Bible break one; it drops an item and is not a kill.
+  - EditMode 330/330 and PlayMode 93/93, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-lantern\`).
+  - Editor play `autoplay-editor-17` (Stage 1, 3 min): 0 errors, min 68 FPS; lanterns glow on the edges of the screenshots, but look small from the game camera (partial `V`).
+
+Still to build: fixed stage items (placed 3-7 tiles from the start) and pressure-plate traps (flat, 20 s or longer cooldown). Neither blocks movement.
 
 ### Look, feel and sound pass (owner request, 2026-09-25)
 
