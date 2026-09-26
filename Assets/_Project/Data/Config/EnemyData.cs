@@ -28,6 +28,11 @@ namespace SoulHunter.Gameplay.Data
         public float MoveSpeed = 3f;
         public int DamageToPlayer = 5;
 
+        [Tooltip("VS knockback taken: how far a hit pushes this enemy back (bats and skeletons 1, heavy 0.3, ghosts 0)")]
+        [Min(0f)] public float Knockback = 1f;
+        [Tooltip("VS: the most knockback this enemy can take after Garlic raised it")]
+        [Min(0f)] public float MaxKnockback = 3f;
+
         [Tooltip("VS movement skill: Homing (default), Floaty (wavy), FixedDirection (straight line across the screen)")]
         public EnemyMovement Movement = EnemyMovement.Homing;
         [Tooltip("Floaty: sideways weave at its widest, as a fraction of the forward direction. Provisional")]

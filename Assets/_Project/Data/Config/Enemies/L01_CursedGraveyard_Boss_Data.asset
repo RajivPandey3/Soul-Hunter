@@ -16,6 +16,8 @@ MonoBehaviour:
   MaxHealth: 1000
   MoveSpeed: 3
   DamageToPlayer: 10
+  Knockback: 0
+  MaxKnockback: 3
   DropChanceGem: 95
   DropChanceChicken: 0
   DropsChest: 1

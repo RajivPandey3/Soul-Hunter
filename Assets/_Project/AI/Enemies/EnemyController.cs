@@ -130,6 +130,7 @@ namespace SoulHunter.Gameplay.AI
             if (_hitSoundHealth == null) _hitSoundHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
+            ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
             if (Rigidbody != null)
             {
                 Rigidbody.linearVelocity = Vector3.zero;
@@ -182,6 +183,48 @@ namespace SoulHunter.Gameplay.AI
         {
             ChangeState(new EnemyFlyState(this, direction, EnemyFlyState.DefaultLifetimeSeconds,
                 EnemyFlyState.SpeedMultiplier * Mathf.Max(0.2f, speed)));
+        }
+
+        // ---------------------------------------------------------------- VS knockback
+        /// <summary>VS: a hit reverses the enemy's movement for 120 ms (vampire.survivors.wiki, Knockback).</summary>
+        public const float KnockbackSeconds = 0.12f;
+        /// <summary>VS: each Garlic hit makes an enemy take 0.3 more knockback, up to its maximum.</summary>
+        public const float GarlicKnockbackStep = 0.3f;
+        private float _knockbackTaken = 1f;
+        private float _knockbackStrength;
+        private float _knockbackUntil = -1f;
+
+        public float KnockbackTaken => _knockbackTaken;
+        public float MaxKnockback => _enemyData != null ? _enemyData.MaxKnockback : 3f;
+        public bool IsKnockedBack => Time.time < _knockbackUntil;
+        /// <summary>This knockback's reversed speed as a multiple of the enemy's move speed.</summary>
+        public float KnockbackStrength => _knockbackStrength;
+
+        /// <summary>Reversed speed during a knockback: move speed x weapon knockback x knockback taken.</summary>
+        public static float KnockbackSpeed(float moveSpeed, float weaponKnockback, float taken) =>
+            Mathf.Max(0f, moveSpeed * weaponKnockback * taken);
+
+        /// <summary>A hit: for 120 ms the enemy moves away from its target instead of toward it. Fliers and frozen enemies stay put.</summary>
+        public void ApplyKnockback(float weaponKnockback)
+        {
+            if (IsFlying || IsFrozen) return;
+            float strength = Mathf.Max(0f, weaponKnockback) * _knockbackTaken;
+            if (strength <= 0f) return;
+            _knockbackStrength = strength;
+            _knockbackUntil = Time.time + KnockbackSeconds;
+        }
+
+        /// <summary>Garlic: the enemy takes more knockback from now on, up to its maximum.</summary>
+        public void AddKnockbackTaken(float amount)
+        {
+            _knockbackTaken = Mathf.Min(MaxKnockback, _knockbackTaken + Mathf.Max(0f, amount));
+        }
+
+        private void ResetKnockback()
+        {
+            _knockbackTaken = _enemyData != null ? _enemyData.Knockback : 1f;
+            _knockbackUntil = -1f;
+            _knockbackStrength = 0f;
         }
 
         /// <summary>This enemy's VS movement skill (Homing when it has no EnemyData).</summary>

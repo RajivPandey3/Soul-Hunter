@@ -16,6 +16,8 @@ MonoBehaviour:
   MaxHealth: 50
   MoveSpeed: 3
   DamageToPlayer: 11
+  Knockback: 0
+  MaxKnockback: 3
   Movement: 1
   FloatyWeave: 0.7
   FloatyPeriodSeconds: 1.8

@@ -340,19 +340,18 @@ Part 4, stage patterns (2026-09-26), following the approved table:
   - Editor play `autoplay-editor-22` (Stage 4, god mode, 3 min): 0 errors, min 43 FPS, up to 233 enemies. The fleeing bot drags the horde into one blob behind itself, as in VS.
 - Seen, not changed: stage events are not capped, so a run can pass 300 enemies briefly (316 seen).
 
-Still to do (owner-approved plan, 2026-09-26): a wave table per stage, with a minimum and interval per minute that rise and fall.
-- Part 4: patterns per stage, from the approved table:
-  - L1 all sides, slow homing, swarms;
-  - L2 all sides, Floaty, closing ring;
-  - L3 all sides blocked by houses, homing, wall;
-  - L4 mostly left/right, walls;
-  - L5 all sides, slow heavy crowd, fast straight swarms;
-  - L6 mostly top/bottom, fast homing;
-  - L7 Floaty ghosts, ghost swarms;
-  - L8 elites, rings;
-  - L9 mixed, walls and rings;
-  - L10 everything, densest.
-- Part 5: VS knockback (movement reversed for 120 ms).
+Part 5, VS knockback (2026-09-26, vampire.survivors.wiki Knockback):
+- A hit reverses an enemy's movement for 120 ms (`EnemyController.ApplyKnockback`; `EnemyChaseState` moves it away from its target) at move speed × weapon knockback (`DamagePacket.WeaponKnockback`, default 1) × the enemy's knockback taken.
+- Knockback taken comes from `EnemyData.Knockback`: 1 for ordinary enemies, 0 for the L7 Sea of Lost Souls ghosts (VS ghosts take none), 0.5 for elites and 0 for bosses (provisional). Bosses are also immune through `KnockbackResistance`. Fliers and frozen enemies are not pushed.
+- Garlic pushes weakly (0.3; provisional) but raises an enemy's knockback taken by 0.3 per hit, up to `MaxKnockback` 3 (VS). The value resets when a pooled enemy is reused.
+- The old 0.15 s transform slide (`HealthController.KinematicKnockback`), which fought the chase velocity every physics step, is gone. **The player is no longer knocked back:** it used to slide 2 units whenever an enemy touched it, which VS never does.
+- Validation:
+  - `KnockbackTests` (T): the formula; the per-enemy data; the Garlic cap; a non-enemy never slides.
+  - `KnockbackPlayModeTests` (R): a hit enemy backs off, then comes on again after about 120 ms; an L7 ghost is not pushed; Garlic raises knockback taken; the player does not slide when touched.
+  - EditMode 346/346, PlayMode 111/111, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-knockback\`).
+  - Editor play `autoplay-editor-24` (Stage 1, 3 min, no god mode): the hero survived, reaching level 13 with 670 kills, 0 errors and min 63 FPS.
+
+The owner-approved crowd plan (Parts 1-5) is done. It is not yet played by the owner.
 
 Each stage still has only one normal enemy type and one elite; new enemy models are Art section work.
 

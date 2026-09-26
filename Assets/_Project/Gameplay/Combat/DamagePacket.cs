@@ -20,6 +20,12 @@ namespace SoulHunter.Gameplay.Combat
         /// post-hit invulnerability window neither blocks them nor is started by them.
         /// </summary>
         public bool IgnoresHitInvulnerability;
+        /// <summary>
+        /// VS weapon knockback: how hard this hit reverses an enemy's movement (1 = a normal weapon). 0 or less means
+        /// the default 1, so packets built without it still knock back normally.
+        /// </summary>
+        public float WeaponKnockback;
+        public float KnockbackOrDefault => WeaponKnockback > 0f ? WeaponKnockback : 1f;
         public DamagePacket(int amount, Vector3 hitPoint, Vector3 knockbackDirection)
             : this(amount, hitPoint, knockbackDirection, DamageType.Normal) { }
 
@@ -30,6 +36,7 @@ namespace SoulHunter.Gameplay.Combat
             KnockbackDirection = knockbackDirection;
             Type = type;
             IgnoresHitInvulnerability = false;
+            WeaponKnockback = 0f; // the default weapon knockback (1)
         }
     }
 }

@@ -40,6 +40,17 @@ namespace SoulHunter.Gameplay.AI
         public void UpdatePhysics(ref SoulHunter.Gameplay.Physics.EnvironmentData envData)
         {
             if (_controller.Target == null) return;
+
+            if (_controller.IsKnockedBack)
+            {
+                // VS knockback: movement reversed, away from the target, at move speed x weapon x knockback taken.
+                Vector3 away = _controller.transform.position - _controller.Target.position;
+                away.y = 0f;
+                away = away.sqrMagnitude > 0.0001f ? away.normalized : -_controller.transform.forward;
+                Vector3 push = away * (_controller.MoveSpeed * _controller.KnockbackStrength);
+                _controller.Rigidbody.linearVelocity = new Vector3(push.x, _controller.Rigidbody.linearVelocity.y, push.z);
+                return;
+            }
             
             float sqrDist = (_controller.Target.position - _controller.transform.position).sqrMagnitude;
             

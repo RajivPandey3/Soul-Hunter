@@ -12,6 +12,9 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class GarlicWeapon : AutoAttackWeapon
     {
+        /// <summary>Garlic's own knockback (weak; provisional). Its VS effect is raising knockback taken.</summary>
+        public const float GarlicKnockback = 0.3f;
+
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.None;
         [Header("Soul Hunter Theme: Aura of Death (Garlic)")]
         [Tooltip("Kitne meter ke daayre (radius) mein aura asar karega")]
@@ -102,14 +105,17 @@ namespace SoulHunter.Gameplay.Weapons
                 if (damageable != null)
                 {
                     enemiesHit++;
-                    // Aura of death doesn't really knockback, just drains soul/health
+                    // A weak push (provisional), but VS Garlic makes each enemy it touches take more knockback.
                     var packet = new DamagePacket
                     {
                         Amount = actualDamage,
                         HitPoint = _hitsBuffer[i].ClosestPoint(transform.position),
-                        KnockbackDirection = (_hitsBuffer[i].transform.position - transform.position).normalized * 0.1f // Tiny knockback
+                        KnockbackDirection = (_hitsBuffer[i].transform.position - transform.position).normalized * 0.1f,
+                        WeaponKnockback = GarlicKnockback
                     };
                     damageable.TakeDamage(packet);
+                    var enemy = _hitsBuffer[i].GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
+                    if (enemy != null) enemy.AddKnockbackTaken(SoulHunter.Gameplay.AI.EnemyController.GarlicKnockbackStep);
                 }
             }
 

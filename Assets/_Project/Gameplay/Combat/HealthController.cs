@@ -67,7 +67,6 @@ namespace SoulHunter.Gameplay.Combat
         [Tooltip("0 = Full Knockback, 1 = Immune (Bosses)")]
         [Range(0f, 1f)]
         public float KnockbackResistance = 0f;
-        private bool _isKnockedBack = false;
 
         public void TakeDamage(DamagePacket packet)
         {
@@ -115,11 +114,10 @@ namespace SoulHunter.Gameplay.Combat
 
             OnDamaged?.Invoke();
 
-            // 100% VS Quality: Kinematic smooth slide (No physics jitter)
-            if (KnockbackResistance < 1f && !_isKnockedBack)
-            {
-                StartCoroutine(KinematicKnockback(packet.KnockbackDirection * 2f * (1f - KnockbackResistance)));
-            }
+            // VS knockback: an enemy's movement is reversed for 120 ms (EnemyController). The player is never knocked
+            // back in VS; it used to slide 2 units whenever an enemy touched it.
+            if (enemy != null && KnockbackResistance < 1f)
+                enemy.ApplyKnockback(packet.KnockbackOrDefault * (1f - KnockbackResistance));
 
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
 
@@ -217,22 +215,6 @@ namespace SoulHunter.Gameplay.Combat
         {
             yield return new WaitForSecondsRealtime(1.5f);
             IsInvincible = false;
-        }
-
-        private System.Collections.IEnumerator KinematicKnockback(Vector3 slideVector)
-        {
-            _isKnockedBack = true;
-            float duration = 0.15f;
-            float elapsed = 0f;
-
-            while (elapsed < duration)
-            {
-                // Smoothly push the enemy without breaking physics swarms
-                transform.position += slideVector * (Time.deltaTime / duration);
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-            _isKnockedBack = false;
         }
     }
 }
