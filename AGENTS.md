@@ -468,7 +468,29 @@ VS ground features: the owner chose "VS wala" (2026-09-26), built one at a time.
   - EditMode 330/330 and PlayMode 93/93, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-lantern\`).
   - Editor play `autoplay-editor-17` (Stage 1, 3 min): 0 errors, min 68 FPS; lanterns glow on the edges of the screenshots, but look small from the game camera (partial `V`).
 
-Still to build: fixed stage items (placed 3-7 tiles from the start) and pressure-plate traps (flat, 20 s or longer cooldown). Neither blocks movement.
+- Owner (2026-09-26): the lantern looked too small, so `LightSourceImporter.Scale` = 1.4. The model, trigger and glow are now 1.4×, about 1.8 units tall. The model design is still awaiting approval.
+
+**Stage items, done (owner OK'd the item list, 2026-09-26):**
+- Layout (VS stage items, Dairy Plant style): `StageItemSpawner` (added by `GameSessionManager`) lays four items when each stage starts.
+  - They go on the diagonals, 55/65/75/85 units from the player's position at the start (about 3-4 tiles), turned a quarter per stage.
+  - Each lands on the nearest open ground (`GroundCheck`), one frame after the floor swap.
+  - The next stage removes the leftovers; pooled pickups return to their pools.
+- The four items: a passive, a weapon, a floor chicken, and a Vacuum/Magnet (odd stages) or Orologion/Time Freeze (even stages).
+
+  | Stage | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+  |---|---|---|---|---|---|---|---|---|---|---|
+  | Passive | Spinach | Armor | Empty Tome | Candelabrador | Bracer | Clover | Spellbinder | Duplicator | Pummarola | Attractorb |
+  | Weapon | Knife | Axe | Cross | Santa Water | Fire Wand | Lightning Ring | Runetracer | Bone | Garlic | Peachone |
+
+- Pickup (`StageItemPickup`): the passive or weapon shows its icon over the Soul Lantern's ground glow. Walking over it applies the next level's `UpgradeData` through `WeaponManager.ApplyUpgrade`, as a level-up would. With no free slot, or at max level, it pays out a coin bag instead (10 gold; provisional).
+- `PickupPoolManager.SpawnChicken/SpawnMagnet/SpawnTimeFreeze` now return the spawned object.
+- Validation:
+  - `StageItemTests` (T): every stage has one of each kind on four different diagonals, 55-85 out, each with a level-1 upgrade, and a different passive per stage.
+  - `StageItemPlayModeTests` (R): four items on open ground at their planned spots; walking onto the passive and the weapon raises each by one level; Stage 2 replaces Stage 1's items; with six weapons a weapon item becomes gold.
+  - EditMode 331/331 and PlayMode 97/97, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-stageitems\`).
+  - Editor play `autoplay-editor-18` (Stage 1, 3 min): 0 errors, min 68 FPS. The bot never walked out to the items, so they are not visually checked yet.
+
+Still to build: pressure-plate traps (flat, 20 s or longer cooldown, trigger an event). They do not block movement.
 
 ### Look, feel and sound pass (owner request, 2026-09-25)
 

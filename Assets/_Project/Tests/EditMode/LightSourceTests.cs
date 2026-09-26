@@ -60,7 +60,8 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(renderers.Length, Is.GreaterThan(1));
                 var bounds = renderers[0].bounds;
                 foreach (var r in renderers) if (r.name != "GroundGlow") bounds.Encapsulate(r.bounds);
-                Assert.That(bounds.size.y, Is.InRange(1.0f, 1.6f), "About two-thirds of the hero's height.");
+                // Owner (2026-09-26): bigger than the first 1.3-unit version, which read too small in play.
+                Assert.That(bounds.size.y, Is.InRange(1.6f, 2.1f), "About the hero's height (1.4x the Blender model).");
                 Assert.That(bounds.min.y, Is.EqualTo(0f).Within(0.05f), "Stands on its pivot, like the heroes and the horde.");
             }
             finally

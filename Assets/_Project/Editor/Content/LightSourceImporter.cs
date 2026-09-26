@@ -24,6 +24,8 @@ namespace SoulHunter.Editor.Content
         public const string MaterialFolder = "Assets/Art/Materials/Props";
         public const string PrefabFolder = "Assets/Prefabs/Props";
         public const string PrefabPath = PrefabFolder + "/SH10_SoulLantern.prefab";
+        /// <summary>Owner (2026-09-26): the lantern read too small from the game camera; drawn 1.4x the Blender size.</summary>
+        public const float Scale = 1.4f;
 
         private sealed class Look { public Color Color; public float Metallic, Roughness, Strength; public Color Emission; }
 
@@ -63,9 +65,9 @@ namespace SoulHunter.Editor.Content
                 body.useGravity = false;
                 var trigger = root.AddComponent<CapsuleCollider>();
                 trigger.isTrigger = true;
-                trigger.radius = 0.45f;
-                trigger.height = 1.4f;
-                trigger.center = new Vector3(0f, 0.7f, 0f);
+                trigger.radius = 0.45f * Scale;
+                trigger.height = 1.4f * Scale;
+                trigger.center = new Vector3(0f, 0.7f * Scale, 0f);
                 var health = root.AddComponent<HealthController>();
                 var so = new SerializedObject(health);
                 so.FindProperty("_maxHealth").intValue = LightSource.MaxHealth;
@@ -75,6 +77,7 @@ namespace SoulHunter.Editor.Content
                 var visual = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Model));
                 visual.name = "Visual";
                 visual.transform.SetParent(root.transform, false);
+                visual.transform.localScale = Vector3.one * Scale;
                 foreach (var r in visual.GetComponentsInChildren<Renderer>())
                     r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 // Stand on the pivot, like the heroes and the horde.
@@ -87,7 +90,7 @@ namespace SoulHunter.Editor.Content
                 glow.transform.SetParent(root.transform, false);
                 glow.transform.localPosition = new Vector3(0f, 0.03f, 0f);
                 glow.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                glow.transform.localScale = Vector3.one * 1.6f;
+                glow.transform.localScale = Vector3.one * 1.6f * Scale;
                 glow.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
                 var glowRenderer = glow.AddComponent<MeshRenderer>();
                 glowRenderer.sharedMaterial = GlowMaterial();

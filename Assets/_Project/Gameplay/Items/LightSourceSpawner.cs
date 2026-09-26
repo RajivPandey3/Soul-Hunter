@@ -83,7 +83,6 @@ namespace SoulHunter.Gameplay.Pickups
         public static bool TryFindSpot(Vector3 playerPosition, out Vector3 spot)
         {
             var cam = Camera.main;
-            int obstacles = LayerMask.GetMask("Obstacle");
             var ground = new Plane(Vector3.up, playerPosition);
             for (int attempt = 0; attempt < 8; attempt++)
             {
@@ -109,10 +108,7 @@ namespace SoulHunter.Gameplay.Pickups
                     spot = playerPosition + new Vector3(dir.x, 0f, dir.y) * 16f;
                 }
                 spot.y = playerPosition.y;
-                bool blocked = obstacles != 0 &&
-                               (UnityEngine.Physics.CheckSphere(spot + Vector3.up * 0.8f, 0.8f, obstacles, QueryTriggerInteraction.Collide) ||
-                                UnityEngine.Physics.Raycast(spot + Vector3.up * 20f, Vector3.down, 20f, obstacles, QueryTriggerInteraction.Collide));
-                if (!blocked) return true;
+                if (GroundCheck.IsOpen(spot, 0.8f)) return true;
             }
             spot = default;
             return false;

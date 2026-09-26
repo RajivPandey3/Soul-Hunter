@@ -59,6 +59,9 @@ namespace SoulHunter.Gameplay.Core
                 // VS light sources: breakable Soul Lanterns appear just off-screen and drop items.
                 if (GetComponent<SoulHunter.Gameplay.Pickups.LightSourceSpawner>() == null)
                     gameObject.AddComponent<SoulHunter.Gameplay.Pickups.LightSourceSpawner>();
+                // VS stage items: a passive, a weapon, a chicken and a Vacuum/Orologion a few tiles from each stage's start.
+                if (GetComponent<SoulHunter.Gameplay.Pickups.StageItemSpawner>() == null)
+                    gameObject.AddComponent<SoulHunter.Gameplay.Pickups.StageItemSpawner>();
             }
             else if (Instance != this)
             {

@@ -1,0 +1,43 @@
+using System.Linq;
+using NUnit.Framework;
+using SoulHunter.Gameplay.Combat;
+using SoulHunter.Gameplay.Data;
+using SoulHunter.Gameplay.Pickups;
+using UnityEngine;
+using Kind = SoulHunter.Gameplay.Pickups.StageItems.Kind;
+
+namespace SoulHunter.Tests.EditMode
+{
+    /// <summary>VS stage items: four items on the diagonals a few tiles from each stage's start.</summary>
+    public class StageItemTests
+    {
+        [Test]
+        public void EveryStage_PlansOnePassive_OneWeapon_AChicken_AndAVacuumOrOrologion_OnTheDiagonals()
+        {
+            var upgrades = GameContentCatalog.Load().Upgrades;
+            var passives = new System.Collections.Generic.HashSet<UpgradeData.UpgradeType>();
+            for (int stage = 1; stage <= 10; stage++)
+            {
+                var plan = StageItems.Plan(stage);
+                Assert.That(plan.Count, Is.EqualTo(4), $"Stage {stage}");
+                Assert.That(plan.Count(e => e.Kind == Kind.Passive), Is.EqualTo(1));
+                Assert.That(plan.Count(e => e.Kind == Kind.Weapon), Is.EqualTo(1));
+                Assert.That(plan.Count(e => e.Kind == Kind.Chicken), Is.EqualTo(1));
+                Assert.That(plan.Count(e => e.Kind == Kind.Magnet || e.Kind == Kind.TimeFreeze), Is.EqualTo(1));
+
+                var directions = plan.Select(e => Mathf.Round(Mathf.Atan2(e.Offset.x, e.Offset.z) * Mathf.Rad2Deg)).ToList();
+                Assert.That(directions.Distinct().Count(), Is.EqualTo(4), "One item per diagonal.");
+                foreach (var e in plan)
+                {
+                    Assert.That(Mathf.Abs(Mathf.Abs(e.Offset.x) - Mathf.Abs(e.Offset.z)), Is.LessThan(0.01f), "On a diagonal.");
+                    Assert.That(e.Offset.y, Is.EqualTo(0f));
+                    Assert.That(e.Offset.magnitude, Is.InRange(55f - 0.01f, 85f + 0.01f), "A few tiles out (a tile is 20 units).");
+                    if (e.Kind == Kind.Passive || e.Kind == Kind.Weapon)
+                        Assert.That(upgrades.Any(u => u != null && u.Type == e.Upgrade && u.Level == 1), Is.True, $"{e.Upgrade} has a level-1 upgrade.");
+                }
+                passives.Add(plan.First(e => e.Kind == Kind.Passive).Upgrade);
+            }
+            Assert.That(passives.Count, Is.EqualTo(10), "Each stage offers a different passive.");
+        }
+    }
+}

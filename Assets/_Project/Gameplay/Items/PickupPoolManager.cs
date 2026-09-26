@@ -103,9 +103,9 @@ namespace SoulHunter.Gameplay.Pickups
             if (tier != null) tier.SetValue(value);
         }
 
-        public void SpawnChicken(Vector3 position)
+        public GameObject SpawnChicken(Vector3 position)
         {
-            SpawnFromPool(_chickenPool, _healthChickenPrefab, position);
+            return SpawnFromPool(_chickenPool, _healthChickenPrefab, position);
         }
 
         public void SpawnChest(Vector3 position)
@@ -113,14 +113,14 @@ namespace SoulHunter.Gameplay.Pickups
             SpawnFromPool(_chestPool, _chestPrefab, position);
         }
 
-        public void SpawnMagnet(Vector3 position)
+        public GameObject SpawnMagnet(Vector3 position)
         {
-            SpawnFromPool(_magnetPool, _magnetPrefab, position);
+            return SpawnFromPool(_magnetPool, _magnetPrefab, position);
         }
 
-        public void SpawnTimeFreeze(Vector3 position)
+        public GameObject SpawnTimeFreeze(Vector3 position)
         {
-            SpawnFromPool(_timeFreezePool, _timeFreezePrefab, position);
+            return SpawnFromPool(_timeFreezePool, _timeFreezePrefab, position);
         }
 
         public void SpawnGold(Vector3 position, int value)
