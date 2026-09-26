@@ -424,7 +424,7 @@ Owner decision (2026-09-27): "MERE STORY KO FOLLOW KARO", i.e. follow the story 
 Validation:
 - `CampaignStoryTests` (T: every line matches the GDD text), `BossScalingAndChestEliteTests` (T: 50 x stage, the elite floor) and `StoryCardPlayModeTests` (R: cards on Levels 1, 4 and 10, no pause, the card goes away).
 - `ChestEliteAndBossPlayModeTests` (R): the elite also drops its gem; the boss has the story health and outlasts its chest elite.
-- EditMode 353/353, PlayMode 134/134, 0 exceptions, save untouched (`D:\SoulHunter-Validationun-20260927-story\`).
+- EditMode 353/353, PlayMode 134/134, 0 exceptions, save untouched (`D:\SoulHunter-Validation\run-20260927-story\`).
 - Editor play `autoplay-editor-30` (Stage 1, no god mode, 0 errors): the story card opened the run; the elite died in 18.8 s; the boss (1,000 health at level 20) lived 24.9 s.
 - `autoplay-editor-31` (Stage 10 jumped to at level 1, god mode, 0 errors): the twist card showed; Shadow Kael had 4,250 health (twice the 2,125 chest elite) and a level-1 hero could not kill him in 150 s.
 
