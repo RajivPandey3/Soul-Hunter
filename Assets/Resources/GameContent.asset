@@ -327,3 +327,4 @@ MonoBehaviour:
   - {fileID: 1396327021201846101, guid: a0ae29b4583afc94cbac0a413fd57944, type: 3}
   - {fileID: 41472951783947860, guid: 58cce38284c33e74492184f1a7b7701a, type: 3}
   - {fileID: 7649708441699079349, guid: 742d17b83abcfac4c826bbd9f808778d, type: 3}
+  WanderingMerchant: {fileID: 4935854625492487647, guid: 6850f23122f6dd3479c45c5f56088130, type: 3}

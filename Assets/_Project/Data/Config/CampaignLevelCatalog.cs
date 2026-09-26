@@ -55,7 +55,7 @@ namespace SoulHunter.Gameplay.Data
         {
             new(1, "The Cursed Graveyard", "Kael starts beside his daughter's grave.", "Teach movement, dash, souls and auto-attacks", CampaignSignature.CursedGraveyard, "SH10_L01_Showcase", 1.00f, 1.00f),
             new(2, "The Dark Forest", "The forest rejects Kael's presence.", "Darkness accelerates enemy pressure", CampaignSignature.DarkForest, "SH10_L02_Showcase", 1.10f, 0.95f),
-            new(3, "The Forgotten Village", "Kael finds the remains of a village burned by demons.", "Wandering Merchant placeholder", CampaignSignature.ForgottenVillage, "SH10_L03_Showcase", 1.15f, 0.90f),
+            new(3, "The Forgotten Village", "Kael finds the remains of a village burned by demons.", "A Wandering Merchant sells weapons and Soul Eggs for gold", CampaignSignature.ForgottenVillage, "SH10_L03_Showcase", 1.15f, 0.90f),
             new(4, "The Ruined Castle", "The Gatekeeper warns Kael about deception.", "Gargoyles, traps and elite encounters", CampaignSignature.RuinedCastle, "SH10_L04_Showcase", 1.20f, 0.88f),
             new(5, "The Crimson Swamp", "Kael's soul begins to rot.", "Poison zones and corruption effects", CampaignSignature.CrimsonSwamp, "SH10_L05_Showcase", 1.25f, 0.85f),
             new(6, "The Frozen Peaks", "The cold reflects Kael's fading humanity.", "Blizzards and periodic movement slow", CampaignSignature.FrozenPeaks, "SH10_L06_Showcase", 1.15f, 0.82f),

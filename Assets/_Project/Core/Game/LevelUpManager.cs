@@ -79,12 +79,26 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
+        /// <summary>VS Golden Egg rule: the selected character's Soul Eggs add whole Reroll, Skip and Banish charges.</summary>
+        private void AddSoulEggCharges()
+        {
+            if (SoulHunter.Core.Services.GameServices.Instance == null ||
+                !SoulHunter.Core.Services.GameServices.Instance.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) ||
+                save.CurrentData == null) return;
+            var eggs = SoulEggs.For(save.CurrentData, save.CurrentData.SelectedCharacterName);
+            if (eggs == null) return;
+            RerollsLeft += SoulEggs.Whole(eggs.Reroll);
+            SkipsLeft += SoulEggs.Whole(eggs.Skip);
+            BanishesLeft += SoulEggs.Whole(eggs.Banish);
+        }
+
         private void Start()
         {
             // Unity Inspector se bachne ke liye Resources folder se load kar rahe hain
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             _allUpgrades = (catalog != null ? catalog.Upgrades : Resources.LoadAll<UpgradeData>("Upgrades")).Where(u => u != null && u.Level > 0).ToList();
-            
+            AddSoulEggCharges();
+
             if (_allUpgrades.Count == 0)
             {
                 Debug.LogWarning("[LevelUpManager] Koi UpgradeData nahi mila! Kya wo 'Resources/Upgrades' folder mein hain?");

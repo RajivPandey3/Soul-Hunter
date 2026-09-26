@@ -1,182 +1,173 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
+using SoulHunter.Core.Persistence;
 using SoulHunter.Core.Services;
 using SoulHunter.Gameplay.Combat;
 using SoulHunter.Gameplay.Player;
 
 namespace SoulHunter.Gameplay.Core
 {
+    /// <summary>
+    /// Level 3 signature (The Forgotten Village), following the VS Merchant rule
+    /// (vampire.survivors.wiki/w/Merchant, checked 2026-09-26):
+    /// - stands near where the stage starts; touching it opens the shop (the game pauses);
+    /// - sells weapons (1,000 gold each, never past the 6 weapon slots) and repeatable Soul Eggs
+    ///   (10,000 gold, VS Golden Egg), paid with the player's gold;
+    /// - several things can be bought in one visit, but the shop can be visited once:
+    ///   leaving it makes the merchant go away for the rest of the stage.
+    /// Prices are the VS numbers and provisional Soul Hunter balance.
+    /// </summary>
     [RequireComponent(typeof(Collider))]
     public class WanderingMerchant : MonoBehaviour
     {
-        // Learning Comment:
-        // Wandering Merchant se khareedi jane wali permanent stat blessings ki types define karta hai.
-        public enum BlessingType
-        {
-            Might,
-            Armor,
-            MaxHealth
-        }
+        public enum WareState { Available, Owned, SlotsFull, TooExpensive }
 
-        [Header("Potion Settings")]
-        [SerializeField] private int _healAmount = 50;
-        [SerializeField] private int _cost = 50;
+        [Header("Wares (VS merchant: Bone and Cherry Bomb are the weapons Soul Hunter shares with its list)")]
+        [SerializeField] private UpgradeData.UpgradeType[] _weaponWares = { UpgradeData.UpgradeType.Bone, UpgradeData.UpgradeType.CherryBomb };
+        [SerializeField] private int _weaponPrice = 1000;
+        [SerializeField] private int _soulEggPrice = 10000;
 
-        [Header("Blessing Costs")]
-        [SerializeField] private int _mightBlessingCost = 100;
-        [SerializeField] private int _armorBlessingCost = 100;
-        [SerializeField] private int _maxHealthBlessingCost = 100;
+        private bool _isShopOpen;
+        private bool _hasLeft;
 
-        [Header("Blessing Bonuses")]
-        [SerializeField] private float _mightBonus = 0.1f;
-        [SerializeField] private int _armorBonus = 1;
-        [SerializeField] private int _maxHealthBonus = 20;
-        
-        private bool _isShopOpen = false;
-        private HealthController _playerHealth;
-        private PlayerStats _playerStats;
-
-        // Learning Comment: Exposes whether the merchant shop is open for deterministic lifecycle control and unit testing.
         public bool IsShopOpen => _isShopOpen;
-
-        // Learning Comment: Exposes potion cost in harvested souls for UI display and deterministic verification.
-        public int Cost => _cost;
-
-        // Learning Comment: Exposes potion heal amount for UI display and deterministic verification.
-        public int HealAmount => _healAmount;
-
-        // Learning Comment: Exposes blessing costs in harvested souls for UI display and deterministic verification.
-        public int MightBlessingCost => _mightBlessingCost;
-        public int ArmorBlessingCost => _armorBlessingCost;
-        public int MaxHealthBlessingCost => _maxHealthBlessingCost;
-
-        // Learning Comment: Exposes blessing bonus amounts for UI display and deterministic verification.
-        public float MightBonus => _mightBonus;
-        public int ArmorBonus => _armorBonus;
-        public int MaxHealthBonus => _maxHealthBonus;
+        /// <summary>True once the player has closed the shop; the merchant never opens again.</summary>
+        public bool HasLeft => _hasLeft;
+        public IReadOnlyList<UpgradeData.UpgradeType> WeaponWares => _weaponWares;
+        public int WeaponPrice => _weaponPrice;
+        public int SoulEggPrice => _soulEggPrice;
+        /// <summary>What the last purchase did, shown in the shop (e.g. "Soul Egg: +1% Might").</summary>
+        public string LastMessage { get; private set; } = "";
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.CompareTag("Player") && !_isShopOpen)
-            {
-                _playerHealth = other.GetComponentInParent<HealthController>() ?? other.GetComponent<HealthController>();
-                _playerStats = other.GetComponentInParent<PlayerStats>() ?? other.GetComponent<PlayerStats>();
-                OpenShop();
-            }
+            if (_isShopOpen || _hasLeft || !other.CompareTag("Player")) return;
+            OpenShop();
         }
-        
-        // Learning Comment: Opens the merchant shop and pauses gameplay by freezing Time.timeScale.
+
         public void OpenShop()
         {
+            if (_hasLeft) return;
             _isShopOpen = true;
-            SoulHunter.Core.Services.GameTime.Pause(this);
+            GameTime.Pause(this);
             BuildShopUI();
         }
 
-        // Learning Comment: Attempts to purchase a healing potion using harvested souls from EconomyService.
-        // Returns false without healing or closing the shop if economy is null or has insufficient souls.
-        // On success, deducts soul cost, heals targetHealth (or _playerHealth) by HealAmount, closes the shop, and returns true.
-        public bool TryPurchase(EconomyService economy = null, HealthController targetHealth = null)
+        /// <summary>Closes the screen and resumes the game (tests and scene teardown). Players leave with <see cref="Leave"/>.</summary>
+        public void CloseShop()
         {
-            if (economy == null)
-            {
-                return false;
-            }
+            _isShopOpen = false;
+            GameTime.Resume(this);
+            DestroyShopUI();
+        }
 
-            if (!economy.SpendSouls(_cost))
-            {
-                return false;
-            }
-
-            var health = targetHealth != null ? targetHealth : _playerHealth;
-            if (health != null)
-            {
-                health.Heal(_healAmount);
-            }
-
+        /// <summary>VS rule: once the player exits the shop, the merchant disappears from the map.</summary>
+        public void Leave()
+        {
             CloseShop();
+            _hasLeft = true;
+            if (Application.isPlaying) Destroy(gameObject);
+        }
+
+        // ---------- Rules (no services, so EditMode tests can drive them) ----------
+
+        public WareState WeaponState(UpgradeData.UpgradeType type, WeaponManager weapons, int gold)
+        {
+            if (weapons != null && weapons.GetWeaponLevel(type) > 0) return WareState.Owned;
+            if (weapons == null || !weapons.HasSlotFor(type)) return WareState.SlotsFull;
+            return gold < _weaponPrice ? WareState.TooExpensive : WareState.Available;
+        }
+
+        /// <summary>
+        /// Buys one of the merchant's weapons at level 1. Nothing is charged when the weapon is not sold here,
+        /// is already owned, or no weapon slot is free.
+        /// </summary>
+        public bool TryBuyWeapon(UpgradeData.UpgradeType type, Func<int, bool> spendGold, WeaponManager weapons)
+        {
+            if (spendGold == null || weapons == null || Array.IndexOf(_weaponWares, type) < 0) return false;
+            if (weapons.GetWeaponLevel(type) > 0 || !weapons.HasSlotFor(type)) return false;
+            if (!spendGold(_weaponPrice)) return false;
+            var levelOne = LevelOne(type);
+            if (levelOne != null) weapons.ApplyUpgrade(levelOne); else weapons.GiveWeapon(type, 1);
+            LastMessage = $"Bought {Name(type)}";
+            return weapons.GetWeaponLevel(type) > 0;
+        }
+
+        /// <summary>Buys a Soul Egg for <paramref name="character"/>: one random stat, permanent, from the next run.</summary>
+        public bool TryBuySoulEgg(GameData data, string character, Func<int, bool> spendGold, System.Random rng, out SoulEggs.Stat stat)
+        {
+            stat = default;
+            if (data == null || string.IsNullOrEmpty(character) || spendGold == null) return false;
+            if (!spendGold(_soulEggPrice)) return false;
+            stat = SoulEggs.Add(data, character, rng);
+            LastMessage = $"Soul Egg: {SoulEggs.Describe(stat)} for {character} (from the next run)";
             return true;
         }
 
-        // Learning Comment: Attempts to purchase a permanent stat blessing using harvested souls from EconomyService.
-        // Returns false without deducting souls or closing the shop if economy is null, souls are insufficient,
-        // or target components cannot be resolved.
-        // On success, deducts soul cost, applies the corresponding stat increase, closes the shop, and returns true.
-        public bool TryPurchaseBlessing(BlessingType blessing, EconomyService economy = null, PlayerStats targetStats = null, HealthController targetHealth = null)
+        // ---------- Purchases through the game's services (shop buttons, AutoplayBot) ----------
+
+        public bool BuyWeapon(UpgradeData.UpgradeType type)
         {
-            if (economy == null)
-            {
-                return false;
-            }
-
-            var stats = targetStats != null ? targetStats : _playerStats;
-            var health = targetHealth != null ? targetHealth : _playerHealth;
-
-            if (stats == null && health != null)
-            {
-                stats = health.GetComponent<PlayerStats>() ?? health.GetComponentInParent<PlayerStats>();
-            }
-
-            if (health == null && stats != null)
-            {
-                health = stats.GetComponent<HealthController>() ?? stats.GetComponentInParent<HealthController>();
-            }
-
-            bool componentsResolved = blessing switch
-            {
-                BlessingType.Might => stats != null,
-                BlessingType.Armor => stats != null,
-                BlessingType.MaxHealth => stats != null && health != null,
-                _ => false
-            };
-
-            if (!componentsResolved)
-            {
-                return false;
-            }
-
-            int cost = blessing switch
-            {
-                BlessingType.Might => _mightBlessingCost,
-                BlessingType.Armor => _armorBlessingCost,
-                BlessingType.MaxHealth => _maxHealthBlessingCost,
-                _ => 0
-            };
-
-            if (!economy.SpendSouls(cost))
-            {
-                return false;
-            }
-
-            switch (blessing)
-            {
-                case BlessingType.Might:
-                    stats.AddMight(_mightBonus);
-                    break;
-                case BlessingType.Armor:
-                    stats.AddArmor(_armorBonus);
-                    break;
-                case BlessingType.MaxHealth:
-                    stats.AddMaxHealth(_maxHealthBonus);
-                    if (health != null && health != stats.GetComponent<HealthController>() && health != stats.GetComponentInParent<HealthController>())
-                    {
-                        health.IncreaseMaxHealth(_maxHealthBonus);
-                    }
-                    break;
-            }
-
-            CloseShop();
-            return true;
+            if (!TryGetEconomy(out var economy)) return false;
+            bool bought = TryBuyWeapon(type, economy.SpendGold, WeaponManager.Instance);
+            if (bought) ShowCost(_weaponPrice);
+            RefreshShopUI();
+            return bought;
         }
 
-        private enum Offer { Potion, Might, Armor, MaxHealth }
+        public bool BuySoulEgg()
+        {
+            if (!TryGetEconomy(out var economy) || !GameServices.Instance.TryGet<SaveService>(out var save) || save.CurrentData == null)
+                return false;
+            bool bought = TryBuySoulEgg(save.CurrentData, save.CurrentData.SelectedCharacterName, economy.SpendGold, new System.Random(), out _);
+            if (bought) { save.SaveGame(); ShowCost(_soulEggPrice); }
+            RefreshShopUI();
+            return bought;
+        }
+
+        private static bool TryGetEconomy(out EconomyService economy)
+        {
+            economy = null;
+            return GameServices.Instance != null && GameServices.Instance.TryGet(out economy);
+        }
+
+        private static int CurrentGold() => TryGetEconomy(out var economy) ? economy.CurrentGold : 0;
+
+        private void ShowCost(int cost)
+        {
+            if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
+                SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-cost, transform.position + Vector3.up * 2f);
+        }
+
+        private static UpgradeData LevelOne(UpgradeData.UpgradeType type)
+        {
+            var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            if (catalog == null || catalog.Upgrades == null) return null;
+            foreach (var upgrade in catalog.Upgrades)
+                if (upgrade != null && upgrade.Type == type && upgrade.Level == 1) return upgrade;
+            return null;
+        }
+
+        private static string Name(UpgradeData.UpgradeType type)
+        {
+            var levelOne = LevelOne(type);
+            return levelOne != null ? UpgradeText.DisplayName(levelOne) : type.ToString();
+        }
+
+        // ---------- Shop screen (uGUI, so keyboard and controller can use it) ----------
 
         private GameObject _shopUI;
-        private TMPro.TextMeshProUGUI _soulsText;
-        /// <summary>The shop screen while open (uGUI, so keyboard and controller can use it).</summary>
+        /// <summary>The shop screen while open.</summary>
         public GameObject ShopUI => _shopUI;
 
-        // The shop was IMGUI (OnGUI), which only a mouse can use. It is now a uGUI screen with a focused
-        // first button, so keyboard and controller players can buy too.
+        private void RefreshShopUI()
+        {
+            if (!_isShopOpen) return;
+            DestroyShopUI();
+            BuildShopUI();
+        }
+
         private void BuildShopUI()
         {
             if (_shopUI != null || !Application.isPlaying) return;
@@ -189,19 +180,57 @@ namespace SoulHunter.Gameplay.Core
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             _shopUI.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
-            var panel = ShopRect("Panel", _shopUI.transform, new Vector2(0.3f, 0.18f), new Vector2(0.7f, 0.82f));
+            var panel = ShopRect("Panel", _shopUI.transform, new Vector2(0.27f, 0.14f), new Vector2(0.73f, 0.86f));
             panel.gameObject.AddComponent<UnityEngine.UI.Image>().color = new Color(0.08f, 0.07f, 0.12f, 0.96f);
-            ShopText("Title", panel, new Vector2(0f, 0.87f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f).color = Color.yellow;
-            _soulsText = ShopText("Souls", panel, new Vector2(0f, 0.78f), new Vector2(1f, 0.87f), "", 28f);
+            ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f).color = new Color(1f, 0.82f, 0.3f);
+            int gold = CurrentGold();
+            ShopText("Gold", panel, new Vector2(0f, 0.81f), new Vector2(1f, 0.89f), $"Gold: {gold}", 28f);
 
-            var first = ShopButton(panel, 0.66f, $"Buy Potion (+{_healAmount} HP) for {_cost} Souls", () => Buy(Offer.Potion));
-            ShopButton(panel, 0.54f, $"Buy Might Blessing (+{Mathf.RoundToInt(_mightBonus * 100f)}% Might) for {_mightBlessingCost} Souls", () => Buy(Offer.Might));
-            ShopButton(panel, 0.42f, $"Buy Armor Blessing (+{_armorBonus} Armor) for {_armorBlessingCost} Souls", () => Buy(Offer.Armor));
-            ShopButton(panel, 0.30f, $"Buy Max Health Blessing (+{_maxHealthBonus} Max HP) for {_maxHealthBlessingCost} Souls", () => Buy(Offer.MaxHealth));
-            ShopButton(panel, 0.12f, "Leave", CloseShop);
-            RefreshSouls();
+            UnityEngine.UI.Button focus = null;
+            float top = 0.79f;
+            foreach (var type in _weaponWares)
+            {
+                var state = WeaponState(type, WeaponManager.Instance, gold);
+                string suffix = state switch
+                {
+                    WareState.Owned => "OWNED",
+                    WareState.SlotsFull => "NO FREE SLOT",
+                    _ => $"{_weaponPrice} G"
+                };
+                var levelOne = LevelOne(type);
+                string description = levelOne != null ? UpgradeText.Describe(levelOne, 0) : "";
+                var captured = type;
+                var button = ShopButton(panel, top, $"{Name(type)}  -  {suffix}\n<size=70%>{description}</size>", () => BuyWeapon(captured));
+                SetAvailable(button, state == WareState.Available);
+                if (focus == null && button.interactable) focus = button;
+                top -= 0.14f;
+            }
+
+            string character = GameServices.Instance != null && GameServices.Instance.TryGet<SaveService>(out var save) && save.CurrentData != null
+                ? save.CurrentData.SelectedCharacterName : "your hunter";
+            var egg = ShopButton(panel, top, $"Soul Egg  -  {_soulEggPrice} G\n<size=70%>Permanently raises a random stat of {character}, from the next run.</size>", () => BuySoulEgg());
+            SetAvailable(egg, gold >= _soulEggPrice);
+            if (focus == null && egg.interactable) focus = egg;
+
+            ShopText("Message", panel, new Vector2(0.05f, 0.24f), new Vector2(0.95f, 0.34f), LastMessage, 24f).color = new Color(0.55f, 0.95f, 1f);
+            var leave = ShopButton(panel, 0.18f, "Leave (the merchant moves on)", Leave);
+            if (focus == null) focus = leave;
             if (UnityEngine.EventSystems.EventSystem.current != null)
-                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(first.gameObject);
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(focus.gameObject);
+        }
+
+        // Sold-out or unaffordable wares stay readable: dark button, grey text (Unity's default disabled tint is light grey).
+        private static readonly Color DisabledWare = new Color(0.09f, 0.09f, 0.12f, 1f);
+        private static readonly Color DisabledText = new Color(0.55f, 0.55f, 0.6f, 1f);
+
+        private static void SetAvailable(UnityEngine.UI.Button button, bool available)
+        {
+            button.interactable = available;
+            var colors = button.colors;
+            colors.disabledColor = DisabledWare;
+            button.colors = colors;
+            foreach (var text in button.GetComponentsInChildren<TMPro.TextMeshProUGUI>())
+                text.color = available ? Color.white : DisabledText;
         }
 
         private void DestroyShopUI()
@@ -211,40 +240,15 @@ namespace SoulHunter.Gameplay.Core
             _shopUI = null;
         }
 
-        private void RefreshSouls()
+        private UnityEngine.UI.Button ShopButton(RectTransform panel, float top, string label, Action onClick)
         {
-            if (_soulsText == null) return;
-            int souls = GameServices.Instance != null && GameServices.Instance.TryGet<EconomyService>(out var economy) ? economy.HarvestedSouls : 0;
-            _soulsText.text = $"Your Souls: {souls}";
-        }
-
-        private void Buy(Offer offer)
-        {
-            if (GameServices.Instance == null || !GameServices.Instance.TryGet<EconomyService>(out var economy)) return;
-            bool bought;
-            int cost;
-            switch (offer)
-            {
-                case Offer.Potion: bought = TryPurchase(economy); cost = _cost; break;
-                case Offer.Might: bought = TryPurchaseBlessing(BlessingType.Might, economy); cost = _mightBlessingCost; break;
-                case Offer.Armor: bought = TryPurchaseBlessing(BlessingType.Armor, economy); cost = _armorBlessingCost; break;
-                default: bought = TryPurchaseBlessing(BlessingType.MaxHealth, economy); cost = _maxHealthBlessingCost; break;
-            }
-            if (!bought) { RefreshSouls(); return; }
-            if (SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
-                SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(-cost, transform.position + Vector3.up * 2f);
-            Destroy(gameObject);
-        }
-
-        private UnityEngine.UI.Button ShopButton(RectTransform panel, float top, string label, System.Action onClick)
-        {
-            var rect = ShopRect(label, panel, new Vector2(0.06f, top - 0.1f), new Vector2(0.94f, top));
+            var rect = ShopRect("Ware", panel, new Vector2(0.05f, top - 0.12f), new Vector2(0.95f, top));
             var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();
             var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();
             button.targetGraphic = image;
             SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
             button.onClick.AddListener(() => onClick());
-            ShopText("Text", rect, Vector2.zero, Vector2.one, label, 24f);
+            ShopText("Text", rect, new Vector2(0.03f, 0f), new Vector2(0.97f, 1f), label, 26f);
             return button;
         }
 
@@ -271,32 +275,16 @@ namespace SoulHunter.Gameplay.Core
             return label;
         }
 
-        // Learning Comment: Closes the merchant shop and safely restores normal gameplay time flow (Time.timeScale = 1f).
-        public void CloseShop()
-        {
-            _isShopOpen = false;
-            SoulHunter.Core.Services.GameTime.Resume(this);
-            DestroyShopUI();
-        }
-
-        // Learning Comment: When the merchant component or GameObject is disabled (e.g. stage transition or object pooling),
-        // safely restore Time.timeScale to 1f and close the shop if currently open so gameplay does not remain permanently paused.
+        // The shop must never leave the game paused (stage change, scene unload).
         private void OnDisable()
         {
-            if (_isShopOpen)
-            {
-                CloseShop();
-            }
+            if (_isShopOpen) CloseShop();
         }
-        
-        // Learning Comment: Ensures Time.timeScale is safely restored to 1f if the merchant is destroyed while the shop is open.
+
         private void OnDestroy()
         {
             DestroyShopUI();
-            if (_isShopOpen)
-            {
-                SoulHunter.Core.Services.GameTime.Resume(this);
-            }
+            if (_isShopOpen) GameTime.Resume(this);
         }
     }
 }

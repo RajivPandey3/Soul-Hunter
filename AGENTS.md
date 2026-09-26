@@ -82,7 +82,39 @@ Signature mechanic:
 
 **Wandering Merchant**
 
-Existing Burning Village / fire-hazard behavior is implementation divergence, not the authoritative requirement.
+The Burning Village fire hazards are gone; Level 3 spawns only the merchant.
+
+Merchant rules (owner: "apply the VS rule everywhere", 2026-09-26; VS Merchant and Golden Egg pages on vampire.survivors.wiki, checked 2026-09-26):
+- The merchant waits about 7 units from the player when Stage 3 starts, on the first spot that no stage obstacle covers, at the hero's height and facing the player.
+- Touching it opens the shop and pauses the game. It sells Bone and Cherry Bomb for 1,000 gold each, at level 1, never twice and never past the 6 weapon slots. It also sells Soul Eggs (Soul Hunter's Golden Egg) for 10,000 gold, repeatable.
+- Gold is the saved gold (`EconomyService.SpendGold`). One source says VS spends total gold; that source is thin.
+- Several things can be bought in one visit. Leaving sends the merchant away for the rest of the stage.
+- The old potion and blessings are removed, because the VS merchant does not sell them.
+- Prices are the VS numbers and are provisional balance.
+
+Before this, the shop took run "souls" that nothing ever granted (`AddSouls` had no caller), so nothing could be bought. The merchant was also a gold capsule.
+
+Soul Eggs (`SoulEggs`, `GameData.SoulEggs`, repaired by `SaveService.Migrate`):
+- Each egg raises one random stat of the character it was bought for, out of 19, by the VS egg amount, with the VS caps. It counts from that character's next run (`PlayerController` and `LevelUpManager` for Reroll/Skip/Banish).
+- Magnet is +1% because Soul Hunter's Magnet is a multiplier.
+- The character select screen does not show egg bonuses yet (UI section).
+
+Model:
+- The owner-approved Blender model (2026-09-26) is built by `ArtSource/Generators/build_merchant.py` (previews in `ArtSource/SH10_Merchant_v01/Previews`) and imported by `MerchantModelImporter` (menu Soul Hunter/Content/Import Wandering Merchant) as `Assets/Prefabs/NPC/SH10_NPC_WanderingMerchant.prefab`, referenced by `GameContentCatalog.WanderingMerchant`.
+- It has 2,694 triangles, stands 1.11x the hero's height, uses URP Lit with glowing soul and ember lanterns, and casts shadows.
+- From the game camera it reads by its pack and lanterns; the cyan glow is faint.
+
+Tools:
+- `AutoplayBot` walks to the merchant, and `-sh-autoplay-gold N` sets starting gold on the throw-away save.
+- Menu Soul Hunter/Debug/Jump To Stage 3/7/10 jumps there in Play Mode, for hands-on tests.
+
+Validation:
+- `WanderingMerchantTests`, `SoulEggTests` (T) and `WanderingMerchantPlayModeTests` (R: spawns near the start in the open with the approved model, the shop opens on touch, gold and slot rules hold, the egg is saved and applies next run, and the real save is unchanged).
+- EditMode 317/317 and PlayMode 65/65 (`D:\SoulHunter-Validation\run-20260926-merchant-model\`, `-model2\`).
+- Editor play `autoplay-editor-07` to `-09`: 0 errors, min 56-67 FPS; partial `V`.
+- The owner accepted it ("merchant OK", 2026-09-26).
+
+Seen, not changed: the hero, the horde and the merchant stand on the player's plane (y ≈ 1) while the stage floor's top is y = 0. Whether characters look like they float needs a visual check (Art section).
 
 ### Level 7
 

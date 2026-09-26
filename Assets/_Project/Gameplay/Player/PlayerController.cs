@@ -269,6 +269,8 @@ namespace SoulHunter.Gameplay.Player
             if (stats != null) stats.ApplyCharacter(character);
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && character.BaseMaxHealth > 0) health.Initialize(character.BaseMaxHealth);
+            // VS Golden Egg rule: the character's Soul Eggs raise its starting stats (after its max health is set).
+            SoulEggs.Apply(SoulEggs.For(saveSvc.CurrentData, character.CharacterName), stats);
             if (health != null && stats != null && stats.StartingShieldSeconds > 0f)
             {
                 health.ShieldedUntil = Time.time + stats.StartingShieldSeconds;

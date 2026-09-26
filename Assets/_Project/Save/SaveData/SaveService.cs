@@ -203,6 +203,8 @@ namespace SoulHunter.Core.Persistence
             data.UnlockedAchievements ??= new System.Collections.Generic.List<string>();
             data.UnlockedCharacters ??= new System.Collections.Generic.List<string>();
             data.OwnedCharacters ??= new System.Collections.Generic.List<string>();
+            data.SoulEggs ??= new System.Collections.Generic.List<SoulEggRecord>();
+            data.SoulEggs.RemoveAll(egg => egg == null || string.IsNullOrEmpty(egg.Character) || !AllFinite(egg));
             data.InputBindingOverrides ??= "";
             if (string.IsNullOrEmpty(data.SelectedCharacterName)) data.SelectedCharacterName = "Kael";
             data.Currency = Mathf.Max(0, data.Currency);
@@ -219,6 +221,15 @@ namespace SoulHunter.Core.Persistence
         }
 
         private static float Volume(float value) => float.IsFinite(value) ? Mathf.Clamp01(value) : 1f;
+
+        private static bool AllFinite(SoulEggRecord egg)
+        {
+            foreach (float value in new[] { egg.MaxHealth, egg.Recovery, egg.Armor, egg.Amount, egg.Revival, egg.Reroll,
+                         egg.Skip, egg.Banish, egg.MoveSpeed, egg.Might, egg.Speed, egg.Duration, egg.Area, egg.Luck,
+                         egg.Growth, egg.Greed, egg.Curse, egg.Magnet, egg.Cooldown })
+                if (!float.IsFinite(value)) return false;
+            return egg.Eggs >= 0;
+        }
         private static string Renamed(string name) => name == "Antonio" ? "Corvan" : name;
 
         private static void RenameAll(System.Collections.Generic.List<string> names)

@@ -125,7 +125,7 @@ namespace SoulHunter.Tests.PlayMode
             merchant.OpenShop();
             yield return null;
             Assert.IsNotNull(merchant.ShopUI, "Shop screen exists. " + Errors());
-            Assert.That(merchant.ShopUI.GetComponentsInChildren<Button>().Length, Is.EqualTo(5), "Four offers and Leave.");
+            Assert.That(merchant.ShopUI.GetComponentsInChildren<Button>().Length, Is.EqualTo(4), "Two weapons, the Soul Egg and Leave.");
             Assert.That(EventSystem.current.currentSelectedGameObject.transform.IsChildOf(merchant.ShopUI.transform), Is.True,
                 "A shop button is focused.");
             merchant.CloseShop();

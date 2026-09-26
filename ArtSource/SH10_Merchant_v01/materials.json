@@ -1,0 +1,212 @@
+{
+  "SH10_NPC_WanderingMerchant_Leather": {
+    "color": [
+      0.24,
+      0.13,
+      0.07
+    ],
+    "metallic": 0,
+    "roughness": 0.75,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Charcoal": {
+    "color": [
+      0.07,
+      0.068,
+      0.075
+    ],
+    "metallic": 0,
+    "roughness": 0.85,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Ash": {
+    "color": [
+      0.13,
+      0.12,
+      0.11
+    ],
+    "metallic": 0,
+    "roughness": 0.9,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Ember": {
+    "color": [
+      0.85,
+      0.3,
+      0.06
+    ],
+    "metallic": 0,
+    "roughness": 0.6,
+    "emission": [
+      1.0,
+      0.38,
+      0.08
+    ],
+    "strength": 4.0
+  },
+  "SH10_NPC_WanderingMerchant_Burgundy": {
+    "color": [
+      0.26,
+      0.05,
+      0.07
+    ],
+    "metallic": 0,
+    "roughness": 0.85,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_AshLight": {
+    "color": [
+      0.24,
+      0.22,
+      0.2
+    ],
+    "metallic": 0,
+    "roughness": 0.9,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Brass": {
+    "color": [
+      0.55,
+      0.38,
+      0.14
+    ],
+    "metallic": 0.8,
+    "roughness": 0.4,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Dark": {
+    "color": [
+      0.012,
+      0.012,
+      0.016
+    ],
+    "metallic": 0,
+    "roughness": 1.0,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Soul": {
+    "color": [
+      0.1,
+      0.85,
+      0.8
+    ],
+    "metallic": 0,
+    "roughness": 0.3,
+    "emission": [
+      0.15,
+      0.95,
+      0.9
+    ],
+    "strength": 8.0
+  },
+  "SH10_NPC_WanderingMerchant_Gold": {
+    "color": [
+      1.0,
+      0.72,
+      0.25
+    ],
+    "metallic": 1.0,
+    "roughness": 0.25,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Wood": {
+    "color": [
+      0.16,
+      0.095,
+      0.065
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Parchment": {
+    "color": [
+      0.72,
+      0.64,
+      0.46
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Iron": {
+    "color": [
+      0.1,
+      0.1,
+      0.12
+    ],
+    "metallic": 0.8,
+    "roughness": 0.45,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  },
+  "SH10_NPC_WanderingMerchant_Bone": {
+    "color": [
+      0.58,
+      0.57,
+      0.4
+    ],
+    "metallic": 0,
+    "roughness": 0.7,
+    "emission": [
+      0,
+      0,
+      0
+    ],
+    "strength": 0
+  }
+}

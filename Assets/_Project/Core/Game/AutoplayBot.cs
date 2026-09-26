@@ -33,6 +33,7 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-stage N                   start at stage N
     ///   -sh-autoplay-shots S     (default 10)  seconds between timed screenshots
     ///   -sh-autoplay-god                       invincible, for long visual tours
+    ///   -sh-autoplay-gold N                    start with N gold (on the throw-away save), e.g. to try the merchant
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -47,6 +48,8 @@ namespace SoulHunter.Gameplay.Core
             public int Stage = 1;
             public float ShotInterval = 10f;
             public bool God;
+            /// <summary>Gold to start with; -1 keeps the save's gold.</summary>
+            public int Gold = -1;
             public bool QuitWhenDone = true;
         }
 
@@ -64,6 +67,7 @@ namespace SoulHunter.Gameplay.Core
         private int _minFps = int.MaxValue;
         private int _maxEnemies;
         private Vector3 _wander = Vector3.forward;
+        private bool _merchantSeen;
         private Vector2 _lastInput;
         private int _lastHealth = -1;
         private EventBus _bus;
@@ -112,6 +116,7 @@ namespace SoulHunter.Gameplay.Core
                 Stage = int.TryParse(ArgValue("-sh-autoplay-stage"), out var s) ? Mathf.Clamp(s, 1, 10) : 1,
                 ShotInterval = float.TryParse(ArgValue("-sh-autoplay-shots"), NumberStyles.Float, inv, out var shots) ? shots : 10f,
                 God = HasArg("-sh-autoplay-god"),
+                Gold = int.TryParse(ArgValue("-sh-autoplay-gold"), out var gold) ? Mathf.Max(0, gold) : -1,
             };
             Launch(settings);
         }
@@ -146,6 +151,7 @@ namespace SoulHunter.Gameplay.Core
             // redirects saving to a temp file first: gold pickups save immediately and would change real progress.
             if (!HasArg(Argument)) save.UseFile(Path.Combine(Application.temporaryCachePath, "autoplay_save.json"));
             save.CurrentData.SelectedCharacterName = Config.Character;
+            if (Config.Gold >= 0) save.CurrentData.Currency = Config.Gold; // the save is a throw-away one by now
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
@@ -229,6 +235,9 @@ namespace SoulHunter.Gameplay.Core
             if (gem != null) pull += Flat(gem.position - me).normalized * (near > 8 ? 0.8f : 1.6f);
             var chest = Nearest(FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
             if (chest != null) pull += Flat(chest.position - me).normalized * 2f;
+            // Walk up to the Level 3 merchant while it is there, as a player would.
+            var merchant = Nearest(FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None).Where(m => !m.HasLeft).Select(m => m.transform), me, 30f);
+            if (merchant != null) pull += Flat(merchant.position - me).normalized * 3f;
             if (_health.CurrentHealth < _health.MaxHealth * 0.5f)
             {
                 var food = Nearest(FindObjectsByType<HealthPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
@@ -317,13 +326,24 @@ namespace SoulHunter.Gameplay.Core
                         closeChest?.Invoke(chest, null);
                     }
                 foreach (var merchant in FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None))
+                {
+                    if (!_merchantSeen)
+                    {
+                        _merchantSeen = true;
+                        yield return Shot("merchant-seen"); // the merchant in the world, before the shop opens
+                    }
                     if (merchant.IsShopOpen)
                     {
                         yield return Shot("merchant");
-                        bool bought = merchant.TryPurchase();
-                        Event("merchant", $"\"bought\": {(bought ? "true" : "false")}");
-                        merchant.CloseShop();
+                        int bought = 0;
+                        foreach (var ware in merchant.WeaponWares)
+                            if (merchant.BuyWeapon(ware)) bought++;
+                        if (merchant.BuySoulEgg()) bought++;
+                        Event("merchant", $"\"bought\": {bought}");
+                        yield return Shot("merchant-bought");
+                        merchant.Leave();
                     }
+                }
             }
         }
 

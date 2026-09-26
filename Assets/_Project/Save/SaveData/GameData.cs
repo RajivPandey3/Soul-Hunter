@@ -60,6 +60,9 @@ namespace SoulHunter.Core.Persistence
         public List<string> UnlockedCharacters = new List<string>();
         public List<string> OwnedCharacters = new List<string>();
 
+        // --- Soul Eggs (VS Golden Egg rule: each egg permanently raises one random stat of one character) ---
+        public List<SoulEggRecord> SoulEggs = new List<SoulEggRecord>();
+
         public GameData()
         {
             // Default values for a new save
@@ -74,5 +77,20 @@ namespace SoulHunter.Core.Persistence
 
             SelectedCharacterName = "Kael"; // Default Hero
         }
+    }
+
+    /// <summary>
+    /// Soul Egg bonuses of one character, as totals. Fractional flat stats (Armor, Amount, Revival, Reroll, Skip,
+    /// Banish) add up egg by egg and count only in whole points. Multipliers are fractions (0.01 = +1%).
+    /// </summary>
+    [Serializable]
+    public class SoulEggRecord
+    {
+        public string Character;
+        public int Eggs;
+        public float MaxHealth, Recovery, Armor, Amount, Revival, Reroll, Skip, Banish;
+        public float MoveSpeed, Might, Speed, Duration, Area, Luck, Growth, Greed, Curse, Magnet;
+        /// <summary>Cooldown reduction as a positive fraction (0.005 = 0.5% faster).</summary>
+        public float Cooldown;
     }
 }

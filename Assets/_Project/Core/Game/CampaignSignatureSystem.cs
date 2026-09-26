@@ -106,17 +106,49 @@ private void TrySubscribeToProgression()
             Debug.Log($"[CampaignSignatureSystem] Active signature: {_level.Signature}");
         }
 
+        /// <summary>
+        /// VS rule: the merchant waits close to where the stage starts. The first spot around the player
+        /// that no stage obstacle covers is used, so the player can always walk up to it.
+        /// </summary>
+        public static Vector3 FindMerchantSpot(Vector3 playerPosition, float distance = 7f)
+        {
+            int obstacles = LayerMask.GetMask("Obstacle");
+            for (int i = 0; i < 16; i++)
+            {
+                float angle = 45f + i * 22.5f;
+                Vector3 offset = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * distance;
+                Vector3 spot = playerPosition + offset;
+                if (obstacles == 0 || !UnityEngine.Physics.CheckSphere(spot + Vector3.up, 1.5f, obstacles, QueryTriggerInteraction.Collide))
+                    return spot;
+            }
+            return playerPosition + new Vector3(distance, 0f, 0f);
+        }
+
         private void SpawnMerchant()
         {
             if (_player == null) return;
-            Vector3 position = _player.transform.position + new Vector3(8f, 0f, 8f);
-            var merchant = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            Vector3 position = FindMerchantSpot(_player.transform.position);
+            // Same height as the hero and the horde: their models stand at their pivot, on the player's plane.
+            position.y = _player.transform.position.y;
+            var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            GameObject merchant;
+            if (catalog != null && catalog.WanderingMerchant != null)
+            {
+                // Owner-approved model (2026-09-26) with its trigger and shop, facing the player.
+                Vector3 toPlayer = _player.transform.position - position;
+                toPlayer.y = 0f;
+                // The model's front is -Z (like the hero models).
+                var facing = toPlayer.sqrMagnitude > 0.01f ? Quaternion.LookRotation(-toPlayer) : Quaternion.identity;
+                merchant = Instantiate(catalog.WanderingMerchant, position, facing);
+            }
+            else
+            {
+                merchant = GameObject.CreatePrimitive(PrimitiveType.Capsule); // fallback if the model is missing
+                merchant.transform.position = position + Vector3.up;
+                merchant.GetComponent<Collider>().isTrigger = true;
+                merchant.AddComponent<SoulHunter.Gameplay.Core.WanderingMerchant>();
+            }
             merchant.name = "WanderingMerchant";
-            merchant.transform.position = position;
-            merchant.transform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
-            merchant.GetComponent<Collider>().isTrigger = true;
-            merchant.GetComponent<Renderer>().material.color = new Color(1f, 0.8f, 0f, 1f); // Gold
-            merchant.AddComponent<SoulHunter.Gameplay.Core.WanderingMerchant>();
             _runtimeHazards.Add(merchant); // Add to hazards list so it gets cleaned up properly
         }
 
