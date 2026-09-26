@@ -340,9 +340,12 @@ namespace SoulHunter.Gameplay.AI
                 // ordinary enemy prefabs keep the stage formula, not enemy health.
                 var bossData = bossController != null && basePrefab == _stageBossPrefab ? bossController.Data : null;
                 // VS rule: boss health scales with the player's level, so a strong build still gets a fight.
-                health.Initialize(ScaleHealthByCurse(bossData != null
-                    ? bossData.HealthForPlayerLevel(CurrentPlayerLevel())
-                    : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage, curse));
+                // Owner's story (2026-09-27): each stage boss is that stage's guardian, so it is never weaker than
+                // the stage's chest elites; the per-level health also rises with the story (50 x stage).
+                int bossHealth = bossData != null
+                    ? StoryBossHealth(bossData.HealthForPlayerLevel(CurrentPlayerLevel()), ChestEliteBaseHealth())
+                    : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage;
+                health.Initialize(ScaleHealthByCurse(bossHealth, curse));
                 health.KnockbackResistance = 1f; // Immune to knockback
                 
                 if (!_bossCallbacks.Contains(health))
@@ -453,6 +456,9 @@ namespace SoulHunter.Gameplay.AI
         /// VS pressure plates start a map event on demand: this stage's formation of the given type, with this
         /// stage's enemies, around the player. Returns the spawned enemies (empty during the boss or a transition).
         /// </summary>
+        /// <summary>True for a stage boss spawned by this spawner (QA tools and the autoplay bot).</summary>
+        public bool IsBoss(EnemyController enemy) => enemy != null && _bossControllers.Contains(enemy);
+
         public List<EnemyController> TriggerStageEvent(StageEventType type, int count)
         {
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
@@ -563,6 +569,21 @@ namespace SoulHunter.Gameplay.AI
             elite.GetComponent<EnemyDrop>()?.DropChestThisLife();
             Debug.Log($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
             return elite;
+        }
+
+        /// <summary>How many chest elites' health a stage boss has at least (owner's story: the guardian outlasts its guards).</summary>
+        public const float BossOverEliteHealth = 2f;
+
+        /// <summary>A stage boss's health before Curse: its per-level health, but never under twice a chest elite's.</summary>
+        public static int StoryBossHealth(int perLevelHealth, int chestEliteHealth) =>
+            Mathf.Max(perLevelHealth, Mathf.RoundToInt(chestEliteHealth * BossOverEliteHealth));
+
+        /// <summary>A chest elite's health before Curse on the current stage (0 if the stage has no elite data).</summary>
+        private int ChestEliteBaseHealth()
+        {
+            var prefab = _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
+            var data = prefab != null ? prefab.GetComponent<EnemyController>()?.Data : null;
+            return data != null ? Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier) : 0;
         }
 
         public static int ScaleHealthByCurse(int baseHealth, float curse) =>

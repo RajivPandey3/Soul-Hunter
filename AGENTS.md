@@ -183,7 +183,7 @@ Validation:
 - Shadow Kael uses the generic Level 10 boss model, not a dark copy of Kael (Art section).
 
 Seen, not changed:
-- The boss died in about 5 s at player level 6, because its health is 50 x player level (provisional balance).
+- The boss died in about 5 s at player level 6, because its health was 50 x player level. Since 2026-09-27 (owner's story) it is 500 x player level, and at least twice a Stage 10 chest elite (4,250); see "Elites and bosses in play".
 - A level-1 hero dropped into Stage 10 dies in about 11 s.
 - The GUI editor ran at 17-38 FPS with 300 Stage 10 enemies before the boss appeared (Performance section).
 
@@ -403,6 +403,32 @@ Found while reviewing the VS Stage 4/5 write-ups: bosses had fixed health (1000 
 - **Timed chest elites:** every `_chestEliteIntervalSeconds` (300 s) of stage time before the boss (5/10/15/20 min), `EnemySpawner` spawns the stage elite with 5x health and 1.5x size that always drops a chest (`EnemyDrop.DropChestThisLife`, cleared on respawn so pooled reuse never drops extra chests). Not blocked by the enemy cap. Values provisional.
 
 Validated by `BossScalingAndChestEliteTests` (T) and `ChestEliteAndBossPlayModeTests` (R); EditMode 246/246, PlayMode 23/23. Balance and feel in real play are unverified.
+
+### Elites and bosses in play; the owner's story (2026-09-27)
+
+Elites and bosses were watched in editor play for the first time. `AutoplayBot` now records `elite-spawn`/`boss-spawn` (health, size, distance, player level), `-killed` (time alive) and `-despawned` events with screenshots. `-sh-autoplay-skip-to T` (after `-sh-autoplay-skip-after S`, default 10) moves the stage clock through `LevelProgressionManager.SkipTo`. Helpers: `EnemyDrop.WillDropChest`, `EnemySpawner.IsBoss`.
+
+First look (`autoplay-editor-28` Stage 1, no god mode; `-29` Stage 4, god mode; 0 errors):
+- The 5:00 chest elite came (5x health, 1.5x size), died in 21.8 s (Stage 1) and 94 s (Stage 4), and dropped a chest.
+- The boss came at 25:00 (3x size; from one end of the Castle corridor), dropped a chest, and the next stage started.
+- Found:
+  - the Stage 1 boss died in 6.4 s;
+  - the Stage 4 boss (600) had less health than its chest elite (625);
+  - elites and bosses dropped only a chest, so their soul gems (50 and 250 XP) never appeared.
+
+Owner decision (2026-09-27): "MERE STORY KO FOLLOW KARO", i.e. follow the story in `Docs/Game_Design_Document.md`; "STORY MEIN NO CHANGES" (do not edit the story; the old GDD level mechanics stay as the earlier owner decisions left them). The owner chose:
+- **Bosses grow with the story:** each stage boss is that stage's guardian. Per-level health is 50 x stage (L1 50 ... L10 Shadow Kael 500) x player level, and never under twice a chest elite's (`EnemySpawner.StoryBossHealth`, `BossOverEliteHealth` = 2). Values provisional.
+- **Souls:** a boss or chest elite drops its soul gem (`EnemyData.ExperienceValue`) next to its chest (`EnemyDrop`).
+- **The story is shown:** `StoryCardUI` (added by `GameHUDController`) shows "Level n: name" and the story when each stage starts, with the premise on Level 1 and the twist on Level 10. It does not pause and waits while a menu is open. The text is word for word from the GDD: `CampaignLevelCatalog` narratives now use the GDD's story lines, plus `CampaignStory.Premise` and `Twist`. The story is about Kael whichever character is played.
+
+Validation:
+- `CampaignStoryTests` (T: every line matches the GDD text), `BossScalingAndChestEliteTests` (T: 50 x stage, the elite floor) and `StoryCardPlayModeTests` (R: cards on Levels 1, 4 and 10, no pause, the card goes away).
+- `ChestEliteAndBossPlayModeTests` (R): the elite also drops its gem; the boss has the story health and outlasts its chest elite.
+- EditMode 353/353, PlayMode 134/134, 0 exceptions, save untouched (`D:\SoulHunter-Validationun-20260927-story\`).
+- Editor play `autoplay-editor-30` (Stage 1, no god mode, 0 errors): the story card opened the run; the elite died in 18.8 s; the boss (1,000 health at level 20) lived 24.9 s.
+- `autoplay-editor-31` (Stage 10 jumped to at level 1, god mode, 0 errors): the twist card showed; Shadow Kael had 4,250 health (twice the 2,125 chest elite) and a level-1 hero could not kill him in 150 s.
+
+Not yet played by the owner.
 
 Stage 3-5 write-ups (Dairy Plant, Gallo Tower, Cappella Magna) added no other adoptable official mechanics; their stage data, names, unlock levels and Hyper/Hurry modes are VS content or conflict with the run structure. Candidate features still awaiting owner direction: shooting ring (needs enemy projectiles), step-on traps that trigger events, environmental weapons (rail cart), telegraphed strikes, invulnerable timed stalkers, stage-placed items, teleport points.
 

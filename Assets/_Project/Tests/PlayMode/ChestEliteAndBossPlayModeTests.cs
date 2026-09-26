@@ -37,6 +37,9 @@ namespace SoulHunter.Tests.PlayMode
 
             health.KillSilently();
             yield return WaitUntilRealtime(() => ActiveChests() == 1, "the chest elite to drop a chest");
+            // Owner's story: Kael harvests souls, so the elite leaves its soul gem too.
+            Assert.That(SoulHunter.Gameplay.Pickups.XPGem.ActiveGems.Any(g => g != null && g.isActiveAndEnabled && g.XPValue == data.ExperienceValue),
+                Is.True, $"The chest elite should also drop its {data.ExperienceValue} XP soul gem. " + Errors());
 
             // Pooled reuse: the same object spawned as an ordinary enemy must not drop a chest.
             yield return WaitUntilRealtime(() => !elite.activeInHierarchy, "the dead elite to return to its pool");
@@ -61,8 +64,12 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsTrue((bool)typeof(EnemySpawner).GetMethod("SpawnBoss", Private).Invoke(spawner, new object[] { bossPrefab }));
             var boss = EnemyController.ActiveEnemies.Last();
             var data = bossPrefab.GetComponent<EnemyController>().Data;
-            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(data.HealthPerPlayerLevel * level, curse),
-                boss.GetComponent<HealthController>().MaxHealth, "Boss health should be per-level health x player level.");
+            var eliteData = (GetPrivateField<GameObject>(spawner, "_stageElitePrefab") ?? GetPrivateField<GameObject>(spawner, "_stageEnemyPrefab"))
+                .GetComponent<EnemyController>().Data;
+            int chestElite = Mathf.RoundToInt(eliteData.MaxHealth * 5f);
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(Mathf.Max(data.HealthPerPlayerLevel * level, chestElite * 2), curse),
+                boss.GetComponent<HealthController>().MaxHealth, "Boss health is per-level health x player level, but at least two chest elites'.");
+            Assert.That(boss.GetComponent<HealthController>().MaxHealth, Is.GreaterThan(chestElite), "The stage boss outlasts its chest elites.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

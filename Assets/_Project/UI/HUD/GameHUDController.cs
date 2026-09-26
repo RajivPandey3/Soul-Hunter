@@ -50,6 +50,10 @@ namespace SoulHunter.Gameplay.UI
             var timer = FindFirstObjectByType<TimerUI>();
             readability.Setup(_goldText, _killText, timer != null ? timer.TimeText : null);
             if (GetComponent<TouchControlsUI>() == null) gameObject.AddComponent<TouchControlsUI>(); // touch stick (mobile / Visible Joystick)
+            // The owner's story: each stage opens with its story line.
+            var storyCard = GetComponent<StoryCardUI>();
+            if (storyCard == null) storyCard = gameObject.AddComponent<StoryCardUI>();
+            storyCard.Setup();
 
             // Health Bar setup
             if (_playerHealth != null)

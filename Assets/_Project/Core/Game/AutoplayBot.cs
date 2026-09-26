@@ -35,6 +35,8 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-god                       invincible, for long visual tours
     ///   -sh-autoplay-gold N                    start with N gold (on the throw-away save), e.g. to try the merchant
     ///   -sh-autoplay-boss-after S              after S seconds of play, skip the stage clock to its boss (e.g. Shadow Kael)
+    ///   -sh-autoplay-skip-to T                 move the stage clock to T seconds (e.g. 290, just before the first chest elite)
+    ///   -sh-autoplay-skip-after S (default 10) seconds of play before -sh-autoplay-skip-to applies
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -53,6 +55,9 @@ namespace SoulHunter.Gameplay.Core
             public int Gold = -1;
             /// <summary>Seconds of play before the stage clock skips to the boss; -1 never.</summary>
             public float BossAfterSeconds = -1f;
+            /// <summary>Stage clock time to skip to (chest elites come every 5 minutes); -1 never.</summary>
+            public float SkipToStageSeconds = -1f;
+            public float SkipAfterSeconds = 10f;
             public bool QuitWhenDone = true;
         }
 
@@ -121,6 +126,8 @@ namespace SoulHunter.Gameplay.Core
                 God = HasArg("-sh-autoplay-god"),
                 Gold = int.TryParse(ArgValue("-sh-autoplay-gold"), out var gold) ? Mathf.Max(0, gold) : -1,
                 BossAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-boss-after"), NumberStyles.Float, inv, out var boss) ? Mathf.Max(0f, boss) : -1f,
+                SkipToStageSeconds = float.TryParse(ArgValue("-sh-autoplay-skip-to"), NumberStyles.Float, inv, out var skipTo) ? Mathf.Max(0f, skipTo) : -1f,
+                SkipAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-skip-after"), NumberStyles.Float, inv, out var skipAfter) ? Mathf.Max(0f, skipAfter) : 10f,
             };
             Launch(settings);
         }
@@ -213,6 +220,7 @@ namespace SoulHunter.Gameplay.Core
 
         private float Elapsed => Time.realtimeSinceStartup - _startedAt;
         private bool _bossSkipped;
+        private bool _clockSkipped;
         private bool _shadowKaelSeen;
 
         /// <summary>
@@ -324,6 +332,13 @@ namespace SoulHunter.Gameplay.Core
             while (!Finished)
             {
                 yield return new WaitForSecondsRealtime(0.4f);
+                if (Config.SkipToStageSeconds >= 0f && !_clockSkipped && Elapsed >= Config.SkipAfterSeconds)
+                {
+                    _clockSkipped = true;
+                    LevelProgressionManager.Instance.SkipTo(Config.SkipToStageSeconds);
+                    Event("clock-skip", string.Format(CultureInfo.InvariantCulture, "\"stage\": {0}, \"stageTime\": {1:0}", LevelProgressionManager.Instance.CurrentStage, Config.SkipToStageSeconds));
+                }
+                WatchStrongEnemies();
                 if (Config.BossAfterSeconds >= 0f && !_bossSkipped && Elapsed >= Config.BossAfterSeconds)
                 {
                     _bossSkipped = true;
@@ -383,6 +398,68 @@ namespace SoulHunter.Gameplay.Core
             int hp = _health.CurrentHealth;
             if (_lastHealth >= 0 && hp < _lastHealth) Event("hurt", $"\"hp\": {hp}, \"max\": {_health.MaxHealth}");
             _lastHealth = hp;
+        }
+
+        // ------------------------------------------------------------------ elites and bosses
+
+        private readonly Dictionary<HealthController, (string kind, float spawnedAt, int maxHp, System.Action onDied)> _strong =
+            new Dictionary<HealthController, (string, float, int, System.Action)>();
+        private EnemySpawner _spawner;
+
+        /// <summary>
+        /// Records every chest elite and stage boss: when it appears (health, size, distance), when it dies and how
+        /// long it lived, with screenshots of its arrival and of the chest it leaves.
+        /// </summary>
+        private void WatchStrongEnemies()
+        {
+            if (_spawner == null) _spawner = FindFirstObjectByType<EnemySpawner>();
+            var progression = LevelProgressionManager.Instance;
+            // One that left without dying (a stage change clears the arena) is forgotten, so its pooled body can be seen again.
+            foreach (var gone in _strong.Keys.Where(h => h == null || !h.gameObject.activeInHierarchy).ToList())
+            {
+                if (gone != null) gone.OnDied -= _strong[gone].onDied;
+                Event(_strong[gone].kind + "-despawned", string.Format(CultureInfo.InvariantCulture, "\"aliveSeconds\": {0:0.0}", Elapsed - _strong[gone].spawnedAt));
+                _strong.Remove(gone);
+            }
+            foreach (var enemy in EnemyController.ActiveEnemies)
+            {
+                if (enemy == null || !enemy.isActiveAndEnabled) continue;
+                bool boss = _spawner != null && _spawner.IsBoss(enemy);
+                var drop = enemy.GetComponent<EnemyDrop>();
+                if (!boss && (drop == null || !drop.WillDropChest)) continue;
+                var health = enemy.GetComponent<HealthController>();
+                if (health == null || health.CurrentHealth <= 0 || _strong.ContainsKey(health)) continue;
+
+                string kind = boss ? "boss" : "elite";
+                float distance = _player != null ? Flat(enemy.transform.position - _player.transform.position).magnitude : -1f;
+                Event(kind + "-spawn", string.Format(CultureInfo.InvariantCulture,
+                    "\"stage\": {0}, \"stageTime\": {1:0}, \"name\": \"{2}\", \"hp\": {3}, \"scale\": {4:0.00}, \"distance\": {5:0.0}, \"playerLevel\": {6}, \"dropsChest\": {7}",
+                    progression.CurrentStage, progression.StageElapsedTime, Escape(enemy.name.Replace("(Clone)", "")), health.MaxHealth,
+                    enemy.transform.localScale.x, distance, _experience != null ? _experience.CurrentLevel : 0,
+                    drop != null && drop.WillDropChest ? "true" : "false"));
+                StartCoroutine(ShotSoon($"{kind}-spawn"));
+
+                void OnDied()
+                {
+                    health.OnDied -= OnDied;
+                    var seen = _strong[health];
+                    _strong.Remove(health);
+                    Event(seen.kind + "-killed", string.Format(CultureInfo.InvariantCulture,
+                        "\"stage\": {0}, \"stageTime\": {1:0}, \"hp\": {2}, \"aliveSeconds\": {3:0.0}, \"playerLevel\": {4}",
+                        progression.CurrentStage, progression.StageElapsedTime, seen.maxHp, Elapsed - seen.spawnedAt,
+                        _experience != null ? _experience.CurrentLevel : 0));
+                    StartCoroutine(ShotAfter($"{seen.kind}-killed", 0.3f));
+                }
+                _strong[health] = (kind, Elapsed, health.MaxHealth, OnDied);
+                health.OnDied += OnDied;
+            }
+        }
+
+        private IEnumerator ShotAfter(string name, float seconds)
+        {
+            yield return new WaitForSecondsRealtime(seconds);
+            while (GameTime.IsPaused && !Finished) yield return new WaitForSecondsRealtime(0.2f);
+            yield return Shot(name);
         }
 
         // ------------------------------------------------------------------ recording

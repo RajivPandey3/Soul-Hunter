@@ -28,6 +28,9 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>Makes this enemy drop a chest the next time it dies (timed chest elites). Cleared when it respawns.</summary>
         public void DropChestThisLife() => _dropsChestThisLife = true;
 
+        /// <summary>True when this enemy drops a chest on death (bosses, and chest elites for this life).</summary>
+        public bool WillDropChest => DropsChest || _dropsChestThisLife;
+
         private void Awake()
         {
             _health = GetComponent<HealthController>();
@@ -65,6 +68,9 @@ namespace SoulHunter.Gameplay.AI
                 if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                 {
                     SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChest(transform.position);
+                    // Owner's story (2026-09-27): Kael harvests souls, so a boss or chest elite also leaves its big
+                    // soul gem (EnemyData.ExperienceValue: 50 elite, 250 boss), set a little aside from the chest.
+                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position + new Vector3(-1.2f, 0f, 0f), GemValue);
                     Debug.Log("Boss killed! Chest dropped!");
                 }
                 return;

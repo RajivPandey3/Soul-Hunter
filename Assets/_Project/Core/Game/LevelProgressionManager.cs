@@ -114,8 +114,18 @@ namespace SoulHunter.Gameplay.Core
         public void SkipToBoss()
         {
             if (_gameWon || StageElapsedTime >= CurrentLevel.BossStartSeconds) return;
-            StageElapsedTime = CurrentLevel.BossStartSeconds;
-            Debug.Log($"[LevelProgressionManager] Skipped Stage {CurrentStage} to its boss at {StageElapsedTime:0}s.");
+            SkipTo(CurrentLevel.BossStartSeconds);
+        }
+
+        /// <summary>
+        /// Debug/QA: moves the stage clock forward to <paramref name="seconds"/> (e.g. just before a 5-minute chest elite).
+        /// Never moves it back. What the spawner schedules by the clock (chest elites, events, the boss) follows.
+        /// </summary>
+        public void SkipTo(float seconds)
+        {
+            if (_gameWon || seconds <= StageElapsedTime) return;
+            StageElapsedTime = seconds;
+            Debug.Log($"[LevelProgressionManager] Skipped Stage {CurrentStage} clock to {StageElapsedTime:0}s.");
         }
 
         public void ReportBossDefeated()

@@ -53,16 +53,16 @@ namespace SoulHunter.Gameplay.Data
     {
         private static readonly CampaignLevelDefinition[] Levels =
         {
-            new(1, "The Cursed Graveyard", "Kael starts beside his daughter's grave.", "Teach movement, dash, souls and auto-attacks", CampaignSignature.CursedGraveyard, "SH10_L01_Showcase", 1.00f, 1.00f),
-            new(2, "The Dark Forest", "The forest rejects Kael's presence.", "Darkness accelerates enemy pressure", CampaignSignature.DarkForest, "SH10_L02_Showcase", 1.10f, 0.95f),
-            new(3, "The Forgotten Village", "Kael finds the remains of a village burned by demons.", "A Wandering Merchant sells weapons and Soul Eggs for gold", CampaignSignature.ForgottenVillage, "SH10_L03_Showcase", 1.15f, 0.90f),
-            new(4, "The Ruined Castle", "The Gatekeeper warns Kael about deception.", "Castle corridors: gargoyles come mostly from the left and right", CampaignSignature.RuinedCastle, "SH10_L04_Showcase", 1.20f, 0.88f),
-            new(5, "The Crimson Swamp", "Kael's soul begins to rot.", "A slow, heavy horde and fast swarms", CampaignSignature.CrimsonSwamp, "SH10_L05_Showcase", 0.90f, 0.85f),
-            new(6, "The Frozen Peaks", "The cold reflects Kael's fading humanity.", "Blizzards and periodic movement slow; fast enemies from above and below", CampaignSignature.FrozenPeaks, "SH10_L06_Showcase", 1.45f, 0.82f),
-            new(7, "The Sea of Lost Souls", "The lost dead erode Kael's sanity.", "Spectral enemies and holy-damage checks", CampaignSignature.SeaOfLostSouls, "SH10_L07_Showcase", 1.30f, 0.80f),
-            new(8, "The Blood Arenas", "The Death God's elite guards test Kael.", "Elite waves replace ordinary swarms", CampaignSignature.BloodArenas, "SH10_L08_Showcase", 1.40f, 0.75f),
-            new(9, "The Throne of Death", "Kael reaches the 99,999th soul.", "Arena boundary contracts over time", CampaignSignature.ThroneOfDeath, "SH10_L09_Showcase", 1.50f, 0.70f),
-            new(10, "The Soul Core", "The mirror reveals Kael as the Death God.", "Shadow Kael final skill-check encounter", CampaignSignature.SoulCore, "SH10_L10_Showcase", 1.60f, 0.65f)
+            new(1, "The Cursed Graveyard", "Kael starts his journey near his daughter's grave, harvesting wandering souls.", "Teach movement, dash, souls and auto-attacks", CampaignSignature.CursedGraveyard, "SH10_L01_Showcase", 1.00f, 1.00f),
+            new(2, "The Dark Forest", "The souls run in fear. Kael realizes the forest is rejecting his dark presence.", "Darkness accelerates enemy pressure", CampaignSignature.DarkForest, "SH10_L02_Showcase", 1.10f, 0.95f),
+            new(3, "The Forgotten Village", "Kael encounters the remnants of a village burned down by demons.", "A Wandering Merchant sells weapons and Soul Eggs for gold", CampaignSignature.ForgottenVillage, "SH10_L03_Showcase", 1.15f, 0.90f),
+            new(4, "The Ruined Castle", "The gateway to the Underworld. The Gatekeeper warns Kael that he is being deceived.", "Castle corridors: gargoyles come mostly from the left and right", CampaignSignature.RuinedCastle, "SH10_L04_Showcase", 1.20f, 0.88f),
+            new(5, "The Crimson Swamp", "Kael's soul begins to rot. He hears whispers and voices.", "A slow, heavy horde and fast swarms", CampaignSignature.CrimsonSwamp, "SH10_L05_Showcase", 0.90f, 0.85f),
+            new(6, "The Frozen Peaks", "The icy descent into the deep underworld. The cold reflects Kael's fading humanity.", "Blizzards and periodic movement slow; fast enemies from above and below", CampaignSignature.FrozenPeaks, "SH10_L06_Showcase", 1.45f, 0.82f),
+            new(7, "The Sea of Lost Souls", "The resting place of souls who gave up. Kael starts losing his sanity.", "Spectral enemies and holy-damage checks", CampaignSignature.SeaOfLostSouls, "SH10_L07_Showcase", 1.30f, 0.80f),
+            new(8, "The Blood Arenas", "The Death God's elite guards test Kael's worthiness.", "Elite waves replace ordinary swarms", CampaignSignature.BloodArenas, "SH10_L08_Showcase", 1.40f, 0.75f),
+            new(9, "The Throne of Death", "The 99,999th soul is collected. Kael approaches the final throne.", "Arena boundary contracts over time", CampaignSignature.ThroneOfDeath, "SH10_L09_Showcase", 1.50f, 0.70f),
+            new(10, "The Soul Core", "The truth is revealed. Kael is the monster. He must fight his own corrupted soul.", "Shadow Kael final skill-check encounter", CampaignSignature.SoulCore, "SH10_L10_Showcase", 1.60f, 0.65f)
         };
 
         public static int Count => Levels.Length;

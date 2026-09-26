@@ -42,6 +42,19 @@ namespace SoulHunter.Tests.EditMode
             }
         }
 
+        [Test]
+        public void StageBosses_GrowWithTheStory_AndOutlastTheirChestElites()
+        {
+            // Owner's story (2026-09-27): later guardians are stronger; per-level health is 50 x stage.
+            for (int stage = 1; stage <= 10; stage++)
+            {
+                var data = AssetDatabase.LoadAssetAtPath<GameObject>(string.Format(BossPrefabPath, stage)).GetComponent<EnemyController>().Data;
+                Assert.That(data.HealthPerPlayerLevel, Is.EqualTo(50 * stage), $"Stage {stage}");
+            }
+            Assert.That(EnemySpawner.StoryBossHealth(200, 625), Is.EqualTo(1250), "A low-level player still meets a boss stronger than two elites.");
+            Assert.That(EnemySpawner.StoryBossHealth(2400, 625), Is.EqualTo(2400), "Otherwise per-level health decides.");
+        }
+
         [TestCase(0f, 0)]
         [TestCase(299f, 0)]
         [TestCase(300f, 1)]
