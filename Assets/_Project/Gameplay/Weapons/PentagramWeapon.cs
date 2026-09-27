@@ -49,13 +49,17 @@ namespace SoulHunter.Gameplay.Combat
                 if (i >= allEnemies.Count) continue;
                 var enemy = allEnemies[i];
                 if (enemy == null) continue;
+                // VS: the 25-minute stage bosses are immune to Pentagram's instant kill.
+                if (enemy.IsStageBoss) continue;
                 // Check chance to leave gem
                 bool keepDrop = Random.value <= _chanceToKeepGems;
                 if (!keepDrop)
                 {
-                    // Disable drop script to simulate vaporizing the drop too
+                    // Erase the drops of this life only. Disabling the component (as before) also stopped the kill
+                    // being counted, lost chest elites' chests, and stayed off when the pool reused the enemy, so it
+                    // never dropped a gem again.
                     var drop = enemy.GetComponent<EnemyDrop>();
-                    if (drop != null) drop.enabled = false;
+                    if (drop != null) drop.EraseDropsThisLife();
                 }
                 
                 var health = enemy.GetComponent<HealthController>();

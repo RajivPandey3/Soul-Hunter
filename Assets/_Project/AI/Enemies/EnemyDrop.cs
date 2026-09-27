@@ -24,9 +24,19 @@ namespace SoulHunter.Gameplay.AI
 
         private HealthController _health;
         private bool _dropsChestThisLife;
+        private bool _erasedThisLife;
+
+        /// <summary>
+        /// VS Pentagram: "if a boss that would have dropped [a chest] is erased, the Treasure Chest is then dropped by a
+        /// different enemy". Chests of erased carriers wait here for the next enemy the spawner sends.
+        /// </summary>
+        public static int PendingChests;
 
         /// <summary>Makes this enemy drop a chest the next time it dies (timed chest elites). Cleared when it respawns.</summary>
         public void DropChestThisLife() => _dropsChestThisLife = true;
+
+        /// <summary>VS Pentagram: this life ends with no drops (a chest it carried passes to another enemy). Cleared on respawn.</summary>
+        public void EraseDropsThisLife() => _erasedThisLife = true;
 
         /// <summary>True when this enemy drops a chest on death (bosses, and chest elites for this life).</summary>
         public bool WillDropChest => DropsChest || _dropsChestThisLife;
@@ -39,6 +49,7 @@ namespace SoulHunter.Gameplay.AI
         private void OnEnable()
         {
             _dropsChestThisLife = false;
+            _erasedThisLife = false;
             _health.OnDied += HandleDeath;
         }
 
@@ -61,6 +72,12 @@ namespace SoulHunter.Gameplay.AI
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill();
+            }
+
+            if (_erasedThisLife)
+            {
+                if (WillDropChest) PendingChests++;
+                return;
             }
 
             if (DropsChest || _dropsChestThisLife)

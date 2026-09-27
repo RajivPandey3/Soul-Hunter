@@ -428,6 +428,15 @@ Validation:
 - Editor play `autoplay-editor-30` (Stage 1, no god mode, 0 errors): the story card opened the run; the elite died in 18.8 s; the boss (1,000 health at level 20) lived 24.9 s.
 - `autoplay-editor-31` (Stage 10 jumped to at level 1, god mode, 0 errors): the twist card showed; Shadow Kael had 4,250 health (twice the 2,125 chest elite) and a level-1 hero could not kill him in 150 s.
 
+The owner's own checks, played by the agent (owner: "DO ALL", 2026-09-27). New bot options: `-sh-autoplay-jump-to N` / `-jump-after S` (the Debug "Jump To Stage" action), and `elite-drops`/`boss-drops` events counting soul gems and chests near the body.
+- `autoplay-editor-32` (new run from Level 1) found a real defect: Pentagram erased the 5:00 chest elite in 1.1 s and the Stage 1 boss in 0.2 s, with no chest and no gem. It also switched `EnemyDrop` off, and the component stayed off when the pool reused the enemy, so that enemy never dropped a gem or counted a kill again.
+  - Fixed per VS (vampire.survivors.wiki/w/Pentagram, checked 2026-09-27): stage bosses are immune (`EnemyController.IsStageBoss`, set by `SpawnBoss`). An erased enemy loses only this life's drops (`EnemyDrop.EraseDropsThisLife`) and still counts as a kill. An erased chest carrier's chest passes to the next ordinary enemy the horde spawns (`EnemyDrop.PendingChests`, `EnemySpawner.GivePendingChest`).
+  - `PentagramPlayModeTests` (R) fail on the old code (boss erased; pooled `EnemyDrop` off) and pass on the new.
+- `autoplay-editor-33` (new run from Level 1, jump to Stage 10 at 20 s, Skip To Stage Boss at 60 s, god mode, 0 errors): the twist card showed, and Shadow Kael (4,250 health) copied Whip and Clock Lancet.
+  - Found: an open level-up screen showed the story card through it. The card now hides while a menu has the game paused and comes back afterwards (`StoryCardPlayModeTests`).
+- `autoplay-editor-34` (new run from Level 1, no god mode, 0 errors): story card; the 5:00 chest elite dropped its chest and 50 XP soul gem; the boss (1,000 health) dropped its 250 XP gem and a chest that the hero picked up at once. The boss died in 4.5 s, at player level 20.
+- EditMode 353/353, PlayMode 136/136, save untouched (`D:\SoulHunter-Validation\run-20260927-pentagram\`). The later story-card change was rerun with its fixture and `PentagramPlayModeTests`: 3/3.
+
 Not yet played by the owner.
 
 Stage 3-5 write-ups (Dairy Plant, Gallo Tower, Cappella Magna) added no other adoptable official mechanics; their stage data, names, unlock levels and Hyper/Hurry modes are VS content or conflict with the run structure. Candidate features still awaiting owner direction: shooting ring (needs enemy projectiles), step-on traps that trigger events, environmental weapons (rail cart), telegraphed strikes, invulnerable timed stalkers, stage-placed items, teleport points.

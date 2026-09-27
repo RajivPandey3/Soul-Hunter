@@ -67,6 +67,7 @@ namespace SoulHunter.Gameplay.AI
 
         private void Start()
         {
+            EnemyDrop.PendingChests = 0; // a new run owes no chests
             var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
             if (player != null)
             {
@@ -188,7 +189,7 @@ namespace SoulHunter.Gameplay.AI
                     int groupSize = Mathf.Max(1, _currentWave.EnemiesPerSpawn + phase.EnemiesPerSpawnBonus + fiveMinutePressure);
                     int availableSlots = Mathf.Max(0, _maxAliveEnemies - EnemyController.ActiveEnemies.Count);
                     int spawnCount = Mathf.Min(groupSize, availableSlots);
-                    for (int i = 0; i < spawnCount; i++) SpawnEnemy(PickSwarmPrefab(level, phase));
+                    for (int i = 0; i < spawnCount; i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
                     // VS rule: Curse makes enemies arrive more often.
                     _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / CurrentCurse());
@@ -197,7 +198,7 @@ namespace SoulHunter.Gameplay.AI
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
                 int missing = Mathf.Min(phase.MinimumEnemies, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
-                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) SpawnEnemy(PickSwarmPrefab(level, phase));
+                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
             }
         }
 
@@ -315,6 +316,7 @@ namespace SoulHunter.Gameplay.AI
             {
                 bossController.Target = _playerTransform;
                 _bossControllers.Add(bossController); // bosses are never relocated
+                bossController.IsStageBoss = true;
                 bossController.SetCastsShadows(true);
             }
             bossObj.SetActive(true);
@@ -456,6 +458,16 @@ namespace SoulHunter.Gameplay.AI
         /// VS pressure plates start a map event on demand: this stage's formation of the given type, with this
         /// stage's enemies, around the player. Returns the spawned enemies (empty during the boss or a transition).
         /// </summary>
+        /// <summary>VS Pentagram: a chest whose carrier was erased goes to the next ordinary enemy of the horde.</summary>
+        private static void GivePendingChest(GameObject enemy)
+        {
+            if (EnemyDrop.PendingChests <= 0 || enemy == null) return;
+            var drop = enemy.GetComponent<EnemyDrop>();
+            if (drop == null || drop.WillDropChest) return;
+            drop.DropChestThisLife();
+            EnemyDrop.PendingChests--;
+        }
+
         /// <summary>True for a stage boss spawned by this spawner (QA tools and the autoplay bot).</summary>
         public bool IsBoss(EnemyController enemy) => enemy != null && _bossControllers.Contains(enemy);
 

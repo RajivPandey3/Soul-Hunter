@@ -45,6 +45,8 @@ namespace SoulHunter.Gameplay.AI
         public int CrowdId => _crowdId != 0 ? _crowdId : (_crowdId = GetInstanceID());
 
         public bool IsSpectral => _isSpectral;
+        /// <summary>A stage boss (set by EnemySpawner.SpawnBoss; bosses have their own pools). VS: immune to Pentagram.</summary>
+        public bool IsStageBoss { get; set; }
         public SoulHunter.Gameplay.Data.EnemyData Data => _enemyData;
 
         private void Awake()

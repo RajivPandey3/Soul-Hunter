@@ -37,6 +37,8 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-boss-after S              after S seconds of play, skip the stage clock to its boss (e.g. Shadow Kael)
     ///   -sh-autoplay-skip-to T                 move the stage clock to T seconds (e.g. 290, just before the first chest elite)
     ///   -sh-autoplay-skip-after S (default 10) seconds of play before -sh-autoplay-skip-to applies
+    ///   -sh-autoplay-jump-to N                 jump the run to stage N, as the Debug "Jump To Stage" menu does
+    ///   -sh-autoplay-jump-after S (default 20) seconds of play before -sh-autoplay-jump-to applies
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -58,6 +60,9 @@ namespace SoulHunter.Gameplay.Core
             /// <summary>Stage clock time to skip to (chest elites come every 5 minutes); -1 never.</summary>
             public float SkipToStageSeconds = -1f;
             public float SkipAfterSeconds = 10f;
+            /// <summary>Stage to jump to mid-run (LevelProgressionManager.StartStage, like the Debug menu); 0 never.</summary>
+            public int JumpToStage;
+            public float JumpAfterSeconds = 20f;
             public bool QuitWhenDone = true;
         }
 
@@ -128,6 +133,8 @@ namespace SoulHunter.Gameplay.Core
                 BossAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-boss-after"), NumberStyles.Float, inv, out var boss) ? Mathf.Max(0f, boss) : -1f,
                 SkipToStageSeconds = float.TryParse(ArgValue("-sh-autoplay-skip-to"), NumberStyles.Float, inv, out var skipTo) ? Mathf.Max(0f, skipTo) : -1f,
                 SkipAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-skip-after"), NumberStyles.Float, inv, out var skipAfter) ? Mathf.Max(0f, skipAfter) : 10f,
+                JumpToStage = int.TryParse(ArgValue("-sh-autoplay-jump-to"), out var jumpTo) ? Mathf.Clamp(jumpTo, 1, 10) : 0,
+                JumpAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-jump-after"), NumberStyles.Float, inv, out var jumpAfter) ? Mathf.Max(0f, jumpAfter) : 20f,
             };
             Launch(settings);
         }
@@ -221,6 +228,7 @@ namespace SoulHunter.Gameplay.Core
         private float Elapsed => Time.realtimeSinceStartup - _startedAt;
         private bool _bossSkipped;
         private bool _clockSkipped;
+        private bool _jumped;
         private bool _shadowKaelSeen;
 
         /// <summary>
@@ -338,6 +346,12 @@ namespace SoulHunter.Gameplay.Core
                     LevelProgressionManager.Instance.SkipTo(Config.SkipToStageSeconds);
                     Event("clock-skip", string.Format(CultureInfo.InvariantCulture, "\"stage\": {0}, \"stageTime\": {1:0}", LevelProgressionManager.Instance.CurrentStage, Config.SkipToStageSeconds));
                 }
+                if (Config.JumpToStage > 0 && !_jumped && Elapsed >= Config.JumpAfterSeconds)
+                {
+                    _jumped = true;
+                    LevelProgressionManager.Instance.StartStage(Config.JumpToStage); // what Soul Hunter/Debug/Jump To Stage does
+                    Event("stage-jump", $"\"stage\": {Config.JumpToStage}");
+                }
                 WatchStrongEnemies();
                 if (Config.BossAfterSeconds >= 0f && !_bossSkipped && Elapsed >= Config.BossAfterSeconds)
                 {
@@ -444,6 +458,7 @@ namespace SoulHunter.Gameplay.Core
                     health.OnDied -= OnDied;
                     var seen = _strong[health];
                     _strong.Remove(health);
+                    StartCoroutine(CheckSoulGem(seen.kind, health.transform.position, drop != null ? drop.GemValue : 0));
                     Event(seen.kind + "-killed", string.Format(CultureInfo.InvariantCulture,
                         "\"stage\": {0}, \"stageTime\": {1:0}, \"hp\": {2}, \"aliveSeconds\": {3:0.0}, \"playerLevel\": {4}",
                         progression.CurrentStage, progression.StageElapsedTime, seen.maxHp, Elapsed - seen.spawnedAt,
@@ -453,6 +468,17 @@ namespace SoulHunter.Gameplay.Core
                 _strong[health] = (kind, Elapsed, health.MaxHealth, OnDied);
                 health.OnDied += OnDied;
             }
+        }
+
+        /// <summary>Owner's story: a boss or chest elite leaves its soul gem by its chest. Records whether one is there.</summary>
+        private IEnumerator CheckSoulGem(string kind, Vector3 where, int value)
+        {
+            yield return null;
+            int gems = XPGem.ActiveGems.Count(g => g != null && g.isActiveAndEnabled && g.XPValue == value &&
+                                                  Flat(g.transform.position - where).magnitude < 3f);
+            int chests = FindObjectsByType<ChestPickup>(FindObjectsSortMode.None)
+                .Count(c => c.gameObject.activeInHierarchy && Flat(c.transform.position - where).magnitude < 3f);
+            Event(kind + "-drops", string.Format(CultureInfo.InvariantCulture, "\"soulGems\": {0}, \"gemValue\": {1}, \"chests\": {2}", gems, value, chests));
         }
 
         private IEnumerator ShotAfter(string name, float seconds)

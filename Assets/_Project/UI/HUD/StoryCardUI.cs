@@ -10,7 +10,7 @@ namespace SoulHunter.Gameplay.UI
     /// <summary>
     /// Tells the owner's story in play (owner, 2026-09-27: "MERE STORY KO FOLLOW KARO"): when a stage starts, a card
     /// under the stage label shows the level name and its story line (CampaignStory.CardText; the premise on Level 1,
-    /// the twist on Level 10). It does not pause the game, and it waits while a menu has the game paused.
+    /// the twist on Level 10). It does not pause the game, and it hides and waits while a menu has the game paused.
     /// The HUD adds this to itself.
     /// </summary>
     public sealed class StoryCardUI : MonoBehaviour
@@ -27,6 +27,7 @@ namespace SoulHunter.Gameplay.UI
         private float _duration;
 
         public bool IsShowing => _group != null && _group.gameObject.activeSelf;
+        public float Alpha => _group != null ? _group.alpha : 0f;
         public string Title => _title != null ? _title.text : "";
         public string Body => _body != null ? _body.text : "";
 
@@ -65,7 +66,14 @@ namespace SoulHunter.Gameplay.UI
 
         private void Update()
         {
-            if (!IsShowing || GameTime.IsPaused) return;
+            if (!IsShowing) return;
+            // A level-up, chest or pause menu is see-through: hide the card under it and carry on once it closes
+            // (editor play showed the Level 10 card's title through "LEVEL UP!").
+            if (GameTime.IsPaused)
+            {
+                _group.alpha = 0f;
+                return;
+            }
             _shownFor += Time.unscaledDeltaTime;
             float fadeIn = Mathf.Clamp01(_shownFor / FadeSeconds);
             float fadeOut = Mathf.Clamp01((_duration - _shownFor) / FadeSeconds);

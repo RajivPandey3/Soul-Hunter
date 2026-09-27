@@ -31,6 +31,17 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(card.Title, Is.EqualTo("Level 4: The Ruined Castle"));
             Assert.That(card.Body, Is.EqualTo("The gateway to the Underworld. The Gatekeeper warns Kael that he is being deceived."));
 
+            // A menu (level-up, chest, pause) hides the card; it comes back when the menu closes.
+            yield return new WaitForSecondsRealtime(1f);
+            Assert.That(card.Alpha, Is.GreaterThan(0.5f));
+            var menu = new object();
+            GameTime.Pause(menu);
+            yield return null;
+            Assert.That(card.IsShowing && card.Alpha == 0f, Is.True, "Hidden, not closed, while a menu is open.");
+            GameTime.Resume(menu);
+            yield return new WaitForSecondsRealtime(0.2f);
+            Assert.That(card.Alpha, Is.GreaterThan(0.5f), "Back once the menu closes.");
+
             float limit = Time.realtimeSinceStartup + StoryCardUI.DurationFor(card.Body) + 3f;
             while (card.IsShowing && Time.realtimeSinceStartup < limit) yield return null;
             Assert.That(card.IsShowing, Is.False, "The card goes away on its own.");
