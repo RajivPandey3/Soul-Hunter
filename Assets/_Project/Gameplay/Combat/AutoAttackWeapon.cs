@@ -207,11 +207,13 @@ namespace SoulHunter.Gameplay.Combat
 
             if (_timer <= 0f)
             {
+                // The cooldown is set first: a weapon whose attack throws must not retry every frame (Death Spiral
+                // threw 30,000 times in one 30-minute run and dragged the frame rate from 80 to 20).
+                _timer = Mathf.Max(0.05f, AttackCooldown * CooldownMultiplier);
                 ShowAttackOnHolder(); // before Attack(): the shot may kill the enemy it aimed at
                 Attack();
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
                 if (audio != null && FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None) audio.PlayWeaponSound(FireSound);
-                _timer = Mathf.Max(0.05f, AttackCooldown * CooldownMultiplier);
             }
         }
 

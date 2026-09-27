@@ -465,6 +465,19 @@ Editor play `autoplay-editor-37` (Stage 1, no god mode, 6 min, clock skipped to 
 
 Not yet played by the owner.
 
+### Death Spiral crash and pooled whips (found 2026-09-28)
+
+A full 30-minute Stage 1 editor run (`autoplay-editor-42`, no god mode) logged 30,204 errors, and the frame rate fell from 80 to 20.
+- **Death Spiral** (the Axe evolution) threw a `NullReferenceException` on every attack. Its scythe is the SH10 model prefab, which has no collider. `Projectile` requires one, so `AddComponent<Projectile>()` returned null. Scythes now get a trigger collider first.
+- **`AutoAttackWeapon.Update`** set the cooldown only after `Attack()`, so an attack that threw was retried every frame. The cooldown is now set first, for every weapon.
+- **`WeaponPoolManager.GetFromPool`** could hand back a destroyed object. Bloody Tear parents its pooled whips to itself, so they die with the weapon (for example when a union replaces it). Destroyed entries are now skipped.
+- New `EvolvedWeaponSweepPlayModeTests` (R): every evolution and union weapon must hurt enemies within 10 s without errors. Evolutions had no sweep before.
+  - On the old code it fails with the `NullReferenceException`.
+  - After the Death Spiral fix it caught the Bloody Tear `MissingReferenceException`.
+  - It passes on the new code.
+
+Balance baseline from the same run: level 70 at 30:00, 18,350 kills, 17 chests, hurt 14 times, never below full health at the timeline samples; the stage boss (3,150 health) lived 50 s.
+
 ### VS extra features: run modes and stage hazards (owner: "extra feature also continue", 2026-09-27)
 
 **Run modes** (VS "List of Modes"). Toggled on the character select screen (a row above the character grid), saved in `GameData` (`ModeHurry` … `ModeLimitBreak`; an older save loads them as off). They are copied into `RunModes` when `LevelProgressionManager` wakes and reset when it is destroyed. Numbers are the VS ones unless marked:

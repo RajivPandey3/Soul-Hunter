@@ -62,11 +62,14 @@ namespace SoulHunter.Gameplay.Combat
             Stack<GameObject> pool = _pools[prefab];
             GameObject objToSpawn = null;
 
-            if (pool.Count > 0)
+            // A pooled object can be destroyed while it waits: Bloody Tear parents its whips to itself, so they die with
+            // the weapon (e.g. when a union replaces it). Skip those instead of returning a destroyed object (found by
+            // EvolvedWeaponSweepPlayModeTests, 2026-09-28).
+            while (pool.Count > 0 && objToSpawn == null)
             {
                 objToSpawn = pool.Pop();
             }
-            else
+            if (objToSpawn == null)
             {
                 objToSpawn = Instantiate(prefab);
                 NoShadows(objToSpawn);

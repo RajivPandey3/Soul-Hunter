@@ -48,8 +48,17 @@ namespace SoulHunter.Gameplay.Combat
                 if (scythe == null) continue;
                 ApplyArea(scythe, ScythePrefab);
                 
+                // The scythe is the SH10 model prefab, which has no collider; Projectile requires one, so AddComponent
+                // returned null and every attack threw (found in a 30-minute editor run, 2026-09-28).
+                if (scythe.GetComponent<Collider>() == null)
+                {
+                    var trigger = scythe.AddComponent<SphereCollider>();
+                    trigger.isTrigger = true;
+                    trigger.radius = 0.6f;
+                }
                 var proj = scythe.GetComponent<Projectile>();
                 if (proj == null) proj = scythe.AddComponent<Projectile>();
+                if (proj == null) continue;
                 // Pierces everything
                 proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(DamageAmount), 6f, pierce: UnlimitedPierce);
                 proj.AddBounces(ExtraBounces);

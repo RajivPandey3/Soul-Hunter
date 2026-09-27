@@ -39,6 +39,7 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-skip-after S (default 10) seconds of play before -sh-autoplay-skip-to applies
     ///   -sh-autoplay-jump-to N                 jump the run to stage N, as the Debug "Jump To Stage" menu does
     ///   -sh-autoplay-jump-after S (default 20) seconds of play before -sh-autoplay-jump-to applies
+    ///   -sh-autoplay-start-level N             start at player level N (the bot picks every level-up), to measure later stages
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -63,6 +64,8 @@ namespace SoulHunter.Gameplay.Core
             /// <summary>Stage to jump to mid-run (LevelProgressionManager.StartStage, like the Debug menu); 0 never.</summary>
             public int JumpToStage;
             public float JumpAfterSeconds = 20f;
+            /// <summary>Player level to start at (1 = normal); the level-ups are chosen by the bot as usual.</summary>
+            public int StartLevel = 1;
             public bool QuitWhenDone = true;
         }
 
@@ -135,6 +138,7 @@ namespace SoulHunter.Gameplay.Core
                 SkipAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-skip-after"), NumberStyles.Float, inv, out var skipAfter) ? Mathf.Max(0f, skipAfter) : 10f,
                 JumpToStage = int.TryParse(ArgValue("-sh-autoplay-jump-to"), out var jumpTo) ? Mathf.Clamp(jumpTo, 1, 10) : 0,
                 JumpAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-jump-after"), NumberStyles.Float, inv, out var jumpAfter) ? Mathf.Max(0f, jumpAfter) : 20f,
+                StartLevel = int.TryParse(ArgValue("-sh-autoplay-start-level"), out var startLevel) ? Mathf.Clamp(startLevel, 1, 400) : 1,
             };
             Launch(settings);
         }
@@ -191,6 +195,10 @@ namespace SoulHunter.Gameplay.Core
                 GameSessionManager.Instance.OnVictory += () => Finish("victory");
             }
             _health.OnDamaged += OnHurt;
+
+            // Start at a later player level: grant the XP, and the level-up screens that follow are answered by the bot.
+            while (_experience != null && _experience.CurrentLevel < Config.StartLevel)
+                _experience.AddXP(_experience.XPToNextLevel - _experience.CurrentXP);
 
             _startedAt = Time.realtimeSinceStartup;
             _nextShot = _startedAt + 2f;
