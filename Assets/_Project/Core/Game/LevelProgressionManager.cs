@@ -68,6 +68,11 @@ namespace SoulHunter.Gameplay.Core
             StopAllCoroutines();
         }
 
+        private void OnDestroy()
+        {
+            if (_instance == this) CampaignLevelCatalog.CurrentStage = 0; // no stage bonuses outside a run
+        }
+
         private void Update()
         {
             if (_gameWon || Time.timeScale <= 0f) return;
@@ -92,6 +97,7 @@ namespace SoulHunter.Gameplay.Core
         {
             if (_gameWon) return;
             CurrentStage = Mathf.Clamp(stageNumber, 1, MaxStages);
+            CampaignLevelCatalog.CurrentStage = CurrentStage; // stage bonuses (player speed, gold)
             StageElapsedTime = 0f;
             _lastStageSecond = -1;
             _runDurationReached = false;
@@ -152,11 +158,29 @@ namespace SoulHunter.Gameplay.Core
             if (_stageTransitionQueued || _gameWon) return;
             _stageTransitionQueued = true;
             Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} cleared because {reason}.");
+            GrantStageClearGold();
             WipeArena();
             OnStageCleared?.Invoke(CurrentStage);
 
             if (CurrentStage >= MaxStages) GameWon();
             else StartCoroutine(NextStageRoutine());
+        }
+
+        /// <summary>
+        /// VS wiki (Stages, The_Reaper): surviving a stage to its end pays 500 gold, plus 100 per revival not used.
+        /// Paid through GoldRewards, so Greed and the stage's gold bonus apply.
+        /// </summary>
+        public static int StageClearGold(int unusedRevivals) => 500 + 100 * Mathf.Max(0, unusedRevivals);
+
+        /// <summary>The last stage-clear payment (gold actually given), for the HUD and tests.</summary>
+        public int LastStageClearGold { get; private set; }
+
+        private void GrantStageClearGold()
+        {
+            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+            var stats = player != null ? player.Stats : null;
+            LastStageClearGold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(StageClearGold(stats != null ? stats.Revivals : 0), stats);
+            Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} clear reward: {LastStageClearGold} gold.");
         }
 
         private void WipeArena()

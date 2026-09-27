@@ -37,6 +37,8 @@ namespace SoulHunter.Gameplay.AI
         private int _chestElitesSpawned;
         private System.Collections.Generic.IReadOnlyList<StageEventEntry> _stageEvents;
         private int _nextStageEvent;
+        // VS wave events repeat: (stage time, entry) of each pending firing.
+        private readonly List<(float time, StageEventEntry entry)> _eventFirings = new List<(float, StageEventEntry)>();
         private readonly List<(Vector3 position, Vector3 direction)> _formation = new List<(Vector3 position, Vector3 direction)>();
 
         [Header("Straggler relocation (VS rule)")]
@@ -113,6 +115,7 @@ namespace SoulHunter.Gameplay.AI
             _chestElitesSpawned = 0;
             _stageEvents = _currentWave.GetEvents();
             _nextStageEvent = 0;
+            _eventFirings.Clear();
             // A corridor stage (the Ruined Castle) is walled along world X around where the player stands now.
             StageCorridor.Begin(WaveTables.CorridorHalfWidth(stageNum), _playerTransform != null ? _playerTransform.position.z : 0f);
             int stageIndex = Mathf.Clamp(stageNum - 1, 0, 9);
@@ -155,11 +158,29 @@ namespace SoulHunter.Gameplay.AI
                 _chestElitesSpawned++;
                 SpawnChestElite();
             }
-            if (_isBossAlive) return;
 
             var level = progression.CurrentLevel;
             float bossStartTime = level.BossStartSeconds;
             var phase = _currentWave.GetPhase(_stageTimePassed);
+
+            // VS wave events: on the stage clock, also during a boss fight. Each one can repeat, and each firing
+            // happens with its chance divided by the player's Luck.
+            while (_stageEvents != null && _nextStageEvent < _stageEvents.Count &&
+                   _stageEvents[_nextStageEvent].TimeSeconds <= _stageTimePassed)
+            {
+                var stageEvent = _stageEvents[_nextStageEvent++];
+                for (int r = 0; r < Mathf.Max(1, stageEvent.Repeat); r++)
+                    _eventFirings.Add((stageEvent.TimeSeconds + r * stageEvent.RepeatDelaySeconds, stageEvent));
+            }
+            for (int i = _eventFirings.Count - 1; i >= 0; i--)
+            {
+                if (_eventFirings[i].time > _stageTimePassed) continue;
+                var firing = _eventFirings[i].entry;
+                bool missed = _stageTimePassed - _eventFirings[i].time > 10f; // the clock was skipped past it (Debug)
+                _eventFirings.RemoveAt(i);
+                if (!missed && EventFires(firing.ChancePercent, CurrentLuck(), Random.value)) RunStageEvent(firing, level, phase);
+            }
+            if (_isBossAlive) return;
 
             if (_stageTimePassed >= bossStartTime && !_bossSpawnedForCurrentWave)
             {
@@ -168,14 +189,6 @@ namespace SoulHunter.Gameplay.AI
                 _bossSpawnedForCurrentWave = SpawnBoss(
                     _stageBossPrefab != null ? _stageBossPrefab : (_bossPrefab != null ? _bossPrefab : _stageEnemyPrefab));
                 return;
-            }
-
-            // VS stage events: scripted formations on the stage clock, before the boss.
-            while (_stageEvents != null && _nextStageEvent < _stageEvents.Count &&
-                   _stageEvents[_nextStageEvent].TimeSeconds <= _stageTimePassed)
-            {
-                var stageEvent = _stageEvents[_nextStageEvent++];
-                if (stageEvent.TimeSeconds < bossStartTime) RunStageEvent(stageEvent, level, phase);
             }
 
             if (EnemyController.ActiveEnemies.Count >= _maxAliveEnemies) return;
@@ -459,10 +472,20 @@ namespace SoulHunter.Gameplay.AI
             return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
         }
 
+        /// <summary>The player's Luck (1 = none). VS: Luck lowers the chance of map events.</summary>
+        private float CurrentLuck()
+        {
+            CurrentCurse(); // resolves _playerStats
+            return _playerStats != null ? Mathf.Max(0.01f, _playerStats.Luck) : 1f;
+        }
+
         /// <summary>
-        /// VS pressure plates start a map event on demand: this stage's formation of the given type, with this
-        /// stage's enemies, around the player. Returns the spawned enemies (empty during the boss or a transition).
+        /// VS wiki (Enemies, map events): each firing happens with chance = eventChance / totalLuck; an event with no
+        /// chance (100 here) is guaranteed.
         /// </summary>
+        public static bool EventFires(float chancePercent, float luck, float roll01) =>
+            chancePercent >= 100f || roll01 * 100f < chancePercent / Mathf.Max(0.01f, luck);
+
         /// <summary>VS Pentagram: a chest whose carrier was erased goes to the next ordinary enemy of the horde.</summary>
         private static void GivePendingChest(GameObject enemy)
         {
@@ -476,6 +499,10 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>True for a stage boss spawned by this spawner (QA tools and the autoplay bot).</summary>
         public bool IsBoss(EnemyController enemy) => enemy != null && _bossControllers.Contains(enemy);
 
+        /// <summary>
+        /// VS pressure plates start a map event on demand: this stage's formation of the given type, with this
+        /// stage's enemies, around the player. Returns the spawned enemies (empty during the boss or a transition).
+        /// </summary>
         public List<EnemyController> TriggerStageEvent(StageEventType type, int count)
         {
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;

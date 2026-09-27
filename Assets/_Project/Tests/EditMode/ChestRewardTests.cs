@@ -89,6 +89,43 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EveryChest_HoldsVsGold_ByItsSize()
+        {
+            // VS wiki (Treasure_Chest): 1 item 100-200, 3 items 300-600, 5 items 500-1000 (then Greed).
+            Assert.That(ChestLogicController.ChestGold(1, 0f), Is.EqualTo(100));
+            Assert.That(ChestLogicController.ChestGold(1, 1f), Is.EqualTo(200));
+            Assert.That(ChestLogicController.ChestGold(3, 0.5f), Is.EqualTo(450));
+            Assert.That(ChestLogicController.ChestGold(5, 1f), Is.EqualTo(1000));
+
+            UsePool(UpgradeData.UpgradeType.Spinach, 8);
+            string message = _chest.ProcessChest(_weapons, _levelUps, 1, true, 0f);
+            Assert.That(message, Does.Contain("Gold: +100"), "A chest with an upgrade still pays its gold.");
+        }
+
+        [Test]
+        public void MaxedItems_PayABigCoinBagEach()
+        {
+            // VS Big Coin Bag: 25 gold for each item with nothing left to upgrade, on top of the chest gold.
+            UsePool(UpgradeData.UpgradeType.Spinach, 2);
+            string message = _chest.ProcessChest(_weapons, _levelUps, 5, true, 0f);
+            Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(2));
+            Assert.That(message, Does.Contain("Gold: +575"), "500 chest gold + 3 maxed items x 25.");
+        }
+
+        [TestCase(30f, false)]
+        [TestCase(60f, true)]
+        [TestCase(119f, true)]
+        [TestCase(180f, false)]
+        [TestCase(540f, false)]
+        [TestCase(600f, true)]
+        [TestCase(1740f, true)]
+        public void OnlyChestsFromTenMinutes_AndTheFirstChest_CanEvolve(float stageSeconds, bool canEvolve)
+        {
+            // VS Mad Forest wave table: the 1:00 chest and every chest from 10:00 on can evolve; 3, 5, 7 and 9 cannot.
+            Assert.That(ChestLogicController.CanEvolveAt(stageSeconds), Is.EqualTo(canEvolve));
+        }
+
+        [Test]
         public void OpeningChest_DoesNotTouchLevelUpQueueOrPauseState()
         {
             // Learning Comment: Chest ko level-up queue ya Time.timeScale nahi chhedna chahiye; pause ChestUI sambhalta hai.

@@ -34,6 +34,17 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EventChance_IsDividedByLuck_AndHundredIsGuaranteed()
+        {
+            // VS wiki (Enemies, map events): chance = eventChance / totalLuck; no chance means guaranteed.
+            Assert.That(SoulHunter.Gameplay.AI.EnemySpawner.EventFires(100f, 3f, 0.99f), Is.True);
+            Assert.That(SoulHunter.Gameplay.AI.EnemySpawner.EventFires(80f, 1f, 0.79f), Is.True);
+            Assert.That(SoulHunter.Gameplay.AI.EnemySpawner.EventFires(80f, 1f, 0.81f), Is.False);
+            Assert.That(SoulHunter.Gameplay.AI.EnemySpawner.EventFires(80f, 2f, 0.39f), Is.True, "Luck 2 halves an 80% chance.");
+            Assert.That(SoulHunter.Gameplay.AI.EnemySpawner.EventFires(80f, 2f, 0.41f), Is.False);
+        }
+
+        [Test]
         public void AuthoredEvents_ReplaceTheDefaultsInTimeOrder()
         {
             _wave.Events.Add(new StageEventEntry { TimeSeconds = 90f, Type = StageEventType.Wall, Count = 4 });

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using SoulHunter.Gameplay.Player;
 
@@ -13,17 +14,77 @@ namespace SoulHunter.Gameplay.Pickups
     {
         [SerializeField, Min(1)] private int _value = 1;
 
+        /// <summary>Coins lying on the ground (the Gilded Charm gathers them all).</summary>
+        public static readonly List<GoldPickup> ActiveCoins = new List<GoldPickup>();
+
+        /// <summary>Speed a gathered coin starts flying at, and how fast it speeds up (units/s, units/s^2).</summary>
+        public const float PullStartSpeed = 12f, PullAcceleration = 40f;
+
+        private Transform _pullTarget;
+        private float _pullSpeed;
+
         public int Value
         {
             get => _value;
             set => _value = Mathf.Max(1, value);
         }
 
+        /// <summary>
+        /// VS Gold Fever coin: worth 0.5 gold before Greed (at least 1 after rounding) and extends the fever by only
+        /// 0.01 s. Set after spawning; cleared when the pool reuses the coin.
+        /// </summary>
+        public bool IsFeverCoin { get; set; }
+
+        /// <summary>True while this coin is flying to the player.</summary>
+        public bool IsPulled => _pullTarget != null;
+
+        private void OnEnable()
+        {
+            if (!ActiveCoins.Contains(this)) ActiveCoins.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ActiveCoins.Remove(this);
+        }
+
+        /// <summary>Flies the coin to <paramref name="target"/>, where the normal pickup check collects it.</summary>
+        public void Magnetize(Transform target)
+        {
+            if (_isCollected || target == null) return;
+            _pullTarget = target;
+            _pullSpeed = PullStartSpeed;
+        }
+
+        protected override void Update()
+        {
+            if (_pullTarget != null && !_isCollected)
+            {
+                if (!_pullTarget.gameObject.activeInHierarchy) _pullTarget = null;
+                else
+                {
+                    _pullSpeed += PullAcceleration * Time.deltaTime;
+                    transform.position = Vector3.MoveTowards(transform.position, _pullTarget.position, _pullSpeed * Time.deltaTime);
+                }
+            }
+            base.Update();
+        }
+
+        public override void ResetPickup()
+        {
+            base.ResetPickup();
+            IsFeverCoin = false;
+            _pullTarget = null;
+        }
+
         protected override void OnPickedUp(Collider player)
         {
             var stats = player != null ? player.GetComponentInParent<PlayerStats>() : null;
-            int gained = GoldRewards.Grant(_value, stats);
-            Debug.Log($"[GoldPickup] +{gained} gold");
+            int gained = IsFeverCoin
+                ? GoldRewards.GrantFraction(GoldFever.FeverCoinBaseGold, stats)
+                : GoldRewards.Grant(_value, stats);
+            GoldFever.OnCoinCollected(_value, IsFeverCoin);
+            if (!IsFeverCoin) Debug.Log($"[GoldPickup] +{gained} gold");
 
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFX(audio.GemPickupSound);

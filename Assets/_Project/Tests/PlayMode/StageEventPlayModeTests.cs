@@ -31,10 +31,12 @@ namespace SoulHunter.Tests.PlayMode
             // authors its own events, so read the expected size from the stage's wave instead of the old default 20.
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             var first = GetPrivateField<WaveData>(spawner, "_currentWave").GetEvents()[0];
-            Assert.That(first.TimeSeconds, Is.EqualTo(150f));
+            // VS density (2026-09-27): the first event is at 2:00 and is guaranteed.
+            Assert.That(first.TimeSeconds, Is.EqualTo(120f));
+            Assert.That(first.ChancePercent, Is.EqualTo(100f));
             Assert.That(first.Type, Is.EqualTo(StageEventType.Swarm), "The Cursed Graveyard opens with a swarm.");
-            typeof(LevelProgressionManager).GetProperty("StageElapsedTime").GetSetMethod(true).Invoke(progression, new object[] { 151f });
-            yield return WaitUntilRealtime(() => Fliers() >= fliersBefore + first.Count, "the 2:30 swarm to spawn");
+            typeof(LevelProgressionManager).GetProperty("StageElapsedTime").GetSetMethod(true).Invoke(progression, new object[] { 121f });
+            yield return WaitUntilRealtime(() => Fliers() >= fliersBefore + first.Count, "the 2:00 swarm to spawn");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

@@ -54,14 +54,15 @@ namespace SoulHunter.Gameplay.Pickups
     }
 
     /// <summary>
-    /// VS light-source drop table (vampire.survivors.wiki, Light source; weight, minimum player level), limited to the
-    /// pickups Soul Hunter has: Gold Coin 50, Floor Chicken 12, Coin Bag 10, Vacuum (Magnet) 2 from level 12,
-    /// Orologion (Time Freeze) 2 from level 4, Rich Coin Bag 1 from level 5. Rosary, Nduja and the clovers have no
-    /// Soul Hunter pickup yet and are left out. Coin values 1 / 10 / 100 follow VS (from memory; provisional).
+    /// VS light-source drop table (vampire.survivors.wiki, Light source; weight, minimum player level): Gold Coin 50,
+    /// Floor Chicken 12, Coin Bag 10, Vacuum (Magnet) 2 from level 12, Orologion (Time Freeze) 2 from level 4, Rich Coin
+    /// Bag 1 from level 5, and (2026-09-27) Soul Hunter's own versions of the Rosary, Nduja Fritta Tanto, Little Clover
+    /// and Gilded Clover: Soul Toll (screen wipe) 1 from level 8, Hellfire Breath 1, Luck Charm 1, and Gilded Charm 1 from
+    /// level 30. Rerollo (weight unknown) is left out. Coin values 1 / 10 / 100 follow VS (from memory; provisional).
     /// </summary>
     public static class LightSourceDrops
     {
-        public enum Drop { GoldCoin, Chicken, CoinBag, Magnet, TimeFreeze, RichCoinBag }
+        public enum Drop { GoldCoin, Chicken, CoinBag, Magnet, TimeFreeze, RichCoinBag, ScreenWipe, FireBreath, GildedCharm, LuckCharm }
 
         public const int GoldCoinValue = 1, CoinBagValue = 10, RichCoinBagValue = 100;
 
@@ -69,7 +70,15 @@ namespace SoulHunter.Gameplay.Pickups
         {
             (Drop.GoldCoin, 50, 0), (Drop.Chicken, 12, 0), (Drop.CoinBag, 10, 0),
             (Drop.Magnet, 2, 12), (Drop.TimeFreeze, 2, 4), (Drop.RichCoinBag, 1, 5),
+            (Drop.ScreenWipe, 1, 8), (Drop.FireBreath, 1, 0), (Drop.GildedCharm, 1, 30), (Drop.LuckCharm, 1, 0),
         };
+
+        /// <summary>The table's weight and minimum player level for a drop (for tests and tuning).</summary>
+        public static (int weight, int minLevel) Entry(Drop drop)
+        {
+            foreach (var e in Table) if (e.drop == drop) return (e.weight, e.minLevel);
+            return (0, int.MaxValue);
+        }
 
         /// <summary>The drop for a uniform roll in [0, 1), among the entries the player's level allows.</summary>
         public static Drop Pick(int playerLevel, float roll01)
@@ -102,6 +111,13 @@ namespace SoulHunter.Gameplay.Pickups
 
         public static void Spawn(Drop drop, Vector3 position)
         {
+            switch (drop)
+            {
+                case Drop.ScreenWipe: ExtraPickupPool.Spawn(ExtraPickupPool.Kind.ScreenWipe, position); return;
+                case Drop.FireBreath: ExtraPickupPool.Spawn(ExtraPickupPool.Kind.FireBreath, position); return;
+                case Drop.LuckCharm: ExtraPickupPool.Spawn(ExtraPickupPool.Kind.LuckCharm, position); return;
+                case Drop.GildedCharm: ExtraPickupPool.Spawn(ExtraPickupPool.Kind.GildedCharm, position); return;
+            }
             var pool = PickupPoolManager.Instance;
             if (pool == null) return;
             switch (drop)

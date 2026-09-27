@@ -15,6 +15,17 @@ namespace SoulHunter.Gameplay.Data
         public GameObject RunePlate;
         /// <summary>The Ruined Castle corridor wall module (20 units long), laid by CorridorWalls.</summary>
         public GameObject CastleWall;
+        [UnityEngine.Header("Light-source pickups (placeholder art, ExtraPickupBuilder)")]
+        [UnityEngine.Tooltip("Soul Toll: kills every non-boss enemy on screen (VS screen wipe).")]
+        public GameObject ScreenWipeItem;
+        [UnityEngine.Tooltip("Hellfire Breath: the hero breathes fire for 10 s (VS fire breath).")]
+        public GameObject FireBreathItem;
+        [UnityEngine.Tooltip("Luck Charm: +10% Luck for the run (VS luck pickup).")]
+        public GameObject LuckCharmItem;
+        [UnityEngine.Tooltip("Gilded Charm: gathers all coins and starts a Gold Fever (VS gold pickup).")]
+        public GameObject GildedCharmItem;
+        [UnityEngine.Tooltip("Flame projectile Hellfire Breath fires (the Fire Wand's fireball).")]
+        public GameObject FireBreathProjectile;
         [UnityEngine.Tooltip("Level 3 Wandering Merchant (model, trigger and shop), spawned by CampaignSignatureSystem.")]
         public GameObject WanderingMerchant;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");

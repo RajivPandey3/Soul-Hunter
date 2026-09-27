@@ -125,39 +125,178 @@ MonoBehaviour:
     EliteBonus: 0
   Phases: []
   Events:
-  - TimeSeconds: 150
+  - TimeSeconds: 120
+    Type: 2
+    Count: 17
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+  - TimeSeconds: 180
     Type: 0
+    Count: 17
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 240
+    Type: 1
+    Count: 18
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 300
+    Type: 2
+    Count: 26
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+  - TimeSeconds: 360
+    Type: 0
+    Count: 19
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 420
+    Type: 1
+    Count: 19
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 480
+    Type: 2
+    Count: 20
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 540
+    Type: 0
+    Count: 20
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 600
+    Type: 1
+    Count: 29
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+  - TimeSeconds: 660
+    Type: 2
+    Count: 21
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 720
+    Type: 0
+    Count: 22
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 780
+    Type: 1
+    Count: 22
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 4
+    ChancePercent: 70
+  - TimeSeconds: 840
+    Type: 2
+    Count: 23
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 900
+    Type: 0
+    Count: 31
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+  - TimeSeconds: 960
+    Type: 1
     Count: 24
     Speed: 1
-  - TimeSeconds: 300
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 1020
+    Type: 2
+    Count: 24
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 4
+    ChancePercent: 70
+  - TimeSeconds: 1080
+    Type: 0
+    Count: 25
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 1200
+    Type: 2
+    Count: 26
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 3
+    ChancePercent: 100
+  - TimeSeconds: 1320
     Type: 1
+    Count: 27
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 4
+    ChancePercent: 70
+  - TimeSeconds: 1440
+    Type: 0
     Count: 28
     Speed: 1
-  - TimeSeconds: 450
-    Type: 2
-    Count: 32
-    Speed: 1
-  - TimeSeconds: 600
-    Type: 0
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 1500
+    Type: 1
     Count: 36
     Speed: 1
-  - TimeSeconds: 750
-    Type: 1
-    Count: 40
-    Speed: 1
-  - TimeSeconds: 900
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+  - TimeSeconds: 1560
     Type: 2
-    Count: 44
+    Count: 29
     Speed: 1
-  - TimeSeconds: 1050
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 1620
     Type: 0
-    Count: 48
+    Count: 28
     Speed: 1
-  - TimeSeconds: 1200
+    Repeat: 6
+    RepeatDelaySeconds: 3
+    ChancePercent: 100
+  - TimeSeconds: 1680
     Type: 1
-    Count: 52
+    Count: 30
     Speed: 1
-  - TimeSeconds: 1350
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+  - TimeSeconds: 1740
     Type: 2
-    Count: 56
+    Count: 30
     Speed: 1
+    Repeat: 6
+    RepeatDelaySeconds: 3
+    ChancePercent: 100

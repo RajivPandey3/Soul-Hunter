@@ -52,12 +52,18 @@ namespace SoulHunter.Gameplay.Data
     [System.Serializable]
     public sealed class StageEventEntry
     {
-        [Tooltip("Stage time (seconds) when the event starts. Events at or after the boss time never run.")]
+        [Tooltip("Stage time (seconds) when the event starts. Events run during the boss fight too (VS).")]
         public float TimeSeconds;
         public StageEventType Type;
         [Min(1)] public int Count = 16;
         [Tooltip("Flight speed relative to the default event speed (1 = 1.5x the enemy's speed). VS swarms are fast.")]
         [Min(0.2f)] public float Speed = 1f;
+        [Tooltip("VS wave events: how many times the event fires in a row (1 = once).")]
+        [Min(1)] public int Repeat = 1;
+        [Tooltip("VS wave events: seconds between repeats.")]
+        [Min(0.1f)] public float RepeatDelaySeconds = 5f;
+        [Tooltip("VS wave events: % chance each time it fires (100 = always); divided by the player's Luck.")]
+        [Range(0f, 100f)] public float ChancePercent = 100f;
     }
 
     /// <summary>

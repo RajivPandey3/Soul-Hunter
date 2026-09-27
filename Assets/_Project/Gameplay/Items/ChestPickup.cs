@@ -13,6 +13,9 @@ namespace SoulHunter.Gameplay.Pickups
         [SerializeField] private LayerMask _playerLayer;
         private bool _isCollected = false;
 
+        /// <summary>VS: only chests from bosses at 10:00 or later (and the 1:00 chest) can evolve a weapon. Set when dropped.</summary>
+        public bool CanEvolve = true;
+
         private readonly Collider[] _playerHits = new Collider[1];
 
         private void Update()
@@ -46,7 +49,7 @@ namespace SoulHunter.Gameplay.Pickups
             string rewardMessage = "";
             if (_logicController != null)
             {
-                rewardMessage = _logicController.ProcessChest(); // UI bypass / Backend processing
+                rewardMessage = _logicController.ProcessChest(CanEvolve); // UI bypass / Backend processing
             }
             else
             {
@@ -65,6 +68,7 @@ namespace SoulHunter.Gameplay.Pickups
         public void ResetPickup()
         {
             _isCollected = false;
+            CanEvolve = true;
         }
     }
 }

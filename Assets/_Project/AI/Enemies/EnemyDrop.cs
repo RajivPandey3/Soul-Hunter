@@ -80,11 +80,18 @@ namespace SoulHunter.Gameplay.AI
                 return;
             }
 
+            // VS Gold Fever (Gilded Charm): while it runs, each kill has a 75% chance to drop a fever coin.
+            SoulHunter.Gameplay.Pickups.GoldFever.OnEnemyKilled(transform.position);
+
             if (DropsChest || _dropsChestThisLife)
             {
                 if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                 {
-                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChest(transform.position);
+                    var chest = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChest(transform.position);
+                    var chestPickup = chest != null ? chest.GetComponent<SoulHunter.Gameplay.Pickups.ChestPickup>() : null;
+                    var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+                    if (chestPickup != null && progression != null)
+                        chestPickup.CanEvolve = SoulHunter.Gameplay.Core.ChestLogicController.CanEvolveAt(progression.StageElapsedTime);
                     // Owner's story (2026-09-27): Kael harvests souls, so a boss or chest elite also leaves its big
                     // soul gem (EnemyData.ExperienceValue: 50 elite, 250 boss), set a little aside from the chest.
                     SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position + new Vector3(-1.2f, 0f, 0f), GemValue);

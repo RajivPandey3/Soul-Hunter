@@ -14,21 +14,24 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void DropTable_FollowsTheVsWeights_AndLevelGates()
         {
-            // Level 1: coin 50, chicken 12, coin bag 10 (the level-gated entries are out).
-            Assert.That(LightSourceDrops.Chance(Drop.GoldCoin, 1), Is.EqualTo(50f / 72f).Within(1e-4));
-            Assert.That(LightSourceDrops.Chance(Drop.Chicken, 1), Is.EqualTo(12f / 72f).Within(1e-4));
+            // Level 1: coin 50, chicken 12, coin bag 10, Hellfire Breath 1, Luck Charm 1 (the level-gated entries are out).
+            Assert.That(LightSourceDrops.Chance(Drop.GoldCoin, 1), Is.EqualTo(50f / 74f).Within(1e-4));
+            Assert.That(LightSourceDrops.Chance(Drop.Chicken, 1), Is.EqualTo(12f / 74f).Within(1e-4));
             Assert.That(LightSourceDrops.Chance(Drop.TimeFreeze, 3), Is.EqualTo(0f));
             Assert.That(LightSourceDrops.Chance(Drop.TimeFreeze, 4), Is.GreaterThan(0f), "Orologion from level 4.");
             Assert.That(LightSourceDrops.Chance(Drop.RichCoinBag, 5), Is.GreaterThan(0f), "Rich Coin Bag from level 5.");
             Assert.That(LightSourceDrops.Chance(Drop.Magnet, 11), Is.EqualTo(0f));
-            Assert.That(LightSourceDrops.Chance(Drop.Magnet, 12), Is.EqualTo(2f / 77f).Within(1e-4), "Vacuum from level 12.");
+            // Level 12: 74 + Orologion 2 + Rich Coin Bag 1 + Soul Toll 1 + Vacuum 2 = 80.
+            Assert.That(LightSourceDrops.Chance(Drop.Magnet, 12), Is.EqualTo(2f / 80f).Within(1e-4), "Vacuum from level 12.");
 
             // Pick walks the weights in order.
             Assert.That(LightSourceDrops.Pick(1, 0f), Is.EqualTo(Drop.GoldCoin));
-            Assert.That(LightSourceDrops.Pick(1, 49.9f / 72f), Is.EqualTo(Drop.GoldCoin));
-            Assert.That(LightSourceDrops.Pick(1, 50.1f / 72f), Is.EqualTo(Drop.Chicken));
-            Assert.That(LightSourceDrops.Pick(1, 0.9999f), Is.EqualTo(Drop.CoinBag));
-            Assert.That(LightSourceDrops.Pick(30, 0.9999f), Is.EqualTo(Drop.RichCoinBag));
+            Assert.That(LightSourceDrops.Pick(1, 49.9f / 74f), Is.EqualTo(Drop.GoldCoin));
+            Assert.That(LightSourceDrops.Pick(1, 50.1f / 74f), Is.EqualTo(Drop.Chicken));
+            Assert.That(LightSourceDrops.Pick(1, 71.9f / 74f), Is.EqualTo(Drop.CoinBag));
+            Assert.That(LightSourceDrops.Pick(1, 0.9999f), Is.EqualTo(Drop.LuckCharm));
+            // Level 30 (all 81): ... Rich Coin Bag ends at 77.
+            Assert.That(LightSourceDrops.Pick(30, 76.5f / 81f), Is.EqualTo(Drop.RichCoinBag));
         }
 
         [Test]

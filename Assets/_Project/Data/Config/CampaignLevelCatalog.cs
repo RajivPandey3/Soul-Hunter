@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace SoulHunter.Gameplay.Data
 {
@@ -29,6 +30,11 @@ namespace SoulHunter.Gameplay.Data
         public readonly float BossStartSeconds;
         public readonly CampaignSignature Signature;
         public readonly string ShowcaseSceneName;
+
+        /// <summary>VS stage bonus: the player's move speed on this stage (CampaignLevelCatalog.StageBonuses).</summary>
+        public float PlayerSpeedMultiplier => CampaignLevelCatalog.PlayerSpeedFor(Number);
+        /// <summary>VS stage bonus: gold from pickups and chests on this stage, on top of Greed.</summary>
+        public float GoldMultiplier => CampaignLevelCatalog.GoldFor(Number);
 
         public CampaignLevelDefinition(int number, string name, string narrative, string modifier,
             CampaignSignature signature, string showcaseSceneName,
@@ -66,6 +72,23 @@ namespace SoulHunter.Gameplay.Data
         };
 
         public static int Count => Levels.Length;
+
+        // VS stage bonuses (vampire.survivors.wiki/w/Stages, fetched 2026-09-27): every stage has its own player move
+        // speed and gold multipliers, growing along the stage list (Mad Forest x1.1 speed; Inlaid Library x1.25;
+        // Dairy Plant x1.25 and x1.2 gold; Gallo Tower x1.3 gold; Cappella Magna x1.4 both; the DLC stages x1.4 and
+        // x1.5 gold). Soul Hunter's ten stages follow that climb, in story order. Provisional balance values.
+        private static readonly float[] PlayerSpeedBonus = { 1.10f, 1.25f, 1.25f, 1.25f, 1.40f, 1.40f, 1.40f, 1.40f, 1.40f, 1.40f };
+        private static readonly float[] GoldBonus = { 1.00f, 1.00f, 1.20f, 1.30f, 1.40f, 1.50f, 1.50f, 1.50f, 1.50f, 1.50f };
+
+        public static float PlayerSpeedFor(int stage) => PlayerSpeedBonus[Mathf.Clamp(stage, 1, PlayerSpeedBonus.Length) - 1];
+        public static float GoldFor(int stage) => GoldBonus[Mathf.Clamp(stage, 1, GoldBonus.Length) - 1];
+
+        /// <summary>The bonuses of the stage being played, or none outside a run (menus, EditMode tests).</summary>
+        public static float CurrentPlayerSpeed => CurrentStage > 0 ? PlayerSpeedFor(CurrentStage) : 1f;
+        public static float CurrentGold => CurrentStage > 0 ? GoldFor(CurrentStage) : 1f;
+
+        /// <summary>Set by LevelProgressionManager when a stage starts; 0 outside a run.</summary>
+        public static int CurrentStage { get; set; }
 
         public static CampaignLevelDefinition Get(int stage)
         {

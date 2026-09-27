@@ -41,7 +41,8 @@ namespace SoulHunter.Gameplay.Player
             get
             {
                 if (_stats == null) _stats = GetComponent<PlayerStats>();
-                float speed = _moveSpeed * (_stats != null ? _stats.MoveSpeedMultiplier : 1f) * _campaignMovementMultiplier;
+                float speed = _moveSpeed * (_stats != null ? _stats.MoveSpeedMultiplier : 1f) * _campaignMovementMultiplier
+                              * SoulHunter.Gameplay.Data.CampaignLevelCatalog.CurrentPlayerSpeed; // VS stage bonus
                 if (_stats != null && _stats.LowHealthSpeedBonus > 0f)
                 {
                     if (_health == null) _health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();

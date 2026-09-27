@@ -40,7 +40,22 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(l10.Select(e => e.Type).Distinct().Count(), Is.EqualTo(3), "L10: everything.");
             Assert.That(l10.Count, Is.GreaterThan(WaveTables.Events(9).Count), "L10: the busiest schedule.");
             for (int stage = 1; stage <= 10; stage++)
-                Assert.That(WaveTables.Events(stage).All(e => e.TimeSeconds < 1500f), Is.True, $"Stage {stage}: before the boss.");
+                Assert.That(WaveTables.Events(stage).All(e => e.TimeSeconds < 1800f), Is.True, $"Stage {stage}: within the 30 minutes.");
+        }
+
+        [Test]
+        public void Events_AreVsDense_WithRepeatsAndChances()
+        {
+            // VS (Mad Forest wave table): events most minutes from 2:00, rings/walls at 5, 10, 15, 25, and guaranteed
+            // repeated swarms at 27 and 29 (after the 25:00 boss). Chance is divided by Luck.
+            for (int stage = 1; stage <= 10; stage++)
+            {
+                var events = WaveTables.Events(stage);
+                Assert.That(events.Count, Is.GreaterThanOrEqualTo(15), $"Stage {stage}: an event most minutes.");
+                Assert.That(events.Select(e => e.TimeSeconds).Min(), Is.EqualTo(120f), $"Stage {stage}: the first at 2:00.");
+                Assert.That(events.Any(e => e.TimeSeconds == 1620f && e.Repeat > 1 && e.ChancePercent >= 100f), Is.True, $"Stage {stage}: 27:00.");
+                Assert.That(events.Any(e => e.ChancePercent < 100f), Is.True, $"Stage {stage}: some events are a chance.");
+            }
         }
 
         [Test]
@@ -57,6 +72,8 @@ namespace SoulHunter.Tests.EditMode
                     Assert.That(wave.Events[e].Type, Is.EqualTo(expected[e].Type));
                     Assert.That(wave.Events[e].TimeSeconds, Is.EqualTo(expected[e].TimeSeconds));
                     Assert.That(wave.Events[e].Speed, Is.EqualTo(expected[e].Speed).Within(1e-4));
+                    Assert.That(wave.Events[e].Repeat, Is.EqualTo(expected[e].Repeat));
+                    Assert.That(wave.Events[e].ChancePercent, Is.EqualTo(expected[e].ChancePercent).Within(1e-4));
                 }
             }
         }

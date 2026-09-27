@@ -59,33 +59,57 @@ namespace SoulHunter.Gameplay.Data
         /// <summary>Share of spawns kept to the stage's sides: all of them in a corridor (VS: only from the ends).</summary>
         public static float SideBiasFor(int stage) => CorridorHalfWidth(stage) > 0f ? 1f : 0.8f;
 
-        /// <summary>Each stage's scripted formations (between the 5-minute chest elites, before the boss). Provisional.</summary>
+        /// <summary>
+        /// Each stage's map events over its 30 minutes, VS-dense (vampire.survivors.wiki/w/Mad_Forest and /w/Enemies:
+        /// swarms most minutes from 2:00 to 12:00 with an 80% chance and repeats, a ring or wall at 5, 10, 15 and 25,
+        /// occasional events mid-stage, heavy repeated swarms at 20, 27 and 29; each chance is divided by Luck).
+        /// The kinds per stage follow the owner-approved table (2026-09-26). Counts and chances are provisional.
+        /// </summary>
         public static List<StageEventEntry> Events(int stage)
         {
             stage = Mathf.Clamp(stage, 1, 10);
             StageEventType S = StageEventType.Swarm, W = StageEventType.Wall, R = StageEventType.ClosingRing;
-            StageEventType[] kinds;
+            StageEventType small, big;
             float speed = 1f;
+            int baseCount = 12;
             switch (stage)
             {
-                case 1: kinds = new[] { S, S, S, S, S }; break;
-                case 2: kinds = new[] { R, S, R, R, R }; break;
-                case 3: kinds = new[] { W, W, S, W, W }; break;
-                case 4: kinds = new[] { W, W, W, W, W }; break;
-                case 5: kinds = new[] { S, S, S, S, S }; speed = 1.8f; break; // fast straight swarms
-                case 6: kinds = new[] { S, S, W, S, S }; break;
-                case 7: kinds = new[] { S, S, S, R, S }; break;               // ghost swarms
-                case 8: kinds = new[] { R, R, R, R, R }; break;               // elite rings
-                case 9: kinds = new[] { W, R, W, R, W }; break;
-                default: kinds = new[] { S, W, R, S, W, R, S, W, R }; break;  // L10: everything, every 2.5 minutes
+                case 1: small = S; big = S; break;                            // swarms
+                case 2: small = R; big = R; break;                            // mostly closing rings
+                case 3: small = W; big = S; break;                            // mostly walls
+                case 4: small = W; big = W; break;                            // corridor walls
+                case 5: small = S; big = S; speed = 1.8f; break;              // fast straight swarms
+                case 6: small = S; big = W; break;                            // mostly swarms
+                case 7: small = S; big = R; break;                            // (ghost) swarms
+                case 8: small = R; big = R; baseCount = 6; break;             // elite rings
+                case 9: small = W; big = R; break;                            // walls and rings
+                default: small = S; big = R; baseCount = 16; break;          // L10: everything
             }
             var events = new List<StageEventEntry>();
-            float spacing = stage == 10 ? 150f : 300f;
-            for (int i = 0; i < kinds.Length; i++)
+            void Add(int minute, StageEventType type, int count, float chance, int repeat, float delay)
             {
-                int count = (stage == 8 ? 10 : 16) + 4 * i + (stage == 10 ? 8 : 0);
-                events.Add(new StageEventEntry { TimeSeconds = 150f + spacing * i, Type = kinds[i], Count = count, Speed = speed });
+                if (stage == 10) type = (StageEventType)(minute % 3); // L10 cycles Swarm, Wall, ClosingRing
+                else if (stage == 9 && type == small) type = minute % 2 == 0 ? W : R; // L9 alternates
+                else if (stage == 2 && type == small && minute % 4 == 0) type = S; // a few swarms among the rings
+                events.Add(new StageEventEntry
+                {
+                    TimeSeconds = minute * 60f, Type = type, Count = count, Speed = speed,
+                    ChancePercent = chance, Repeat = repeat, RepeatDelaySeconds = delay,
+                });
             }
+            foreach (int m in new[] { 2, 3, 4, 6, 7, 8, 9, 11, 12 })
+                Add(m, small, baseCount + m / 2, m == 2 ? 100f : 80f, 2, 5f);   // VS: most early minutes, 80%, twice
+            foreach (int m in new[] { 5, 10, 15, 25 })
+                Add(m, big, baseCount + 8 + m / 2, 100f, 1, 5f);                // VS: the wall/ring minutes
+            foreach (int m in new[] { 13, 17, 22 })
+                Add(m, small, baseCount + m / 2, 70f, 3, 4f);                   // occasional mid-stage events
+            Add(20, small, baseCount + 10, 100f, 5, 3f);                        // VS: heavy at 20
+            Add(27, small, baseCount + 12, 100f, 6, 3f);                        // VS: guaranteed, repeated, at 27 and 29
+            Add(29, small, baseCount + 14, 100f, 6, 3f);
+            if (stage == 10)                                                    // L10: the busiest schedule
+                foreach (int m in new[] { 14, 16, 18, 24, 26, 28 })
+                    Add(m, small, baseCount + m / 2, 80f, 2, 5f);
+            events.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
             return events;
         }
 

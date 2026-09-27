@@ -403,6 +403,49 @@ Seen, not changed: in the earlier editor play `autoplay-editor-25` (Stage 4 jump
 
 Not yet played by the owner.
 
+### VS stage rules A to Z (owner request, 2026-09-27)
+
+Owner: "ALL STAGE KE BARE MEIN A TO Z PATA KARO ... OR APPLY KARO", then "complete the table" and "extra feature also continue".
+
+Research from vampire.survivors.wiki, fetched 2026-09-27; raw pages are in the session scratchpad under `vs/stages/`:
+- the stage system (time limit, stage bonuses, waves, the 300 enemy cap, map events, modes);
+- 16 stages, stage by stage;
+- chests, pickups, light sources and the level-up screen.
+
+Applied from the gap table (the "extra" features are listed at the end):
+1. **Chests** (`ChestLogicController`):
+   - Every chest pays VS gold on top of its items: 1 item 100–200, 3 items 300–600, 5 items 500–1000, then Greed. Before, only an empty chest paid a flat 100.
+   - An item with nothing left to upgrade pays 25 gold (Big Coin Bag).
+   - At most one evolution per chest. Only chests dropped at 10:00 or later, or at 1:00, can evolve (VS Mad Forest evo flags; `CanEvolveAt`, `ChestPickup.CanEvolve`, set by `EnemyDrop`).
+   - Not tested: one evolution per chest, and a chest from before 10:00 not evolving, need a full evolution setup. Covered by code review and editor play.
+2. **Stage bonuses** (`CampaignLevelCatalog.PlayerSpeedFor` / `GoldFor`, applied in `PlayerController.MoveSpeed` and `GoldRewards.ApplyGreed`):
+   - Player speed per stage: ×1.10, 1.25, 1.25, 1.25, 1.40 … 1.40.
+   - Gold per stage: ×1.0, 1.0, 1.2, 1.3, 1.4, 1.5 … 1.5.
+   - This follows the VS stage list (Mad Forest ×1.1 speed … Cappella Magna ×1.4, DLC stages ×1.5 gold). Values are provisional.
+   - Minutes 25–29 keep minute 24's peak wave (VS keeps 100–300 there).
+3. **Map events, VS-dense** (`WaveTables.Events`, `StageEventEntry.Repeat` / `RepeatDelaySeconds` / `ChancePercent`, `EnemySpawner.EventFires`):
+   - Most minutes from 2:00 to 12:00: 80% chance, fired twice.
+   - A ring or wall at 5, 10, 15 and 25.
+   - 70% chance with repeats at 13, 17 and 22.
+   - Guaranteed repeated swarms at 20, 27 and 29.
+   - The chance is divided by Luck, and 100% means guaranteed.
+   - Kinds per stage keep the approved table. Events now also run during a boss fight.
+   - Firings the Debug clock skipped more than 10 s past are dropped.
+   - The 10 stage wave assets were rebuilt with `WaveTableBuilder`.
+4. **New light-source pickups** (VS Rosary, Nduja Fritta Tanto, Little Clover and Gilded Clover, with the VS weights and levels, in `LightSourceDrops`). Soul Hunter names are provisional:
+   - **Soul Toll** (weight 1, from level 8): kills every enemy on screen; stage bosses are immune. Normal drops (`ScreenWipePickup`).
+   - **Hellfire Breath** (weight 1): a temporary weapon (`FireBreath`) for 10 s × Duration, not a weapon slot, and not copied by Shadow Kael.
+     - Every 0.5 s it fires 12 (+ Amount) piercing flames, 30 × Might damage each, in a 30° cone at the nearest enemy.
+     - The flames deal Magic damage like the Fire Wand, so they hurt Level 7 ghosts.
+     - Speed 9 and the 30° cone are Soul Hunter's own numbers; VS gives only "speed 300%".
+   - **Luck Charm** (weight 1): +10% Luck for the run.
+   - **Gilded Charm** (weight 1, from level 30): pulls every coin on the ground to the player and starts a 10 s Gold Fever (`GoldFever`).
+     - During the fever, each kill has a 75% chance to drop a coin worth 0.5 × Greed (at least 1).
+     - Picking up a coin, coin bag or rich coin bag adds 0.5, 5 or 10 s, capped at 10 s.
+   - The models are placeholder primitives from `ExtraPickupBuilder` (menu Soul Hunter/Content/Build Extra Pickups): `Assets/Prefabs/Items/SH10_Pickup_*.prefab`, referenced in `GameContentCatalog`. **Not owner-approved art.**
+   - Not mapped: Luck raising rare light-source drops (no formula on the wiki); Orologion slowing the fever.
+5. **Stage clear gold** (`LevelProgressionManager.StageClearGold`): 500 gold, plus 100 per unused revival, when a stage is cleared at 30:00 (or the final boss dies). Greed and the stage gold bonus apply.
+
 ### Balance pass, Part 1: weapons on VS numbers (owner request, 2026-09-27)
 
 Owner: "balance pass shuru karo". Balance follows the VS rules plus the owner's story; the planned parts are:
