@@ -15,6 +15,9 @@ namespace SoulHunter.Gameplay.Data
             "His obsession with harvesting souls corrupted him entirely, trapping him in purgatory. " +
             "The final boss is his own shadow. To free his daughter's soul, he must destroy himself.";
 
+        /// <summary>The last sentence of the twist, shown when Shadow Kael is destroyed and the run is won.</summary>
+        public const string FinalLine = "To free his daughter's soul, he must destroy himself.";
+
         /// <summary>The story told when <paramref name="stage"/> starts.</summary>
         public static string CardText(int stage)
         {

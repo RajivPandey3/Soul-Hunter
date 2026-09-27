@@ -68,7 +68,8 @@ namespace SoulHunter.Gameplay.UI
                     if (label != _survivalTimeText && label.text.Trim().ToUpperInvariant().Contains("GAME OVER"))
                         label.text = "PACT COMPLETE";
             if (_survivalTimeText != null)
-                _survivalTimeText.text = "<b>ALL TEN STAGES SURVIVED</b>\nThe pact has reached its end.\n\n" + _survivalTimeText.text;
+                // The owner's story, word for word (Docs/Game_Design_Document.md): the run is won by destroying Shadow Kael.
+                _survivalTimeText.text = "<b>SHADOW KAEL DESTROYED</b>\n" + SoulHunter.Gameplay.Data.CampaignStory.FinalLine + "\n\n" + _survivalTimeText.text;
         }
 
         private void ShowGameOverScreen()

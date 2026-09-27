@@ -181,6 +181,14 @@ namespace SoulHunter.Gameplay.Core
 
         private void CompleteStageAfterSurvival()
         {
+            // The owner's story (Docs/Game_Design_Document.md, Level 10 and the twist): "To free his daughter's soul,
+            // he must destroy himself." Owner, 2026-09-27: the final stage is not survived; it ends only when Shadow
+            // Kael is destroyed (ReportBossDefeated). The Soul Core has no time limit.
+            if (CurrentStage >= MaxStages)
+            {
+                Debug.Log("[LevelProgressionManager] The Soul Core has no time limit: Kael must destroy his shadow.");
+                return;
+            }
             CompleteStage("it was survived for the full 30 minutes");
         }
 

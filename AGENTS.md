@@ -201,7 +201,16 @@ Owner decision (2026-09-24): one run plays through all 10 levels in order. This 
   - My first list (1, 5, 10, 11, 15, 18, 20, 21, 29) came from a summarised page fetch and missed rows. The raw wave table gives the list above; the owner chose "the VS minutes", so the corrected list follows that choice.
 - A 10-stage run is now about 5 hours.
 
-Seen, not changed: Stage 10 at 30:00 with Shadow Kael still alive also wins the run (the survival limit completes the last stage). The story says Kael "must destroy himself", so this may need an owner decision.
+**The ending (owner, 2026-09-27: "study the full story then finalize the death").** The story says: "The final boss is his own shadow. To free his daughter's soul, he must destroy himself." So:
+- Level 10 (The Soul Core) has no time limit. 30:00 no longer wins. Only destroying Shadow Kael ends it (`LevelProgressionManager.CompleteStageAfterSurvival` skips the last stage). In Endless mode, his death starts the next cycle.
+- The victory screen reads "SHADOW KAEL DESTROYED" with the twist's own last sentence (`CampaignStory.FinalLine`). It said "ALL TEN STAGES SURVIVED / The pact has reached its end.", which was not the owner's story.
+- Tests: `RunModeTests` (T: 30:00 on Level 10 neither wins nor starts a new cycle; the boss kill does) and `CampaignStoryTests` (T: the line is the GDD's).
+- EditMode 399/399, PlayMode 147/147, save untouched (`D:\SoulHunter-Validationun-20260927-ending\`).
+- Editor play `autoplay-editor-41`: Level 1, then a jump to Level 10 and a clock skip to 29:50; god mode, 0 errors, min 57 FPS.
+  - After 30:00 the run went on at Level 10 ("The Soul Core has no time limit").
+  - Shadow Kael (4,500 health) copied the player's 6 weapons.
+  - The level-10 bot did not kill him in 3 minutes, so the victory screen was not seen in play; it is covered by tests only.
+- Not yet played by the owner.
 
 Do not split the campaign into separate per-level runs or add a Reaper-style run end without a new owner decision.
 

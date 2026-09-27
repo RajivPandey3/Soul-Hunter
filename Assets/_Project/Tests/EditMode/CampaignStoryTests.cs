@@ -31,6 +31,7 @@ namespace SoulHunter.Tests.EditMode
             string gdd = Gdd();
             StringAssert.Contains($"* **The Goal:** {CampaignStory.Premise}", gdd);
             StringAssert.Contains($"* **The Twist (Level 10):** {CampaignStory.Twist}", gdd);
+            StringAssert.EndsWith(CampaignStory.FinalLine, CampaignStory.Twist, "The victory line is the twist's own last sentence.");
         }
 
         [Test]

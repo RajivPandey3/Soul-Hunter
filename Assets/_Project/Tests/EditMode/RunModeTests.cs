@@ -142,8 +142,12 @@ namespace SoulHunter.Tests.EditMode
             progression.OnGameWon += () => won = true;
             progression.StartStage(10);
 
+            // The owner's story: the Soul Core is not survived; only destroying Shadow Kael ends it.
             SurviveThirtyMinutes(progression);
+            Assert.That(won, Is.False, "30:00 on Level 10 does not win.");
+            Assert.That(progression.IsStageTransitioning, Is.False);
 
+            progression.ReportBossDefeated();
             Assert.That(won, Is.True);
             Assert.That(LevelProgressionManager.StageAfter(10), Is.EqualTo(0));
         }
@@ -158,6 +162,8 @@ namespace SoulHunter.Tests.EditMode
             progression.StartStage(10);
 
             SurviveThirtyMinutes(progression);
+            Assert.That(RunModes.EndlessCycle, Is.EqualTo(0), "30:00 on Level 10 never ends it; Shadow Kael must die.");
+            progression.ReportBossDefeated();
 
             Assert.That(won, Is.False, "Endless: Level 10 does not end the run.");
             Assert.That(RunModes.EndlessCycle, Is.EqualTo(1));
