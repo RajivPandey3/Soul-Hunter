@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentLevel: 1
-  DamageAmount: 10
-  AttackCooldown: 1.5
+  DamageAmount: 5
+  AttackCooldown: 1.4
   BulletPrefab: {fileID: 2259916499533006485, guid: 9dfa83e4803ac2b46b920fe47acb8d5b, type: 3}
   ShootCorners: 1
 --- !u!1001 &7876297237528370866

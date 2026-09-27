@@ -13,6 +13,18 @@ namespace SoulHunter.Gameplay.Combat
 
         public override void LevelUp() {}
 
+        // VS wiki (Death Spiral): 60 damage, 4 s, 9 scythes, pierce effectively unlimited. Evolutions do not level.
+        public const float BaseDamage = 60f;
+        public const float BaseCooldown = 4f;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            // Damage and cooldown live in the base fields so Shadow Kael's mirroring can scale them.
+            DamageAmount = BaseDamage;
+            AttackCooldown = BaseCooldown;
+        }
+
         // VS: Death Spiral scythes pass through every enemy in their path.
         private const int UnlimitedPierce = 9999;
 
@@ -39,7 +51,7 @@ namespace SoulHunter.Gameplay.Combat
                 var proj = scythe.GetComponent<Projectile>();
                 if (proj == null) proj = scythe.AddComponent<Projectile>();
                 // Pierces everything
-                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(60f), 6f, pierce: UnlimitedPierce);
+                proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(DamageAmount), 6f, pierce: UnlimitedPierce);
                 proj.AddBounces(ExtraBounces);
                 
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();

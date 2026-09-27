@@ -49,9 +49,9 @@ MonoBehaviour:
   DamageAmount: 10
   AttackCooldown: 1.5
   _axePrefab: {fileID: 3781992811130695033, guid: 2c3769a94b901544cab38fba46c14cec, type: 3}
-  _cooldown: 2
+  _cooldown: 4
   _groundSpeed: 12
-  _damage: 25
+  _damage: 20
 --- !u!1001 &7363985253211550730
 PrefabInstance:
   m_ObjectHideFlags: 0

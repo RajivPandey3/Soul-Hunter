@@ -10,13 +10,29 @@ namespace SoulHunter.Gameplay.Combat
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         public GameObject PentagramVFXPrefab; 
         
-        private float _chanceToKeepGems = 0.1f; // Lv 1: deletes everything, barely keeps gems
+        // VS wiki (Pentagram): 90 s cooldown, 10% chance not to erase an enemy's drops. Levels: L2 CD -10; L3 25%;
+        // L4 CD -10; L5 45%; L6 CD -5; L7 65%; L8 CD -5.
+        public const float VsCooldown = 90f;
+        public const float VsKeepChance = 0.1f;
+
+        // Base chance at level 1; level-ups add on top (tests set it to 0 to erase every drop).
+        private float _chanceToKeepGems = VsKeepChance;
+
+        public override int MaxLevel => 8;
+        private int Level => Mathf.Clamp(CurrentLevel, 1, 8);
+        public float CooldownForLevel => VsCooldown - (Level >= 2 ? 10f : 0f) - (Level >= 4 ? 10f : 0f) - (Level >= 6 ? 5f : 0f) - (Level >= 8 ? 5f : 0f);
+        public float KeepChance => _chanceToKeepGems + (Level >= 7 ? 0.55f : Level >= 5 ? 0.35f : Level >= 3 ? 0.15f : 0f);
+
+        protected override void Awake()
+        {
+            base.Awake();
+            AttackCooldown = CooldownForLevel;
+        }
 
         public override void LevelUp()
         {
-            CurrentLevel++;
-            AttackCooldown -= 5f; // Faster cooldown
-            _chanceToKeepGems += 0.1f; // Higher chance to keep items
+            CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1);
+            AttackCooldown = CooldownForLevel;
         }
 
         protected override void Attack()
@@ -52,7 +68,7 @@ namespace SoulHunter.Gameplay.Combat
                 // VS: the 25-minute stage bosses are immune to Pentagram's instant kill.
                 if (enemy.IsStageBoss) continue;
                 // Check chance to leave gem
-                bool keepDrop = Random.value <= _chanceToKeepGems;
+                bool keepDrop = Random.value < KeepChance;
                 if (!keepDrop)
                 {
                     // Erase the drops of this life only. Disabling the component (as before) also stopped the kill

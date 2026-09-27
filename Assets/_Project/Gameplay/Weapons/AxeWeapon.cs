@@ -7,7 +7,8 @@ namespace SoulHunter.Gameplay.Weapons
     /// Learning Comment:
     /// VS = SH Rule: Axe weapon umeed se uthta hai (Parabola arc) aur wapas neeche girti hai.
     /// Ye script simply ek Axe Projectile banati hai aur usay upar ki taraf dhakka (force) deti hai.
-    /// Level table (1-8): L2/L5 ek aur axe, L3/L6/L8 damage, L4/L7 area.
+    /// Level table (1-8): L2/L5 ek aur axe, L3/L6/L8 damage, L4/L7 pierce.
+    /// VS wiki (Axe): 20 damage, 4 s, 1 axe, pierce 3; L2/L5 +1 axe; L3/L6/L8 +20 damage; L4/L7 pierce +2.
     /// </summary>
     public class AxeWeapon : AutoAttackWeapon
     {
@@ -17,18 +18,21 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private GameObject _axePrefab;
 
         [Tooltip("Kitni der baad agla axe fainka jayega")]
-        [SerializeField] private float _cooldown = 2f;
+        [SerializeField] private float _cooldown = 4f;
 
         [Tooltip("Ground speed of a thrown axe (before the projectile Speed stat). Provisional.")]
         [SerializeField] private float _groundSpeed = 12f;
 
-        [SerializeField] private int _damage = 25;
+        [SerializeField] private int _damage = 20;
 
         public override int MaxLevel => 8;
         /// <summary>Axes per attack from levels (before the Amount stat).</summary>
         public int LevelAxeCount { get; private set; } = 1;
-        /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
+        /// <summary>Area bonus from levels (multiplies the Area stat). VS Axe levels add no Area, so it stays 1.</summary>
         public float LevelAreaMultiplier { get; private set; } = 1f;
+        /// <summary>Enemies one axe can hit before it is used up (VS: 3, +2 at L4 and L7).</summary>
+        public int Pierce { get; private set; } = BasePierce;
+        private const int BasePierce = 3;
 
         protected override void Awake()
         {
@@ -59,8 +63,8 @@ namespace SoulHunter.Gameplay.Weapons
                 case 2:
                 case 5: LevelAxeCount++; break;
                 case 4:
-                case 7: LevelAreaMultiplier += 0.2f; break;
-                default: DamageAmount += 15f; break; // 3, 6, 8
+                case 7: Pierce += 2; break;
+                default: DamageAmount += 20f; break; // 3, 6, 8
             }
         }
 
@@ -103,6 +107,11 @@ namespace SoulHunter.Gameplay.Weapons
             projectileDamage.DamageAmount = actualDamage;
             AimAtHostiles(axeObj);
 
+            // VS pierce: the axe is used up after hitting Pierce enemies.
+            var pierce = axeObj.GetComponent<AxePierce>();
+            if (pierce == null) pierce = axeObj.AddComponent<AxePierce>();
+            pierce.Arm(Pierce, projectileDamage);
+
             // Rigidbody ko dhakka do
             Rigidbody rb = axeObj.GetComponent<Rigidbody>();
             if (rb != null)
@@ -131,6 +140,48 @@ namespace SoulHunter.Gameplay.Weapons
         {
             yield return new WaitForSeconds(5f);
             if (axe != null && axe.activeSelf) axe.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Counts the different hostiles a thrown axe touches and returns it to the pool once it has hit
+    /// its pierce count. The axe is hidden after the frame's physics callbacks, so the last hit still
+    /// deals its damage whichever component Unity calls first.
+    /// </summary>
+    public class AxePierce : MonoBehaviour
+    {
+        private readonly System.Collections.Generic.HashSet<int> _hit = new();
+        private ProjectileDamage _damage;
+        private int _pierce = int.MaxValue;
+        private bool _usedUp;
+
+        public int HitCount => _hit.Count;
+
+        public void Arm(int pierce, ProjectileDamage damage)
+        {
+            _pierce = Mathf.Max(1, pierce);
+            _damage = damage;
+            _hit.Clear();
+            _usedUp = false;
+        }
+
+        private void OnDisable() { _hit.Clear(); _usedUp = false; }
+
+        private void OnTriggerEnter(Collider other) => Count(other);
+        private void OnCollisionEnter(Collision collision) => Count(collision.collider);
+
+        private void Count(Collider other)
+        {
+            if (_usedUp || other == null || _damage == null || !other.CompareTag(_damage.TargetTag)) return;
+            var damageable = other.GetComponentInParent<IDamageable>();
+            if (damageable == null) return;
+            _hit.Add(damageable is Component body ? body.GetInstanceID() : other.GetInstanceID());
+            if (_hit.Count >= _pierce) _usedUp = true;
+        }
+
+        private void LateUpdate()
+        {
+            if (_usedUp) gameObject.SetActive(false);
         }
     }
 }

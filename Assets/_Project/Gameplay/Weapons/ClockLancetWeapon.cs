@@ -8,14 +8,28 @@ namespace SoulHunter.Gameplay.Combat
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         public GameObject FreezeBeamPrefab;
         private int _currentDirectionIndex = 0; // Rotates 12 positions like a clock
-        private float _freezeDuration = 3f;
         private readonly RaycastHit[] _hits = new RaycastHit[128];
+
+        // VS wiki (Clock Lancet): no damage, 2.0 s cooldown, 2.0 s freeze; max level 7. Levels: L2 Dur +1; L3 CD -0.5;
+        // L4 Dur +1; L5 Dur +1; L6 CD -0.5; L7 Dur +1.
+        public const float VsCooldown = 2f;
+        public const float VsFreezeDuration = 2f;
+
+        public override int MaxLevel => 7;
+        private int Level => Mathf.Clamp(CurrentLevel, 1, 7);
+        public float FreezeDuration => VsFreezeDuration + (Level >= 2 ? 1f : 0f) + (Level >= 4 ? 1f : 0f) + (Level >= 5 ? 1f : 0f) + (Level >= 7 ? 1f : 0f);
+        public float CooldownForLevel => VsCooldown - (Level >= 3 ? 0.5f : 0f) - (Level >= 6 ? 0.5f : 0f);
+
+        protected override void Awake()
+        {
+            base.Awake();
+            AttackCooldown = CooldownForLevel;
+        }
 
         public override void LevelUp()
         {
-            CurrentLevel++;
-            _freezeDuration += 0.5f;
-            if (CurrentLevel % 2 == 0) AttackCooldown -= 0.1f;
+            CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1);
+            AttackCooldown = CooldownForLevel;
         }
 
         protected override void Attack()
@@ -49,7 +63,7 @@ namespace SoulHunter.Gameplay.Combat
             for (int i = 0; i < count; i++)
             {
                 var enemy = _hits[i].collider.GetComponentInParent<EnemyController>();
-                if (enemy != null) enemy.Freeze(_freezeDuration * DurationMultiplier);
+                if (enemy != null) enemy.Freeze(FreezeDuration * DurationMultiplier);
             }
         }
     }

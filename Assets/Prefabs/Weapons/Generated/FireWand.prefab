@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentLevel: 1
-  DamageAmount: 10
-  AttackCooldown: 1.5
+  DamageAmount: 20
+  AttackCooldown: 3
   FireballPrefab: {fileID: 7457182400913755663, guid: 632b4a2519df583458130d5ea74d623d, type: 3}
   ProjectileSpeed: 5
   FireRange: 15

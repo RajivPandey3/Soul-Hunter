@@ -46,10 +46,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _biblePrefab: {fileID: 5068360835409548677, guid: a80ae5410877ce4499b99db58f444c04, type: 3}
-  _bibleCount: 2
+  _bibleCount: 1
   _radius: 3
   _rotationSpeed: 180
-  _damage: 8
+  _damage: 10
 --- !u!1001 &1298153300534024565
 PrefabInstance:
   m_ObjectHideFlags: 0

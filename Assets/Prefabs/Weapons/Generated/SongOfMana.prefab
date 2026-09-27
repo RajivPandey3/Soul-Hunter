@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentLevel: 1
   DamageAmount: 10
-  AttackCooldown: 1.5
+  AttackCooldown: 2
   VerticalBeamPrefab: {fileID: 4381632210131443372, guid: 05be6c12a7aac4e4db67eafc9b33e079, type: 3}
   _shotSpeed: 18
   _shotPierce: 5

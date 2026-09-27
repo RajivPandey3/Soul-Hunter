@@ -45,9 +45,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1d77f1227c3b8d4a9e09df7755557f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _damageRadius: 4
-  _damageInterval: 0.8
-  _damageAmount: 10
+  _damageRadius: 7.5
+  _damageInterval: 1
+  _damageAmount: 20
   _enemyLayer:
     serializedVersion: 2
     m_Bits: 128

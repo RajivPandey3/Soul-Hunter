@@ -7,14 +7,38 @@ namespace SoulHunter.Gameplay.Combat
         public GameObject BulletPrefab; 
         public bool ShootCorners = true; // Phiera shoots corners
         
-        private int _bulletsPerShot = 1; 
+        // VS wiki (Gun = Phiera Der Tuphello): 5 damage, 1.4 s cooldown, 1 bullet, pierce 1. Level-ups: L2 +1 bullet;
+        // L3 +2 pierce; L4 +1 bullet; L5 +5 damage; L6 +2 pierce; L7 +5 damage, Speed +50%; L8 +2 pierce.
+        // Soul Hunter keeps its 4-way pattern, so Amount counts bullets per arm.
+        private const float VsBaseDamage = 5f;
+        private const float VsCooldown = 1.4f;
+        private const float BulletSpeed = 20f; // Soul Hunter speed tuning (kept)
+        private const float BulletLifetime = 2f; // Soul Hunter range tuning (kept)
+
+        public override int MaxLevel => 8;
+        private int Level => Mathf.Clamp(CurrentLevel, 1, MaxLevel);
+        public float BaseDamage => VsBaseDamage + (Level >= 5 ? 5f : 0f) + (Level >= 7 ? 5f : 0f);
+        public int BulletsPerArm => 1 + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0);
+        public int Pierce => 1 + 2 * ((Level >= 3 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 8 ? 1 : 0));
+        public float LevelSpeedMultiplier => Level >= 7 ? 1.5f : 1f;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            ApplyLevelStats();
+        }
 
         public override void LevelUp()
         {
-            CurrentLevel++;
-            DamageAmount += 5f; 
-            AttackCooldown -= 0.1f; // Guns shoot fast
-            if (CurrentLevel % 3 == 0) _bulletsPerShot++; 
+            CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1);
+            ApplyLevelStats();
+        }
+
+        /// <summary>Keeps the base fields in step with the level (the base timer reads AttackCooldown).</summary>
+        private void ApplyLevelStats()
+        {
+            DamageAmount = BaseDamage;
+            AttackCooldown = VsCooldown;
         }
 
         protected override void Attack()
@@ -34,7 +58,7 @@ namespace SoulHunter.Gameplay.Combat
 
             foreach (var dir in directions)
             {
-                for (int i = 0; i < _bulletsPerShot + ExtraAmount; i++)
+                for (int i = 0; i < BulletsPerArm + ExtraAmount; i++)
                 {
                     // Slight spread
                     Vector3 spreadDir = Quaternion.Euler(0f, Random.Range(-5f, 5f), 0f) * dir;
@@ -46,7 +70,7 @@ namespace SoulHunter.Gameplay.Combat
                     
                     var proj = bullet.GetComponent<Projectile>();
                     if (proj == null) proj = bullet.AddComponent<Projectile>();
-                    proj.Initialize(spreadDir, 20f * SpeedMultiplier, ScaledDamage(DamageAmount), 2f);
+                    proj.Initialize(spreadDir, BulletSpeed * LevelSpeedMultiplier * SpeedMultiplier, ScaledDamage(BaseDamage), BulletLifetime, pierce: Pierce);
                     proj.AddBounces(ExtraBounces);
                     
                     var damageDealer = bullet.GetComponent<ProjectileDamage>();

@@ -9,6 +9,7 @@ namespace SoulHunter.Gameplay.Weapons
     /// Ye ek rectangular box area mein aaye hue sabhi dushmano ko ek saath damage deta hai.
     /// Isme koi goli (projectile) travel nahi karti, ye instant hit (OverlapBox) karta hai.
     /// Level table (1-8): L2 dusri taraf ek aur whip, L3-L8 damage, L4/L6 area.
+    /// VS wiki (Whip): 10 damage, 1.35 s, 1 whip; L2 +1 whip; L3-L8 +5 damage; L4/L6 Area +10%.
     /// </summary>
     public class WhipWeapon : AutoAttackWeapon
     {
@@ -22,7 +23,7 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private float _attackWidth = 1.5f;
 
         [Tooltip("Kitni der baad agla chabuk (whip) chalega")]
-        [SerializeField] private float _cooldown = 1.5f;
+        [SerializeField] private float _cooldown = 1.35f;
 
         [SerializeField] private int _damage = 10;
         [SerializeField] private LayerMask _enemyLayer;

@@ -40,7 +40,7 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void Garlic_LevelsToEight_GrowsAreaDamageAndSpeed()
+        public void Garlic_LevelsToEight_GrowsAreaDamageAndSpeed() // VS wiki (Garlic): +10 damage, -0.3 s cooldown by L8
         {
             _object = new GameObject("Garlic");
             var garlic = _object.AddComponent<GarlicWeapon>();
@@ -50,28 +50,29 @@ namespace SoulHunter.Tests.EditMode
 
             Assert.That(garlic.MaxLevel, Is.EqualTo(8));
             Assert.That(garlic.CurrentLevel, Is.EqualTo(8));
-            Assert.That(garlic.DamageAmount, Is.EqualTo(baseDamage + 9f));
+            Assert.That(garlic.DamageAmount, Is.EqualTo(baseDamage + 10f));
             Assert.That(garlic.LevelAreaMultiplier, Is.EqualTo(2f).Within(0.001f));
-            Assert.That(garlic.AttackCooldown, Is.EqualTo(baseCooldown * 0.729f).Within(0.001f));
+            Assert.That(garlic.AttackCooldown, Is.EqualTo(baseCooldown - 0.3f).Within(0.001f));
         }
 
         [Test]
-        public void Axe_LevelsToEight_AddsTwoAxesDamageAndArea()
+        public void Axe_LevelsToEight_AddsTwoAxesDamageAndPierce() // VS wiki (Axe): +60 damage, pierce 3 -> 7
         {
             var axe = CreateAtMaxLevel<AxeWeapon>(out float baseDamage);
             Assert.That(axe.CurrentLevel, Is.EqualTo(8));
             Assert.That(axe.LevelAxeCount, Is.EqualTo(3));
-            Assert.That(axe.DamageAmount, Is.EqualTo(baseDamage + 45f));
-            Assert.That(axe.LevelAreaMultiplier, Is.EqualTo(1.4f).Within(0.001f));
+            Assert.That(axe.DamageAmount, Is.EqualTo(baseDamage + 60f));
+            Assert.That(axe.LevelAreaMultiplier, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(axe.Pierce, Is.EqualTo(7));
         }
 
         [Test]
-        public void Bible_LevelsToEight_AddsThreeBooksDamageAreaAndSpeed()
+        public void Bible_LevelsToEight_AddsThreeBooksDamageAreaAndSpeed() // VS wiki (King Bible): +20 damage by L8
         {
             var bible = CreateAtMaxLevel<BibleWeapon>(out float baseDamage);
             Assert.That(bible.CurrentLevel, Is.EqualTo(8));
             Assert.That(bible.LevelBookCount, Is.EqualTo(3));
-            Assert.That(bible.DamageAmount, Is.EqualTo(baseDamage + 12f));
+            Assert.That(bible.DamageAmount, Is.EqualTo(baseDamage + 20f));
             Assert.That(bible.LevelAreaMultiplier, Is.EqualTo(1.5f).Within(0.001f));
             Assert.That(bible.LevelSpeedMultiplier, Is.EqualTo(1.6f).Within(0.001f));
         }

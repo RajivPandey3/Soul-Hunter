@@ -7,27 +7,39 @@ namespace SoulHunter.Gameplay.Combat
     {
         protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         [SerializeField] private GameObject _projectilePrefab;
-        public float KnifeSpeed = 15f;
+        public float KnifeSpeed = 15f; // Soul Hunter speed tuning (kept)
 
-        private int _knivesPerAttack = 1;
+        // VS wiki (Knife): 6.5 damage, 1.0 s cooldown, 1 knife, pierce 1. Level-ups: L2 +1 knife; L3 +1 knife, +5 damage;
+        // L4 +1 knife; L5 +1 pierce; L6 +1 knife; L7 +1 knife, +5 damage; L8 +1 pierce.
+        private const float VsBaseDamage = 6.5f;
+        private const float VsCooldown = 1.0f;
+
+        public override int MaxLevel => 8;
+        private int Level => Mathf.Clamp(CurrentLevel, 1, MaxLevel);
+        public float BaseDamage => VsBaseDamage + (Level >= 3 ? 5f : 0f) + (Level >= 7 ? 5f : 0f);
+        public int KnivesPerAttack => 1 + (Level >= 2 ? 1 : 0) + (Level >= 3 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 7 ? 1 : 0);
         /// <summary>Enemies each knife passes through (VS: +1 at levels 5 and 8).</summary>
-        public int Pierce { get; private set; } = 1;
+        public int Pierce => 1 + (Level >= 5 ? 1 : 0) + (Level >= 8 ? 1 : 0);
         private PlayerController _player;
 
         protected override void Awake()
         {
             base.Awake();
             _player = GetComponentInParent<PlayerController>();
+            ApplyLevelStats();
         }
 
         public override void LevelUp()
         {
-            CurrentLevel++;
-            DamageAmount += 5f;
+            CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1);
+            ApplyLevelStats();
+        }
 
-            if (CurrentLevel % 2 == 0) _knivesPerAttack++;
-            if (CurrentLevel == 5) AttackCooldown -= 0.2f;
-            if (CurrentLevel == 5 || CurrentLevel == 8) Pierce++;
+        /// <summary>Keeps the base fields (the base timer reads AttackCooldown) in step with the level.</summary>
+        private void ApplyLevelStats()
+        {
+            DamageAmount = BaseDamage;
+            AttackCooldown = VsCooldown;
         }
 
         protected override void Attack()
@@ -42,7 +54,7 @@ namespace SoulHunter.Gameplay.Combat
             else moveDir.Normalize();
             moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 
-            for (int i = 0; i < _knivesPerAttack + ExtraAmount; i++)
+            for (int i = 0; i < KnivesPerAttack + ExtraAmount; i++)
             {
                 Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-10f, 10f), 0) * moveDir;
                 Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
@@ -56,7 +68,7 @@ namespace SoulHunter.Gameplay.Combat
 
 
                 var proj = knife.GetComponent<Projectile>();
-                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(DamageAmount), 2f, pierce: Pierce);
+                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 2f, pierce: Pierce);
                 if (proj != null) proj.AddBounces(ExtraBounces);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();

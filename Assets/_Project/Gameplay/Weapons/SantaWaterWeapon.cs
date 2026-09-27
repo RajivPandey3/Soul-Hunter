@@ -16,24 +16,35 @@ namespace SoulHunter.Gameplay.Combat
         public GameObject WaterZonePrefab; // Zone jo zameen pe fire/water damage dega
         public float DropRadius = 8f; // Kitne area me randomly bottle giregi
         
-        private int _zonesPerAttack = 2; 
+        // VS wiki (Santa Water): 10 damage, 4.5 s cooldown, 1 flask, 2.0 s pool. Levels: L2 +1 flask, Area +20%;
+        // L3 Dur +0.5, +10; L4 +1 flask, Area +20%; L5 Dur +0.25, +10; L6 +1 flask, Area +20%; L7 Dur +0.25, +5;
+        // L8 Area +20%, +5. Area bonuses scale our own pool size.
+        public const float VsBaseDamage = 10f;
+        public const float VsCooldown = 4.5f;
+        public const int VsAmount = 1;
+        public const float VsDuration = 2f;
 
-        public override void LevelUp()
+        public override int MaxLevel => 8;
+        private int Level => Mathf.Clamp(CurrentLevel, 1, 8);
+        public float BaseDamage => DamageAmount + (Level >= 3 ? 10f : 0f) + (Level >= 5 ? 10f : 0f) + (Level >= 7 ? 5f : 0f) + (Level >= 8 ? 5f : 0f);
+        public int FlaskCount => VsAmount + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0);
+        public float LevelArea => 1f + 0.2f * ((Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 8 ? 1 : 0));
+        public float PoolDuration => VsDuration + (Level >= 3 ? 0.5f : 0f) + (Level >= 5 ? 0.25f : 0f) + (Level >= 7 ? 0.25f : 0f);
+
+        protected override void Awake()
         {
-            CurrentLevel++;
-            DamageAmount += 5f; 
-            
-            if (CurrentLevel == 4 || CurrentLevel == 8) 
-            {
-                _zonesPerAttack++; 
-            }
+            base.Awake();
+            DamageAmount = VsBaseDamage;
+            AttackCooldown = VsCooldown;
         }
+
+        public override void LevelUp() { CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1); }
 
         protected override void Attack()
         {
             if (WaterZonePrefab == null) return;
 
-            for (int i = 0; i < _zonesPerAttack + ExtraAmount; i++)
+            for (int i = 0; i < FlaskCount + ExtraAmount; i++)
             {
                 // Random position near player
                 // Owner decision: aim at the nearest enemy; drop on it (extra flasks land close by), random around the player when none.
@@ -52,13 +63,13 @@ namespace SoulHunter.Gameplay.Combat
                 ? WeaponPoolManager.Instance.GetFromPool(WaterZonePrefab, position, Quaternion.identity)
                 : Instantiate(WaterZonePrefab, position, Quaternion.identity);
             if (zone == null) return;
-            ApplyArea(zone, WaterZonePrefab);
+            zone.transform.localScale = WaterZonePrefab.transform.localScale * AreaMultiplier * LevelArea;
             
             // TouchDamage laga denge taake zone me jo bhi aaye use lagatar damage ho
             var damageDealer = zone.GetComponent<TouchDamage>();
             if (damageDealer == null) damageDealer = zone.AddComponent<TouchDamage>();
             
-            damageDealer.DamageAmount = ScaledDamage(DamageAmount);
+            damageDealer.DamageAmount = ScaledDamage(BaseDamage);
             damageDealer.DamageInterval = 0.5f; // Har adhe second baad dubara damage
             damageDealer.SourceWeaponName = "Santa Water";
             // Learning Comment:
@@ -68,10 +79,10 @@ namespace SoulHunter.Gameplay.Combat
             damageDealer.DamageType = DamageType.Holy;
             AimAtHostiles(zone);
             
-            // Zone 3 seconds tak zameen pe rahega
+            // The pool stays for its VS duration, scaled by Duration.
             var lifetime = zone.GetComponent<PooledLifetime>();
-            if (lifetime != null) lifetime.Arm(3f * DurationMultiplier);
-            else if (Application.isPlaying) Destroy(zone, 3f * DurationMultiplier);
+            if (lifetime != null) lifetime.Arm(PoolDuration * DurationMultiplier);
+            else if (Application.isPlaying) Destroy(zone, PoolDuration * DurationMultiplier);
         }
     }
 }

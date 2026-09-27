@@ -395,6 +395,45 @@ Seen, not changed: in the earlier editor play `autoplay-editor-25` (Stage 4 jump
 
 Not yet played by the owner.
 
+### Balance pass, Part 1: weapons on VS numbers (owner request, 2026-09-27)
+
+Owner: "balance pass shuru karo". Balance follows the VS rules plus the owner's story; the planned parts are:
+1. weapons;
+2. XP per stage;
+3. enemy health and damage per stage;
+4. boss and elite fight length;
+5. run length (owner decision).
+
+Baseline before Part 1 (`autoplay-editor-35`, Stage 1, 15 min, no god mode, old weapons): level 117, 63,998 kills, never more than 89 enemies, hero never hurt, min 8 FPS.
+- Most weapons used placeholders (10 damage, 1.5 s).
+- Pentagram erased the map every 1.5 s, and its level-ups took 5 s per level off that, going below zero.
+- Holy Wand fired every 0.1 s and Thousand Edge every 0.05 s.
+
+Now every weapon's level-1 damage, cooldown, amount, pierce and duration, and its level 2-8 table, follow vampire.survivors.wiki (fetched 2026-09-27; raw pages in the session scratchpad). Each script names its numbers as constants with a "VS wiki" comment and has `MaxLevel` 8 (7 for Clock Lancet and Laurel).
+- Soul Hunter keeps its own level-1 Area and Speed; VS Area/Speed level-ups apply as percentages on top.
+- Examples:
+  - Whip 1.35 s; Axe 20 / 4 s with VS pierce (new `AxePierce`, an axe leaves after 3 enemies); Cross 5 / 2 s; King Bible 10, 1 book; Garlic 1.3 s.
+  - Knife 6.5 / 1 s; Fire Wand 20 / 3 s, 3 shots; Santa Water 10 / 4.5 s; Lightning Ring 15 / 4.5 s; Peachone 10 / 1 s, 4 bombs.
+  - Pentagram 90 s, 10% keep chance; Clock Lancet 2 s / 2 s freeze.
+  - Evolutions: Thousand Edge 16.5 / 0.35 s ×6; Bloody Tear 40; Unholy Vespers 30; Heaven Sword 77 / 3.3 s; Death Spiral 60 / 4 s; Soul Eater 20, 3× Garlic's radius.
+- Not mapped (listed in the scripts):
+  - VS hit intervals and per-weapon knockback.
+  - King Bible's on/off duration (our books always orbit).
+  - Cherry Bomb's explode chance (our bomb only deals contact damage).
+  - Pentagram's 1 s duration and its erasing of items already on the ground.
+  - Peachone's duration.
+  - Damage rounds down to whole numbers in `Projectile`, so Knife hits for 6 before Might.
+- Kept although VS differs: Soul Eater and Bloody Tear healing (Soul Hunter's own), all aiming at the nearest enemy (owner decision), and the Gun's 4-way pattern (VS Amount counts per arm).
+
+Validation:
+- `WeaponLevelTableTests` (T) was updated to the VS tables (Garlic, Axe, Bible).
+- `WeaponSweepPlayModeTests` (R) now resets a weapon's timer after placing its targets, because the first shot fires on equip and Pentagram's next shot is 90 s away.
+- EditMode 353/353, PlayMode 135/136. The one failure was that sweep case (Pentagram); after the fix the sweep fixture passed 21/21. Save untouched (`D:\SoulHunter-Validation\run-20260927-weapons\`).
+- After (`autoplay-editor-36`, same run): level 43, 9,484 kills, up to 118 enemies, min 43 FPS, 0 errors. That is about what a VS player reaches by 15:00 (from memory, not a source).
+- Seen for later parts: the hero was hurt only twice in 15 minutes (enemy pressure, Part 3).
+
+Not yet played by the owner.
+
 ### Boss level scaling and chest elites (owner decisions, 2026-09-24)
 
 Found while reviewing the VS Stage 4/5 write-ups: bosses had fixed health (1000 x stage) although one run keeps levelling across 10 stages, and only stage bosses dropped chests (~10 per run), so evolutions were rare. The owner chose:

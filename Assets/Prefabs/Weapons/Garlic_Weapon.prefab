@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _damageRadius: 2.5
-  _damageInterval: 1
+  _damageInterval: 1.3
   _damageAmount: 5
   _enemyLayer:
     serializedVersion: 2

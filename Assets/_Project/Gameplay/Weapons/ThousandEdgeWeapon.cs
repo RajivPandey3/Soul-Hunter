@@ -7,7 +7,16 @@ namespace SoulHunter.Gameplay.Combat
     {
         protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
         public GameObject KnifePrefab;
-        public float KnifeSpeed = 25f;
+        public float KnifeSpeed = 25f; // Soul Hunter speed tuning (kept)
+
+        // VS wiki (Thousand Edge, Knife evolution): 16.5 damage, 0.35 s cooldown, 6 knives, pierce 3. It does not level.
+        private const float VsDamage = 16.5f;
+        private const float VsCooldown = 0.35f;
+        private const int VsAmount = 6;
+        private const int VsPierce = 3;
+        public float BaseDamage => VsDamage;
+        public int KnivesPerAttack => VsAmount;
+        public int Pierce => VsPierce;
 
         private PlayerController _player;
 
@@ -15,11 +24,8 @@ namespace SoulHunter.Gameplay.Combat
         {
             base.Awake();
             _player = GetComponentInParent<PlayerController>();
-        }
-
-        private void Start()
-        {
-            AttackCooldown = 0.05f; // Machine-gun speed (NO cooldown basically)
+            DamageAmount = VsDamage;
+            AttackCooldown = VsCooldown; // was 0.05 s with one 35-damage knife per volley
         }
 
         public override void LevelUp() {}
@@ -37,7 +43,7 @@ namespace SoulHunter.Gameplay.Combat
             moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 
             // Amount adds knives per volley.
-            for (int i = 0; i < 1 + ExtraAmount; i++)
+            for (int i = 0; i < KnivesPerAttack + ExtraAmount; i++)
             {
                 Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * moveDir;
                 Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
@@ -51,7 +57,7 @@ namespace SoulHunter.Gameplay.Combat
 
                 var proj = knife.GetComponent<Projectile>();
                 if (proj == null) proj = knife.AddComponent<Projectile>();
-                proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(35f), 3f);
+                proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 3f, pierce: Pierce);
                 proj.AddBounces(ExtraBounces);
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();

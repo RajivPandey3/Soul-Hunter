@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentLevel: 1
-  DamageAmount: 10
-  AttackCooldown: 1.5
+  DamageAmount: 16.5
+  AttackCooldown: 0.35
   KnifePrefab: {fileID: 1161883881319528480, guid: a7099fc00117192429d8aaa3fe75a6f6, type: 3}
   KnifeSpeed: 25
 --- !u!1001 &6385912856096690495

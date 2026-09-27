@@ -9,6 +9,9 @@ namespace SoulHunter.Gameplay.Weapons
     /// VS = SH Rule: Bible weapon player ke gird (orbit) mein ghoomti hai.
     /// Ye continuously rotate karti hai, aur jo dushman beech mein aaye usey damage karti hai.
     /// Level table (1-8): L2/L5/L8 ek aur bible, L3/L6 area + speed, L4/L7 damage.
+    /// VS wiki (King Bible): 10 damage, 1 book, 3 s duration then 3 s cooldown; L2/L5/L8 +1 book;
+    /// L3/L6 Area +25%, Speed +30%; L4/L7 Duration +0.5, +10 damage. The duration/cooldown cycle is not built:
+    /// the books orbit all the time. VS wiki (Unholy Vespers, uses this script): 30 damage, 4 books (UnholyVespers.prefab).
     /// </summary>
     public class BibleWeapon : AutoAttackWeapon
     {
@@ -17,7 +20,7 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private GameObject _biblePrefab;
 
         [Tooltip("Kitni bibles ghoomengi")]
-        [SerializeField] private int _bibleCount = 2;
+        [SerializeField] private int _bibleCount = 1;
 
         [Tooltip("Player se kitni door ghoomengi (Orbit Radius)")]
         [SerializeField] private float _radius = 3f;
@@ -25,7 +28,7 @@ namespace SoulHunter.Gameplay.Weapons
         [Tooltip("Kitni tezi se ghoomengi")]
         [SerializeField] private float _rotationSpeed = 180f;
 
-        [SerializeField] private int _damage = 8;
+        [SerializeField] private int _damage = 10;
 
         private float _currentAngle = 0f;
         private List<GameObject> _activeBibles = new List<GameObject>();
@@ -67,7 +70,7 @@ namespace SoulHunter.Gameplay.Weapons
                 case 3:
                 case 6: LevelAreaMultiplier += 0.25f; LevelSpeedMultiplier += 0.3f; break;
                 case 4:
-                case 7: DamageAmount += 6f; break;
+                case 7: DamageAmount += 10f; break; // VS also adds Duration +0.5 here; our books orbit without a duration
                 default: LevelBookCount++; break; // 2, 5, 8
             }
         }

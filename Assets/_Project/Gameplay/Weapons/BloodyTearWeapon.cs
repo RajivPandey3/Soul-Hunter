@@ -13,6 +13,19 @@ namespace SoulHunter.Gameplay.Combat
         public float HealAmount = 8f; 
         private HealthController _playerHealth;
 
+        // VS wiki (Bloody Tear): 40 damage, 1.35 s, 2 whips (+Amount). Evolutions do not level.
+        public const float BaseDamage = 40f;
+        public const float BaseCooldown = 1.35f;
+        public const int BaseWhipCount = 2;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            // Damage and cooldown live in the base fields so Shadow Kael's mirroring can scale them.
+            DamageAmount = BaseDamage;
+            AttackCooldown = BaseCooldown;
+        }
+
         private void Start()
         {
             _playerHealth = GetComponentInParent<HealthController>();
@@ -29,9 +42,10 @@ namespace SoulHunter.Gameplay.Combat
             
             // Whip logic but with lifesteal
             // Owner decision: aim at the nearest enemy; the second lash covers the opposite side.
+            // Extra whips (Amount) alternate sides like the Whip.
             Vector3 aim = AimDirection(Vector3.right);
-            FireWhip(aim);
-            FireWhip(-aim);
+            int whips = BaseWhipCount + ExtraAmount;
+            for (int i = 0; i < whips; i++) FireWhip(i % 2 == 0 ? aim : -aim);
         }
 
         private void FireWhip(Vector3 direction)
@@ -61,7 +75,7 @@ namespace SoulHunter.Gameplay.Combat
             var damageDealer = whip.GetComponent<TouchDamage>();
             if (damageDealer == null) damageDealer = whip.AddComponent<TouchDamage>();
             
-            damageDealer.DamageAmount = RollDamage(50f); // High base damage
+            damageDealer.DamageAmount = RollDamage(DamageAmount);
             damageDealer.SourceWeaponName = "Bloody Tear";
             damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the whip hurt its own holder
             

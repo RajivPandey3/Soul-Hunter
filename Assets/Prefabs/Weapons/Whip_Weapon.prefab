@@ -47,7 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 4
   _attackWidth: 1.5
-  _cooldown: 1.5
+  _cooldown: 1.35
   _damage: 10
   _enemyLayer:
     serializedVersion: 2

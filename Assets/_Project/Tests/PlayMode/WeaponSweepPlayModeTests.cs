@@ -65,6 +65,10 @@ namespace SoulHunter.Tests.PlayMode
                 enemies.Add(health);
                 start[health] = health.CurrentHealth;
             }
+            // The weapon fired once when it was given, before the ring existed. With VS cooldowns (Pentagram 90 s,
+            // Axe 4 s) the next shot can be far off, so it fires again now that there is something to hit.
+            typeof(AutoAttackWeapon).GetField("_timer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .SetValue(weapon, 0f);
 
             bool affected = false, sawBullet = false;
             float deadline = Time.realtimeSinceStartup + 10f;

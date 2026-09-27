@@ -9,6 +9,8 @@ namespace SoulHunter.Gameplay.Weapons
     /// thodi door aage jaa kar wapas ghoomta hai (boomerang effect), aur raste mein sabko katta hai.
     /// Is script ke do hisse hain: (1) Weapon Spawner, (2) Boomerang Projectile logic (jo aage chal kar hum projectile me shift kar sakte hain).
     /// Level table (1-8): L2/L5/L8 damage, L3/L6 area + speed, L4/L7 ek aur cross.
+    /// VS wiki (Cross): 5 damage, 2 s, 1 cross; L2/L5/L8 +10 damage; L3/L6 Area +10%, Speed +25%; L4/L7 +1 cross.
+    /// VS wiki (Heaven Sword, uses this script): 77 damage, 3.3 s, 1 sword (HeavenSword.prefab).
     /// </summary>
     public class CrossWeapon : AutoAttackWeapon
     {
@@ -18,7 +20,7 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private GameObject _crossPrefab;
         
         [Tooltip("Kitni der baad agla cross fainka jayega")]
-        [SerializeField] private float _cooldown = 3f;
+        [SerializeField] private float _cooldown = 2f;
 
         [Tooltip("Boomerang ki speed")]
         [SerializeField] private float _speed = 12f;
@@ -26,7 +28,7 @@ namespace SoulHunter.Gameplay.Weapons
         [Tooltip("Cross ko palatne (wapas aane) mein kitna waqt lagega")]
         [SerializeField] private float _returnTime = 1f;
 
-        [SerializeField] private int _damage = 20;
+        [SerializeField] private int _damage = 5;
 
         public override int MaxLevel => 8;
         /// <summary>Crosses per attack from levels (before the Amount stat).</summary>

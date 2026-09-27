@@ -9,6 +9,8 @@ namespace SoulHunter.Gameplay.Weapons
     /// Har X seconds mein us aura ke andar aane wale sabhi dushmano ko damage lagta hai.
     /// Ye kisi ko point nahi karta, bas area of effect (AoE) mein damage deta hai.
     /// Level table (1-8): har level damage; L2/L4/L6/L8 area, L3/L5/L7 tez interval.
+    /// VS wiki (Garlic): 5 damage, 1.3 s; L2 Area +40%, +2; L3/L7 -0.1 s, +1; L5 -0.1 s, +2; L4/L6 Area +20%, +1; L8 Area +20%, +2.
+    /// VS wiki (Soul Eater, uses this script): 20 damage, 1.0 s, Area 300% of Garlic (SoulEater.prefab radius 7.5).
     /// </summary>
     public class GarlicWeapon : AutoAttackWeapon
     {
@@ -21,7 +23,7 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private float _damageRadius = 2.5f;
 
         [Tooltip("Har kitne second mein aura damage dega")]
-        [SerializeField] private float _damageInterval = 1f;
+        [SerializeField] private float _damageInterval = 1.3f;
 
         [Tooltip("Ek baar mein kitna damage padega")]
         [SerializeField] private int _damageAmount = 5;
@@ -79,9 +81,10 @@ namespace SoulHunter.Gameplay.Weapons
             {
                 case 2: LevelAreaMultiplier += 0.4f; DamageAmount += 2f; break;
                 case 3:
-                case 7: AttackCooldown *= 0.9f; DamageAmount += 1f; break;
-                case 5: AttackCooldown *= 0.9f; DamageAmount += 2f; break;
-                default: LevelAreaMultiplier += 0.2f; DamageAmount += 1f; break; // 4, 6, 8
+                case 7: AttackCooldown -= 0.1f; DamageAmount += 1f; break;
+                case 5: AttackCooldown -= 0.1f; DamageAmount += 2f; break;
+                case 8: LevelAreaMultiplier += 0.2f; DamageAmount += 2f; break;
+                default: LevelAreaMultiplier += 0.2f; DamageAmount += 1f; break; // 4, 6
             }
         }
 

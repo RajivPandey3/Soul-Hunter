@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentLevel: 1
-  DamageAmount: 10
-  AttackCooldown: 1.5
+  DamageAmount: 5
+  AttackCooldown: 3
   BonePrefab: {fileID: 292770240441890885, guid: 00fc9e2238de11b48814eb363feeac78, type: 3}
   ThrowSpeed: 10
 --- !u!1001 &4535521236085326800

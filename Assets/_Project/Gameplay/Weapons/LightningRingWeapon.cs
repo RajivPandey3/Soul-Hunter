@@ -17,23 +17,28 @@ namespace SoulHunter.Gameplay.Combat
         public GameObject LightningStrikePrefab; // Bijli ka visual aur damage hitbox
         public float StrikeRadius = 15f; // Kitni door tak bijli gir sakti hai
         
-        private int _strikesPerAttack = 2; // Level 1 par 2 bijliyan girenge
+        // VS wiki (Lightning Ring): 15 damage, 4.5 s cooldown, 2 strikes. Levels: L2 +1 strike; L3 Area +100%, +10;
+        // L4 +1 strike; L5 Area +100%, +20; L6 +1 strike; L7 Area +100%, +20; L8 +1 strike.
+        // Area bonuses scale our own strike size.
+        public const float VsBaseDamage = 15f;
+        public const float VsCooldown = 4.5f;
+        public const int VsAmount = 2;
+
+        public override int MaxLevel => 8;
+        private int Level => Mathf.Clamp(CurrentLevel, 1, 8);
+        public float BaseDamage => DamageAmount + (Level >= 3 ? 10f : 0f) + (Level >= 5 ? 20f : 0f) + (Level >= 7 ? 20f : 0f);
+        public int StrikeCount => VsAmount + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 8 ? 1 : 0);
+        public float LevelArea => 1f + (Level >= 3 ? 1f : 0f) + (Level >= 5 ? 1f : 0f) + (Level >= 7 ? 1f : 0f);
         private readonly List<EnemyController> _targetBuffer = new List<EnemyController>(64);
 
-        public override void LevelUp()
+        protected override void Awake()
         {
-            CurrentLevel++;
-            DamageAmount += 15f; // Har level par damage badhega
-            
-            if (CurrentLevel % 2 == 0) 
-            {
-                _strikesPerAttack++; // Har 2nd level par ek extra bijli giregi
-            }
-            if (CurrentLevel == 4 || CurrentLevel == 8)
-            {
-                AttackCooldown -= 0.5f; // Speed badhegi
-            }
+            base.Awake();
+            DamageAmount = VsBaseDamage;
+            AttackCooldown = VsCooldown;
         }
+
+        public override void LevelUp() { CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1); }
 
         protected override void Attack()
         {
@@ -56,7 +61,7 @@ namespace SoulHunter.Gameplay.Combat
             _targetBuffer.AddRange(allEnemies);
             List<EnemyController> validTargets = _targetBuffer;
             
-            int strikesThisTurn = Mathf.Min(_strikesPerAttack + ExtraAmount, validTargets.Count);
+            int strikesThisTurn = Mathf.Min(StrikeCount + ExtraAmount, validTargets.Count);
 
             for (int i = 0; i < strikesThisTurn; i++)
             {
@@ -93,12 +98,14 @@ namespace SoulHunter.Gameplay.Combat
                 ? WeaponPoolManager.Instance.GetFromPool(LightningStrikePrefab, position, Quaternion.identity)
                 : Instantiate(LightningStrikePrefab, position, Quaternion.identity);
             if (strike == null) return;
-            ApplyArea(strike, LightningStrikePrefab);
+            // VS Area level-ups widen the strike on the ground; the bolt keeps its height.
+            Vector3 scale = LightningStrikePrefab.transform.localScale * AreaMultiplier;
+            strike.transform.localScale = new Vector3(scale.x * LevelArea, scale.y, scale.z * LevelArea);
             
             var damageDealer = strike.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = strike.AddComponent<ProjectileDamage>();
             
-            damageDealer.DamageAmount = ScaledDamage(DamageAmount);
+            damageDealer.DamageAmount = ScaledDamage(BaseDamage);
             damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
             damageDealer.SourceWeaponName = "Lightning Ring";
             AimAtHostiles(strike);

@@ -18,14 +18,19 @@ namespace SoulHunter.Gameplay.Combat
         private int _currentCharges = 1;
         private float _rechargeRemaining;
         private float _graceRemaining;
+        // VS wiki (Laurel): 1 shield charge, 10 s recharge; max level 7. Levels L2, L3, L5, L6: CD -0.5 and
+        // invulnerability +0.2 s; L4, L7: +1 charge. The 0.2 s base invulnerability is Soul Hunter's (not in the research).
+        public const float VsCooldown = 10f;
+        public const float CooldownPerTimingLevel = 0.5f;
+        public const float InvulnerabilityPerTimingLevel = 0.2f;
         public override int MaxLevel => 7;
         private int Level => Mathf.Clamp(CurrentLevel, 1, MaxLevel);
         private int TimingUpgrades => (Level >= 2 ? 1 : 0) + (Level >= 3 ? 1 : 0) + (Level >= 5 ? 1 : 0) + (Level >= 6 ? 1 : 0);
         public int CurrentCharges => _currentCharges;
         public virtual int MaxCharges => 1 + (Level >= 4 ? 1 : 0) + (Level >= 7 ? 1 : 0);
-        public virtual float BaseRechargeCooldown => Mathf.Max(0.1f, AttackCooldown - TimingUpgrades * 0.5f);
+        public virtual float BaseRechargeCooldown => Mathf.Max(0.1f, VsCooldown - TimingUpgrades * CooldownPerTimingLevel);
         public float EffectiveRechargeCooldown => BaseRechargeCooldown * CooldownMultiplier;
-        public virtual float BlockGraceSeconds => _blockGraceSeconds + TimingUpgrades * 0.2f;
+        public virtual float BlockGraceSeconds => _blockGraceSeconds + TimingUpgrades * InvulnerabilityPerTimingLevel;
         public event Action<DamagePacket> OnBlocked;
 
         protected override void Awake()
