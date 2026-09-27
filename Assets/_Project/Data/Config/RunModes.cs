@@ -1,0 +1,53 @@
+using UnityEngine;
+
+namespace SoulHunter.Gameplay.Data
+{
+    /// <summary>
+    /// VS run modes (vampire.survivors.wiki/w/Stages, "List of Modes", fetched 2026-09-27), chosen on the character
+    /// select screen and fixed for the run. Owner, 2026-09-27: "extra feature also continue". Soul Hunter plays the ten
+    /// stages as one run, so each mode applies to the whole run. The multipliers below are the VS ones; Soul Hunter
+    /// numbers are marked provisional.
+    /// - Hurry: the stage clock runs twice as fast; XP +25%. Events still come at their clock times.
+    /// - Hyper: player and enemy move speed +65%, projectile speed +15%, gold +50%, enemy minimum x1.25.
+    /// - Inverse: enemies start at +200% health and gain +5% health and +0.5% speed per stage minute; gold +200%,
+    ///   Luck +20%. (VS also flips and darkens the map; not built.)
+    /// - Endless: the run does not end at Level 10; it starts again at Level 1 as a new cycle. Each cycle: enemy
+    ///   health +100%, spawn rate and count +50%, enemy damage +25%.
+    /// - Arcana: Arcana chests at 11:00 and 21:00 (VS). - Limit Break: once everything is maxed, level-ups keep
+    ///   strengthening weapons instead of paying gold.
+    /// </summary>
+    public static class RunModes
+    {
+        public static bool Hurry, Hyper, Inverse, Endless, Arcana, LimitBreak;
+
+        /// <summary>Endless cycle: 0 on the first pass through the ten stages, then 1, 2, ...</summary>
+        public static int EndlessCycle;
+
+        public static void Reset()
+        {
+            Hurry = Hyper = Inverse = Endless = Arcana = LimitBreak = false;
+            EndlessCycle = 0;
+        }
+
+        public static float ClockSpeed => Hurry ? 2f : 1f;
+        public static float XpMultiplier => Hurry ? 1.25f : 1f;
+
+        public static float PlayerSpeedMultiplier => Hyper ? 1.65f : 1f;
+        public static float ProjectileSpeedMultiplier => Hyper ? 1.15f : 1f;
+
+        /// <summary>VS: a stage's and its modes' gold bonuses add together.</summary>
+        public static float GoldBonus => (Hyper ? 0.5f : 0f) + (Inverse ? 2f : 0f);
+        public static float LuckBonus => Inverse ? 0.2f : 0f;
+
+        public static float EnemySpeedMultiplier(float stageMinutes) =>
+            (Hyper ? 1.65f : 1f) * (Inverse ? 1f + 0.005f * Mathf.Max(0f, stageMinutes) : 1f);
+
+        public static float EnemyHealthMultiplier(float stageMinutes) =>
+            (Inverse ? 3f + 0.05f * Mathf.Max(0f, stageMinutes) : 1f) * (1f + Mathf.Max(0, EndlessCycle));
+
+        public static float EnemyDamageMultiplier => 1f + 0.25f * Mathf.Max(0, EndlessCycle);
+
+        /// <summary>Spawn rate and enemy minimum: Hyper x1.25 minimum; each Endless cycle +50%.</summary>
+        public static float SpawnMultiplier => (Hyper ? 1.25f : 1f) * (1f + 0.5f * Mathf.Max(0, EndlessCycle));
+    }
+}

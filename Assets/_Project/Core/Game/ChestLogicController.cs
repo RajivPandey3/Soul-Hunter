@@ -67,6 +67,28 @@ namespace SoulHunter.Gameplay.Core
         }
 
         /// <summary>
+        /// VS Arcana chest (Arcana mode, the 11:00 and 21:00 elites): gives one Arcana the player does not hold instead of
+        /// items. VS offers a choice of four; Soul Hunter has no Arcana choice screen yet, so a random one is given and
+        /// named in the chest message. With three or more Arcanas held (VS), or none left, it opens as a regular chest.
+        /// </summary>
+        public string ProcessArcanaChest(bool canEvolve = true)
+        {
+            var arcanas = ArcanaManager.Instance;
+            if (arcanas == null || !arcanas.CanGrantFromChest) return ProcessChest(canEvolve);
+            var arcana = arcanas.GrantRandomAvailableArcana(Random.value);
+            if (arcana == null) return ProcessChest(canEvolve);
+            return ArcanaMessage(arcana);
+        }
+
+        public static string ArcanaMessage(SoulHunter.Gameplay.Data.ArcanaData arcana)
+        {
+            var message = new StringBuilder("ARCANA CHEST!\n\n");
+            message.Append("<color=#C79BFF>Arcana ").Append(arcana.CardNumber).Append(" - ").Append(arcana.CardName).Append("</color>");
+            if (!string.IsNullOrWhiteSpace(arcana.Description)) message.Append('\n').Append(arcana.Description);
+            return message.ToString();
+        }
+
+        /// <summary>
         /// Opens a chest holding <paramref name="itemCount"/> items and returns the reward text. VS rules: at most one
         /// evolution per chest (only when <paramref name="canEvolve"/>), one upgrade per other item, 25 gold for an item
         /// with nothing left to upgrade, and the chest's own gold on top.

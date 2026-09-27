@@ -48,7 +48,25 @@ namespace SoulHunter.Gameplay.Core
         private void Awake()
         {
             if (_instance == null) _instance = this;
-            else if (_instance != this) Destroy(gameObject);
+            else if (_instance != this) { Destroy(gameObject); return; }
+            BeginRunModes();
+        }
+
+        /// <summary>
+        /// VS run modes: the gameplay scene's progression manager starts the run, so it copies the modes saved on the
+        /// character select screen into RunModes (after clearing anything an earlier run left) before any Start runs.
+        /// Limit Break bonuses of an earlier run are cleared too. Restart and back-to-menu destroy this object, which
+        /// resets RunModes (OnDestroy).
+        /// </summary>
+        private static void BeginRunModes()
+        {
+            SoulHunter.Core.Persistence.SaveService save = null;
+            SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
+            RunModeOptions.BeginRun(save != null ? save.CurrentData : null);
+            LimitBreak.Reset();
+            if (RunModes.Hurry || RunModes.Hyper || RunModes.Inverse || RunModes.Endless || RunModes.Arcana || RunModes.LimitBreak)
+                Debug.Log($"[LevelProgressionManager] Run modes: Hurry={RunModes.Hurry} Hyper={RunModes.Hyper} Inverse={RunModes.Inverse} " +
+                          $"Endless={RunModes.Endless} Arcana={RunModes.Arcana} LimitBreak={RunModes.LimitBreak}");
         }
 
         private void Start()
@@ -70,14 +88,27 @@ namespace SoulHunter.Gameplay.Core
 
         private void OnDestroy()
         {
-            if (_instance == this) CampaignLevelCatalog.CurrentStage = 0; // no stage bonuses outside a run
+            if (_instance != this) return;
+            CampaignLevelCatalog.CurrentStage = 0; // no stage bonuses outside a run
+            RunModes.Reset(); // nor run modes: the next run copies them from the save again
+            LimitBreak.Reset();
+            _instance = null;
         }
 
         private void Update()
         {
             if (_gameWon || Time.timeScale <= 0f) return;
+            AdvanceClock(Time.deltaTime);
+        }
 
-            StageElapsedTime += Time.deltaTime;
+        /// <summary>
+        /// Moves the stage clock by <paramref name="deltaTime"/> of game time. VS Hurry mode runs the clock twice as fast
+        /// (RunModes.ClockSpeed), so everything scheduled on it (waves, events, chest elites, the boss, 30:00) comes sooner.
+        /// </summary>
+        public void AdvanceClock(float deltaTime)
+        {
+            if (_gameWon || deltaTime <= 0f) return;
+            StageElapsedTime += deltaTime * RunModes.ClockSpeed;
             OnStageTimeChanged?.Invoke(StageElapsedTime);
 
             int second = Mathf.FloorToInt(StageElapsedTime);
@@ -144,7 +175,7 @@ namespace SoulHunter.Gameplay.Core
             Debug.Log($"[LevelProgressionManager] Boss of Stage {CurrentStage} Defeated!");
             // Owner (2026-09-27): every stage lasts the full 30 minutes, as in VS; killing the 25:00 boss no longer
             // ends it. 30:00 clears the screen and starts the next stage. The Level 10 boss (Shadow Kael) is the end
-            // of the story, so killing him still wins the run.
+            // of the story, so killing him still wins the run (in Endless mode it starts the next cycle instead).
             if (CurrentStage >= MaxStages) CompleteStage("its final boss was defeated");
         }
 
@@ -162,9 +193,28 @@ namespace SoulHunter.Gameplay.Core
             WipeArena();
             OnStageCleared?.Invoke(CurrentStage);
 
-            if (CurrentStage >= MaxStages) GameWon();
-            else StartCoroutine(NextStageRoutine());
+            int next = StageAfter(CurrentStage);
+            if (next <= 0) { GameWon(); return; }
+            if (next <= CurrentStage)
+            {
+                // VS Endless: the run goes on as a new cycle, with a stronger horde (RunModes multipliers).
+                RunModes.EndlessCycle++;
+                Debug.Log($"[LevelProgressionManager] Endless: cycle {RunModes.EndlessCycle} starts again at Level {next}.");
+            }
+            _nextStage = next;
+            StartCoroutine(NextStageRoutine());
         }
+
+        private int _nextStage;
+
+        /// <summary>The stage the one after this one is cleared, or 0 when the run is won.</summary>
+        public int NextStage => _stageTransitionQueued ? _nextStage : 0;
+
+        /// <summary>
+        /// The stage that follows <paramref name="stage"/>: the next one, or after Level 10 either 0 (the run is won) or,
+        /// in VS Endless mode, Level 1 again.
+        /// </summary>
+        public static int StageAfter(int stage) => stage < MaxStages ? stage + 1 : RunModes.Endless ? 1 : 0;
 
         /// <summary>
         /// VS wiki (Stages, The_Reaper): surviving a stage to its end pays 500 gold, plus 100 per revival not used.
@@ -203,7 +253,7 @@ namespace SoulHunter.Gameplay.Core
         private System.Collections.IEnumerator NextStageRoutine()
         {
             yield return new WaitForSeconds(5f); 
-            StartStage(CurrentStage + 1);
+            StartStage(_nextStage);
         }
 
         private void GameWon()

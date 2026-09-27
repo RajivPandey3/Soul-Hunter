@@ -84,8 +84,9 @@ namespace SoulHunter.Gameplay.Data
         public static float GoldFor(int stage) => GoldBonus[Mathf.Clamp(stage, 1, GoldBonus.Length) - 1];
 
         /// <summary>The bonuses of the stage being played, or none outside a run (menus, EditMode tests).</summary>
-        public static float CurrentPlayerSpeed => CurrentStage > 0 ? PlayerSpeedFor(CurrentStage) : 1f;
-        public static float CurrentGold => CurrentStage > 0 ? GoldFor(CurrentStage) : 1f;
+        public static float CurrentPlayerSpeed => (CurrentStage > 0 ? PlayerSpeedFor(CurrentStage) : 1f) * RunModes.PlayerSpeedMultiplier;
+        /// <summary>VS: the stage's gold bonus and the run modes' gold bonuses add together.</summary>
+        public static float CurrentGold => (CurrentStage > 0 ? GoldFor(CurrentStage) : 1f) + RunModes.GoldBonus;
 
         /// <summary>Set by LevelProgressionManager when a stage starts; 0 outside a run.</summary>
         public static int CurrentStage { get; set; }

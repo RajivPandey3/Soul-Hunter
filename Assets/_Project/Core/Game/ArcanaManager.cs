@@ -11,6 +11,11 @@ namespace SoulHunter.Gameplay.Core
     /// Learning Comment:
     /// ArcanaManager game ke shuru mein ya chest (11:00 or 21:00 min) se naye cards (Arcanas) apply karta hai.
     /// Ye player stats aur weapons dono par gehra asar daalta hai.
+    /// VS Arcana mode (vampire.survivors.wiki/w/Arcanas, 2026-09-27): Arcanas exist only with the mode on. The run
+    /// starts with one Arcana, and Arcana chests (dropped by the 11:00 and 21:00 chest elites, EnemySpawner) give one
+    /// more each, until the player holds three; after that those elites drop regular chests. VS lets the player choose
+    /// from four; Soul Hunter has no Arcana choice screen yet, so a random unowned Arcana is given.
+    /// Before 2026-09-27 this manager gave the next Arcana on every stage's 11:00 and 21:00 whatever the mode.
     /// </summary>
     public class ArcanaManager : MonoBehaviour
     {
@@ -21,34 +26,19 @@ namespace SoulHunter.Gameplay.Core
         [Tooltip("Test karne ke liye shuru mein kon sa card dena hai? (Optional)")]
         [SerializeField] private ArcanaData _startingArcanaTest;
         [SerializeField] private List<ArcanaData> _availableArcanas = new List<ArcanaData>();
-        [SerializeField] private float _firstArcanaTime = 660f;
-        [SerializeField] private float _secondArcanaTime = 1260f;
+        /// <summary>VS: with three or more Arcanas, the Arcana elites drop regular chests.</summary>
+        public const int MaxArcanasFromChests = 3;
         public int ProjectileBounceCount { get; private set; }
         public bool GeminiEnabled { get; private set; }
         public float GeminiSpreadDegrees { get; private set; } = 12f;
         public event Action<ArcanaData> OnArcanaAwarded;
-        private bool _firstTimedCardGranted;
-        private bool _secondTimedCardGranted;
-        private LevelProgressionManager _progression;
+        /// <summary>The Arcana given at the start of an Arcana-mode run (null otherwise).</summary>
+        public ArcanaData StartingArcana { get; private set; }
 
         private void Awake()
         {
             if (Instance == null) Instance = this;
             else if (Instance != this) Destroy(gameObject);
-        }
-
-        private void OnEnable()
-        {
-            _progression = LevelProgressionManager.Instance;
-            _progression.OnStageStarted += HandleStageStarted;
-        }
-
-        private void HandleStageStarted(int stage)
-        {
-            // Arcana clocks are run-local to each campaign stage. Existing
-            // cards persist, but the two timed award windows are re-armed.
-            _firstTimedCardGranted = false;
-            _secondTimedCardGranted = false;
         }
 
         private void Start()
@@ -58,27 +48,48 @@ namespace SoulHunter.Gameplay.Core
             {
                 ApplyArcana(_startingArcanaTest);
             }
-        }
-
-        private void Update()
-        {
-            float time = _progression != null ? _progression.StageElapsedTime : 0f;
-            if (!_firstTimedCardGranted && time >= _firstArcanaTime)
+            // VS Arcana mode: the run starts with one Arcana (RunModes is set in LevelProgressionManager.Awake).
+            else if (RunModes.Arcana)
             {
-                _firstTimedCardGranted = true;
-                GrantNextAvailableArcana();
-            }
-            if (!_secondTimedCardGranted && time >= _secondArcanaTime)
-            {
-                _secondTimedCardGranted = true;
-                GrantNextAvailableArcana();
+                StartingArcana = GrantRandomAvailableArcana(UnityEngine.Random.value);
             }
         }
 
         private void OnDestroy()
         {
-            if (_progression != null) _progression.OnStageStarted -= HandleStageStarted;
             if (Instance == this) Instance = null;
+        }
+
+        /// <summary>True while an Arcana chest still gives an Arcana (fewer than three held and one left to give).</summary>
+        public bool CanGrantFromChest => ActiveArcanas.Count < MaxArcanasFromChests && AvailableCount > 0;
+
+        public int AvailableCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var arcana in _availableArcanas)
+                    if (arcana != null && !ActiveArcanas.Contains(arcana)) count++;
+                return count;
+            }
+        }
+
+        /// <summary>Gives a random Arcana the player does not hold yet. <paramref name="roll01"/> is uniform in [0, 1).</summary>
+        public ArcanaData GrantRandomAvailableArcana(float roll01)
+        {
+            var available = new List<ArcanaData>();
+            foreach (var arcana in _availableArcanas)
+                if (arcana != null && !ActiveArcanas.Contains(arcana) && !available.Contains(arcana)) available.Add(arcana);
+            if (available.Count == 0) return null;
+            var pick = available[Mathf.Clamp(Mathf.FloorToInt(roll01 * available.Count), 0, available.Count - 1)];
+            ApplyArcana(pick);
+            return pick;
+        }
+
+        /// <summary>Tests and tools: the Arcanas this manager can give.</summary>
+        public void SetAvailableArcanas(IEnumerable<ArcanaData> arcanas)
+        {
+            _availableArcanas = new List<ArcanaData>(arcanas);
         }
 
         public bool GrantNextAvailableArcana()

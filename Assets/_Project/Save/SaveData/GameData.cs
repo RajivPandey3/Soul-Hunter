@@ -63,6 +63,15 @@ namespace SoulHunter.Core.Persistence
         // --- Soul Eggs (VS Golden Egg rule: each egg permanently raises one random stat of one character) ---
         public List<SoulEggRecord> SoulEggs = new List<SoulEggRecord>();
 
+        // --- Run modes (VS "List of Modes"), picked on the character select screen and copied into RunModes when a
+        // run starts. A save written before these existed has no such fields and loads them as off. ---
+        public bool ModeHurry;
+        public bool ModeHyper;
+        public bool ModeInverse;
+        public bool ModeEndless;
+        public bool ModeArcana;
+        public bool ModeLimitBreak;
+
         public GameData()
         {
             // Default values for a new save

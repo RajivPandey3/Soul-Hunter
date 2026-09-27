@@ -80,7 +80,7 @@ namespace SoulHunter.Gameplay.AI
                 if (health != null) health.Initialize(_enemyData.MaxHealth);
 
                 var touchDamage = GetComponent<SoulHunter.Gameplay.Combat.TouchDamage>();
-                if (touchDamage != null) touchDamage.DamageAmount = _enemyData.DamageToPlayer;
+                if (touchDamage != null) touchDamage.DamageAmount = Mathf.RoundToInt(_enemyData.DamageToPlayer * SoulHunter.Gameplay.Data.RunModes.EnemyDamageMultiplier);
 
                 var drop = GetComponent<EnemyDrop>();
                 if (drop != null) 

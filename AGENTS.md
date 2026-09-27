@@ -446,6 +446,61 @@ Applied from the gap table (the "extra" features are listed at the end):
    - Not mapped: Luck raising rare light-source drops (no formula on the wiki); Orologion slowing the fever.
 5. **Stage clear gold** (`LevelProgressionManager.StageClearGold`): 500 gold, plus 100 per unused revival, when a stage is cleared at 30:00 (or the final boss dies). Greed and the stage gold bonus apply.
 
+Validation: EditMode 377/377; PlayMode 140/140, then the stage fixtures 47/47 after the L10 schedule fix; save untouched (`D:\SoulHunter-Validation\run-20260927-stagetable\`). Committed in `dba31112`.
+
+Editor play `autoplay-editor-37` (Stage 1, no god mode, 6 min, clock skipped to 9:50 at 60 s): 0 errors, level 25, 2,427 kills, min 44 FPS.
+- Chest elites came at 1:00 and at 10, 12 and 14 minutes.
+- Each chest paid its upgrade plus 100–200 gold.
+- Swarms and rings came about every minute.
+- The skip made the 3, 5, 7 and 9-minute elites arrive together (a Debug-skip artifact).
+
+Not yet played by the owner.
+
+### VS extra features: run modes and stage hazards (owner: "extra feature also continue", 2026-09-27)
+
+**Run modes** (VS "List of Modes"). Toggled on the character select screen (a row above the character grid), saved in `GameData` (`ModeHurry` … `ModeLimitBreak`; an older save loads them as off). They are copied into `RunModes` when `LevelProgressionManager` wakes and reset when it is destroyed. Numbers are the VS ones unless marked:
+- **Hurry:** the stage clock runs 2× (`LevelProgressionManager.AdvanceClock`); XP +25%.
+- **Hyper:** player and enemy move speed +65%, projectile speed +15%, gold +50%, spawn rate and enemy minimum ×1.25.
+- **Inverse:** enemies start at +200% health and gain +5% health and +0.5% speed per stage minute; gold +200%; Luck +20% (applied once in `PlayerStats.Start`). The flipped, darker VS map is not built.
+- **Endless:** clearing Level 10 no longer wins. `RunModes.EndlessCycle` goes up and Level 1 starts again. Each cycle adds +100% enemy health, +50% spawn rate and count, and +25% enemy damage.
+- **Arcana:**
+  - One random Arcana at the start of the run.
+  - Arcana chests at 11:00 and 21:00, carried by chest elites (`EnemyDrop.CarryArcanaThisLife`, `ChestPickup.IsArcana`, `ChestLogicController.ProcessArcanaChest`), up to 3 Arcanas.
+  - **Changed:** `ArcanaManager` used to give an Arcana at 11:00 and 21:00 of every stage without any mode. VS gives none without the mode, so that is gone.
+  - Not built: the VS pick-from-four choice screen (here the Arcana is random) and showing the start-of-run Arcana on screen.
+- **Limit Break:** once nothing is left to level, level-ups offer "LIMIT BREAK" cards: +10% damage to one held weapon per card (`LimitBreak`, hooked in `AutoAttackWeapon.ScaledDamage`; provisional). VS's random stat per card is not built.
+- Not built: the HUD and game-over screen do not show the active modes or the Endless cycle.
+- Hooks: `RunModes` is read by `EnemySpawner`, `EnemyController`, `PlayerExperience`, `AutoAttackWeapon` and `CampaignLevelCatalog.CurrentGold` / `CurrentPlayerSpeed`.
+- `GameplayPlayModeTestBase.BootIntoGameplay` turns every mode off for the other tests.
+
+**Stage hazards** (`StageHazards`, added by `GameSessionManager`; table in `StageHazardTable`). All numbers are provisional, and placement follows the story's stages:
+- **Death's Shadow** (VS Stalker): Stages 5 and 9 at 8:00 and 12:00.
+  - The stage boss model at 1.5×, tinted dark, 18 units out, at the player's base speed, with 30 contact damage.
+  - It cannot be hurt, pushed or killed (not even by Soul Toll, Pentagram or the stage-clear wipe), drops nothing, and leaves after 120 s.
+  - It is not a stage boss. It restores the pooled enemy when it goes.
+- **Soul Meteors** (VS Shooting Star): Stages 6 and 10, every even minute from 2:00 to 28:00.
+  - A volley of 8 ground markers (the first on the player); each strikes 2 s later for 30 to the player (minus Armor) and 30 to enemies within 1.6.
+  - The markers use the existing VFX magic circle.
+- **Pile Assault** (VS): Stage 8 at 9:00, 10:00, 12:00 and 20:00.
+  - 12 stage enemies on an ellipse stand still and each fire a slow bullet (10 damage) every 2.5 s.
+  - They can be killed; the survivors leave after 20 s.
+- **Rail carts** (VS Dairy Plant carts): Stage 3, two 24-unit rails near the start.
+  - Weapons empty a cart's 30 HP to launch it; it runs along the rail dealing 200 to each enemy it touches, then waits at the far end.
+  - It never hurts the player.
+- Placeholder art from `StageHazardBuilder` (menu Soul Hunter/Content/Build Stage Hazards): `SH10_RailCart`, `SH10_HazardMarker`, and the hazard bullet (a tinted Magic Wand bolt). **Not owner-approved art.**
+- Found in validation: `RailCartTrack` was declared inside `RailCart.cs`, so Unity could not save it on the prefab (a MonoBehaviour needs its own file). It now has its own file.
+
+Validation:
+- EditMode 399/399 after that fix. The full PlayMode run gave 147/147; after the fix, the hazard and run-mode fixtures gave 7/7. Save untouched (`D:\SoulHunter-Validation\run-20260927-extras\`).
+- Editor play, god mode, 2.5 min each, 0 errors:
+  - `autoplay-editor-38`, Stage 5 (clock at 7:50): Death's Shadow appeared at 8:00. Min 42 FPS, up to 317 enemies.
+  - `-39`, Stage 6: a Soul Meteor volley at 2:00 struck. Min 38 FPS.
+  - `-40`, Stage 3: both rail carts lie near the start and are visible. Min 63 FPS.
+  - The shadow and meteors are confirmed in the log; in the screenshots they are hidden by level-up screens or off-frame (partial `V`).
+- Run modes are covered by tests only; the bot does not turn modes on.
+
+Not yet played by the owner.
+
 ### Balance pass, Part 1: weapons on VS numbers (owner request, 2026-09-27)
 
 Owner: "balance pass shuru karo". Balance follows the VS rules plus the owner's story; the planned parts are:

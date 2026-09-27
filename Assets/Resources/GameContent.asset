@@ -335,4 +335,7 @@ MonoBehaviour:
   LuckCharmItem: {fileID: 3265543988881633348, guid: e300356a24bb06d45bf7194da65e6080, type: 3}
   GildedCharmItem: {fileID: 4942604634137321088, guid: 63ced3fbb1c4938459b437bad5d66bc9, type: 3}
   FireBreathProjectile: {fileID: 7457182400913755663, guid: 632b4a2519df583458130d5ea74d623d, type: 3}
+  RailCart: {fileID: 4802044111147347626, guid: 9110b53f79bd1334da07df28d2ada061, type: 3}
+  HazardMarker: {fileID: 3466339483402821886, guid: 77198681c40d3e848962733e03c8edd8, type: 3}
+  HazardBullet: {fileID: 1192744282758312269, guid: 3d40d511f32b3db4aad11ba911b65a4e, type: 3}
   WanderingMerchant: {fileID: 4935854625492487647, guid: 6850f23122f6dd3479c45c5f56088130, type: 3}

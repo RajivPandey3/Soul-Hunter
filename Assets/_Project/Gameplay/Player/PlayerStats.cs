@@ -53,8 +53,15 @@ namespace SoulHunter.Gameplay.Player
                     Debug.Log("[PlayerStats] Meta Progression Loaded! Player is stronger.");
                 }
             }
+            // VS Inverse mode: +20% Luck for the run, once. RunModes is filled from the save in
+            // LevelProgressionManager.Awake, before any Start of the gameplay scene.
+            RunModeLuckApplied = SoulHunter.Gameplay.Data.RunModes.LuckBonus;
+            if (RunModeLuckApplied > 0f) AddLuck(RunModeLuckApplied);
             SyncArmor();
         }
+
+        /// <summary>The run-mode Luck bonus added at the start of this run (VS Inverse: +0.2), for the HUD and tests.</summary>
+        public float RunModeLuckApplied { get; private set; }
 
         private bool _characterApplied;
         private bool _isMirror;

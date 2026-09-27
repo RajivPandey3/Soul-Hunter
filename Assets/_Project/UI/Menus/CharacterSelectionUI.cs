@@ -58,6 +58,8 @@ namespace SoulHunter.UI
         private TextMeshProUGUI _filterButtonLabel;
         private TextMeshProUGUI _filterCountText;
         private readonly List<Toggle> _stageToggles = new List<Toggle>();
+        private readonly List<Toggle> _modeToggles = new List<Toggle>();
+        private TextMeshProUGUI _modeHintText;
         private ScrollRect _gridScroll;
         private Dictionary<UpgradeData.UpgradeType, UpgradeData> _weaponInfo;
         private EconomyService _economy;
@@ -78,6 +80,33 @@ namespace SoulHunter.UI
         public bool FilterOn => _filterOn;
         public string FilterCountText => _filterCountText != null ? _filterCountText.text : null;
         public IReadOnlyList<Toggle> StageToggles => _stageToggles;
+        /// <summary>The VS run mode toggles, in RunModeOptions.All order (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break).</summary>
+        public IReadOnlyList<Toggle> ModeToggles => _modeToggles;
+        public string ModeHintText => _modeHintText != null ? _modeHintText.text : null;
+
+        /// <summary>
+        /// Turns a VS run mode on or off for the next runs. The choice is saved at once (GameData.Mode*), and the next run
+        /// copies it into RunModes when it starts.
+        /// </summary>
+        public void SetMode(RunMode mode, bool on)
+        {
+            var data = SaveData();
+            if (data == null) return;
+            if (RunModeOptions.Get(data, mode) != on)
+            {
+                RunModeOptions.Set(data, mode, on);
+                GameServices.Instance?.Get<SoulHunter.Core.Persistence.SaveService>()?.SaveGame();
+                PlayUISound(false);
+            }
+            int index = System.Array.IndexOf(RunModeOptions.All, mode);
+            if (index >= 0 && index < _modeToggles.Count && _modeToggles[index].isOn != on) _modeToggles[index].SetIsOnWithoutNotify(on);
+            ShowModeHint(RunModeOptions.Description(mode));
+        }
+
+        private void ShowModeHint(string hint)
+        {
+            if (_modeHintText != null) _modeHintText.text = hint;
+        }
 
         /// <summary>Turns the stage filter on or off (VS "FILTER: ON/OFF").</summary>
         public void SetFilter(bool on)
@@ -391,7 +420,7 @@ namespace SoulHunter.UI
             }
 
             // Centre: scrollable grid of character cards.
-            var gridBox = CreatePanel("CharacterGrid", root, new Vector2(0.27f, 0.33f), new Vector2(0.73f, 0.88f));
+            var gridBox = CreatePanel("CharacterGrid", root, new Vector2(0.27f, 0.33f), new Vector2(0.73f, 0.785f));
             var viewport = CreateRect("Viewport", gridBox, Vector2.zero, Vector2.one);
             viewport.offsetMin = new Vector2(10f, 10f);
             viewport.offsetMax = new Vector2(-10f, -10f);
@@ -446,6 +475,56 @@ namespace SoulHunter.UI
 
             // Right: VS-style character filter by the stage each character comes from.
             BuildFilterPanel(root);
+
+            // Above the grid: VS run modes (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break).
+            BuildModesRow(root);
+        }
+
+        /// <summary>
+        /// VS "List of Modes" toggles in one row above the character grid, with a line under them that says what the
+        /// focused (or hovered) mode does. Keyboard/gamepad focus uses the options screen's orange focus colour.
+        /// </summary>
+        private void BuildModesRow(RectTransform root)
+        {
+            var box = CreatePanel("RunModes", root, new Vector2(0.27f, 0.795f), new Vector2(0.73f, 0.88f));
+            var data = SaveData();
+            int count = RunModeOptions.All.Length;
+            float width = 0.98f / count;
+            for (int i = 0; i < count; i++)
+            {
+                var mode = RunModeOptions.All[i];
+                float left = 0.01f + i * width;
+                var cell = CreateRect($"Mode_{mode}", box, new Vector2(left + 0.004f, 0.44f), new Vector2(left + width - 0.004f, 0.95f));
+                var background = cell.gameObject.AddComponent<Image>();
+                var toggle = cell.gameObject.AddComponent<Toggle>();
+                toggle.targetGraphic = background;
+                SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(toggle, background);
+
+                var tickBox = CreateRect("Box", cell, new Vector2(0.04f, 0.18f), new Vector2(0.2f, 0.82f));
+                var tickBoxImage = tickBox.gameObject.AddComponent<Image>();
+                tickBoxImage.color = new Color(0.32f, 0.32f, 0.4f, 1f);
+                tickBoxImage.raycastTarget = false;
+                tickBox.gameObject.AddComponent<AspectRatioFitter>().aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
+                var check = CreateRect("Check", tickBox, new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f));
+                var checkImage = check.gameObject.AddComponent<Image>();
+                checkImage.color = _bonusColor; // gold tick = on
+                checkImage.raycastTarget = false;
+                toggle.graphic = checkImage;
+
+                var label = CreateText("Label", cell, new Vector2(0.24f, 0f), new Vector2(0.98f, 1f),
+                    RunModeOptions.Name(mode), TextAlignmentOptions.Left, 11f, 20f);
+                label.textWrappingMode = TextWrappingModes.NoWrap;
+
+                toggle.SetIsOnWithoutNotify(RunModeOptions.Get(data, mode));
+                toggle.onValueChanged.AddListener(on => SetMode(mode, on));
+                var hint = cell.gameObject.AddComponent<FocusHint>();
+                hint.Hint = RunModeOptions.Description(mode);
+                hint.Show = ShowModeHint;
+                _modeToggles.Add(toggle);
+            }
+            _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.04f), new Vector2(0.985f, 0.42f),
+                "Modes: select one to see what it does.", TextAlignmentOptions.Left, 10f, 18f);
+            _modeHintText.color = new Color(0.82f, 0.85f, 0.95f);
         }
 
         private void BuildFilterPanel(RectTransform root)

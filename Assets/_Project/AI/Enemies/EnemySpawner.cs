@@ -35,6 +35,8 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField, Min(1f)] private float _chestEliteHealthMultiplier = 5f;
         [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
         private int _chestElitesSpawned;
+        private int _arcanaChestsSpawned;
+        public static readonly float[] ArcanaChestMinutes = { 11f, 21f };
         private System.Collections.Generic.IReadOnlyList<StageEventEntry> _stageEvents;
         private int _nextStageEvent;
         // VS wave events repeat: (stage time, entry) of each pending firing.
@@ -113,6 +115,7 @@ namespace SoulHunter.Gameplay.AI
             _stageTimePassed = 0f;
             _timer = 0f;
             _chestElitesSpawned = 0;
+            _arcanaChestsSpawned = 0;
             _stageEvents = _currentWave.GetEvents();
             _nextStageEvent = 0;
             _eventFirings.Clear();
@@ -157,6 +160,12 @@ namespace SoulHunter.Gameplay.AI
             {
                 _chestElitesSpawned++;
                 SpawnChestElite();
+            }
+            // VS Arcana mode: Arcana chests at 11:00 and 21:00.
+            if (RunModes.Arcana && _arcanaChestsSpawned < ChestElitesDue(_stageTimePassed, ArcanaChestMinutes))
+            {
+                _arcanaChestsSpawned++;
+                SpawnChestElite()?.GetComponent<EnemyDrop>()?.CarryArcanaThisLife();
             }
 
             var level = progression.CurrentLevel;
@@ -210,12 +219,12 @@ namespace SoulHunter.Gameplay.AI
                     for (int i = 0; i < spawnCount; i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
                     // VS rule: Curse makes enemies arrive more often.
-                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / CurrentCurse());
+                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (CurrentCurse() * RunModes.SpawnMultiplier));
                 }
 
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
-                int missing = Mathf.Min(phase.MinimumEnemies, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
+                int missing = Mathf.Min(Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier), _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
             }
         }
@@ -341,7 +350,7 @@ namespace SoulHunter.Gameplay.AI
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger
             float curse = CurrentCurse();
             bossObj.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
-                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse);
+                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse * RunModes.EnemySpeedMultiplier(StageMinutes));
             ConfigureStageDamageRule(bossObj);
 
             // LEVEL 10 REQUIREMENT: Shadow Kael Boss Controller
@@ -365,7 +374,7 @@ namespace SoulHunter.Gameplay.AI
                 int bossHealth = bossData != null
                     ? StoryBossHealth(bossData.HealthForPlayerLevel(CurrentPlayerLevel()), ChestEliteBaseHealth())
                     : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage;
-                health.Initialize(ScaleHealthByCurse(bossHealth, curse));
+                health.Initialize(ScaleHealthByCurse(ModeHealth(bossHealth), curse));
                 health.KnockbackResistance = 1f; // Immune to knockback
                 
                 if (!_bossCallbacks.Contains(health))
@@ -444,7 +453,7 @@ namespace SoulHunter.Gameplay.AI
             enemyToSpawn.SetActive(true);
             float curse = CurrentCurse();
             enemyToSpawn.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
-                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse);
+                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse * RunModes.EnemySpeedMultiplier(StageMinutes));
             ConfigureStageDamageRule(enemyToSpawn);
             // VS movement skill: Floaty enemies weave, Fixed Direction ones take their line toward the player now.
             if (enemyController != null) enemyController.BeginMovement();
@@ -455,7 +464,7 @@ namespace SoulHunter.Gameplay.AI
                 // VS rule: Curse makes enemies tougher. Always scale from the EnemyData value so
                 // pooled enemies never compound it; enemies without data keep their own max health.
                 var data = enemyController != null ? enemyController.Data : null;
-                if (data != null) health.Initialize(ScaleHealthByCurse(data.MaxHealth, curse));
+                if (data != null) health.Initialize(ScaleHealthByCurse(ModeHealth(data.MaxHealth), curse));
                 else health.ResetHealth();
             }
             return enemyToSpawn;
@@ -607,7 +616,7 @@ namespace SoulHunter.Gameplay.AI
             var data = elite.GetComponent<EnemyController>()?.Data;
             var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && data != null)
-                health.Initialize(ScaleHealthByCurse(Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier), CurrentCurse()));
+                health.Initialize(ScaleHealthByCurse(ModeHealth(Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier)), CurrentCurse()));
             elite.GetComponent<EnemyDrop>()?.DropChestThisLife();
             Debug.Log($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
             return elite;
@@ -626,6 +635,38 @@ namespace SoulHunter.Gameplay.AI
             var prefab = _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
             var data = prefab != null ? prefab.GetComponent<EnemyController>()?.Data : null;
             return data != null ? Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier) : 0;
+        }
+
+        /// <summary>Stage minutes on the clock (for the run modes' per-minute growth).</summary>
+        private static float StageMinutes
+        {
+            get
+            {
+                var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+                return progression != null ? progression.StageElapsedTime / 60f : 0f;
+            }
+        }
+
+        /// <summary>Health after the run modes (Inverse, Endless cycles); unchanged when no mode is on.</summary>
+        private static int ModeHealth(int baseHealth)
+        {
+            float m = RunModes.EnemyHealthMultiplier(StageMinutes);
+            return Mathf.Approximately(m, 1f) ? baseHealth : Mathf.Max(1, Mathf.RoundToInt(baseHealth * m));
+        }
+
+        // ---- Stage hazards (Stalker, pile assaults, ...) spawn this stage's enemies through these. ----
+        public GameObject StageEnemyPrefab => _stageEnemyPrefab;
+        public GameObject StageElitePrefab => _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
+        public GameObject StageBossPrefab => _stageBossPrefab;
+
+        /// <summary>Spawns one of this stage's enemies the normal way (pool, stage speed, health, damage rule) at a position.</summary>
+        public GameObject SpawnHazardEnemy(GameObject prefab, Vector3 position)
+        {
+            var enemy = SpawnEnemy(prefab);
+            if (enemy == null) return null;
+            position.y = _playerTransform != null ? _playerTransform.position.y : position.y;
+            enemy.transform.position = StageCorridor.Clamp(position);
+            return enemy;
         }
 
         public static int ScaleHealthByCurse(int baseHealth, float curse) =>

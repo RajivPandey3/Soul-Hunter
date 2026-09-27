@@ -157,14 +157,15 @@ namespace SoulHunter.Gameplay.Core
 
     Debug.Log($"[LevelUpManager] >>> Calling GetRandomValidUpgrades({_currentChoiceCount})");
 
-    List<UpgradeData> choices = GetRandomValidUpgrades(_currentChoiceCount);
+    List<UpgradeData> choices = GetLevelUpChoices(_currentChoiceCount);
 
     Debug.Log($"[LevelUpManager] <<< GetRandomValidUpgrades returned | count={choices.Count}");
 
     if (choices.Count == 0)
     {
         // VS rule: once every item is maxed, a level-up still pays out
-        // (floor chicken heal + gold) instead of being thrown away.
+        // (floor chicken heal + gold) instead of being thrown away. With Limit Break on, cards are offered instead
+        // (see GetLevelUpChoices), so this only happens when the player holds no weapon at all.
         Debug.Log($"[LevelUpManager] No valid upgrades available. Granting {_pendingLevelUps} maxed-out reward(s).");
         for (; _pendingLevelUps > 0; _pendingLevelUps--) GrantMaxedOutReward();
         _isLevelUpActive = false;
@@ -206,7 +207,8 @@ namespace SoulHunter.Gameplay.Core
         public void SelectUpgrade(UpgradeData upgrade)
         {
             if (upgrade == null) return;
-            if (_weaponManager != null)
+            // VS Limit Break: a Limit Break card strengthens its weapon beyond max level instead of levelling it.
+            if (!LimitBreak.TryApplyCard(upgrade) && _weaponManager != null)
             {
                 _weaponManager.ApplyUpgrade(upgrade);
             }
@@ -220,7 +222,7 @@ namespace SoulHunter.Gameplay.Core
         {
             if (!_isLevelUpActive || RerollsLeft <= 0) return false;
             RerollsLeft--;
-            PresentChoicesOrPayOut(GetRandomValidUpgrades(_currentChoiceCount));
+            PresentChoicesOrPayOut(GetLevelUpChoices(_currentChoiceCount));
             return true;
         }
 
@@ -242,9 +244,13 @@ namespace SoulHunter.Gameplay.Core
         {
             if (!_isLevelUpActive || BanishesLeft <= 0 || upgrade == null) return false;
             BanishesLeft--;
-            _banishedTypes.Add(upgrade.Type);
-            Debug.Log($"[LevelUpManager] Banished {upgrade.Type} for this run.");
-            PresentChoicesOrPayOut(GetRandomValidUpgrades(_currentChoiceCount));
+            // A Limit Break card is not an item: banishing it only deals new cards and keeps its weapon in the pool.
+            if (!LimitBreak.IsCard(upgrade))
+            {
+                _banishedTypes.Add(upgrade.Type);
+                Debug.Log($"[LevelUpManager] Banished {upgrade.Type} for this run.");
+            }
+            PresentChoicesOrPayOut(GetLevelUpChoices(_currentChoiceCount));
             return true;
         }
 
@@ -292,6 +298,27 @@ namespace SoulHunter.Gameplay.Core
         {
             SoulHunter.Core.Services.GameTime.Resume(this);
             if (_playerController != null) _playerController.ResumeMovementAfterMenu();
+        }
+
+        /// <summary>
+        /// The choices of one level-up: normal upgrades, or, when nothing is left to offer and VS Limit Break mode is on,
+        /// Limit Break cards (one per weapon held, picked at random). Chests keep using GetRandomValidUpgrades (VS: Limit
+        /// Break does not change treasure chests).
+        /// </summary>
+        public List<UpgradeData> GetLevelUpChoices(int count)
+        {
+            var choices = GetRandomValidUpgrades(count);
+            if (choices.Count == 0 && SoulHunter.Gameplay.Data.RunModes.LimitBreak)
+                choices = LimitBreak.BuildCards(_weaponManager, count, IconFor);
+            return choices;
+        }
+
+        private Sprite IconFor(UpgradeData.UpgradeType type)
+        {
+            if (_allUpgrades != null)
+                foreach (var upgrade in _allUpgrades)
+                    if (upgrade != null && upgrade.Type == type && upgrade.Icon != null) return upgrade.Icon;
+            return null;
         }
 
         public List<UpgradeData> GetRandomValidUpgrades(int count)

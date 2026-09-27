@@ -65,6 +65,10 @@ namespace SoulHunter.Gameplay.Core
                 // Corridor stages (the Ruined Castle, as VS's Inlaid Library) are walled along their length.
                 if (GetComponent<SoulHunter.Gameplay.Environment.CorridorWalls>() == null)
                     gameObject.AddComponent<SoulHunter.Gameplay.Environment.CorridorWalls>();
+                // VS stage hazards on the stage clock: Death's Shadow (Stalker), Soul Meteors (Shooting Star),
+                // Pile Assaults, and the rail carts of Stage 3.
+                if (GetComponent<SoulHunter.Gameplay.Hazards.StageHazards>() == null)
+                    gameObject.AddComponent<SoulHunter.Gameplay.Hazards.StageHazards>();
             }
             else if (Instance != this)
             {

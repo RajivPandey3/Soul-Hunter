@@ -26,6 +26,13 @@ namespace SoulHunter.Gameplay.Data
         public GameObject GildedCharmItem;
         [UnityEngine.Tooltip("Flame projectile Hellfire Breath fires (the Fire Wand's fireball).")]
         public GameObject FireBreathProjectile;
+        [UnityEngine.Header("Stage hazards (StageHazardBuilder; the rail cart is placeholder art)")]
+        [UnityEngine.Tooltip("Stage 3 rail with its cart (VS dairy cart), laid by StageHazards.")]
+        public GameObject RailCart;
+        [UnityEngine.Tooltip("Soul Meteor ground marker (VS Shooting Star): the VFX v2 magic circle on a flat quad.")]
+        public GameObject HazardMarker;
+        [UnityEngine.Tooltip("Bullet the Pile Assault enemies shoot (the Magic Wand bolt, tinted at runtime).")]
+        public GameObject HazardBullet;
         [UnityEngine.Tooltip("Level 3 Wandering Merchant (model, trigger and shop), spawned by CampaignSignatureSystem.")]
         public GameObject WanderingMerchant;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");

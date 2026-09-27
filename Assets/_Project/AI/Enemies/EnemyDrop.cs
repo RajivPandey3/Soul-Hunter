@@ -25,6 +25,11 @@ namespace SoulHunter.Gameplay.AI
         private HealthController _health;
         private bool _dropsChestThisLife;
         private bool _erasedThisLife;
+        private bool _arcanaThisLife;
+
+        /// <summary>VS Arcana mode: this life's chest is an Arcana chest (11:00 and 21:00). Cleared on respawn.</summary>
+        public void CarryArcanaThisLife() => _arcanaThisLife = true;
+        public bool CarriesArcana => _arcanaThisLife;
 
         /// <summary>
         /// VS Pentagram: "if a boss that would have dropped [a chest] is erased, the Treasure Chest is then dropped by a
@@ -50,6 +55,7 @@ namespace SoulHunter.Gameplay.AI
         {
             _dropsChestThisLife = false;
             _erasedThisLife = false;
+            _arcanaThisLife = false;
             _health.OnDied += HandleDeath;
         }
 
@@ -92,6 +98,7 @@ namespace SoulHunter.Gameplay.AI
                     var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
                     if (chestPickup != null && progression != null)
                         chestPickup.CanEvolve = SoulHunter.Gameplay.Core.ChestLogicController.CanEvolveAt(progression.StageElapsedTime);
+                    if (chestPickup != null) chestPickup.IsArcana = _arcanaThisLife;
                     // Owner's story (2026-09-27): Kael harvests souls, so a boss or chest elite also leaves its big
                     // soul gem (EnemyData.ExperienceValue: 50 elite, 250 boss), set a little aside from the chest.
                     SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position + new Vector3(-1.2f, 0f, 0f), GemValue);

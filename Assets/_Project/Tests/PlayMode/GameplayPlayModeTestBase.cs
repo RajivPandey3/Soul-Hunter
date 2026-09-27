@@ -70,7 +70,7 @@ namespace SoulHunter.Tests.PlayMode
         protected string Errors() => _errors.Count == 0 ? "(no errors logged)" : "Logged errors:\n" + string.Join("\n", _errors);
 
         /// <summary>Boots like a real launch and enters Main_Gameplay through SceneService.</summary>
-        protected IEnumerator BootIntoGameplay()
+        protected IEnumerator BootIntoGameplay(System.Action<SoulHunter.Core.Persistence.GameData> configureSave = null)
         {
             var load = SceneManager.LoadSceneAsync("Bootstrap");
             Assert.IsNotNull(load, "Bootstrap is not in Build Settings.");
@@ -83,6 +83,11 @@ namespace SoulHunter.Tests.PlayMode
             var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
             save.UseFile(System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save.json"));
             save.CurrentData.SelectedCharacterName = "Kael";
+            // Tests play without VS run modes (Hurry, Hyper, ...) even if the owner turned some on; a test that needs
+            // modes turns them on in configureSave, and the run copies them into RunModes when it starts.
+            foreach (var mode in SoulHunter.Gameplay.Data.RunModeOptions.All)
+                SoulHunter.Gameplay.Data.RunModeOptions.Set(save.CurrentData, mode, false);
+            configureSave?.Invoke(save.CurrentData);
 
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             yield return WaitForFreshGameplay(previousPlayer: null);

@@ -229,6 +229,8 @@ namespace SoulHunter.Core.Persistence
             data.MetaArmorLevel = Mathf.Max(0, data.MetaArmorLevel);
             data.MetaGreedLevel = Mathf.Max(0, data.MetaGreedLevel);
             data.MetaRevivalLevel = Mathf.Max(0, data.MetaRevivalLevel);
+            // Run mode toggles (ModeHurry ... ModeLimitBreak) need no step: a save without them loads them as off, which
+            // is the VS default, and a bool cannot hold an impossible value. The schema version stays at 1.
             if (data.WindowMode < 0 || data.WindowMode > 3) data.WindowMode = 0;
             if (data.ResolutionIndex < -1) data.ResolutionIndex = -1;
         }

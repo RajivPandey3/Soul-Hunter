@@ -81,7 +81,7 @@ namespace SoulHunter.Gameplay.Player
         {
             if (amount <= 0) return;
             var stats = GetComponent<PlayerStats>();
-            int adjustedAmount = Mathf.Max(1, Mathf.RoundToInt(amount * (stats != null ? stats.ExpBonus : 1f)));
+            int adjustedAmount = Mathf.Max(1, Mathf.RoundToInt(amount * (stats != null ? stats.ExpBonus : 1f) * SoulHunter.Gameplay.Data.RunModes.XpMultiplier));
             CurrentXP += adjustedAmount;
             OnSoulCollected?.Invoke(adjustedAmount);
             

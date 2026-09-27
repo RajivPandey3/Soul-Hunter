@@ -87,7 +87,8 @@ namespace SoulHunter.Gameplay.Combat
         protected float CooldownMultiplier => OwnerStats != null ? OwnerStats.Cooldown : 1f;
         protected float AreaMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Area) : 1f;
         protected float DurationMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Duration) : 1f;
-        protected float SpeedMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f;
+        protected float SpeedMultiplier => (OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f)
+                                           * (OwnerStats != null ? SoulHunter.Gameplay.Data.RunModes.ProjectileSpeedMultiplier : 1f);
         protected int ExtraAmount => OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0;
         /// <summary>Extra projectile bounces from the holder's character (e.g. Seraphina).</summary>
         protected int ExtraBounces => OwnerStats != null ? Mathf.Max(0, OwnerStats.ExtraProjectileBounces) : 0;
@@ -165,7 +166,7 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>Base damage scaled by Might.</summary>
-        protected float ScaledDamage(float baseDamage) => baseDamage * MightMultiplier;
+        protected float ScaledDamage(float baseDamage) => baseDamage * MightMultiplier * LimitBreak.DamageMultiplier(this);
 
         /// <summary>
         /// VS rule: some weapons can land critical hits; Luck multiplies the chance. 0 = cannot crit.

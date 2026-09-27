@@ -71,7 +71,8 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>The card's small tag: NEW! for something the player does not have yet, else the level it goes to.</summary>
-        public static string Tag(UpgradeData upgrade, int ownedLevel) => ownedLevel <= 0 ? "NEW!" : $"Level {upgrade.Level}";
+        public static string Tag(UpgradeData upgrade, int ownedLevel) =>
+            LimitBreak.IsCard(upgrade) ? "LIMIT BREAK" : ownedLevel <= 0 ? "NEW!" : $"Level {upgrade.Level}";
 
         public static string Describe(UpgradeData upgrade, int ownedLevel)
         {

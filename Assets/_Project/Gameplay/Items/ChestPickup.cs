@@ -16,6 +16,9 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>VS: only chests from bosses at 10:00 or later (and the 1:00 chest) can evolve a weapon. Set when dropped.</summary>
         public bool CanEvolve = true;
 
+        /// <summary>VS Arcana mode: an Arcana chest (11:00 and 21:00) gives an Arcana choice instead of items.</summary>
+        public bool IsArcana;
+
         private readonly Collider[] _playerHits = new Collider[1];
 
         private void Update()
@@ -49,7 +52,10 @@ namespace SoulHunter.Gameplay.Pickups
             string rewardMessage = "";
             if (_logicController != null)
             {
-                rewardMessage = _logicController.ProcessChest(CanEvolve); // UI bypass / Backend processing
+                // VS Arcana mode: an Arcana chest gives an Arcana instead of items.
+                rewardMessage = IsArcana
+                    ? _logicController.ProcessArcanaChest(CanEvolve)
+                    : _logicController.ProcessChest(CanEvolve); // UI bypass / Backend processing
             }
             else
             {
@@ -69,6 +75,7 @@ namespace SoulHunter.Gameplay.Pickups
         {
             _isCollected = false;
             CanEvolve = true;
+            IsArcana = false;
         }
     }
 }
