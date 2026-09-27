@@ -55,21 +55,27 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(EnemySpawner.StoryBossHealth(2400, 625), Is.EqualTo(2400), "Otherwise per-level health decides.");
         }
 
+        // Owner (2026-09-27): the VS Mad Forest chest minutes 1, 3, 5, 7, 9, 10, 12, 14, 15, 16, 18, 20, 22, 23, 27, 29
+        // (25:00 is the boss; the Arcana-only 11:00 and 21:00 chests are left out).
         [TestCase(0f, 0)]
-        [TestCase(299f, 0)]
-        [TestCase(300f, 1)]
-        [TestCase(1200f, 4)]
-        [TestCase(1499f, 4)]
-        [TestCase(1800f, 4)]
-        public void ChestElites_AreDueEveryFiveMinutesBeforeTheBoss(float stageTime, int expected)
+        [TestCase(59f, 0)]
+        [TestCase(60f, 1)]
+        [TestCase(300f, 3)]
+        [TestCase(660f, 6)]
+        [TestCase(1260f, 12)]
+        [TestCase(1500f, 14)]
+        [TestCase(1740f, 16)]
+        [TestCase(1800f, 16)]
+        public void ChestElites_ComeAtTheVsMinutes(float stageTime, int expected)
         {
-            Assert.That(EnemySpawner.ChestElitesDue(stageTime, 300f, 1500f), Is.EqualTo(expected));
+            Assert.That(EnemySpawner.ChestElitesDue(stageTime, EnemySpawner.DefaultChestEliteMinutes), Is.EqualTo(expected));
         }
 
         [Test]
-        public void ChestElites_AreOffWithoutAnInterval()
+        public void ChestElites_AreOffWithoutMinutes()
         {
-            Assert.That(EnemySpawner.ChestElitesDue(1000f, 0f, 1500f), Is.EqualTo(0));
+            Assert.That(EnemySpawner.ChestElitesDue(1000f, null), Is.EqualTo(0));
+            Assert.That(EnemySpawner.ChestElitesDue(1000f, new float[0]), Is.EqualTo(0));
         }
     }
 }

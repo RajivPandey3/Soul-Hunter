@@ -5,8 +5,8 @@ using UnityEngine;
 namespace SoulHunter.Tests.EditMode
 {
     /// <summary>
-    /// Learning Comment: BossStageAdvanceTests verifies the owner decision that killing a stage boss clears the
-    /// stage and moves the run on, that a stage clears only once, and that the Level 10 boss wins the run.
+    /// Learning Comment: BossStageAdvanceTests verifies the owner decisions that a stage runs the full 30 minutes (VS;
+    /// 2026-09-27, killing its boss no longer ends it), that a stage clears only once, and that the Level 10 boss wins the run.
     /// </summary>
     public class BossStageAdvanceTests
     {
@@ -27,16 +27,25 @@ namespace SoulHunter.Tests.EditMode
             Object.DestroyImmediate(_object);
         }
 
+        private void SurviveThirtyMinutes() =>
+            typeof(LevelProgressionManager).GetMethod("CompleteStageAfterSurvival",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(_progression, null);
+
         [Test]
-        public void BossKill_ClearsStage_AndStartsTransition()
+        public void BossKill_DoesNotEndTheStage_ItRunsToThirtyMinutes()
         {
-            // Learning Comment: Boss marne par stage clear ho jaye, 30 minute ka intezaar na ho.
-            int clearedStage = 0;
-            _progression.OnStageCleared += stage => clearedStage = stage;
+            // Owner (2026-09-27): every stage lasts the full 30 minutes, as in VS.
+            int clears = 0;
+            _progression.OnStageCleared += _ => clears++;
 
             _progression.ReportBossDefeated();
 
-            Assert.That(clearedStage, Is.EqualTo(1));
+            Assert.That(_progression.IsBossDefeated, Is.True);
+            Assert.That(clears, Is.EqualTo(0), "Killing the 25:00 boss no longer clears the stage.");
+            Assert.That(_progression.IsStageTransitioning, Is.False);
+
+            SurviveThirtyMinutes();
+            Assert.That(clears, Is.EqualTo(1), "30:00 clears the stage.");
             Assert.That(_progression.IsStageTransitioning, Is.True, "Agla stage shuru hone tak transition chalna chahiye.");
         }
 
@@ -46,8 +55,8 @@ namespace SoulHunter.Tests.EditMode
             int clears = 0;
             _progression.OnStageCleared += _ => clears++;
 
-            _progression.ReportBossDefeated();
-            _progression.ReportBossDefeated();
+            SurviveThirtyMinutes();
+            SurviveThirtyMinutes();
 
             Assert.That(clears, Is.EqualTo(1));
         }
@@ -55,12 +64,13 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void StartingNextStage_EndsTransition()
         {
-            _progression.ReportBossDefeated();
+            SurviveThirtyMinutes();
 
             _progression.StartStage(2);
 
             Assert.That(_progression.CurrentStage, Is.EqualTo(2));
             Assert.That(_progression.IsStageTransitioning, Is.False);
+            Assert.That(_progression.IsBossDefeated, Is.False, "A new stage has a new boss.");
         }
 
         [Test]

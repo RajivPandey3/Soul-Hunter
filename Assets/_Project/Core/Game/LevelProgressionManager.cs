@@ -128,14 +128,18 @@ namespace SoulHunter.Gameplay.Core
             Debug.Log($"[LevelProgressionManager] Skipped Stage {CurrentStage} clock to {StageElapsedTime:0}s.");
         }
 
+        /// <summary>True once this stage's boss has died (the stage itself runs on to 30:00).</summary>
+        public bool IsBossDefeated => _bossDefeated;
+
         public void ReportBossDefeated()
         {
             if (_bossDefeated || _gameWon) return;
             _bossDefeated = true;
             Debug.Log($"[LevelProgressionManager] Boss of Stage {CurrentStage} Defeated!");
-            // Owner decision: killing the stage boss clears the stage and moves the run on.
-            // The boss's chest is already on the ground and survives the transition.
-            CompleteStage("its boss was defeated");
+            // Owner (2026-09-27): every stage lasts the full 30 minutes, as in VS; killing the 25:00 boss no longer
+            // ends it. 30:00 clears the screen and starts the next stage. The Level 10 boss (Shadow Kael) is the end
+            // of the story, so killing him still wins the run.
+            if (CurrentStage >= MaxStages) CompleteStage("its final boss was defeated");
         }
 
         private void CompleteStageAfterSurvival()

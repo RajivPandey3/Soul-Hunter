@@ -193,7 +193,15 @@ Not yet played by the owner.
 
 Owner decision (2026-09-24): one run plays through all 10 levels in order. This intentionally differs from Vampire Survivors' separate per-stage runs.
 
-Killing a stage's boss clears that stage and starts the next one after a short transition; a stage whose boss is still alive ends at its 30-minute limit. Killing the Level 10 boss wins the run.
+~~Killing a stage's boss clears that stage and starts the next one.~~ Superseded by the owner on 2026-09-27, after VS research. vampire.survivors.wiki/w/Mad_Forest: a 30-minute run; chest bosses at 1, 3, 5, 7, 9, 10, 12, 14, 15, 16, 18, 20, 22, 23, 25 and 29 minutes, plus Arcana-only chests at 11 and 21; at 30:00 the screen is cleared and the Reaper comes.
+- Every stage lasts the full 30 minutes, like VS. The stage boss comes at 25:00, and killing it no longer ends the stage (`LevelProgressionManager.IsBossDefeated`).
+- At 30:00 the screen is cleared and the next stage starts after a short transition. There is no Reaper; the run moves on instead.
+- Killing the Level 10 boss (Shadow Kael, the end of the story) still wins the run.
+- Chest elites come at the VS minutes 1, 3, 5, 7, 9, 10, 12, 14, 15, 16, 18, 20, 22, 23, 27 and 29 (`EnemySpawner.DefaultChestEliteMinutes`), 16 per stage. They were every 5 minutes before the boss, and they also come during a boss fight.
+  - My first list (1, 5, 10, 11, 15, 18, 20, 21, 29) came from a summarised page fetch and missed rows. The raw wave table gives the list above; the owner chose "the VS minutes", so the corrected list follows that choice.
+- A 10-stage run is now about 5 hours.
+
+Seen, not changed: Stage 10 at 30:00 with Shadow Kael still alive also wins the run (the survival limit completes the last stage). The story says Kael "must destroy himself", so this may need an owner decision.
 
 Do not split the campaign into separate per-level runs or add a Reaper-style run end without a new owner decision.
 

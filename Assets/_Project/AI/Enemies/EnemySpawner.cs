@@ -26,8 +26,11 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField, Min(1)] private int _maxMinimumTopUpPerFrame = 8;
 
         [Header("Chest elites (VS rule)")]
-        [Tooltip("A chest-carrying elite arrives every this many seconds of stage time, before the boss. Provisional.")]
-        [SerializeField, Min(0f)] private float _chestEliteIntervalSeconds = 300f;
+        [Tooltip("Stage minutes at which a chest-carrying elite arrives. Owner (2026-09-27): the VS minutes, read from the " +
+                 "Mad Forest wave table (vampire.survivors.wiki/w/Mad_Forest?action=raw). 25:00 is the stage boss; the " +
+                 "11:00 and 21:00 VS chests only hold Arcanas and are left out until Arcana chests exist.")]
+        [SerializeField] private float[] _chestEliteMinutes = DefaultChestEliteMinutes;
+        public static readonly float[] DefaultChestEliteMinutes = { 1f, 3f, 5f, 7f, 9f, 10f, 12f, 14f, 15f, 16f, 18f, 20f, 22f, 23f, 27f, 29f };
         [Tooltip("Chest elite health = its EnemyData.MaxHealth x this (then Curse). Provisional.")]
         [SerializeField, Min(1f)] private float _chestEliteHealthMultiplier = 5f;
         [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
@@ -139,13 +142,22 @@ namespace SoulHunter.Gameplay.AI
 
             // Runs during boss fights too, so the swarm never piles up off-screen.
             RelocateStragglers();
-            if (_isBossAlive) return;
 
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
             // The arena was just wiped; keep it empty until the next stage starts.
             if (progression.IsStageTransitioning) return;
-            var level = progression.CurrentLevel;
             _stageTimePassed = progression.StageElapsedTime;
+
+            // Like the boss, a chest elite is never blocked by a full arena, nor by a boss fight (VS: they come on
+            // the stage clock).
+            if (_chestElitesSpawned < ChestElitesDue(_stageTimePassed, _chestEliteMinutes))
+            {
+                _chestElitesSpawned++;
+                SpawnChestElite();
+            }
+            if (_isBossAlive) return;
+
+            var level = progression.CurrentLevel;
             float bossStartTime = level.BossStartSeconds;
             var phase = _currentWave.GetPhase(_stageTimePassed);
 
@@ -156,13 +168,6 @@ namespace SoulHunter.Gameplay.AI
                 _bossSpawnedForCurrentWave = SpawnBoss(
                     _stageBossPrefab != null ? _stageBossPrefab : (_bossPrefab != null ? _bossPrefab : _stageEnemyPrefab));
                 return;
-            }
-
-            // Like the boss, a chest elite is never blocked by a full arena.
-            if (_chestElitesSpawned < ChestElitesDue(_stageTimePassed, _chestEliteIntervalSeconds, bossStartTime))
-            {
-                _chestElitesSpawned++;
-                SpawnChestElite();
             }
 
             // VS stage events: scripted formations on the stage clock, before the boss.
@@ -552,15 +557,13 @@ namespace SoulHunter.Gameplay.AI
             return experience != null ? experience.CurrentLevel : 1;
         }
 
-        /// <summary>
-        /// How many chest elites are due by <paramref name="stageTime"/>: one every
-        /// <paramref name="interval"/> seconds, only before the stage boss arrives.
-        /// </summary>
-        public static int ChestElitesDue(float stageTime, float interval, float bossStartSeconds)
+        /// <summary>How many chest elites are due by <paramref name="stageTime"/> seconds: one per listed minute reached.</summary>
+        public static int ChestElitesDue(float stageTime, System.Collections.Generic.IReadOnlyList<float> minutes)
         {
-            if (interval <= 0f) return 0;
-            float lastTime = Mathf.Min(stageTime, bossStartSeconds - 0.001f);
-            return Mathf.Max(0, Mathf.FloorToInt(lastTime / interval));
+            if (minutes == null) return 0;
+            int due = 0;
+            for (int i = 0; i < minutes.Count; i++) if (minutes[i] * 60f <= stageTime) due++;
+            return due;
         }
 
         /// <summary>
