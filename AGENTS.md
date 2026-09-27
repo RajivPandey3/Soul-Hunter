@@ -465,6 +465,24 @@ Editor play `autoplay-editor-37` (Stage 1, no god mode, 6 min, clock skipped to 
 
 Not yet played by the owner.
 
+### Balance pass, Part 3: enemy pressure along the stages (2026-09-28)
+
+Measured with the bot, no god mode. `-sh-autoplay-start-level N` starts the hero at level N, so later stages can be played at a believable strength.
+- Before:
+  - Stage 1 over 30 min (`autoplay-editor-43`): level 83, hurt 5 times, at most 183 enemies.
+  - Stage 5 from level 110 over 15 min (`-44`): hurt 9 times, at most 180 enemies.
+  - Stage 10 from level 140 (`-45`): **dead after 2:27**, with 289 enemies at 2:00 and a Soul Meteor volley of 8.
+- Changes:
+  - Every stage's wave table now peaks at the 300 enemy minimum. VS Mad Forest reaches 300 from 11:00; the old peak was 150 + 16 per stage, 166 on Stage 1. The 10 wave assets were rebuilt.
+  - Soul Meteors come every 4 minutes from 4:00 with 6 markers (VS Gallo Tower has stars at only a few set minutes). They were every even minute from 2:00 with 8.
+- After:
+  - Stage 1 over 15 min (`-46`): level 50, 11,650 kills, up to 233 enemies, hurt 4 times, min 33 FPS in the GUI editor.
+  - Stage 10 from level 140 over 10 min (`-47`): survived; hurt 100 times, health between 79 and 100, up to 327 enemies, min 9 FPS in the GUI editor (27–47 FPS at the 2-minute samples).
+  - The gem count stayed at or under 400.
+- XP per stage was not changed. By about level 80 every weapon and passive is maxed, and after that VS level-ups also give only gold or a chicken.
+- EditMode 399/399, PlayMode 149/149, save untouched (`D:\SoulHunter-Validation\run-20260928-balance3\`).
+- Still open (Part 4): boss and elite fight length at later levels. Shadow Kael has 500 × level health, 75,000 at level 150.
+
 ### Death Spiral crash and pooled whips (found 2026-09-28)
 
 A full 30-minute Stage 1 editor run (`autoplay-editor-42`, no god mode) logged 30,204 errors, and the frame rate fell from 80 to 20.

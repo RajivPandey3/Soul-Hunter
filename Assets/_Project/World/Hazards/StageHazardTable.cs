@@ -48,13 +48,14 @@ namespace SoulHunter.Gameplay.Hazards
         public const int MeteorPlayerDamage = 30;          // VS: 30 damage
         public const int MeteorEnemyDamage = 30;
         public const float MeteorRadius = 1.6f;
-        public const int MeteorVolleyCount = 8;
+        public const int MeteorVolleyCount = 6;             // balance 2026-09-28: 8 every 2 min killed a level-140 hero in 2.5 min
         public const float MeteorStaggerSeconds = 0.2f;    // markers of a volley appear one after another
         public const float MeteorMinSpread = 2f;
         public const float MeteorMaxSpread = 7f;
         public static readonly int[] MeteorStages = { 6, 10 };
-        public const float MeteorFirstMinute = 2f;
-        public const float MeteorLastMinute = 28f;         // every even minute up to the 30:00 stage end
+        public const float MeteorFirstMinute = 4f;         // VS Gallo Tower: stars at 0, 4, 15, 22; here every 4 minutes
+        public const float MeteorLastMinute = 28f;
+        public const float MeteorEveryMinutes = 4f;
 
         // ---- Pile Assault ----
         public const int PileCount = 12;
@@ -82,7 +83,7 @@ namespace SoulHunter.Gameplay.Hazards
             if (System.Array.IndexOf(ShadowStages, stage) >= 0)
                 foreach (float minute in ShadowMinutes) list.Add(new StageHazardEntry(StageHazardKind.DeathsShadow, minute * 60f));
             if (System.Array.IndexOf(MeteorStages, stage) >= 0)
-                for (float minute = MeteorFirstMinute; minute <= MeteorLastMinute + 0.01f; minute += 2f)
+                for (float minute = MeteorFirstMinute; minute <= MeteorLastMinute + 0.01f; minute += MeteorEveryMinutes)
                     list.Add(new StageHazardEntry(StageHazardKind.SoulMeteors, minute * 60f));
             if (stage == PileStage)
                 foreach (float minute in PileMinutes) list.Add(new StageHazardEntry(StageHazardKind.PileAssault, minute * 60f));

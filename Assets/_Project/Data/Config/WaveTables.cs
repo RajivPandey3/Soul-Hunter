@@ -33,7 +33,10 @@ namespace SoulHunter.Gameplay.Data
         // Stage 1 follows VS's Mad Forest opening closely (15 at 0:00, about 30 at 1:00, 50 by 2:00-3:00, about 100
         // around 8:00-12:00); later stages open bigger and peak higher, below the 300-enemy cap.
         public static int OpeningMinimum(int stage) => 15 + 5 * (Mathf.Clamp(stage, 1, 10) - 1);
-        public static int PeakMinimum(int stage) => Mathf.Min(290, 150 + 16 * (Mathf.Clamp(stage, 1, 10) - 1));
+        // VS (Mad Forest wave table): the enemy minimum reaches the 300 cap on the first stage already (11:00, 21-24,
+        // 27-29). Balance pass 2026-09-28: every stage peaks at 300; later stages are harder through enemy health,
+        // speed and damage. (It was 150 + 16 per stage, 166 on Stage 1: a 30-minute bot run was hurt 5 times.)
+        public static int PeakMinimum(int stage) => 300;
 
         /// <summary>Dip minutes: every fifth minute, shifted per stage, never the opening minute.</summary>
         public static bool IsDip(int stage, int minute) => minute > 0 && (minute + Mathf.Clamp(stage, 1, 10)) % 5 == 0;

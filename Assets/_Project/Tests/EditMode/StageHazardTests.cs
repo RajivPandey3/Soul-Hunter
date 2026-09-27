@@ -27,9 +27,10 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void SoulMeteors_FallEveryEvenMinuteFrom2_OnStages6And10()
+        public void SoulMeteors_FallEveryFourMinutesFrom4_OnStages6And10()
         {
-            var expected = Enumerable.Range(1, 14).Select(i => i * 120f).ToArray(); // 2:00 ... 28:00
+            // Balance 2026-09-28 (VS Gallo Tower has stars at a few set minutes): 4:00, 8:00 ... 28:00.
+            var expected = Enumerable.Range(1, 7).Select(i => i * 240f).ToArray();
             foreach (int stage in new[] { 6, 10 })
             {
                 var times = StageHazardTable.For(stage).Where(e => e.Kind == StageHazardKind.SoulMeteors).Select(e => e.TimeSeconds).ToArray();

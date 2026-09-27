@@ -28,99 +28,99 @@ MonoBehaviour:
     Interval: 0.6
     EliteBonus: 0
   - Minute: 1
-    Minimum: 84
+    Minimum: 93
     Interval: 0.585
     EliteBonus: 0
   - Minute: 2
-    Minimum: 97
+    Minimum: 110
     Interval: 0.57
     EliteBonus: 0
   - Minute: 3
-    Minimum: 30
+    Minimum: 34
     Interval: 0.832
     EliteBonus: 0.44
   - Minute: 4
-    Minimum: 101
+    Minimum: 117
     Interval: 0.54
     EliteBonus: 0
   - Minute: 5
-    Minimum: 110
+    Minimum: 129
     Interval: 0.525
     EliteBonus: 0
   - Minute: 6
-    Minimum: 130
+    Minimum: 153
     Interval: 0.51
     EliteBonus: 0
   - Minute: 7
-    Minimum: 152
+    Minimum: 180
     Interval: 0.495
     EliteBonus: 0
   - Minute: 8
-    Minimum: 50
+    Minimum: 59
     Interval: 0.72
     EliteBonus: 0.44
   - Minute: 9
-    Minimum: 167
+    Minimum: 199
     Interval: 0.465
     EliteBonus: 0
   - Minute: 10
-    Minimum: 158
+    Minimum: 189
     Interval: 0.45
     EliteBonus: 0
   - Minute: 11
-    Minimum: 152
+    Minimum: 182
     Interval: 0.435
     EliteBonus: 0
   - Minute: 12
-    Minimum: 159
+    Minimum: 191
     Interval: 0.42
     EliteBonus: 0
   - Minute: 13
-    Minimum: 54
+    Minimum: 65
     Interval: 0.608
     EliteBonus: 0.44
   - Minute: 14
-    Minimum: 206
+    Minimum: 248
     Interval: 0.39
     EliteBonus: 0
   - Minute: 15
-    Minimum: 220
+    Minimum: 266
     Interval: 0.375
     EliteBonus: 0
   - Minute: 16
-    Minimum: 216
+    Minimum: 261
     Interval: 0.36
     EliteBonus: 0
   - Minute: 17
-    Minimum: 201
+    Minimum: 243
     Interval: 0.345
     EliteBonus: 0
   - Minute: 18
-    Minimum: 57
+    Minimum: 69
     Interval: 0.495
     EliteBonus: 0.44
   - Minute: 19
-    Minimum: 197
+    Minimum: 239
     Interval: 0.315
     EliteBonus: 0
   - Minute: 20
-    Minimum: 222
+    Minimum: 269
     Interval: 0.3
     EliteBonus: 0
   - Minute: 21
-    Minimum: 250
+    Minimum: 304
     Interval: 0.285
     EliteBonus: 0
   - Minute: 22
-    Minimum: 264
+    Minimum: 321
     Interval: 0.27
     EliteBonus: 0
   - Minute: 23
-    Minimum: 77
+    Minimum: 94
     Interval: 0.383
     EliteBonus: 0.44
   - Minute: 24
-    Minimum: 237
+    Minimum: 288
     Interval: 0.24
     EliteBonus: 0
   Phases: []
