@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using SoulHunter.Gameplay.AI;
 using SoulHunter.Gameplay.Combat;
+using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Pickups;
 using SoulHunter.Gameplay.Player;
 
@@ -70,6 +71,24 @@ namespace SoulHunter.Tests.PlayMode
             Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(Mathf.Max(data.HealthPerPlayerLevel * level, chestElite * 2), curse),
                 boss.GetComponent<HealthController>().MaxHealth, "Boss health is per-level health x player level, but at least two chest elites'.");
             Assert.That(boss.GetComponent<HealthController>().MaxHealth, Is.GreaterThan(chestElite), "The stage boss outlasts its chest elites.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator TheHorde_KeepsComing_DuringABossFight()
+        {
+            // VS: the minute waves go on while the boss lives (Mad Forest keeps a minimum of 100 at 25:00). Found
+            // 2026-09-28: the spawner stopped while a boss lived, so the boss stood alone on screen for minutes.
+            yield return BootIntoGameplay();
+            PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            LevelProgressionManager.Instance.SkipToBoss();
+            yield return WaitUntilRealtime(() => EnemyController.ActiveEnemies.Any(e => e != null && spawner.IsBoss(e)), "the stage boss to appear");
+            foreach (var stray in EnemyController.ActiveEnemies.ToList())
+                if (stray != null && !spawner.IsBoss(stray)) stray.gameObject.SetActive(false);
+            yield return WaitUntilRealtime(() => EnemyController.ActiveEnemies.Count(e => e != null && !spawner.IsBoss(e)) >= 20,
+                "the horde to refill while the boss is alive");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

@@ -481,7 +481,15 @@ Measured with the bot, no god mode. `-sh-autoplay-start-level N` starts the hero
   - The gem count stayed at or under 400.
 - XP per stage was not changed. By about level 80 every weapon and passive is maxed, and after that VS level-ups also give only gold or a chicken.
 - EditMode 399/399, PlayMode 149/149, save untouched (`D:\SoulHunter-Validation\run-20260928-balance3\`).
-- Still open (Part 4): boss and elite fight length at later levels. Shadow Kael has 500 × level health, 75,000 at level 150.
+- **Waves during boss fights:** the spawner stopped the minute waves while a boss lived, so a boss stood alone on screen for minutes. VS keeps the waves going (Mad Forest's minimum is 100 at 25:00), and now so does Soul Hunter. `ChestEliteAndBossPlayModeTests.TheHorde_KeepsComing_DuringABossFight` (R).
+- `AutoplayBot` now picks level-ups through the level-up screen. It used to call `SelectUpgrade` directly, which left the panel open after the last level-up (a bot artifact; a player's click closes it).
+- EditMode 399/399, PlayMode 150/150, save untouched (`D:\SoulHunter-Validation\run-20260928-bosswaves\`).
+- **Boss fight length (Part 4), measured with the bot in god mode:**
+  - Stage 1 boss (3,150 health at level 63): 50 s.
+  - Stage 5 boss (27,500 at level 110, `autoplay-editor-50`): 310 s.
+  - Shadow Kael (75,000 at level 150, `-49`): 190 s, and the run ended in victory.
+  - VS boss fights usually take well under 2 minutes (from memory, not a source). The bot runs from bosses, so these times are rough.
+  - Health (50 × stage × level) is the owner's story choice; any change waits for the owner.
 
 ### Death Spiral crash and pooled whips (found 2026-09-28)
 

@@ -326,7 +326,12 @@ namespace SoulHunter.Gameplay.Core
             UpgradeData pick = choices.OrderByDescending(c => Score(weapons, c)).First();
             if (_experience.CurrentLevel % 5 == 0) yield return Shot($"levelup{_experience.CurrentLevel:00}");
             Event("levelup", $"\"level\": {_experience.CurrentLevel}, \"choices\": [{string.Join(", ", choices.Select(c => $"\"{Escape(c.UpgradeName)}\""))}], \"picked\": \"{Escape(pick.UpgradeName)}\"");
-            levelUp.SelectUpgrade(pick);
+            // Pick through the level-up screen like a player, so the panel closes (calling SelectUpgrade directly left it
+            // on screen after the last level-up).
+            var ui = FindFirstObjectByType<LevelUpUI>();
+            var select = typeof(LevelUpUI).GetMethod("OnUpgradeSelected", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (ui != null && select != null) select.Invoke(ui, new object[] { pick });
+            else levelUp.SelectUpgrade(pick);
         }
 
         private static int Score(WeaponManager weapons, UpgradeData upgrade)

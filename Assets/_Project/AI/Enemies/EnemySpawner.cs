@@ -189,7 +189,6 @@ namespace SoulHunter.Gameplay.AI
                 _eventFirings.RemoveAt(i);
                 if (!missed && EventFires(firing.ChancePercent, CurrentLuck(), Random.value)) RunStageEvent(firing, level, phase);
             }
-            if (_isBossAlive) return;
 
             if (_stageTimePassed >= bossStartTime && !_bossSpawnedForCurrentWave)
             {
@@ -206,7 +205,9 @@ namespace SoulHunter.Gameplay.AI
             // activation time; a boss-designated wave never leaks normal mobs.
             bool waveIsActive = _stageTimePassed >= Mathf.Max(0f, _currentWave.StartTimeInSeconds);
             bool bossPhase = _currentWave.IsBossWave || phase.IsBossPhase;
-            if ((!_bossSpawnedForCurrentWave || _bossDefeatedForCurrentWave) && waveIsActive && !bossPhase)
+            // VS: the minute waves go on during a boss fight (Mad Forest keeps a minimum of 100 at 25:00). Before
+            // 2026-09-28 the horde stopped while the boss lived, so a boss fight was the boss alone on screen.
+            if (waveIsActive && !bossPhase)
             {
                 _timer -= Time.deltaTime;
                 if (_timer <= 0f)
