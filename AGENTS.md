@@ -205,7 +205,7 @@ Owner decision (2026-09-24): one run plays through all 10 levels in order. This 
 - Level 10 (The Soul Core) has no time limit. 30:00 no longer wins. Only destroying Shadow Kael ends it (`LevelProgressionManager.CompleteStageAfterSurvival` skips the last stage). In Endless mode, his death starts the next cycle.
 - The victory screen reads "SHADOW KAEL DESTROYED" with the twist's own last sentence (`CampaignStory.FinalLine`). It said "ALL TEN STAGES SURVIVED / The pact has reached its end.", which was not the owner's story.
 - Tests: `RunModeTests` (T: 30:00 on Level 10 neither wins nor starts a new cycle; the boss kill does) and `CampaignStoryTests` (T: the line is the GDD's).
-- EditMode 399/399, PlayMode 147/147, save untouched (`D:\SoulHunter-Validationun-20260927-ending\`).
+- EditMode 399/399, PlayMode 147/147, save untouched (`D:\SoulHunter-Validation\run-20260927-ending\`).
 - Editor play `autoplay-editor-41`: Level 1, then a jump to Level 10 and a clock skip to 29:50; god mode, 0 errors, min 57 FPS.
   - After 30:00 the run went on at Level 10 ("The Soul Core has no time limit").
   - Shadow Kael (4,500 health) copied the player's 6 weapons.
