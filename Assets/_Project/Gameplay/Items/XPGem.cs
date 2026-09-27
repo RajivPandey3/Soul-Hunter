@@ -17,6 +17,7 @@ namespace SoulHunter.Gameplay.Pickups
 
         private Transform _targetPlayer;
         private bool _isMagnetized = false;
+        public bool IsMagnetized => _isMagnetized;
 
         private void Update()
         {

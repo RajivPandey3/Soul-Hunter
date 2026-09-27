@@ -93,9 +93,27 @@ namespace SoulHunter.Gameplay.Pickups
         public void SpawnGem(Vector3 position) => SpawnGem(position, DefaultGemValue);
 
         /// <summary>A Soul Gem worth <paramref name="value"/> XP; its tier model (cyan / violet / crimson) follows the value.</summary>
+        /// <summary>VS wiki (Experience_Gem): with more than 400 gems on the ground, new XP goes into one red gem instead.</summary>
+        public const int MaxGemsOnGround = 400;
+        private XPGem _mergeGem;
+
         public void SpawnGem(Vector3 position, int value)
         {
+            // VS gem cap: past 400 gems, add the XP to a single gem rather than spawning more (thousands of uncollected
+            // gems dragged a 30-minute editor run down to ~20 FPS).
+            if (XPGem.ActiveGems.Count >= MaxGemsOnGround)
+            {
+                if (_mergeGem != null && _mergeGem.isActiveAndEnabled && !_mergeGem.IsMagnetized)
+                {
+                    _mergeGem.XPValue += Mathf.Max(1, value);
+                    var mergedTier = _mergeGem.GetComponent<TieredVisual>();
+                    if (mergedTier != null) mergedTier.SetValue(_mergeGem.XPValue);
+                    return;
+                }
+                _mergeGem = null;
+            }
             var gem = SpawnFromPool(_gemPool, _xpGemPrefab, position);
+            if (gem != null && XPGem.ActiveGems.Count > MaxGemsOnGround) _mergeGem = gem.GetComponent<XPGem>();
             if (gem == null) return;
             var xp = gem.GetComponent<XPGem>();
             if (xp != null) xp.XPValue = Mathf.Max(1, value);

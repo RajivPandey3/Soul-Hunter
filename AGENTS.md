@@ -476,7 +476,9 @@ A full 30-minute Stage 1 editor run (`autoplay-editor-42`, no god mode) logged 3
   - After the Death Spiral fix it caught the Bloody Tear `MissingReferenceException`.
   - It passes on the new code.
 
-Balance baseline from the same run: level 70 at 30:00, 18,350 kills, 17 chests, hurt 14 times, never below full health at the timeline samples; the stage boss (3,150 health) lived 50 s.
+VS gem cap (vampire.survivors.wiki/w/Experience_Gem): past 400 gems on the ground, new XP goes into one gem instead of new gems (`PickupPoolManager.MaxGemsOnGround`). The rerun after the fixes (`autoplay-editor-43`) had 0 errors but still fell to 23–40 FPS in the last 10 minutes with only ~43 enemies; uncollected gems are the suspect, so `AutoplayBot` now also logs the gem count. `GemCapPlayModeTests` (R): 600 gems keep at most 401 on the ground and lose no XP. EditMode 399/399, PlayMode 149/149, save untouched.
+
+Balance baseline from the first run: level 70 at 30:00, 18,350 kills, 17 chests, hurt 14 times, never below full health at the timeline samples; the stage boss (3,150 health) lived 50 s.
 
 ### VS extra features: run modes and stage hazards (owner: "extra feature also continue", 2026-09-27)
 
