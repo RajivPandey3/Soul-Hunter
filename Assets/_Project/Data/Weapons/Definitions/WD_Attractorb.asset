@@ -15,10 +15,10 @@ MonoBehaviour:
   Type: 29
   IsPassive: 1
   DisplayName: Attractorb
-  Description: +25% pickup range.
+  Description: Bigger pickup range.
   Icon: {fileID: 1572192499065990504, guid: fc94b9929738fff43a240bea024fc1b1, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 100
   Levels:
   - {fileID: 11400000, guid: 426981625a7d0c147a3a28b58ca37a4e, type: 2}

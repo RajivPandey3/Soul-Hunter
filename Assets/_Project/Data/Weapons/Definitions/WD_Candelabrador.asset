@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +10% area.
   Icon: {fileID: -7648935954811957849, guid: 905ec260f9637c641830c79cf6373c83, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 100
   Levels:
   - {fileID: 11400000, guid: 81055655ae363e84ab9b4487adce2e01, type: 2}

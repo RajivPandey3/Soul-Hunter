@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +8% experience.
   Icon: {fileID: 6849961437476997493, guid: bd811006775bf4d4a9b14a12078e63f1, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 70
   Levels:
   - {fileID: 11400000, guid: a05e6d5a4a79b784897dd0506e5a5ea9, type: 2}

@@ -174,14 +174,19 @@ namespace SoulHunter.Gameplay.Combat
             Debug.Log($"[HealthController] Max Health increased by {amount}! New Max: {_maxHealth}");
         }
 
-        public void MultiplyMaxHealth(float multiplier)
+        /// <param name="healByIncrease">
+        /// True (default) also restores the health gained. VS Hollow Heart passes false: it "does not heal to fill up the
+        /// newly increased Max Health".
+        /// </param>
+        public void MultiplyMaxHealth(float multiplier, bool healByIncrease = true)
         {
             if (multiplier <= 0f) return;
             if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;
             int previous = _maxHealth;
             _preciseMaxHealth *= multiplier;
             _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_preciseMaxHealth));
-            if (_currentHealth > 0) _currentHealth = Mathf.Clamp(_currentHealth + _maxHealth - previous, 1, _maxHealth);
+            if (_currentHealth > 0)
+                _currentHealth = Mathf.Clamp(healByIncrease ? _currentHealth + _maxHealth - previous : _currentHealth, 1, _maxHealth);
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
         }
 

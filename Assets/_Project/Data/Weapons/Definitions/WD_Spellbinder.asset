@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +10% weapon duration.
   Icon: {fileID: -2084348082026221834, guid: e93ec3b06206aea42a0e9ee86739adaa, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 100
   Levels:
   - {fileID: 11400000, guid: 30af93adf18b4fd49b5d0c5361b39d86, type: 2}

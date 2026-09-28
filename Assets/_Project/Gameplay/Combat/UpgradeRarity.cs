@@ -67,6 +67,24 @@ namespace SoulHunter.Gameplay.Combat
         public static int VsWeight(UpgradeData.UpgradeType type) =>
             VsRarity.TryGetValue(type, out var entry) ? entry.Rarity : DefaultWeight;
 
+        /// <summary>
+        /// VS passive max levels (each item's wiki infobox `max-level`, fetched 2026-09-28): 5 for Spinach, Armor, Hollow
+        /// Heart, Pummarola, Empty Tome, Candelabrador, Bracer, Spellbinder, Wings, Attractorb, Clover, Crown and
+        /// Skull O'Maniac; 2 for Duplicator and Tirajisú ("the only passive items with a max level of 2"); 9 for the
+        /// Metaglio stage items. 0 for weapons (their prefab sets it).
+        /// </summary>
+        public static int VsPassiveMaxLevel(UpgradeData.UpgradeType type)
+        {
+            switch (type)
+            {
+                case UpgradeData.UpgradeType.Duplicator:
+                case UpgradeData.UpgradeType.Tiragisu: return 2;
+                case UpgradeData.UpgradeType.MetaglioLeft:
+                case UpgradeData.UpgradeType.MetaglioRight: return 9;
+                default: return WeaponManager.IsWeaponType(type) ? 0 : 5;
+            }
+        }
+
         /// <summary>Level-up weight: the definition's Rarity, else the VS table, else 100.</summary>
         public static int GetWeight(UpgradeData.UpgradeType type)
         {

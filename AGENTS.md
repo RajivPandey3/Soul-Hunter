@@ -529,7 +529,21 @@ The owner asked for three improvements: wave enemy types, boss ability component
   - Visible effects:
     - Bone and Cherry Bomb (rarity 1) almost never appear in level-ups, as in VS; the Level 3 merchant sells both.
     - Owned items are offered more often.
-- Still differs from VS: passives go to level 8, while most VS passives stop at 5 (a later task). Stone Mask has no Soul Hunter item.
+- Stone Mask has no Soul Hunter item.
+- **Passives on VS values** (owner, 2026-09-28: "passives ka max level VS jaisa theek karo"; each item's wiki infobox):
+  - **Max level** (`UpgradeRarity.VsPassiveMaxLevel`, in the definitions and the builder):
+    - 5: Spinach, Armor, Hollow Heart, Pummarola, Empty Tome, Candelabrador, Bracer, Spellbinder, Wings, Attractorb, Clover, Crown, Skull O'Maniac.
+    - 2: Duplicator and Tirajisú.
+    - 9: the Metaglios.
+    - They were 8.
+  - **Hollow Heart:** max health × 1.2 per level, without filling the gain ("does not heal to fill up the newly increased Max Health"). It was +20 flat with a heal.
+  - **Attractorb:** Magnet multiplied by 1.5, then 1.33, 1.25, 1.2 and 1.33 (3.98× at level 5; `WeaponManager.AttractorbStep`, `PlayerStats.MultiplyMagnet`). It was +25% per level.
+  - **Metaglio Left/Right:** level 1 gives nothing; the bonus starts at level 2.
+  - The other passives already matched the wiki's per-level bonuses.
+  - Not built: Tirajisú leaving the inventory when its last revival is used (and returning to the pool), and Armor's retaliatory damage.
+  - Tests: `PassiveVsTests` (T).
+  - `StoryCardPlayModeTests` was made steady: a kill by the starting weapon could open a level-up screen, and the pause stopped the card's countdown. The test now turns the weapons off.
+  - EditMode 456/456. The full PlayMode run gave 162/163 (the story-card test), and that test passed alone after the fix. Save untouched (`D:/SoulHunter-Validation/run-20260928-passives/`).
 - Tests: `WeaponDefinitionTests` (T) and `WeaponDefinitionPlayModeTests` (R: every definition's prefab matches the old wiring; real level-ups offer valid, distinct items). `LevelUpCurveTests` now uses the VS rarity values.
 - EditMode 435/435, PlayMode 163/163, save untouched, scene unchanged (`D:/SoulHunter-Validation/run-20260928-weapondefs/`).
 

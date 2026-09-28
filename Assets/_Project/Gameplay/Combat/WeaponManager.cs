@@ -191,7 +191,9 @@ namespace SoulHunter.Gameplay.Combat
             switch (upgrade.Type)
             {
                 case UpgradeData.UpgradeType.PlayerSpeed: stats.AddMoveSpeed(0.1f); break; // +10% Speed
-                case UpgradeData.UpgradeType.MaxHealth: if(health != null) health.IncreaseMaxHealth(20); break;
+                // VS wiki (Hollow_Heart): "multiplies Max Health by 1.2 per level" and "does not heal to fill up the newly
+                // increased Max Health". (It was +20 flat, with a heal.)
+                case UpgradeData.UpgradeType.MaxHealth: if (health != null) health.MultiplyMaxHealth(1.2f, healByIncrease: false); break;
                 
                 // Base & Expansions
                 case UpgradeData.UpgradeType.EmptyTome: stats.ReduceCooldown(0.08f); break; // -8% Cooldown
@@ -204,19 +206,37 @@ namespace SoulHunter.Gameplay.Combat
                 case UpgradeData.UpgradeType.Duplicator: stats.AddAmount(1); break; // +1 Projectile
                 case UpgradeData.UpgradeType.Armor: stats.AddArmor(1); break; // +1 Defense
                 case UpgradeData.UpgradeType.Pummarola: stats.AddRegen(0.2f); break; // +0.2 HP/sec
-                case UpgradeData.UpgradeType.Attractorb: stats.AddMagnet(0.25f); break; // +25% Pickup range
+                // VS wiki (Attractorb): multiplicative steps, 1.5x at level 1, then +33%, +25%, +20%, +33% (3.98x at 5).
+                case UpgradeData.UpgradeType.Attractorb: stats.MultiplyMagnet(AttractorbStep(upgrade.Level)); break;
                 case UpgradeData.UpgradeType.Clover: stats.AddLuck(0.1f); break; // +10% Luck
                 case UpgradeData.UpgradeType.Crown: stats.AddExpBonus(0.08f); break; // +8% Exp
                 case UpgradeData.UpgradeType.SkullOManiac: stats.AddCurse(0.1f); break; // +10% Curse
                 case UpgradeData.UpgradeType.Tiragisu: stats.AddRevival(1); break; // +1 Revival
+                // VS wiki (Metaglio_Left / Metaglio_Right): level 1 gives nothing; levels 2-9 add 0.1 Recovery and x1.05
+                // Max Health (Left) or +5% Curse (Right).
                 case UpgradeData.UpgradeType.MetaglioLeft:
+                    if (upgrade.Level <= 1) break;
                     stats.AddRegen(0.1f);
                     if (health != null) health.MultiplyMaxHealth(1.05f);
                     break;
-                case UpgradeData.UpgradeType.MetaglioRight: stats.AddCurse(0.05f); break;
+                case UpgradeData.UpgradeType.MetaglioRight: if (upgrade.Level > 1) stats.AddCurse(0.05f); break;
             }
 
             Debug.Log($"[WeaponManager] Passive Applied: {upgrade.Type} is now Level {upgrade.Level}");
+        }
+
+        /// <summary>VS wiki (Attractorb) magnet multiplier gained at <paramref name="level"/>: 1.5, 1.33, 1.25, 1.2, 1.33.</summary>
+        public static float AttractorbStep(int level)
+        {
+            switch (level)
+            {
+                case 1: return 1.5f;
+                case 2: return 1.33f;
+                case 3: return 1.25f;
+                case 4: return 1.2f;
+                case 5: return 1.33f;
+                default: return 1f;
+            }
         }
 
         private Dictionary<GameObject, GameObject> _spawnedWeapons = new Dictionary<GameObject, GameObject>();

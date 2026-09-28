@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +1 armor (less damage taken).
   Icon: {fileID: 8253109200740065530, guid: b773fcd2cbdb700418211d5c27850b8c, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 100
   Levels:
   - {fileID: 11400000, guid: 644da61309cd5454595a3c90c64faa28, type: 2}

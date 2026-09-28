@@ -42,7 +42,7 @@ namespace SoulHunter.Gameplay.Combat
         private static readonly Dictionary<UpgradeData.UpgradeType, string> Passives = new Dictionary<UpgradeData.UpgradeType, string>
         {
             { UpgradeData.UpgradeType.PlayerSpeed, "+10% move speed." },
-            { UpgradeData.UpgradeType.MaxHealth, "+20 max health." },
+            { UpgradeData.UpgradeType.MaxHealth, "Max health x1.2." },
             { UpgradeData.UpgradeType.EmptyTome, "-8% weapon cooldown." },
             { UpgradeData.UpgradeType.Spinach, "+10% Might (all damage)." },
             { UpgradeData.UpgradeType.Bracer, "+10% projectile speed." },
@@ -51,7 +51,7 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.Duplicator, "+1 projectile for every weapon." },
             { UpgradeData.UpgradeType.Armor, "+1 armor (less damage taken)." },
             { UpgradeData.UpgradeType.Pummarola, "Recover 0.2 health every second." },
-            { UpgradeData.UpgradeType.Attractorb, "+25% pickup range." },
+            { UpgradeData.UpgradeType.Attractorb, "Bigger pickup range." },
             { UpgradeData.UpgradeType.Clover, "+10% luck." },
             { UpgradeData.UpgradeType.Crown, "+8% experience." },
             { UpgradeData.UpgradeType.SkullOManiac, "+10% curse: more and tougher enemies." },

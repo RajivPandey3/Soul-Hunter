@@ -192,6 +192,8 @@ namespace SoulHunter.Gameplay.Player
         public void AddDuration(float amount) { Duration += amount; }
         public void AddRegen(float amount) { Regen += amount; }
         public void AddMagnet(float amount) { Magnet += amount; }
+        /// <summary>VS Attractorb: its Magnet bonus multiplies (wiki: "Multiplicative").</summary>
+        public void MultiplyMagnet(float factor) { if (factor > 0f) Magnet *= factor; }
         public void AddExpBonus(float amount) { ExpBonus += amount; }
         public void AddProjectileSpeed(float amount) { ProjectileSpeed += amount; }
 

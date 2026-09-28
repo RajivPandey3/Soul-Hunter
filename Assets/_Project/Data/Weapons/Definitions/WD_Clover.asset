@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +10% luck.
   Icon: {fileID: 2750178941999587609, guid: b7bfc4dd67b8ee54893143747e950e7e, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 100
   Levels:
   - {fileID: 11400000, guid: d588299ee6085954481bbd95c6f30636, type: 2}

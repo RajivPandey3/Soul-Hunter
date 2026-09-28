@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +1 revival.
   Icon: {fileID: 3045440801195614347, guid: b226c5cc69a9e4d42b7152936599142e, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 2
   Rarity: 40
   Levels:
   - {fileID: 11400000, guid: fecae681906351a4d84268eb76d4afda, type: 2}

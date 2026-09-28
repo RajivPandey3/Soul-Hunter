@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -18,6 +19,11 @@ namespace SoulHunter.Tests.PlayMode
         {
             yield return BootIntoGameplay();
             Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            // No kills, so no level-up screen pauses the game while the card counts down (flaky before 2026-09-28).
+            foreach (var weapon in SoulHunter.Gameplay.Player.PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>())
+                weapon.gameObject.SetActive(false);
+            foreach (var stray in EnemyController.ActiveEnemies.ToArray())
+                if (stray != null) stray.gameObject.SetActive(false);
             var card = Object.FindFirstObjectByType<StoryCardUI>();
             Assert.IsNotNull(card, "The HUD has no story card. " + Errors());
             Assert.That(card.IsShowing, Is.True, "Level 1 opens with the story.");

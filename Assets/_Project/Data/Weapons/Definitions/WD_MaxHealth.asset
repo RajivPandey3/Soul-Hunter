@@ -15,10 +15,10 @@ MonoBehaviour:
   Type: 4
   IsPassive: 1
   DisplayName: Max Health
-  Description: +20 max health.
+  Description: Max health x1.2.
   Icon: {fileID: 7638726196213528408, guid: cb5b16d7ffaef6d4592f582d49bbdf46, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 90
   Levels:
   - {fileID: 11400000, guid: 1b45894c4758da64ab58ef210cda3191, type: 2}

@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: Recover 0.2 health every second.
   Icon: {fileID: -6625864876067820037, guid: b47a1664c6a27014a8d0e24855a5ffab, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 90
   Levels:
   - {fileID: 11400000, guid: b6a2c1bf33c7543458a91fd5309ce07c, type: 2}

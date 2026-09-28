@@ -19,8 +19,7 @@ namespace SoulHunter.Editor.Content
     /// - IsPassive: the built-in split (WeaponManager.LegacyIsWeaponType).
     /// - DisplayName / Description: UpgradeText (the level-1 asset's name, and the built-in weapon or passive text).
     /// - Icon: the first icon among the item's UpgradeData assets; Levels: those assets (catalog Upgrades), level 1 first.
-    /// - MaxLevel: the weapon prefab's AutoAttackWeapon.MaxLevel; stage passives (Metaglio) 9; other passives their
-    ///   highest UpgradeData level (the level-up only offers existing assets, so this keeps today's behaviour).
+    /// - MaxLevel: the weapon prefab's AutoAttackWeapon.MaxLevel; passives the VS max level (UpgradeRarity.VsPassiveMaxLevel).
     /// - Rarity: the VS item rarity (UpgradeRarity.VsRarity, each value read from the item's VS wiki infobox,
     ///   https://vampire.survivors.wiki/w/&lt;Page&gt;?action=raw, 2026-09-28).
     /// Existing definition assets are updated in place (same GUIDs). Menu: Soul Hunter/Content/Build Weapon Definitions, or
@@ -91,7 +90,7 @@ namespace SoulHunter.Editor.Content
                 if (definition.IsPassive)
                 {
                     definition.WeaponPrefab = null;
-                    definition.MaxLevel = WeaponManager.IsStagePassive(type) ? StagePassiveMaxLevel : levels.Select(u => u.Level).DefaultIfEmpty(0).Max();
+                    definition.MaxLevel = UpgradeRarity.VsPassiveMaxLevel(type); // VS wiki max levels (5, 2 or 9)
                 }
                 else
                 {

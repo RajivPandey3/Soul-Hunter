@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +10% projectile speed.
   Icon: {fileID: 7628034302274340188, guid: 372d0bb142277fa4299255d447b73a03, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 5
   Rarity: 100
   Levels:
   - {fileID: 11400000, guid: a21957589b6d2964c9900327885b7180, type: 2}

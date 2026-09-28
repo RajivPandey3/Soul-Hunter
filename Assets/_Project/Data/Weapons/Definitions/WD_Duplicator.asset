@@ -18,7 +18,7 @@ MonoBehaviour:
   Description: +1 projectile for every weapon.
   Icon: {fileID: -7039772475811174324, guid: 53ef18aa3866def4aaf2e6c2f86acbbd, type: 3}
   WeaponPrefab: {fileID: 0}
-  MaxLevel: 8
+  MaxLevel: 2
   Rarity: 50
   Levels:
   - {fileID: 11400000, guid: 5e059ab89ae15ac43804ccd30f6b1cd4, type: 2}
