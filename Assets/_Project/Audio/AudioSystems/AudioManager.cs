@@ -27,6 +27,13 @@ namespace SoulHunter.Gameplay.Audio
         public AudioClip UIClickSound;
         public AudioClip UIConfirmSound;
         public AudioClip UnlockSound;
+        [Tooltip("VS wiki (Treasure_Chest, Audio): plays when a chest is found.")]
+        public AudioClip TreasureFoundSound;
+        [Tooltip("VS: one jingle per chest size, for 1, 3 and 5 items.")]
+        public AudioClip TreasureASound, TreasureBSound, TreasureCSound;
+
+        /// <summary>The chest jingle for a chest of <paramref name="itemCount"/> items (VS Treasure A/B/C).</summary>
+        public AudioClip TreasureJingle(int itemCount) => itemCount >= 5 ? TreasureCSound : itemCount >= 3 ? TreasureBSound : TreasureASound;
 
         [Header("Weapon Sounds")]
         public AudioClip ShootSound;

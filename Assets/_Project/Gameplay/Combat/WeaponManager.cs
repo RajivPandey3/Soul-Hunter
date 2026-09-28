@@ -56,6 +56,9 @@ namespace SoulHunter.Gameplay.Combat
         // A union takes the slot of its first weapon and shows the union's icon.
         private readonly Dictionary<UpgradeData.UpgradeType, Sprite> _unionIconBySlot = new Dictionary<UpgradeData.UpgradeType, Sprite>();
 
+        /// <summary>Icon of the last evolution (its base weapon's) or union (its own), for the chest screen.</summary>
+        public Sprite LastEvolvedIcon { get; private set; }
+
         /// <summary>One HUD inventory slot.</summary>
         public struct InventorySlot
         {
@@ -497,6 +500,8 @@ namespace SoulHunter.Gameplay.Combat
                     {
                         // Evolution criteria met!
                         _evolvedWeapons.Add(evo.BaseWeapon);
+                        var baseDefinition = DefinitionOf(evo.BaseWeapon);
+                        LastEvolvedIcon = baseDefinition != null ? baseDefinition.Icon : null;
                         
                         // Old weapon disable karo
                         DisableOldWeapon(evo.BaseWeapon);
@@ -538,6 +543,7 @@ namespace SoulHunter.Gameplay.Combat
                         _unionConsumedWeapons.Add(union.WeaponB);
                         _activeUnionWeaponCount++;
                         _unionIconBySlot[union.WeaponA] = union.UnionIcon;
+                        LastEvolvedIcon = union.UnionIcon;
                         
                         DisableOldWeapon(union.WeaponA);
                         DisableOldWeapon(union.WeaponB);

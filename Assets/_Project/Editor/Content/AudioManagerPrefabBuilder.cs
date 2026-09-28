@@ -37,6 +37,10 @@ namespace SoulHunter.Editor.Content
                 audio.UIClickSound = Clip("UIClick");
                 audio.UIConfirmSound = Clip("UIConfirm");
                 audio.UnlockSound = Clip("Unlock");
+                audio.TreasureFoundSound = Clip("TreasureFound");
+                audio.TreasureASound = Clip("TreasureA");
+                audio.TreasureBSound = Clip("TreasureB");
+                audio.TreasureCSound = Clip("TreasureC");
                 audio.ShootSound = Clip("Shoot");
                 audio.SlashSound = Clip("Slash");
                 audio.MagicSound = Clip("Magic");

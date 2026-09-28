@@ -59,7 +59,6 @@ namespace SoulHunter.Tests.PlayMode
 
             var chestUI = Object.FindObjectsByType<ChestUI>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .First(ui => ui.isActiveAndEnabled && GetPrivateField<GameObject>(ui, "_chestPanel") != null);
-            var panel = GetPrivateField<GameObject>(chestUI, "_chestPanel");
 
             // An Arcana chest, as the 11:00 / 21:00 chest elites drop it, right on the player.
             var chestObject = PickupPoolManager.Instance.SpawnChest(PlayerController.Instance.transform.position);
@@ -70,16 +69,16 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => !chestObject.activeInHierarchy, "the player to collect the Arcana chest");
             yield return null;
 
-            Assert.IsTrue(panel.activeInHierarchy, "The chest screen opens. " + Errors());
+            Assert.IsTrue(chestUI.IsOpen, "The chest screen opens. " + Errors());
+            Assert.That(chestUI.Screen.Preview, Is.Not.Null);
             var rewardText = GetPrivateField<TextMeshProUGUI>(chestUI, "_rewardText");
             Assert.That(rewardText.text, Does.StartWith("ARCANA CHEST!"), $"Reward text: '{rewardText.text}'. " + Errors());
             Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(2), "The Arcana chest gave a second Arcana.");
             Assert.That(arcanas.ActiveArcanas[1], Is.Not.SameAs(arcanas.ActiveArcanas[0]), "Never one already held.");
             Assert.That(rewardText.text, Does.Contain(arcanas.ActiveArcanas[1].CardName));
 
-            Click(GetPrivateField<Button>(chestUI, "_claimButton"), "Claim");
-            yield return null;
-            Assert.IsFalse(panel.activeInHierarchy, "Claim closes the chest screen.");
+            yield return chestUI.OpenAndClose();
+            Assert.IsFalse(chestUI.IsOpen, "Open, then Done, closes the chest screen. " + Errors());
         }
     }
 }

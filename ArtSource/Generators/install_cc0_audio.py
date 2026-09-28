@@ -5,7 +5,8 @@ file per game sound, loudness-normalises it (so packs from different authors sit
 Vorbis to Assets/_Project/Audio/CC0/ and writes CREDITS.md there. AudioManagerPrefabBuilder prefers these files
 over the older synthesised ones (Assets/_Project/Audio/SFX, Music), which stay as a fallback.
 
-Run: blender --background --python ArtSource/Generators/install_cc0_audio.py -- <downloads folder>
+Run: blender --background --python ArtSource/Generators/install_cc0_audio.py -- <downloads folder> [--only A,B]
+--only installs just the named sounds and appends their rows to CREDITS.md (the other files stay untouched).
 The downloads folder holds the extracted packs listed in SOURCES (not kept in the repository).
 Set SOULHUNTER_ROOT to run against an isolated copy of the project.
 """
@@ -61,6 +62,12 @@ SFX = {
     'Slash': ('oga-swishes', 'oga/swishes/swishes/swish-1.wav'),
     'Magic': ('oga-rpg', 'oga/rpg_sound_pack/RPG Sound Pack/battle/magic1.wav'),
     'Explosion': ('kenney-scifi', 'kenney/sci-fi-sounds/Audio/explosionCrunch_000.ogg'),
+    # VS wiki (Treasure_Chest, Audio): "Treasure Found" when a chest is found, then a jingle for a 1-, 3- or 5-item
+    # chest. Picked 2026-09-28 from the unused jingles by measured length (short to long) and rising pitch.
+    'TreasureFound': ('kenney-jingles', 'kenney/music-jingles/Audio/Hit jingles/jingles_HIT12.ogg'),
+    'TreasureA': ('kenney-jingles', 'kenney/music-jingles/Audio/Hit jingles/jingles_HIT01.ogg'),
+    'TreasureB': ('kenney-jingles', 'kenney/music-jingles/Audio/8-Bit jingles/jingles_NES13.ogg'),
+    'TreasureC': ('kenney-jingles', 'kenney/music-jingles/Audio/8-Bit jingles/jingles_NES00.ogg'),
 }
 
 MUSIC = {'Music_Menu': ('menu', 'oga/music/menu.mp3')}
@@ -88,7 +95,22 @@ def install(name, source, rel, downloads, folder, target_rms):
 
 
 def main():
-    downloads = Path(sys.argv[sys.argv.index('--') + 1])
+    args = sys.argv[sys.argv.index('--') + 1:]
+    downloads = Path(args[0])
+    if '--only' in args:
+        only = args[args.index('--only') + 1].split(',')
+        credits = OUT / 'CREDITS.md'
+        text = credits.read_text(encoding='utf-8')
+        for name in only:
+            source, rel = SFX[name]
+            name, source, file, _ = install(name, source, rel, downloads, 'SFX', SFX_RMS)
+            title, author, url = SOURCES[source]
+            row = f'| {name} | {file} | {title} | {author} | {url} |'
+            if f'| {name} |' not in text:
+                text = text.rstrip('\n') + '\n' + row + '\n'
+        credits.write_text(text, encoding='utf-8')
+        print('AUDIO_COMPLETE', len(only), flush=True)
+        return
     rows = []
     for name, (source, rel) in SFX.items():
         rows.append(install(name, source, rel, downloads, 'SFX', SFX_RMS))

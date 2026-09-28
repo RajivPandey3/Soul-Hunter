@@ -65,7 +65,7 @@ namespace SoulHunter.Gameplay.Pickups
             // UI call
             if (_chestUI != null)
             {
-                _chestUI.OpenChest(rewardMessage);
+                _chestUI.OpenChest(rewardMessage, _logicController != null ? _logicController.LastResult : null);
             }
 
             gameObject.SetActive(false);

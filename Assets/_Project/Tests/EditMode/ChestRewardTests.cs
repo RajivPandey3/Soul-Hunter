@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
@@ -110,6 +111,49 @@ namespace SoulHunter.Tests.EditMode
             string message = _chest.ProcessChest(_weapons, _levelUps, 5, true, 0f);
             Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(2));
             Assert.That(message, Does.Contain("Gold: +575"), "500 chest gold + 3 maxed items x 25.");
+        }
+
+        [Test]
+        public void Chest_RecordsWhatItGave_ForTheOpeningScreen()
+        {
+            UsePool(UpgradeData.UpgradeType.Spinach, 2);
+            _chest.ProcessChest(_weapons, _levelUps, 5, true, 0f);
+            var result = _chest.LastResult;
+            Assert.That(result.ItemCount, Is.EqualTo(5));
+            Assert.That(result.Rewards.Count, Is.EqualTo(5), "One entry per item.");
+            Assert.That(result.Rewards.Take(2).All(r => !r.IsCoinBag && r.Level > 0), Is.True, "Two upgrades.");
+            Assert.That(result.Rewards.Skip(2).All(r => r.IsCoinBag), Is.True, "Three coin bags.");
+            Assert.That(result.OnlyCoins, Is.False);
+            Assert.That(result.Gold, Is.EqualTo(575));
+        }
+
+        [TestCase(0, 0, 1, false)]   // the first six chests cannot be skipped
+        [TestCase(5, 0, 3, false)]
+        [TestCase(6, 0, 1, true)]    // from the seventh, 1- and 3-item chests can
+        [TestCase(6, 0, 3, true)]
+        [TestCase(6, 0, 5, false)]   // 5-item chests need 50 of them ...
+        [TestCase(40, 50, 5, true)]
+        [TestCase(500, 0, 5, true)]  // ... or 500 chests
+        public void VsSkipRules(int opened, int fiveOpened, int items, bool canSkip)
+        {
+            Assert.That(SoulHunter.Gameplay.UI.ChestSkipRules.CanSkip(opened, fiveOpened, items), Is.EqualTo(canSkip));
+        }
+
+        [Test]
+        public void CoinOnlyChests_SkipThemselves_OnceFiveItemChestsCanBeSkipped()
+        {
+            Assert.That(SoulHunter.Gameplay.UI.ChestSkipRules.SkipsItself(10, 0, onlyCoins: true), Is.False);
+            Assert.That(SoulHunter.Gameplay.UI.ChestSkipRules.SkipsItself(10, 50, onlyCoins: true), Is.True);
+            Assert.That(SoulHunter.Gameplay.UI.ChestSkipRules.SkipsItself(10, 50, onlyCoins: false), Is.False);
+        }
+
+        [Test]
+        public void ChestAndLevelUpEffects_RunWhileThePauseStarts()
+        {
+            Assert.That(SoulHunter.Gameplay.VFX.VFXPoolManager.PlaysWhilePaused(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen), Is.True);
+            Assert.That(SoulHunter.Gameplay.VFX.VFXPoolManager.PlaysWhilePaused(SoulHunter.Gameplay.VFX.VfxKind.LevelUp), Is.True);
+            Assert.That(SoulHunter.Gameplay.VFX.VFXPoolManager.PlaysWhilePaused(SoulHunter.Gameplay.VFX.VfxKind.HitSpark), Is.False,
+                "Combat effects still freeze with the game.");
         }
 
         [TestCase(30f, false)]

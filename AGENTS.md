@@ -987,6 +987,60 @@ Owner flow: online samples first, then approval. The CC0 samples were rejected i
 
 Validated by `PickupV2Tests` (T: tier thresholds, approved models and materials per tier, chest model, elite and boss XP) and `WeaponSweepPlayModeTests.Gems_AndCoins_ShowTheirTierByValue` (R). Both suites: EditMode 344/344, PlayMode 64/64, save unchanged (`D:\SoulHunter-Validation\run-20260925-pickups\`). In-game screenshots were checked (partial `V`). From the 55-degree camera, the chest shows mostly its lid, with the skull and seam at the front.
 
+### VS chest-opening screen and the frozen chest VFX (owner request, 2026-09-28)
+
+Owner: "vs mein chest milne per VFX hai wo nahi dikh raha ... wiki se check karo or effect dalo". The chest screen was a text line over the running game with a white "Claim and Continue" button.
+
+**Frozen VFX.** The chest-open effect started in the same frame the game paused, so its particles froze on their first frame and never showed. The level-up effect had the same problem. `VFXPoolManager.PlaysWhilePaused` runs those two kinds on unscaled time; combat effects still freeze with the game.
+
+**The opening screen** (`ChestOpeningScreen`, `ChestPreviewStage`, opened by `ChestUI`). It follows vampire.survivors.wiki/w/Treasure_Chest (the page, its Audio section and its patch notes), in Soul Hunter's own art:
+1. The game pauses and the screen dims.
+   - The approved Soul Reliquary chest drops in with a flash and a ring (the intro blast), and "Treasure Found" plays.
+   - An OPEN button rotates in.
+2. OPEN:
+   - the lid opens (the lid parts hang on a hinge at the back) and approved gold Soul Coins burst out;
+   - the Treasure A/B/C jingle plays for a 1-, 3- or 5-item chest;
+   - the background lights up on 3- and 5-item chests only ("Stopping background panel lighting up in lvl 1 chests");
+   - the gold counts up, scales in and pulses;
+   - each item spins past as a reel and stops, with stars behind it;
+   - 5-item chests add fireworks.
+3. DONE rotates in once the gold has counted up, and resumes the game.
+- The 3D chest is a copy far below the stage (y = -1000), filmed by its own camera into a RenderTexture. The copy is laid out one frame late, because the renderer bounds of a copy made that frame read the stage position. The model's own up (body to lid) and front (towards the lock plate) are measured, and the copy is turned upright facing the camera; the FBX is turned inside the chest prefab.
+- Effects use the approved VFX v2 sprites (`GameContentCatalog.ChestFx*`): magic circle, shock ring, impact star, sparkle.
+- `ChestLogicController.LastResult` (`ChestResult`, `ChestReward`) records what a chest gave. `WeaponManager.LastEvolvedIcon` gives an evolution its base weapon's icon, and a union its own icon.
+
+**Skipping** (`ChestSkipRules`, wiki Skipping):
+- the first six chests on a save cannot be skipped;
+- after that, 1- and 3-item chests skip with Esc, right click or gamepad B, jumping to the end;
+- 5-item chests can be skipped after 50 five-item chests or 500 chests;
+- once 5-item chests can be skipped, coin-only chests play a quick in-game effect with no screen;
+- `GameData.ChestsOpened` / `FiveItemChestsOpened` count them (repaired by `SaveService.Migrate`);
+- while the screen is open, the Pause action is off (as in `OptionsMenuUI`), so Esc does not also open the pause menu;
+- the wiki's third unlock ("seen the final fireworks") has no Soul Hunter counterpart.
+
+**Sounds:** four unused CC0 Kenney Music Jingles, picked by measured length and rising pitch, not by ear: TreasureFound HIT12 (0.28 s), TreasureA HIT01 (0.51 s), TreasureB NES13 (1.05 s), TreasureC NES00 (1.76 s). They were added with `install_cc0_audio.py --only`, credited in `CREDITS.md` and wired by `AudioManagerPrefabBuilder`.
+
+Provisional: every timing, the coin counts (12/22/36) and the layout. **Not built:** the wiki's first-six-chests item sequence 1-1-3-1-1-5 (it changes rewards, not the effect; owner decision).
+
+`AutoplayBot` and `PerformanceBenchmark` press OPEN, then DONE (`ChestUI.OpenAndClose`), instead of closing the old panel by reflection.
+
+Validation:
+- `ChestFlowPlayModeTests` (R):
+  - a collected chest pauses the game and plays Treasure Found, and cannot be skipped among the first six;
+  - OPEN opens the lid, bursts coins, plays the size jingle, reveals every item and counts the gold to the chest's gold;
+  - DONE resumes the game, restores the pause key, counts the chest on the save and cleans up the preview;
+  - a 5-item chest lights up, has fireworks and plays Treasure C;
+  - the seventh chest can be skipped;
+  - a coin-only chest opens no screen once 5-item chests are skippable;
+  - the chest effect keeps playing while paused.
+- `ChestPreviewPlayModeTests` (R): the camera is on the lock's side; OPEN turns the lid about its hinge, back and up over it.
+- `ChestRewardTests` (T): the chest result, the skip rules and the pause-time effects.
+- The first full run found DONE appearing before the gold had counted up on 1-item chests (fixed). While building the preview, the chest was filmed from the wrong side, first by guessing its front and then from stale bounds; the measured layout above fixed that.
+- EditMode 470/470. Full PlayMode 169/170: the one failure was a test race (a weapon's sound in the collection frame replaced Treasure Found as the last clip). The test now turns weapons off, and the chest fixtures then passed 7/7. 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260929-chest4/`).
+- Editor play `autoplay-editor-55` to `-58` (Stage 1, 4 min each, 0 errors): screenshots of the closed chest (front, skull, lock, glowing seam) and the open chest (lid up, +144 gold, "Cross NEW!") (partial `V`).
+
+Not yet played or heard by the owner.
+
 ### VFX v2 sprites and VS-style level-up cards (owner-approved, 2026-09-26)
 
 The owner approved the VFX v2 concept sheet: eight Soul Hunter sprites made procedurally by `ArtSource/Generators/build_vfx_textures.py` (soul flame, slash arc, magic circle, impact star, soul wisp, lightning bolt, shockwave ring, sparkle), written to `Assets/Art/Textures/VFX/SH10_Vfx2_*.png`. `WeaponVfxBuilder` now uses them:

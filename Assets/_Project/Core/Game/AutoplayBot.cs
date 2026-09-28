@@ -348,8 +348,6 @@ namespace SoulHunter.Gameplay.Core
         /// <summary>Chests and the merchant pause the game until closed; a player would close them.</summary>
         private IEnumerator Housekeeping()
         {
-            var closeChest = typeof(ChestUI).GetMethod("CloseChest", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var panelField = typeof(ChestUI).GetField("_chestPanel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             while (!Finished)
             {
                 yield return new WaitForSecondsRealtime(0.4f);
@@ -389,13 +387,20 @@ namespace SoulHunter.Gameplay.Core
                     }
                 }
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
-                    // Unity's destroyed/unassigned objects pass an "is" check: test with != null before touching them.
-                    if (panelField?.GetValue(chest) is GameObject panel && panel != null && panel.activeSelf)
+                    if (chest != null && chest.IsOpen)
                     {
+                        // VS chest screen: wait for OPEN, press it, shoot the reveal, press DONE (like a player).
+                        var screen = chest.Screen;
+                        float until = Time.unscaledTime + 5f;
+                        while (screen.Current == ChestOpeningScreen.Phase.Intro && Time.unscaledTime < until) yield return null;
                         yield return Shot("chest");
-                        Event("chest", "\"opened\": true");
-                        yield return new WaitForSecondsRealtime(0.6f);
-                        closeChest?.Invoke(chest, null);
+                        screen.PressOpen();
+                        until = Time.unscaledTime + 10f;
+                        while (screen.Current != ChestOpeningScreen.Phase.Done && screen.IsOpen && Time.unscaledTime < until) yield return null;
+                        yield return Shot("chest-open");
+                        Event("chest", string.Format(CultureInfo.InvariantCulture, "\"items\": {0}, \"gold\": {1}, \"canSkip\": {2}",
+                            screen.ItemCount, screen.ShownGold, screen.CanSkip ? "true" : "false"));
+                        yield return chest.OpenAndClose();
                     }
                 foreach (var merchant in FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None))
                 {

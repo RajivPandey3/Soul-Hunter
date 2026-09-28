@@ -37,6 +37,15 @@ namespace SoulHunter.Gameplay.Data
         public GameObject HazardBullet;
         [UnityEngine.Tooltip("Level 3 Wandering Merchant (model, trigger and shop), spawned by CampaignSignatureSystem.")]
         public GameObject WanderingMerchant;
+        [UnityEngine.Header("Chest opening screen (approved VFX v2 sprites)")]
+        [UnityEngine.Tooltip("Rotating light behind an opening 3- or 5-item chest.")]
+        public UnityEngine.Texture2D ChestFxCircle;
+        [UnityEngine.Tooltip("Ring that bursts out when the chest opens.")]
+        public UnityEngine.Texture2D ChestFxRing;
+        [UnityEngine.Tooltip("Flash when the chest lands and opens.")]
+        public UnityEngine.Texture2D ChestFxFlash;
+        [UnityEngine.Tooltip("Stars behind each revealed item, and the 5-item fireworks.")]
+        public UnityEngine.Texture2D ChestFxSparkle;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
 
         /// <summary>The weapon/passive definition of <paramref name="type"/>, or null when none exists.</summary>

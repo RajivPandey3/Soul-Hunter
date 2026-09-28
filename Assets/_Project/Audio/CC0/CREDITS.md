@@ -34,3 +34,7 @@ Files were loudness-normalised and re-encoded by ArtSource/Generators/install_cc
 | Music_Stage08 | l08.mp3 | Battle Theme B | cynicmusic | https://opengameart.org/content/battle-theme-b-for-rpg |
 | Music_Stage09 | l09.ogg | Cursed Tower Veranda | bobjt | https://opengameart.org/content/cursed-tower-veranda |
 | Music_Stage10 | l10.ogg | Final Hour | isaiah658 | https://opengameart.org/content/final-hour |
+| TreasureFound | jingles_HIT12.ogg | Music Jingles | Kenney | https://kenney.nl/assets/music-jingles |
+| TreasureA | jingles_HIT01.ogg | Music Jingles | Kenney | https://kenney.nl/assets/music-jingles |
+| TreasureB | jingles_NES13.ogg | Music Jingles | Kenney | https://kenney.nl/assets/music-jingles |
+| TreasureC | jingles_NES00.ogg | Music Jingles | Kenney | https://kenney.nl/assets/music-jingles |

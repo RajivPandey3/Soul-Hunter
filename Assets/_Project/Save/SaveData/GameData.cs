@@ -63,6 +63,13 @@ namespace SoulHunter.Core.Persistence
         // --- Soul Eggs (VS Golden Egg rule: each egg permanently raises one random stat of one character) ---
         public List<SoulEggRecord> SoulEggs = new List<SoulEggRecord>();
 
+        /// <summary>
+        /// VS wiki (Treasure_Chest, Skipping): chests opened on this save, and how many held 5 items. The first six chest
+        /// animations cannot be skipped; 5-item chests become skippable after 50 five-item chests or 500 chests.
+        /// </summary>
+        public int ChestsOpened;
+        public int FiveItemChestsOpened;
+
         // --- Run modes (VS "List of Modes"), picked on the character select screen and copied into RunModes when a
         // run starts. A save written before these existed has no such fields and loads them as off. ---
         public bool ModeHurry;

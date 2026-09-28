@@ -376,3 +376,7 @@ MonoBehaviour:
   HazardMarker: {fileID: 3466339483402821886, guid: 77198681c40d3e848962733e03c8edd8, type: 3}
   HazardBullet: {fileID: 1192744282758312269, guid: 3d40d511f32b3db4aad11ba911b65a4e, type: 3}
   WanderingMerchant: {fileID: 4935854625492487647, guid: 6850f23122f6dd3479c45c5f56088130, type: 3}
+  ChestFxCircle: {fileID: 2800000, guid: 2533efe8e179357409e041a059a5c1bd, type: 3}
+  ChestFxRing: {fileID: 2800000, guid: bfb726a9bf55fbb4b8a1f28865684c01, type: 3}
+  ChestFxFlash: {fileID: 2800000, guid: 05b2f1deb279bf4429150567b5ac660c, type: 3}
+  ChestFxSparkle: {fileID: 2800000, guid: 52d027c78d673a7429f38f4a91ebddd5, type: 3}

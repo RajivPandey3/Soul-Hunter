@@ -5,54 +5,174 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using SoulHunter.Core.Persistence;
+using SoulHunter.Core.Services;
+using SoulHunter.Gameplay.AI;
+using SoulHunter.Gameplay.Audio;
+using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Pickups;
 using SoulHunter.Gameplay.Player;
 using SoulHunter.Gameplay.UI;
+using SoulHunter.Gameplay.VFX;
 
 namespace SoulHunter.Tests.PlayMode
 {
     /// <summary>
-    /// End-to-end chest flow: a chest spawned by the pickup pool is collected by the
-    /// player, opens the chest screen with a reward, and Claim closes it and resumes play.
+    /// End-to-end chest flow with the VS chest-opening screen (vampire.survivors.wiki/w/Treasure_Chest): collecting a
+    /// chest pauses the game and opens the screen with the "Treasure Found" jingle; OPEN opens the lid, plays the chest-size
+    /// jingle, counts the gold up and reveals every item; DONE resumes the game. The first six chests on a save cannot be
+    /// skipped; later ones can, and coin-only chests skip themselves once 5-item chests are skippable.
     /// </summary>
     public class ChestFlowPlayModeTests : GameplayPlayModeTestBase
     {
         [UnityTest]
-        public IEnumerator CollectingChest_OpensRewardScreen_AndClaimResumesGame()
+        public IEnumerator CollectingChest_PlaysTheVsOpening_AndDoneResumesGame()
         {
-            yield return BootIntoGameplay();
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 0; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            // The persistent AudioManager is destroyed between PlayMode tests; the game makes it on its first scene load.
+            AudioManager.EnsureInstance();
+            yield return null;
+            Assert.That(AudioManager.Instance != null, Is.True, "An AudioManager plays the jingles.");
+            // Weapons off: a weapon firing in the collection frame would replace Treasure Found as the last sound.
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true)) weapon.enabled = false;
+            var chestUI = LiveChestUI();
+            Assert.IsFalse(chestUI.IsOpen, "No chest screen before a chest is collected.");
 
             var pool = PickupPoolManager.Instance;
-            Assert.IsNotNull(pool, "No PickupPoolManager in Main_Gameplay.");
-            var chestUI = LiveChestUI();
-            var panel = GetPrivateField<GameObject>(chestUI, "_chestPanel");
-            Assert.IsNotNull(panel, "ChestUI has no chest panel assigned.");
-            Assert.IsFalse(panel.activeInHierarchy, "Chest panel should be hidden before any chest is collected.");
-
-            // Spawn a chest on top of the player, exactly as boss drops do.
             pool.SpawnChest(PlayerController.Instance.transform.position);
-            var chest = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None)
-                .FirstOrDefault(c => c.gameObject.activeInHierarchy);
+            var chest = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).FirstOrDefault(c => c.gameObject.activeInHierarchy);
             Assert.IsNotNull(chest, "SpawnChest did not produce an active chest.");
-
             yield return WaitUntilRealtime(() => !chest.gameObject.activeInHierarchy, "the player to collect the chest");
             yield return null;
 
-            Assert.IsTrue(panel.activeInHierarchy,
-                "Chest was collected but the chest screen did not open " +
-                $"(pool _chestUI={(GetPrivateField<ChestUI>(pool, "_chestUI") == null ? "NULL" : "set")}). " + Errors());
-            Assert.AreEqual(0f, Time.timeScale, "Game should pause while the chest screen is open.");
+            Assert.IsTrue(chestUI.IsOpen, "Collecting a chest opens the chest screen. " + Errors());
+            Assert.AreEqual(0f, Time.timeScale, "The game pauses under the chest screen.");
+            var screen = chestUI.Screen;
+            Assert.That(AudioManager.Instance.LastClip, Is.SameAs(AudioManager.Instance.TreasureFoundSound), "VS: Treasure Found plays first.");
+            Assert.That(screen.CanSkip, Is.False, "VS: the first six chests cannot be skipped.");
+            Assert.That(screen.TrySkip(), Is.False);
+            Assert.That(PauseActionEnabled(), Is.False, "Esc skips chests, so it does not open the pause menu meanwhile.");
 
-            var rewardText = GetPrivateField<TextMeshProUGUI>(chestUI, "_rewardText");
-            Assert.IsNotNull(rewardText, "ChestUI has no reward text assigned.");
-            Assert.IsFalse(string.IsNullOrWhiteSpace(rewardText.text) || rewardText.text == "Chest Empty!",
-                $"Chest screen shows no reward (text: '{rewardText.text}'). " + Errors());
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.WaitingToOpen, "the OPEN button");
+            Assert.That(screen.OpenButton.gameObject.activeInHierarchy, Is.True);
+            Assert.That(screen.Preview, Is.Not.Null, "The chest is shown in 3D.");
+            Assert.That(screen.Preview.Texture, Is.Not.Null);
+            Assert.That(screen.Preview.LidOpen, Is.False, "The lid stays shut until OPEN.");
 
-            Click(GetPrivateField<Button>(chestUI, "_claimButton"), "Claim");
+            Click(screen.OpenButton, "Open");
+            yield return WaitUntilRealtime(() => screen.Preview != null && screen.Preview.CoinsInFlight > 0, "coins to burst out of the chest");
+            Assert.That(AudioManager.Instance.LastClip, Is.SameAs(AudioManager.Instance.TreasureJingle(screen.ItemCount)).Or.SameAs(AudioManager.Instance.UIConfirmSound),
+                "The chest-size jingle plays on OPEN.");
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.Done, "every item to be revealed");
+            Assert.That(screen.Preview.LidOpen, Is.True, "OPEN opened the lid.");
+            var result = Object.FindFirstObjectByType<ChestLogicController>().LastResult;
+            Assert.That(screen.RevealedCount, Is.EqualTo(result.Rewards.Count), "Every item is revealed.");
+            Assert.That(screen.ShownGold, Is.EqualTo(result.Gold).And.GreaterThan(0), "The gold counts up to the chest's gold.");
+            Assert.That(screen.DoneButton.gameObject.activeInHierarchy, Is.True);
+            Assert.AreEqual(0f, Time.timeScale, "Still paused until DONE.");
+
+            Click(screen.DoneButton, "Done");
             yield return null;
+            Assert.IsFalse(chestUI.IsOpen, "DONE closes the chest screen.");
+            Assert.AreEqual(1f, Time.timeScale, "The game resumes after DONE. " + Errors());
+            Assert.That(PauseActionEnabled(), Is.True, "The pause key works again.");
+            Assert.That(Save().ChestsOpened, Is.EqualTo(1), "The chest is counted on the save (VS skip rules).");
+            Assert.That(GameObject.Find("ChestPreviewStage"), Is.Null, "The 3D preview is cleaned up.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
 
-            Assert.IsFalse(panel.activeInHierarchy, "Chest screen should close after Claim.");
-            Assert.AreEqual(1f, Time.timeScale, "Game should resume after Claim. " + Errors());
+        [UnityTest]
+        public IEnumerator FiveItemChest_LightsUp_HasFireworks_AndPlaysTheBigJingle()
+        {
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 20; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            // The persistent AudioManager is destroyed between PlayMode tests; the game makes it on its first scene load.
+            AudioManager.EnsureInstance();
+            yield return null;
+            Assert.That(AudioManager.Instance != null, Is.True, "An AudioManager plays the jingles.");
+            var chestUI = LiveChestUI();
+            var result = new ChestResult { ItemCount = 5, Gold = 750 };
+            for (int i = 0; i < 5; i++) result.Rewards.Add(new ChestReward { Name = "Item " + i, Level = i + 1 });
+
+            chestUI.OpenChest("TREASURE x5!", result);
+            var screen = chestUI.Screen;
+            Assert.That(screen.CanSkip, Is.False, "VS: 5-item chests need 50 of them (or 500 chests) before they can be skipped.");
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.WaitingToOpen, "the OPEN button");
+            screen.PressOpen();
+            yield return null;
+            Assert.That(AudioManager.Instance.LastClip, Is.SameAs(AudioManager.Instance.TreasureCSound), "The 5-item jingle.");
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.Done, "the reveal");
+            Assert.That(screen.BackgroundLit, Is.True, "The background lights up on 3- and 5-item chests.");
+            Assert.That(screen.FireworksShown, Is.GreaterThan(0), "Fireworks on a 5-item chest.");
+            Assert.That(screen.RevealedCount, Is.EqualTo(5));
+            Assert.That(screen.ShownGold, Is.EqualTo(750));
+            screen.PressDone();
+            yield return null;
+            Assert.That(Save().FiveItemChestsOpened, Is.EqualTo(1));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator AfterSixChests_AChestCanBeSkipped_AndCoinOnlyChestsSkipThemselves()
+        {
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 6; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var chestUI = LiveChestUI();
+            var result = new ChestResult { ItemCount = 1, Gold = 150 };
+            result.Rewards.Add(new ChestReward { Name = "Whip", Level = 2 });
+
+            chestUI.OpenChest("You Found a Chest!", result);
+            var screen = chestUI.Screen;
+            Assert.That(screen.CanSkip, Is.True, "VS: from the seventh chest, 1- and 3-item chests can be skipped.");
+            yield return null;
+            Assert.That(screen.TrySkip(), Is.True);
+            Assert.That(screen.Current, Is.EqualTo(ChestOpeningScreen.Phase.Done), "Skipping jumps to the end.");
+            Assert.That(screen.RevealedCount, Is.EqualTo(1));
+            Assert.That(screen.ShownGold, Is.EqualTo(150));
+            screen.PressDone();
+            yield return null;
+            Assert.AreEqual(1f, Time.timeScale);
+
+            // Once 5-item chests are skippable, a chest of coin bags only plays a quick in-game animation (VS).
+            Save().FiveItemChestsOpened = 50;
+            var coins = new ChestResult { ItemCount = 3, Gold = 400 };
+            for (int i = 0; i < 3; i++) coins.Rewards.Add(new ChestReward { Name = "Coin Bag", IsCoinBag = true });
+            chestUI.OpenChest("TREASURE x3!", coins);
+            Assert.That(chestUI.IsOpen, Is.False, "No screen for a coin-only chest.");
+            Assert.That(chestUI.QuickChests, Is.EqualTo(1));
+            Assert.AreEqual(1f, Time.timeScale, "The game never paused.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator ChestOpenEffect_KeepsPlaying_WhileTheGameIsPaused()
+        {
+            // Found 2026-09-28: the chest effect started in the frame the game paused and froze on its first frame.
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var at = PlayerController.Instance.transform.position;
+            VFXPoolManager.Play(VfxKind.ChestOpen, at);
+            GameTime.Pause(this);
+            try
+            {
+                var effect = VFXPoolManager.Instance.GetComponentsInChildren<ParticleSystem>(true)
+                    .FirstOrDefault(p => p.gameObject.activeInHierarchy && p.main.useUnscaledTime);
+                Assert.That(effect, Is.Not.Null, "The chest effect runs on real time.");
+                float start = effect.time;
+                yield return new WaitForSecondsRealtime(0.3f);
+                Assert.That(effect.time, Is.GreaterThan(start), "It keeps playing while paused.");
+            }
+            finally { GameTime.Resume(this); }
+        }
+
+        private static GameData Save() => GameServices.Instance.Get<SaveService>().CurrentData;
+
+        private static bool PauseActionEnabled()
+        {
+            GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            var pause = input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
+            return pause != null && pause.enabled;
         }
 
         private static ChestUI LiveChestUI()

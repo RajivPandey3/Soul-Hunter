@@ -181,16 +181,11 @@ namespace SoulHunter.Gameplay.Core
         /// <summary>Chest rewards pause the game until closed; the benchmark closes them like a player would.</summary>
         private IEnumerator CloseChests()
         {
-            var close = typeof(ChestUI).GetMethod("CloseChest", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             while (true)
             {
                 yield return WaitRealtime(0.5f);
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
-                {
-                    var panel = typeof(ChestUI).GetField("_chestPanel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        ?.GetValue(chest) as GameObject;
-                    if (panel != null && panel.activeSelf) close?.Invoke(chest, null);
-                }
+                    if (chest != null && chest.IsOpen) yield return chest.OpenAndClose();
             }
         }
 

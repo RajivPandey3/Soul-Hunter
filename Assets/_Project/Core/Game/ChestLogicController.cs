@@ -1,5 +1,6 @@
 using UnityEngine;
 using SoulHunter.Gameplay.Combat;
+using SoulHunter.Gameplay.Data;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,8 +17,33 @@ namespace SoulHunter.Gameplay.Core
     /// evolution per chest, only from chests that can evolve (VS: bosses at 10:00 or later, and the 1:00 chest).
     /// Yeh script UI ke bina bhi background mein logic run karti hai.
     /// </summary>
+    /// <summary>One item a chest gave, for the chest-opening screen.</summary>
+    public struct ChestReward
+    {
+        public string Name;
+        public Sprite Icon;
+        public int Level;
+        public bool IsEvolution;
+        /// <summary>VS Big Coin Bag: nothing was left to upgrade, so this item paid 25 gold.</summary>
+        public bool IsCoinBag;
+    }
+
+    /// <summary>What the last chest gave: the chest-opening screen plays it (VS wiki, Treasure_Chest).</summary>
+    public sealed class ChestResult
+    {
+        public int ItemCount;
+        public bool IsArcana;
+        public int Gold;
+        public readonly List<ChestReward> Rewards = new List<ChestReward>();
+        /// <summary>Every item became a coin bag (VS: such chests skip their animation once skipping is unlocked).</summary>
+        public bool OnlyCoins => Rewards.Count > 0 && Rewards.TrueForAll(r => r.IsCoinBag);
+    }
+
     public class ChestLogicController : MonoBehaviour
     {
+        /// <summary>The chest processed last (null before the first).</summary>
+        public ChestResult LastResult { get; private set; }
+
         [Tooltip("Base % chance (at Luck 1) that a chest holds 5 items. Provisional balance value.")]
         [SerializeField, Range(0f, 100f)] private float _fiveItemChancePercent = 3f;
         [Tooltip("Base % chance (at Luck 1) that a chest holds 3 items. Provisional balance value.")]
@@ -77,6 +103,8 @@ namespace SoulHunter.Gameplay.Core
             if (arcanas == null || !arcanas.CanGrantFromChest) return ProcessChest(canEvolve);
             var arcana = arcanas.GrantRandomAvailableArcana(Random.value);
             if (arcana == null) return ProcessChest(canEvolve);
+            LastResult = new ChestResult { ItemCount = 1, IsArcana = true };
+            LastResult.Rewards.Add(new ChestReward { Name = $"Arcana {arcana.CardNumber} - {arcana.CardName}", Icon = arcana.CardIcon, Level = 1 });
             return ArcanaMessage(arcana);
         }
 
@@ -97,6 +125,7 @@ namespace SoulHunter.Gameplay.Core
                                    bool canEvolve = true, float goldRoll01 = 0f)
         {
             var rewards = new List<string>();
+            var result = new ChestResult { ItemCount = itemCount };
             bool evolved = false;
             int maxedItems = 0;
             for (int i = 0; i < itemCount; i++)
@@ -107,6 +136,7 @@ namespace SoulHunter.Gameplay.Core
                     evolved = true;
                     Debug.Log($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
                     rewards.Add($"<color=red>Ultimate Power: {evolvedName}</color>");
+                    result.Rewards.Add(new ChestReward { Name = evolvedName, Icon = weaponManager.LastEvolvedIcon, Level = 1, IsEvolution = true });
                     continue;
                 }
 
@@ -118,9 +148,16 @@ namespace SoulHunter.Gameplay.Core
                     weaponManager.ApplyUpgrade(upgrades[0]);
                     Debug.Log($"[ChestLogicController] Chest se Free Upgrade mila: {upgrades[0].UpgradeName}!");
                     rewards.Add($"<color=yellow>+ {upgrades[0].UpgradeName} (Lv {upgrades[0].Level})</color>");
+                    var definition = WeaponDefinitionLookup.Find(upgrades[0].Type);
+                    result.Rewards.Add(new ChestReward
+                    {
+                        Name = UpgradeText.DisplayName(upgrades[0]), Level = upgrades[0].Level,
+                        Icon = upgrades[0].Icon != null ? upgrades[0].Icon : definition != null ? definition.Icon : null
+                    });
                     continue;
                 }
 
+                result.Rewards.Add(new ChestReward { Name = "Coin Bag", IsCoinBag = true });
                 maxedItems++; // 3. nothing left to upgrade: VS pays a Big Coin Bag for this item
             }
 
@@ -129,6 +166,8 @@ namespace SoulHunter.Gameplay.Core
             int gold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(
                 ChestGold(itemCount, goldRoll01) + maxedItems * GoldPerMaxedItem, player != null ? player.Stats : null);
             if (gold > 0) Debug.Log($"[ChestLogicController] Chest se {gold} Gold mile!");
+            result.Gold = gold;
+            LastResult = result;
 
             var message = new StringBuilder(itemCount > 1 ? $"TREASURE x{itemCount}!\n" : "You Found a Chest!\n");
             foreach (var reward in rewards) message.Append('\n').Append(reward);

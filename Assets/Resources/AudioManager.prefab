@@ -57,6 +57,10 @@ MonoBehaviour:
   UIClickSound: {fileID: 8300000, guid: 020a99da1b0dc1c4bb146a8584b46bcf, type: 3}
   UIConfirmSound: {fileID: 8300000, guid: 47d023643089e0048bc3fd52262506b7, type: 3}
   UnlockSound: {fileID: 8300000, guid: 6d12ea1aca4afce40b9c9133458e0dca, type: 3}
+  TreasureFoundSound: {fileID: 8300000, guid: 536b43af7303fba4e8f0164461767e87, type: 3}
+  TreasureASound: {fileID: 8300000, guid: 7f6710d68793c764ea737d2add85550f, type: 3}
+  TreasureBSound: {fileID: 8300000, guid: 5e7758a8810c1d141b6058da010b04b4, type: 3}
+  TreasureCSound: {fileID: 8300000, guid: d22a899e6b1642b4ea116a159a5ac8ea, type: 3}
   ShootSound: {fileID: 8300000, guid: c7a6bc88dec6a6a40a8bf51ef6b21564, type: 3}
   SlashSound: {fileID: 8300000, guid: 80c6058fc7a6b7c45a6a251e01b47b0c, type: 3}
   MagicSound: {fileID: 8300000, guid: cddbe851f09626346a253516a8e776f1, type: 3}

@@ -77,12 +77,21 @@ namespace SoulHunter.Gameplay.VFX
             vfx.transform.localScale = prefab.transform.localScale * Mathf.Max(0.05f, scale);
             if (vfx.activeSelf) vfx.SetActive(false); // a recycled one restarts cleanly
             vfx.SetActive(true);
+            bool unscaled = PlaysWhilePaused(kind);
             foreach (var particles in vfx.GetComponentsInChildren<ParticleSystem>())
             {
+                var main = particles.main;
+                main.useUnscaledTime = unscaled;
                 particles.Clear(false);
                 particles.Play(false);
             }
         }
+
+        /// <summary>
+        /// Effects that start in the same frame the game pauses (a chest or level-up screen opens). Their particles run in
+        /// real time; on game time they froze on their first frame and never showed (found 2026-09-28).
+        /// </summary>
+        public static bool PlaysWhilePaused(VfxKind kind) => kind == VfxKind.ChestOpen || kind == VfxKind.LevelUp;
 
         private GameObject GetOrCreate(VfxKind kind, GameObject prefab)
         {

@@ -48,6 +48,9 @@ namespace SoulHunter.Gameplay.Pickups
         [Tooltip("Coin model; GoldPickup and a trigger collider are added at runtime if missing")]
         [SerializeField] private GameObject _goldCoinPrefab;
         [SerializeField, Min(0)] private int _prewarmPerPickupType = 32;
+        /// <summary>The chest and coin models, for the chest-opening screen's 3D preview.</summary>
+        public GameObject ChestPrefab => _chestPrefab;
+        public GameObject GoldCoinPrefab => _goldCoinPrefab;
 
         private Stack<GameObject> _gemPool = new Stack<GameObject>();
         private Stack<GameObject> _chickenPool = new Stack<GameObject>();
