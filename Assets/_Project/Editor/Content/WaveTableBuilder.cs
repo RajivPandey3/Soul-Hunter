@@ -21,6 +21,16 @@ namespace SoulHunter.Editor.Content
                 var wave = AssetDatabase.LoadAssetAtPath<WaveData>(StageWaves[i]);
                 if (wave == null) throw new System.IO.FileNotFoundException("Missing stage wave", StageWaves[i]);
                 wave.Minutes = WaveTables.Build(i + 1, wave.SpawnInterval);
+                // VS wave enemy types (WaveTables.EnemyTypesByStage), resolved from prefab paths.
+                foreach (var minute in wave.Minutes)
+                    foreach (var path in WaveTables.EnemyTypePaths(i + 1, minute.Minute))
+                    {
+                        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                        if (prefab == null) throw new System.IO.FileNotFoundException("Missing wave enemy type", path);
+                        if (prefab.GetComponent<SoulHunter.Gameplay.AI.EnemyController>() == null)
+                            throw new System.ArgumentException($"{path} is not an enemy (no EnemyController).");
+                        minute.EnemyTypes.Add(prefab);
+                    }
                 wave.SpawnSide = WaveTables.SideFor(i + 1);
                 wave.SideBias = WaveTables.SideBiasFor(i + 1);
                 wave.Events = WaveTables.Events(i + 1);

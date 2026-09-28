@@ -215,7 +215,14 @@ namespace SoulHunter.Gameplay.AI
                     int groupSize = Mathf.Max(1, _currentWave.EnemiesPerSpawn + phase.EnemiesPerSpawnBonus + fiveMinutePressure);
                     int availableSlots = Mathf.Max(0, _maxAliveEnemies - EnemyController.ActiveEnemies.Count);
                     int spawnCount = Mathf.Min(groupSize, availableSlots);
-                    for (int i = 0; i < spawnCount; i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
+                    if (phase.EnemyTypes != null && phase.EnemyTypes.Count > 0)
+                    {
+                        // VS wiki (Enemies, Waves): above the minimum, each tick sends one of each of the wave's types.
+                        foreach (var type in phase.EnemyTypes)
+                            if (EnemyController.ActiveEnemies.Count < _maxAliveEnemies) GivePendingChest(SpawnEnemy(type));
+                    }
+                    else
+                        for (int i = 0; i < spawnCount; i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
                     // VS rule: Curse makes enemies arrive more often.
                     _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (CurrentCurse() * RunModes.SpawnMultiplier));
@@ -224,8 +231,19 @@ namespace SoulHunter.Gameplay.AI
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
                 int missing = Mathf.Min(Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier), _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
-                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
+                // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
+                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(SpawnEnemy(NextWavePrefab(level, phase)));
             }
+        }
+
+        private int _waveTypeCursor;
+
+        /// <summary>The next enemy of the wave: its types in turn (VS), or the stage's own enemy when it lists none.</summary>
+        private GameObject NextWavePrefab(SoulHunter.Gameplay.Data.CampaignLevelDefinition level, WavePhase phase)
+        {
+            if (phase.EnemyTypes == null || phase.EnemyTypes.Count == 0) return PickSwarmPrefab(level, phase);
+            _waveTypeCursor = (_waveTypeCursor + 1) % phase.EnemyTypes.Count;
+            return phase.EnemyTypes[_waveTypeCursor];
         }
 
         private GameObject PickSwarmPrefab(SoulHunter.Gameplay.Data.CampaignLevelDefinition level, WavePhase phase)

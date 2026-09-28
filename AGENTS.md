@@ -467,6 +467,23 @@ Editor play `autoplay-editor-37` (Stage 1, no god mode, 6 min, clock skipped to 
 
 Not yet played by the owner.
 
+### Scalability: adding content (owner request, 2026-09-28)
+
+The owner asked for three improvements: wave enemy types, boss ability components and a single weapon definition asset.
+
+**1. Wave enemy types.** VS wiki, Enemies, "Waves": "Each wave specifies a minimum amount and a spawn interval ... If the minimum amount is not met ... enemies will be spawned until the quota is filled. If more enemies than the minimum amount is present, one of each type of enemies in the wave will be spawned."
+- `MinuteWave.EnemyTypes` (enemy gameplay prefabs) reaches `WavePhase.EnemyTypes`.
+- `EnemySpawner` fills the minimum with the wave's types in turn (`NextWavePrefab`) and, above the minimum, sends one of each type per tick.
+- An empty list keeps the old behaviour (the stage's own enemy with the elite chance), so no stage changed yet: new enemy models are Art section work.
+- To add an enemy type:
+  1. Make its `EnemyData`.
+  2. Make a gameplay prefab like `SH10_Lxx_EnemyGameplay`.
+  3. List it in `WaveTables.EnemyTypesByStage` (stage → from-minute → prefab paths).
+  4. Run Soul Hunter/Content/Build Wave Tables, which checks every path is an enemy with EnemyData.
+  - No scene or spawner code changes.
+- Tests: `WaveEnemyTypeTests` (T) and `WaveEnemyTypePlayModeTests` (R: a two-type wave fills its minimum with both types, then sends one of each per tick).
+- EditMode 410/410, PlayMode 151/151, save untouched (`D:/SoulHunter-Validation/run-20260928-wavetypes/`).
+
 ### Balance pass, Part 3: enemy pressure along the stages (2026-09-28)
 
 Measured with the bot, no god mode. `-sh-autoplay-start-level N` starts the hero at level N, so later stages can be played at a believable strength.

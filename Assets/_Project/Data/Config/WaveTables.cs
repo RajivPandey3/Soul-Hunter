@@ -133,6 +133,26 @@ namespace SoulHunter.Gameplay.Data
             return Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
         }
 
+        /// <summary>
+        /// VS wiki (Enemies, Waves): each minute's wave lists its enemy types. Soul Hunter authors them here, per stage, as
+        /// (first minute, enemy gameplay prefab paths); a later entry replaces an earlier one from its minute on. The
+        /// WaveTableBuilder resolves the paths into each MinuteWave.EnemyTypes. A stage with no entries keeps its own
+        /// enemy with the elite chance. To add a new enemy type: make its EnemyData + gameplay prefab (like
+        /// Assets/Prefabs/Enemies/Gameplay/SH10_Lxx_EnemyGameplay.prefab), list it here, run Build Wave Tables.
+        /// </summary>
+        public static readonly Dictionary<int, List<(int fromMinute, string[] prefabPaths)>> EnemyTypesByStage =
+            new Dictionary<int, List<(int, string[])>>();
+
+        /// <summary>The enemy type prefab paths of a stage's minute (empty: the stage's own enemy).</summary>
+        public static string[] EnemyTypePaths(int stage, int minute)
+        {
+            string[] paths = System.Array.Empty<string>();
+            if (EnemyTypesByStage.TryGetValue(Mathf.Clamp(stage, 1, 10), out var entries))
+                foreach (var (fromMinute, prefabPaths) in entries)
+                    if (minute >= fromMinute) paths = prefabPaths;
+            return paths;
+        }
+
         public static List<MinuteWave> Build(int stage, float baseInterval)
         {
             stage = Mathf.Clamp(stage, 1, 10);

@@ -15,6 +15,8 @@ namespace SoulHunter.Gameplay.Data
         public bool IsBossPhase;
         [Tooltip("VS enemy minimum: the swarm is topped up straight away whenever fewer enemies are alive (0 = off)")]
         [Min(0)] public int MinimumEnemies;
+        [Tooltip("VS wave enemy types (from the minute table). Empty: the stage's own enemy, with the elite chance.")]
+        public List<GameObject> EnemyTypes = new List<GameObject>();
     }
 
     /// <summary>VS-style scripted formations. Event enemies ignore the player and fly a fixed path.</summary>
@@ -41,6 +43,10 @@ namespace SoulHunter.Gameplay.Data
         [Min(0.05f)] public float Interval = 1f;
         [Tooltip("Extra elite chance this minute: a quiet minute with tougher enemies")]
         [Range(0f, 1f)] public float EliteBonus;
+        [Tooltip("VS wiki (Enemies, Waves): the enemy types of this minute's wave. Below the minimum they fill the quota in " +
+                 "turn; above it, each spawn tick sends one of each type. Any enemy gameplay prefab (EnemyController + " +
+                 "EnemyData) works. Empty: the stage's own enemy, with the elite chance (as before).")]
+        public List<GameObject> EnemyTypes = new List<GameObject>();
     }
 
     /// <summary>
@@ -162,7 +168,8 @@ namespace SoulHunter.Gameplay.Data
                         EliteChanceBonus = m.EliteBonus,
                         EnemyPrefab = EnemyPrefab,
                         IsBossPhase = IsBossWave,
-                        MinimumEnemies = m.Minimum
+                        MinimumEnemies = m.Minimum,
+                        EnemyTypes = m.EnemyTypes != null ? m.EnemyTypes.FindAll(t => t != null) : new List<GameObject>()
                     };
                 }
             }
