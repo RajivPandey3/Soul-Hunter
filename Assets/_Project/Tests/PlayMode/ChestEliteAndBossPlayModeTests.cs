@@ -33,8 +33,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNotNull(elite, "SpawnChestElite produced nothing. " + Errors());
             var data = elite.GetComponent<EnemyController>().Data;
             var health = elite.GetComponent<HealthController>();
-            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(Mathf.RoundToInt(data.MaxHealth * 5f), curse), health.MaxHealth,
-                "Chest elite should have 5x its EnemyData health.");
+            int level = PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel;
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(EnemySpawner.ChestEliteHealth(0f, level), curse), health.MaxHealth,
+                "A chest elite has the VS chest-boss health (50 x level outside the 5/10/15/20-minute bosses).");
 
             health.KillSilently();
             yield return WaitUntilRealtime(() => ActiveChests() == 1, "the chest elite to drop a chest");
@@ -65,12 +66,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsTrue((bool)typeof(EnemySpawner).GetMethod("SpawnBoss", Private).Invoke(spawner, new object[] { bossPrefab }));
             var boss = EnemyController.ActiveEnemies.Last();
             var data = bossPrefab.GetComponent<EnemyController>().Data;
-            var eliteData = (GetPrivateField<GameObject>(spawner, "_stageElitePrefab") ?? GetPrivateField<GameObject>(spawner, "_stageEnemyPrefab"))
-                .GetComponent<EnemyController>().Data;
-            int chestElite = Mathf.RoundToInt(eliteData.MaxHealth * 5f);
-            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(Mathf.Max(data.HealthPerPlayerLevel * level, chestElite * 2), curse),
-                boss.GetComponent<HealthController>().MaxHealth, "Boss health is per-level health x player level, but at least two chest elites'.");
-            Assert.That(boss.GetComponent<HealthController>().MaxHealth, Is.GreaterThan(chestElite), "The stage boss outlasts its chest elites.");
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(data.HealthPerPlayerLevel * level, curse),
+                boss.GetComponent<HealthController>().MaxHealth, "VS HP x Level: per-level health x player level.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

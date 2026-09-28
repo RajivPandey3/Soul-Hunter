@@ -133,13 +133,19 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void BanishingTheLastItem_PaysOutAndClosesLevelUp()
+        public void BanishingTheLastItem_OffersGoldOrChicken_ThenCloses()
         {
+            // VS wiki (Level_up): with nothing left to upgrade, the level-up offers gold or a Floor Chicken to pick.
             UsePool(UpgradeData.UpgradeType.MagicWand);
             OpenLevelUp();
 
             Assert.That(_manager.Banish(_lastRound[0]), Is.True);
 
+            Assert.That(_manager.IsLevelUpActive, Is.True, "The screen stays open with the two reward cards.");
+            Assert.That(_lastRound.Count, Is.EqualTo(2));
+            Assert.That(_lastRound.TrueForAll(MaxedRewards.IsCard), Is.True);
+
+            _manager.SelectUpgrade(_lastRound[0]);
             Assert.That(_manager.IsLevelUpActive, Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
         }

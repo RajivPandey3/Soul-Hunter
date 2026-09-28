@@ -31,8 +31,6 @@ namespace SoulHunter.Gameplay.AI
                  "11:00 and 21:00 VS chests only hold Arcanas and are left out until Arcana chests exist.")]
         [SerializeField] private float[] _chestEliteMinutes = DefaultChestEliteMinutes;
         public static readonly float[] DefaultChestEliteMinutes = { 1f, 3f, 5f, 7f, 9f, 10f, 12f, 14f, 15f, 16f, 18f, 20f, 22f, 23f, 27f, 29f };
-        [Tooltip("Chest elite health = its EnemyData.MaxHealth x this (then Curse). Provisional.")]
-        [SerializeField, Min(1f)] private float _chestEliteHealthMultiplier = 5f;
         [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
         private int _chestElitesSpawned;
         private int _arcanaChestsSpawned;
@@ -159,13 +157,13 @@ namespace SoulHunter.Gameplay.AI
             if (_chestElitesSpawned < ChestElitesDue(_stageTimePassed, _chestEliteMinutes))
             {
                 _chestElitesSpawned++;
-                SpawnChestElite();
+                SpawnChestEliteAt(_chestEliteMinutes[_chestElitesSpawned - 1]);
             }
             // VS Arcana mode: Arcana chests at 11:00 and 21:00.
             if (RunModes.Arcana && _arcanaChestsSpawned < ChestElitesDue(_stageTimePassed, ArcanaChestMinutes))
             {
                 _arcanaChestsSpawned++;
-                SpawnChestElite()?.GetComponent<EnemyDrop>()?.CarryArcanaThisLife();
+                SpawnChestEliteAt(ArcanaChestMinutes[_arcanaChestsSpawned - 1])?.GetComponent<EnemyDrop>()?.CarryArcanaThisLife();
             }
 
             var level = progression.CurrentLevel;
@@ -369,11 +367,10 @@ namespace SoulHunter.Gameplay.AI
                 // Stage boss EnemyData is authoritative. Fallback bosses built from
                 // ordinary enemy prefabs keep the stage formula, not enemy health.
                 var bossData = bossController != null && basePrefab == _stageBossPrefab ? bossController.Data : null;
-                // VS rule: boss health scales with the player's level, so a strong build still gets a fight.
-                // Owner's story (2026-09-27): each stage boss is that stage's guardian, so it is never weaker than
-                // the stage's chest elites; the per-level health also rises with the story (50 x stage).
+                // VS rule (HP x Level): boss health is its per-level health x the player's level when it spawns. The
+                // per-level values follow the VS 25:00 bosses along the stage list (owner, 2026-09-28: "pura VS").
                 int bossHealth = bossData != null
-                    ? StoryBossHealth(bossData.HealthForPlayerLevel(CurrentPlayerLevel()), ChestEliteBaseHealth())
+                    ? bossData.HealthForPlayerLevel(CurrentPlayerLevel())
                     : 1000 * SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage;
                 health.Initialize(ScaleHealthByCurse(ModeHealth(bossHealth), curse));
                 health.KnockbackResistance = 1f; // Immune to knockback
@@ -607,7 +604,22 @@ namespace SoulHunter.Gameplay.AI
         /// VS rule: strong enemies arrive at fixed times and always drop a chest (the main source
         /// of evolutions). Uses the stage elite (or the stage enemy) with extra health.
         /// </summary>
-        private GameObject SpawnChestElite()
+        private GameObject SpawnChestElite() => SpawnChestEliteAt(StageMinutes);
+
+        /// <summary>
+        /// VS wiki (Mad Forest chest bosses, fetched 2026-09-28; all with HP x Level unless noted): Glowing and Silver Bats
+        /// 50 (most minutes, and the 11:00/21:00 Arcana holders), Giant Mantichana 150 at 10:00, Giant Werewolf 200 at
+        /// 15:00, Giant Mummy 250 at 20:00; the 5:00 Mantichana has a flat 500 without HP x Level.
+        /// </summary>
+        public static int ChestEliteHealth(float minute, int playerLevel)
+        {
+            int m = Mathf.RoundToInt(minute);
+            if (m == 5) return 500;
+            int perLevel = m == 10 ? 150 : m == 15 ? 200 : m == 20 ? 250 : 50;
+            return perLevel * Mathf.Max(1, playerLevel);
+        }
+
+        private GameObject SpawnChestEliteAt(float minute)
         {
             var prefab = _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
             var elite = SpawnEnemy(prefab);
@@ -617,25 +629,10 @@ namespace SoulHunter.Gameplay.AI
             var data = elite.GetComponent<EnemyController>()?.Data;
             var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && data != null)
-                health.Initialize(ScaleHealthByCurse(ModeHealth(Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier)), CurrentCurse()));
+                health.Initialize(ScaleHealthByCurse(ModeHealth(ChestEliteHealth(minute, CurrentPlayerLevel())), CurrentCurse()));
             elite.GetComponent<EnemyDrop>()?.DropChestThisLife();
             Debug.Log($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
             return elite;
-        }
-
-        /// <summary>How many chest elites' health a stage boss has at least (owner's story: the guardian outlasts its guards).</summary>
-        public const float BossOverEliteHealth = 2f;
-
-        /// <summary>A stage boss's health before Curse: its per-level health, but never under twice a chest elite's.</summary>
-        public static int StoryBossHealth(int perLevelHealth, int chestEliteHealth) =>
-            Mathf.Max(perLevelHealth, Mathf.RoundToInt(chestEliteHealth * BossOverEliteHealth));
-
-        /// <summary>A chest elite's health before Curse on the current stage (0 if the stage has no elite data).</summary>
-        private int ChestEliteBaseHealth()
-        {
-            var prefab = _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
-            var data = prefab != null ? prefab.GetComponent<EnemyController>()?.Data : null;
-            return data != null ? Mathf.RoundToInt(data.MaxHealth * _chestEliteHealthMultiplier) : 0;
         }
 
         /// <summary>Stage minutes on the clock (for the run modes' per-minute growth).</summary>

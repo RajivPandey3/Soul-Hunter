@@ -214,10 +214,31 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void LimitBreakOff_NothingLeft_OffersNoCards()
+        public void LimitBreakOff_NothingLeft_OffersGoldOrChicken()
         {
+            // VS wiki (Level_up): with nothing left to upgrade, the level-up offers gold or a Floor Chicken to choose from.
             var (manager, _) = NewLevelUp(UpgradeData.UpgradeType.MagicWand);
-            Assert.That(manager.GetLevelUpChoices(3), Is.Empty, "Without Limit Break a maxed build gets gold and a chicken instead.");
+            var cards = manager.GetLevelUpChoices(3);
+            Assert.That(cards.Count, Is.EqualTo(2));
+            Assert.That(cards.TrueForAll(MaxedRewards.IsCard), Is.True);
+            Assert.That(cards.Exists(MaxedRewards.IsGoldCard) && cards.Exists(c => !MaxedRewards.IsGoldCard(c)), Is.True, "One gold, one chicken.");
+            Assert.That(UpgradeText.Tag(cards[0], 0), Is.EqualTo("REWARD"));
+        }
+
+        [Test]
+        public void MaxedChickenCard_HealsThirty_AndGoldCard_Pays25()
+        {
+            var player = Track(new GameObject("MaxedPlayer"));
+            var controller = player.AddComponent<PlayerController>();
+            var health = player.GetComponent<HealthController>() ?? player.AddComponent<HealthController>();
+            health.Initialize(100);
+            health.TakeDamage(new DamagePacket(50, Vector3.zero, Vector3.zero, DamageType.Normal));
+            int hurt = health.CurrentHealth;
+            var cards = MaxedRewards.BuildCards();
+            Assert.That(MaxedRewards.TryApply(cards.Find(c => !MaxedRewards.IsGoldCard(c)), controller), Is.True);
+            Assert.That(health.CurrentHealth, Is.EqualTo(Mathf.Min(100, hurt + MaxedRewards.HealAmount)));
+            Assert.That(MaxedRewards.GoldAmount, Is.EqualTo(25), "VS Big Coin Bag.");
+            Assert.That(MaxedRewards.TryApply(Track(ScriptableObject.CreateInstance<UpgradeData>()), controller), Is.False, "Not a reward card.");
         }
 
         [Test]

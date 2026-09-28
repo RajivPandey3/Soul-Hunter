@@ -34,6 +34,8 @@ Owner decision (2026-09-24): Soul Hunter is a Vampire Survivors-style game with 
 
 Match mechanics and feel only. Do not copy Vampire Survivors code, decompiled or extracted game data, art, audio, text, or character/item names. Soul Hunter's story, characters, names, and art stay its own.
 
+Owner rule (2026-09-28): every Soul Hunter task, however small, is based 0–100% on the VS wiki (vampire.survivors.wiki), plus the owner's story (`Docs/Game_Design_Document.md`, never edited). Look the rule up on the wiki (raw: `https://vampire.survivors.wiki/w/<Page>?action=raw`) and cite the page. Never state a VS fact from memory; if the wiki is silent or thin, say so. Ask the owner only when the wiki has no answer, it conflicts with the story or an owner decision, or it is art approval.
+
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 
 ---
@@ -612,7 +614,22 @@ First look (`autoplay-editor-28` Stage 1, no god mode; `-29` Stage 4, god mode; 
   - elites and bosses dropped only a chest, so their soul gems (50 and 250 XP) never appeared.
 
 Owner decision (2026-09-27): "MERE STORY KO FOLLOW KARO", i.e. follow the story in `Docs/Game_Design_Document.md`; "STORY MEIN NO CHANGES" (do not edit the story; the old GDD level mechanics stay as the earlier owner decisions left them). The owner chose:
-- **Bosses grow with the story:** each stage boss is that stage's guardian. Per-level health is 50 x stage (L1 50 ... L10 Shadow Kael 500) x player level, and never under twice a chest elite's (`EnemySpawner.StoryBossHealth`, `BossOverEliteHealth` = 2). Values provisional.
+- ~~**Bosses grow with the story:** 50 × stage × level, never under twice a chest elite's.~~ Replaced on 2026-09-28 by the owner's choice "pura VS". Bosses and chest elites now use the VS wiki's HP x Level values (raw boss pages fetched 2026-09-28):
+  - **Stage bosses, per level:** Stage 1: 150 (Mad Forest Giant Blue Venus); Stages 2–3: 250 (Inlaid Library Hag, Dairy Plant Sword Guardian); Stages 4–10: 500 (Gallo Tower Giant Enemy Crab, Mt.Moonspell Orochimario).
+    - Later guardians are never weaker, per the story; Cappella Magna's 250 would have dropped.
+    - Shadow Kael stays at 500.
+    - The "twice a chest elite" floor is gone: in VS, Mad Forest's 20:00 Giant Mummy (250) is stronger than its 25:00 boss (150).
+  - **Chest elites** (`EnemySpawner.ChestEliteHealth`, VS Mad Forest chest bosses):
+    - 50 × level at most minutes (Glowing/Silver Bat), and at the Arcana minutes.
+    - 150 × level at 10:00 (Giant Mantichana), 200 × at 15:00 (Giant Werewolf), 250 × at 20:00 (Giant Mummy).
+    - A flat 500 at 5:00 (Mantichana, no HP x Level).
+    - The old rule was 5 × the stage elite's EnemyData health.
+  - **Maxed-out level-ups** (VS wiki Level_up): with nothing left to upgrade, the level-up screen offers two cards, "Gold Pouch" (+25 gold, the Big Coin Bag) or "Roast Chicken" (30 health, the Floor Chicken), and the player picks one (`MaxedRewards`). Before, both were given silently with no screen. The VS "always gold/chicken" option after 100 Big Coin Bags is not built.
+  - Pickup values checked against the wiki: chicken 30, Orologion 10 s, coins 1/10/100, Big Coin Bag 25. All match.
+  - Validation: EditMode 407/407 (the banish test now expects the reward cards), PlayMode 150/150, save untouched (`D:/SoulHunter-Validation/run-20260928-vsboss/`).
+  - Editor play `autoplay-editor-51` (Stage 1, god mode, clock skipped to the boss at level 20): 0 errors, min 49 FPS.
+    - The boss had 3,000 health (150 × 20) and died in 87 s.
+    - The chest elites matched the VS values: 200 at 1:00 (level 4), 700 at 3:00, 500 at 5:00, 3,000 at 10:00.
 - **Souls:** a boss or chest elite drops its soul gem (`EnemyData.ExperienceValue`) next to its chest (`EnemyDrop`).
 - **The story is shown:** `StoryCardUI` (added by `GameHUDController`) shows "Level n: name" and the story when each stage starts, with the premise on Level 1 and the twist on Level 10. It does not pause and waits while a menu is open. The text is word for word from the GDD: `CampaignLevelCatalog` narratives now use the GDD's story lines, plus `CampaignStory.Premise` and `Twist`. The story is about Kael whichever character is played.
 

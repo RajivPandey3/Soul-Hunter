@@ -208,7 +208,7 @@ namespace SoulHunter.Gameplay.Core
         {
             if (upgrade == null) return;
             // VS Limit Break: a Limit Break card strengthens its weapon beyond max level instead of levelling it.
-            if (!LimitBreak.TryApplyCard(upgrade) && _weaponManager != null)
+            if (!MaxedRewards.TryApply(upgrade, _playerController) && !LimitBreak.TryApplyCard(upgrade) && _weaponManager != null)
             {
                 _weaponManager.ApplyUpgrade(upgrade);
             }
@@ -245,7 +245,7 @@ namespace SoulHunter.Gameplay.Core
             if (!_isLevelUpActive || BanishesLeft <= 0 || upgrade == null) return false;
             BanishesLeft--;
             // A Limit Break card is not an item: banishing it only deals new cards and keeps its weapon in the pool.
-            if (!LimitBreak.IsCard(upgrade))
+            if (!LimitBreak.IsCard(upgrade) && !MaxedRewards.IsCard(upgrade))
             {
                 _banishedTypes.Add(upgrade.Type);
                 Debug.Log($"[LevelUpManager] Banished {upgrade.Type} for this run.");
@@ -310,6 +310,9 @@ namespace SoulHunter.Gameplay.Core
             var choices = GetRandomValidUpgrades(count);
             if (choices.Count == 0 && SoulHunter.Gameplay.Data.RunModes.LimitBreak)
                 choices = LimitBreak.BuildCards(_weaponManager, count, IconFor);
+            // VS wiki (Level_up): with nothing left to upgrade, the level-up offers gold or a Floor Chicken to choose from.
+            if (choices.Count == 0 && _weaponManager != null)
+                choices = MaxedRewards.BuildCards();
             return choices;
         }
 

@@ -43,16 +43,29 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void StageBosses_GrowWithTheStory_AndOutlastTheirChestElites()
+        public void StageBosses_FollowTheVs2500Bosses_AlongTheStages()
         {
-            // Owner's story (2026-09-27): later guardians are stronger; per-level health is 50 x stage.
+            // VS wiki (HP x Level per level): Mad Forest Giant Blue Venus 150, Inlaid Library Hag 250, Dairy Plant Sword
+            // Guardian 250, Gallo Tower Giant Enemy Crab 500 (Mt.Moonspell Orochimario 500); later guardians never weaker
+            // (owner's story; Cappella Magna's 250 would drop). Owner, 2026-09-28: "pura VS".
+            int[] expected = { 150, 250, 250, 500, 500, 500, 500, 500, 500, 500 };
             for (int stage = 1; stage <= 10; stage++)
             {
                 var data = AssetDatabase.LoadAssetAtPath<GameObject>(string.Format(BossPrefabPath, stage)).GetComponent<EnemyController>().Data;
-                Assert.That(data.HealthPerPlayerLevel, Is.EqualTo(50 * stage), $"Stage {stage}");
+                Assert.That(data.HealthPerPlayerLevel, Is.EqualTo(expected[stage - 1]), $"Stage {stage}");
             }
-            Assert.That(EnemySpawner.StoryBossHealth(200, 625), Is.EqualTo(1250), "A low-level player still meets a boss stronger than two elites.");
-            Assert.That(EnemySpawner.StoryBossHealth(2400, 625), Is.EqualTo(2400), "Otherwise per-level health decides.");
+        }
+
+        [TestCase(1f, 10, 500)]    // Glowing Bat: 50 x level
+        [TestCase(5f, 10, 500)]    // the 5:00 Mantichana: a flat 500
+        [TestCase(5f, 80, 500)]
+        [TestCase(10f, 10, 1500)]  // Giant Mantichana: 150 x level
+        [TestCase(15f, 10, 2000)]  // Giant Werewolf: 200 x level
+        [TestCase(20f, 10, 2500)]  // Giant Mummy: 250 x level
+        [TestCase(29f, 10, 500)]
+        public void ChestElites_UseTheVsMadForestChestBosses(float minute, int level, int expected)
+        {
+            Assert.That(EnemySpawner.ChestEliteHealth(minute, level), Is.EqualTo(expected));
         }
 
         // Owner (2026-09-27): the VS Mad Forest chest minutes 1, 3, 5, 7, 9, 10, 12, 14, 15, 16, 18, 20, 22, 23, 27, 29
