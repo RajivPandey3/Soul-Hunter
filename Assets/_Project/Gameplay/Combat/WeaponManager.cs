@@ -48,6 +48,23 @@ namespace SoulHunter.Gameplay.Combat
         public event System.Action<UpgradeData> OnWeaponAcquiredOrUpgraded;
         /// <summary>An item left the inventory (Tirajisú after the last Revival).</summary>
         public event System.Action<UpgradeData.UpgradeType> OnItemRemoved;
+        /// <summary>Anything in the inventory changed: gained, levelled, evolved, united or removed. The HUD redraws on it.</summary>
+        public event System.Action OnInventoryChanged;
+
+        // Items in the order they were gained (the HUD fills its slots in this order, like VS).
+        private readonly List<UpgradeData.UpgradeType> _acquireOrder = new List<UpgradeData.UpgradeType>();
+        // A union takes the slot of its first weapon and shows the union's icon.
+        private readonly Dictionary<UpgradeData.UpgradeType, Sprite> _unionIconBySlot = new Dictionary<UpgradeData.UpgradeType, Sprite>();
+
+        /// <summary>One HUD inventory slot.</summary>
+        public struct InventorySlot
+        {
+            public UpgradeData.UpgradeType Type;
+            public Sprite Icon;
+            public int Level;
+            /// <summary>An evolved weapon (it keeps its base weapon's slot) or a union.</summary>
+            public bool Evolved;
+        }
 
         private void Awake()
         {
@@ -113,8 +130,43 @@ namespace SoulHunter.Gameplay.Combat
                 Debug.Log($"[WeaponManager] Weapon slots full; {type} was not acquired.");
                 return;
             }
+            TrackAcquired(type, level);
             _weaponLevels[type] = level;
             if (IsWeaponType(type)) ActivateOrUpgradeWeapon(GetWeaponObject(type), level);
+            OnInventoryChanged?.Invoke();
+        }
+
+        private void TrackAcquired(UpgradeData.UpgradeType type, int newLevel)
+        {
+            if (newLevel > 0 && !_acquireOrder.Contains(type)) _acquireOrder.Add(type);
+            else if (newLevel <= 0) _acquireOrder.Remove(type);
+        }
+
+        /// <summary>
+        /// Weapons (<paramref name="passives"/> false) or passives in the order gained, as the HUD shows them. Weapons
+        /// merged into a union give one slot, where the union's first weapon was.
+        /// </summary>
+        public List<InventorySlot> GetInventory(bool passives)
+        {
+            var slots = new List<InventorySlot>();
+            foreach (var type in _acquireOrder)
+            {
+                int level = GetWeaponLevel(type);
+                if (level <= 0 || IsWeaponType(type) == passives) continue;
+                if (_unionIconBySlot.TryGetValue(type, out var unionIcon))
+                {
+                    slots.Add(new InventorySlot { Type = type, Icon = unionIcon, Level = level, Evolved = true });
+                    continue;
+                }
+                if (_unionConsumedWeapons.Contains(type)) continue;
+                var definition = DefinitionOf(type);
+                slots.Add(new InventorySlot
+                {
+                    Type = type, Icon = definition != null ? definition.Icon : null, Level = level,
+                    Evolved = !passives && _evolvedWeapons.Contains(type)
+                });
+            }
+            return slots;
         }
 
         public int GetWeaponLevel(UpgradeData.UpgradeType type)
@@ -174,6 +226,7 @@ namespace SoulHunter.Gameplay.Combat
             }
 
             // Level update karo
+            TrackAcquired(upgrade.Type, upgrade.Level);
             _weaponLevels[upgrade.Type] = upgrade.Level;
             
             // UI ko batao
@@ -182,6 +235,7 @@ namespace SoulHunter.Gameplay.Combat
             // VS = SH Logic: Jo weapon mila hai usay ON kar do ya upgrade kar do
             if (IsWeaponType(upgrade.Type)) ActivateOrUpgradeWeapon(GetWeaponObject(upgrade.Type), upgrade.Level);
             else ApplyPassiveStat(upgrade);
+            OnInventoryChanged?.Invoke();
         }
 
         private void ApplyPassiveStat(UpgradeData upgrade)
@@ -240,7 +294,9 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (revivalsLeft > 0 || GetWeaponLevel(UpgradeData.UpgradeType.Tiragisu) == 0) return false;
             _weaponLevels[UpgradeData.UpgradeType.Tiragisu] = 0;
+            TrackAcquired(UpgradeData.UpgradeType.Tiragisu, 0);
             OnItemRemoved?.Invoke(UpgradeData.UpgradeType.Tiragisu);
+            OnInventoryChanged?.Invoke();
             Debug.Log("[WeaponManager] Last Revival used: Tirajisú left the inventory.");
             return true;
         }
@@ -348,8 +404,10 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (upgrade == null || !IsStagePassive(upgrade.Type) || upgrade.Level != 1 || GetWeaponLevel(upgrade.Type) != 0) return false;
             // Ground acquisition is allowed beyond the six normal passive slots.
+            TrackAcquired(upgrade.Type, 1);
             _weaponLevels[upgrade.Type] = 1;
             OnWeaponAcquiredOrUpgraded?.Invoke(upgrade);
+            OnInventoryChanged?.Invoke();
             return true;
         }
 
@@ -454,6 +512,7 @@ namespace SoulHunter.Gameplay.Combat
 
                         evolvedWeaponName = evo.EvolvedName;
                         Debug.Log($"[WeaponManager] EVOLUTION SUCCESS! {evo.BaseWeapon} evolved into {evo.EvolvedName}!");
+                        OnInventoryChanged?.Invoke();
                         return true;
                     }
                 }
@@ -478,6 +537,7 @@ namespace SoulHunter.Gameplay.Combat
                         _unionConsumedWeapons.Add(union.WeaponA);
                         _unionConsumedWeapons.Add(union.WeaponB);
                         _activeUnionWeaponCount++;
+                        _unionIconBySlot[union.WeaponA] = union.UnionIcon;
                         
                         DisableOldWeapon(union.WeaponA);
                         DisableOldWeapon(union.WeaponB);
@@ -492,6 +552,7 @@ namespace SoulHunter.Gameplay.Combat
 
                         evolvedWeaponName = union.UnionName;
                         Debug.Log($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName}!");
+                        OnInventoryChanged?.Invoke();
                         return true;
                     }
                 }
