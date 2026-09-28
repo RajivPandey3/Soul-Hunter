@@ -14,6 +14,13 @@ namespace SoulHunter.Gameplay.Combat
         // L4 Dur +1; L5 Dur +1; L6 CD -0.5; L7 Dur +1.
         public const float VsCooldown = 2f;
         public const float VsFreezeDuration = 2f;
+        /// <summary>
+        /// Freeze chance compared with an enemy's freeze resistance (vampire.survivors.wiki/w/Enemies, "Resistances").
+        /// The Clock Lancet page (vampire.survivors.wiki/w/Clock_Lancet, raw, read 2026-09-28) gives no number ("Chance to
+        /// freeze enemies in time"), so 1.0 is assumed: every hit freezes an ordinary enemy, and VS bosses with
+        /// res-freeze 1.1 resist until Garlic lowers it.
+        /// </summary>
+        public const float VsFreezeChance = 1f;
 
         public override int MaxLevel => 7;
         private int Level => Mathf.Clamp(CurrentLevel, 1, 7);
@@ -63,7 +70,7 @@ namespace SoulHunter.Gameplay.Combat
             for (int i = 0; i < count; i++)
             {
                 var enemy = _hits[i].collider.GetComponentInParent<EnemyController>();
-                if (enemy != null) enemy.Freeze(FreezeDuration * DurationMultiplier);
+                if (enemy != null) enemy.TryWeaponFreeze(VsFreezeChance, FreezeDuration * DurationMultiplier);
             }
         }
     }

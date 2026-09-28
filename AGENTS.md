@@ -484,6 +484,33 @@ The owner asked for three improvements: wave enemy types, boss ability component
 - Tests: `WaveEnemyTypeTests` (T) and `WaveEnemyTypePlayModeTests` (R: a two-type wave fills its minimum with both types, then sends one of each per tick).
 - EditMode 410/410, PlayMode 151/151, save untouched (`D:/SoulHunter-Validation/run-20260928-wavetypes/`).
 
+**2. Enemy and boss abilities, data-driven** (VS behaviour catalog from the wiki boss and enemy pages, 2026-09-28):
+- `EnemyData.Abilities` is a list of `EnemyAbilitySpec`, run by `EnemyAbilities` (added to every enemy, pooling-safe, pause and freeze aware). The kinds, with their VS sources:
+  - **Summon:** Trickster, Directer, Avatar of Gaea.
+  - **Shoot:** Twin Skulls 1 s / speed 250 / 25; Twin Snakes 2 s / 140 / 20; The Ender's interval shrinks with health.
+  - **Lunge:** Orochimario heads every 5–10 s.
+  - **InvulnerablePhase:** The Ender's 90 s shield, which releases the stored damage.
+  - **SelfDestruct:** Sig.ra Rossi, 2 s fuse, 50 damage.
+  - **HazardZone:** The Ender's 12-damage zones for 10 s.
+  - **HalvingPulse:** Cosmic Egg.
+- A number left at 0 uses that kind's VS default (`EnemyAbilityDefaults`). Values the wiki does not give are marked provisional in code: lunge speed and time, pulse interval and radius, arm distance, zone radius, summon ring and cap, and the 0.03 units/s-per-VS-speed conversion.
+- To give a boss an ability: open its EnemyData, add an Abilities entry, pick a Kind and leave the numbers at 0 for VS. No boss has an ability yet; that is a content decision.
+- **VS resistances** (Enemies page), new `EnemyData` fields:
+  - `FreezeResistance`: weapon freezes (Clock Lancet, chance 1.0; the wiki gives none) fail when the resistance is higher. Orologion ignores it.
+  - `InstantKillResistance`: Pentagram and Soul Toll skip the enemy (the stage-boss skip stays too).
+  - `DebuffResistance`: blocks Garlic's knockback and freeze-resistance reductions. Garlic now also lowers freeze resistance by 0.1 per hit (Garlic page).
+  - All 10 bosses have freeze resistance 1.1 (VS), so **Clock Lancet no longer freezes bosses**.
+  - Stages 2–10 bosses also resist instant kill and debuffs. Stage 1 does not, like the Giant Blue Venus.
+- **Bosses come back:** VS wiki (Enemies, Bosses): "Bosses do not despawn when the player moves away from them, but get teleported back to the screen." Straggler relocation now includes bosses; before, a boss left behind stayed there.
+- Tests:
+  - `EnemyAbilityTests` (T).
+  - `EnemyAbilityPlayModeTests` (R):
+    - summon up to the cap, a bullet that hurts the player, a lunge, the shield releasing its damage, a self-destruct after its fuse, a zone, and the pulse halving health;
+    - nothing runs while paused or frozen;
+    - the resistances hold in play.
+  - `ChestEliteAndBossPlayModeTests.ABossLeftBehind_IsBroughtBackToTheScreen` (R).
+- EditMode 417/417, PlayMode 161/161, save untouched (`D:/SoulHunter-Validation/run-20260928-abilities/`).
+
 ### Balance pass, Part 3: enemy pressure along the stages (2026-09-28)
 
 Measured with the bot, no god mode. `-sh-autoplay-start-level N` starts the hero at level N, so later stages can be played at a believable strength.

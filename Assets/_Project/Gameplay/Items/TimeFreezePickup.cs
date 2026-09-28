@@ -22,7 +22,8 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 var enemy = allEnemies[i];
                 if (enemy == null) continue;
-                // Bosses ko shayad freeze nahi hona chahiye, par VS mein bosses bhi slow ya freeze ho jate hain.
+                // VS (vampire.survivors.wiki/w/Enemies, "Resistances"): "Freeze from Orologion goes through freeze
+                // resistance", so bosses freeze too; weapon freezes use EnemyController.TryWeaponFreeze instead.
                 enemy.Freeze(_freezeDuration);
             }
             

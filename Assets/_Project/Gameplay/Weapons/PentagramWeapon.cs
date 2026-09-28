@@ -67,6 +67,8 @@ namespace SoulHunter.Gameplay.Combat
                 if (enemy == null) continue;
                 // VS: the 25-minute stage bosses are immune to Pentagram's instant kill.
                 if (enemy.IsStageBoss) continue;
+                // VS instant kill resistance (vampire.survivors.wiki/w/Enemies, "Resistances": immunity to Pentagram).
+                if (enemy.ResistsInstantKill) continue;
                 // Check chance to leave gem
                 bool keepDrop = Random.value < KeepChance;
                 if (!keepDrop)

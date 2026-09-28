@@ -23,3 +23,7 @@ MonoBehaviour:
   DropsChest: 1
   HealthPerPlayerLevel: 250
   ExperienceValue: 250
+  FreezeResistance: 1.1
+  InstantKillResistance: 1
+  DebuffResistance: 1
+  Abilities: []

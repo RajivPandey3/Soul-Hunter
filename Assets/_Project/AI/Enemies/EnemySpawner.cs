@@ -274,8 +274,10 @@ namespace SoulHunter.Gameplay.AI
             for (int i = enemies.Count - 1; i >= 0; i--)
             {
                 var enemy = enemies[i];
-                // Event fliers follow their own path and leave on their own.
-                if (enemy == null || _bossControllers.Contains(enemy) || enemy.IsFlying) continue;
+                // Event fliers follow their own path and leave on their own. Bosses are brought back too: VS wiki
+                // (Enemies, Bosses): "Bosses do not despawn when the player moves away from them, but get teleported back
+                // to the screen." (Before 2026-09-28 a boss left behind stayed there.)
+                if (enemy == null || enemy.IsFlying) continue;
 
                 Vector3 offset = enemy.transform.position - playerPos;
                 offset.y = 0f;
@@ -359,7 +361,7 @@ namespace SoulHunter.Gameplay.AI
             if (bossController != null)
             {
                 bossController.Target = _playerTransform;
-                _bossControllers.Add(bossController); // bosses are never relocated
+                _bossControllers.Add(bossController); // a stage boss (IsBoss); brought back to the screen when left behind (VS)
                 bossController.IsStageBoss = true;
                 bossController.SetCastsShadows(true);
             }

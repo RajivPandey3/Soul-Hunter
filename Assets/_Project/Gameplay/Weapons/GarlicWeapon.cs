@@ -118,7 +118,8 @@ namespace SoulHunter.Gameplay.Weapons
                     };
                     damageable.TakeDamage(packet);
                     var enemy = _hitsBuffer[i].GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
-                    if (enemy != null) enemy.AddKnockbackTaken(SoulHunter.Gameplay.AI.EnemyController.GarlicKnockbackStep);
+                    // VS Garlic debuffs (+0.3 knockback taken, -0.1 freeze resistance), blocked by debuff resistance.
+                    if (enemy != null) enemy.ApplyGarlicDebuff();
                 }
             }
 

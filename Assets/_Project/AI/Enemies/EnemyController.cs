@@ -133,6 +133,8 @@ namespace SoulHunter.Gameplay.AI
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
+            ResetFreezeResistance(); // Garlic's freeze-resistance reduction lasts one life too
+            RestartAbilities();     // VS skills start again on every spawn (pooling-safe)
             if (Rigidbody != null)
             {
                 Rigidbody.linearVelocity = Vector3.zero;
@@ -145,6 +147,7 @@ namespace SoulHunter.Gameplay.AI
         {
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged -= PlayHitSound; _hitSoundHealth.OnDied -= PlayDeathSound; }
             ActiveEnemies.Remove(this);
+            if (_abilities != null) _abilities.Stop();
             _currentState?.Exit();
             _currentState = null;
             // Spawners refresh Target on every spawn, including pooled reuse.
@@ -153,6 +156,77 @@ namespace SoulHunter.Gameplay.AI
                 Rigidbody.linearVelocity = Vector3.zero;
                 Rigidbody.angularVelocity = Vector3.zero;
             }
+        }
+
+        /// <summary>The state the enemy is in (chase, fly, frozen, hold, lunge ...).</summary>
+        public IEnemyState CurrentState => _currentState;
+
+        // ---------------------------------------------------------------- VS resistances and skills
+        // vampire.survivors.wiki/w/Enemies, "Resistances": freeze, instant kill and debuff (EnemyResistance has the rules).
+        private float _freezeResistance;
+        private EnemyAbilities _abilities;
+
+        /// <summary>Current freeze resistance: the data's value, lowered by Garlic hits during this life.</summary>
+        public float FreezeResistance => _freezeResistance;
+        /// <summary>VS instant kill resistance (Pentagram, Soul Toll). Stage bosses are always immune.</summary>
+        public bool ResistsInstantKill => EnemyResistance.ResistsInstantKill(IsStageBoss, _enemyData != null && _enemyData.InstantKillResistance);
+        /// <summary>VS debuff resistance: Garlic's knockback and freeze-resistance reductions do not land.</summary>
+        public bool ResistsDebuffs => _enemyData != null && _enemyData.DebuffResistance;
+        /// <summary>This enemy's skill runner (null when its data has no abilities and none was ever started).</summary>
+        public EnemyAbilities Abilities => _abilities;
+
+        private void ResetFreezeResistance()
+        {
+            _freezeResistance = _enemyData != null ? Mathf.Max(0f, _enemyData.FreezeResistance) : 0f;
+        }
+
+        /// <summary>Starts this enemy's VS skills from its data (none: the runner, if any, is stopped).</summary>
+        public void RestartAbilities()
+        {
+            var specs = _enemyData != null ? _enemyData.Abilities : null;
+            if (_abilities == null) _abilities = GetComponent<EnemyAbilities>();
+            if (specs == null || specs.Count == 0)
+            {
+                if (_abilities != null) _abilities.Stop();
+                return;
+            }
+            if (_abilities == null) _abilities = gameObject.AddComponent<EnemyAbilities>();
+            _abilities.Begin(this, specs);
+        }
+
+        /// <summary>
+        /// Swaps this enemy's data at runtime (tests use a ScriptableObject.Instantiate copy so assets never change) and
+        /// restarts its knockback, freeze resistance and skills. Health, speed, contact damage and drops keep what Awake set.
+        /// </summary>
+        public void UseData(SoulHunter.Gameplay.Data.EnemyData data)
+        {
+            _enemyData = data;
+            ResetKnockback();
+            ResetFreezeResistance();
+            if (isActiveAndEnabled) RestartAbilities();
+        }
+
+        /// <summary>
+        /// A weapon's freeze (Clock Lancet): lands unless the freeze resistance is higher than the weapon's freeze chance
+        /// (VS). Returns true when the enemy was frozen. Orologion uses Freeze directly and ignores resistance.
+        /// </summary>
+        public bool TryWeaponFreeze(float weaponFreezeChance, float duration)
+        {
+            if (!EnemyResistance.WeaponFreezes(_freezeResistance, weaponFreezeChance)) return false;
+            Freeze(duration);
+            return true;
+        }
+
+        /// <summary>
+        /// One Garlic hit's debuffs (VS Garlic, vampire.survivors.wiki/w/Garlic): +0.3 knockback taken up to the maximum
+        /// and -0.1 freeze resistance down to 0, unless the enemy resists debuffs. Returns true when they landed.
+        /// </summary>
+        public bool ApplyGarlicDebuff()
+        {
+            if (!EnemyResistance.GarlicDebuffApplies(ResistsDebuffs)) return false;
+            AddKnockbackTaken(GarlicKnockbackStep);
+            _freezeResistance = EnemyResistance.AfterGarlicHit(_freezeResistance);
+            return true;
         }
 
         /// <summary>True while a Time Freeze or Clock Lancet holds this enemy.</summary>

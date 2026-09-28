@@ -89,6 +89,25 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        [UnityTest]
+        public IEnumerator ABossLeftBehind_IsBroughtBackToTheScreen()
+        {
+            // VS wiki (Enemies, Bosses): "Bosses do not despawn when the player moves away from them, but get teleported
+            // back to the screen." Before 2026-09-28 a boss left far behind stayed there.
+            yield return BootIntoGameplay();
+            PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            LevelProgressionManager.Instance.SkipToBoss();
+            yield return WaitUntilRealtime(() => EnemyController.ActiveEnemies.Any(e => e != null && spawner.IsBoss(e)), "the stage boss to appear");
+            var boss = EnemyController.ActiveEnemies.First(e => e != null && spawner.IsBoss(e));
+            var player = PlayerController.Instance.transform.position;
+            boss.transform.position = player + new Vector3(100f, 0f, 0f);
+            yield return WaitUntilRealtime(() => boss == null || Vector3.Distance(boss.transform.position, PlayerController.Instance.transform.position) < 40f,
+                "the boss to be brought back near the player");
+            Assert.That(boss != null && boss.isActiveAndEnabled, Is.True, "Still the same, living boss.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         private static int ActiveChests() =>
             Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy);
     }

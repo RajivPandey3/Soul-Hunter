@@ -37,6 +37,8 @@ namespace SoulHunter.Gameplay.Pickups
                 var enemy = enemies[i];
                 if (enemy == null || !enemy.isActiveAndEnabled) continue;
                 if (enemy.IsStageBoss) continue; // immune to instant kills
+                // VS instant kill resistance (vampire.survivors.wiki/w/Enemies, "Resistances": immunity to Rosary).
+                if (enemy.ResistsInstantKill) continue;
                 if (!IsOnScreen(camera, enemy.transform.position)) continue;
                 var health = enemy.GetComponent<HealthController>();
                 if (health == null || health.CurrentHealth <= 0) continue;

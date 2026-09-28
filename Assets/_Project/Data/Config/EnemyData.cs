@@ -55,6 +55,18 @@ namespace SoulHunter.Gameplay.Data
         [Tooltip("VS boss rule: when above 0, max health is this x the player's level (MaxHealth is then ignored)")]
         [Min(0)] public int HealthPerPlayerLevel = 0;
 
+        // ---- VS resistances (vampire.survivors.wiki/w/Enemies, "Resistances"). Defaults: none, as before. ----
+        [Tooltip("VS res-freeze: a weapon freeze (Clock Lancet) fails when this is higher than the weapon's freeze chance. " +
+                 "Orologion ignores it. Garlic lowers it by 0.1 per hit unless the enemy resists debuffs. VS bosses: 1.1")]
+        [Min(0f)] public float FreezeResistance = 0f;
+        [Tooltip("VS res-kill: immune to instant kills (Pentagram, Soul Toll / Rosary)")]
+        public bool InstantKillResistance = false;
+        [Tooltip("VS res-debuff: immune to Garlic's knockback and freeze-resistance reductions")]
+        public bool DebuffResistance = false;
+
+        [Tooltip("VS enemy/boss skills (EnemyAbilities runs them). Empty = an ordinary enemy")]
+        public System.Collections.Generic.List<EnemyAbilitySpec> Abilities = new System.Collections.Generic.List<EnemyAbilitySpec>();
+
         /// <summary>Max health before Curse: per-level health for level-scaled enemies (bosses), else MaxHealth.</summary>
         public int HealthForPlayerLevel(int playerLevel) =>
             HealthPerPlayerLevel > 0 ? HealthPerPlayerLevel * Mathf.Max(1, playerLevel) : MaxHealth;
