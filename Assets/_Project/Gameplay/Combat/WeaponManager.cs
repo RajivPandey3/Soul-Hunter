@@ -46,6 +46,8 @@ namespace SoulHunter.Gameplay.Combat
 
         // Event for UI to update Inventory Icons
         public event System.Action<UpgradeData> OnWeaponAcquiredOrUpgraded;
+        /// <summary>An item left the inventory (Tirajisú after the last Revival).</summary>
+        public event System.Action<UpgradeData.UpgradeType> OnItemRemoved;
 
         private void Awake()
         {
@@ -184,8 +186,13 @@ namespace SoulHunter.Gameplay.Combat
 
         private void ApplyPassiveStat(UpgradeData upgrade)
         {
+            // Main_Gameplay keeps Weapon_Manager under MANAGERS, not under the player, so a parent lookup alone found no
+            // PlayerStats and every passive did nothing in the real game (found 2026-09-28 by TirajisuPlayModeTests).
             var stats = GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
             var health = GetComponentInParent<HealthController>();
+            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+            if (stats == null && player != null) stats = player.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
+            if (health == null && player != null) health = player.GetComponent<HealthController>();
             if (stats == null) return;
 
             switch (upgrade.Type)
@@ -223,6 +230,19 @@ namespace SoulHunter.Gameplay.Combat
             }
 
             Debug.Log($"[WeaponManager] Passive Applied: {upgrade.Type} is now Level {upgrade.Level}");
+        }
+
+        /// <summary>
+        /// VS wiki (Tirajisú): "Tirajisú will only be removed from the inventory when the last Revive is used up", from any
+        /// Revival source. Its slot frees up and it can be offered again from level 1. Returns true when it was removed.
+        /// </summary>
+        public bool ReleaseSpentTirajisu(int revivalsLeft)
+        {
+            if (revivalsLeft > 0 || GetWeaponLevel(UpgradeData.UpgradeType.Tiragisu) == 0) return false;
+            _weaponLevels[UpgradeData.UpgradeType.Tiragisu] = 0;
+            OnItemRemoved?.Invoke(UpgradeData.UpgradeType.Tiragisu);
+            Debug.Log("[WeaponManager] Last Revival used: Tirajisú left the inventory.");
+            return true;
         }
 
         /// <summary>VS wiki (Attractorb) magnet multiplier gained at <paramref name="level"/>: 1.5, 1.33, 1.25, 1.2, 1.33.</summary>

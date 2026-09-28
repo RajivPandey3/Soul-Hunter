@@ -203,6 +203,9 @@ namespace SoulHunter.Gameplay.Player
             {
                 health.ReviveFromDeath();
                 Debug.Log($"[PlayerController] Revival consumed. Remaining revivals: {stats.Revivals}");
+                var weapons = GetComponentInChildren<SoulHunter.Gameplay.Combat.WeaponManager>();
+                if (weapons == null) weapons = SoulHunter.Gameplay.Combat.WeaponManager.Instance;
+                if (weapons != null) weapons.ReleaseSpentTirajisu(stats.Revivals);
                 return;
             }
 

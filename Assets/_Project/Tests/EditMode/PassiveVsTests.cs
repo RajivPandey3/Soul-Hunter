@@ -101,5 +101,47 @@ namespace SoulHunter.Tests.EditMode
                 Object.DestroyImmediate(two);
             }
         }
+
+        [Test]
+        public void Tirajisu_LeavesTheInventory_OnlyWhenTheLastRevivalIsUsed()
+        {
+            // VS wiki (Tirajisú): "Tirajisú will only be removed from the inventory when the last Revive is used up",
+            // and "you can get it again through a level up".
+            _player = new GameObject("Player");
+            var stats = _player.AddComponent<PlayerStats>();
+            _player.AddComponent<HealthController>().Initialize(100);
+            var weapons = _player.AddComponent<WeaponManager>();
+            weapons.DefinitionLookup = _ => null;
+            var one = ScriptableObject.CreateInstance<UpgradeData>();
+            one.Type = UpgradeType.Tiragisu; one.Level = 1;
+            UpgradeType? removed = null;
+            weapons.OnItemRemoved += type => removed = type;
+            try
+            {
+                weapons.ApplyUpgrade(one);
+                Assert.That(weapons.GetWeaponLevel(UpgradeType.Tiragisu), Is.EqualTo(1));
+                int passives = weapons.GetPassiveCount();
+
+                Assert.That(weapons.ReleaseSpentTirajisu(revivalsLeft: 1), Is.False, "A Revival is left: it stays.");
+                Assert.That(weapons.GetWeaponLevel(UpgradeType.Tiragisu), Is.EqualTo(1));
+                Assert.That(removed, Is.Null);
+
+                Assert.That(weapons.ReleaseSpentTirajisu(revivalsLeft: 0), Is.True, "The last Revival is gone: it leaves.");
+                Assert.That(weapons.GetWeaponLevel(UpgradeType.Tiragisu), Is.EqualTo(0));
+                Assert.That(weapons.GetPassiveCount(), Is.EqualTo(passives - 1), "Its passive slot is free again.");
+                Assert.That(removed, Is.EqualTo(UpgradeType.Tiragisu));
+
+                int revivals = stats.Revivals;
+                weapons.ApplyUpgrade(one);
+                Assert.That(weapons.GetWeaponLevel(UpgradeType.Tiragisu), Is.EqualTo(1), "It can be taken again from level 1.");
+                Assert.That(stats.Revivals, Is.EqualTo(revivals + 1), "Taking it again adds a Revival.");
+                Assert.That(weapons.ReleaseSpentTirajisu(revivalsLeft: 0), Is.True);
+                Assert.That(weapons.ReleaseSpentTirajisu(revivalsLeft: 0), Is.False, "Once gone, there is nothing left to remove.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(one);
+            }
+        }
     }
 }

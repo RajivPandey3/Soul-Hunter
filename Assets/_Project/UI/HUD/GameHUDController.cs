@@ -74,6 +74,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 _boundWeapons = _weaponManager;
                 _boundWeapons.OnWeaponAcquiredOrUpgraded += HandleWeaponAcquired;
+                _boundWeapons.OnItemRemoved += HandleItemRemoved;
             }
 
             // VS HUD shows gold collected this run (the saved total lives in the menu shop).
@@ -96,7 +97,11 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_playerHealth != null) _playerHealth.OnHealthChanged -= UpdateHealthBar;
 
-            if (_boundWeapons != null) _boundWeapons.OnWeaponAcquiredOrUpgraded -= HandleWeaponAcquired;
+            if (_boundWeapons != null)
+            {
+                _boundWeapons.OnWeaponAcquiredOrUpgraded -= HandleWeaponAcquired;
+                _boundWeapons.OnItemRemoved -= HandleItemRemoved;
+            }
             if (_stats != null)
             {
                 _stats.OnKillsChanged -= UpdateKills;
@@ -129,8 +134,8 @@ namespace SoulHunter.Gameplay.UI
         {
             if (upgrade == null || upgrade.Icon == null) return;
 
-            bool isPassive = upgrade.Type == UpgradeData.UpgradeType.PlayerSpeed ||
-                             upgrade.Type == UpgradeData.UpgradeType.MaxHealth;
+            // Every passive goes in the passive row (it used to check only Wings and Hollow Heart).
+            bool isPassive = !WeaponManager.IsWeaponType(upgrade.Type);
 
             var activeList = isPassive ? _ownedPassives : _ownedWeapons;
             var activeSlots = isPassive ? _passiveSlots : _weaponSlots;
@@ -148,6 +153,26 @@ namespace SoulHunter.Gameplay.UI
                 }
             }
             // Agar pehle se hai, toh hum slot ke neeche level dikha sakte hain (VS style)
+        }
+
+        // VS Tirajisú: a spent item leaves its slot and the icons after it move up one.
+        private void HandleItemRemoved(UpgradeData.UpgradeType type)
+        {
+            bool isPassive = _ownedPassives.Contains(type);
+            var activeList = isPassive ? _ownedPassives : _ownedWeapons;
+            var activeSlots = isPassive ? _passiveSlots : _weaponSlots;
+            int index = activeList.IndexOf(type);
+            if (index < 0 || activeSlots == null) return;
+            activeList.RemoveAt(index);
+            for (int i = index; i < activeSlots.Length; i++)
+            {
+                if (activeSlots[i] == null) continue;
+                var next = i + 1 < activeSlots.Length ? activeSlots[i + 1] : null;
+                bool filled = i < activeList.Count && next != null;
+                activeSlots[i].sprite = filled ? next.sprite : null;
+                activeSlots[i].color = filled ? Color.white : new Color(0, 0, 0, 0);
+            }
+            if (isPassive) _currentPassiveIndex = activeList.Count; else _currentWeaponIndex = activeList.Count;
         }
 
         private void ClearSlots(Image[] slots)
