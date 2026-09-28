@@ -90,16 +90,19 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void PickWeightedIndex_UsesRarityWeights()
         {
-            // Learning Comment: Tiragisu (30) aur Magic Wand (100): total 130, roll ka pehla 30/130 Tiragisu ko jaye.
+            // VS wiki (Level_up): P(item) = itemRarity / itemPoolWeight. Tirajisu (Tiragisu) has VS rarity 40 and
+            // Magic Wand 100: total 140, so the first 40/140 (~0.286) of the roll goes to Tiragisu.
             var choices = new List<UpgradeData>
             {
                 Upgrade(UpgradeData.UpgradeType.Tiragisu),
                 Upgrade(UpgradeData.UpgradeType.MagicWand)
             };
 
-            Assert.That(UpgradeRarity.GetWeight(UpgradeData.UpgradeType.Tiragisu), Is.LessThan(UpgradeRarity.DefaultWeight));
+            Assert.That(UpgradeRarity.GetWeight(UpgradeData.UpgradeType.Tiragisu), Is.EqualTo(40));
+            Assert.That(UpgradeRarity.GetWeight(UpgradeData.UpgradeType.MagicWand), Is.EqualTo(100));
             Assert.That(LevelUpManager.PickWeightedIndex(choices, 0.20f), Is.EqualTo(0));
-            Assert.That(LevelUpManager.PickWeightedIndex(choices, 0.25f), Is.EqualTo(1));
+            Assert.That(LevelUpManager.PickWeightedIndex(choices, 0.28f), Is.EqualTo(0));
+            Assert.That(LevelUpManager.PickWeightedIndex(choices, 0.29f), Is.EqualTo(1));
             Assert.That(LevelUpManager.PickWeightedIndex(choices, 0.99f), Is.EqualTo(1));
         }
     }

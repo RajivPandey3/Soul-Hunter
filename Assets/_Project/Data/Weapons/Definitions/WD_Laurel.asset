@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Laurel
+  m_EditorClassIdentifier: 
+  Type: 18
+  IsPassive: 0
+  DisplayName: Laurel
+  Description: A ward that blocks incoming hits.
+  Icon: {fileID: -1251007986208197992, guid: b1d5d1dc69b110244b5b8170b6cc8554, type: 3}
+  WeaponPrefab: {fileID: 5282492645583807953, guid: cc4760ffd08eedb4da7d10df58e59c4b, type: 3}
+  MaxLevel: 7
+  Rarity: 60
+  Levels:
+  - {fileID: 11400000, guid: 0da5909b5e09322419341979f4fc7dbd, type: 2}
+  - {fileID: 11400000, guid: 9d8328d38f3f9084480b52b07f0e2d6c, type: 2}
+  - {fileID: 11400000, guid: 08f9b83649646774197e68bb778215a2, type: 2}
+  - {fileID: 11400000, guid: 0b1e4e8a269e2a047963eba76ae726c3, type: 2}
+  - {fileID: 11400000, guid: 4758f605f17ceca44b459e040356fcef, type: 2}
+  - {fileID: 11400000, guid: 0f159501fccbf864abec75849424b165, type: 2}
+  - {fileID: 11400000, guid: ba7043285f48fef449c5652b795c22f3, type: 2}

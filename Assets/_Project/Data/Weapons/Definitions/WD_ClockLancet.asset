@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_ClockLancet
+  m_EditorClassIdentifier: 
+  Type: 17
+  IsPassive: 0
+  DisplayName: Clock Lancet
+  Description: A beam of frost that freezes enemies in place.
+  Icon: {fileID: -7440709273541419159, guid: da1d3b3b1b12bc84cacefd73df9aa0bb, type: 3}
+  WeaponPrefab: {fileID: 6776182737823650166, guid: ae53fffb611f31749bf5aba1f0d86f00, type: 3}
+  MaxLevel: 7
+  Rarity: 70
+  Levels:
+  - {fileID: 11400000, guid: 5c7416cbe7f0ed941aec1c62cedcb955, type: 2}
+  - {fileID: 11400000, guid: bcc1b8eff37a73d41be60141d2c91b35, type: 2}
+  - {fileID: 11400000, guid: 0fb0be57cc51e5a44a8faa4eb9c20489, type: 2}
+  - {fileID: 11400000, guid: 151a7b0600279fe4f9ee1a5e4c040afc, type: 2}
+  - {fileID: 11400000, guid: 8d609e37ecf8ae34dbb346be652c5409, type: 2}
+  - {fileID: 11400000, guid: e47ea55bde310054e888c76f74c9d9a0, type: 2}
+  - {fileID: 11400000, guid: 455a9ca123d91c445bba6e1729d64bde, type: 2}
+  - {fileID: 11400000, guid: 127db26c78206d74d8232ffdbe4aff7f, type: 2}

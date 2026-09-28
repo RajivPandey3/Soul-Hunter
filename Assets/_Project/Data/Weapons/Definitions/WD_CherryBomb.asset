@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_CherryBomb
+  m_EditorClassIdentifier: 
+  Type: 22
+  IsPassive: 0
+  DisplayName: Cherry Bomb
+  Description: Bombs that bounce away and explode.
+  Icon: {fileID: 6046647134197512536, guid: 52c77657319c59d4d9fad1e7fab8331c, type: 3}
+  WeaponPrefab: {fileID: 3114931514130683718, guid: 72f69bf9510222a458d80b6b54a91ee4, type: 3}
+  MaxLevel: 8
+  Rarity: 1
+  Levels:
+  - {fileID: 11400000, guid: e420e7333c5f0bc4da8d38bda1639a50, type: 2}
+  - {fileID: 11400000, guid: 26c730d52c8c07c42a6182b95660bbfc, type: 2}
+  - {fileID: 11400000, guid: 58c732fcabf1ab24093b22215194e516, type: 2}
+  - {fileID: 11400000, guid: 04b21b78de3e6b14bb1b54fef57cb8f7, type: 2}
+  - {fileID: 11400000, guid: 4b6805b58d1218044b7eb4c2675c9e6c, type: 2}
+  - {fileID: 11400000, guid: ac16e90641011a340a23d26fb839aec4, type: 2}
+  - {fileID: 11400000, guid: 5afd61eb4f3fa6e4fa3815551e07391a, type: 2}
+  - {fileID: 11400000, guid: 4c745cea2c886244fa59c3150e34f259, type: 2}

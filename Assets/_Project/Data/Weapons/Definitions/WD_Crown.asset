@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Crown
+  m_EditorClassIdentifier: 
+  Type: 31
+  IsPassive: 1
+  DisplayName: Crown
+  Description: +8% experience.
+  Icon: {fileID: 6849961437476997493, guid: bd811006775bf4d4a9b14a12078e63f1, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 70
+  Levels:
+  - {fileID: 11400000, guid: a05e6d5a4a79b784897dd0506e5a5ea9, type: 2}
+  - {fileID: 11400000, guid: 335347523fc323b45bb6f56fec5ffa72, type: 2}
+  - {fileID: 11400000, guid: d57ffceef4c6dfc4a911b7366060de58, type: 2}
+  - {fileID: 11400000, guid: 211cea3284a8e6540b836193c77c7153, type: 2}
+  - {fileID: 11400000, guid: 6c2ffa2a19f339640b8183921af91158, type: 2}
+  - {fileID: 11400000, guid: fddee26c30a42684b996a6ed4605044e, type: 2}
+  - {fileID: 11400000, guid: 522e943a944d5214f849a44c8d1e28a6, type: 2}
+  - {fileID: 11400000, guid: 6e3e2848aa4332a4484790510e03a479, type: 2}

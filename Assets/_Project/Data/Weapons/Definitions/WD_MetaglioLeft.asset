@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_MetaglioLeft
+  m_EditorClassIdentifier: 
+  Type: 34
+  IsPassive: 1
+  DisplayName: Metaglio Left
+  Description: +0.1 health per second and +5% max health.
+  Icon: {fileID: 0}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 9
+  Rarity: 10
+  Levels:
+  - {fileID: 11400000, guid: 6d8c1c20cfd36f14694d973230d7818a, type: 2}
+  - {fileID: 11400000, guid: f6b34acc57ece0b4ebda123f6eadd58e, type: 2}
+  - {fileID: 11400000, guid: d9d4882d41d9ada41bec6513215d2b7a, type: 2}
+  - {fileID: 11400000, guid: ad3223e6b99352944902dae89e5e7866, type: 2}
+  - {fileID: 11400000, guid: 11f729ed1e39dab439578dee6108ae77, type: 2}
+  - {fileID: 11400000, guid: b6c5fcc56fdec914ca83facbac334458, type: 2}
+  - {fileID: 11400000, guid: 7e9724ff57132ff4298014e6d8f28418, type: 2}
+  - {fileID: 11400000, guid: fcd90013eeb000d488b0d054179fdb78, type: 2}
+  - {fileID: 11400000, guid: bb3d98d8696dd4c4a9be415c5d9d4855, type: 2}

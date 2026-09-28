@@ -99,6 +99,8 @@ namespace SoulHunter.Tests.EditMode
             FieldInfo field = typeof(WeaponManager).GetField(fieldName,
                 BindingFlags.Instance | BindingFlags.NonPublic);
             field?.SetValue(manager, prefab);
+            // These tests wire their own mock prefabs into the old fields, so the catalog's WeaponDefinitions must not win.
+            manager.DefinitionLookup = _ => null;
         }
 
         /// <summary>

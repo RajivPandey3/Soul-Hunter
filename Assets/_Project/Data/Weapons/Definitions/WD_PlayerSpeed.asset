@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_PlayerSpeed
+  m_EditorClassIdentifier: 
+  Type: 3
+  IsPassive: 1
+  DisplayName: Player Speed
+  Description: +10% move speed.
+  Icon: {fileID: 2255866367331030390, guid: 5dc1dcbda5f8d56469e7185e12f7076d, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 50
+  Levels:
+  - {fileID: 11400000, guid: 77b97a7d647c23649a729fea85e65f21, type: 2}
+  - {fileID: 11400000, guid: da21f1eb8057d0046888803546885b25, type: 2}
+  - {fileID: 11400000, guid: c65b4c842ae0d6049a455d67b303a0d4, type: 2}
+  - {fileID: 11400000, guid: c2c0901c0eaf012458befe9f882330a1, type: 2}
+  - {fileID: 11400000, guid: b314749c292523e4cae2e8c3535ee708, type: 2}
+  - {fileID: 11400000, guid: 3d4ef4309f952e54f9536a201edbd51a, type: 2}
+  - {fileID: 11400000, guid: 4b76b64c5fec58d4cab2b9c8896d84e4, type: 2}
+  - {fileID: 11400000, guid: 582f4e84a1e46074087132903cbc1f0f, type: 2}

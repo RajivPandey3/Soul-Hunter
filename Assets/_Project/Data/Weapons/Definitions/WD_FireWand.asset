@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_FireWand
+  m_EditorClassIdentifier: 
+  Type: 9
+  IsPassive: 0
+  DisplayName: Fire Wand
+  Description: Throws fireballs at the nearest enemy.
+  Icon: {fileID: 3887494039375579144, guid: 67ed2576a98aa8d469c7edd25077c560, type: 3}
+  WeaponPrefab: {fileID: 4796915207285325883, guid: de925b7c506f8f94da74a79af2249919, type: 3}
+  MaxLevel: 8
+  Rarity: 80
+  Levels:
+  - {fileID: 11400000, guid: cdad2b1c8ff2d2d4387c511eec9c4a59, type: 2}
+  - {fileID: 11400000, guid: fae041feae1ffdb40ad3d6243eb0ddc1, type: 2}
+  - {fileID: 11400000, guid: 96803fba475e40f48afac24a55166659, type: 2}
+  - {fileID: 11400000, guid: 6d4dd6b0c4664ca42b2802b2768a0f0b, type: 2}
+  - {fileID: 11400000, guid: 7ac473ccbdce9994688e9f219c241709, type: 2}
+  - {fileID: 11400000, guid: 07dc48ddc64aa8442910db0a36448c19, type: 2}
+  - {fileID: 11400000, guid: 04f2b092ee4c9d44e85b9aeddb4e687a, type: 2}
+  - {fileID: 11400000, guid: 95ea236f934e14b49b59e1f232a07f3f, type: 2}

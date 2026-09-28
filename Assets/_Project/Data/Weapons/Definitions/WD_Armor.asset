@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Armor
+  m_EditorClassIdentifier: 
+  Type: 27
+  IsPassive: 1
+  DisplayName: Armor
+  Description: +1 armor (less damage taken).
+  Icon: {fileID: 8253109200740065530, guid: b773fcd2cbdb700418211d5c27850b8c, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: 644da61309cd5454595a3c90c64faa28, type: 2}
+  - {fileID: 11400000, guid: c7bf49eb6a468dc429673dfdfd8f28d8, type: 2}
+  - {fileID: 11400000, guid: cbb4bdf0619fa0f4996a60ac368cfb4e, type: 2}
+  - {fileID: 11400000, guid: 97895cc5dccffce40927f4060e9aea15, type: 2}
+  - {fileID: 11400000, guid: 2cc123b38418fa74b9505daf6ed10b07, type: 2}
+  - {fileID: 11400000, guid: 05c5a178e89ce5a4d91426072c474d1c, type: 2}
+  - {fileID: 11400000, guid: 09f3dd903b322ac4cba9aa4d0813c738, type: 2}
+  - {fileID: 11400000, guid: 5089c0c6d0f432940b8ff553a572ea79, type: 2}

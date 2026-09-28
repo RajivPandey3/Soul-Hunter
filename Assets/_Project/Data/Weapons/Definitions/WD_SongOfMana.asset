@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_SongOfMana
+  m_EditorClassIdentifier: 
+  Type: 21
+  IsPassive: 0
+  DisplayName: Song Of Mana
+  Description: Piercing magic shots toward the nearest enemy.
+  Icon: {fileID: -5073605158764676077, guid: 807baf14699bdc240895a8464618dc37, type: 3}
+  WeaponPrefab: {fileID: 1468209639630668397, guid: 42f63f8f21f197f4b8d0a1589d02758d, type: 3}
+  MaxLevel: 8
+  Rarity: 50
+  Levels:
+  - {fileID: 11400000, guid: 4248b807b0855b74d8ecbb9d30690c1d, type: 2}
+  - {fileID: 11400000, guid: 1f09ea5db906fd340a34dbb66b00d860, type: 2}
+  - {fileID: 11400000, guid: d2924dc341f331d4a8966ffecd4799e1, type: 2}
+  - {fileID: 11400000, guid: 7401c3b0bfbaaf14db96b513e5676b58, type: 2}
+  - {fileID: 11400000, guid: 37270457246f1084497d9baf317b1576, type: 2}
+  - {fileID: 11400000, guid: ed878820c8d22a94c80f34a846de1c9c, type: 2}
+  - {fileID: 11400000, guid: 8e1f84316e26ac0438644885ee00fccc, type: 2}
+  - {fileID: 11400000, guid: a555522d0460a0b448eac46964d0908a, type: 2}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_MagicWand
+  m_EditorClassIdentifier: 
+  Type: 0
+  IsPassive: 0
+  DisplayName: Magic Wand
+  Description: Fires a soul bolt at the nearest enemy.
+  Icon: {fileID: 1395071446575585912, guid: b5f8aa21578b8e84ab39971b395b07f9, type: 3}
+  WeaponPrefab: {fileID: 8018278098601975372, guid: cdc4e19bfc8ae304f84b1b3169ba5a77, type: 3}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: 57474c820ce05d24db7a3a74dcf93ff1, type: 2}
+  - {fileID: 11400000, guid: 951eb2c39c171b94e9209faf41636e2b, type: 2}
+  - {fileID: 11400000, guid: dce9732cb1b9d474f8c8774f1880383d, type: 2}
+  - {fileID: 11400000, guid: 5de5cc26b61f19142866d1e481a48ec2, type: 2}
+  - {fileID: 11400000, guid: 499c9f5221f798d49ba27a17a24bc1d2, type: 2}
+  - {fileID: 11400000, guid: a236fc082995ac443a8ca527ffb7be0b, type: 2}
+  - {fileID: 11400000, guid: 4d91d74f71191204eb07370d9490e7ba, type: 2}
+  - {fileID: 11400000, guid: 2bf78d6ff27fa364ebdae2c1e27d1540, type: 2}

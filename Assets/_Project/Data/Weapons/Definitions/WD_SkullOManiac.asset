@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_SkullOManiac
+  m_EditorClassIdentifier: 
+  Type: 32
+  IsPassive: 1
+  DisplayName: Skull O Maniac
+  Description: '+10% curse: more and tougher enemies.'
+  Icon: {fileID: 6968413500004054039, guid: 3c28eea5e26f940439c059d9888861a4, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 40
+  Levels:
+  - {fileID: 11400000, guid: d940cad7910897345b43c9c7fa19c134, type: 2}
+  - {fileID: 11400000, guid: 1a5544299ae0983408489528d94fda93, type: 2}
+  - {fileID: 11400000, guid: d611763ae5a10b0469c1513e1e63139f, type: 2}
+  - {fileID: 11400000, guid: 3b19efce81dcc9746a102b48c325fd82, type: 2}
+  - {fileID: 11400000, guid: 0e050e23c3542484eb8ab19a527ebf95, type: 2}
+  - {fileID: 11400000, guid: 1203b742ec478264e9dba38f8655d251, type: 2}
+  - {fileID: 11400000, guid: b577fea6038a3914ca560d30d0c26d24, type: 2}
+  - {fileID: 11400000, guid: 36ec4d2f5e1cad241bc1a75d9868147b, type: 2}

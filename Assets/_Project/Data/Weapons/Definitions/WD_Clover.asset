@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Clover
+  m_EditorClassIdentifier: 
+  Type: 30
+  IsPassive: 1
+  DisplayName: Clover
+  Description: +10% luck.
+  Icon: {fileID: 2750178941999587609, guid: b7bfc4dd67b8ee54893143747e950e7e, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: d588299ee6085954481bbd95c6f30636, type: 2}
+  - {fileID: 11400000, guid: fd3e6e8e2ae16594faaea8d493497f65, type: 2}
+  - {fileID: 11400000, guid: 0352848572fb7e549b45127bad08acfb, type: 2}
+  - {fileID: 11400000, guid: c6f85eacf9eccdf49bad22deadce6a6b, type: 2}
+  - {fileID: 11400000, guid: 5185ceecdc9132b40b984fcc8b2f6f40, type: 2}
+  - {fileID: 11400000, guid: dbc3ec375c75a7247873b564f529f99e, type: 2}
+  - {fileID: 11400000, guid: 7b73bd1f9cd946b4cb2aeedeb5f0a595, type: 2}
+  - {fileID: 11400000, guid: 8feffa0a7cd4cea46846b04cf7608ea2, type: 2}

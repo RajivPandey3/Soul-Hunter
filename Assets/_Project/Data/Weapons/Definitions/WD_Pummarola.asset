@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Pummarola
+  m_EditorClassIdentifier: 
+  Type: 28
+  IsPassive: 1
+  DisplayName: Pummarola
+  Description: Recover 0.2 health every second.
+  Icon: {fileID: -6625864876067820037, guid: b47a1664c6a27014a8d0e24855a5ffab, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 90
+  Levels:
+  - {fileID: 11400000, guid: b6a2c1bf33c7543458a91fd5309ce07c, type: 2}
+  - {fileID: 11400000, guid: 606bb8e10a4208344a1ab888e038f17f, type: 2}
+  - {fileID: 11400000, guid: 9ce0741ef925df4418e1919417214108, type: 2}
+  - {fileID: 11400000, guid: 0cbf702fb107f8643af78991b2766dd3, type: 2}
+  - {fileID: 11400000, guid: 17eca2eeb3a65664c83af7908f10bd79, type: 2}
+  - {fileID: 11400000, guid: 1cd4c05b381f6e14ea8d15f44f3f5347, type: 2}
+  - {fileID: 11400000, guid: 04e3f399a6fbb3d4faba2c8a1aa3ea99, type: 2}
+  - {fileID: 11400000, guid: 817811fe2b17f86438e713f78e804033, type: 2}

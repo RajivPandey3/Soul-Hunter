@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Garlic
+  m_EditorClassIdentifier: 
+  Type: 2
+  IsPassive: 0
+  DisplayName: Garlic
+  Description: A cursed aura that hurts every enemy close to you.
+  Icon: {fileID: -1942978020547984136, guid: 68bfc11e490c5c54cab679f2635dc410, type: 3}
+  WeaponPrefab: {fileID: 8730689159742151083, guid: 6d4ecbc75518edd4aa55bcd02082d1c3, type: 3}
+  MaxLevel: 8
+  Rarity: 70
+  Levels:
+  - {fileID: 11400000, guid: c3cd82221a473da4f98c1a97b1883328, type: 2}
+  - {fileID: 11400000, guid: dc2290035adf84a4cbdb23baf2ffd169, type: 2}
+  - {fileID: 11400000, guid: fbd8ff5bc9df0784ba221a166fa59aac, type: 2}
+  - {fileID: 11400000, guid: a01ec2f9eb3a3f248b9e0a239f7c567c, type: 2}
+  - {fileID: 11400000, guid: cd31efb1951f3d54ab36f39fa30d216a, type: 2}
+  - {fileID: 11400000, guid: 7282ab4860613bf45890725e33219248, type: 2}
+  - {fileID: 11400000, guid: 2bc02b4ed4f344244a8aed5feb4f237b, type: 2}
+  - {fileID: 11400000, guid: b08f290318f5f4f479a86e3c47d35493, type: 2}

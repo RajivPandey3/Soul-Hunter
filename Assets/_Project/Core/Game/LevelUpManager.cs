@@ -324,38 +324,126 @@ namespace SoulHunter.Gameplay.Core
             return null;
         }
 
-        public List<UpgradeData> GetRandomValidUpgrades(int count)
+        /// <summary>
+        /// The level-up draw (VS wiki, https://vampire.survivors.wiki/w/Level_up): the eligible items, then the two
+        /// "owned item" checks, then rarity-weighted picks without repetition. Chests call it without the owned checks.
+        /// </summary>
+        public List<UpgradeData> GetRandomValidUpgrades(int count) => GetRandomValidUpgrades(count, ownedChecks: true);
+
+        private List<UpgradeData> GetRandomValidUpgrades(int count, bool ownedChecks)
+        {
+            var validUpgrades = GetValidUpgrades();
+            if (validUpgrades.Count == 0) return new List<UpgradeData>();
+
+            // VS "Receiving owned items": only while the player's inventory is not full.
+            float ownedChance = ownedChecks && !_weaponManager.IsInventoryFull ? OwnedChance(CurrentLuck(), LevelBeingOffered()) : 0f;
+            var weapons = _weaponManager;
+            return DrawChoices(validUpgrades, count, type => weapons.GetWeaponLevel(type) > 0, ownedChance, () => Random.value);
+        }
+
+        /// <summary>
+        /// Every upgrade that can be offered now: the next level of an item (level 1 only while a slot is free), within its
+        /// max level, not banished, and one per item (VS: an item cannot be offered more than once per level up).
+        /// </summary>
+        public List<UpgradeData> GetValidUpgrades()
         {
             List<UpgradeData> validUpgrades = new List<UpgradeData>();
             if (_weaponManager == null || _allUpgrades == null) return validUpgrades;
-            
+            var seen = new HashSet<UpgradeData.UpgradeType>();
+
             foreach (var up in _allUpgrades)
             {
+                if (up == null) continue;
                 // Logic: Agar Upgrade Level 1 hai, toh player ke paas wo Level 0 par hona chahiye.
                 int currentLvl = _weaponManager.GetWeaponLevel(up.Type);
                 // New items are only offered while a slot is free; otherwise picking
                 // one would be rejected by WeaponManager and waste the level-up.
                 if (currentLvl == up.Level - 1 && up.Level <= _weaponManager.GetMaxWeaponLevel(up.Type) &&
                     !(currentLvl == 0 && WeaponManager.IsStagePassive(up.Type)) &&
-                    _weaponManager.HasSlotFor(up.Type) && !_banishedTypes.Contains(up.Type))
+                    _weaponManager.HasSlotFor(up.Type) && !_banishedTypes.Contains(up.Type) && seen.Add(up.Type))
                 {
                     validUpgrades.Add(up);
                 }
             }
-            
-            // Rarity-weighted pick without duplicates (VS rule: rare items show up less often)
-            List<UpgradeData> result = new List<UpgradeData>();
-            while (result.Count < count && validUpgrades.Count > 0)
+            return validUpgrades;
+        }
+
+        private float CurrentLuck()
+        {
+            var stats = _playerController != null ? _playerController.Stats : null;
+            return stats != null ? stats.Luck : 1f;
+        }
+
+        /// <summary>The level this level-up reaches (several queued level-ups are offered in order).</summary>
+        private int LevelBeingOffered()
+        {
+            if (_experience == null) return 1;
+            return Mathf.Max(1, _experience.CurrentLevel - Mathf.Max(0, _pendingLevelUps - 1));
+        }
+
+        /// <summary>
+        /// VS wiki (Level_up, "Receiving owned items"): ownedChance = 1 + 0.3x - 1/totalLuck, where x = 2 if the player's
+        /// level is even and x = 1 if it is odd. At Luck 1 that is 30% on odd levels and 60% on even levels.
+        /// </summary>
+        public static float OwnedChance(float totalLuck, int playerLevel)
+        {
+            float luck = Mathf.Max(0.0001f, totalLuck);
+            int x = playerLevel % 2 == 0 ? 2 : 1;
+            return Mathf.Clamp01(1f + 0.3f * x - 1f / luck);
+        }
+
+        /// <summary>
+        /// The VS level-up draw on an already filtered pool (VS wiki, https://vampire.survivors.wiki/w/Level_up):
+        /// 1. "Receiving owned items": the owned-item check is performed twice; each success adds an owned item selected
+        ///    at random (uniformly: the wiki says "randomly selected" and gives no weight). If the second check selects the
+        ///    same item as the first, it is discarded and a new item is pulled from the pool of all items instead.
+        /// 2. "Random selection of items": the remaining options are drawn from the pool at random without repetition,
+        ///    each with P = itemRarity / itemPoolWeight (UpgradeRarity.GetWeight).
+        /// <paramref name="roll01"/> returns uniform values in [0, 1); an <paramref name="ownedChance"/> of 0 skips step 1.
+        /// </summary>
+        public static List<UpgradeData> DrawChoices(List<UpgradeData> valid, int count, System.Func<UpgradeData.UpgradeType, bool> isOwned,
+            float ownedChance, System.Func<float> roll01)
+        {
+            var result = new List<UpgradeData>();
+            if (valid == null || count <= 0) return result;
+            var pool = new List<UpgradeData>(valid);
+
+            if (ownedChance > 0f && isOwned != null)
             {
-                int index = PickWeightedIndex(validUpgrades, Random.value);
-                result.Add(validUpgrades[index]);
-                validUpgrades.RemoveAt(index); // Ensure no duplicates
+                var owned = valid.Where(u => isOwned(u.Type)).ToList();
+                for (int check = 0; check < 2 && owned.Count > 0 && result.Count < count; check++)
+                {
+                    if (roll01() >= ownedChance) continue;
+                    var pick = owned[Mathf.Clamp(Mathf.FloorToInt(roll01() * owned.Count), 0, owned.Count - 1)];
+                    if (result.Contains(pick))
+                    {
+                        // Same item as the first check: discarded, and a new item comes from the pool of all items.
+                        if (pool.Count == 0) continue;
+                        int index = PickWeightedIndex(pool, roll01());
+                        result.Add(pool[index]);
+                        pool.RemoveAt(index);
+                    }
+                    else
+                    {
+                        result.Add(pick);
+                        pool.Remove(pick);
+                    }
+                }
+            }
+
+            // Rarity-weighted picks without duplicates.
+            while (result.Count < count && pool.Count > 0)
+            {
+                int index = PickWeightedIndex(pool, roll01());
+                result.Add(pool[index]);
+                pool.RemoveAt(index); // Ensure no duplicates
             }
             return result;
         }
 
         /// <summary>
-        /// Picks an index with probability proportional to each upgrade's rarity weight.
+        /// Picks an index with probability proportional to each upgrade's rarity weight
+        /// (VS wiki Level_up: P(item) = itemRarity / itemPoolWeight).
         /// <paramref name="roll01"/> is a uniform random value in [0, 1).
         /// </summary>
         public static int PickWeightedIndex(List<UpgradeData> upgrades, float roll01)
@@ -373,9 +461,10 @@ namespace SoulHunter.Gameplay.Core
             return upgrades.Count - 1;
         }
 
+        /// <summary>A chest's item: the rarity-weighted draw without the level-up's owned-item checks.</summary>
         public List<UpgradeData> GetRandomValidUpgradesForChest()
         {
-            return GetRandomValidUpgrades(1);
+            return GetRandomValidUpgrades(1, ownedChecks: false);
         }
     }
 }

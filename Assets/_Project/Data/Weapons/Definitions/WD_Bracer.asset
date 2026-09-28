@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Bracer
+  m_EditorClassIdentifier: 
+  Type: 13
+  IsPassive: 1
+  DisplayName: Bracer
+  Description: +10% projectile speed.
+  Icon: {fileID: 7628034302274340188, guid: 372d0bb142277fa4299255d447b73a03, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: a21957589b6d2964c9900327885b7180, type: 2}
+  - {fileID: 11400000, guid: 48e885a87ca7ede4489fd826f2f87513, type: 2}
+  - {fileID: 11400000, guid: 0de74b073d09a5640a37ef2b46583001, type: 2}
+  - {fileID: 11400000, guid: a4675a9d6f06b594a913dfbaaf56cca1, type: 2}
+  - {fileID: 11400000, guid: 21857b94f77d3a5448c03553d7bef7db, type: 2}
+  - {fileID: 11400000, guid: f060597802ac3444b88f76818df7fa0c, type: 2}
+  - {fileID: 11400000, guid: a017f18f28b05c448a67a3be7157d13e, type: 2}
+  - {fileID: 11400000, guid: e0fef5710184d874b9ea6dbc48c261ed, type: 2}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Knife
+  m_EditorClassIdentifier: 
+  Type: 14
+  IsPassive: 0
+  DisplayName: Knife
+  Description: Throws fast knives at the nearest enemy.
+  Icon: {fileID: -6282676865250185422, guid: 4fd171ae17f1e344dae3c78a09161621, type: 3}
+  WeaponPrefab: {fileID: 2144015948706526831, guid: bf7cab851e44786428d2a8a2fe37b6cf, type: 3}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: f6f7fc2b6b8958c44a10687bdde516d5, type: 2}
+  - {fileID: 11400000, guid: 000bbd66a5f5deb498ed9f8f4c09ea6f, type: 2}
+  - {fileID: 11400000, guid: bf63f4f423c286549a8d73c2ad030d20, type: 2}
+  - {fileID: 11400000, guid: a335cfc1ea536df4fafed8634e80d17d, type: 2}
+  - {fileID: 11400000, guid: 15f265a7bbede1b4c96f6146730ad0ab, type: 2}
+  - {fileID: 11400000, guid: de37bff3a30e971429ae46b6b4212f6d, type: 2}
+  - {fileID: 11400000, guid: 793dd45c4f276cb44bf99b01f14fa167, type: 2}
+  - {fileID: 11400000, guid: e94e15b9997d08641a8953b0100dfb5c, type: 2}

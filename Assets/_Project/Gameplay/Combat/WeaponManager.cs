@@ -120,8 +120,19 @@ namespace SoulHunter.Gameplay.Combat
             return _weaponLevels.ContainsKey(type) ? _weaponLevels[type] : 0;
         }
 
+        /// <summary>
+        /// Which WeaponDefinition this manager uses for a type. Defaults to GameContentCatalog.WeaponDefinitions; tests that
+        /// wire their own prefabs into the old fields set it to <c>_ =&gt; null</c>.
+        /// </summary>
+        public System.Func<UpgradeData.UpgradeType, WeaponDefinition> DefinitionLookup { get; set; } = WeaponDefinitionLookup.Find;
+
+        private WeaponDefinition DefinitionOf(UpgradeData.UpgradeType type) => DefinitionLookup != null ? DefinitionLookup(type) : null;
+
         public int GetMaxWeaponLevel(UpgradeData.UpgradeType type)
         {
+            // The item's definition first; without one, the older rules (stage passives 9, else the prefab's MaxLevel).
+            var definition = DefinitionOf(type);
+            if (definition != null && definition.MaxLevel > 0) return definition.MaxLevel;
             if (IsStagePassive(type)) return 9;
             var prefab = GetWeaponObject(type);
             var weapon = prefab != null ? prefab.GetComponent<AutoAttackWeapon>() : null;
@@ -243,6 +254,15 @@ namespace SoulHunter.Gameplay.Combat
 
         public GameObject GetWeaponObject(UpgradeData.UpgradeType type)
         {
+            // The item's definition first; the scene fields and bindings below are the fallback for items without one.
+            var definition = DefinitionOf(type);
+            if (definition != null && definition.WeaponPrefab != null) return definition.WeaponPrefab;
+            return LegacyWeaponObject(type);
+        }
+
+        /// <summary>The weapon prefab from this manager's own serialized fields and bindings (pre-definition wiring).</summary>
+        public GameObject LegacyWeaponObject(UpgradeData.UpgradeType type)
+        {
             switch (type)
             {
                 case UpgradeData.UpgradeType.MagicWand: return _magicWandObject;
@@ -270,6 +290,9 @@ namespace SoulHunter.Gameplay.Combat
                 : GetPassiveCount() < _maxPassiveSlots;
         }
 
+        /// <summary>True when every weapon slot and every passive slot is taken (VS: "the player's inventory is full").</summary>
+        public bool IsInventoryFull => GetActiveWeaponsCount() >= _maxWeaponSlots && GetPassiveCount() >= _maxPassiveSlots;
+
         public int GetPassiveCount()
         {
             int count = 0;
@@ -290,7 +313,15 @@ namespace SoulHunter.Gameplay.Combat
             return true;
         }
 
-        private static bool IsWeaponType(UpgradeData.UpgradeType type)
+        /// <summary>True for weapons, false for passives: the item's WeaponDefinition.IsPassive, else the built-in list.</summary>
+        public static bool IsWeaponType(UpgradeData.UpgradeType type)
+        {
+            var definition = WeaponDefinitionLookup.Find(type);
+            return definition != null ? !definition.IsPassive : LegacyIsWeaponType(type);
+        }
+
+        /// <summary>The built-in weapon/passive split used before WeaponDefinitions (every type not listed is a weapon).</summary>
+        public static bool LegacyIsWeaponType(UpgradeData.UpgradeType type)
         {
             return !IsStagePassive(type) && type != UpgradeData.UpgradeType.PlayerSpeed && type != UpgradeData.UpgradeType.MaxHealth &&
                 type != UpgradeData.UpgradeType.EmptyTome && type != UpgradeData.UpgradeType.Spinach && type != UpgradeData.UpgradeType.Bracer &&

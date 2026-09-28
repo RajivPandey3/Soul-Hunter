@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Runetracer
+  m_EditorClassIdentifier: 
+  Type: 15
+  IsPassive: 0
+  DisplayName: Runetracer
+  Description: A glowing rune that races across the field.
+  Icon: {fileID: 658483851337776300, guid: b69ec6d02b67fd642bcd2179ab653c78, type: 3}
+  WeaponPrefab: {fileID: 6989098805370584031, guid: e6d8d2ba8cea1a44f923bd6b7a6eacc8, type: 3}
+  MaxLevel: 8
+  Rarity: 80
+  Levels:
+  - {fileID: 11400000, guid: fa2ae46b2937eb041b471ab1cfd3b925, type: 2}
+  - {fileID: 11400000, guid: b349a982b72244c4180b22241e355952, type: 2}
+  - {fileID: 11400000, guid: 5cd9a34f383d9864c8f847f88308b5a5, type: 2}
+  - {fileID: 11400000, guid: 8af627aa8a6b2e14ca568baf71e547bf, type: 2}
+  - {fileID: 11400000, guid: f473bfb288bae52418c54d740bd47c11, type: 2}
+  - {fileID: 11400000, guid: 44f1a241510cdc84db301666679cad2a, type: 2}
+  - {fileID: 11400000, guid: caeaaf3b160659a42b43743f64cff20d, type: 2}
+  - {fileID: 11400000, guid: 6a4ad5ae64c31934087c83658bd56f05, type: 2}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Duplicator
+  m_EditorClassIdentifier: 
+  Type: 26
+  IsPassive: 1
+  DisplayName: Duplicator
+  Description: +1 projectile for every weapon.
+  Icon: {fileID: -7039772475811174324, guid: 53ef18aa3866def4aaf2e6c2f86acbbd, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 50
+  Levels:
+  - {fileID: 11400000, guid: 5e059ab89ae15ac43804ccd30f6b1cd4, type: 2}
+  - {fileID: 11400000, guid: 93497879db0e30a439a00b283db3950c, type: 2}
+  - {fileID: 11400000, guid: e7e37474d52ba5b45aaa96962b363b1a, type: 2}
+  - {fileID: 11400000, guid: beae8a0d3877d37408a100538121f2a3, type: 2}
+  - {fileID: 11400000, guid: 18b0cfc2898bf804a93c98f937236392, type: 2}
+  - {fileID: 11400000, guid: 32ffa3a4f9ed9e14a90c17cea9a14d1f, type: 2}
+  - {fileID: 11400000, guid: 139d50bcd93f42540bc029d868ba9b38, type: 2}
+  - {fileID: 11400000, guid: 22f70bf2ec7bedb44b89a49cf84fab36, type: 2}

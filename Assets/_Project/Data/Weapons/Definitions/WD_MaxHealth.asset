@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_MaxHealth
+  m_EditorClassIdentifier: 
+  Type: 4
+  IsPassive: 1
+  DisplayName: Max Health
+  Description: +20 max health.
+  Icon: {fileID: 7638726196213528408, guid: cb5b16d7ffaef6d4592f582d49bbdf46, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 8
+  Rarity: 90
+  Levels:
+  - {fileID: 11400000, guid: 1b45894c4758da64ab58ef210cda3191, type: 2}
+  - {fileID: 11400000, guid: 6308a66e643e00e41bbfb7b0bb5dde0a, type: 2}
+  - {fileID: 11400000, guid: 0d5af70a0b7fa8c448c4d271314a0274, type: 2}
+  - {fileID: 11400000, guid: 5802544166e0326479b92c5d0c9ad8fa, type: 2}
+  - {fileID: 11400000, guid: fac31ad0ea8e6d94e8e4ecd612ea7990, type: 2}
+  - {fileID: 11400000, guid: 086bbd0784efbfb408e11c65aa185483, type: 2}
+  - {fileID: 11400000, guid: 8eadc9f221ea30246b67fa35fa75728e, type: 2}
+  - {fileID: 11400000, guid: c3199a83a1cfd2a44a39acf07b695ad2, type: 2}

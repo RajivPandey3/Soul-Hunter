@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Bone
+  m_EditorClassIdentifier: 
+  Type: 19
+  IsPassive: 0
+  DisplayName: Bone
+  Description: Throws a spinning bone at the nearest enemy.
+  Icon: {fileID: 8628547636436244734, guid: fea9b2c30a51a1a4880cc587eab6979a, type: 3}
+  WeaponPrefab: {fileID: 3462129940389874203, guid: 41181321e425b7b419fbb7e43803c361, type: 3}
+  MaxLevel: 8
+  Rarity: 1
+  Levels:
+  - {fileID: 11400000, guid: 2272fb2cff2b938428fc82281c5ae501, type: 2}
+  - {fileID: 11400000, guid: 29dc2819472dc8640a212905c015a925, type: 2}
+  - {fileID: 11400000, guid: 26c350841f465b442856e8f813c7c41a, type: 2}
+  - {fileID: 11400000, guid: 74c07d35d74db344794e8379056415fb, type: 2}
+  - {fileID: 11400000, guid: 06d12688517ff9646b09be297ff55d85, type: 2}
+  - {fileID: 11400000, guid: f8a3953f063020c48bc7c4e16d3c183e, type: 2}
+  - {fileID: 11400000, guid: 27e438380e65a2747aa01a471981a722, type: 2}
+  - {fileID: 11400000, guid: 3f0999e07c1ab6b4d8e84e1dce9c7361, type: 2}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Cross
+  m_EditorClassIdentifier: 
+  Type: 7
+  IsPassive: 0
+  DisplayName: Cross
+  Description: A holy cross flies at the nearest enemy and returns.
+  Icon: {fileID: 6203059290615345688, guid: 3505075ec2b93d34d86ad6a535864442, type: 3}
+  WeaponPrefab: {fileID: 8767656658600148067, guid: 6756b9c5b03f52e4fbc51dd694074a0d, type: 3}
+  MaxLevel: 8
+  Rarity: 80
+  Levels:
+  - {fileID: 11400000, guid: 12c267d0d4fd2ba4eacf50de48524a29, type: 2}
+  - {fileID: 11400000, guid: 3d19ef09b5a834143a852d4284a4cc49, type: 2}
+  - {fileID: 11400000, guid: 7e23f7d4fd196984b82731735efd488e, type: 2}
+  - {fileID: 11400000, guid: 969aaa40c56bf0447b348f5d86d9614a, type: 2}
+  - {fileID: 11400000, guid: cd471905b84e59c4dbf74472447dee40, type: 2}
+  - {fileID: 11400000, guid: 079558d3c1f88eb43bf99ddd0e2abd62, type: 2}
+  - {fileID: 11400000, guid: 20669a62e2ddffc418bdcb9c82fdcec3, type: 2}
+  - {fileID: 11400000, guid: 8bf11330946b2654b9caa91ba25fcadb, type: 2}

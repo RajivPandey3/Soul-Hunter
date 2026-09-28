@@ -200,6 +200,7 @@ namespace SoulHunter.Tests.EditMode
                 prefab.AddComponent<AutoAttackWeapon>();
                 string field = type == UpgradeData.UpgradeType.MagicWand ? "_magicWandObject" : "_garlicWeaponObject";
                 typeof(WeaponManager).GetField(field, Private).SetValue(weapons, prefab);
+                weapons.DefinitionLookup = _ => null; // the mock prefab above, not the catalog's WeaponDefinition
                 weapons.GiveWeapon(type, 1);
 
                 // The only upgrade in the pool is level 1 of a weapon already held: nothing is left to offer.

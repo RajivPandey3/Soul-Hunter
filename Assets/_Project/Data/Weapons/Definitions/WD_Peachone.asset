@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Peachone
+  m_EditorClassIdentifier: 
+  Type: 20
+  IsPassive: 0
+  DisplayName: Peachone
+  Description: A spirit bird circles you and drops blasts.
+  Icon: {fileID: -5696232168332645895, guid: 44b7f02a1062bc94f932c20773e61330, type: 3}
+  WeaponPrefab: {fileID: 8651560908677845679, guid: ac892fc7a32d99d48b8ea8ae42a3317b, type: 3}
+  MaxLevel: 8
+  Rarity: 50
+  Levels:
+  - {fileID: 11400000, guid: 9ea8ebd71c975b44ea5d2df092c87c7c, type: 2}
+  - {fileID: 11400000, guid: 3d6187f717bd95246acdea4b1be1889b, type: 2}
+  - {fileID: 11400000, guid: 1f89e614476239e4291509ea3ddd575d, type: 2}
+  - {fileID: 11400000, guid: d7141a2acf32bfa4c838fefe029e64ea, type: 2}
+  - {fileID: 11400000, guid: 486b7f424911d1b418cb9ef2b7b026bb, type: 2}
+  - {fileID: 11400000, guid: 364a3c375a50c23489a42196bf422856, type: 2}
+  - {fileID: 11400000, guid: 375aaaa6e696df04191d6c4f7e7f4574, type: 2}
+  - {fileID: 11400000, guid: bcd1b1358e983cf4382ff1a3c3351e60, type: 2}

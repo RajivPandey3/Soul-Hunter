@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_LightningRing
+  m_EditorClassIdentifier: 
+  Type: 8
+  IsPassive: 0
+  DisplayName: Lightning Ring
+  Description: Calls lightning down on nearby enemies.
+  Icon: {fileID: 7898527009763241430, guid: 42058cf485fe1804ea767dcf932f6fb8, type: 3}
+  WeaponPrefab: {fileID: 7141299393435530342, guid: 0317b2c8736dce34682f043a3185eabc, type: 3}
+  MaxLevel: 8
+  Rarity: 80
+  Levels:
+  - {fileID: 11400000, guid: ae1eb23e6d972a148a1b8637b1fd9070, type: 2}
+  - {fileID: 11400000, guid: ba7776902fbd4334dbea465b6851bbbc, type: 2}
+  - {fileID: 11400000, guid: 2b9a46cf39ac2634eac4f1beddf01bcf, type: 2}
+  - {fileID: 11400000, guid: 85435c73711275a4fbc277c0ae9b5fd3, type: 2}
+  - {fileID: 11400000, guid: eb6f25051493ceb4086afe6000ebcabe, type: 2}
+  - {fileID: 11400000, guid: 5b7ef06dc1bc30b4d8850ed7e1a8b227, type: 2}
+  - {fileID: 11400000, guid: 62e9f30cca94e3b4f9aa00099f058823, type: 2}
+  - {fileID: 11400000, guid: 5fa5d9f09f1a8bc44b5da9bae6bb4e3b, type: 2}

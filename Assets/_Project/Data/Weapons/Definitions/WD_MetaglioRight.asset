@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_MetaglioRight
+  m_EditorClassIdentifier: 
+  Type: 35
+  IsPassive: 1
+  DisplayName: Metaglio Right
+  Description: +5% curse.
+  Icon: {fileID: 0}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 9
+  Rarity: 10
+  Levels:
+  - {fileID: 11400000, guid: 79101a41f552dcc418fec67fa5821898, type: 2}
+  - {fileID: 11400000, guid: 046ada3d62806aa4ab32777ba2ee1405, type: 2}
+  - {fileID: 11400000, guid: 84b882993b3f999449fcf47ab269d8ac, type: 2}
+  - {fileID: 11400000, guid: d19da84bbcc054f47b66085c73ba86df, type: 2}
+  - {fileID: 11400000, guid: 0dd9ee8752e33fe4aafdf2c0f9ce8237, type: 2}
+  - {fileID: 11400000, guid: c8b0872052209264c93c93fcfd0d8a45, type: 2}
+  - {fileID: 11400000, guid: 3c23fa6bfb65ee442800020eb29b056b, type: 2}
+  - {fileID: 11400000, guid: b0ffde88748a3f04cac08da24d78b16e, type: 2}
+  - {fileID: 11400000, guid: 7d0ef5c5d6989f54e80f37310dbcf2c7, type: 2}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Axe
+  m_EditorClassIdentifier: 
+  Type: 5
+  IsPassive: 0
+  DisplayName: Axe
+  Description: Hurls a heavy axe that tumbles through enemies.
+  Icon: {fileID: -8072591114664276155, guid: 404ba1ad26a96ee42ab45d75e2b5776a, type: 3}
+  WeaponPrefab: {fileID: 5529983867789336766, guid: 9e8984ce92004e24a80ec08e7834b13e, type: 3}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: 4004ac4189cc1464598a589740787b9e, type: 2}
+  - {fileID: 11400000, guid: 20f6c7e46e24a844786a4081067798ff, type: 2}
+  - {fileID: 11400000, guid: 0cf47cbb48e2cce47aac520e40621033, type: 2}
+  - {fileID: 11400000, guid: 5d5480bef664ce3468dfe6a1a5bb9a15, type: 2}
+  - {fileID: 11400000, guid: b09cec069ec96944c905b451ea65c340, type: 2}
+  - {fileID: 11400000, guid: 6f5c30c08e215ff40accf64e906f2b59, type: 2}
+  - {fileID: 11400000, guid: 2f4179850cf90c840a9f1271aea53373, type: 2}
+  - {fileID: 11400000, guid: ec6dd3143bcc31b4eb116d6a24408acb, type: 2}

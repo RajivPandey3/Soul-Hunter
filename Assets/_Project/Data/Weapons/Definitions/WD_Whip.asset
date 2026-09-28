@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_Whip
+  m_EditorClassIdentifier: 
+  Type: 1
+  IsPassive: 0
+  DisplayName: Whip
+  Description: Lashes the nearest enemy, then the other side.
+  Icon: {fileID: -8349577252986738125, guid: 91488db1dd4d2124ca1a24bbd4e41c94, type: 3}
+  WeaponPrefab: {fileID: 3390574610662801528, guid: 8f7daa05aca7810498f35f8809f6b85e, type: 3}
+  MaxLevel: 8
+  Rarity: 100
+  Levels:
+  - {fileID: 11400000, guid: d8ed1c3a017d0234ca78bbf56329f662, type: 2}
+  - {fileID: 11400000, guid: ce010713a31397e4b880a716a140ea38, type: 2}
+  - {fileID: 11400000, guid: d4c1124cb05d824419a8046b24168384, type: 2}
+  - {fileID: 11400000, guid: 7173d600a6ec538498da2eca598867f1, type: 2}
+  - {fileID: 11400000, guid: 7b0956a5e3cc23b49bd71f848e6143dc, type: 2}
+  - {fileID: 11400000, guid: d53921bb30430cf4eb19c5022c4860a1, type: 2}
+  - {fileID: 11400000, guid: 50c2d2c25bff6f34bb40acb1180255f9, type: 2}
+  - {fileID: 11400000, guid: 89e1a49a7a812994dadeb2da91cf2cce, type: 2}

@@ -511,6 +511,28 @@ The owner asked for three improvements: wave enemy types, boss ability component
   - `ChestEliteAndBossPlayModeTests.ABossLeftBehind_IsBroughtBackToTheScreen` (R).
 - EditMode 417/417, PlayMode 161/161, save untouched (`D:/SoulHunter-Validation/run-20260928-abilities/`).
 
+**3. One weapon definition asset per item, and VS level-up weighting.**
+- `WeaponDefinition` (Create > Soul Hunter > Weapon Definition) holds an item's type, weapon or passive, name, description, icon, prefab, max level, VS rarity and level assets.
+- The 36 definitions are in `Assets/_Project/Data/Weapons/Definitions/`, listed in `GameContentCatalog.WeaponDefinitions`. `WeaponDefinitionBuilder` (menu Soul Hunter/Content/Build Weapon Definitions) builds them from the old wiring; it reads the scene without saving it.
+- `WeaponManager` (prefab, weapon or passive, max level) and `UpgradeText` (name, description) read the definition first and fall back to the old fields, so existing content behaves the same.
+- To add a weapon or passive:
+  1. Add the enum value at the **end** of `UpgradeData.UpgradeType` (it is stored as an int).
+  2. Write the script and prefab (a passive needs its stat case in `WeaponManager.ApplyPassiveStat`).
+  3. Make its level UpgradeData assets.
+  4. Make one WeaponDefinition with the VS rarity, citing the wiki page, and add it to GameContent.
+  - No scene binding is needed.
+- **VS level-up weighting** (wiki Level_up):
+  - Items are drawn from one pool by rarity: P = itemRarity / poolWeight.
+  - Rarities come from each item's wiki infobox (`UpgradeRarity.VsRarity`), for example Whip 100, Garlic 70, Pentagram 60, Peachone 50, Bone 1, Cherry Bomb 1, Hollow Heart 90, Wings 50, Tirajisú 40, Metaglio 10.
+  - While the inventory is not full, two extra checks each offer an owned item with chance 1 + 0.3x − 1/totalLuck (x = 2 on even levels, 1 on odd).
+  - Chests use the weighted draw without those checks.
+  - Visible effects:
+    - Bone and Cherry Bomb (rarity 1) almost never appear in level-ups, as in VS; the Level 3 merchant sells both.
+    - Owned items are offered more often.
+- Still differs from VS: passives go to level 8, while most VS passives stop at 5 (a later task). Stone Mask has no Soul Hunter item.
+- Tests: `WeaponDefinitionTests` (T) and `WeaponDefinitionPlayModeTests` (R: every definition's prefab matches the old wiring; real level-ups offer valid, distinct items). `LevelUpCurveTests` now uses the VS rarity values.
+- EditMode 435/435, PlayMode 163/163, save untouched, scene unchanged (`D:/SoulHunter-Validation/run-20260928-weapondefs/`).
+
 ### Balance pass, Part 3: enemy pressure along the stages (2026-09-28)
 
 Measured with the bot, no god mode. `-sh-autoplay-start-level N` starts the hero at level N, so later stages can be played at a believable strength.

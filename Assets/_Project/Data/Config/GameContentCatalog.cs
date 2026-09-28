@@ -7,6 +7,8 @@ namespace SoulHunter.Gameplay.Data
     {
         public CharacterData[] Characters;
         public UpgradeData[] Upgrades;
+        [UnityEngine.Tooltip("One definition per weapon/passive type (WeaponDefinitionBuilder). Read before the older tables.")]
+        public WeaponDefinition[] WeaponDefinitions;
         [UnityEngine.Tooltip("Floor tile per stage (index 0 = Level 1), used by InfiniteMap.")]
         public GameObject[] StageFloors;
         /// <summary>VS light source: the Soul Lantern, a breakable prop that drops an item (LightSourceSpawner).</summary>
@@ -36,6 +38,9 @@ namespace SoulHunter.Gameplay.Data
         [UnityEngine.Tooltip("Level 3 Wandering Merchant (model, trigger and shop), spawned by CampaignSignatureSystem.")]
         public GameObject WanderingMerchant;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
+
+        /// <summary>The weapon/passive definition of <paramref name="type"/>, or null when none exists.</summary>
+        public static WeaponDefinition FindWeaponDefinition(UpgradeData.UpgradeType type) => WeaponDefinitionLookup.Find(type);
 
         /// <summary>Old saves may still name a renamed character (Antonio became Corvan on 2026-09-25).</summary>
         public static string CurrentName(string name) => name == "Antonio" ? "Corvan" : name;
