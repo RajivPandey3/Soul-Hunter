@@ -184,7 +184,8 @@ namespace SoulHunter.Tests.EditMode
         private (LevelUpManager manager, WeaponManager weapons) NewLevelUp(params UpgradeData.UpgradeType[] held)
         {
             var manager = Track(new GameObject("LimitBreakLevelUp")).AddComponent<LevelUpManager>();
-            typeof(LevelUpManager).GetMethod("Awake", Private).Invoke(manager, null); // loads the Reroll/Skip/Banish charges
+            typeof(LevelUpManager).GetMethod("Awake", Private).Invoke(manager, null);
+            manager.AddCharges(2, 2, 2); // VS: charges come from the PowerUps (rank 1 each here)
             // WeaponManager spawns weapons under the scene's PlayerController.
             var player = Track(new GameObject("LimitBreakPlayer"));
             player.AddComponent<PlayerController>();

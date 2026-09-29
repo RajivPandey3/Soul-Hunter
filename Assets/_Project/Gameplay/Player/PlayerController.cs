@@ -284,8 +284,8 @@ namespace SoulHunter.Gameplay.Player
         }
 
         /// <summary>
-        /// VS PowerUps (heal balance pass, 2026-09-29): Max Health x1.1 per rank on top of the character's (the run starts
-        /// at full health) and Recovery +0.1 HP per second per rank.
+        /// VS Max Health PowerUp: x1.1 per rank on top of the character's, the run starting at full health. The other
+        /// PowerUps are applied by PlayerStats.ApplyPowerUps.
         /// </summary>
         private void ApplyHealingPowerUps()
         {
@@ -294,10 +294,8 @@ namespace SoulHunter.Gameplay.Player
             var data = saveSvc != null ? saveSvc.CurrentData : null;
             if (data == null) return;
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            float multiplier = SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthMultiplier(data.MetaMaxHealthLevel);
+            float multiplier = SoulHunter.Core.Persistence.PowerUps.MaxHealthMultiplier(SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.MaxHealth));
             if (health != null && multiplier > 1f) health.MultiplyMaxHealth(multiplier, healByIncrease: true);
-            float recovery = SoulHunter.Core.Persistence.MetaPowerUps.Recovery(data.MetaRecoveryLevel);
-            if (Stats != null && recovery > 0f) Stats.AddRegen(recovery);
         }
 
         private void OnDashEvent(PlayerDashEvent dashEvent)

@@ -1262,8 +1262,7 @@ Checked against vampire.survivors.wiki (fetched 2026-09-29):
 
 Changes:
 - `MetaPowerUps` (Foundation) holds the VS ranks, bonuses and prices. `GameData.MetaMaxHealthLevel` / `MetaRecoveryLevel` are clamped by `SaveService`'s repair; an older save loads them as 0.
-- `PowerUpMenuUI` builds a **Max Health +10%** and a **Recovery +0.1/s** button at runtime from a copy of an existing button, so `MainMenu` is not edited. They show `Lvl n/max`, stop at the VS rank and switch off at max.
-  - Prices are the VS initial cost (200), fixed. VS raises prices per purchase, and Soul Hunter's existing shop prices (Might 500, Armor 300, Greed 400, Revival 1000) do not follow VS either; that is a later shop pass (provisional).
+- Superseded the next day by the full VS PowerUp shop (below); the heal effects stay the same.
 - `PlayerController.ApplyHealingPowerUps`: max health × 1.1^rank after the character and Soul Eggs, with the run starting at full health, and Recovery +0.1 × rank via `PlayerStats.AddRegen` (`PlayerRecovery` heals each second).
 - `HealthPickup.HealWithRecovery`: a floor chicken, and the maxed-level chicken card (`MaxedRewards`), heals 30 × (1 + Recovery).
 - `CharacterStatSheet.Build` and the select screen include both PowerUps.
@@ -1287,6 +1286,89 @@ Validation:
   - With the PowerUps the hero took more than twice the hits and never fell below 94/133. Lanterns broken per run: 8–25 (chickens 0–5).
   - Random loadouts make these runs rough; `-75` killed 24,991, most likely through Soul Toll wipes.
   - 0 errors in every run.
+
+Not yet played by the owner.
+
+### VS PowerUp shop (owner: "everwhere follow DOT VS ONLY", 2026-09-30)
+
+Everything is from vampire.survivors.wiki/w/PowerUps and each PowerUp's own page (fetched 2026-09-30).
+
+**The list.** `PowerUps` (Foundation, `Save/SaveData/PowerUps.cs`) holds 23 PowerUps in the wiki's order, each with its rank limit, bonus per rank and initial cost:
+
+| PowerUp | Per rank | Ranks | Initial cost |
+|---|---|---|---|
+| Might | +5% | 5 | 200 |
+| Armor | +1 | 3 | 600 |
+| Max Health | ×1.1, multiplied | 3 | 200 |
+| Recovery | +0.1 HP/s | 5 | 200 |
+| Cooldown | −2.5% | 2 | 900 |
+| Area | +5% | 2 | 300 |
+| Speed | +10% projectile speed | 2 | 300 |
+| Duration | +15% | 2 | 300 |
+| Amount | +1 | 1 | 5,000 |
+| Move Speed | +5% | 2 | 600 |
+| Magnet | ×1.25, multiplied | 2 | 300 |
+| Luck | +10% | 3 | 600 |
+| Growth | +3% | 5 | 900 |
+| Greed | +10% | 5 | 200 |
+| Curse | +10% | 5 | 1,666 |
+| Revival | +1 | 1 | 10,000 |
+| Omni | +2% Might, projectile Speed, Duration and Area | 5 | 1,000 |
+| Charm | +20 enemies per wave | 5 | 10,000 |
+| Defang | 3% of enemies harmless | 5 | 10 |
+| Reroll | +2 | 5 | 1,000 |
+| Skip | +2 | 5 | 100 |
+| Banish | +2 | 5 | 100 |
+| Preserve | 10% chance to keep a Reroll/Skip/Banish | 5 | 500 |
+
+**Price** (wiki Cost section): `InitialPrice` when nothing at all has been bought, else `InitialPrice × (1 + Bought) + floor(20 × 1.1^TotalBought)`. **Refund** returns every rank's price; the fees are additive since VS v0.7.2, so the order does not matter.
+
+**Left out, and differences from VS:**
+- The four Seals are left out: they are used in VS's Collection menu, which Soul Hunter does not have.
+- VS unlocks some ranks through achievements and items (Reroll, Skip, Banish, Omni, Charm, Defang). Soul Hunter has none of those, so every rank can be bought. **That is a gap to raise with the owner.**
+
+**Save** (version 2):
+- `GameData.PowerUpRanks` holds the ranks.
+- `SaveService.Migrate` v1 → v2 refunds the old fixed-price shop once, as the owner chose ("Refund all"): Might 500, Armor 300, Greed 400 and Revival 1000 per level, and the 2026-09-29 Max Health / Recovery buttons 200. It then zeroes the old fields.
+  - The owner's real save (Might level 9) gets 4,500 gold back on its next load. It had 21,271 gold on 2026-09-30.
+- The repair keeps only known PowerUps, one entry each, within their VS ranks.
+
+**Effects in a run:**
+- `PlayerStats.ApplyPowerUps`, with Max Health in `PlayerController`. This replaces the old +10% Might / +20% Greed per level.
+- Curse now also raises the wave's enemy minimum (Curse page: frequency, quantity, speed and health), and Charm adds its flat number after Curse (Charm page).
+- **Reroll, Skip and Banish start at 0 as in VS**, +2 per rank plus Soul Eggs. Soul Hunter's old free 2/2/2 per run is gone; the scene's `_starting*` values are no longer read.
+- **Skip gives experience**: 20% of the next level (the Skip page's tips; the page gives no formula).
+- **Preserve** keeps a used charge at 10% per rank.
+- **Defang** (`EnemySpawner.Defang`, `EnemyController.IsDefanged`):
+  - applies only to ordinary wave spawns; chest elites, bosses and event enemies never (Defang page);
+  - a defanged enemy deals no contact damage and runs no abilities, and is tinted green through `DamageFlash.SetTint`, which survives hit flashes;
+  - the new VS Display option **Show Defanged Enemies** (on by default) turns the tint off.
+
+**Shop screen** (`PowerUpMenuUI`):
+- Built at runtime in `PowerUp_Panel` from a copy of an old button, so `MainMenu` is not edited; the old four-button grid is hidden.
+- A 6 × 4 grid of dark cells (icon, name, rank; gold when selected, green when maxed), an info box (description, rank, VS price or MAX), **Buy** and **Refund PowerUps**.
+- Icons are Soul Hunter's passive of the same stat, as VS PowerUps show their passive item; none for Greed, Omni, Charm, Defang, Reroll, Skip, Banish and Preserve.
+
+`AutoplayBot`:
+- `-sh-autoplay-heal-powerups` now sets Max Health 3 and Recovery 5 through `PowerUps`.
+- `-sh-autoplay-shop-shot` opens the shop before the run, buys a few ranks and screenshots it.
+
+Validation:
+- `PowerUpShopTests` (T):
+  - the wiki list;
+  - the price formula, with the wiki's own example of five ranks of a 200-gold PowerUp: base costs 3,000 plus fees 22 + 24 + 26 + 29;
+  - Refund returns exactly what was paid;
+  - the owner-style v1 save (Might 9 → +4,500, Armor 1 → +300, Max Health 2 → +400) is refunded once;
+  - the repair clamps.
+- `HealBalanceTests` and `CharacterStatBlockTests` were moved to the catalog; `LevelUpActionTests` and `RunModeTests` grant charges explicitly.
+- `PowerUpShopPlayModeTests` (R):
+  - the MainMenu shop has a cell for every PowerUp, sells Recovery at 200, 422, 624, 826 and 1,029, stops at rank 5, shows the fee on the next PowerUp, and refunds everything;
+  - a run with every PowerUp maxed gets each effect: Might +35% with Omni, Armor +3, Max Health ×1.331, Reroll/Skip/Banish 10 each, Charm 100, Defang 15%, Preserve 50%;
+  - without PowerUps a run has no Reroll/Skip/Banish;
+  - a defanged enemy deals no damage and is green;
+  - Skip gives experience, and Preserve keeps some charges.
+- EditMode 483/483, PlayMode 190/190, save untouched, both before and after the final UI fix (`D:/SoulHunter-Validation/run-20260930-powerups/`, `-powerups2/`).
+- Editor play `autoplay-editor-80` (`-sh-autoplay-shop-shot`, 2 min): the shop screenshot shows all 23 cells readable, Recovery 5/5 green, Greed selected at price 242 (200 + fee after 8 ranks), 0 errors, min 84 FPS (partial `V`).
 
 Not yet played by the owner.
 

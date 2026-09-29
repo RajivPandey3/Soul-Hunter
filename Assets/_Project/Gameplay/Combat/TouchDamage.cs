@@ -79,9 +79,15 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
+        private SoulHunter.Gameplay.AI.EnemyController _owner;
+        private bool _ownerLooked;
+
         private void Update()
         {
             if (_targets.Count == 0) return;
+            // VS Defang: a defanged enemy cannot deal damage to the player.
+            if (!_ownerLooked) { _owner = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>(); _ownerLooked = true; }
+            if (_owner != null && _owner.IsDefanged) return;
 
             // Learning Comment:
             // Dictionary ko direct foreach mein iterate karte waqt agar TakeDamage() ke natijay mein

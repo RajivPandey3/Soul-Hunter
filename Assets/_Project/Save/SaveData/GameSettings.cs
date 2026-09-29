@@ -34,6 +34,7 @@ namespace SoulHunter.Core.Persistence
         public static bool ShowStageProgression => Data == null || Data.ShowStageProgression;
         public static bool VisibleJoystick => Data != null && Data.VisibleJoystick;
         public static bool PauseOnFocusLoss => Data == null || Data.PauseOnFocusLoss;
+        public static bool ShowDefangedEnemies => Data == null || Data.ShowDefangedEnemies;
 
         /// <summary>Tells listeners (audio, screen mode) that an option changed.</summary>
         public static void NotifyChanged() => Changed?.Invoke();

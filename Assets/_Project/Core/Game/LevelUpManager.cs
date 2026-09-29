@@ -58,9 +58,9 @@ namespace SoulHunter.Gameplay.Core
 
         private void Awake()
         {
-            RerollsLeft = Mathf.Max(0, _startingRerolls);
-            SkipsLeft = Mathf.Max(0, _startingSkips);
-            BanishesLeft = Mathf.Max(0, _startingBanishes);
+            // VS (Reroll, Skip and Banish pages): a run starts with none; the PowerUps give 2 per rank (AddPowerUpCharges),
+            // and Soul Eggs add theirs. The scene's _starting* values (2 each, Soul Hunter's old default) are no longer used.
+            RerollsLeft = SkipsLeft = BanishesLeft = 0;
 
             // Learning Comment:
             // "Read First, Match Later" aur Self-Healing pattern:
@@ -78,6 +78,35 @@ namespace SoulHunter.Gameplay.Core
                 _playerController = FindFirstObjectByType<PlayerController>();
             }
         }
+
+        /// <summary>Adds charges (the PowerUps at run start; tests).</summary>
+        public void AddCharges(int rerolls, int skips, int banishes)
+        {
+            RerollsLeft += Mathf.Max(0, rerolls);
+            SkipsLeft += Mathf.Max(0, skips);
+            BanishesLeft += Mathf.Max(0, banishes);
+        }
+
+        /// <summary>VS PowerUps: Reroll, Skip and Banish each give 2 charges per rank.</summary>
+        private void AddPowerUpCharges()
+        {
+            if (SoulHunter.Core.Services.GameServices.Instance == null ||
+                !SoulHunter.Core.Services.GameServices.Instance.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) ||
+                save.CurrentData == null) return;
+            var data = save.CurrentData;
+            AddCharges(Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Reroll, SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.Reroll))),
+                       Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Skip, SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.Skip))),
+                       Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Banish, SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.Banish))));
+        }
+
+        /// <summary>VS Preserve: the chance that a Reroll, Skip or Banish is kept after use.</summary>
+        private bool Preserved() => _playerController != null && _playerController.Stats != null && Random.value < _playerController.Stats.Preserve;
+
+        /// <summary>
+        /// VS Skip: the level's choices are skipped "and gain experience instead". The Skip page's tips give the amount:
+        /// 20% of the experience to the next level (a thin source; the page gives no formula).
+        /// </summary>
+        public const float SkipExperienceShare = 0.2f;
 
         /// <summary>VS Golden Egg rule: the selected character's Soul Eggs add whole Reroll, Skip and Banish charges.</summary>
         private void AddSoulEggCharges()
@@ -97,6 +126,7 @@ namespace SoulHunter.Gameplay.Core
             // Unity Inspector se bachne ke liye Resources folder se load kar rahe hain
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             _allUpgrades = (catalog != null ? catalog.Upgrades : Resources.LoadAll<UpgradeData>("Upgrades")).Where(u => u != null && u.Level > 0).ToList();
+            AddPowerUpCharges();
             AddSoulEggCharges();
 
             if (_allUpgrades.Count == 0)
@@ -221,7 +251,7 @@ namespace SoulHunter.Gameplay.Core
         public bool Reroll()
         {
             if (!_isLevelUpActive || RerollsLeft <= 0) return false;
-            RerollsLeft--;
+            if (!Preserved()) RerollsLeft--;
             PresentChoicesOrPayOut(GetLevelUpChoices(_currentChoiceCount));
             return true;
         }
@@ -230,9 +260,11 @@ namespace SoulHunter.Gameplay.Core
         public bool Skip()
         {
             if (!_isLevelUpActive || SkipsLeft <= 0) return false;
-            SkipsLeft--;
+            if (!Preserved()) SkipsLeft--;
             Debug.Log("[LevelUpManager] Level-up skipped.");
             CompleteCurrentLevelUp();
+            // "and gain experience instead" (after the level-up closes, so the XP can start the next one).
+            if (_experience != null) _experience.AddXP(Mathf.Max(1, Mathf.RoundToInt(_experience.XPToNextLevel * SkipExperienceShare)));
             return true;
         }
 
@@ -243,7 +275,7 @@ namespace SoulHunter.Gameplay.Core
         public bool Banish(UpgradeData upgrade)
         {
             if (!_isLevelUpActive || BanishesLeft <= 0 || upgrade == null) return false;
-            BanishesLeft--;
+            if (!Preserved()) BanishesLeft--;
             // A Limit Break card is not an item: banishing it only deals new cards and keeps its weapon in the pool.
             if (!LimitBreak.IsCard(upgrade) && !MaxedRewards.IsCard(upgrade))
             {

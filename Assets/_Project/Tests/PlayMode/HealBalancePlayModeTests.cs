@@ -24,7 +24,13 @@ namespace SoulHunter.Tests.PlayMode
         [UnityTest]
         public IEnumerator ARun_StartsWithTheHealingPowerUps()
         {
-            yield return BootIntoGameplay(save => { save.MetaMaxHealthLevel = 3; save.MetaRecoveryLevel = 5; save.SoulEggs?.Clear(); });
+            yield return BootIntoGameplay(save =>
+            {
+                save.PowerUpRanks.Clear();
+                PowerUps.SetRank(save, PowerUpId.MaxHealth, 3);
+                PowerUps.SetRank(save, PowerUpId.Recovery, 5);
+                save.SoulEggs?.Clear();
+            });
             Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
             foreach (var stray in EnemyController.ActiveEnemies.ToList()) if (stray != null) stray.gameObject.SetActive(false);
             yield return null;
@@ -45,34 +51,6 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => !chicken.activeInHierarchy, "the chicken to be picked up");
             Assert.That(health.CurrentHealth - before, Is.GreaterThanOrEqualTo(HealthPickup.HealWithRecovery(30, player.Stats.Regen) - 1),
                 "A chicken heals 30 x (1 + Recovery).");
-            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
-        }
-
-        [UnityTest]
-        public IEnumerator TheShop_SellsMaxHealthAndRecovery_UpToTheirVsRanks()
-        {
-            var load = SceneManager.LoadSceneAsync("Bootstrap");
-            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
-            var save = GameServices.Instance.Get<SaveService>();
-            save.UseFile(System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save.json"));
-            save.CurrentData.Currency = 5000;
-            save.CurrentData.MetaMaxHealthLevel = 0;
-            save.CurrentData.MetaRecoveryLevel = 0;
-            Object.FindFirstObjectByType<MainMenuNavigation>().ShowPowerUps();
-            yield return null;
-
-            var shop = Object.FindFirstObjectByType<PowerUpMenuUI>();
-            Assert.That(shop, Is.Not.Null);
-            Assert.That(shop.MaxHealthButton, Is.Not.Null, "The shop has a Max Health button. " + Errors());
-            Assert.That(shop.RecoveryButton, Is.Not.Null, "The shop has a Recovery button.");
-            Assert.That(shop.MaxHealthButton.gameObject.activeInHierarchy && shop.RecoveryButton.gameObject.activeInHierarchy, Is.True);
-
-            for (int i = 0; i < 5; i++) shop.MaxHealthButton.onClick.Invoke();
-            for (int i = 0; i < 7; i++) shop.RecoveryButton.onClick.Invoke();
-            Assert.That(save.CurrentData.MetaMaxHealthLevel, Is.EqualTo(MetaPowerUps.MaxHealthRanks), "Max Health stops at rank 3.");
-            Assert.That(save.CurrentData.MetaRecoveryLevel, Is.EqualTo(MetaPowerUps.RecoveryRanks), "Recovery stops at rank 5.");
-            Assert.That(save.CurrentData.Currency, Is.EqualTo(5000 - 3 * MetaPowerUps.MaxHealthPrice - 5 * MetaPowerUps.RecoveryPrice), "Only real purchases cost gold.");
-            Assert.That(shop.MaxHealthButton.interactable || shop.RecoveryButton.interactable, Is.False, "Maxed buttons are switched off.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

@@ -99,6 +99,7 @@ namespace SoulHunter.Gameplay.AI
         {
             if (_enemy == null || _runners.Count == 0) return;
             if (SoulHunter.Core.Services.GameTime.IsPaused) return;
+            if (_enemy.IsDefanged) return; // VS Defang: it cannot deal damage, so its attacks do not run
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
             if (_health != null && _health.CurrentHealth <= 0) return;

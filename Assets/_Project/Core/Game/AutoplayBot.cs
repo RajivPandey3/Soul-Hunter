@@ -191,9 +191,14 @@ namespace SoulHunter.Gameplay.Core
             save.CurrentData.SelectedCharacterName = Config.Character;
             if (Config.Gold >= 0) save.CurrentData.Currency = Config.Gold; // the save is a throw-away one by now
             save.CurrentData.DisableBlood = Config.NoBlood;
-            // The throw-away save: the healing PowerUps bought (or not), so balance runs compare like with like.
-            save.CurrentData.MetaMaxHealthLevel = Config.HealPowerUps ? SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthRanks : 0;
-            save.CurrentData.MetaRecoveryLevel = Config.HealPowerUps ? SoulHunter.Core.Persistence.MetaPowerUps.RecoveryRanks : 0;
+            // VS PowerUps on the throw-away save: none, or Max Health and Recovery at their VS max with -sh-autoplay-heal-powerups.
+            save.CurrentData.PowerUpRanks.Clear();
+            if (Config.HealPowerUps)
+            {
+                SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.MaxHealth, 3);
+                SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.Recovery, 5);
+            }
+            if (HasArg("-sh-autoplay-shop-shot")) yield return ShopShots(save.CurrentData);
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
@@ -564,6 +569,36 @@ namespace SoulHunter.Gameplay.Core
         }
 
         /// <summary>A player build captures the full screen with the UI; the editor renders the game camera.</summary>
+        /// <summary>
+        /// -sh-autoplay-shop-shot: before the run, opens the VS PowerUps screen on the throw-away save (with gold), buys a
+        /// few ranks like a player and screenshots it. The menu lives in the UI assembly, so it is reached by name.
+        /// </summary>
+        private IEnumerator ShopShots(SoulHunter.Core.Persistence.GameData data)
+        {
+            data.Currency = Mathf.Max(data.Currency, 20000);
+            MonoBehaviour Find(string type) => FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.GetType().Name == type);
+            var navigation = Find("MainMenuNavigation");
+            navigation?.GetType().GetMethod("ShowPowerUps")?.Invoke(navigation, null);
+            yield return new WaitForSecondsRealtime(0.5f);
+            var shop = Find("PowerUpMenuUI");
+            if (shop != null)
+            {
+                var select = shop.GetType().GetMethod("Select");
+                var buy = shop.GetType().GetMethod("BuySelected");
+                foreach (var (id, ranks) in new[] { (SoulHunter.Core.Persistence.PowerUpId.Might, 2), (SoulHunter.Core.Persistence.PowerUpId.Recovery, 5), (SoulHunter.Core.Persistence.PowerUpId.Magnet, 1) })
+                {
+                    select?.Invoke(shop, new object[] { id });
+                    for (int i = 0; i < ranks; i++) buy?.Invoke(shop, null);
+                }
+                select?.Invoke(shop, new object[] { SoulHunter.Core.Persistence.PowerUpId.Greed });
+            }
+            yield return new WaitForSecondsRealtime(0.3f);
+            yield return Shot("powerups");
+            Event("powerups", string.Format(CultureInfo.InvariantCulture, "\"bought\": {0}, \"gold\": {1}", SoulHunter.Core.Persistence.PowerUps.TotalBought(data), data.Currency));
+            navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
+            yield return new WaitForSecondsRealtime(0.3f);
+        }
+
         private IEnumerator Shot(string name)
         {
             string file = Path.Combine(Config.OutputFolder, "shots", $"{_shots.Count:000}_{name}.png");

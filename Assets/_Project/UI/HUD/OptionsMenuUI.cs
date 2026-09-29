@@ -135,6 +135,8 @@ namespace SoulHunter.Gameplay.UI
             AddToggle(display, ref y, row, "Flashing VFX", () => GameSettings.FlashingVfx, v => { if (data != null) data.FlashingVfx = v; });
             AddToggle(display, ref y, row, "Disable Blood", () => GameSettings.DisableBlood, v => { if (data != null) data.DisableBlood = v; });
             AddToggle(display, ref y, row, "Screen Shake", () => GameSettings.ScreenShake, v => { if (data != null) data.ScreenShake = v; });
+            // VS Options, Display: the green look of Defanged enemies (Defang PowerUp).
+            AddToggle(display, ref y, row, "Show Defanged Enemies", () => GameSettings.ShowDefangedEnemies, v => { if (data != null) data.ShowDefangedEnemies = v; });
 
             // Gameplay
             var gameplay = BeginTab("Gameplay", panel);

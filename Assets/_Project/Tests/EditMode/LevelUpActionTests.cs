@@ -31,6 +31,8 @@ namespace SoulHunter.Tests.EditMode
             _manager = _object.AddComponent<LevelUpManager>();
             // EditMode does not run Awake; it loads the starting charges.
             typeof(LevelUpManager).GetMethod("Awake", Private).Invoke(_manager, null);
+            // VS: a run starts with no Reroll/Skip/Banish; the PowerUps give 2 each per rank (rank 1 here).
+            _manager.AddCharges(2, 2, 2);
             typeof(LevelUpManager).GetField("_weaponManager", Private).SetValue(_manager, _weapons);
             _manager.OnLevelUpUIRound += choices => { _lastRound = choices; _rounds++; };
         }

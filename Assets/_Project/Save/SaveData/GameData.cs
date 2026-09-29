@@ -13,7 +13,7 @@ namespace SoulHunter.Core.Persistence
     public class GameData
     {
         /// <summary>Save schema version this build writes. Raise it and add a step to SaveService.Migrate when the format changes.</summary>
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
 
         /// <summary>
         /// Schema version of this save. No initializer on purpose: a file written before versioning has no such
@@ -42,6 +42,8 @@ namespace SoulHunter.Core.Persistence
         /// <summary>On-screen touch joystick (VS "Visible Joysticks"); always shown on mobile.</summary>
         public bool VisibleJoystick = false;
         public bool PauseOnFocusLoss = true;
+        /// <summary>VS Options, Display: "Show Defanged Enemies" (the green look of Defanged enemies).</summary>
+        public bool ShowDefangedEnemies = true;
         /// <summary>Input System binding overrides (remapped controls) as JSON; empty = defaults.</summary>
         public string InputBindingOverrides = "";
         public float HighScoreTime;
@@ -51,10 +53,12 @@ namespace SoulHunter.Core.Persistence
         public int MetaArmorLevel;
         public int MetaGreedLevel;
         public int MetaRevivalLevel;
-        /// <summary>VS Max Health PowerUp rank (0-3; heal balance pass, 2026-09-29).</summary>
+        /// <summary>Old shop (2026-09-29 buttons); v1 saves only. Refunded and zeroed by the v2 migration.</summary>
         public int MetaMaxHealthLevel;
-        /// <summary>VS Recovery PowerUp rank (0-5; heal balance pass, 2026-09-29).</summary>
+        /// <summary>Old shop (2026-09-29 buttons); v1 saves only. Refunded and zeroed by the v2 migration.</summary>
         public int MetaRecoveryLevel;
+        /// <summary>VS PowerUp ranks bought (PowerUps; since save version 2, 2026-09-30).</summary>
+        public System.Collections.Generic.List<PowerUpRank> PowerUpRanks = new System.Collections.Generic.List<PowerUpRank>();
 
         // --- Current Run Data ---
         public string SelectedCharacterName;

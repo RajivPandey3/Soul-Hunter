@@ -9,10 +9,6 @@ namespace SoulHunter.Gameplay.Player
     /// </summary>
     public struct CharacterStatSheet
     {
-        public const float MightPerMetaLevel = 0.1f;
-        public const int ArmorPerMetaLevel = 1;
-        public const float GreedPerMetaLevel = 0.2f;
-        public const int RevivalsPerMetaLevel = 1;
 
         public int MaxHealth;
         public float Recovery;
@@ -32,8 +28,8 @@ namespace SoulHunter.Gameplay.Player
         public float Curse;
 
         /// <summary>Character stats plus meta power-up levels (0 when nothing was bought).</summary>
-        public static CharacterStatSheet Build(CharacterData character, int metaMight = 0, int metaArmor = 0, int metaGreed = 0, int metaRevival = 0,
-            int metaMaxHealth = 0, int metaRecovery = 0)
+        /// <summary>Character stats plus the VS PowerUps bought in <paramref name="data"/> (none when null).</summary>
+        public static CharacterStatSheet Build(CharacterData character, SoulHunter.Core.Persistence.GameData data = null)
         {
             var sheet = new CharacterStatSheet
             {
@@ -59,13 +55,29 @@ namespace SoulHunter.Gameplay.Player
                 sheet.Greed = character.StartingGreed;
                 sheet.Curse = character.StartingCurse;
             }
-            sheet.Might += metaMight * MightPerMetaLevel;
-            sheet.Armor += metaArmor * ArmorPerMetaLevel;
-            sheet.Greed += metaGreed * GreedPerMetaLevel;
-            sheet.Revivals += metaRevival * RevivalsPerMetaLevel;
-            // VS PowerUps: Max Health x1.1 per rank (multiplied), Recovery +0.1 per rank.
-            sheet.MaxHealth = UnityEngine.Mathf.RoundToInt(sheet.MaxHealth * SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthMultiplier(metaMaxHealth));
-            sheet.Recovery += SoulHunter.Core.Persistence.MetaPowerUps.Recovery(metaRecovery);
+            if (data != null)
+            {
+                // The same VS PowerUp effects a run gets (PlayerStats.ApplyPowerUps, PlayerController for Max Health).
+                int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Rank(data, id);
+                float Bonus(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Bonus(id, Rank(id));
+                float omni = Bonus(SoulHunter.Core.Persistence.PowerUpId.Omni);
+                sheet.MaxHealth = UnityEngine.Mathf.RoundToInt(sheet.MaxHealth * SoulHunter.Core.Persistence.PowerUps.MaxHealthMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.MaxHealth)));
+                sheet.Might += Bonus(SoulHunter.Core.Persistence.PowerUpId.Might) + omni;
+                sheet.Armor += Rank(SoulHunter.Core.Persistence.PowerUpId.Armor);
+                sheet.Recovery += Bonus(SoulHunter.Core.Persistence.PowerUpId.Recovery);
+                sheet.Cooldown -= Bonus(SoulHunter.Core.Persistence.PowerUpId.Cooldown);
+                sheet.Area += Bonus(SoulHunter.Core.Persistence.PowerUpId.Area) + omni;
+                sheet.Speed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Speed) + omni;
+                sheet.Duration += Bonus(SoulHunter.Core.Persistence.PowerUpId.Duration) + omni;
+                sheet.Amount += Rank(SoulHunter.Core.Persistence.PowerUpId.Amount);
+                sheet.MoveSpeed += Bonus(SoulHunter.Core.Persistence.PowerUpId.MoveSpeed);
+                sheet.Magnet *= SoulHunter.Core.Persistence.PowerUps.MagnetMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.Magnet));
+                sheet.Luck += Bonus(SoulHunter.Core.Persistence.PowerUpId.Luck);
+                sheet.Growth += Bonus(SoulHunter.Core.Persistence.PowerUpId.Growth);
+                sheet.Greed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Greed);
+                sheet.Curse += Bonus(SoulHunter.Core.Persistence.PowerUpId.Curse);
+                sheet.Revivals += Rank(SoulHunter.Core.Persistence.PowerUpId.Revival);
+            }
             return sheet;
         }
 

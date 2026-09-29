@@ -79,10 +79,16 @@ namespace SoulHunter.Tests.EditMode
         {
             // Learning Comment: Select screen wahi stats dikhaye jin se run shuru hoga (character + power-ups).
             var isolde = Catalog("Isolde");
-            var sheet = CharacterStatSheet.Build(isolde, metaMight: 2, metaArmor: 1, metaGreed: 1, metaRevival: 1);
-            Assert.That(sheet.Might, Is.EqualTo(isolde.StartingMight + 0.2f).Within(0.001f));
+            // VS PowerUps (PowerUps page): Might +5% per rank, Armor +1, Greed +10%, Revival +1.
+            var bought = new SoulHunter.Core.Persistence.GameData();
+            SoulHunter.Core.Persistence.PowerUps.SetRank(bought, SoulHunter.Core.Persistence.PowerUpId.Might, 2);
+            SoulHunter.Core.Persistence.PowerUps.SetRank(bought, SoulHunter.Core.Persistence.PowerUpId.Armor, 1);
+            SoulHunter.Core.Persistence.PowerUps.SetRank(bought, SoulHunter.Core.Persistence.PowerUpId.Greed, 1);
+            SoulHunter.Core.Persistence.PowerUps.SetRank(bought, SoulHunter.Core.Persistence.PowerUpId.Revival, 1);
+            var sheet = CharacterStatSheet.Build(isolde, bought);
+            Assert.That(sheet.Might, Is.EqualTo(isolde.StartingMight + 0.1f).Within(0.001f));
             Assert.That(sheet.Armor, Is.EqualTo(isolde.StartingArmor + 1));
-            Assert.That(sheet.Greed, Is.EqualTo(isolde.StartingGreed + 0.2f).Within(0.001f));
+            Assert.That(sheet.Greed, Is.EqualTo(isolde.StartingGreed + 0.1f).Within(0.001f));
             Assert.That(sheet.Revivals, Is.EqualTo(1));
 
             var rows = sheet.DisplayRows().ToDictionary(r => r.Label);

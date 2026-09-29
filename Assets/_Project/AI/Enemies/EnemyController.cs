@@ -45,6 +45,22 @@ namespace SoulHunter.Gameplay.AI
         public int CrowdId => _crowdId != 0 ? _crowdId : (_crowdId = GetInstanceID());
 
         public bool IsSpectral => _isSpectral;
+
+        /// <summary>
+        /// VS Defang (Defang page): this life, the enemy cannot deal damage to the player, and it looks green unless the
+        /// "Show Defanged Enemies" option is off. Set by EnemySpawner for ordinary wave spawns; cleared on every spawn.
+        /// </summary>
+        public bool IsDefanged { get; private set; }
+
+        /// <summary>Soul Hunter's shade for a defanged enemy (VS: "a green appearance").</summary>
+        public static readonly Color DefangTint = new Color(0.55f, 1f, 0.55f, 1f);
+
+        public void SetDefanged(bool defanged)
+        {
+            IsDefanged = defanged;
+            var flash = GetComponentInChildren<SoulHunter.Gameplay.VFX.DamageFlash>();
+            if (flash != null) flash.SetTint(defanged && SoulHunter.Core.Persistence.GameSettings.ShowDefangedEnemies ? DefangTint : (Color?)null);
+        }
         /// <summary>A stage boss (set by EnemySpawner.SpawnBoss; bosses have their own pools). VS: immune to Pentagram.</summary>
         public bool IsStageBoss { get; set; }
         public SoulHunter.Gameplay.Data.EnemyData Data => _enemyData;
@@ -135,6 +151,7 @@ namespace SoulHunter.Gameplay.AI
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
             ResetFreezeResistance(); // Garlic's freeze-resistance reduction lasts one life too
             RestartAbilities();     // VS skills start again on every spawn (pooling-safe)
+            if (IsDefanged) SetDefanged(false); // Defang lasts one life
             if (Rigidbody != null)
             {
                 Rigidbody.linearVelocity = Vector3.zero;

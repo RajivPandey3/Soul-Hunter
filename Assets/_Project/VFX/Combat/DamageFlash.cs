@@ -28,6 +28,29 @@ namespace SoulHunter.Gameplay.VFX
         private MaterialPropertyBlock _propBlock;
         private float _flashTimer;
         private bool _isFlashing;
+        private Color? _tint;
+
+        /// <summary>
+        /// A lasting tint (VS Defang's green) that the flash returns to instead of the material's own colour; null clears it.
+        /// </summary>
+        public void SetTint(Color? tint)
+        {
+            _tint = tint;
+            if (!_isFlashing) ApplyRest();
+        }
+
+        private void ApplyRest()
+        {
+            if (_propBlock == null) _propBlock = new MaterialPropertyBlock();
+            _propBlock.Clear();
+            if (_tint.HasValue)
+            {
+                _propBlock.SetColor(BaseColorId, _tint.Value);
+                _propBlock.SetColor(ColorId, _tint.Value);
+            }
+            foreach (var target in _renderers)
+                if (target != null) target.SetPropertyBlock(_propBlock);
+        }
 
         private void Awake()
         {
@@ -118,12 +141,8 @@ namespace SoulHunter.Gameplay.VFX
         private void EndFlash()
         {
             _isFlashing = false;
-            // Clearing the block restores each material's own colour.
-            _propBlock.Clear();
-            foreach (var target in _renderers)
-            {
-                if (target != null) target.SetPropertyBlock(_propBlock);
-            }
+            // Back to the material's own colour, or to the lasting tint (Defang).
+            ApplyRest();
         }
     }
 }

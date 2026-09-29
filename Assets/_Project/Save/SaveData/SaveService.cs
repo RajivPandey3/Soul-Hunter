@@ -249,6 +249,22 @@ namespace SoulHunter.Core.Persistence
                 RenameAll(data.OwnedCharacters);
                 data.SaveVersion = 1;
             }
+            if (data.SaveVersion < 2)
+            {
+                // v1 -> v2 (owner, 2026-09-30: "Refund all"): the old fixed-price shop is replaced by the VS PowerUps.
+                // Like VS's Refund button, every old level's price comes back as gold and the VS shop starts at 0.
+                int refund = System.Math.Max(0, data.MetaMightLevel) * PowerUps.OldMightPrice
+                             + System.Math.Max(0, data.MetaArmorLevel) * PowerUps.OldArmorPrice
+                             + System.Math.Max(0, data.MetaGreedLevel) * PowerUps.OldGreedPrice
+                             + System.Math.Max(0, data.MetaRevivalLevel) * PowerUps.OldRevivalPrice
+                             + System.Math.Max(0, data.MetaMaxHealthLevel) * PowerUps.OldMaxHealthPrice
+                             + System.Math.Max(0, data.MetaRecoveryLevel) * PowerUps.OldRecoveryPrice;
+                if (refund > 0) Debug.Log($"[SaveService] Old power-ups refunded for the VS PowerUp shop: +{refund} gold.");
+                data.Currency = System.Math.Max(0, data.Currency) + refund;
+                data.MetaMightLevel = data.MetaArmorLevel = data.MetaGreedLevel = data.MetaRevivalLevel = 0;
+                data.MetaMaxHealthLevel = data.MetaRecoveryLevel = 0;
+                data.SaveVersion = 2;
+            }
             if (data.SaveVersion > GameData.CurrentVersion)
                 Debug.LogWarning($"[SaveService] Save version {data.SaveVersion} is newer than this build ({GameData.CurrentVersion}).");
 
@@ -268,8 +284,15 @@ namespace SoulHunter.Core.Persistence
             data.MetaArmorLevel = Mathf.Max(0, data.MetaArmorLevel);
             data.MetaGreedLevel = Mathf.Max(0, data.MetaGreedLevel);
             data.MetaRevivalLevel = Mathf.Max(0, data.MetaRevivalLevel);
-            data.MetaMaxHealthLevel = Mathf.Clamp(data.MetaMaxHealthLevel, 0, MetaPowerUps.MaxHealthRanks);
-            data.MetaRecoveryLevel = Mathf.Clamp(data.MetaRecoveryLevel, 0, MetaPowerUps.RecoveryRanks);
+            data.MetaMaxHealthLevel = Mathf.Max(0, data.MetaMaxHealthLevel);
+            data.MetaRecoveryLevel = Mathf.Max(0, data.MetaRecoveryLevel);
+            // VS PowerUps: known ids only, one entry each, ranks within the VS limits.
+            data.PowerUpRanks ??= new System.Collections.Generic.List<PowerUpRank>();
+            var seen = new System.Collections.Generic.HashSet<string>();
+            data.PowerUpRanks.RemoveAll(r => r == null || !System.Enum.TryParse(r.Id, out PowerUpId _) || !seen.Add(r.Id));
+            foreach (var r in data.PowerUpRanks)
+                r.Rank = Mathf.Clamp(r.Rank, 0, PowerUps.Info((PowerUpId)System.Enum.Parse(typeof(PowerUpId), r.Id)).MaxRank);
+            data.PowerUpRanks.RemoveAll(r => r.Rank == 0);
             data.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
             data.FiveItemChestsOpened = Mathf.Max(0, data.FiveItemChestsOpened);
             // Run mode toggles (ModeHurry ... ModeLimitBreak) need no step: a save without them loads them as off, which

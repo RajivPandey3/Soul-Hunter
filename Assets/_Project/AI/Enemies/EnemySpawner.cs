@@ -219,10 +219,10 @@ namespace SoulHunter.Gameplay.AI
                     {
                         // VS wiki (Enemies, Waves): above the minimum, each tick sends one of each of the wave's types.
                         foreach (var type in phase.EnemyTypes)
-                            if (EnemyController.ActiveEnemies.Count < _maxAliveEnemies) GivePendingChest(SpawnEnemy(type));
+                            if (EnemyController.ActiveEnemies.Count < _maxAliveEnemies) GivePendingChest(Defang(SpawnEnemy(type)));
                     }
                     else
-                        for (int i = 0; i < spawnCount; i++) GivePendingChest(SpawnEnemy(PickSwarmPrefab(level, phase)));
+                        for (int i = 0; i < spawnCount; i++) GivePendingChest(Defang(SpawnEnemy(PickSwarmPrefab(level, phase))));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
                     // VS rule: Curse makes enemies arrive more often.
                     _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (CurrentCurse() * RunModes.SpawnMultiplier));
@@ -230,9 +230,11 @@ namespace SoulHunter.Gameplay.AI
 
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
-                int missing = Mathf.Min(Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier), _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
+                // VS: Curse raises the wave quantity, and Charm adds a flat number after it (Curse and Charm pages).
+                int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier * CurrentCurse()) + CurrentCharm();
+                int missing = Mathf.Min(wanted, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
-                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(SpawnEnemy(NextWavePrefab(level, phase)));
+                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnEnemy(NextWavePrefab(level, phase))));
             }
         }
 
@@ -497,6 +499,28 @@ namespace SoulHunter.Gameplay.AI
             if (_playerStats == null || _playerStats.transform != _playerTransform)
                 _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
             return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
+        }
+
+        /// <summary>VS Charm: enemies added to every wave.</summary>
+        private int CurrentCharm()
+        {
+            CurrentCurse(); // resolves _playerStats
+            return _playerStats != null ? Mathf.Max(0, _playerStats.Charm) : 0;
+        }
+
+        /// <summary>
+        /// VS Defang: a share of each wave's spawned enemies cannot deal damage (green). Only ordinary wave spawns: wave
+        /// bosses (chest elites), stage bosses and event enemies are never defanged (Defang page).
+        /// </summary>
+        private GameObject Defang(GameObject enemy)
+        {
+            if (enemy == null) return null;
+            var controller = enemy.GetComponent<EnemyController>();
+            if (controller == null) return enemy;
+            CurrentCurse(); // resolves _playerStats
+            float chance = _playerStats != null ? _playerStats.Defang : 0f;
+            controller.SetDefanged(chance > 0f && Random.value < chance);
+            return enemy;
         }
 
         /// <summary>The player's Luck (1 = none). VS: Luck lowers the chance of map events.</summary>

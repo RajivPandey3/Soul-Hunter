@@ -15,22 +15,22 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void MaxHealthPowerUp_Multiplies_ByTenPercentPerRank_UpToThree()
         {
-            Assert.That(MetaPowerUps.MaxHealthMultiplier(0), Is.EqualTo(1f));
-            Assert.That(MetaPowerUps.MaxHealthMultiplier(1), Is.EqualTo(1.1f).Within(1e-5));
-            Assert.That(MetaPowerUps.MaxHealthMultiplier(2), Is.EqualTo(1.21f).Within(1e-5));
-            Assert.That(MetaPowerUps.MaxHealthMultiplier(3), Is.EqualTo(1.331f).Within(1e-5), "VS: +33.1% at rank 3.");
-            Assert.That(MetaPowerUps.MaxHealthMultiplier(9), Is.EqualTo(1.331f).Within(1e-5), "Never past rank 3.");
-            Assert.That(MetaPowerUps.MaxHealthPrice, Is.EqualTo(200));
+            Assert.That(PowerUps.MaxHealthMultiplier(0), Is.EqualTo(1f));
+            Assert.That(PowerUps.MaxHealthMultiplier(1), Is.EqualTo(1.1f).Within(1e-5));
+            Assert.That(PowerUps.MaxHealthMultiplier(2), Is.EqualTo(1.21f).Within(1e-5));
+            Assert.That(PowerUps.MaxHealthMultiplier(3), Is.EqualTo(1.331f).Within(1e-5), "VS: +33.1% at rank 3.");
+            Assert.That(PowerUps.MaxHealthMultiplier(9), Is.EqualTo(1.331f).Within(1e-5), "Never past rank 3.");
+            Assert.That(PowerUps.Info(PowerUpId.MaxHealth).InitialPrice, Is.EqualTo(200));
         }
 
         [Test]
         public void RecoveryPowerUp_GivesATenthPerRank_UpToHalf()
         {
-            Assert.That(MetaPowerUps.Recovery(0), Is.EqualTo(0f));
-            Assert.That(MetaPowerUps.Recovery(3), Is.EqualTo(0.3f).Within(1e-5));
-            Assert.That(MetaPowerUps.Recovery(5), Is.EqualTo(0.5f).Within(1e-5));
-            Assert.That(MetaPowerUps.Recovery(8), Is.EqualTo(0.5f).Within(1e-5), "VS: max 0.5.");
-            Assert.That(MetaPowerUps.RecoveryPrice, Is.EqualTo(200));
+            Assert.That(PowerUps.Bonus(PowerUpId.Recovery, 0), Is.EqualTo(0f));
+            Assert.That(PowerUps.Bonus(PowerUpId.Recovery, 3), Is.EqualTo(0.3f).Within(1e-5));
+            Assert.That(PowerUps.Bonus(PowerUpId.Recovery, 5), Is.EqualTo(0.5f).Within(1e-5));
+            Assert.That(PowerUps.Bonus(PowerUpId.Recovery, 8), Is.EqualTo(0.5f).Within(1e-5), "VS: max 0.5.");
+            Assert.That(PowerUps.Info(PowerUpId.Recovery).InitialPrice, Is.EqualTo(200));
         }
 
         [Test]
@@ -44,7 +44,10 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void TheSelectScreen_ShowsTheHealingPowerUps()
         {
-            var sheet = CharacterStatSheet.Build(null, metaMaxHealth: 3, metaRecovery: 5);
+            var data = new GameData();
+            PowerUps.SetRank(data, PowerUpId.MaxHealth, 3);
+            PowerUps.SetRank(data, PowerUpId.Recovery, 5);
+            var sheet = CharacterStatSheet.Build(null, data);
             Assert.That(sheet.MaxHealth, Is.EqualTo(133));
             Assert.That(sheet.Recovery, Is.EqualTo(0.5f).Within(1e-5));
         }

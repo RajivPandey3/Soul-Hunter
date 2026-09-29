@@ -1,45 +1,64 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using SoulHunter.Core.Persistence;
 using SoulHunter.Core.Services;
+using UpgradeType = SoulHunter.Gameplay.Combat.UpgradeData.UpgradeType;
 
 namespace SoulHunter.UI
 {
     /// <summary>
-    /// Learning Comment:
-    /// VS Rule: Power-Up Menu. 
-    /// Yeh Main Menu ki wo screen hai jahan player apne kamaye hue Gold se hamesha (permanent) rehne wale stats kharidta hai.
-    /// In upgrades se player agle har run mein shuru se hi taqatwar hota hai.
+    /// The VS PowerUps screen (owner, 2026-09-30: "everwhere follow DOT VS ONLY"; vampire.survivors.wiki/w/PowerUps):
+    /// every PowerUp in the wiki's order as a grid of cells (icon, name, rank), an info box with the selected PowerUp's
+    /// description, rank and VS price, a Buy button, and VS's "Refund PowerUps" button. Built at runtime inside the scene's
+    /// PowerUp_Panel from a copy of an existing button, so the MainMenu scene is not edited; the old four-button grid is
+    /// hidden. Icons: VS PowerUps show the matching passive item, so each uses Soul Hunter's passive of the same stat
+    /// where one exists (none for Greed, Omni, Charm, Defang, Reroll, Skip, Banish, Preserve).
     /// </summary>
     public class PowerUpMenuUI : MonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private TextMeshProUGUI _goldText;
-        
-        [Header("Power-Up Buttons")]
+
+        [Header("Old buttons (hidden; the VS grid replaces them)")]
         [SerializeField] private Button _buyMightButton;
         [SerializeField] private Button _buyArmorButton;
         [SerializeField] private Button _buyGreedButton;
         [SerializeField] private Button _buyRevivalButton;
 
-        [Header("Prices")]
+        [Header("Old prices (unused since 2026-09-30; the v2 save migration refunds them)")]
         [SerializeField] private int _mightPrice = 500;
         [SerializeField] private int _armorPrice = 300;
         [SerializeField] private int _greedPrice = 400;
         [SerializeField] private int _revivalPrice = 1000;
 
-        // VS healing PowerUps (heal balance pass, 2026-09-29): built at runtime from a copy of an existing button, so the
-        // menu scene is not edited. Max Health 3 ranks, Recovery 5 ranks (MetaPowerUps).
-        private Button _buyMaxHealthButton;
-        private Button _buyRecoveryButton;
+        private static readonly Dictionary<PowerUpId, UpgradeType> IconItem = new Dictionary<PowerUpId, UpgradeType>
+        {
+            { PowerUpId.Might, UpgradeType.Spinach }, { PowerUpId.Armor, UpgradeType.Armor }, { PowerUpId.MaxHealth, UpgradeType.MaxHealth },
+            { PowerUpId.Recovery, UpgradeType.Pummarola }, { PowerUpId.Cooldown, UpgradeType.EmptyTome }, { PowerUpId.Area, UpgradeType.Candelabrador },
+            { PowerUpId.Speed, UpgradeType.Bracer }, { PowerUpId.Duration, UpgradeType.Spellbinder }, { PowerUpId.Amount, UpgradeType.Duplicator },
+            { PowerUpId.MoveSpeed, UpgradeType.PlayerSpeed }, { PowerUpId.Magnet, UpgradeType.Attractorb }, { PowerUpId.Luck, UpgradeType.Clover },
+            { PowerUpId.Growth, UpgradeType.Crown }, { PowerUpId.Curse, UpgradeType.SkullOManiac }, { PowerUpId.Revival, UpgradeType.Tiragisu },
+        };
 
-        /// <summary>The Max Health and Recovery buttons (tests).</summary>
-        public Button MaxHealthButton => _buyMaxHealthButton;
-        public Button RecoveryButton => _buyRecoveryButton;
+        private static readonly Color PlainCell = new Color(0.13f, 0.1f, 0.13f, 0.92f), SelectedCell = new Color(0.62f, 0.4f, 0.08f, 0.95f),
+            MaxedCell = new Color(0.12f, 0.32f, 0.14f, 0.92f);
 
         private EconomyService _economy;
-        private SoulHunter.Core.Persistence.SaveService _saveService;
+        private SaveService _saveService;
         private bool _listenersBound;
+        private readonly Dictionary<PowerUpId, Button> _cells = new Dictionary<PowerUpId, Button>();
+        private TextMeshProUGUI _info;
+        private Button _buyButton, _refundButton;
+        private PowerUpId _selected = PowerUpId.Might;
+
+        /// <summary>The grid cell of a PowerUp (tests).</summary>
+        public Button CellFor(PowerUpId id) => _cells.TryGetValue(id, out var cell) ? cell : null;
+        public Button BuyButton => _buyButton;
+        public Button RefundButton => _refundButton;
+        public PowerUpId Selected => _selected;
+        public string InfoText => _info != null ? _info.text : "";
 
         private void Start()
         {
@@ -48,144 +67,179 @@ namespace SoulHunter.UI
                 GameServices.Instance.TryGet(out _economy);
                 GameServices.Instance.TryGet(out _saveService);
             }
-
-            // Button Listeners
-            if (_buyMightButton) _buyMightButton.onClick.AddListener(() => BuyPowerUp("Might", _mightPrice));
-            if (_buyArmorButton) _buyArmorButton.onClick.AddListener(() => BuyPowerUp("Armor", _armorPrice));
-            if (_buyGreedButton) _buyGreedButton.onClick.AddListener(() => BuyPowerUp("Greed", _greedPrice));
-            if (_buyRevivalButton) _buyRevivalButton.onClick.AddListener(() => BuyPowerUp("Revival", _revivalPrice));
-            BuildHealingButtons();
-            if (_buyMaxHealthButton) _buyMaxHealthButton.onClick.AddListener(() => BuyPowerUp("MaxHealth", SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthPrice));
-            if (_buyRecoveryButton) _buyRecoveryButton.onClick.AddListener(() => BuyPowerUp("Recovery", SoulHunter.Core.Persistence.MetaPowerUps.RecoveryPrice));
-
+            BuildShop();
             if (_economy != null)
             {
                 _economy.OnGoldChanged += HandleGoldChanged;
                 _listenersBound = true;
             }
-
             UpdateUI();
         }
 
-        private void HandleGoldChanged(int _) { UpdateUI(); }
+        private void HandleGoldChanged(int _) => UpdateUI();
 
         private void OnDestroy()
         {
             if (_listenersBound && _economy != null) _economy.OnGoldChanged -= HandleGoldChanged;
-            if (_buyMightButton) _buyMightButton.onClick.RemoveAllListeners();
-            if (_buyArmorButton) _buyArmorButton.onClick.RemoveAllListeners();
-            if (_buyGreedButton) _buyGreedButton.onClick.RemoveAllListeners();
-            if (_buyRevivalButton) _buyRevivalButton.onClick.RemoveAllListeners();
-            if (_buyMaxHealthButton) _buyMaxHealthButton.onClick.RemoveAllListeners();
-            if (_buyRecoveryButton) _buyRecoveryButton.onClick.RemoveAllListeners();
         }
 
-        private void BuildHealingButtons()
+        private void BuildShop()
         {
             Button template = null;
-            foreach (var candidate in new[] { _buyRevivalButton, _buyGreedButton, _buyArmorButton, _buyMightButton })
+            foreach (var candidate in new[] { _buyMightButton, _buyArmorButton, _buyGreedButton, _buyRevivalButton })
                 if (candidate != null) { template = candidate; break; }
-            if (template == null || _buyMaxHealthButton != null) return;
-            var existing = new[] { _buyMightButton, _buyArmorButton, _buyGreedButton, _buyRevivalButton };
-            var layout = template.transform.parent != null ? template.transform.parent.GetComponent<LayoutGroup>() : null;
-            var templateRect = (RectTransform)template.transform;
-            float lowest = float.MaxValue;
-            foreach (var b in existing)
-                if (b != null) lowest = Mathf.Min(lowest, ((RectTransform)b.transform).anchoredPosition.y);
-            float step = templateRect.rect.height + 12f;
-            _buyMaxHealthButton = CopyButton(template, "Buy_MaxHealth", layout, lowest - step);
-            _buyRecoveryButton = CopyButton(template, "Buy_Recovery", layout, lowest - step * 2f);
+            if (template == null) return;
+            var oldGrid = template.transform.parent;
+            var panel = oldGrid != null && oldGrid.parent != null ? (RectTransform)oldGrid.parent : (RectTransform)transform;
+            foreach (var old in new[] { _buyMightButton, _buyArmorButton, _buyGreedButton, _buyRevivalButton })
+                if (old != null) old.gameObject.SetActive(false);
+            if (oldGrid != null && oldGrid != panel) oldGrid.gameObject.SetActive(false);
+
+            // The grid: the wiki's order, 6 across.
+            var grid = new GameObject("VS_PowerUpGrid", typeof(RectTransform)).GetComponent<RectTransform>();
+            grid.SetParent(panel, false);
+            Anchor(grid, 0.06f, 0.37f, 0.94f, 0.9f);
+            var layout = grid.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2(250f, 136f);
+            layout.spacing = new Vector2(10f, 10f);
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 6;
+            layout.childAlignment = TextAnchor.UpperCenter;
+            foreach (var info in PowerUps.All)
+            {
+                var id = info.Id;
+                var cell = Instantiate(template, grid);
+                cell.name = "PowerUp_" + id;
+                cell.gameObject.SetActive(true);
+                cell.onClick.RemoveAllListeners();
+                cell.onClick.AddListener(() => Select(id));
+                AddIcon(cell, id);
+                _cells[id] = cell;
+            }
+
+            var infoGo = new GameObject("VS_PowerUpInfo", typeof(RectTransform));
+            infoGo.transform.SetParent(panel, false);
+            Anchor((RectTransform)infoGo.transform, 0.06f, 0.2f, 0.6f, 0.35f);
+            _info = infoGo.AddComponent<TextMeshProUGUI>();
+            var font = template.GetComponentInChildren<TextMeshProUGUI>();
+            if (font != null) _info.font = font.font;
+            _info.fontSize = 28f;
+            _info.alignment = TextAlignmentOptions.TopLeft;
+            _info.color = Color.white;
+
+            _buyButton = MakeButton(template, panel, "VS_Buy", "Buy", 0.62f, 0.24f, 0.77f, 0.34f, BuySelected);
+            _refundButton = MakeButton(template, panel, "VS_Refund", "Refund PowerUps", 0.79f, 0.24f, 0.94f, 0.34f, Refund);
+            if (_goldText != null) Anchor(_goldText.rectTransform, 0.06f, 0.12f, 0.45f, 0.19f);
         }
 
-        private static Button CopyButton(Button template, string name, LayoutGroup layout, float y)
+        private static void Anchor(RectTransform rect, float xMin, float yMin, float xMax, float yMax)
         {
-            var copy = Instantiate(template, template.transform.parent);
-            copy.name = name;
-            copy.onClick.RemoveAllListeners();
-            if (layout == null)
-            {
-                var rect = (RectTransform)copy.transform;
-                rect.anchoredPosition = new Vector2(((RectTransform)template.transform).anchoredPosition.x, y);
-            }
-            return copy;
+            rect.anchorMin = new Vector2(xMin, yMin);
+            rect.anchorMax = new Vector2(xMax, yMax);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
         }
 
-        private void BuyPowerUp(string type, int price)
+        private static Button MakeButton(Button template, RectTransform panel, string name, string label, float xMin, float yMin, float xMax, float yMax,
+            UnityEngine.Events.UnityAction action)
         {
-            if (_economy == null || _saveService == null) return;
-            // VS rank limits for the healing PowerUps.
-            if (type == "MaxHealth" && _saveService.CurrentData.MetaMaxHealthLevel >= SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthRanks) return;
-            if (type == "Recovery" && _saveService.CurrentData.MetaRecoveryLevel >= SoulHunter.Core.Persistence.MetaPowerUps.RecoveryRanks) return;
+            var button = Instantiate(template, panel);
+            button.name = name;
+            button.gameObject.SetActive(true);
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(action);
+            Anchor((RectTransform)button.transform, xMin, yMin, xMax, yMax);
+            var text = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (text != null) text.text = label;
+            return button;
+        }
 
-            // Kya player ke paas itne paise hain?
-            if (_economy.SpendGold(price))
-            {
-                // Paise the, kharid liya! Ab data update karo
-                switch (type)
-                {
-                    case "Might": _saveService.CurrentData.MetaMightLevel++; break;
-                    case "Armor": _saveService.CurrentData.MetaArmorLevel++; break;
-                    case "Greed": _saveService.CurrentData.MetaGreedLevel++; break;
-                    case "Revival": _saveService.CurrentData.MetaRevivalLevel++; break;
-                    case "MaxHealth": _saveService.CurrentData.MetaMaxHealthLevel++; break;
-                    case "Recovery": _saveService.CurrentData.MetaRecoveryLevel++; break;
-                }
-                
-                _saveService.SaveGame();
-                UpdateUI();
-                
-                if (SoulHunter.Gameplay.Audio.AudioManager.Instance != null)
-                {
-                    SoulHunter.Gameplay.Audio.AudioManager.Instance.PlaySFX(SoulHunter.Gameplay.Audio.AudioManager.Instance.LevelUpSound);
-                }
-                Debug.Log($"[PowerUpMenu] Successfully bought {type}! New Gold: {_economy.CurrentGold}");
-            }
-            else
-            {
-                Debug.Log("[PowerUpMenu] Not enough gold!");
-                // Yahan error sound baja sakte hain
-            }
+        private static void AddIcon(Button cell, PowerUpId id)
+        {
+            var label = cell.GetComponentInChildren<TextMeshProUGUI>();
+            // No icon: keep the text off the cell's edge.
+            if (label != null) label.rectTransform.offsetMin = new Vector2(16f, label.rectTransform.offsetMin.y);
+            if (!IconItem.TryGetValue(id, out var item)) return;
+            var definition = SoulHunter.Gameplay.Data.WeaponDefinitionLookup.Find(item);
+            if (definition == null || definition.Icon == null) return;
+            var iconGo = new GameObject("Icon", typeof(RectTransform));
+            iconGo.transform.SetParent(cell.transform, false);
+            var rect = (RectTransform)iconGo.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
+            rect.pivot = new Vector2(0f, 0.5f);
+            rect.anchoredPosition = new Vector2(10f, 0f);
+            rect.sizeDelta = new Vector2(56f, 56f);
+            var image = iconGo.AddComponent<Image>();
+            image.sprite = definition.Icon;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            var text = cell.GetComponentInChildren<TextMeshProUGUI>();
+            if (text != null) { text.rectTransform.offsetMin = new Vector2(70f, text.rectTransform.offsetMin.y); }
+        }
+
+        /// <summary>Shows a PowerUp in the info box (a click on its cell).</summary>
+        public void Select(PowerUpId id)
+        {
+            _selected = id;
+            UpdateUI();
+        }
+
+        /// <summary>VS: buys the next rank of the selected PowerUp at its current price, if affordable and not maxed.</summary>
+        public void BuySelected()
+        {
+            var data = _saveService != null ? _saveService.CurrentData : null;
+            if (_economy == null || data == null || PowerUps.IsMaxed(data, _selected)) return;
+            int price = PowerUps.Price(data, _selected);
+            if (!_economy.SpendGold(price)) { Debug.Log("[PowerUpMenu] Not enough gold!"); return; }
+            PowerUps.SetRank(data, _selected, PowerUps.Rank(data, _selected) + 1);
+            _saveService.SaveGame();
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFX(audio.LevelUpSound);
+            UpdateUI();
+        }
+
+        /// <summary>VS "Refund PowerUps": every rank comes off and its gold comes back.</summary>
+        public void Refund()
+        {
+            var data = _saveService != null ? _saveService.CurrentData : null;
+            if (_economy == null || data == null || PowerUps.TotalBought(data) == 0) return;
+            int value = PowerUps.RefundValue(data);
+            data.PowerUpRanks.Clear();
+            _economy.AddGold(value);
+            _saveService.SaveGame();
+            UpdateUI();
         }
 
         private void UpdateUI()
         {
-            if (_economy != null && _goldText != null)
+            var data = _saveService != null ? _saveService.CurrentData : null;
+            if (_economy != null && _goldText != null) _goldText.text = $"Gold: {_economy.CurrentGold}";
+            foreach (var pair in _cells)
             {
-                _goldText.text = $"Gold: {_economy.CurrentGold}";
+                var info = PowerUps.Info(pair.Key);
+                int rank = PowerUps.Rank(data, pair.Key);
+                var text = pair.Value.GetComponentInChildren<TextMeshProUGUI>();
+                if (text != null)
+                {
+                    text.fontSize = 24f;
+                    text.color = Color.white;
+                    text.alignment = TextAlignmentOptions.MidlineLeft;
+                    text.text = $"{info.Name}\n{rank}/{info.MaxRank}";
+                }
+                // Dark cells so the white names read on the menu art; gold for the selected one, green once maxed.
+                pair.Value.image.color = pair.Key == _selected ? SelectedCell : (rank >= info.MaxRank ? MaxedCell : PlainCell);
             }
-
-            // VS Style: Jab level barh jaye toh price mehngi ho jati hai (optional complexity)
-            // Abhi ke liye buttons par Levels dikhate hain
-            if (_saveService != null)
+            if (_info != null)
             {
-                UpdateButtonText(_buyMightButton, "Might", _mightPrice, _saveService.CurrentData.MetaMightLevel);
-                UpdateButtonText(_buyArmorButton, "Armor", _armorPrice, _saveService.CurrentData.MetaArmorLevel);
-                UpdateButtonText(_buyGreedButton, "Greed", _greedPrice, _saveService.CurrentData.MetaGreedLevel);
-                UpdateButtonText(_buyRevivalButton, "Revival", _revivalPrice, _saveService.CurrentData.MetaRevivalLevel);
-                UpdateRankedButton(_buyMaxHealthButton, "Max Health +10%", SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthPrice,
-                    _saveService.CurrentData.MetaMaxHealthLevel, SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthRanks);
-                UpdateRankedButton(_buyRecoveryButton, "Recovery +0.1/s", SoulHunter.Core.Persistence.MetaPowerUps.RecoveryPrice,
-                    _saveService.CurrentData.MetaRecoveryLevel, SoulHunter.Core.Persistence.MetaPowerUps.RecoveryRanks);
+                var info = PowerUps.Info(_selected);
+                int rank = PowerUps.Rank(data, _selected);
+                bool maxed = rank >= info.MaxRank;
+                string price = maxed ? "MAX" : $"Price: {PowerUps.Price(data, _selected)}";
+                _info.text = $"<b>{info.Name}</b>  {rank}/{info.MaxRank}\n{info.Description}\n{price}";
             }
-        }
-
-        private void UpdateRankedButton(Button btn, string name, int price, int level, int maxLevel)
-        {
-            if (btn == null) return;
-            bool maxed = level >= maxLevel;
-            btn.interactable = !maxed;
-            var txt = btn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = maxed ? $"{name} Lvl {level}/{maxLevel}\nMAX" : $"{name} Lvl {level}/{maxLevel}\nCost: {price}";
-        }
-
-        private void UpdateButtonText(Button btn, string name, int price, int level)
-        {
-            if (btn == null) return;
-            var txt = btn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null)
-            {
-                txt.text = $"{name} Lvl {level}\nCost: {price}";
-            }
+            if (_buyButton != null)
+                _buyButton.interactable = data != null && !PowerUps.IsMaxed(data, _selected) && _economy != null && _economy.CurrentGold >= PowerUps.Price(data, _selected);
+            if (_refundButton != null) _refundButton.interactable = data != null && PowerUps.TotalBought(data) > 0;
         }
     }
 }

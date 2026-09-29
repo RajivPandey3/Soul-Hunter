@@ -44,19 +44,52 @@ namespace SoulHunter.Gameplay.Player
             if (SoulHunter.Core.Services.GameServices.Instance != null)
             {
                 var saveService = SoulHunter.Core.Services.GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
-                if (saveService != null && saveService.CurrentData != null)
-                {
-                    Might += saveService.CurrentData.MetaMightLevel * CharacterStatSheet.MightPerMetaLevel;
-                    Armor += saveService.CurrentData.MetaArmorLevel * CharacterStatSheet.ArmorPerMetaLevel;
-                    Greed += saveService.CurrentData.MetaGreedLevel * CharacterStatSheet.GreedPerMetaLevel;
-                    Revivals += saveService.CurrentData.MetaRevivalLevel * CharacterStatSheet.RevivalsPerMetaLevel;
-                    Debug.Log("[PlayerStats] Meta Progression Loaded! Player is stronger.");
-                }
+                if (saveService != null && saveService.CurrentData != null) ApplyPowerUps(saveService.CurrentData);
             }
             // VS Inverse mode: +20% Luck for the run, once. RunModes is filled from the save in
             // LevelProgressionManager.Awake, before any Start of the gameplay scene.
             RunModeLuckApplied = SoulHunter.Gameplay.Data.RunModes.LuckBonus;
             if (RunModeLuckApplied > 0f) AddLuck(RunModeLuckApplied);
+            SyncArmor();
+        }
+
+        /// <summary>VS Charm: enemies added to every wave (flat, after Curse).</summary>
+        public int Charm { get; private set; }
+        /// <summary>VS Defang: share of spawned wave enemies that cannot deal damage (0-0.15).</summary>
+        public float Defang { get; private set; }
+        /// <summary>VS Preserve: chance that a Reroll, Skip or Banish is kept after use (0-0.5).</summary>
+        public float Preserve { get; private set; }
+
+        /// <summary>
+        /// The VS PowerUps bought (PowerUps; every value from vampire.survivors.wiki/w/PowerUps and each PowerUp's page).
+        /// Max Health is applied by PlayerController (it sits on HealthController) and Reroll/Skip/Banish by LevelUpManager.
+        /// </summary>
+        public void ApplyPowerUps(SoulHunter.Core.Persistence.GameData data)
+        {
+            if (data == null) return;
+            int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Rank(data, id);
+            float Bonus(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Bonus(id, Rank(id));
+            Might += Bonus(SoulHunter.Core.Persistence.PowerUpId.Might);
+            Armor += Rank(SoulHunter.Core.Persistence.PowerUpId.Armor);
+            Regen += Bonus(SoulHunter.Core.Persistence.PowerUpId.Recovery);
+            Cooldown = Mathf.Max(0.1f, Cooldown - Bonus(SoulHunter.Core.Persistence.PowerUpId.Cooldown));
+            Area += Bonus(SoulHunter.Core.Persistence.PowerUpId.Area);
+            ProjectileSpeed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Speed);
+            Duration += Bonus(SoulHunter.Core.Persistence.PowerUpId.Duration);
+            Amount += Rank(SoulHunter.Core.Persistence.PowerUpId.Amount);
+            MoveSpeedMultiplier += Bonus(SoulHunter.Core.Persistence.PowerUpId.MoveSpeed);
+            Magnet *= SoulHunter.Core.Persistence.PowerUps.MagnetMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.Magnet));
+            Luck += Bonus(SoulHunter.Core.Persistence.PowerUpId.Luck);
+            ExpBonus += Bonus(SoulHunter.Core.Persistence.PowerUpId.Growth);
+            Greed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Greed);
+            Curse += Bonus(SoulHunter.Core.Persistence.PowerUpId.Curse);
+            Revivals += Rank(SoulHunter.Core.Persistence.PowerUpId.Revival);
+            // Omni: Might, Projectile Speed, Duration and Area +2% per rank.
+            float omni = Bonus(SoulHunter.Core.Persistence.PowerUpId.Omni);
+            Might += omni; ProjectileSpeed += omni; Duration += omni; Area += omni;
+            Charm += Mathf.RoundToInt(Bonus(SoulHunter.Core.Persistence.PowerUpId.Charm));
+            Defang += Bonus(SoulHunter.Core.Persistence.PowerUpId.Defang);
+            Preserve += Bonus(SoulHunter.Core.Persistence.PowerUpId.Preserve);
             SyncArmor();
         }
 
