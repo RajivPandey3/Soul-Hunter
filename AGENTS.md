@@ -38,6 +38,13 @@ Owner rule (2026-09-28): every Soul Hunter task, however small, is based 0–100
 
 Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT implementation (section 10) of the VS rule, and VS only. Where the wiki gives a number or rule, use it; "provisional" Soul Hunter numbers are not acceptable there. Where the wiki is silent, say so and ask the owner. Owner decisions and the owner's story above still come first.
 
+**Owner core rule (2026-09-30, the definition of Soul Hunter):** "SH = VS + my own story + own audio, own VFX, own assets, own UI, etc. Everything should be own, but the core logic of VS must be adopted top to bottom (DOT). No mistakes. If a VS rule has to change a little, 5% is allowed."
+- **From VS, top to bottom:** every rule, number, formula, timing, flow and system (stats, weapons, evolutions, level-ups, enemies, waves, pickups, chests, stages, modes, menus and what they do). Nothing is left out without a reason recorded here.
+- **Soul Hunter's own:** story, names, text, characters, art, models, VFX, audio, music and the UI's look. Never VS assets, names or text.
+- **5% rule (my reading, pending the owner's confirmation):** a VS number may be tuned by at most ±5% of its wiki value, and every such change is recorded with the wiki value next to it. Bigger or structural changes need an explicit owner decision. Approved owner decisions in section 5 stay as the recorded exceptions: one 10-stage run, no Reaper, Level 3/7/10, nearest-enemy aiming, dash and Soul Burst from the GDD.
+- **No mistakes:** each rule is re-checked against the raw wiki page and the code before it is built, then proven with tests and editor play. When the wiki is silent or contradicts itself, stop and ask the owner; never guess.
+- The full VS rule list and the gaps are in `Docs/VS_DOT_Table.md`; the work order is in `Docs/VS_DOT_Plan.md`.
+
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 
 ---
