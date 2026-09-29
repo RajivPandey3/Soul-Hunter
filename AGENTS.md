@@ -1098,6 +1098,29 @@ Validation:
     - blood off (`-67`): only 3,804 kills; average 35.9, minimum 30.
     - The editor runs are too noisy to measure the saving; only a build benchmark at a high kill rate can (`P` unverified).
   - Stage 1 (`-68`): 0 errors, minimum 68 FPS.
+- **Build benchmark** (owner: "build benchmark bhi chalao", 2026-09-29):
+  - Setup: Windows build on the reference laptop (i5-8350U, UHD 620), Medium, 1366x768 window rendered at 1080p's pixel count, V-Sync off.
+  - Built in the isolated copy to `D:/SoulHunter-Validation/run-20260929-bloodbench/build*/`; `D:\Unity Builds\SoulHunter` untouched.
+  - New `PerformanceBenchmark` options:
+    - `-sh-benchmark-level N`: start the hero at level N, for a high kill rate.
+    - `-sh-benchmark-no-blood`: Disable Blood on.
+    - `-sh-benchmark-blood-ab`: the same hero measures each late segment with blood, without, then with it again.
+    - Each segment now also records its kills.
+  - **Separate runs cannot compare blood.** The level-up picks are random, so loadouts and kill rates differ. In the first level-60 runs, the blood-on heroes drew Pentagram and Santa Water and killed 4–5× more (3,800–4,800 against 1,065–1,140 in the Stage 1 late segment), which swamped any blood cost.
+  - Level-1 hero (first build: the level option did not apply, the blood switch did), Stage 10 at 20:30, about 290 enemies:
+    - blood on, 3 runs: 60.8 / 75.8 / 64.5 FPS average, 1% low 33.7 / 46.3 / 34.5;
+    - blood off, 2 runs: 74.1 / 69.7, 1% low 44.2 / 41.9.
+    - Kills were not recorded; the ranges overlap.
+  - **In-run A/B, level-60 hero** (`ab-lv60-1` and `-3`; `-2` is invalid, see below), average FPS for blood / no blood / blood again:
+    - run 1: Stage 1 late 95.3 / 65.9 / 78.9; Stage 10 late 72.1 / 67.8 / 76.9;
+    - run 3: Stage 1 late 57.2 / 44.6 / 45.7; Stage 10 late 47.1 / 31.9 / 37.9.
+    - In every pair the no-blood segment was no faster; it also had the most kills (for example 782 against 287 and 434).
+    - **The spray's cost is below the noise in a build.** FPS follows the kill rate and the loadout.
+  - **Seen, not changed:**
+    - With a level-60 hero at 300–1,985 kills per 30 s, the 1% low falls to 7–15 FPS with or without blood, well under the 30 FPS hard minimum. Heavy kill rates themselves (drops, gems, death effects) cost frames; this needs its own performance pass (`P`).
+    - Benchmark defect: run `-2` stayed paused (timeScale 0) from level 61. Its level-up handler picks `choices[0]` and does nothing when a round offers no normal choices, so a maxed-reward screen may stay open. Not fixed.
+  - Found by the full PlayMode run: `AutoplayBot` never removed its level-up, stage, game-over, victory and damage handlers. A gem collected while a test tore down started a coroutine on the destroyed bot (`MissingReferenceException`, `AutoplayBotPlayModeTests`). All of them are now removed in `OnDestroy`.
+  - EditMode 473/473, PlayMode 174/174, save untouched (`D:/SoulHunter-Validation/run-20260929-bloodbench2/`).
 
 Not yet played by the owner.
 
