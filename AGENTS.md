@@ -1118,9 +1118,34 @@ Validation:
     - **The spray's cost is below the noise in a build.** FPS follows the kill rate and the loadout.
   - **Seen, not changed:**
     - With a level-60 hero at 300–1,985 kills per 30 s, the 1% low falls to 7–15 FPS with or without blood, well under the 30 FPS hard minimum. Heavy kill rates themselves (drops, gems, death effects) cost frames; this needs its own performance pass (`P`).
-    - Benchmark defect: run `-2` stayed paused (timeScale 0) from level 61. Its level-up handler picks `choices[0]` and does nothing when a round offers no normal choices, so a maxed-reward screen may stay open. Not fixed.
+    - Run `-2` stayed paused (timeScale 0) from its second segment. First read as a level-up problem; it was a chest (fixed, below).
   - Found by the full PlayMode run: `AutoplayBot` never removed its level-up, stage, game-over, victory and damage handlers. A gem collected while a test tore down started a coroutine on the destroyed bot (`MissingReferenceException`, `AutoplayBotPlayModeTests`). All of them are now removed in `OnDestroy`.
   - EditMode 473/473, PlayMode 174/174, save untouched (`D:/SoulHunter-Validation/run-20260929-bloodbench2/`).
+
+### Chest screen froze the game (fixed 2026-09-29)
+
+Owner: "2 wala karo" (fix the benchmark stall).
+
+A stall watchdog in `PerformanceBenchmark` (records who holds the pause when the game stays paused for 15 s, then closes a chest screen or takes a level-up card; each stall is listed in the results) showed:
+- The pause was held by the scene's `ChestUI` on `--- MANAGERS ---/UI_Bindings`, the one `PickupPoolManager` hands chests to.
+- That `ChestUI` has no canvas above it. It put the chest screen on `FindFirstObjectByType<Canvas>()`, which could be a temporary canvas, such as the character unlock notice (`CharacterUnlockTracker`) or the merchant's shop.
+- When that canvas was destroyed, the screen went with it: once it stopped at "Revealing", once "no screen". The chest's pause was never released, so **the game stayed frozen for the rest of the run.**
+- A real player could hit this when a chest opens while an unlock notice or the shop is up. In the level-60 benchmark, the start-level XP unlocks characters (Aria at player level 20).
+
+Fix:
+- `ChestUI.ScreenCanvas()` gives the chest screen its own overlay canvas, owned by the `ChestUI`: sorting order 400 (above the HUD, below the unlock notice's 500), CanvasScaler at 1920x1080 like the HUD.
+- `ChestUI.Update` releases the pause if the screen is ever gone while a chest is open.
+- `GameTime.PauserNames()` lists who holds the pause, for diagnostics.
+
+Validation:
+- `ChestFlowPlayModeTests.TheChestScreen_HasItsOwnCanvas_AndSurvivesATemporaryCanvasGoingAway` (R): the pool's `ChestUI` screen sits on its own canvas; a temporary overlay canvas destroyed mid-chest leaves the screen working and DONE resumes; a screen destroyed while open no longer leaves the game paused.
+- EditMode 473/473, PlayMode 175/175, save untouched (`D:/SoulHunter-Validation/run-20260929-chestcanvas/`).
+- Level-60 A/B benchmark, 5 builds' runs after the fix:
+  - no run froze (timeScale 0 at the end of a segment is a chest screen open at that moment);
+  - with a 5 s watchdog, one "stall" was a 5-item chest that legitimately takes 6–7 s, so the threshold is now 15 s; the last two runs had 0 stalls and 0 errors.
+- Blood A/B in those runs again showed no cost (blood segments as fast or faster than the no-blood ones).
+
+Seen, not changed: with a level-60 hero, FPS falls from segment to segment regardless of blood. Run `ab-lv60-5` went 41.9, 31.0, 20.3, then about 21 in Stage 10, with 2,500–4,500 kills per 30 s. Something builds up with heavy killing; this belongs to the heavy-kill performance pass (`P`).
 
 Not yet played by the owner.
 

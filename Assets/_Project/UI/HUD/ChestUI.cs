@@ -70,10 +70,7 @@ namespace SoulHunter.Gameplay.UI
 
             if (_screen == null)
             {
-                var canvas = GetComponentInParent<Canvas>();
-                if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
-                if (canvas == null) return;
-                _screen = ChestOpeningScreen.Create(canvas);
+                _screen = ChestOpeningScreen.Create(ScreenCanvas());
                 _screen.Closed += CloseChest;
             }
 
@@ -82,6 +79,39 @@ namespace SoulHunter.Gameplay.UI
             var pool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
             _screen.Show(result, ChestSkipRules.CanSkip(before, fiveBefore, items),
                 pool != null ? pool.ChestPrefab : null, pool != null ? pool.GoldCoinPrefab : null);
+        }
+
+        public const int ScreenSortingOrder = 400;
+        private Canvas _canvas;
+
+        /// <summary>
+        /// The chest screen's own overlay canvas, owned by this ChestUI (1920x1080 reference like the HUD, above it, below
+        /// the unlock notice). Found 2026-09-29 by the benchmark's stall watchdog: the scene's ChestUI (UI_Bindings) has no
+        /// canvas above it and took FindFirstObjectByType&lt;Canvas&gt;(), which could be a temporary canvas (the character
+        /// unlock notice or the merchant's shop). When that canvas was switched off or destroyed, the screen stopped
+        /// half-way or vanished with it, and the chest's pause was never released: the game stayed frozen.
+        /// </summary>
+        public Canvas ScreenCanvas()
+        {
+            if (_canvas != null) return _canvas;
+            var go = new GameObject("ChestScreenCanvas", typeof(RectTransform));
+            go.transform.SetParent(transform, false);
+            _canvas = go.AddComponent<Canvas>();
+            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.overrideSorting = true;
+            _canvas.sortingOrder = ScreenSortingOrder;
+            var scaler = go.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0f;
+            go.AddComponent<GraphicRaycaster>();
+            return _canvas;
+        }
+
+        // Safety net: a screen destroyed while open (scene teardown, anything unexpected) must not leave the game paused.
+        private void Update()
+        {
+            if (_paused && (_screen == null || !_screen.IsOpen)) CloseChest();
         }
 
         /// <summary>Plays the screen to its end and closes it, as a player pressing Open, then Done would (bot, benchmark).</summary>

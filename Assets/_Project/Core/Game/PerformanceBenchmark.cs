@@ -34,6 +34,9 @@ namespace SoulHunter.Gameplay.Core
         private string _outputPath;
         private readonly StringBuilder _json = new StringBuilder();
         private readonly List<string> _errors = new List<string>();
+        private readonly List<string> _stalls = new List<string>();
+        private List<UpgradeData> _lastChoices;
+        private const float StallSeconds = 15f; // a 5-item chest legitimately takes 6-7 s to reveal
 
         /// <summary>The results path given after -sh-benchmark, or null when not benchmarking.</summary>
         public static string RequestedOutput()
@@ -101,9 +104,10 @@ namespace SoulHunter.Gameplay.Core
             var player = PlayerController.Instance;
             player.GetComponent<HealthController>().IsInvincible = true;
             var levelUp = FindFirstObjectByType<LevelUpManager>();
-            if (levelUp != null) levelUp.OnLevelUpUIRound += choices => { if (choices.Count > 0) StartCoroutine(Pick(levelUp, choices[0])); };
+            if (levelUp != null) levelUp.OnLevelUpUIRound += choices => { _lastChoices = choices; if (choices.Count > 0) StartCoroutine(Pick(levelUp, choices[0])); };
             StartCoroutine(Walk());
             StartCoroutine(CloseChests());
+            StartCoroutine(StallWatchdog(levelUp));
             var experience = player.GetComponent<PlayerExperience>();
             int startLevel = StartLevel();
             while (experience != null && experience.CurrentLevel < startLevel)
@@ -137,6 +141,7 @@ namespace SoulHunter.Gameplay.Core
             }
 
             _json.Append("  ],\n");
+            _json.Append($"  \"stalls\": [{string.Join(", ", _stalls.Select(e => "\"" + Escape(e) + "\""))}],\n");
             _json.Append($"  \"errors\": [{string.Join(", ", _errors.Select(e => "\"" + Escape(e) + "\""))}]\n}}\n");
             System.IO.File.WriteAllText(_outputPath, _json.ToString());
             Debug.Log($"[PerformanceBenchmark] Results written to {_outputPath}");
@@ -230,6 +235,36 @@ namespace SoulHunter.Gameplay.Core
         }
 
         /// <summary>Chest rewards pause the game until closed; the benchmark closes them like a player would.</summary>
+        /// <summary>
+        /// A player never leaves the game paused for long. If it stays paused for StallSeconds (found 2026-09-29: a run
+        /// sat on an open chest screen for four segments), this records who holds the pause and what is open, then
+        /// closes the chest screen or takes a level-up card, so the measurement goes on and the stall shows in the results.
+        /// </summary>
+        private IEnumerator StallWatchdog(LevelUpManager levelUp)
+        {
+            float pausedSince = -1f;
+            while (true)
+            {
+                yield return WaitRealtime(0.5f);
+                if (Time.timeScale > 0f) { pausedSince = -1f; continue; }
+                if (pausedSince < 0f) { pausedSince = Time.realtimeSinceStartup; continue; }
+                if (Time.realtimeSinceStartup - pausedSince < StallSeconds) continue;
+
+                var chests = FindObjectsByType<ChestUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                string chestState = string.Join(" ", chests.Select(c => c.Screen != null ? $"{c.name}:{c.Screen.Current}" : $"{c.name}:no screen"));
+                string stall = $"{Time.realtimeSinceStartup:F0}s: paused by {SoulHunter.Core.Services.GameTime.PauserNames()}; " +
+                               $"level-up active {(levelUp != null && levelUp.IsLevelUpActive)}; chests {chestState}";
+                Debug.LogWarning("[PerformanceBenchmark] Stall: " + stall);
+                if (_stalls.Count < 20) _stalls.Add(stall);
+
+                foreach (var chest in chests)
+                    if (chest != null && chest.IsOpen) yield return chest.OpenAndClose();
+                if (levelUp != null && levelUp.IsLevelUpActive && _lastChoices != null && _lastChoices.Count > 0)
+                    levelUp.SelectUpgrade(_lastChoices[0]);
+                pausedSince = -1f;
+            }
+        }
+
         private IEnumerator CloseChests()
         {
             while (true)

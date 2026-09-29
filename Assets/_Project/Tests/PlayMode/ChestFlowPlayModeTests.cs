@@ -117,6 +117,52 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheChestScreen_HasItsOwnCanvas_AndSurvivesATemporaryCanvasGoingAway()
+        {
+            // Found 2026-09-29 (benchmark stall watchdog): the chests' ChestUI (UI_Bindings, no canvas above it) put its
+            // screen on FindFirstObjectByType<Canvas>(), which could be a temporary canvas such as the character unlock
+            // notice. When that canvas went away, the screen went with it and the game stayed paused for good.
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 20; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var chestUI = GetPrivateField<ChestUI>(PickupPoolManager.Instance, "_chestUI");
+            Assert.That(chestUI, Is.Not.Null, "The pickup pool hands chests to a ChestUI.");
+
+            // A temporary overlay canvas like the unlock notice, which the old lookup could pick.
+            var notice = new GameObject("TemporaryNotice", typeof(RectTransform));
+            notice.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            var result = new ChestResult { ItemCount = 1, Gold = 150 };
+            result.Rewards.Add(new ChestReward { Name = "Whip", Level = 2 });
+            chestUI.OpenChest("You Found a Chest!", result);
+            var screen = chestUI.Screen;
+            Assert.That(screen, Is.Not.Null);
+            Assert.That(screen.GetComponentInParent<Canvas>().rootCanvas, Is.SameAs(chestUI.ScreenCanvas()),
+                "The chest screen lives on the ChestUI's own canvas.");
+            Assert.That(chestUI.ScreenCanvas().sortingOrder, Is.EqualTo(ChestUI.ScreenSortingOrder));
+            Assert.AreEqual(0f, Time.timeScale);
+
+            Object.Destroy(notice);
+            yield return null;
+            yield return null;
+            Assert.That(screen != null && screen.IsOpen, Is.True, "The screen is still there after the temporary canvas went away.");
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.WaitingToOpen, "the OPEN button");
+            screen.PressOpen();
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.Done, "the reveal");
+            screen.PressDone();
+            yield return null;
+            Assert.AreEqual(1f, Time.timeScale, "DONE resumes the game.");
+
+            // Safety net: a screen that disappears while open releases the pause.
+            chestUI.OpenChest("You Found a Chest!", result);
+            Assert.AreEqual(0f, Time.timeScale);
+            Object.Destroy(chestUI.Screen.gameObject);
+            yield return null;
+            yield return null;
+            Assert.AreEqual(1f, Time.timeScale, "A chest screen destroyed while open does not leave the game paused.");
+            Assert.That(PauseActionEnabled(), Is.True, "The pause key works again.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator FiveItemChest_LightsUp_HasFireworks_AndPlaysTheBigJingle()
         {
             yield return BootIntoGameplay(save => { save.ChestsOpened = 20; save.FiveItemChestsOpened = 0; });

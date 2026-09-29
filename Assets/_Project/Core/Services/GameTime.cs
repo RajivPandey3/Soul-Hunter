@@ -23,6 +23,15 @@ namespace SoulHunter.Core.Services
 
         public static float SlowMotion => _slowMotion;
 
+        /// <summary>Who holds the pause now, by type (diagnostics: the benchmark's stall watchdog).</summary>
+        public static string PauserNames()
+        {
+            PruneDestroyedOwners();
+            var names = new List<string>();
+            foreach (var owner in _pausers) names.Add(owner is Object unityObject ? $"{owner.GetType().Name}({unityObject.name})" : owner.GetType().Name);
+            return names.Count > 0 ? string.Join(", ", names) : "(nobody)";
+        }
+
         /// <summary>Freezes gameplay until <paramref name="owner"/> calls Resume. Repeat calls are ignored.</summary>
         public static void Pause(object owner)
         {
