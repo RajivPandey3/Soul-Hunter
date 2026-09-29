@@ -57,8 +57,8 @@ namespace SoulHunter.Tests.PlayMode
         {
             var xs = new System.Collections.Generic.SortedSet<float>();
             var zs = new System.Collections.Generic.SortedSet<float>();
-            for (int x = 0; x < 3; x++)
-                for (int z = 0; z < 3; z++)
+            for (int x = 0; x < InfiniteMap.GridSize; x++)
+                for (int z = 0; z < InfiniteMap.GridSize; z++)
                 {
                     var chunk = map.ChunkAt(x, z);
                     Assert.That(chunk, Is.Not.Null);
@@ -68,9 +68,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(map.ChunkSize, Is.EqualTo(20f), "Chunk spacing must equal the 20-unit floor tile.");
             foreach (var axis in new[] { xs.ToArray(), zs.ToArray() })
             {
-                Assert.That(axis.Length, Is.EqualTo(3));
-                Assert.That(axis[1] - axis[0], Is.EqualTo(20f).Within(.01f));
-                Assert.That(axis[2] - axis[1], Is.EqualTo(20f).Within(.01f));
+                Assert.That(axis.Length, Is.EqualTo(InfiniteMap.GridSize));
+                for (int i = 1; i < axis.Length; i++) Assert.That(axis[i] - axis[i - 1], Is.EqualTo(20f).Within(.01f));
             }
         }
 

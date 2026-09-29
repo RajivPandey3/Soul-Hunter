@@ -326,10 +326,22 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.Pickups.GoldRewards.Grant(MaxedOutGoldAmount, _playerController != null ? _playerController.Stats : null);
         }
 
+        /// <summary>
+        /// VS wiki (Level_up): "After selecting an item, the game resumes and the character gains a brief moment of
+        /// invulnerability." The wiki gives no length; Soul Hunter uses the hero's own hit invulnerability (0.5 s).
+        /// </summary>
+        public const float FallbackInvulnerabilitySeconds = 0.5f;
+
         private void ResumeGameplay()
         {
             SoulHunter.Core.Services.GameTime.Resume(this);
-            if (_playerController != null) _playerController.ResumeMovementAfterMenu();
+            if (_playerController != null)
+            {
+                _playerController.ResumeMovementAfterMenu();
+                var health = _playerController.GetComponent<HealthController>();
+                if (health != null)
+                    health.GrantInvulnerability(health.PostHitInvulnerability > 0f ? health.PostHitInvulnerability : FallbackInvulnerabilitySeconds);
+            }
         }
 
         /// <summary>

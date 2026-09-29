@@ -1372,6 +1372,20 @@ Validation:
 
 Not yet played by the owner.
 
+### Ground late to appear; level-up pause (owner reports, 2026-09-30)
+
+**"ground late se spawn ho raha hai".** `InfiniteMap` kept a 3 × 3 grid of 20-unit tiles, which reaches only 20 units past the hero near a tile edge. The 55-degree camera shows about 21 units to each side at 16:9 (28 at 21:9), so a screen edge showed bare background until the far tile wrapped over. The grid is now 5 × 5 (`InfiniteMap.GridSize`), reaching at least 40 units every way; a tile more than half the grid away wraps to the other side.
+- `GroundCoveragePlayModeTests` (R): the hero steps to tile edges in every direction, and every screen corner and edge midpoint must fall on a tile, with the camera at 21:9 (a batchmode window is narrow). It fails on the old 3 × 3 grid ("Screen point (0,0) ... shows no floor") and passes on 5 × 5.
+- Editor play `autoplay-editor-81` (Stage 1, 30 s, `-sh-autoplay-early-shots`: a shot every 0.2 s for the first 3 s): floor to every screen edge from the first frame, 0 errors, min 60 FPS (partial `V`).
+
+**Level-up pause** (owner: the game kept running behind the level-up screen). vampire.survivors.wiki/w/Level_up (checked 2026-09-30): "Upon leveling up, the game is paused ..." and "After selecting an item, the game resumes and the character gains a brief moment of invulnerability" (Patch 0.2.12). The wiki gives no length.
+- `LevelUpPausePlayModeTests` (R): with a real level-up open for 1.5 s, the time scale stays 0; the stage clock, enemy count, enemies, gems, the player, projectiles, every world transform, animator and game-time particle stay still. The test passed on the existing code, so the pause itself was not reproduced as broken; what the owner saw is still unexplained and needs the owner to show it (only the chest and level-up effects run on unscaled time, by design).
+- Added: after the pick, the hero is invulnerable for its hit invulnerability (0.5 s fallback; Soul Hunter's number) (`LevelUpManager.ResumeGameplay`, `HealthController.GrantInvulnerability`).
+
+Validation: EditMode 483/483, PlayMode 192/192, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260930-ground-levelup2/`).
+
+Not yet played by the owner.
+
 ### VFX v2 sprites and VS-style level-up cards (owner-approved, 2026-09-26)
 
 The owner approved the VFX v2 concept sheet: eight Soul Hunter sprites made procedurally by `ArtSource/Generators/build_vfx_textures.py` (soul flame, slash arc, magic circle, impact star, soul wisp, lightning bolt, shockwave ring, sparkle), written to `Assets/Art/Textures/VFX/SH10_Vfx2_*.png`. `WeaponVfxBuilder` now uses them:

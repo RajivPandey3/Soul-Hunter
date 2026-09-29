@@ -40,6 +40,12 @@ namespace SoulHunter.Gameplay.Combat
         public float PostHitInvulnerability { get; set; }
         private float _hitInvulnerableUntil = -1f;
         public bool IsHitInvulnerable => Time.time < _hitInvulnerableUntil;
+
+        /// <summary>Invulnerable for <paramref name="seconds"/> of game time from now (keeps a longer one already running).</summary>
+        public void GrantInvulnerability(float seconds)
+        {
+            if (seconds > 0f) _hitInvulnerableUntil = Mathf.Max(_hitInvulnerableUntil, Time.time + seconds);
+        }
         /// <summary>Time (Time.time) until which every hit is blocked: a character's starting shield.</summary>
         public float ShieldedUntil { get; set; } = -1f;
         public bool IsShielded => Time.time < ShieldedUntil;

@@ -7,7 +7,7 @@ namespace SoulHunter.Gameplay.Environment
     /// <summary>
     /// Learning Comment:
     /// Vampire Survivors wali asali Infinite Map logic (Chunk Repositioning).
-    /// Isme hum 3x3 (Total 9) zameen ke tukdo (chunks) ka ek grid banate hain.
+    /// Isme hum 5x5 (Total 25) zameen ke tukdo (chunks) ka ek grid banate hain.
     /// Jab player aage badhta hai, toh jo zameen piche chhoot jati hai,
     /// game usko uthakar chup-chap player ke aage rakh deta hai.
     /// Yahi exact trick Vampire Survivors mein anant map banane ke liye use hoti hai!
@@ -24,7 +24,16 @@ namespace SoulHunter.Gameplay.Environment
         [SerializeField] private float _chunkSize = 20f;
 
         private Transform _player;
-        private GameObject[,] _chunks = new GameObject[3, 3];
+        /// <summary>
+        /// Tiles per side. Owner report (2026-09-30): "ground late se spawn ho raha hai". A 3 x 3 grid of 20-unit tiles
+        /// only reaches 20 units past the hero near a tile edge, while the 55-degree camera shows about 21 units to each
+        /// side at 16:9 (more in a wider window), so the screen edge showed bare background until the far tile jumped
+        /// over. 5 x 5 reaches at least 40 units in every direction.
+        /// </summary>
+        public const int GridSize = 5;
+        private const int Mid = GridSize / 2;
+
+        private GameObject[,] _chunks = new GameObject[GridSize, GridSize];
         private LevelProgressionManager _progression;
 
         public GameObject CurrentFloorPrefab { get; private set; }
@@ -71,18 +80,18 @@ namespace SoulHunter.Gameplay.Environment
                 Debug.LogWarning("[InfiniteMap] Chunk prefab is not assigned; map tiling is disabled.", this);
                 return;
             }
-            if (floorPrefab == CurrentFloorPrefab && _chunks[1, 1] != null) return;
+            if (floorPrefab == CurrentFloorPrefab && _chunks[Mid, Mid] != null) return;
 
             _originalMaterials.Clear(); // every tile is replaced below
             // Keep the grid where it is (around the player) and only swap the tiles.
-            Vector3 center = _chunks[1, 1] != null ? _chunks[1, 1].transform.position : Vector3.zero;
-            for (int x = 0; x < 3; x++)
+            Vector3 center = _chunks[Mid, Mid] != null ? _chunks[Mid, Mid].transform.position : Vector3.zero;
+            for (int x = 0; x < GridSize; x++)
             {
-                for (int z = 0; z < 3; z++)
+                for (int z = 0; z < GridSize; z++)
                 {
                     Vector3 spawnPos = _chunks[x, z] != null
                         ? _chunks[x, z].transform.position
-                        : center + new Vector3((x - 1) * _chunkSize, 0, (z - 1) * _chunkSize);
+                        : center + new Vector3((x - Mid) * _chunkSize, 0, (z - Mid) * _chunkSize);
                     if (_chunks[x, z] != null) Destroy(_chunks[x, z]);
                     GameObject newChunk = Instantiate(floorPrefab, spawnPos, RandomQuarterTurn(), transform);
                     newChunk.SetActive(true);
@@ -134,11 +143,13 @@ namespace SoulHunter.Gameplay.Environment
 
         private void RepositionChunks()
         {
-            float viewDist = _chunkSize * 1.5f;
+            // A tile more than half the grid away from the hero wraps to the other side.
+            float viewDist = _chunkSize * GridSize * 0.5f;
+            float wrap = _chunkSize * GridSize;
 
-            for (int x = 0; x < 3; x++)
+            for (int x = 0; x < GridSize; x++)
             {
-                for (int z = 0; z < 3; z++)
+                for (int z = 0; z < GridSize; z++)
                 {
                     if (_chunks[x, z] == null) continue;
                     Transform chunk = _chunks[x, z].transform;
@@ -146,15 +157,15 @@ namespace SoulHunter.Gameplay.Environment
 
                     // X-Axis check
                     if (_player.position.x - pos.x > viewDist)
-                        pos.x += _chunkSize * 3;
+                        pos.x += wrap;
                     else if (pos.x - _player.position.x > viewDist)
-                        pos.x -= _chunkSize * 3;
+                        pos.x -= wrap;
 
                     // Z-Axis check
                     if (_player.position.z - pos.z > viewDist)
-                        pos.z += _chunkSize * 3;
+                        pos.z += wrap;
                     else if (pos.z - _player.position.z > viewDist)
-                        pos.z -= _chunkSize * 3;
+                        pos.z -= wrap;
 
                     if (pos != chunk.position)
                     {

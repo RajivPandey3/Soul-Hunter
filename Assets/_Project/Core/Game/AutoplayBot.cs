@@ -202,6 +202,8 @@ namespace SoulHunter.Gameplay.Core
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
+            // -sh-autoplay-early-shots: every 0.2 s for the first 3 s of the run (how the stage first appears).
+            if (HasArg("-sh-autoplay-early-shots")) StartCoroutine(EarlyShots());
             yield return new WaitForSecondsRealtime(1f);
 
             _player = PlayerController.Instance;
@@ -597,6 +599,16 @@ namespace SoulHunter.Gameplay.Core
             Event("powerups", string.Format(CultureInfo.InvariantCulture, "\"bought\": {0}, \"gold\": {1}", SoulHunter.Core.Persistence.PowerUps.TotalBought(data), data.Currency));
             navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
             yield return new WaitForSecondsRealtime(0.3f);
+        }
+
+        private IEnumerator EarlyShots()
+        {
+            float start = Time.realtimeSinceStartup;
+            for (int i = 0; i <= 15; i++)
+            {
+                while (Time.realtimeSinceStartup < start + i * 0.2f) yield return null;
+                yield return Shot($"early{i * 200:0000}ms");
+            }
         }
 
         private IEnumerator Shot(string name)
