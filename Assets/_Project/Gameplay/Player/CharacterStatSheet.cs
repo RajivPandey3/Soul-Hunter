@@ -32,7 +32,8 @@ namespace SoulHunter.Gameplay.Player
         public float Curse;
 
         /// <summary>Character stats plus meta power-up levels (0 when nothing was bought).</summary>
-        public static CharacterStatSheet Build(CharacterData character, int metaMight = 0, int metaArmor = 0, int metaGreed = 0, int metaRevival = 0)
+        public static CharacterStatSheet Build(CharacterData character, int metaMight = 0, int metaArmor = 0, int metaGreed = 0, int metaRevival = 0,
+            int metaMaxHealth = 0, int metaRecovery = 0)
         {
             var sheet = new CharacterStatSheet
             {
@@ -62,6 +63,9 @@ namespace SoulHunter.Gameplay.Player
             sheet.Armor += metaArmor * ArmorPerMetaLevel;
             sheet.Greed += metaGreed * GreedPerMetaLevel;
             sheet.Revivals += metaRevival * RevivalsPerMetaLevel;
+            // VS PowerUps: Max Health x1.1 per rank (multiplied), Recovery +0.1 per rank.
+            sheet.MaxHealth = UnityEngine.Mathf.RoundToInt(sheet.MaxHealth * SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthMultiplier(metaMaxHealth));
+            sheet.Recovery += SoulHunter.Core.Persistence.MetaPowerUps.Recovery(metaRecovery);
             return sheet;
         }
 

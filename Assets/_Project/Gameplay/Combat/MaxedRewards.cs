@@ -41,7 +41,7 @@ namespace SoulHunter.Gameplay.Combat
             if (IsGoldCard(card))
                 SoulHunter.Gameplay.Pickups.GoldRewards.Grant(GoldAmount, player != null ? player.Stats : null);
             else if (player != null)
-                player.GetComponent<HealthController>()?.Heal(HealAmount);
+                player.GetComponent<HealthController>()?.Heal(SoulHunter.Gameplay.Pickups.HealthPickup.HealWithRecovery(HealAmount, player.Stats != null ? player.Stats.Regen : 0f));
             return true;
         }
     }

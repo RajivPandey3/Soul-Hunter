@@ -270,7 +270,8 @@ namespace SoulHunter.UI
             var data = SaveData();
             var sheet = CharacterStatSheet.Build(charData,
                 data != null ? data.MetaMightLevel : 0, data != null ? data.MetaArmorLevel : 0,
-                data != null ? data.MetaGreedLevel : 0, data != null ? data.MetaRevivalLevel : 0);
+                data != null ? data.MetaGreedLevel : 0, data != null ? data.MetaRevivalLevel : 0,
+                data != null ? data.MetaMaxHealthLevel : 0, data != null ? data.MetaRecoveryLevel : 0);
 
             // One text with values in a column (<pos>), so labels and values always share a font size.
             var text = new System.Text.StringBuilder("<b>Stats</b>\n");

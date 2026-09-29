@@ -51,6 +51,10 @@ namespace SoulHunter.Core.Persistence
         public int MetaArmorLevel;
         public int MetaGreedLevel;
         public int MetaRevivalLevel;
+        /// <summary>VS Max Health PowerUp rank (0-3; heal balance pass, 2026-09-29).</summary>
+        public int MetaMaxHealthLevel;
+        /// <summary>VS Recovery PowerUp rank (0-5; heal balance pass, 2026-09-29).</summary>
+        public int MetaRecoveryLevel;
 
         // --- Current Run Data ---
         public string SelectedCharacterName;
@@ -90,6 +94,8 @@ namespace SoulHunter.Core.Persistence
             MetaArmorLevel = 0;
             MetaGreedLevel = 0;
             MetaRevivalLevel = 0;
+            MetaMaxHealthLevel = 0;
+            MetaRecoveryLevel = 0;
 
             SelectedCharacterName = "Kael"; // Default Hero
         }

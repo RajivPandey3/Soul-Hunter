@@ -268,6 +268,8 @@ namespace SoulHunter.Core.Persistence
             data.MetaArmorLevel = Mathf.Max(0, data.MetaArmorLevel);
             data.MetaGreedLevel = Mathf.Max(0, data.MetaGreedLevel);
             data.MetaRevivalLevel = Mathf.Max(0, data.MetaRevivalLevel);
+            data.MetaMaxHealthLevel = Mathf.Clamp(data.MetaMaxHealthLevel, 0, MetaPowerUps.MaxHealthRanks);
+            data.MetaRecoveryLevel = Mathf.Clamp(data.MetaRecoveryLevel, 0, MetaPowerUps.RecoveryRanks);
             data.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
             data.FiveItemChestsOpened = Mathf.Max(0, data.FiveItemChestsOpened);
             // Run mode toggles (ModeHurry ... ModeLimitBreak) need no step: a save without them loads them as off, which

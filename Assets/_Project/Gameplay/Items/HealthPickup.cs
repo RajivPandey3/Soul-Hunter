@@ -65,6 +65,12 @@ namespace SoulHunter.Gameplay.Pickups
             }
         }
 
+        /// <summary>
+        /// VS wiki (Recovery): "Recovery also boosts healing from pickups, each 0.1 translates to an additive 10% boost":
+        /// the heal is multiplied by 1 + Recovery (Soul Hunter's Regen, HP per second).
+        /// </summary>
+        public static int HealWithRecovery(int amount, float recovery) => Mathf.RoundToInt(amount * (1f + Mathf.Max(0f, recovery)));
+
         public void ResetPickup()
         {
             _isMagnetized = false;
@@ -76,7 +82,8 @@ namespace SoulHunter.Gameplay.Pickups
             var health = playerTransform.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null)
             {
-                health.Heal(HealAmount);
+                var stats = playerTransform.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
+                health.Heal(HealWithRecovery(HealAmount, stats != null ? stats.Regen : 0f));
             }
 
             if (SoulHunter.Gameplay.Audio.AudioManager.Instance != null)

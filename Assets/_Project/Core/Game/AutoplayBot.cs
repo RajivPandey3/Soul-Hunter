@@ -41,6 +41,7 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-jump-after S (default 20) seconds of play before -sh-autoplay-jump-to applies
     ///   -sh-autoplay-start-level N             start at player level N (the bot picks every level-up), to measure later stages
     ///   -sh-autoplay-no-blood                  play with Disable Blood on (A/B checks of the blood spray's cost)
+    ///   -sh-autoplay-heal-powerups             play with the VS Max Health and Recovery PowerUps bought (heal balance)
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -69,6 +70,8 @@ namespace SoulHunter.Gameplay.Core
             public int StartLevel = 1;
             /// <summary>Plays with the Disable Blood option on (A/B checks of the blood spray's cost).</summary>
             public bool NoBlood;
+            /// <summary>Plays with the VS Max Health (rank 3) and Recovery (rank 5) PowerUps bought (heal balance checks).</summary>
+            public bool HealPowerUps;
             public bool QuitWhenDone = true;
         }
 
@@ -143,6 +146,7 @@ namespace SoulHunter.Gameplay.Core
                 JumpAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-jump-after"), NumberStyles.Float, inv, out var jumpAfter) ? Mathf.Max(0f, jumpAfter) : 20f,
                 StartLevel = int.TryParse(ArgValue("-sh-autoplay-start-level"), out var startLevel) ? Mathf.Clamp(startLevel, 1, 400) : 1,
                 NoBlood = HasArg("-sh-autoplay-no-blood"),
+                HealPowerUps = HasArg("-sh-autoplay-heal-powerups"),
             };
             Launch(settings);
         }
@@ -187,6 +191,9 @@ namespace SoulHunter.Gameplay.Core
             save.CurrentData.SelectedCharacterName = Config.Character;
             if (Config.Gold >= 0) save.CurrentData.Currency = Config.Gold; // the save is a throw-away one by now
             save.CurrentData.DisableBlood = Config.NoBlood;
+            // The throw-away save: the healing PowerUps bought (or not), so balance runs compare like with like.
+            save.CurrentData.MetaMaxHealthLevel = Config.HealPowerUps ? SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthRanks : 0;
+            save.CurrentData.MetaRecoveryLevel = Config.HealPowerUps ? SoulHunter.Core.Persistence.MetaPowerUps.RecoveryRanks : 0;
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;

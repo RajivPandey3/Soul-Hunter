@@ -145,6 +145,7 @@ namespace SoulHunter.Gameplay.Player
             }
 
             ApplySelectedCharacterStats();
+            ApplyHealingPowerUps();
             var hurtHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (hurtHealth != null) hurtHealth.OnDamaged += PlayHurtSound;
 
@@ -280,6 +281,23 @@ namespace SoulHunter.Gameplay.Player
                 health.ShieldedUntil = Time.time + stats.StartingShieldSeconds;
                 StartingShieldVisual.Attach(health, character.ShieldVisualPrefab);
             }
+        }
+
+        /// <summary>
+        /// VS PowerUps (heal balance pass, 2026-09-29): Max Health x1.1 per rank on top of the character's (the run starts
+        /// at full health) and Recovery +0.1 HP per second per rank.
+        /// </summary>
+        private void ApplyHealingPowerUps()
+        {
+            if (GameServices.Instance == null) return;
+            var saveSvc = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            var data = saveSvc != null ? saveSvc.CurrentData : null;
+            if (data == null) return;
+            var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            float multiplier = SoulHunter.Core.Persistence.MetaPowerUps.MaxHealthMultiplier(data.MetaMaxHealthLevel);
+            if (health != null && multiplier > 1f) health.MultiplyMaxHealth(multiplier, healByIncrease: true);
+            float recovery = SoulHunter.Core.Persistence.MetaPowerUps.Recovery(data.MetaRecoveryLevel);
+            if (Stats != null && recovery > 0f) Stats.AddRegen(recovery);
         }
 
         private void OnDashEvent(PlayerDashEvent dashEvent)

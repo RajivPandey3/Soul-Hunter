@@ -1245,6 +1245,49 @@ Validation:
 
 Not yet played by the owner.
 
+### Heal balance pass (owner: "heal balance pass karo", 2026-09-29)
+
+Why: after the VS no-enemy-drops rule, a lantern-ignoring bot run had **no healing at all**: 19 hits of 5 over 5 minutes, Recovery 0, and it died at 4:48.
+
+Checked against vampire.survivors.wiki (fetched 2026-09-29):
+- **Damage matches VS.** Mad Forest's bat deals 5 and its skeleton and Mudman 10; Soul Hunter's L1 enemy deals 5 with 10 HP. Player Max Health is 100, and Recovery starts at 0 (Max Health and Recovery pages).
+- The wiki does not give how often an enemy's damage lands; the Armor page says "multiple times per second". Soul Hunter's `TouchDamage` stays at 0.5 s per enemy.
+- **What VS has and Soul Hunter lacked** (PowerUps page):
+  - the **Max Health** PowerUp: +10% per rank, 3 ranks, multiplied (+33.1%), initial cost 200;
+  - the **Recovery** PowerUp: +0.1 HP/s per rank, 5 ranks (+0.5), initial cost 200.
+  - Soul Hunter's shop sold only Might, Armor, Greed and Revival.
+- Recovery page: "Recovery also boosts healing from pickups, each 0.1 translates to an additive 10% boost".
+
+Changes:
+- `MetaPowerUps` (Foundation) holds the VS ranks, bonuses and prices. `GameData.MetaMaxHealthLevel` / `MetaRecoveryLevel` are clamped by `SaveService`'s repair; an older save loads them as 0.
+- `PowerUpMenuUI` builds a **Max Health +10%** and a **Recovery +0.1/s** button at runtime from a copy of an existing button, so `MainMenu` is not edited. They show `Lvl n/max`, stop at the VS rank and switch off at max.
+  - Prices are the VS initial cost (200), fixed. VS raises prices per purchase, and Soul Hunter's existing shop prices (Might 500, Armor 300, Greed 400, Revival 1000) do not follow VS either; that is a later shop pass (provisional).
+- `PlayerController.ApplyHealingPowerUps`: max health × 1.1^rank after the character and Soul Eggs, with the run starting at full health, and Recovery +0.1 × rank via `PlayerStats.AddRegen` (`PlayerRecovery` heals each second).
+- `HealthPickup.HealWithRecovery`: a floor chicken, and the maxed-level chicken card (`MaxedRewards`), heals 30 × (1 + Recovery).
+- `CharacterStatSheet.Build` and the select screen include both PowerUps.
+- `AutoplayBot -sh-autoplay-heal-powerups` plays with both at max rank. Otherwise the bot's throw-away save has none, so runs compare like with like.
+
+Validation:
+- `HealBalanceTests` (T): the multipliers, the Recovery cap, pickup healing (30 → 45 at Recovery 0.5) and the select-screen sheet (133 HP, 0.5 Recovery).
+- `HealBalancePlayModeTests` (R):
+  - a run with both at max starts Kael at 133/133 with 0.5 Recovery, regains health each second, and a chicken heals 45;
+  - the MainMenu shop sells both only up to rank 3 and 5, charges only real purchases, and switches the maxed buttons off.
+- EditMode 478/478, PlayMode 186/186, save untouched (`D:/SoulHunter-Validation/run-20260929-heal/`).
+- Editor play, Stage 1, 6 min, no god mode, lantern-seeking bot:
+
+  | Run | Healing PowerUps | Result | Hits taken | Lowest health |
+  |---|---|---|---|---|
+  | `-75` | no | survived | 0 | 100/100 |
+  | `-77` | no | survived | 7 | 60/100 |
+  | `-76` | rank 3 + 5 | survived | 17 | 110/133 |
+  | `-78` | rank 3 + 5 | survived | 15 | 94/133 |
+
+  - With the PowerUps the hero took more than twice the hits and never fell below 94/133. Lanterns broken per run: 8–25 (chickens 0–5).
+  - Random loadouts make these runs rough; `-75` killed 24,991, most likely through Soul Toll wipes.
+  - 0 errors in every run.
+
+Not yet played by the owner.
+
 ### VFX v2 sprites and VS-style level-up cards (owner-approved, 2026-09-26)
 
 The owner approved the VFX v2 concept sheet: eight Soul Hunter sprites made procedurally by `ArtSource/Generators/build_vfx_textures.py` (soul flame, slash arc, magic circle, impact star, soul wisp, lightning bolt, shockwave ring, sparkle), written to `Assets/Art/Textures/VFX/SH10_Vfx2_*.png`. `WeaponVfxBuilder` now uses them:
