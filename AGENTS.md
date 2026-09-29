@@ -180,7 +180,7 @@ Defects found and fixed in the process:
   - Magic Wand, Cross, Lightning Ring, Crimson Shroud and Bloody Tear picked targets from the enemy list.
 - A boss-held Pentagram wiped the boss's own horde and the boss itself, and a boss-held Clock Lancet froze them. Both now skip enemies.
 
-Owner decision pending: the player has no frozen state, and "wiping" the player is not a VS mechanic. So Shadow Kael's Clock Lancet only shows its beam, and his Pentagram only flashes.
+The player has no frozen state, and "wiping" the player is not a VS mechanic, so Shadow Kael's Clock Lancet only shows its beam and his Pentagram only flashes (open question in `Docs/VS_DOT_Plan.md`, Phase 0).
 
 Tools: `LevelProgressionManager.SkipToBoss()` (menu Soul Hunter/Debug/Skip To Stage Boss, bot option `-sh-autoplay-boss-after S`). With it, the bot records a `shadow-kael` event listing the mirrored weapons, plus screenshots.
 
@@ -307,7 +307,7 @@ This came from a review of an external "Vampire Survivors engine" write-up (owne
 
 A second write-up (VS Stage 2, Inlaid Library) was reviewed under the same direction. Adopted: the VS "enemy minimum". Each wave phase has `MinimumEnemies`, and `EnemySpawner` refills the swarm up to it immediately (at most `_maxMinimumTopUpPerFrame` = 8 per frame), on top of the interval spawns; before this the horde only grew by one group per interval, so fast killing emptied the screen. The automatic 5-minute phases use `WaveData.MinimumEnemies` (30) + `MinimumEnemiesPerPhase` (20) per phase: 30/50/70/90/110, provisional balance. Validated by `EnemyMinimumTests` (T) and `EnemyMinimumPlayModeTests` (R: opening horde reaches the minimum and refills after a full wipe); EditMode 237/237, PlayMode 21/21. Feel and performance at these counts are unverified (`V`, `P`).
 
-Not adopted: Stage 2 unlocking at player level 20 (conflicts with the one-run 10-level structure); Inlaid Library's wave tables, enemy/item/relic names and ×1.25 speed (VS game data, and taken from the fan wiki rather than poncle); its corridor and left/right spawning (Soul Hunter Level 2 is The Dark Forest). Stage events (wall/swarm/self-destruct enemies), destructibles, stage-placed items and Hyper mode are candidate features that need owner direction before they are built.
+Not adopted: Stage 2 unlocking at player level 20 (conflicts with the one-run 10-level structure); Inlaid Library's wave tables, enemy/item/relic names and ×1.25 speed (VS game data, and taken from the fan wiki rather than poncle); its corridor and left/right spawning (Soul Hunter Level 2 is The Dark Forest).
 
 ### Enemy crowd separation (owner report, 2026-09-26)
 
@@ -653,12 +653,7 @@ Not yet played by the owner.
 
 ### Balance pass, Part 1: weapons on VS numbers (owner request, 2026-09-27)
 
-Owner: "balance pass shuru karo". Balance follows the VS rules plus the owner's story; the planned parts are:
-1. weapons;
-2. XP per stage;
-3. enemy health and damage per stage;
-4. boss and elite fight length;
-5. run length (owner decision).
+Owner: "balance pass shuru karo". Balance follows the VS rules plus the owner's story.
 
 Baseline before Part 1 (`autoplay-editor-35`, Stage 1, 15 min, no god mode, old weapons): level 117, 63,998 kills, never more than 89 enemies, hero never hurt, min 8 FPS.
 - Most weapons used placeholders (10 damage, 1.5 s).
@@ -749,7 +744,7 @@ The owner's own checks, played by the agent (owner: "DO ALL", 2026-09-27). New b
 
 Not yet played by the owner.
 
-Stage 3-5 write-ups (Dairy Plant, Gallo Tower, Cappella Magna) added no other adoptable official mechanics; their stage data, names, unlock levels and Hyper/Hurry modes are VS content or conflict with the run structure. Candidate features still awaiting owner direction: shooting ring (needs enemy projectiles), step-on traps that trigger events, environmental weapons (rail cart), telegraphed strikes, invulnerable timed stalkers, stage-placed items, teleport points.
+Stage 3-5 write-ups (Dairy Plant, Gallo Tower, Cappella Magna) added no other adoptable official mechanics; their stage data, names, unlock levels and Hyper/Hurry modes are VS content or conflict with the run structure.
 
 ### Stage events (owner request, 2026-09-24)
 
@@ -1586,15 +1581,7 @@ The expensive full static audit has already been completed.
 
 Do not repeat it unless the owner explicitly requests a new full audit or the project state changes enough to invalidate the current verified baseline.
 
-Current priority is to use the established project truth to perform actual Soul Hunter development safely and incrementally.
-
-Pending broader verification work may continue in parallel when useful:
-
-- clean editor/package compile baseline;
-- final requirement-to-acceptance reconciliation;
-- representative runtime/build/performance acceptance.
-
-These pending items are not a reason to endlessly postpone ordinary, explicitly authorized development work.
+The only active plan is `Docs/VS_DOT_Plan.md` (owner, 2026-09-30: every older pending plan was removed). Work follows it, one row at a time.
 
 ---
 

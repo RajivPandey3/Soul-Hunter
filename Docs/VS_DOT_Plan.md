@@ -35,6 +35,7 @@ Source table: `Docs/VS_DOT_Table.md` (177 VS rules from raw vampire.survivors.wi
 6. Items Soul Hunter lacks: Ebony Wings, Silver/Gold Ring, Stone Mask, a second gun. Add Soul Hunter versions?
 7. Unlock gating (VS relics and achievements for modes, PowerUp ranks, items, coffins for characters): add, or keep everything open?
 8. Arcanas use VS names; they need Soul Hunter names (no-copy rule).
+9. Shadow Kael's mirrored Clock Lancet and Pentagram: the player has no frozen state and VS never wipes the player. Now the beam only shows and the Pentagram only flashes. Keep, or give them a player effect?
 
 ## Phase 1: core rules that change play (no new art needed)
 
