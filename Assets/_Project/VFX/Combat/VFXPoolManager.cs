@@ -15,7 +15,7 @@ namespace SoulHunter.Gameplay.VFX
         public static VFXPoolManager Instance { get; private set; }
 
         private const int MaxPerKind = 32;
-        private static readonly float[] MinInterval = { 0.02f, 0.01f, 0.03f, 0.03f, 0.2f, 0f, 0f, 0f, 0f, 0.01f }; // by VfxKind
+        private static readonly float[] MinInterval = { 0.02f, 0.01f, 0.03f, 0.03f, 0.2f, 0f, 0f, 0f, 0f, 0.01f, 0.01f }; // by VfxKind
         /// <summary>Blood splats stay on the ground for a while, so a horde needs more of them than other kinds.</summary>
         private const int MaxBlood = 64;
 
@@ -47,15 +47,39 @@ namespace SoulHunter.Gameplay.VFX
         }
 
         /// <summary>
-        /// Blood where an enemy died: a spray from its body and a splat on the ground under it that fades. VS has blood
-        /// on kills and an option to switch it off (vampire.survivors.wiki/w/Options, "Disable blood", added in v1.6.0);
-        /// the wiki does not describe how it looks, so the look is Soul Hunter's own. Nothing plays with Disable Blood on.
+        /// Blood where an enemy died. Owner (2026-09-29): "blood effect enemy ke neck se spray particle ki tarah": a jet of
+        /// blood spurts from the neck, away from the hero and upwards, in pulses; the drops fall and a splat is left on the
+        /// floor where the jet lands. VS has blood on kills and an option to switch it off (vampire.survivors.wiki/w/Options,
+        /// "Disable blood", added in v1.6.0); the wiki does not describe its look. Nothing plays with Disable Blood on.
         /// </summary>
-        public static void PlayBlood(Vector3 bodyPosition)
+        public static void PlayBlood(Vector3 bodyPosition, Vector3 neckPosition, Vector3 awayFromHero)
         {
             if (SoulHunter.Core.Persistence.GameSettings.DisableBlood) return;
-            Play(VfxKind.Blood, new Vector3(bodyPosition.x, GroundHeight(bodyPosition) + 0.03f, bodyPosition.z));
+            Vector3 jet = SprayDirection(awayFromHero, Random.Range(-SprayYawJitter, SprayYawJitter));
+            Play(VfxKind.BloodSpray, neckPosition, Quaternion.FromToRotation(Vector3.up, jet), 1f);
+            Vector3 flat = new Vector3(jet.x, 0f, jet.z).normalized;
+            Vector3 landing = bodyPosition + flat * SplatOffset;
+            Play(VfxKind.Blood, new Vector3(landing.x, GroundHeight(landing) + 0.03f, landing.z));
         }
+
+        /// <summary>Tilt of the jet above the ground, the random turn either side, and how far out its splat lands (provisional).</summary>
+        public const float SprayElevationDegrees = 50f, SprayYawJitter = 25f, SplatOffset = 0.9f;
+
+        /// <summary>The jet's direction: away from the hero on the ground plane (any way if unknown), tilted upwards.</summary>
+        public static Vector3 SprayDirection(Vector3 awayFromHero, float yawDegrees)
+        {
+            Vector3 flat = new Vector3(awayFromHero.x, 0f, awayFromHero.z);
+            if (flat.sqrMagnitude < 0.0001f) flat = Vector3.forward;
+            flat = Quaternion.Euler(0f, yawDegrees, 0f) * flat.normalized;
+            float up = SprayElevationDegrees * Mathf.Deg2Rad;
+            return (flat * Mathf.Cos(up) + Vector3.up * Mathf.Sin(up)).normalized;
+        }
+
+        /// <summary>The neck of a body: its drawn bounds' centre line at 80% of its height (the models have no neck bone in common).</summary>
+        public static Vector3 NeckOf(Bounds body) =>
+            new Vector3(body.center.x, body.min.y + body.size.y * NeckHeight, body.center.z);
+
+        public const float NeckHeight = 0.8f;
 
         /// <summary>Top of the stage floor under a point (bodies stand on the player's plane, above the floor's top).</summary>
         public static float GroundHeight(Vector3 point)
@@ -125,7 +149,7 @@ namespace SoulHunter.Gameplay.VFX
             for (int i = 0; i < pool.Count; i++)
                 if (pool[i] != null && !pool[i].activeSelf) return pool[i];
 
-            if (pool.Count < (kind == VfxKind.Blood ? MaxBlood : MaxPerKind))
+            if (pool.Count < (kind == VfxKind.Blood || kind == VfxKind.BloodSpray ? MaxBlood : MaxPerKind))
             {
                 var created = Instantiate(prefab, transform);
                 created.SetActive(false);

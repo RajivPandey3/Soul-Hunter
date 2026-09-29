@@ -66,6 +66,24 @@ namespace SoulHunter.Gameplay.AI
             _health.OnDied -= HandleDeath;
         }
 
+        private Renderer[] _bodyRenderers;
+
+        /// <summary>The drawn body (its model's meshes; effects and pickups are left out). Read at death, while it is still shown.</summary>
+        private Bounds BodyBounds()
+        {
+            if (_bodyRenderers == null || _bodyRenderers.Length == 0)
+                _bodyRenderers = System.Array.FindAll(GetComponentsInChildren<Renderer>(true), r => r is SkinnedMeshRenderer || r is MeshRenderer);
+            bool any = false;
+            var bounds = new Bounds(transform.position + Vector3.up, Vector3.one * 2f);
+            foreach (var r in _bodyRenderers)
+            {
+                if (r == null || !r.enabled || !r.gameObject.activeInHierarchy) continue;
+                if (!any) { bounds = r.bounds; any = true; }
+                else bounds.Encapsulate(r.bounds);
+            }
+            return bounds;
+        }
+
         private void HandleDeath()
         {
             // Learning Comment:
@@ -76,8 +94,12 @@ namespace SoulHunter.Gameplay.AI
             float luck = stats != null ? Mathf.Max(1f, stats.Luck) : 1f;
 
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
-            // Ghosts (Level 7) have no body to bleed; everything else leaves blood unless Disable Blood is on.
-            if (_enemy == null || !_enemy.IsSpectral) SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(transform.position);
+            // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
+            if (_enemy == null || !_enemy.IsSpectral)
+            {
+                Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
+                SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(transform.position, SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(BodyBounds()), away);
+            }
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {

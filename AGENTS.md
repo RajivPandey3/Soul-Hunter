@@ -1051,18 +1051,31 @@ Owner: "vs mein enemy ke marne per blood effect dikhta hai wiki mein check karo 
 
 Before, a kill showed only a faint blue soul puff, and Disable Blood only switched the Blood Arenas floor stains.
 
-Now (`VFXPoolManager.PlayBlood`, called from `EnemyDrop` next to the soul puff):
-- A new `VfxKind.Blood` (`VFX_Blood.prefab`, built by `WeaponVfxBuilder.BuildBlood`, menu Soul Hunter/Content/Build Blood VFX): 12 dark-red drops spray up from the body and fall, a splat lands on the floor under the enemy, and 4 small drops land around it. The splat stays, then fades within about 2.4 s (close to VS's death animation length). The drops and splat use alpha blending, so they darken the floor instead of glowing. The splat texture is procedural (`SH10_Vfx_BloodSplat.png`).
-- The splat lies on the floor's top, found by a raycast under the enemy (`VFXPoolManager.GroundHeight`), because bodies stand on the player's plane above it.
-- Disable Blood switches it off. The soul puff stays.
+The first version (a small dark spray and a floor splat, commit `3e7d1271`) was rejected by the owner ("ye sahi nahi hai"). Online samples were shown for comparison (artifact "Soul Hunter Blood Samples": Vefects Free Blood VFX, Vefects Blood VFX, RVFX Blood Effects Pack, and CC0 OpenGameArt sheets by sinestesia, overcrafted and tobiasm). The owner then asked: "blood effect enemy ke neck se spray particle ki tarah VFX set karo".
+
+Now (`VFXPoolManager.PlayBlood(body, neck, awayFromHero)`, called from `EnemyDrop` next to the soul puff):
+- **Neck spray** (`VfxKind.BloodSpray`, `VFX_BloodSpray.prefab`):
+  - A jet of stretched bright-red particles spurts from the neck in three weakening pulses over 0.7 s, like a heartbeat.
+  - The jet is tilted 50° up and turned away from the hero, ±25° at random (`SprayDirection`).
+  - It comes with two bursts of round drops (a 35° cone) and a short mist puff.
+  - The particles live in world space, so the jet arcs and falls under gravity.
+- The neck is 80% of the way up the enemy's drawn body (`VFXPoolManager.NeckOf`, from `EnemyDrop.BodyBounds`, read at death while the model is still shown). The models share no neck bone.
+- **Floor splat** (`VfxKind.Blood`, `VFX_Blood.prefab`): it lies 0.9 units out in the jet's direction (`SplatOffset`), where the drops land, on the floor top (`GroundHeight`). It grows at about 0.3 s, when the drops arrive, and 5 small drops land around it. It fades by about 2.5 s.
+- Everything is alpha blended, so it darkens the floor instead of glowing. Built by `WeaponVfxBuilder.BuildBlood` (menu Soul Hunter/Content/Build Blood VFX).
+- Disable Blood switches both off; the soul puff stays.
 - Level 7 ghosts (`EnemyController.IsSpectral`) leave no blood. The wiki is silent on this; it is Soul Hunter's choice, because ghosts have no body.
-- The pool keeps up to 64 blood effects (other kinds keep 32), with the oldest reused first. Colours, sizes and timings are provisional. **The look is not yet owner-approved.**
+- The pool keeps up to 64 of each blood kind (other kinds keep 32), with the oldest reused first.
+- Colours, sizes, angles and timings are provisional. The spray is the same size on elites and bosses. **The look is not yet owner-approved.**
 
 Validation:
-- `BloodPlayModeTests` (R): a kill leaves blood under the enemy on the floor, alpha blended, still there at 1.5 s and gone by 3.5 s. With Disable Blood on there is no blood but the puff still plays; a ghost leaves none; kills bleed again once the option is off.
-- `WeaponVfxTests.VfxLibrary_HasEveryEffect_AndNoneLoops` (T) now includes Blood.
-- EditMode 471/471, PlayMode 173/173, 0 errors, save untouched (`D:/SoulHunter-Validation/run-20260929-blood/`).
-- Editor play `autoplay-editor-59` (before) and `-60` (after), Stage 1, 2 min: 0 errors, min 63 FPS. In `-60` the screenshots show fresh red splats and drops under kills and darker, fading stains behind the horde (partial `V`, `run-20260929-blood/editor-play-blood.png`).
+- `BloodPlayModeTests` (R):
+  - A kill sprays from the neck (within 0.05 of 80% of the body height), away from the hero, rising at 50°.
+  - It is still spurting at 0.35 s and has ended by 1.55 s.
+  - The splat lies on the floor where the jet lands; everything is alpha blended; the splat is still there at 1.55 s and gone by 3.55 s.
+  - With Disable Blood on there is no spray or splat, but the puff plays. A ghost leaves neither. Kills bleed again once the option is off.
+- `WeaponVfxTests.VfxLibrary_HasEveryEffect_AndNoneLoops` (T) includes both kinds.
+- EditMode 471/471, PlayMode 173/173, 0 errors, save untouched (`D:/SoulHunter-Validation/run-20260929-bloodspray/`).
+- Editor play `autoplay-editor-61` (Stage 1, 1.5 min, a screenshot every second): 0 errors, min 72 FPS. The shots show red jets rising from killed enemies and drops arcing onto the ground, with a splat left behind (partial `V`, `run-20260929-bloodspray/editor-play-spray-zoom.png`).
 
 Not yet played by the owner.
 
