@@ -36,6 +36,8 @@ Match mechanics and feel only. Do not copy Vampire Survivors code, decompiled or
 
 Owner rule (2026-09-28): every Soul Hunter task, however small, is based 0–100% on the VS wiki (vampire.survivors.wiki), plus the owner's story (`Docs/Game_Design_Document.md`, never edited). Look the rule up on the wiki (raw: `https://vampire.survivors.wiki/w/<Page>?action=raw`) and cite the page. Never state a VS fact from memory; if the wiki is silent or thin, say so. Ask the owner only when the wiki has no answer, it conflicts with the story or an owner decision, or it is art approval.
 
+Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT implementation (section 10) of the VS rule, and VS only. Where the wiki gives a number or rule, use it; "provisional" Soul Hunter numbers are not acceptable there. Where the wiki is silent, say so and ask the owner. Owner decisions and the owner's story above still come first.
+
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 
 ---
