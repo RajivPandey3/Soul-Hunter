@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SoulHunter.Gameplay.VFX
 {
     /// <summary>Gameplay feedback effects played by VFXPoolManager.Play.</summary>
-    public enum VfxKind { HitSpark, EnemyDeath, GemPickup, GoldPickup, Heal, ChestOpen, LevelUp, Explosion, Slash, Blood, BloodSpray }
+    public enum VfxKind { HitSpark, EnemyDeath, GemPickup, GoldPickup, Heal, ChestOpen, LevelUp, Explosion, Slash, BloodSpray }
 
     /// <summary>
     /// Learning Comment: Saare gameplay VFX prefabs ek jagah (Resources/VfxLibrary.asset). VfxBuilder (editor) inhe
@@ -23,9 +23,7 @@ namespace SoulHunter.Gameplay.VFX
         public GameObject LevelUp;
         public GameObject Explosion;
         public GameObject Slash;
-        /// <summary>Blood on an enemy's death (VS has blood, switched off by its "Disable Blood" option).</summary>
-        public GameObject Blood;
-        /// <summary>The blood jet that spurts from a killed enemy's neck (owner, 2026-09-29).</summary>
+        /// <summary>The 300-particle blood jet from a killed enemy's neck (owner, 2026-09-29). VS has blood, switched off by its "Disable blood" option.</summary>
         public GameObject BloodSpray;
 
         public GameObject Get(VfxKind kind) => kind switch
@@ -39,7 +37,6 @@ namespace SoulHunter.Gameplay.VFX
             VfxKind.LevelUp => LevelUp,
             VfxKind.Explosion => Explosion,
             VfxKind.Slash => Slash,
-            VfxKind.Blood => Blood,
             VfxKind.BloodSpray => BloodSpray,
             _ => null,
         };

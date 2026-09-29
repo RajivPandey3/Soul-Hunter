@@ -264,8 +264,8 @@ namespace SoulHunter.Editor.Content
         }
 
         /// <summary>
-        /// Menu: Soul Hunter/Content/Build Blood VFX. Builds only the blood effects (the neck spray and the floor splat) and
-        /// sets them in VfxLibrary, leaving every other effect and weapon prefab as it is.
+        /// Menu: Soul Hunter/Content/Build Blood VFX. Builds only the neck blood spray and sets it in VfxLibrary, leaving
+        /// every other effect and weapon prefab as it is.
         /// CLI: -executeMethod SoulHunter.Editor.Content.WeaponVfxBuilder.BuildBloodOnly -quit
         /// </summary>
         [MenuItem("Soul Hunter/Content/Build Blood VFX")]
@@ -276,108 +276,52 @@ namespace SoulHunter.Editor.Content
             if (library == null) throw new FileNotFoundException("Build the weapon VFX first", LibraryPath);
             BuildBlood(library);
             AssetDatabase.SaveAssets();
-            Debug.Log("[WeaponVfxBuilder] Built the blood effects.");
+            Debug.Log("[WeaponVfxBuilder] Built the neck blood spray.");
         }
 
-        private static readonly Color BloodBright = new Color(0.88f, 0.05f, 0.08f), BloodRed = new Color(0.7f, 0.02f, 0.06f),
-                                      BloodDark = new Color(0.45f, 0.0f, 0.04f);
+        private static readonly Color BloodBright = new Color(0.88f, 0.05f, 0.08f), BloodRed = new Color(0.7f, 0.02f, 0.06f);
+
+        /// <summary>Three spurts, like a heartbeat, each weaker than the last: (start seconds, particles per step), 10 steps 0.02 s apart.</summary>
+        public static readonly (float Time, int Count)[] SprayPulses = { (0f, 14), (0.25f, 10), (0.5f, 6) };
+        public const int SprayStepsPerPulse = 10;
+        public const float SprayStepSeconds = 0.02f;
 
         /// <summary>
-        /// Blood on an enemy's death. Owner (2026-09-29): "blood effect enemy ke neck se spray particle ki tarah". VS has
-        /// blood that its "Disable blood" option switches off; the wiki does not show its look, so this is Soul Hunter's own:
-        /// VFX_BloodSpray: a jet spurts from the neck in three pulses (like a heartbeat) along the effect's +Y, which
-        ///   VFXPoolManager.PlayBlood turns away from the hero and upwards, with a spray of round drops and a puff of mist.
-        ///   The particles live in the world, so the jet arcs and falls under gravity.
-        /// VFX_Blood: where the jet lands, a splat grows on the floor once the drops arrive, with small drops around it, and
-        ///   fades within about 2.4 s (VS death animations in the wiki last 1.8-2.5 s).
-        /// Alpha blended, so the blood darkens the floor instead of glowing. Sizes, colours and timings are provisional.
+        /// Blood on an enemy's death. Owner (2026-09-29): "blood effect enemy ke neck se spray particle ki tarah", then
+        /// "jameen per blood effect nahi chahiye ... neck ke pass ... 300 particle mein dikhao". VS has blood that its
+        /// "Disable blood" option switches off; the wiki does not show its look, so this is Soul Hunter's own.
+        /// VFX_BloodSpray: exactly 300 particles (VFXPoolManager.SprayParticles) spurt from the neck in three pulses
+        /// (140, 100 and 60 particles over 0.7 s) along the effect's +Y, which VFXPoolManager.PlayBlood turns away from the
+        /// hero and upwards. Stretched streaks and small round drops in one system, in world space, so the jet arcs and
+        /// falls under gravity; nothing is left on the ground. Alpha blended. Sizes, colours and timings are provisional.
         /// </summary>
         private static void BuildBlood(VfxLibrary library)
         {
             var dropTex = Texture("SH10_Vfx_BloodDrop", (x, y) => { float d = Mathf.Sqrt(x * x + y * y); return Mathf.Clamp01((1f - d) * 3f); });
-            var splatTex = Texture("SH10_Vfx_BloodSplat", BloodSplatAlpha);
             var drop = ParticleMaterial("SH10_Vfx_BloodDrop", dropTex, additive: false);
-            var splat = ParticleMaterial("SH10_Vfx_BloodSplat", splatTex, additive: false);
 
             var spray = new GameObject("VFX_BloodSpray");
             var jet = AddParticles(spray.transform, new Ps
             {
-                Name = "Jet", Material = drop, World = true, Duration = 0.7f, Rate = 1f,
-                Lifetime = new Vector2(0.45f, 0.7f), Speed = new Vector2(4f, 6.5f), Size = new Vector2(0.1f, 0.17f),
+                Name = "Jet", Material = drop, World = true, Duration = 0.8f,
+                Lifetime = new Vector2(0.4f, 0.7f), Speed = new Vector2(3f, 6.5f), Size = new Vector2(0.05f, 0.14f),
                 ColorA = BloodBright, ColorB = BloodRed, EndColor = new Color(0.5f, 0f, 0.04f, 0.85f),
-                Gravity = 1.4f, Shape = ParticleSystemShapeType.Cone, Radius = 0.04f,
-                SizeCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.7f), Stretch = true, StretchLength = 1.2f, MaxParticles = 60,
+                Gravity = 1.4f, Shape = ParticleSystemShapeType.Cone, Radius = 0.05f,
+                SizeCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.7f), Stretch = true, StretchLength = 1.2f,
+                MaxParticles = VFXPoolManager.SprayParticles,
             });
-            var jetShape = jet.shape;
-            jetShape.angle = 9f;
-            jetShape.rotation = new Vector3(-90f, 0f, 0f); // the cone points along the effect's +Y
-            var jetEmission = jet.emission;
-            // Three spurts, each weaker than the last.
-            jetEmission.rateOverTime = new ParticleSystem.MinMaxCurve(95f, new AnimationCurve(
-                new Keyframe(0f, 1f), new Keyframe(0.16f, 0.25f), new Keyframe(0.3f, 0.85f), new Keyframe(0.46f, 0.2f),
-                new Keyframe(0.6f, 0.6f), new Keyframe(0.8f, 0.1f), new Keyframe(1f, 0f)));
+            var shape = jet.shape;
+            shape.angle = 14f;
+            shape.rotation = new Vector3(-90f, 0f, 0f); // the cone points along the effect's +Y
+            var emission = jet.emission;
+            emission.rateOverTime = 0f;
+            var bursts = new ParticleSystem.Burst[SprayPulses.Length];
+            for (int i = 0; i < SprayPulses.Length; i++)
+                bursts[i] = new ParticleSystem.Burst(SprayPulses[i].Time, (short)SprayPulses[i].Count, SprayStepsPerPulse, SprayStepSeconds);
+            emission.SetBursts(bursts);
             jet.GetComponent<ParticleSystemRenderer>().velocityScale = 0.06f;
-
-            var drops = AddParticles(spray.transform, new Ps
-            {
-                Name = "Drops", Material = drop, World = true, Burst = 10, Duration = 0.7f,
-                Lifetime = new Vector2(0.4f, 0.7f), Speed = new Vector2(2f, 5f), Size = new Vector2(0.06f, 0.12f),
-                ColorA = BloodBright, ColorB = BloodDark, EndColor = new Color(0.5f, 0f, 0.04f, 0.9f),
-                Gravity = 1.6f, Shape = ParticleSystemShapeType.Cone, Radius = 0.06f,
-                SizeCurve = AnimationCurve.Constant(0f, 1f, 1f), MaxParticles = 24,
-            });
-            var dropsShape = drops.shape;
-            dropsShape.angle = 35f;
-            dropsShape.rotation = new Vector3(-90f, 0f, 0f);
-            var dropsEmission = drops.emission;
-            dropsEmission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)10), new ParticleSystem.Burst(0.3f, (short)6) });
-
-            AddParticles(spray.transform, new Ps
-            {
-                Name = "Mist", Material = drop, World = true, Burst = 3, Duration = 0.4f,
-                Lifetime = new Vector2(0.25f, 0.4f), Speed = new Vector2(0.3f, 0.8f), Size = new Vector2(0.35f, 0.6f),
-                ColorA = new Color(0.8f, 0.04f, 0.07f, 0.55f), ColorB = new Color(0.6f, 0.02f, 0.05f, 0.45f),
-                EndColor = new Color(0.5f, 0f, 0.04f, 0f), SizeCurve = Grow(0.6f, 1.4f), Radius = 0.08f, MaxParticles = 4,
-            });
             library.BloodSpray = SaveVfx(spray, VfxFolder);
-
-            var blood = new GameObject("VFX_Blood");
-            // The splat grows once the jet's drops arrive (about 0.3 s), then stays and fades.
-            AddParticles(blood.transform, new Ps
-            {
-                Name = "Splat", Material = splat, World = true, Burst = 1, Duration = 0.5f,
-                Lifetime = new Vector2(2.2f, 2.5f), Speed = Vector2.zero, Size = new Vector2(1.4f, 2f),
-                ColorA = BloodRed, ColorB = BloodDark, EndColor = new Color(0.4f, 0f, 0.03f, 0f),
-                SizeCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.1f, 0f), new Keyframe(0.18f, 1f), new Keyframe(1f, 1.05f)),
-                HorizontalBillboard = true, MaxParticles = 2,
-            });
-            AddParticles(blood.transform, new Ps
-            {
-                Name = "Drops", Material = splat, World = true, Burst = 5, Duration = 0.5f,
-                Lifetime = new Vector2(1.8f, 2.2f), Speed = Vector2.zero, Size = new Vector2(0.25f, 0.5f),
-                ColorA = BloodRed, ColorB = BloodDark, EndColor = new Color(0.4f, 0f, 0.03f, 0f),
-                SizeCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.12f, 0f), new Keyframe(0.2f, 1f), new Keyframe(1f, 1f)),
-                Shape = ParticleSystemShapeType.Circle, Radius = 1.1f, HorizontalBillboard = true, MaxParticles = 6,
-            }, new Vector3(0f, 0.01f, 0f));
-            library.Blood = SaveVfx(blood, VfxFolder);
             EditorUtility.SetDirty(library);
-        }
-
-        /// <summary>An irregular splat: a lumpy centre blob and a few droplets around it (procedural, Soul Hunter's own).</summary>
-        private static float BloodSplatAlpha(float x, float y)
-        {
-            float d = Mathf.Sqrt(x * x + y * y), angle = Mathf.Atan2(y, x);
-            float edge = 0.5f + 0.09f * Mathf.Sin(angle * 5f + 0.7f) + 0.06f * Mathf.Sin(angle * 9f + 2.1f)
-                         + 0.1f * (Mathf.PerlinNoise(Mathf.Cos(angle) * 2f + 5f, Mathf.Sin(angle) * 2f + 5f) - 0.5f);
-            float blob = Mathf.Clamp01((edge - d) * 14f);
-            float drops = 0f;
-            for (int i = 0; i < 7; i++)
-            {
-                float a = i * 0.9f + 0.4f, r = 0.68f + 0.07f * (i % 3), size = 0.05f + 0.025f * (i % 2);
-                float dx = x - Mathf.Cos(a) * r, dy = y - Mathf.Sin(a) * r;
-                drops = Mathf.Max(drops, Mathf.Clamp01((size - Mathf.Sqrt(dx * dx + dy * dy)) * 40f));
-            }
-            return Mathf.Max(blob, drops) * 0.92f;
         }
 
         private static AnimationCurve Grow(float from, float to) => AnimationCurve.EaseInOut(0f, from, 1f, to);

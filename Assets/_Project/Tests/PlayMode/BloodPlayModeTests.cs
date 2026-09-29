@@ -16,13 +16,13 @@ namespace SoulHunter.Tests.PlayMode
     /// <summary>
     /// Blood on enemy deaths. VS has blood on kills and a "Disable blood" option that switches it off
     /// (vampire.survivors.wiki/w/Options, added in v1.6.0); the wiki does not describe its look. A killed enemy leaves a
-    /// jet of blood from its neck, away from the hero, and a splat on the floor where the jet lands that fades after about 2.4 s; nothing with Disable Blood on, and
+    /// jet of 300 blood particles from its neck, away from the hero, and nothing on the ground (owner, 2026-09-29); nothing with Disable Blood on, and
     /// no blood from Level 7 ghosts.
     /// </summary>
     public class BloodPlayModeTests : GameplayPlayModeTestBase
     {
         [UnityTest]
-        public IEnumerator AKill_SpraysBloodFromTheNeck_AwayFromTheHero_AndLeavesASplatThatFades()
+        public IEnumerator AKill_Sprays300BloodParticlesFromTheNeck_AwayFromTheHero_AndNothingOnTheGround()
         {
             yield return BootIntoGameplay();
             var enemy = SpawnEnemyNearPlayer();
@@ -37,7 +37,7 @@ namespace SoulHunter.Tests.PlayMode
             var vfx = VFXPoolManager.Instance;
             Assert.That(vfx.Playing(VfxKind.EnemyDeath), Is.Not.Empty, "The soul puff still plays.");
 
-            // Owner (2026-09-29): the blood sprays from the neck like a particle jet.
+            // Owner (2026-09-29): the blood sprays from the neck like a particle jet, with 300 particles.
             var sprays = vfx.Playing(VfxKind.BloodSpray);
             Assert.That(sprays, Has.Count.EqualTo(1), "A kill sprays blood. " + Errors());
             var spray = sprays[0].transform;
@@ -50,28 +50,32 @@ namespace SoulHunter.Tests.PlayMode
                 "The jet points away from the hero.");
             Assert.That(Mathf.Asin(jet.y) * Mathf.Rad2Deg, Is.EqualTo(VFXPoolManager.SprayElevationDegrees).Within(1f), "The jet rises.");
 
-            var jetParticles = spray.Find("Jet").GetComponent<ParticleSystem>();
-            yield return new WaitForSeconds(0.35f);
-            Assert.That(jetParticles.particleCount, Is.GreaterThan(5), "The jet is still spurting after 0.35 s.");
-            Assert.That(jetParticles.isEmitting, Is.True);
-
-            var blood = vfx.Playing(VfxKind.Blood);
-            Assert.That(blood, Has.Count.EqualTo(1), "The jet leaves a splat on the floor.");
-            var root = blood[0].transform.position;
-            Vector3 landing = at + flatJet * VFXPoolManager.SplatOffset;
-            Assert.That(new Vector2(root.x - landing.x, root.z - landing.z).magnitude, Is.LessThan(0.02f), "The splat lies where the jet lands.");
-            Assert.That(root.y, Is.EqualTo(VFXPoolManager.GroundHeight(landing) + 0.03f).Within(0.01f), "The splat lies on the floor, not at body height.");
-            Assert.That(root.y, Is.LessThan(at.y), "The floor is below the enemy's body.");
-
-            foreach (var renderer in blood[0].GetComponentsInChildren<ParticleSystemRenderer>().Concat(spray.GetComponentsInChildren<ParticleSystemRenderer>()))
+            var systems = sprays[0].GetComponentsInChildren<ParticleSystem>();
+            Assert.That(systems, Has.Length.EqualTo(1), "One spray system, nothing else (no ground splat).");
+            var particles = systems[0];
+            foreach (var renderer in sprays[0].GetComponentsInChildren<ParticleSystemRenderer>())
                 Assert.That(renderer.sharedMaterial.GetFloat("_DstBlend"), Is.EqualTo((float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha),
-                    $"{renderer.name} is alpha blended (blood darkens the floor; it does not glow).");
+                    $"{renderer.name} is alpha blended (blood, not a glow).");
 
-            yield return new WaitForSeconds(1.2f);
-            Assert.That(sprays[0].activeSelf, Is.False, "The jet is over.");
-            Assert.That(blood[0].activeSelf, Is.True, "The splat stays on the ground for a while.");
-            yield return new WaitForSeconds(2f);
-            Assert.That(blood[0].activeSelf, Is.False, "It fades and returns to the pool.");
+            // Count every particle the spray emits: the last pulse ends at 0.68 s and no particle lives longer than 0.7 s.
+            int emitted = 0, previous = 0, peak = 0;
+            var buffer = new ParticleSystem.Particle[VFXPoolManager.SprayParticles + 10];
+            var seen = new HashSet<uint>();
+            float end = Time.time + 1.6f;
+            while (Time.time < end)
+            {
+                int alive = particles.GetParticles(buffer);
+                for (int i = 0; i < alive; i++) if (seen.Add(buffer[i].randomSeed)) emitted++;
+                peak = Mathf.Max(peak, alive);
+                previous = alive;
+                yield return null;
+            }
+            Assert.That(emitted, Is.EqualTo(VFXPoolManager.SprayParticles), "The spray has 300 particles.");
+            Assert.That(peak, Is.GreaterThan(100), "Many are in the air together.");
+            Assert.That(previous, Is.EqualTo(0));
+
+            yield return new WaitForSeconds(0.3f);
+            Assert.That(sprays[0].activeSelf, Is.False, "The spray is over and back in the pool.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
@@ -100,7 +104,6 @@ namespace SoulHunter.Tests.PlayMode
                 yield return null;
                 var vfx = VFXPoolManager.Instance;
                 Assert.That(vfx.Playing(VfxKind.EnemyDeath), Is.Not.Empty, "The kill still shows its soul puff.");
-                Assert.That(vfx.Playing(VfxKind.Blood), Is.Empty, "VS Disable Blood: no blood.");
                 Assert.That(vfx.Playing(VfxKind.BloodSpray), Is.Empty, "VS Disable Blood: no spray.");
             }
             finally
@@ -115,12 +118,11 @@ namespace SoulHunter.Tests.PlayMode
             yield return new WaitForSeconds(0.05f); // past the blood throttle
             Kill(ghost, DamageType.Holy);
             yield return null;
-            Assert.That(VFXPoolManager.Instance.Playing(VfxKind.Blood), Is.Empty, "A ghost leaves no blood.");
             Assert.That(VFXPoolManager.Instance.Playing(VfxKind.BloodSpray), Is.Empty, "A ghost sprays no blood.");
 
             Kill(SpawnEnemyNearPlayer(), DamageType.Normal);
             yield return null;
-            Assert.That(VFXPoolManager.Instance.Playing(VfxKind.Blood), Is.Not.Empty, "With the option off again, kills bleed.");
+            Assert.That(VFXPoolManager.Instance.Playing(VfxKind.BloodSpray), Is.Not.Empty, "With the option off again, kills bleed.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
@@ -128,7 +130,7 @@ namespace SoulHunter.Tests.PlayMode
         private static IEnumerator WaitForNoBlood()
         {
             float end = Time.realtimeSinceStartup + 5f;
-            while (VFXPoolManager.Instance != null && (VFXPoolManager.Instance.Playing(VfxKind.Blood).Count > 0 || VFXPoolManager.Instance.Playing(VfxKind.BloodSpray).Count > 0) && Time.realtimeSinceStartup < end)
+            while (VFXPoolManager.Instance != null && VFXPoolManager.Instance.Playing(VfxKind.BloodSpray).Count > 0 && Time.realtimeSinceStartup < end)
                 yield return null;
             yield return new WaitForSeconds(0.05f); // past the blood throttle
         }

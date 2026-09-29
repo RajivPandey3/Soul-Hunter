@@ -1053,29 +1053,35 @@ Before, a kill showed only a faint blue soul puff, and Disable Blood only switch
 
 The first version (a small dark spray and a floor splat, commit `3e7d1271`) was rejected by the owner ("ye sahi nahi hai"). Online samples were shown for comparison (artifact "Soul Hunter Blood Samples": Vefects Free Blood VFX, Vefects Blood VFX, RVFX Blood Effects Pack, and CC0 OpenGameArt sheets by sinestesia, overcrafted and tobiasm). The owner then asked: "blood effect enemy ke neck se spray particle ki tarah VFX set karo".
 
-Now (`VFXPoolManager.PlayBlood(body, neck, awayFromHero)`, called from `EnemyDrop` next to the soul puff):
-- **Neck spray** (`VfxKind.BloodSpray`, `VFX_BloodSpray.prefab`):
-  - A jet of stretched bright-red particles spurts from the neck in three weakening pulses over 0.7 s, like a heartbeat.
-  - The jet is tilted 50° up and turned away from the hero, ±25° at random (`SprayDirection`).
-  - It comes with two bursts of round drops (a 35° cone) and a short mist puff.
-  - The particles live in world space, so the jet arcs and falls under gravity.
+The owner played that version (a neck jet plus a floor splat, commit `fa694b1c`) and decided (2026-09-29): "jameen per blood effect nahi chahiye, haa uper jo blood neck ke pass dikh raha hai use 300 particle mein dikhao". So there is no blood on the ground, and the neck spray has 300 particles.
+
+Now (`VFXPoolManager.PlayBlood(neck, awayFromHero)`, called from `EnemyDrop` next to the soul puff):
+- **Neck spray** (`VfxKind.BloodSpray`, `VFX_BloodSpray.prefab`, built by `WeaponVfxBuilder.BuildBlood`, menu Soul Hunter/Content/Build Blood VFX):
+  - One particle system emits exactly 300 particles (`VFXPoolManager.SprayParticles`).
+  - They come in three pulses, like a heartbeat: 140, then 100, then 60 particles, each pulse 10 bursts 0.02 s apart, starting at 0, 0.25 and 0.5 s.
+  - The particles are stretched bright-red streaks and small drops in a 14° cone, alpha blended, living in world space, so the jet arcs and falls under gravity. Each lives 0.4–0.7 s; the spray is over by about 1.4 s.
+- The jet is tilted 50° up and turned away from the hero, ±25° at random (`SprayDirection`).
 - The neck is 80% of the way up the enemy's drawn body (`VFXPoolManager.NeckOf`, from `EnemyDrop.BodyBounds`, read at death while the model is still shown). The models share no neck bone.
-- **Floor splat** (`VfxKind.Blood`, `VFX_Blood.prefab`): it lies 0.9 units out in the jet's direction (`SplatOffset`), where the drops land, on the floor top (`GroundHeight`). It grows at about 0.3 s, when the drops arrive, and 5 small drops land around it. It fades by about 2.5 s.
-- Everything is alpha blended, so it darkens the floor instead of glowing. Built by `WeaponVfxBuilder.BuildBlood` (menu Soul Hunter/Content/Build Blood VFX).
-- Disable Blood switches both off; the soul puff stays.
-- Level 7 ghosts (`EnemyController.IsSpectral`) leave no blood. The wiki is silent on this; it is Soul Hunter's choice, because ghosts have no body.
-- The pool keeps up to 64 of each blood kind (other kinds keep 32), with the oldest reused first.
-- Colours, sizes, angles and timings are provisional. The spray is the same size on elites and bosses. **The look is not yet owner-approved.**
+- **Nothing is left on the ground.** The floor splat, its prefab (`VFX_Blood`) and its texture and material were removed.
+- Disable Blood switches the spray off; the soul puff stays.
+- Level 7 ghosts (`EnemyController.IsSpectral`) do not bleed. The wiki is silent on this; it is Soul Hunter's choice, because ghosts have no body.
+- At most 32 sprays play at once (9,600 particles), with the oldest reused first. Colours, sizes, angles and timings are provisional. The spray is the same size on elites and bosses. **The look is not yet owner-approved.**
+- `AutoplayBot` option `-sh-autoplay-no-blood` plays with Disable Blood on, for A/B checks.
 
 Validation:
 - `BloodPlayModeTests` (R):
   - A kill sprays from the neck (within 0.05 of 80% of the body height), away from the hero, rising at 50°.
-  - It is still spurting at 0.35 s and has ended by 1.55 s.
-  - The splat lies on the floor where the jet lands; everything is alpha blended; the splat is still there at 1.55 s and gone by 3.55 s.
-  - With Disable Blood on there is no spray or splat, but the puff plays. A ghost leaves neither. Kills bleed again once the option is off.
-- `WeaponVfxTests.VfxLibrary_HasEveryEffect_AndNoneLoops` (T) includes both kinds.
-- EditMode 471/471, PlayMode 173/173, 0 errors, save untouched (`D:/SoulHunter-Validation/run-20260929-bloodspray/`).
-- Editor play `autoplay-editor-61` (Stage 1, 1.5 min, a screenshot every second): 0 errors, min 72 FPS. The shots show red jets rising from killed enemies and drops arcing onto the ground, with a splat left behind (partial `V`, `run-20260929-bloodspray/editor-play-spray-zoom.png`).
+  - It is one alpha-blended system with no ground splat.
+  - Counting every particle it emits gives exactly 300, over 100 of them in the air together, and none left after 1.6 s.
+  - With Disable Blood on there is no spray, but the puff plays. A ghost sprays none. Kills bleed again once the option is off.
+- EditMode 471/471, PlayMode 173/173, 0 errors, save untouched (`D:/SoulHunter-Validation/run-20260929-spray300/`).
+- Editor play `autoplay-editor-62` (Stage 1, 1.5 min, a screenshot every second): 0 errors. The shots show dense red jets spraying from killed enemies' necks and nothing on the ground (partial `V`, `run-20260929-spray300/editor-play-spray300-zoom.png`). That run's FPS fell from 70–99 to 36–51 once kills sped up (1,221 kills in 90 s).
+- **Cost (GUI editor A/B, Stage 10, god mode, player level 60, 3 min, about 36 kills per second):**
+  - blood on (`-63`): 6,556 kills; after 15 s, average 45.6 FPS, last minute 34.9, minimum 26;
+  - blood off (`-64`): 6,607 kills; average 47.8, last minute 40.3, minimum 33.
+  - About 5–13% slower, and the blood-on run went below the 30 FPS hard minimum in the GUI editor.
+  - A repeat blood-on run (`-65`) killed only 2,981 and averaged 42.1 (minimum 34), so the runs are noisy.
+  - Editor numbers are not build numbers; no build benchmark was run (`P` unverified).
 
 Not yet played by the owner.
 

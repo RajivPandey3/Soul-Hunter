@@ -98,7 +98,7 @@ namespace SoulHunter.Gameplay.AI
             if (_enemy == null || !_enemy.IsSpectral)
             {
                 Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
-                SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(transform.position, SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(BodyBounds()), away);
+                SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(BodyBounds()), away);
             }
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)

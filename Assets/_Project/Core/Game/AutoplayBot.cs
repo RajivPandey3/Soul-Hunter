@@ -40,6 +40,7 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-jump-to N                 jump the run to stage N, as the Debug "Jump To Stage" menu does
     ///   -sh-autoplay-jump-after S (default 20) seconds of play before -sh-autoplay-jump-to applies
     ///   -sh-autoplay-start-level N             start at player level N (the bot picks every level-up), to measure later stages
+    ///   -sh-autoplay-no-blood                  play with Disable Blood on (A/B checks of the blood spray's cost)
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -66,6 +67,8 @@ namespace SoulHunter.Gameplay.Core
             public float JumpAfterSeconds = 20f;
             /// <summary>Player level to start at (1 = normal); the level-ups are chosen by the bot as usual.</summary>
             public int StartLevel = 1;
+            /// <summary>Plays with the Disable Blood option on (A/B checks of the blood spray's cost).</summary>
+            public bool NoBlood;
             public bool QuitWhenDone = true;
         }
 
@@ -139,6 +142,7 @@ namespace SoulHunter.Gameplay.Core
                 JumpToStage = int.TryParse(ArgValue("-sh-autoplay-jump-to"), out var jumpTo) ? Mathf.Clamp(jumpTo, 1, 10) : 0,
                 JumpAfterSeconds = float.TryParse(ArgValue("-sh-autoplay-jump-after"), NumberStyles.Float, inv, out var jumpAfter) ? Mathf.Max(0f, jumpAfter) : 20f,
                 StartLevel = int.TryParse(ArgValue("-sh-autoplay-start-level"), out var startLevel) ? Mathf.Clamp(startLevel, 1, 400) : 1,
+                NoBlood = HasArg("-sh-autoplay-no-blood"),
             };
             Launch(settings);
         }
@@ -174,6 +178,7 @@ namespace SoulHunter.Gameplay.Core
             if (!HasArg(Argument)) save.UseFile(Path.Combine(Application.temporaryCachePath, "autoplay_save.json"));
             save.CurrentData.SelectedCharacterName = Config.Character;
             if (Config.Gold >= 0) save.CurrentData.Currency = Config.Gold; // the save is a throw-away one by now
+            save.CurrentData.DisableBlood = Config.NoBlood;
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
