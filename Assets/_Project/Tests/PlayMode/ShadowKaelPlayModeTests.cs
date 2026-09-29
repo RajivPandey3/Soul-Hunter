@@ -156,8 +156,8 @@ namespace SoulHunter.Tests.PlayMode
 
             var playerHealth = player.GetComponent<HealthController>();
             int playerStart = playerHealth.CurrentHealth;
-            // Laurel is a shield. Clock Lancet (freeze) and Pentagram (screen wipe) have no player version yet
-            // (owner decision pending), so held by the boss they must only leave the boss and its horde alone.
+            // Laurel is a shield. Clock Lancet slows and Pentagram erases items (owner decision 2026-09-30, tests below);
+            // neither deals damage, so here they must only leave the boss and its horde alone.
             bool attacks = type != UpgradeType.Laurel && type != UpgradeType.ClockLancet && type != UpgradeType.Pentagram;
             float deadline = Time.realtimeSinceStartup + (attacks ? 10f : 4f);
             var closest = new Dictionary<string, string>();
@@ -196,6 +196,104 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(hurt, Is.Empty, $"The mirrored {type} hurt {hurt.Count} of the boss's own horde.");
             Assert.That(horde.Any(h => h != null && h.GetComponent<EnemyController>().IsFrozen), Is.False, $"The mirrored {type} froze the horde.");
             foreach (var h in horde) if (h != null) Object.Destroy(h.gameObject);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>Spawns Shadow Kael holding only <paramref name="type"/>, held 3 units right of the player, harmless on contact.</summary>
+        private IEnumerator KaelHolding(UpgradeType type, System.Action<ShadowKaelController, AutoAttackWeapon> ready)
+        {
+            yield return EnterStage10();
+            var player = PlayerController.Instance;
+            var weapons = WeaponManager.Instance;
+            var weaponPrefab = weapons.GetWeaponObject(type);
+            foreach (var existing in player.GetComponentsInChildren<AutoAttackWeapon>())
+                if (!existing.gameObject.name.StartsWith(weaponPrefab.name)) existing.gameObject.SetActive(false);
+            weapons.GiveWeapon(type, 1);
+            var kael = SpawnShadowKael();
+            foreach (var own in player.GetComponentsInChildren<AutoAttackWeapon>()) own.gameObject.SetActive(false);
+            kael.GetComponent<TouchDamage>().DamageAmount = 0;
+            Vector3 bossPos = player.transform.position + Vector3.right * 3f;
+            bossPos.y = kael.transform.position.y;
+            kael.transform.position = bossPos;
+            var body = kael.GetComponent<Rigidbody>();
+            if (body != null) body.position = bossPos;
+            Physics.SyncTransforms();
+            ready(kael, kael.GetComponentInChildren<AutoAttackWeapon>(true));
+        }
+
+        [UnityTest]
+        public IEnumerator MirroredClockLancet_SlowsThePlayerToHalfSpeed_ForItsFreezeTime()
+        {
+            // Owner decision (2026-09-30): the player moves at half speed for the weapon's freeze time (2 s at level 1).
+            ShadowKaelController kael = null;
+            AutoAttackWeapon lancet = null;
+            yield return KaelHolding(UpgradeType.ClockLancet, (k, w) => { kael = k; lancet = w; });
+            var player = PlayerController.Instance;
+            Vector3 bossPos = kael.transform.position;
+            float normal = player.MoveSpeed;
+            float deadline = Time.realtimeSinceStartup + 6f;
+            while (!player.IsSlowed && Time.realtimeSinceStartup < deadline)
+            {
+                kael.transform.position = bossPos;
+                yield return null;
+            }
+            Assert.That(player.IsSlowed, Is.True, "The mirrored beam slows the player. " + Errors());
+            Assert.That(player.MoveSpeed, Is.EqualTo(normal * 0.5f).Within(0.001f), "Half speed.");
+            Assert.That(kael.GetComponent<EnemyController>().IsFrozen, Is.False, "The boss is never frozen by its own lancet.");
+
+            // With the lancet gone, the slow ends after the freeze time (2 s x Duration 1).
+            lancet.gameObject.SetActive(false);
+            yield return new WaitForSeconds(ClockLancetWeapon.VsFreezeDuration + 0.2f);
+            Assert.That(player.IsSlowed, Is.False, "The slow ends after the freeze time.");
+            Assert.That(player.MoveSpeed, Is.EqualTo(normal).Within(0.001f));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator MirroredPentagram_ErasesItemsOnScreen_ButNotStageItems_NorTheHorde()
+        {
+            // Owner decision (2026-09-30), using VS Pentagram's item erase (vampire.survivors.wiki/w/Pentagram): "erasing
+            // every enemy, their drops, and all items on the screen, except for stage items". The boss's copy erases no enemy.
+            ShadowKaelController kael = null;
+            AutoAttackWeapon pentagram = null;
+            yield return KaelHolding(UpgradeType.Pentagram, (k, w) => { kael = k; pentagram = w; });
+            var player = PlayerController.Instance;
+            Vector3 at = player.transform.position;
+            // Its own timer off: the boss's Pentagram fires on its own right after spawning and would erase the items
+            // below before the controlled activation (seen 2026-09-30).
+            pentagram.enabled = false;
+            yield return null;
+
+            var pool = PickupPoolManager.Instance;
+            for (int i = 0; i < 5; i++) pool.SpawnGem(at + new Vector3(-3f + i * 1.5f, 0f, 7f), 10); // beyond the magnet (4 units)
+            var chicken = pool.SpawnChicken(at + new Vector3(-6f, 0f, -4f));
+            // A stage item brought on screen keeps its mark and must stay.
+            var stageItem = Object.FindFirstObjectByType<StageItemSpawner>().Placed.FirstOrDefault(p => p != null && p.activeInHierarchy && p.GetComponent<StageItemMark>() != null);
+            Assert.IsNotNull(stageItem, "Stage 10 placed its stage items.");
+            stageItem.transform.position = at + new Vector3(6f, 0f, -4f);
+            var enemyPrefab = GetPrivateField<List<GameObject>>(_spawner, "_stageEnemyPrefabs")[0];
+            var enemy = Object.Instantiate(enemyPrefab, kael.transform.position + Vector3.forward * 2f, Quaternion.identity);
+            yield return null;
+            Assert.That(GroundItemEraser.OnScreen(Camera.main, chicken.transform.position), Is.True, "The chicken is on screen.");
+            Assert.That(GroundItemEraser.OnScreen(Camera.main, stageItem.transform.position), Is.True, "The stage item is on screen.");
+
+            // A keep chance below zero makes the VS roll always erase (x / Luck is never below 0), so the real Attack()
+            // path runs deterministically. The roll itself is checked below and in PentagramItemRollTests.
+            typeof(PentagramWeapon).GetField("_chanceToKeepGems", Private).SetValue(pentagram, -1f);
+            int gemsOnScreen = XPGem.ActiveGems.Count(g => g != null && g.gameObject.activeInHierarchy && GroundItemEraser.OnScreen(Camera.main, g.transform.position));
+            string before = $"gems on screen {gemsOnScreen}, all gems {XPGem.ActiveGems.Count}, ticked {PickupTicker.Count}, chicken active {chicken.activeInHierarchy}, " +
+                            $"chicken mark {chicken.GetComponent<StageItemMark>() != null}, camera {Camera.main.name}, luck {kael.MirroredStats.Luck}";
+            typeof(AutoAttackWeapon).GetMethod("Attack", Private).Invoke(pentagram, null);
+
+            Assert.That(((PentagramWeapon)pentagram).LastItemsErased, Is.GreaterThanOrEqualTo(6), "Five gems and a chicken were erased. Before: " + before);
+            Assert.That(XPGem.ActiveGems.Count(g => g != null && GroundItemEraser.OnScreen(Camera.main, g.transform.position)), Is.EqualTo(0), "No gem is left on screen.");
+            Assert.That(chicken.activeInHierarchy, Is.False, "The chicken is erased.");
+            Assert.That(stageItem.activeInHierarchy, Is.True, "Stage items are never erased.");
+            Assert.That(enemy.activeInHierarchy, Is.True, "The boss's Pentagram erases no enemy.");
+            Assert.That(kael.gameObject.activeInHierarchy, Is.True);
+
+            // VS keep roll: with enough Luck (x / totalLuck never above 10%), nothing is erased.
+            Assert.That(GroundItemEraser.ErasesItems(0.1f, 10.1f, 1f), Is.False);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

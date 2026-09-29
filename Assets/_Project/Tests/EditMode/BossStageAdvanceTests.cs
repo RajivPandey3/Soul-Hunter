@@ -52,9 +52,12 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void ClearingAStage_PaysVsGold()
         {
-            // VS wiki: 500 gold for surviving to the end, +100 per unused revival.
+            // VS wiki (The_Reaper, Revival): 500 gold, then +100, +200, +300, +400 per unused revival, then +100 each.
             Assert.That(LevelProgressionManager.StageClearGold(0), Is.EqualTo(500));
-            Assert.That(LevelProgressionManager.StageClearGold(2), Is.EqualTo(700));
+            Assert.That(LevelProgressionManager.StageClearGold(1), Is.EqualTo(600));
+            Assert.That(LevelProgressionManager.StageClearGold(3), Is.EqualTo(1100), "The wiki's own example: 3 revives = 1,100.");
+            Assert.That(LevelProgressionManager.StageClearGold(4), Is.EqualTo(1500));
+            Assert.That(LevelProgressionManager.StageClearGold(6), Is.EqualTo(1700), "Past +400, each revival gives +100.");
             SurviveThirtyMinutes();
             Assert.That(_progression.LastStageClearGold, Is.EqualTo(500), "No player here: Greed 1, and stage 1 has no gold bonus.");
         }

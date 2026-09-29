@@ -3,30 +3,26 @@
 Built 2026-09-30 from raw vampire.survivors.wiki pages (fetched that day) and the Soul Hunter code at commit 0f9a73cd.
 Status: MATCH, PARTIAL, MISSING, DIFFERS-OWNER (an owner decision), SH-ONLY (not in VS, no owner decision), N/A, UNKNOWN.
 
-Counts: MATCH 70, PARTIAL 64, MISSING 26, DIFFERS-OWNER 7, SH-ONLY 5, UNKNOWN 3, N/A 2
+Counts: MATCH 72, PARTIAL 62, MISSING 27, DIFFERS-OWNER 8, UNKNOWN 3, SH-ONLY 2, N/A 2
 
 ## Top gaps
 
 1. **Chests give new items.** VS chests only level up items you own (Treasure_Chest, patch 0.2.7). SH's chest draw can hand out a new weapon or passive.
 2. **Growth at levels 20 and 40.** VS gives +100% Growth at levels 20 and 40 to offset the +600 / +2400 XP. SH charges the XP without the Growth, so levelling there takes about twice as long.
 3. **Six evolutions missing.** Hellfire, La Borra, NO FUTURE, Thunder Loop, Gorgeous Moon and Mannajja have every part in SH but no evolution. Crimson Shroud can never be reached because nothing gives Metaglio.
-4. **Six unions are SH inventions.** They reuse evolution prefabs, and one can never fire. Owner decision: remove them or define real ones.
-5. **Stat caps missing.** VS caps Might and Area at 1000%, Speed and Duration at 500%, Amount at 10. SH caps only Soul Eggs.
-6. **Invulnerability timings.** VS: 240 ms after a hit (SH 0.5 s); brief i-frames after a chicken and after a chest (SH none).
-7. **Base weapons crit.** In VS, Whip/Knife/Axe crit only with the Slash Arcana. SH gives 6 weapons 10% at 2x.
-8. **Results and menu shell.** No full results screen (per-weapon DPS, items, PowerUps), no Collection, Bestiary, Unlocks or Credits; quitting skips the results.
-9. **Orologion and spawning.** New spawns are not frozen during Orologion; enemies can spawn on screen at the sides; event spawns have no 500 cap.
-10. **Arcana.** No choose screen at start and no pick-1-of-4 chest screen; only 4 Arcanas with partial effects, using VS names.
+4. **Stat caps missing.** VS caps Might and Area at 1000%, Speed and Duration at 500%, Amount at 10. SH caps only Soul Eggs.
+5. **Invulnerability timings.** VS: 240 ms after a hit (SH 0.5 s); brief i-frames after a chicken and after a chest (SH none).
+6. **Base weapons crit.** In VS, Whip/Knife/Axe crit only with the Slash Arcana. SH gives 6 weapons 10% at 2x.
+7. **Results and menu shell.** No full results screen (per-weapon DPS, items, PowerUps), no Collection, Bestiary, Unlocks or Credits; quitting skips the results.
+8. **Orologion and spawning.** New spawns are not frozen during Orologion; enemies can spawn on screen at the sides; event spawns have no 500 cap.
+9. **Arcana.** No choose screen at start and no pick-1-of-4 chest screen; only 4 Arcanas with partial effects, using VS names.
 
-## Owner decisions needed
+## Owner decisions
 
-- Should the dash deal 50 damage? It is not in VS or the GDD.
-- Keep or remove the 6 invented unions?
-- Gem colour thresholds: VS 2/9 XP, or scaled to SH's 10-XP gems?
-- Stage-clear revival gold: the Stages page says a flat +100, The_Reaper page says +100/+200/+300. Which one?
-- Add Ebony Wings, Silver/Gold Ring, Stone Mask and a second gun, or accept their absence?
-- Gate modes and PowerUp ranks behind unlocks (VS relics/achievements), or keep them open?
-- Coffins for character unlocks, or keep the condition unlocks?
+- Decided 30 Sep: 5% rule = numbers ±5%; dash without damage; invented unions removed; gems 20/90; revival gold stacks; Shadow Kael's Clock Lancet slows, Pentagram erases items (all built).
+- Decided 30 Sep: add Ebony Wings, Silver/Gold Ring, Stone Mask and a second gun (Phase 2).
+- Decided 30 Sep: the VS unlock system (Phase 3).
+- Open: Soul Hunter names for the Arcanas (asked when they are built).
 
 ## Player & stats
 
@@ -56,7 +52,7 @@ Counts: MATCH 70, PARTIAL 64, MISSING 26, DIFFERS-OWNER 7, SH-ONLY 5, UNKNOWN 3,
 | Hit i-frames | Invulnerability Time 240 ms after a hit (cap 1 s) | Invulnerability_Time | Timing | 0.5 s (_hitInvulnerabilitySeconds) | PARTIAL | Set 0.24 s |
 | Hit i-frames | Floor Chicken also gives invulnerability (length not given) | Invulnerability_Time, Pickups | Behavior | HealthPickup gives none | MISSING | Add brief i-frames |
 | Controls | Movement only; weapons fire on their own | Weapons | Input | Move + Dash + Soul Burst (from the owner's GDD) | DIFFERS-OWNER |  |
-| Controls | (VS has no dash) | - | Behavior | The dash deals a flat 50 damage to enemies it passes; the GDD only says 'dash through enemies and avoid damage' | SH-ONLY | Owner: should the dash do damage? |
+| Controls | (VS has no dash) | - | Behavior | Dash only moves and avoids damage (GDD); stops at walls. Fixed 2026-09-30 | DIFFERS-OWNER | Owner decision: dash from the GDD, no damage |
 | Stats panel | Stats visible on character select, pause and level-up | Player_stats | UI | Character select only | MISSING | Add a stats panel to pause and level-up |
 | Character select | White = character/egg values, yellow = PowerUps; Reroll/Skip/Banish rows; Magnet hidden | Characters, Magnet | UI | All bonuses yellow; no R/S/B rows; Magnet shown | PARTIAL | Split colours, add rows, hide Magnet |
 | Characters | Starting weapon and stat bonuses | Characters | Data | CharacterData, all 13 checked | MATCH |  |
@@ -83,8 +79,7 @@ Counts: MATCH 70, PARTIAL 64, MISSING 26, DIFFERS-OWNER 7, SH-ONLY 5, UNKNOWN 3,
 | Evolution | Peachone+Ebony Wings; Clock Lancet+Silver/Gold Ring | Evolution | Data | SH has no Ebony Wings or Rings | MISSING | Owner: add counterparts or accept |
 | Evolution | Only evo chests (10:00+, MF 1:00); one evo per chest, first reward | Evolution | Timing | CanEvolveAt, one per chest | MATCH |  |
 | Evolution | Base weapon removed, passive kept | Evolution | Behavior | DisableOldWeapon | MATCH |  |
-| Union | All base weapons max -> one slot (e.g. Phiera+Eight+Tirajisu) | Evolution#Union | Data | 6 invented unions in Main_Gameplay reuse evolution prefabs (two make Holy Wand) | SH-ONLY | Owner: remove or define real ones |
-| Union | - | - | Edge case | Union needing Clock Lancet level 8 never fires (max 7) | SH-ONLY | Defect if kept |
+| Union | All base weapons max -> one slot (e.g. Phiera+Eight+Tirajisu) | Evolution#Union | Data | 6 invented unions removed 2026-09-30; system kept | MISSING | VS unions come with the second gun (Phase 2) |
 | Upgrade | Levelling a weapon resets its cooldown and fires it at once | Weapons | Timing | ApplyWeaponLevel leaves the timer | MISSING | Reset timer on level-up |
 | Stats | Might, Area, Duration, Speed, Cooldown add together | Might, Area ... | Data | PlayerStats additive | MATCH |  |
 | Crit | Base Whip/Knife/Axe crit only with the Slash Arcana | Whip, Knife, Axe, Slash_(XVI) | Behavior | 10% at 2x on 6 weapons (provisional) | SH-ONLY | Remove base crits |
@@ -138,13 +133,13 @@ Counts: MATCH 70, PARTIAL 64, MISSING 26, DIFFERS-OWNER 7, SH-ONLY 5, UNKNOWN 3,
 | Run clock | 30:00, then the Reaper | Stages, The_Reaper | Timing | Next stage at 30:00; L10 no limit | DIFFERS-OWNER |  |
 | Stalker | Killable (HP x Level 2,550), 50 dmg, spawn chance | The_Stalker | Behavior | Death's Shadow: always, unkillable, 30 dmg | PARTIAL | Make it VS |
 | Shooting Star | Markers, 2 s, 30 damage | Shooting_Star | Timing | SoulMeteor | MATCH |  |
-| Clock Lancet | Freeze, no damage | Clock_Lancet | Behavior | ClockLancetWeapon | MATCH | Boss copy pending owner |
+| Clock Lancet | Freeze, no damage | Clock_Lancet | Behavior | ClockLancetWeapon; boss copy slows the player 50% (owner exception) | MATCH |  |
 
 ## Pickups & economy
 
 | System | VS rule | Wiki | DOT | Soul Hunter now | Status | Gap / action |
 |---|---|---|---|---|---|---|
-| XP gems | Blue up to 2 XP, green up to 9, red above | Experience_Gem | Data | Cyan <25, violet <100, crimson (gem = 10 XP) | PARTIAL | Owner: VS 2/9 or scaled |
+| XP gems | Blue up to 2 XP, green up to 9, red above | Experience_Gem | Data | Up to 20 / up to 90 / above (x10 for 10-XP gems, owner 2026-09-30) | MATCH |  |
 | XP gems | 400 on the ground, XP merges into one red gem | Experience_Gem | Performance | MaxGemsOnGround 400 | MATCH |  |
 | Magnet | Gems pulled in the Magnet radius | Magnet | Behavior | PlayerExperience 4 u x Magnet | MATCH |  |
 | Magnet | Magnet also collects other pickups | Magnet, Pickups | Behavior | Coins/chicken fixed 1.5 radius | PARTIAL | Scale by Magnet |
@@ -194,7 +189,7 @@ Counts: MATCH 70, PARTIAL 64, MISSING 26, DIFFERS-OWNER 7, SH-ONLY 5, UNKNOWN 3,
 | Stage | 30:00 limit | Stages | Timing | LevelProgressionManager | MATCH |  |
 | Stage | Stage bonuses: speed and gold | Stages | Data | PlayerSpeedFor / GoldFor | MATCH | L6-10 SH mapping |
 | Stage | Stage + mode bonuses summed, then multiply | Stages | Data | GoldBonus + ApplyGreed | PARTIAL | Check order |
-| Stage | Clear: 500 + 100 per unused revival (Reaper page: +100/+200/+300) | Stages, The_Reaper | Data | 500 + 100 each | PARTIAL | Wiki pages conflict |
+| Stage | Clear: 500, then +100/+200/+300/+400 per unused revival, then +100 | The_Reaper, Revival | Data | StageClearGold stacks (owner chose these pages, 2026-09-30) | MATCH |  |
 | Stage | Confined stages (corridors) | Stages | Behavior | L4 corridor | MATCH |  |
 | Stage | Trap plates trigger events | Stages | Interaction | Rune Plates | MATCH |  |
 | Stage | Pre-placed items and relics | Stages | Data | 4 items; no relics | PARTIAL |  |

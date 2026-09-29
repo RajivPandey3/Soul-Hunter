@@ -34,7 +34,6 @@ namespace SoulHunter.Gameplay.Player
 
         private PlayerStats _stats;
         private Transform _movementCamera;
-        private readonly Collider[] _dashHits = new Collider[50];
 
         public float MoveSpeed
         {
@@ -43,6 +42,7 @@ namespace SoulHunter.Gameplay.Player
                 if (_stats == null) _stats = GetComponent<PlayerStats>();
                 float speed = _moveSpeed * (_stats != null ? _stats.MoveSpeedMultiplier : 1f) * _campaignMovementMultiplier
                               * SoulHunter.Gameplay.Data.CampaignLevelCatalog.CurrentPlayerSpeed; // VS stage bonus
+                if (IsSlowed) speed *= _slowFactor;
                 if (_stats != null && _stats.LowHealthSpeedBonus > 0f)
                 {
                     if (_health == null) _health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
@@ -78,6 +78,23 @@ namespace SoulHunter.Gameplay.Player
         }
         public SoulHunter.Gameplay.Animation.EntityAnimator Animator { get; private set; }
         public bool IsDashing { get; private set; }
+        private const float DashProbeRadius = 0.4f; // the player's capsule radius
+        private const float DashSkin = 0.05f;
+
+        // Owner decision (2026-09-30): Shadow Kael's mirrored Clock Lancet slows the player to half speed for the
+        // weapon's freeze time. VS has no player freeze; this is the owner's exception. Game time, so pauses hold it.
+        public const float ClockLancetSlowFactor = 0.5f;
+        private float _slowUntil = -1f;
+        private float _slowFactor = 1f;
+        public bool IsSlowed => Time.time < _slowUntil;
+
+        /// <summary>Moves at <paramref name="factor"/> x speed for <paramref name="seconds"/>; a running slow keeps the longer end and the stronger factor.</summary>
+        public void Slow(float factor, float seconds)
+        {
+            if (seconds <= 0f) return;
+            _slowFactor = IsSlowed ? Mathf.Min(_slowFactor, factor) : factor;
+            _slowUntil = Mathf.Max(_slowUntil, Time.time + seconds);
+        }
 
         public void SetCampaignMovementMultiplier(float multiplier)
         {
@@ -306,9 +323,6 @@ namespace SoulHunter.Gameplay.Player
             }
         }
 
-        private readonly System.Collections.Generic.HashSet<SoulHunter.Gameplay.Combat.IDamageable> _dashDamaged =
-            new System.Collections.Generic.HashSet<SoulHunter.Gameplay.Combat.IDamageable>();
-
         private IEnumerator DashCoroutine()
         {
             IsDashing = true;
@@ -326,30 +340,23 @@ namespace SoulHunter.Gameplay.Player
                 dashDirection = FacingDirection;
             }
 
-            // 2. Damage Buffer for Soul Reap Dash
-            Collider[] dashHits = _dashHits;
-            int enemyLayer = LayerMask.GetMask("Enemy");
-            // Each enemy takes the dash hit once per dash, not once per frame.
-            _dashDamaged.Clear();
-
+            // Owner decision (2026-09-30): the dash only moves and avoids damage, as the GDD says ("dash through
+            // enemies and avoid damage"). It used to deal a flat 50 damage to every enemy it passed; VS has no dash.
+            // The body is moved, not the transform: the player's Rigidbody interpolates, which overwrote transform
+            // writes every frame, so the dash covered about 0.7 of its 3 units (found 2026-09-30, DashPlayModeTests).
+            // Enemies are passed through; stage obstacles and corridor walls still stop the dash.
+            int obstacles = LayerMask.GetMask("Obstacle");
             float elapsed = 0;
             while(elapsed < _dashDuration)
             {
-                // Smooth glide through enemies
-                transform.position += dashDirection * (_dashSpeed * Time.deltaTime);
-
-                // 3. Deal damage to anyone we pass through (Soul Reap)
-                int hitCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, 1.5f, dashHits, enemyLayer);
-                for (int i = 0; i < hitCount; i++)
-                {
-                    if (dashHits[i] == null) continue;
-                    var damageable = dashHits[i].GetComponentInParent<SoulHunter.Gameplay.Combat.IDamageable>();
-                    if (damageable != null && _dashDamaged.Add(damageable))
-                    {
-                        // Dash deals fixed 50 damage
-                        damageable.TakeDamage(new SoulHunter.Gameplay.Combat.DamagePacket(50, transform.position, dashDirection));
-                    }
-                }
+                float step = _dashSpeed * Time.deltaTime;
+                Vector3 from = Rigidbody.position;
+                if (UnityEngine.Physics.SphereCast(from, DashProbeRadius, dashDirection, out RaycastHit wall, step + DashSkin, obstacles, QueryTriggerInteraction.Ignore))
+                    step = Mathf.Max(0f, wall.distance - DashSkin);
+                Vector3 to = from + dashDirection * step;
+                Rigidbody.position = to;
+                transform.position = to;
+                if (step <= 0f) break;
 
                 elapsed += Time.deltaTime;
                 yield return null;

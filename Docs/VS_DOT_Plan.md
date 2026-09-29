@@ -31,11 +31,15 @@ Source table: `Docs/VS_DOT_Table.md` (177 VS rules from raw vampire.survivors.wi
 2. ~~Dash damage~~ Decided 2026-09-30: remove it (the dash only moves and avoids damage).
 3. ~~Invented unions~~ Decided 2026-09-30: remove all 6.
 4. ~~Gem colours~~ Decided 2026-09-30: 20 / 90 XP (VS 2 / 9 scaled x10).
-5. Stage-clear revival gold: flat +100 (Stages page) or +100/+200/+300 (The_Reaper page)?
-6. Items Soul Hunter lacks: Ebony Wings, Silver/Gold Ring, Stone Mask, a second gun. Add Soul Hunter versions?
-7. Unlock gating (VS relics and achievements for modes, PowerUp ranks, items, coffins for characters): add, or keep everything open?
-8. Arcanas use VS names; they need Soul Hunter names (no-copy rule).
-9. Shadow Kael's mirrored Clock Lancet and Pentagram: the player has no frozen state and VS never wipes the player. Now the beam only shows and the Pentagram only flashes. Keep, or give them a player effect?
+5. ~~Revival gold~~ Decided 2026-09-30: stacking +100/+200/+300/+400, then +100 again (The_Reaper and Revival pages; 3 revivals = 500 + 600 = 1,100).
+6. ~~Missing items~~ Decided 2026-09-30: add all as Soul Hunter items (own names/art, VS rules): Ebony Wings, Silver Ring, Gold Ring, Stone Mask, the second gun. Built in Phase 2; art needs owner approval.
+7. ~~Unlocks~~ Decided 2026-09-30: the VS unlock system (achievements, relics, coffins; own names and text). Built in Phase 3.
+8. Arcanas need Soul Hunter names (no-copy rule). Names proposed to the owner when Arcanas are built (Phase 2).
+9. ~~Shadow Kael~~ Decided 2026-09-30: his mirrored Clock Lancet and Pentagram get an effect on the player (an owner exception; VS has no rule). The exact effect is proposed to the owner before it is built.
+
+Shadow Kael details (owner, 2026-09-30): Clock Lancet slows the player to 50% for the weapon's freeze time; Pentagram erases the items on screen (VS Pentagram's item erase, stage items kept).
+
+**Phase 0 status:** items 2, 3, 4, 5 and 9 are built (AGENTS.md section 7, "Phase 0 of the VS DOT plan"). Items 6 and 7 are Phase 2 and Phase 3 work; item 8 comes with the Arcanas.
 
 ## Phase 1: core rules that change play (no new art needed)
 

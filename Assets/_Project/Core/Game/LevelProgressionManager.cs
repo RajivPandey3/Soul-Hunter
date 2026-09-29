@@ -225,10 +225,18 @@ namespace SoulHunter.Gameplay.Core
         public static int StageAfter(int stage) => stage < MaxStages ? stage + 1 : RunModes.Endless ? 1 : 0;
 
         /// <summary>
-        /// VS wiki (Stages, The_Reaper): surviving a stage to its end pays 500 gold, plus 100 per revival not used.
-        /// Paid through GoldRewards, so Greed and the stage's gold bonus apply.
+        /// VS wiki (Stages, The_Reaper, Revival): surviving a stage to its end pays 500 gold. Each unused revival adds a
+        /// stacking bonus: +100, +200, +300, +400, then +100 for every one after that ("3 revives is 500 + 100 + 200 +
+        /// 300 = 1,100"; "caps at 400 and any additional unused Revivals will only give 100"). Owner chose the stacking
+        /// pages over the Stages page's flat "100 for each" (2026-09-30). Paid through GoldRewards, so Greed and the
+        /// stage's gold bonus apply.
         /// </summary>
-        public static int StageClearGold(int unusedRevivals) => 500 + 100 * Mathf.Max(0, unusedRevivals);
+        public static int StageClearGold(int unusedRevivals)
+        {
+            int gold = 500;
+            for (int i = 1; i <= unusedRevivals; i++) gold += i <= 4 ? 100 * i : 100;
+            return gold;
+        }
 
         /// <summary>The last stage-clear payment (gold actually given), for the HUD and tests.</summary>
         public int LastStageClearGold { get; private set; }

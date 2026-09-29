@@ -22,6 +22,13 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>Pickups being updated now (tests).</summary>
         public static int Count => Pickups.Count;
 
+        /// <summary>Copies every ticked pickup (coins, bags, chickens, magnets, freezes ...) into <paramref name="into"/>.</summary>
+        public static void CopyTo(List<ITickedPickup> into)
+        {
+            into.Clear();
+            into.AddRange(Pickups);
+        }
+
         private static bool IsListed(ITickedPickup pickup)
         {
             int i = pickup.TickerIndex;

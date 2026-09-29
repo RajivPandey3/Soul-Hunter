@@ -26,7 +26,7 @@ namespace SoulHunter.Editor.Content
         public const string GemPrefab = "Assets/Prefabs/Items/XP_Gem.prefab";
         public const string CoinPrefab = "Assets/Prefabs/Items/SH10_Gold_Coin.prefab";
         public const string ChestPrefab = "Assets/Prefabs/Items/Chest.prefab";
-        public static readonly int[] GemThresholds = { 25, 100 };   // XP: under 25 cyan, under 100 violet, else crimson
+        public static readonly int[] GemThresholds = { 21, 91 };    // XP: VS blue "up to 2", green "up to 9", red beyond (Experience_Gem), x10 for SH's 10-XP gems (owner, 2026-09-30)
         public static readonly int[] CoinThresholds = { 5, 25 };    // gold: under 5 bronze, under 25 silver, else gold
 
         private sealed class Look { public Color Color; public float Metallic, Roughness, Strength; public Color Emission; }

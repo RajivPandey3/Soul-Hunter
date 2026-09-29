@@ -21,6 +21,9 @@ namespace SoulHunter.Gameplay.Combat
         public override int MaxLevel => 8;
         private int Level => Mathf.Clamp(CurrentLevel, 1, 8);
         public float CooldownForLevel => VsCooldown - (Level >= 2 ? 10f : 0f) - (Level >= 4 ? 10f : 0f) - (Level >= 6 ? 5f : 0f) - (Level >= 8 ? 5f : 0f);
+        /// <summary>Items the last boss-held activation erased (tests).</summary>
+        public int LastItemsErased { get; private set; } = -1;
+
         public float KeepChance => _chanceToKeepGems + (Level >= 7 ? 0.55f : Level >= 5 ? 0.35f : Level >= 3 ? 0.15f : 0f);
 
         protected override void Awake()
@@ -50,9 +53,16 @@ namespace SoulHunter.Gameplay.Combat
                 }
             }
 
-            // Shadow Kael's copy would wipe its own horde and itself. Wiping the player is not a VS mechanic, so a
-            // boss-held Pentagram only flashes (owner decision pending).
-            if (HeldByEnemy) return;
+            // Shadow Kael's copy never wipes its own horde or itself. Owner decision (2026-09-30): it uses VS Pentagram's
+            // own item erase against the player: every item on screen except stage items goes, unless the VS keep roll
+            // (with the boss's mirrored Luck) saves them.
+            if (HeldByEnemy)
+            {
+                float luck = OwnerStats != null ? OwnerStats.Luck : 1f;
+                if (SoulHunter.Gameplay.Pickups.GroundItemEraser.ErasesItems(KeepChance, luck, Random.value))
+                    LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
+                return;
+            }
 
             // Wipe all enemies on screen
             // KillSilently disables enemies immediately, and OnDisable removes

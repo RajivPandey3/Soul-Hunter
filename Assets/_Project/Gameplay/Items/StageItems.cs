@@ -151,7 +151,13 @@ namespace SoulHunter.Gameplay.Pickups
                     case StageItems.Kind.Magnet: item = pool != null ? pool.SpawnMagnet(spot) : null; break;
                     case StageItems.Kind.TimeFreeze: item = pool != null ? pool.SpawnTimeFreeze(spot) : null; break;
                 }
-                if (item != null) _placed.Add(item);
+                if (item != null)
+                {
+                    _placed.Add(item);
+                    // VS: Pentagram erases every item on screen "except for stage items". The mark goes when the item is
+                    // picked up or cleared, so a pooled copy reused later is an ordinary pickup again.
+                    if (item.GetComponent<StageItemMark>() == null) item.AddComponent<StageItemMark>();
+                }
             }
 
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
@@ -191,6 +197,12 @@ namespace SoulHunter.Gameplay.Pickups
             foreach (var plate in _plates) if (plate != null) Destroy(plate.gameObject);
             _plates.Clear();
         }
+    }
+
+    /// <summary>Marks an item placed on the map by the stage (VS "stage item"); removed when the item leaves the ground.</summary>
+    public sealed class StageItemMark : MonoBehaviour
+    {
+        private void OnDisable() => Destroy(this);
     }
 
     /// <summary>

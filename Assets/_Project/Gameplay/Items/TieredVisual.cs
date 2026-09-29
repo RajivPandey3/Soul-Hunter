@@ -9,7 +9,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public sealed class TieredVisual : MonoBehaviour
     {
-        public int[] Thresholds = { 25, 100 };
+        public int[] Thresholds = { 21, 91 };
         public GameObject[] Tiers = new GameObject[0];
 
         public int CurrentTier { get; private set; } = -1;

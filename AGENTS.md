@@ -43,7 +43,7 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
 - **Soul Hunter's own:** story, names, text, characters, art, models, VFX, audio, music and the UI's look. Never VS assets, names or text.
 - **5% rule (owner confirmed 2026-09-30, "Numbers ±5%"):** a VS number may be tuned by at most ±5% of its wiki value, and every such change is recorded with the wiki value next to it. Bigger or structural changes need an explicit owner decision. Approved owner decisions in section 5 stay as the recorded exceptions: one 10-stage run, no Reaper, Level 3/7/10, nearest-enemy aiming, dash and Soul Burst from the GDD.
 - **No mistakes:** each rule is re-checked against the raw wiki page and the code before it is built, then proven with tests and editor play. When the wiki is silent or contradicts itself, stop and ask the owner; never guess.
-- Owner decisions 2026-09-30: the dash only moves and avoids damage (its 50 damage goes); the 6 Soul Hunter-invented weapon unions are removed; XP gem colours change at 20 and 90 XP (VS 2 and 9, scaled to Soul Hunter's 10-XP gems). Not yet built.
+- Owner decisions 2026-09-30: the dash only moves and avoids damage (its 50 damage goes); the 6 Soul Hunter-invented weapon unions are removed; XP gem colours change at 20 and 90 XP (VS 2 and 9, scaled to Soul Hunter's 10-XP gems); stage-clear revival gold stacks; missing VS items and the VS unlock system are added later; Shadow Kael's mirrored Clock Lancet slows and his Pentagram erases items. Built: see "Phase 0 of the VS DOT plan" (section 7).
 - The full VS rule list and the gaps are in `Docs/VS_DOT_Table.md`; the work order is in `Docs/VS_DOT_Plan.md`.
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
@@ -1374,6 +1374,25 @@ Validation:
 - Editor play `autoplay-editor-80` (`-sh-autoplay-shop-shot`, 2 min): the shop screenshot shows all 23 cells readable, Recovery 5/5 green, Greed selected at price 242 (200 + fee after 8 ranks), 0 errors, min 84 FPS (partial `V`).
 
 Not yet played by the owner.
+
+### Phase 0 of the VS DOT plan (owner decisions, 2026-09-30)
+
+Built from the owner's answers (`Docs/VS_DOT_Plan.md`, Phase 0):
+- **Dash:** it only moves and avoids damage, as the GDD says ("dash through enemies and avoid damage"); the flat 50 damage is gone.
+  - **Defect found by the new test:** the dash moved `transform.position` while the player's Rigidbody interpolates, so Unity overwrote most of it: it covered about 0.7 of its 3 units. It now moves the Rigidbody.
+  - The kinematic dash also went through stage obstacles and the Castle corridor walls. It now stops at the first `Obstacle`-layer collider (sphere cast, the capsule's 0.4 radius).
+  - `DashPlayModeTests` (R): the dash covers its distance, an enemy in its path takes no damage, the hero is invulnerable only while dashing, and a wall 1.5 ahead stops it.
+- **Invented unions removed:** the six `Union_*.asset` files are deleted. The union system stays for VS's own unions (Phase 2). `Main_Gameplay`'s `_availableUnions` list still holds six missing references, which `WeaponManager` skips; the owner's editor had the scene open with unsaved changes, so the scene file was not touched. `UnionPlayModeTests` (R): no union is live.
+- **Gem colours:** vampire.survivors.wiki/w/Experience_Gem: blue "up to 2 XP", green "up to 9", red beyond. Scaled ×10: under 21, under 91, above (`XP_Gem.prefab`, `TieredVisual`, `PickupV2Importer.GemThresholds`). `PickupV2Tests` (T): the tiers and the prefab thresholds.
+- **Stage-clear revival gold:** The_Reaper and Revival pages: +100, +200, +300, +400 per unused revival, then +100 each ("3 revives is 500 + 100 + 200 + 300 = 1,100"). The Stages page says a flat 100; the owner chose the stacking pages. `LevelProgressionManager.StageClearGold`; `BossStageAdvanceTests` (T).
+- **Shadow Kael's mirrored Clock Lancet** (owner exception, VS has no player freeze): a beam that crosses the player makes it move at half speed for the weapon's freeze time (2 s at level 1, × the boss's mirrored Duration) (`PlayerController.Slow`, `IsSlowed`). The boss and its horde are still never frozen.
+- **Shadow Kael's mirrored Pentagram** (owner exception using VS Pentagram's own item erase, vampire.survivors.wiki/w/Pentagram: "erasing every enemy, their drops, and all items on the screen, except for stage items"): it erases every gem, coin, bag, chicken, magnet, freeze and chest on screen, but not stage items and no enemy. The VS keep roll applies, with the boss's mirrored Luck: x ~ U[0,1] rounded to 2 decimals, and items go when x / Luck > the keep threshold (10% at level 1; 25/45/65% at levels 3/5/7) (`GroundItemEraser`, `StageItemMark`).
+  - The player's own Pentagram does not erase ground items yet; that is a Phase 1 row, and it will use the same `GroundItemEraser`.
+- Tests: `ShadowKaelPlayModeTests.MirroredClockLancet_SlowsThePlayerToHalfSpeed_ForItsFreezeTime` and `MirroredPentagram_ErasesItemsOnScreen_ButNotStageItems_NorTheHorde` (R); `PentagramItemRollTests` (T, the wiki's own worked examples).
+- Validation: EditMode 485/485, PlayMode 197/197, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260930-phase0b/`). The first full run failed the dash test (the interpolation defect above); the Pentagram test first failed because the boss's own first shot had already erased the items, so the test now stops the boss weapon's timer.
+- Editor play `autoplay-editor-82` (Stage 10, level-60 hero, god mode, boss at 40 s, 2.5 min): Shadow Kael copied Whip, Runetracer, Knife, Bible, Magic Wand and a level-6 Pentagram; 0 errors, min 14 FPS in the GUI editor at 300 enemies (level-60 kill rate; known performance note).
+- Seen, not changed (Art section): Stage 10's paths look flat bright cyan in that run.
+- Not yet played by the owner.
 
 ### Ground late to appear; level-up pause (owner reports, 2026-09-30)
 

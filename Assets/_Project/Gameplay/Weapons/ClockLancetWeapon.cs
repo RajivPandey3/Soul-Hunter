@@ -62,11 +62,22 @@ namespace SoulHunter.Gameplay.Combat
                 }
             }
 
-            // Shadow Kael's mirrored copy: the ray starts inside the boss and would freeze it and its own horde.
-            // The player has no frozen state, so a boss-held lancet only shows its beam (owner decision pending).
-            if (GetComponentInParent<EnemyController>() != null) return;
-
             int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, 20f * AreaMultiplier);
+
+            // Shadow Kael's mirrored copy never freezes the boss or its horde. Owner decision (2026-09-30): a player the
+            // beam crosses moves at half speed for the weapon's freeze time (VS has no player freeze).
+            if (GetComponentInParent<EnemyController>() != null)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    var player = _hits[i].collider.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerController>();
+                    if (player == null) continue;
+                    player.Slow(SoulHunter.Gameplay.Player.PlayerController.ClockLancetSlowFactor, FreezeDuration * DurationMultiplier);
+                    break;
+                }
+                return;
+            }
+
             for (int i = 0; i < count; i++)
             {
                 var enemy = _hits[i].collider.GetComponentInParent<EnemyController>();

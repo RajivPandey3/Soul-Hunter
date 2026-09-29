@@ -13,10 +13,24 @@ namespace SoulHunter.Tests.EditMode
     /// </summary>
     public class PickupV2Tests
     {
-        [TestCase(1, 0)] [TestCase(10, 0)] [TestCase(24, 0)] [TestCase(25, 1)] [TestCase(50, 1)] [TestCase(99, 1)] [TestCase(100, 2)] [TestCase(250, 2)]
+        [TestCase(1, 0)] [TestCase(10, 0)] [TestCase(20, 0)] [TestCase(21, 1)] [TestCase(50, 1)] [TestCase(90, 1)] [TestCase(91, 2)] [TestCase(250, 2)]
         public void GemTier_FollowsXp(int xp, int tier)
         {
-            Assert.That(TieredVisual.TierFor(xp, new[] { 25, 100 }), Is.EqualTo(tier));
+            Assert.That(TieredVisual.TierFor(xp, VsGemThresholds), Is.EqualTo(tier));
+        }
+
+        /// <summary>
+        /// vampire.survivors.wiki/w/Experience_Gem: "Blue Experience Gems grant up to 2 XP, green Experience Gems up to 9 XP
+        /// and red gems contain anything beyond." Soul Hunter's basic gem is 10 XP (VS 1), so x10 (owner, 2026-09-30):
+        /// up to 20, up to 90, beyond. A tier shows while XP is under its threshold.
+        /// </summary>
+        private static readonly int[] VsGemThresholds = { 21, 91 };
+
+        [Test]
+        public void TheGemPrefab_UsesTheVsColourThresholds()
+        {
+            var tiered = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Items/XP_Gem.prefab").GetComponent<TieredVisual>();
+            Assert.That(tiered.Thresholds, Is.EqualTo(VsGemThresholds));
         }
 
         [TestCase(1, 0)] [TestCase(4, 0)] [TestCase(5, 1)] [TestCase(10, 1)] [TestCase(25, 2)] [TestCase(50, 2)]
