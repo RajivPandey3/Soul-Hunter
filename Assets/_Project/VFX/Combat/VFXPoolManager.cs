@@ -15,12 +15,14 @@ namespace SoulHunter.Gameplay.VFX
         public static VFXPoolManager Instance { get; private set; }
 
         private const int MaxPerKind = 32;
-        private static readonly float[] MinInterval = { 0.02f, 0.01f, 0.03f, 0.03f, 0.2f, 0f, 0f, 0f, 0f }; // by VfxKind
+        private static readonly float[] MinInterval = { 0.02f, 0.01f, 0.03f, 0.03f, 0.2f, 0f, 0f, 0f, 0f, 0.01f }; // by VfxKind
+        /// <summary>Blood splats stay on the ground for a while, so a horde needs more of them than other kinds.</summary>
+        private const int MaxBlood = 64;
 
         private VfxLibrary _library;
         private readonly Dictionary<VfxKind, List<GameObject>> _pools = new Dictionary<VfxKind, List<GameObject>>();
         private readonly Dictionary<VfxKind, int> _reuseIndex = new Dictionary<VfxKind, int>();
-        private readonly float[] _lastPlayed = new float[9];
+        private readonly float[] _lastPlayed = new float[System.Enum.GetValues(typeof(VfxKind)).Length];
 
         /// <summary>The manager of the active scene, created on first use.</summary>
         public static VFXPoolManager EnsureInstance()
@@ -44,6 +46,26 @@ namespace SoulHunter.Gameplay.VFX
             if (manager != null) manager.PlayInternal(kind, position, rotation, scale);
         }
 
+        /// <summary>
+        /// Blood where an enemy died: a spray from its body and a splat on the ground under it that fades. VS has blood
+        /// on kills and an option to switch it off (vampire.survivors.wiki/w/Options, "Disable blood", added in v1.6.0);
+        /// the wiki does not describe how it looks, so the look is Soul Hunter's own. Nothing plays with Disable Blood on.
+        /// </summary>
+        public static void PlayBlood(Vector3 bodyPosition)
+        {
+            if (SoulHunter.Core.Persistence.GameSettings.DisableBlood) return;
+            Play(VfxKind.Blood, new Vector3(bodyPosition.x, GroundHeight(bodyPosition) + 0.03f, bodyPosition.z));
+        }
+
+        /// <summary>Top of the stage floor under a point (bodies stand on the player's plane, above the floor's top).</summary>
+        public static float GroundHeight(Vector3 point)
+        {
+            int ignore = LayerMask.GetMask("Enemy", "Player", "Obstacle");
+            return UnityEngine.Physics.Raycast(point + Vector3.up * 2f, Vector3.down, out var hit, 12f, ~ignore, QueryTriggerInteraction.Ignore)
+                ? hit.point.y
+                : 0f;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -62,6 +84,10 @@ namespace SoulHunter.Gameplay.VFX
 
         /// <summary>Number of pooled instances of a kind (tests).</summary>
         public int PooledCount(VfxKind kind) => _pools.TryGetValue(kind, out var pool) ? pool.Count : 0;
+
+        /// <summary>The instances of a kind that are playing now (tests).</summary>
+        public List<GameObject> Playing(VfxKind kind) =>
+            _pools.TryGetValue(kind, out var pool) ? pool.FindAll(v => v != null && v.activeSelf) : new List<GameObject>();
 
         private void PlayInternal(VfxKind kind, Vector3 position, Quaternion? rotation, float scale)
         {
@@ -99,7 +125,7 @@ namespace SoulHunter.Gameplay.VFX
             for (int i = 0; i < pool.Count; i++)
                 if (pool[i] != null && !pool[i].activeSelf) return pool[i];
 
-            if (pool.Count < MaxPerKind)
+            if (pool.Count < (kind == VfxKind.Blood ? MaxBlood : MaxPerKind))
             {
                 var created = Instantiate(prefab, transform);
                 created.SetActive(false);

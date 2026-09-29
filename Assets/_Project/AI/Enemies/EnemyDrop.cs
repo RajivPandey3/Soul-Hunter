@@ -23,6 +23,7 @@ namespace SoulHunter.Gameplay.AI
         public int GemValue = 10;
 
         private HealthController _health;
+        private EnemyController _enemy;
         private bool _dropsChestThisLife;
         private bool _erasedThisLife;
         private bool _arcanaThisLife;
@@ -49,6 +50,7 @@ namespace SoulHunter.Gameplay.AI
         private void Awake()
         {
             _health = GetComponent<HealthController>();
+            _enemy = GetComponent<EnemyController>();
         }
 
         private void OnEnable()
@@ -74,6 +76,8 @@ namespace SoulHunter.Gameplay.AI
             float luck = stats != null ? Mathf.Max(1f, stats.Luck) : 1f;
 
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
+            // Ghosts (Level 7) have no body to bleed; everything else leaves blood unless Disable Blood is on.
+            if (_enemy == null || !_enemy.IsSpectral) SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(transform.position);
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {

@@ -263,6 +263,86 @@ namespace SoulHunter.Editor.Content
             return ps;
         }
 
+        /// <summary>
+        /// Menu: Soul Hunter/Content/Build Blood VFX. Builds only the blood effect and sets VfxLibrary.Blood, leaving every
+        /// other effect and weapon prefab as it is. CLI: -executeMethod SoulHunter.Editor.Content.WeaponVfxBuilder.BuildBloodOnly -quit
+        /// </summary>
+        [MenuItem("Soul Hunter/Content/Build Blood VFX")]
+        public static void BuildBloodOnly()
+        {
+            foreach (var folder in new[] { VfxFolder, TextureFolder, MaterialFolder }) EnsureFolder(folder);
+            var library = AssetDatabase.LoadAssetAtPath<VfxLibrary>(LibraryPath);
+            if (library == null) throw new FileNotFoundException("Build the weapon VFX first", LibraryPath);
+            BuildBlood(library);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[WeaponVfxBuilder] Built the blood effect.");
+        }
+
+        private static readonly Color BloodRed = new Color(0.62f, 0.02f, 0.05f), BloodDark = new Color(0.36f, 0.0f, 0.03f);
+
+        /// <summary>
+        /// Blood on an enemy's death (VS: blood that its "Disable blood" option switches off; the wiki does not show its
+        /// look). Soul Hunter's own: a spray of dark-red drops from the body that fall back to the ground, and a splat on
+        /// the ground that stays, then fades within about 2 s (VS death animations in the wiki last 1.8-2.5 s). Alpha
+        /// blended, so it reads as blood on any floor instead of glowing. The effect root sits on the floor
+        /// (VFXPoolManager.PlayBlood). Sizes and timings are provisional.
+        /// </summary>
+        private static void BuildBlood(VfxLibrary library)
+        {
+            var dropTex = Texture("SH10_Vfx_BloodDrop", (x, y) => { float d = Mathf.Sqrt(x * x + y * y); return Mathf.Clamp01((1f - d) * 3f); });
+            var splatTex = Texture("SH10_Vfx_BloodSplat", BloodSplatAlpha);
+            var drop = ParticleMaterial("SH10_Vfx_BloodDrop", dropTex, additive: false);
+            var splat = ParticleMaterial("SH10_Vfx_BloodSplat", splatTex, additive: false);
+
+            var blood = new GameObject("VFX_Blood");
+            var spray = AddParticles(blood.transform, new Ps
+            {
+                Name = "Spray", Material = drop, World = true, Burst = 12, Duration = 0.6f,
+                Lifetime = new Vector2(0.35f, 0.6f), Speed = new Vector2(2.5f, 5f), Size = new Vector2(0.12f, 0.26f),
+                ColorA = BloodRed, ColorB = BloodDark, EndColor = new Color(0.3f, 0f, 0.02f, 0.6f),
+                Gravity = 1.6f, Shape = ParticleSystemShapeType.Hemisphere, Radius = 0.25f,
+                SizeCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.6f), MaxParticles = 16,
+            }, new Vector3(0f, 0.9f, 0f));
+            var sprayShape = spray.shape;
+            sprayShape.rotation = new Vector3(-90f, 0f, 0f); // the hemisphere opens upwards, not towards +Z
+            AddParticles(blood.transform, new Ps
+            {
+                Name = "Splat", Material = splat, World = true, Burst = 1, Duration = 0.5f,
+                Lifetime = new Vector2(2f, 2.4f), Speed = Vector2.zero, Size = new Vector2(1.3f, 1.9f),
+                ColorA = BloodRed, ColorB = BloodDark, EndColor = new Color(0.3f, 0f, 0.02f, 0f),
+                SizeCurve = new AnimationCurve(new Keyframe(0f, 0.35f), new Keyframe(0.08f, 1f), new Keyframe(1f, 1.05f)),
+                HorizontalBillboard = true, MaxParticles = 2,
+            });
+            // Drops land around the splat a moment later.
+            AddParticles(blood.transform, new Ps
+            {
+                Name = "Drops", Material = splat, World = true, Burst = 4, Duration = 0.5f,
+                Lifetime = new Vector2(1.6f, 2f), Speed = Vector2.zero, Size = new Vector2(0.25f, 0.5f),
+                ColorA = BloodRed, ColorB = BloodDark, EndColor = new Color(0.3f, 0f, 0.02f, 0f),
+                SizeCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.1f, 0f), new Keyframe(0.18f, 1f), new Keyframe(1f, 1f)),
+                Shape = ParticleSystemShapeType.Circle, Radius = 1.1f, HorizontalBillboard = true, MaxParticles = 6,
+            }, new Vector3(0f, 0.01f, 0f));
+            library.Blood = SaveVfx(blood, VfxFolder);
+            EditorUtility.SetDirty(library);
+        }
+
+        /// <summary>An irregular splat: a lumpy centre blob and a few droplets around it (procedural, Soul Hunter's own).</summary>
+        private static float BloodSplatAlpha(float x, float y)
+        {
+            float d = Mathf.Sqrt(x * x + y * y), angle = Mathf.Atan2(y, x);
+            float edge = 0.5f + 0.09f * Mathf.Sin(angle * 5f + 0.7f) + 0.06f * Mathf.Sin(angle * 9f + 2.1f)
+                         + 0.1f * (Mathf.PerlinNoise(Mathf.Cos(angle) * 2f + 5f, Mathf.Sin(angle) * 2f + 5f) - 0.5f);
+            float blob = Mathf.Clamp01((edge - d) * 14f);
+            float drops = 0f;
+            for (int i = 0; i < 7; i++)
+            {
+                float a = i * 0.9f + 0.4f, r = 0.68f + 0.07f * (i % 3), size = 0.05f + 0.025f * (i % 2);
+                float dx = x - Mathf.Cos(a) * r, dy = y - Mathf.Sin(a) * r;
+                drops = Mathf.Max(drops, Mathf.Clamp01((size - Mathf.Sqrt(dx * dx + dy * dy)) * 40f));
+            }
+            return Mathf.Max(blob, drops) * 0.92f;
+        }
+
         private static AnimationCurve Grow(float from, float to) => AnimationCurve.EaseInOut(0f, from, 1f, to);
 
         private static GameObject SaveVfx(GameObject root, string folder)
@@ -299,6 +379,7 @@ namespace SoulHunter.Editor.Content
             AddParticles(death.transform, new Ps { Name = "Puff", Material = _soft, Burst = 10, Lifetime = new Vector2(0.35f, 0.6f), Speed = new Vector2(1f, 2.5f), Size = new Vector2(0.4f, 0.8f), ColorA = new Color(0.6f, 0.4f, 1f, 0.8f), ColorB = new Color(0.35f, 0.8f, 1f, 0.8f), EndColor = new Color(0.2f, 0.4f, 0.9f, 0f), SizeCurve = Grow(0.8f, 1.5f), Radius = 0.3f, MaxParticles = 16 });
             AddParticles(death.transform, new Ps { Name = "Wisps", Material = _wisp, Burst = 4, Lifetime = new Vector2(0.6f, 0.9f), Speed = new Vector2(0.2f, 0.6f), Size = new Vector2(0.5f, 0.8f), ColorA = Soul, ColorB = new Color(0.7f, 0.6f, 1f), Velocity = new Vector3(0f, 2.8f, 0f), Radius = 0.3f, MaxParticles = 8, RandomRotation = false });
             library.EnemyDeath = SaveVfx(death, VfxFolder);
+            BuildBlood(library);
 
             library.GemPickup = SaveVfx(Sparkle("VFX_GemPickup", new Color(0.4f, 0.95f, 1f)), VfxFolder);
             library.GoldPickup = SaveVfx(Sparkle("VFX_GoldPickup", Gold), VfxFolder);

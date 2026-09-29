@@ -1043,6 +1043,29 @@ Validation:
 
 Not yet played or heard by the owner.
 
+### Blood on enemy deaths (owner request, 2026-09-29)
+
+Owner: "vs mein enemy ke marne per blood effect dikhta hai wiki mein check karo or apply karo". What the wiki says (fetched 2026-09-29):
+- vampire.survivors.wiki/w/Options: VS has a "Disable blood" option (Display section), added in v1.6.0 (Updates/v1.6.0 patch notes). So kills show blood unless it is switched off.
+- The wiki does not describe how the blood looks. Enemy pages show only per-enemy death animations: the body breaks into pieces that scatter and fade (for example Skeleton, 18 frames × 140 ms = 2.5 s; Pipeestrello, 13 × 140 ms = 1.8 s).
+
+Before, a kill showed only a faint blue soul puff, and Disable Blood only switched the Blood Arenas floor stains.
+
+Now (`VFXPoolManager.PlayBlood`, called from `EnemyDrop` next to the soul puff):
+- A new `VfxKind.Blood` (`VFX_Blood.prefab`, built by `WeaponVfxBuilder.BuildBlood`, menu Soul Hunter/Content/Build Blood VFX): 12 dark-red drops spray up from the body and fall, a splat lands on the floor under the enemy, and 4 small drops land around it. The splat stays, then fades within about 2.4 s (close to VS's death animation length). The drops and splat use alpha blending, so they darken the floor instead of glowing. The splat texture is procedural (`SH10_Vfx_BloodSplat.png`).
+- The splat lies on the floor's top, found by a raycast under the enemy (`VFXPoolManager.GroundHeight`), because bodies stand on the player's plane above it.
+- Disable Blood switches it off. The soul puff stays.
+- Level 7 ghosts (`EnemyController.IsSpectral`) leave no blood. The wiki is silent on this; it is Soul Hunter's choice, because ghosts have no body.
+- The pool keeps up to 64 blood effects (other kinds keep 32), with the oldest reused first. Colours, sizes and timings are provisional. **The look is not yet owner-approved.**
+
+Validation:
+- `BloodPlayModeTests` (R): a kill leaves blood under the enemy on the floor, alpha blended, still there at 1.5 s and gone by 3.5 s. With Disable Blood on there is no blood but the puff still plays; a ghost leaves none; kills bleed again once the option is off.
+- `WeaponVfxTests.VfxLibrary_HasEveryEffect_AndNoneLoops` (T) now includes Blood.
+- EditMode 471/471, PlayMode 173/173, 0 errors, save untouched (`D:/SoulHunter-Validation/run-20260929-blood/`).
+- Editor play `autoplay-editor-59` (before) and `-60` (after), Stage 1, 2 min: 0 errors, min 63 FPS. In `-60` the screenshots show fresh red splats and drops under kills and darker, fading stains behind the horde (partial `V`, `run-20260929-blood/editor-play-blood.png`).
+
+Not yet played by the owner.
+
 ### VFX v2 sprites and VS-style level-up cards (owner-approved, 2026-09-26)
 
 The owner approved the VFX v2 concept sheet: eight Soul Hunter sprites made procedurally by `ArtSource/Generators/build_vfx_textures.py` (soul flame, slash arc, magic circle, impact star, soul wisp, lightning bolt, shockwave ring, sparkle), written to `Assets/Art/Textures/VFX/SH10_Vfx2_*.png`. `WeaponVfxBuilder` now uses them:
