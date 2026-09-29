@@ -157,6 +157,14 @@ namespace SoulHunter.Gameplay.Core
             return bot;
         }
 
+        private readonly List<System.Action> _unsubscribe = new List<System.Action>();
+
+        private void OnDestroy()
+        {
+            foreach (var undo in _unsubscribe) undo();
+            _unsubscribe.Clear();
+        }
+
         private void OnEnable() => Application.logMessageReceived += OnLog;
         private void OnDisable() => Application.logMessageReceived -= OnLog;
 
@@ -191,15 +199,30 @@ namespace SoulHunter.Gameplay.Core
             if (Config.God) _health.IsInvincible = true;
             if (Config.Stage > 1) LevelProgressionManager.Instance.StartStage(Config.Stage);
 
+            // Every subscription is undone in OnDestroy: a level-up after the bot is gone (a gem collected while a test
+            // tears down) used to start a coroutine on the destroyed bot (MissingReferenceException, found 2026-09-29).
             var levelUp = FindFirstObjectByType<LevelUpManager>();
-            if (levelUp != null) levelUp.OnLevelUpUIRound += choices => StartCoroutine(ChooseUpgrade(levelUp, choices));
-            LevelProgressionManager.Instance.OnStageStarted += stage => { Event("stage", $"\"stage\": {stage}"); StartCoroutine(ShotSoon($"stage{stage:00}")); };
-            if (GameSessionManager.Instance != null)
+            if (levelUp != null)
             {
-                GameSessionManager.Instance.OnGameOver += () => Finish("died");
-                GameSessionManager.Instance.OnVictory += () => Finish("victory");
+                System.Action<List<UpgradeData>> choose = choices => StartCoroutine(ChooseUpgrade(levelUp, choices));
+                levelUp.OnLevelUpUIRound += choose;
+                _unsubscribe.Add(() => { if (levelUp != null) levelUp.OnLevelUpUIRound -= choose; });
+            }
+            var progression = LevelProgressionManager.Instance;
+            System.Action<int> stageStarted = stage => { Event("stage", $"\"stage\": {stage}"); StartCoroutine(ShotSoon($"stage{stage:00}")); };
+            progression.OnStageStarted += stageStarted;
+            _unsubscribe.Add(() => { if (progression != null) progression.OnStageStarted -= stageStarted; });
+            var session = GameSessionManager.Instance;
+            if (session != null)
+            {
+                System.Action died = () => Finish("died"), won = () => Finish("victory");
+                session.OnGameOver += died;
+                session.OnVictory += won;
+                _unsubscribe.Add(() => { if (session != null) { session.OnGameOver -= died; session.OnVictory -= won; } });
             }
             _health.OnDamaged += OnHurt;
+            var health = _health;
+            _unsubscribe.Add(() => { if (health != null) health.OnDamaged -= OnHurt; });
 
             // Start at a later player level: grant the XP, and the level-up screens that follow are answered by the bot.
             while (_experience != null && _experience.CurrentLevel < Config.StartLevel)

@@ -61,10 +61,37 @@ namespace SoulHunter.Gameplay.Core
             if ((type == LogType.Error || type == LogType.Exception) && _errors.Count < 20) _errors.Add(condition);
         }
 
+        /// <summary>
+        /// Options: -sh-benchmark-level N starts the hero at level N (a strong hero kills fast, which loads kill effects such
+        /// as the blood spray); -sh-benchmark-no-blood turns Disable Blood on, for A/B checks of the spray's cost;
+        /// -sh-benchmark-blood-ab measures each late segment with blood, without, then with it again, in one run.
+        /// </summary>
+        /// <summary>-sh-benchmark-blood-ab: each late segment is measured with blood, without, then with it again.</summary>
+        private static bool BloodAB => System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-sh-benchmark-blood-ab") >= 0;
+        private const float AbWarmupSeconds = 3f;
+
+        private static void SetBlood(bool on)
+        {
+            var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            if (save != null && save.CurrentData != null) save.CurrentData.DisableBlood = !on;
+        }
+
+        private static bool NoBlood => System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-sh-benchmark-no-blood") >= 0;
+
+        private static int StartLevel()
+        {
+            var args = System.Environment.GetCommandLineArgs();
+            int i = System.Array.IndexOf(args, "-sh-benchmark-level");
+            return i >= 0 && i + 1 < args.Length && int.TryParse(args[i + 1], out int level) ? Mathf.Clamp(level, 1, 400) : 1;
+        }
+
         private IEnumerator Start()
         {
             while (SceneManager.GetActiveScene().name != "MainMenu") yield return null;
             yield return new WaitForSecondsRealtime(1f);
+            // The save is a throw-away one while benchmarking (SaveService).
+            var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            if (save != null && save.CurrentData != null) save.CurrentData.DisableBlood = NoBlood;
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
@@ -77,15 +104,37 @@ namespace SoulHunter.Gameplay.Core
             if (levelUp != null) levelUp.OnLevelUpUIRound += choices => { if (choices.Count > 0) StartCoroutine(Pick(levelUp, choices[0])); };
             StartCoroutine(Walk());
             StartCoroutine(CloseChests());
+            var experience = player.GetComponent<PlayerExperience>();
+            int startLevel = StartLevel();
+            while (experience != null && experience.CurrentLevel < startLevel)
+                experience.AddXP(experience.XPToNextLevel - experience.CurrentXP);
 
             _json.Append("{\n");
             _json.Append($"  \"device\": \"{Escape(SystemInfo.processorType)} | {Escape(SystemInfo.graphicsDeviceName)} | {SystemInfo.systemMemorySize} MB\",\n");
             _json.Append($"  \"quality\": \"{QualitySettings.names[QualitySettings.GetQualityLevel()]}\",\n");
+            _json.Append($"  \"startLevel\": {startLevel},\n");
+            _json.Append($"  \"blood\": \"{(BloodAB ? "A/B" : NoBlood ? "off" : "on")}\",\n");
             _json.Append("  \"segments\": [\n");
 
-            yield return Measure("Stage 1 opening", null, 0f, true);
-            yield return Measure("Stage 1 at 20:30", null, LateStageTime, true);
-            yield return Measure("Stage 10 at 20:30", 10, LateStageTime, false);
+            if (BloodAB)
+            {
+                // The same hero and loadout, so the kill rate stays comparable: blood, no blood, blood again.
+                foreach (var (label, stage, last) in new[] { ("Stage 1 at 20:30", (int?)null, false), ("Stage 10 at 20:30", (int?)10, true) })
+                {
+                    SetBlood(true);
+                    yield return Measure(label + " / blood", stage, LateStageTime, true);
+                    SetBlood(false);
+                    yield return Measure(label + " / no blood", null, 0f, true, AbWarmupSeconds);
+                    SetBlood(true);
+                    yield return Measure(label + " / blood again", null, 0f, !last, AbWarmupSeconds);
+                }
+            }
+            else
+            {
+                yield return Measure("Stage 1 opening", null, 0f, true);
+                yield return Measure("Stage 1 at 20:30", null, LateStageTime, true);
+                yield return Measure("Stage 10 at 20:30", 10, LateStageTime, false);
+            }
 
             _json.Append("  ],\n");
             _json.Append($"  \"errors\": [{string.Join(", ", _errors.Select(e => "\"" + Escape(e) + "\""))}]\n}}\n");
@@ -117,7 +166,7 @@ namespace SoulHunter.Gameplay.Core
             return $"{Mathf.RoundToInt(Screen.width * scale)}x{Mathf.RoundToInt(Screen.height * scale)}";
         }
 
-        private IEnumerator Measure(string label, int? stage, float stageTime, bool more)
+        private IEnumerator Measure(string label, int? stage, float stageTime, bool more, float warmupSeconds = WarmupSeconds)
         {
             var progression = LevelProgressionManager.Instance;
             if (stage.HasValue) progression.StartStage(stage.Value);
@@ -127,9 +176,10 @@ namespace SoulHunter.Gameplay.Core
                     .GetSetMethod(true).Invoke(progression, new object[] { stageTime });
             ApplyBenchmarkSettings(); // stage changes and options may have reapplied V-Sync
 
-            yield return WaitRealtime(WarmupSeconds);
+            yield return WaitRealtime(warmupSeconds);
             var frames = new List<float>();
             long enemies = 0;
+            int killsBefore = RunStatsTracker.Instance != null ? RunStatsTracker.Instance.TotalKills : 0;
             float end = Time.realtimeSinceStartup + MeasureSeconds;
             while (Time.realtimeSinceStartup < end)
             {
@@ -138,6 +188,7 @@ namespace SoulHunter.Gameplay.Core
                 enemies += EnemyController.ActiveEnemies.Count;
             }
 
+            int kills = (RunStatsTracker.Instance != null ? RunStatsTracker.Instance.TotalKills : 0) - killsBefore;
             frames.Sort();
             float avg = frames.Average();
             float p99 = frames[Mathf.Min(frames.Count - 1, (int)(frames.Count * 0.99f))];
@@ -145,11 +196,11 @@ namespace SoulHunter.Gameplay.Core
             _json.Append(string.Format(inv,
                 "    {{\"segment\": \"{0}\", \"window\": \"{1}x{2}\", \"rendered3D\": \"{15}\", \"frames\": {3}, \"avgFps\": {4:F1}, \"avgMs\": {5:F2}, " +
                 "\"p99Ms\": {6:F2}, \"onePercentLowFps\": {7:F1}, \"maxMs\": {8:F2}, \"framesOver33ms\": {9}, \"avgEnemies\": {10:F0}, " +
-                "\"monoMB\": {11}, \"allocatedMB\": {12}, \"timeScale\": {13}}}{14}\n",
+                "\"kills\": {16}, \"monoMB\": {11}, \"allocatedMB\": {12}, \"timeScale\": {13}}}{14}\n",
                 label, Screen.width, Screen.height, frames.Count, 1000f / avg, avg, p99, 1000f / p99, frames[frames.Count - 1],
                 frames.Count(f => f > 33.4f), enemies / (double)Mathf.Max(1, frames.Count),
                 UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() / (1024 * 1024),
-                UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / (1024 * 1024), Time.timeScale, more ? "," : "", RenderedResolution()));
+                UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / (1024 * 1024), Time.timeScale, more ? "," : "", RenderedResolution(), kills));
         }
 
         /// <summary>Takes the first level-up choice a frame later, after the level-up screen has opened.</summary>
