@@ -223,6 +223,11 @@ namespace SoulHunter.Gameplay.Core
             _health.OnDamaged += OnHurt;
             var health = _health;
             _unsubscribe.Add(() => { if (health != null) health.OnDamaged -= OnHurt; });
+            // Lantern income (balance pass, 2026-09-29): every broken Soul Lantern and what it dropped.
+            System.Action<SoulHunter.Gameplay.Pickups.LightSource, SoulHunter.Gameplay.Pickups.LightSourceDrops.Drop> lantern =
+                (source, drop) => Event("lantern", $"\"drop\": \"{drop}\"");
+            SoulHunter.Gameplay.Pickups.LightSource.AnyBroken += lantern;
+            _unsubscribe.Add(() => SoulHunter.Gameplay.Pickups.LightSource.AnyBroken -= lantern);
 
             // Start at a later player level: grant the XP, and the level-up screens that follow are answered by the bot.
             while (_experience != null && _experience.CurrentLevel < Config.StartLevel)
@@ -297,6 +302,15 @@ namespace SoulHunter.Gameplay.Core
             // Walk up to the Level 3 merchant while it is there, as a player would.
             var merchant = Nearest(FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None).Where(m => !m.HasLeft).Select(m => m.transform), me, 30f);
             if (merchant != null) pull += Flat(merchant.position - me).normalized * 3f;
+            // Like a VS player: break Soul Lanterns in view and pick up what they drop (coins, bags, items). Since the
+            // 2026-09-29 VS drop rule these are where coins and chickens come from; the bot used to ignore them.
+            if (near < 6)
+            {
+                var lantern = Nearest(FindObjectsByType<LightSource>(FindObjectsSortMode.None).Where(l => l.isActiveAndEnabled).Select(l => l.transform), me, 18f);
+                if (lantern != null) pull += Flat(lantern.position - me).normalized * 1.8f;
+                var item = Nearest(FindObjectsByType<Pickup>(FindObjectsSortMode.None).Where(p => p.isActiveAndEnabled).Select(p => p.transform), me, 14f);
+                if (item != null) pull += Flat(item.position - me).normalized * 1.8f;
+            }
             if (_health.CurrentHealth < _health.MaxHealth * 0.5f)
             {
                 var food = Nearest(FindObjectsByType<HealthPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);

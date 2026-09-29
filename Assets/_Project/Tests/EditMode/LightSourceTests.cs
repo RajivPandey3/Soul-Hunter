@@ -35,6 +35,42 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void Luck_RaisesEveryDrop_ButGoldCoinAndCoinBag()
+        {
+            // VS wiki (Luck, "Higher rarity pickups"): itemWeight = rarity x totalLuck, except Gold Coin and Coin Bag.
+            Assert.That(LightSourceDrops.Weight(Drop.GoldCoin, 30, 2f), Is.EqualTo(50f));
+            Assert.That(LightSourceDrops.Weight(Drop.CoinBag, 30, 2f), Is.EqualTo(10f));
+            Assert.That(LightSourceDrops.Weight(Drop.Chicken, 30, 2f), Is.EqualTo(24f));
+            Assert.That(LightSourceDrops.Weight(Drop.Magnet, 30, 2f), Is.EqualTo(4f));
+            Assert.That(LightSourceDrops.Weight(Drop.Magnet, 11, 2f), Is.EqualTo(0f), "Still gated by level.");
+            // Level 1, Luck 2: coin 50, bag 10, chicken 24, Hellfire Breath 2, Luck Charm 2 = 88.
+            Assert.That(LightSourceDrops.Chance(Drop.Chicken, 1, 2f), Is.EqualTo(24f / 88f).Within(1e-5));
+            Assert.That(LightSourceDrops.Chance(Drop.GoldCoin, 1, 2f), Is.EqualTo(50f / 88f).Within(1e-5));
+            Assert.That(LightSourceDrops.Pick(1, 2f, 0.999f), Is.EqualTo(Drop.LuckCharm));
+            Assert.That(LightSourceDrops.Chance(Drop.Chicken, 1), Is.EqualTo(12f / 74f).Within(1e-5), "Luck 1 keeps the plain table.");
+        }
+
+        [Test]
+        public void EachLevel_UsesItsVsStageLanternNumbers()
+        {
+            // VS wiki (Light source, destructible table), following the stage-bonus climb.
+            var expected = new (float chance, float max, int count)[]
+            {
+                (0.10f, 0.50f, 10), (0.075f, 0.50f, 10), (0.20f, 0.60f, 10), (0.075f, 0.50f, 10),
+                (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20),
+            };
+            for (int stage = 1; stage <= 10; stage++)
+            {
+                var numbers = LightSourceSpawner.ForStage(stage);
+                Assert.That(numbers.Chance, Is.EqualTo(expected[stage - 1].chance).Within(1e-5), $"Level {stage} chance");
+                Assert.That(numbers.MaxChance, Is.EqualTo(expected[stage - 1].max).Within(1e-5), $"Level {stage} cap");
+                Assert.That(numbers.Max, Is.EqualTo(expected[stage - 1].count), $"Level {stage} lanterns at once");
+            }
+            Assert.That(LightSourceSpawner.SpawnChance(LightSourceSpawner.ForStage(5), 3f), Is.EqualTo(0.60f).Within(1e-5));
+            Assert.That(LightSourceSpawner.SpawnChance(LightSourceSpawner.ForStage(5), 10f), Is.EqualTo(0.80f).Within(1e-5), "Cappella Magna caps at 80%.");
+        }
+
+        [Test]
         public void SpawnChance_IsBaseTimesLuck_Capped()
         {
             Assert.That(LightSourceSpawner.SpawnChance(1f), Is.EqualTo(0.10f).Within(1e-5));

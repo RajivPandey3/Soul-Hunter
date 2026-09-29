@@ -93,11 +93,14 @@ namespace SoulHunter.Gameplay.AI
 
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
             // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
+            Bounds body = BodyBounds();
             if (_enemy == null || !_enemy.IsSpectral)
             {
                 Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
-                SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(BodyBounds()), away);
+                SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away);
             }
+            // VS-style death (owner, 2026-09-29): the body stays a moment and sinks while the blood sprays.
+            SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body);
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {

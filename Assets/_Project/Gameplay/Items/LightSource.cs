@@ -19,6 +19,9 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>Raised when it breaks, with the item it dropped.</summary>
         public event System.Action<LightSource, LightSourceDrops.Drop> Broken;
 
+        /// <summary>Any lantern broken, with its drop (the autoplay bot logs these to measure lantern income).</summary>
+        public static event System.Action<LightSource, LightSourceDrops.Drop> AnyBroken;
+
         private void Awake()
         {
             _health = GetComponent<HealthController>();
@@ -42,13 +45,15 @@ namespace SoulHunter.Gameplay.Pickups
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
             var experience = player != null ? player.GetComponent<SoulHunter.Gameplay.Player.PlayerExperience>() : null;
             int level = experience != null ? experience.CurrentLevel : 1;
-            var drop = LightSourceDrops.Pick(level, Random.value);
+            float luck = player != null && player.Stats != null ? player.Stats.Luck : 1f;
+            var drop = LightSourceDrops.Pick(level, luck, Random.value);
             Vector3 at = transform.position;
             LightSourceDrops.Spawn(drop, at);
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, at + Vector3.up * 0.8f);
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFXThrottled(audio.EnemyDeathSound, SoulHunter.Gameplay.Audio.AudioManager.EnemyDeathInterval, 0.7f);
             Broken?.Invoke(this, drop);
+            AnyBroken?.Invoke(this, drop);
             // HealthController deactivates the lantern after OnDied; the spawner's pool takes it back.
         }
     }
@@ -58,7 +63,9 @@ namespace SoulHunter.Gameplay.Pickups
     /// Floor Chicken 12, Coin Bag 10, Vacuum (Magnet) 2 from level 12, Orologion (Time Freeze) 2 from level 4, Rich Coin
     /// Bag 1 from level 5, and (2026-09-27) Soul Hunter's own versions of the Rosary, Nduja Fritta Tanto, Little Clover
     /// and Gilded Clover: Soul Toll (screen wipe) 1 from level 8, Hellfire Breath 1, Luck Charm 1, and Gilded Charm 1 from
-    /// level 30. Rerollo (weight unknown) is left out. Coin values 1 / 10 / 100 follow VS (from memory; provisional).
+    /// level 30. Rerollo (weight unknown) is left out. Coin values 1 / 10 / 100 (wiki Gold Coin (pickup), Coin Bag and
+    /// Rich Coin Bag pages, checked 2026-09-29). Luck (wiki Luck, "Higher rarity pickups"): every drop except Gold Coin
+    /// and Coin Bag weighs rarity x totalLuck (Soul Hunter's Luck, 1 at base).
     /// </summary>
     public static class LightSourceDrops
     {
@@ -80,33 +87,45 @@ namespace SoulHunter.Gameplay.Pickups
             return (0, int.MaxValue);
         }
 
-        /// <summary>The drop for a uniform roll in [0, 1), among the entries the player's level allows.</summary>
-        public static Drop Pick(int playerLevel, float roll01)
+        /// <summary>VS Luck: weight x totalLuck for every drop except Gold Coin and Coin Bag; 0 below its level.</summary>
+        public static float Weight(Drop drop, int playerLevel, float luck)
         {
-            int total = 0;
-            foreach (var e in Table) if (playerLevel >= e.minLevel) total += e.weight;
-            float target = Mathf.Clamp01(roll01) * total;
-            int running = 0;
             foreach (var e in Table)
             {
-                if (playerLevel < e.minLevel) continue;
-                running += e.weight;
+                if (e.drop != drop) continue;
+                if (playerLevel < e.minLevel) return 0f;
+                bool plainGold = drop == Drop.GoldCoin || drop == Drop.CoinBag;
+                return e.weight * (plainGold ? 1f : Mathf.Max(0f, luck));
+            }
+            return 0f;
+        }
+
+        /// <summary>The drop for a uniform roll in [0, 1) at Luck 1.</summary>
+        public static Drop Pick(int playerLevel, float roll01) => Pick(playerLevel, 1f, roll01);
+
+        /// <summary>The drop for a uniform roll in [0, 1), among the entries the player's level allows, weighted by Luck.</summary>
+        public static Drop Pick(int playerLevel, float luck, float roll01)
+        {
+            float total = 0f;
+            foreach (var e in Table) total += Weight(e.drop, playerLevel, luck);
+            float target = Mathf.Clamp01(roll01) * total;
+            float running = 0f;
+            foreach (var e in Table)
+            {
+                float weight = Weight(e.drop, playerLevel, luck);
+                if (weight <= 0f) continue;
+                running += weight;
                 if (target < running) return e.drop;
             }
             return Drop.GoldCoin;
         }
 
-        /// <summary>Share of rolls that give this drop at this level (for tests and tuning).</summary>
-        public static float Chance(Drop drop, int playerLevel)
+        /// <summary>Share of rolls that give this drop at this level and Luck (for tests and tuning).</summary>
+        public static float Chance(Drop drop, int playerLevel, float luck = 1f)
         {
-            int total = 0, mine = 0;
-            foreach (var e in Table)
-            {
-                if (playerLevel < e.minLevel) continue;
-                total += e.weight;
-                if (e.drop == drop) mine += e.weight;
-            }
-            return total > 0 ? mine / (float)total : 0f;
+            float total = 0f;
+            foreach (var e in Table) total += Weight(e.drop, playerLevel, luck);
+            return total > 0f ? Weight(drop, playerLevel, luck) / total : 0f;
         }
 
         public static void Spawn(Drop drop, Vector3 position)

@@ -31,6 +31,41 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AtTheLimit_ANewLanternReplacesTheOldest_NearestThePlayer()
+        {
+            // VS wiki (Light source): at the limit a new light source spawns closest to the player and the oldest goes.
+            yield return QuietArena();
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            var lanterns = Object.FindFirstObjectByType<LightSourceSpawner>();
+            lanterns.enabled = false; // placed by hand; no random attempts
+            int max = LightSourceSpawner.ForStage(1).Max;
+            var placed = new List<LightSource>();
+            for (int i = 0; i < max; i++)
+            {
+                Assert.That(LightSourceSpawner.TryFindSpot(player.transform.position, out var spot), Is.True);
+                placed.Add(lanterns.Spawn(spot));
+            }
+            Assert.That(lanterns.Active.Count, Is.EqualTo(max));
+            var oldestSpot = placed[0].transform.position;
+            var others = new List<Vector3>();
+            for (int i = 1; i < placed.Count; i++) others.Add(placed[i].transform.position);
+            var fresh = lanterns.ReplaceOldest(player.transform.position);
+            Assert.That(fresh, Is.Not.Null, "A replacement lantern appears.");
+            Assert.That(lanterns.Active.Count, Is.EqualTo(max), "Still at the limit.");
+            Assert.That(lanterns.Active[lanterns.Active.Count - 1], Is.SameAs(fresh), "The new one is the newest.");
+            // The pool may hand the same object back, so the oldest is checked by place: nothing stands there any more.
+            bool oldestStillThere = false;
+            foreach (var lantern in lanterns.Active)
+                if (lantern != fresh && (lantern.transform.position - oldestSpot).sqrMagnitude < 0.01f) oldestStillThere = true;
+            Assert.That(oldestStillThere, Is.False, "The oldest lantern is gone.");
+            Assert.That(others.TrueForAll(p => lanterns.Active.Any(l => (l.transform.position - p).sqrMagnitude < 0.01f)), Is.True,
+                "The other lanterns stay.");
+            Assert.That(lanterns.Replaced, Is.EqualTo(1));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator Lanterns_AppearJustOffScreen_OnOpenGround_AtMostTen()
         {
             yield return QuietArena();

@@ -1202,6 +1202,49 @@ Not yet played by the owner.
 
 Not yet played by the owner.
 
+### Lantern drop balance and the dying body (owner, 2026-09-29)
+
+Owner: "lantern drops ka balance pass karo, blood drop ko bhi balance karo kyun ki enemy marne per gayab ho jata hai per blood dikhta rahta hai".
+
+**Soul Lanterns, following vampire.survivors.wiki (Light source and Luck pages, fetched 2026-09-29).** The drop weights and level gates already matched the wiki table (Gold Coin 50, Floor Chicken 12, Coin Bag 10, Vacuum 2 from level 12, Orologion 2 from level 4, Rich Coin Bag 1 from level 5, and the Rosary / Nduja / clover stand-ins). Coin values 1 / 10 / 100 are now checked against the Gold Coin (pickup), Coin Bag and Rich Coin Bag pages. Added:
+- **Luck** (wiki Luck, "Higher rarity pickups": `itemWeight = rarity x totalLuck`): every drop except Gold Coin and Coin Bag weighs its rarity × Luck (`LightSourceDrops.Weight`, `Pick(level, luck, roll)`). Before, Luck changed nothing.
+- **Per level**: the wiki gives every VS stage its own chance, cap and maximum. The owner had no preference, so the stage-bonus climb is used (`LightSourceSpawner.ForStage`):
+
+  | Level | VS stage | Chance | Cap | At once |
+  |---|---|---|---|---|
+  | L1 | Mad Forest | 10% | 50% | 10 |
+  | L2 | Inlaid Library | 7.5% | 50% | 10 |
+  | L3 | Dairy Plant | 20% | 60% | 10 |
+  | L4 | Gallo Tower | 7.5% | 50% | 10 |
+  | L5–L10 | Cappella Magna | 20% | 80% | 20 |
+
+  Inlaid Library, Dairy Plant and Gallo Tower's fixed spawn spots are not modelled.
+- **At the limit** (wiki): the attempt still rolls, at the base chance with no Luck. A success despawns the oldest lantern and places a new one at the off-screen spot nearest the player (`ReplaceOldest`). Before, spawning stopped at 10.
+- `LightSource.AnyBroken` lets `AutoplayBot` log every broken lantern (`lantern` events). The bot now also walks to lanterns within 18 units and to items within 14 when fewer than 6 enemies are near, like a player. Before, it ignored them and broke only 2 lanterns in 5 minutes.
+
+**The dying body** (the owner chose "Body briefly stays (VS-style)"; wiki enemy pages show death animations of about 1.8–2.5 s):
+- `EnemyCorpses`: at death (`EnemyDrop`), a still copy of the enemy's drawn meshes stays where it died. Skinned meshes are baked in their last pose; the hit flash, a property block, is not copied.
+- The copy holds, then sinks into the ground (1.1 × its height, eased) and shrinks to 0.6 over `LingerSeconds` 0.7, ending with the neck jet (last spurt at 0.5 s).
+- The enemy itself still returns to the pool at once, so kills, spawning and pooling are unchanged.
+- At most 32 corpses (8 meshes each); beyond that an enemy vanishes as before. Ghosts get a body too, but still no blood. Timings are provisional.
+
+Validation:
+- `LightSourceTests` (T): Luck weighting, per-level numbers and caps.
+- `LightSourcePlayModeTests.AtTheLimit_ANewLanternReplacesTheOldest_NearestThePlayer` (R).
+- `EnemyCorpsePlayModeTests` (R): the body copy has every drawn mesh, sinks and shrinks by 0.5 s, and is gone by 0.85 s while the enemy was pooled at once; 60 kills in one frame leave exactly 32 corpses, all gone after 0.9 s.
+- EditMode 474/474, PlayMode 184/184, save untouched (`D:/SoulHunter-Validation/run-20260929-corpse-lantern/`).
+- Heavy benchmark (release, level-60 hero), FPS by 20 s window:
+  - run 2 (1,000–2,300 kills per window): 59–65;
+  - run 1 (4,100–7,000 kills per window): 45–56.
+  - The corpse update is not in the profile's top 60.
+- Editor play:
+  - `autoplay-editor-74` (Stage 1, 5 min, lantern-seeking bot): 7 lanterns broken (5 Gold Coins, 1 Rich Coin Bag, 1 chicken), 411 gold with 2 chests, 0 errors, min 60 FPS. **The bot died at 4:48** at level 14. Earlier bot runs survived 5 minutes when kills still dropped chickens.
+  - `-73` (Stage 5, level-30 hero, god mode, 3 min): 16 lanterns (9 Gold Coins, 2 Coin Bags, 5 chickens), 262 gold.
+  - The sinking body is hard to catch in 2 s screenshots; it is covered by the tests (partial `V`).
+- Balance note for the owner: with VS drops, healing now comes from lanterns, stage items, Recovery and the maxed-level chicken card. Whether early Stage 1 is too hard is a balance decision.
+
+Not yet played by the owner.
+
 ### VFX v2 sprites and VS-style level-up cards (owner-approved, 2026-09-26)
 
 The owner approved the VFX v2 concept sheet: eight Soul Hunter sprites made procedurally by `ArtSource/Generators/build_vfx_textures.py` (soul flame, slash arc, magic circle, impact star, soul wisp, lightning bolt, shockwave ring, sparkle), written to `Assets/Art/Textures/VFX/SH10_Vfx2_*.png`. `WeaponVfxBuilder` now uses them:
