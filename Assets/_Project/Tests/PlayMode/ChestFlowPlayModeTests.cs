@@ -49,7 +49,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsTrue(chestUI.IsOpen, "Collecting a chest opens the chest screen. " + Errors());
             Assert.AreEqual(0f, Time.timeScale, "The game pauses under the chest screen.");
             var screen = chestUI.Screen;
-            Assert.That(AudioManager.Instance.LastClip, Is.SameAs(AudioManager.Instance.TreasureFoundSound), "VS: Treasure Found plays first.");
+            // A new weapon from the chest can fire in the same frame, so the recent clips are checked, not only the last one.
+            Assert.That(AudioManager.Instance.RecentClips, Does.Contain(AudioManager.Instance.TreasureFoundSound), "VS: Treasure Found plays first.");
             Assert.That(screen.CanSkip, Is.False, "VS: the first six chests cannot be skipped.");
             Assert.That(screen.TrySkip(), Is.False);
             Assert.That(PauseActionEnabled(), Is.False, "Esc skips chests, so it does not open the pause menu meanwhile.");
@@ -62,7 +63,7 @@ namespace SoulHunter.Tests.PlayMode
 
             Click(screen.OpenButton, "Open");
             yield return WaitUntilRealtime(() => screen.Preview != null && screen.Preview.CoinsInFlight > 0, "coins to burst out of the chest");
-            Assert.That(AudioManager.Instance.LastClip, Is.SameAs(AudioManager.Instance.TreasureJingle(screen.ItemCount)).Or.SameAs(AudioManager.Instance.UIConfirmSound),
+            Assert.That(AudioManager.Instance.RecentClips, Does.Contain(AudioManager.Instance.TreasureJingle(screen.ItemCount)),
                 "The chest-size jingle plays on OPEN.");
             yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.Done, "every item to be revealed");
             Assert.That(screen.Preview.LidOpen, Is.True, "OPEN opened the lid.");
@@ -79,6 +80,39 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(PauseActionEnabled(), Is.True, "The pause key works again.");
             Assert.That(Save().ChestsOpened, Is.EqualTo(1), "The chest is counted on the save (VS skip rules).");
             Assert.That(GameObject.Find("ChestPreviewStage"), Is.Null, "The 3D preview is cleaned up.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator FirstSixChestsOnASave_Give_1_1_3_1_1_5_Items()
+        {
+            // VS wiki (Treasure_Chest): "The first six chests picked up in a save will always drop items in the set
+            // sequence 1-1-3-1-1-5." Six real chests are collected and opened; the seventh rolls again.
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 0; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true)) weapon.enabled = false;
+            var chestUI = LiveChestUI();
+            var logic = Object.FindFirstObjectByType<ChestLogicController>();
+            int[] expected = { 1, 1, 3, 1, 1, 5 };
+            var seen = new System.Collections.Generic.List<int>();
+
+            for (int i = 0; i < expected.Length; i++)
+            {
+                PickupPoolManager.Instance.SpawnChest(PlayerController.Instance.transform.position);
+                var chest = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).FirstOrDefault(c => c.gameObject.activeInHierarchy);
+                Assert.IsNotNull(chest, $"Chest {i + 1} did not spawn.");
+                yield return WaitUntilRealtime(() => !chest.gameObject.activeInHierarchy, $"the player to collect chest {i + 1}");
+                yield return null;
+                Assert.IsTrue(chestUI.IsOpen, $"Chest {i + 1} opens the screen. " + Errors());
+                seen.Add(chestUI.Screen.ItemCount);
+                Assert.That(logic.LastResult.ItemCount, Is.EqualTo(expected[i]), $"Chest {i + 1}: seen so far {string.Join("-", seen)}.");
+                Assert.That(logic.LastResult.Rewards.Count, Is.EqualTo(expected[i]), $"Chest {i + 1} gives one reward per item.");
+                yield return chestUI.OpenAndClose(20f);
+                Assert.IsFalse(chestUI.IsOpen, $"Chest {i + 1} closed.");
+                Assert.That(Save().ChestsOpened, Is.EqualTo(i + 1));
+            }
+            Assert.That(Save().FiveItemChestsOpened, Is.EqualTo(1), "The sixth chest was a 5-item chest.");
+            Assert.That(ChestLogicController.FirstChestItems(Save().ChestsOpened), Is.EqualTo(0), "From the seventh chest the count is rolled.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

@@ -1020,7 +1020,9 @@ Owner: "vs mein chest milne per VFX hai wo nahi dikh raha ... wiki se check karo
 
 **Sounds:** four unused CC0 Kenney Music Jingles, picked by measured length and rising pitch, not by ear: TreasureFound HIT12 (0.28 s), TreasureA HIT01 (0.51 s), TreasureB NES13 (1.05 s), TreasureC NES00 (1.76 s). They were added with `install_cc0_audio.py --only`, credited in `CREDITS.md` and wired by `AudioManagerPrefabBuilder`.
 
-Provisional: every timing, the coin counts (12/22/36) and the layout. **Not built:** the wiki's first-six-chests item sequence 1-1-3-1-1-5 (it changes rewards, not the effect; owner decision).
+Provisional: every timing, the coin counts (12/22/36) and the layout.
+
+**First six chests: 1-1-3-1-1-5** (owner: "haan 1-1-3-1-1-5 bhi add karo", 2026-09-29; wiki Treasure_Chest: "The first six chests picked up in a save will always drop items in the set sequence 1-1-3-1-1-5"). `ChestLogicController.ItemCountFor` uses `FirstChestSequence` while `GameData.ChestsOpened` is under 6, whatever Luck or the roll; from the seventh chest the Luck roll applies again. An Arcana chest counts as one of the six (ChestUI counts every chest) but gives its Arcana; the wiki does not say how Arcana chests fit the sequence. The owner's save had opened 5 chests (2026-09-29), so its next chest is the sequence's 5-item chest. Tests: `ChestRewardTests.FirstSixChests_FollowTheVsSequence_ThenLuckRolls` (T) and `ChestFlowPlayModeTests.FirstSixChestsOnASave_Give_1_1_3_1_1_5_Items` (R: six real chests collected and opened). The first full run failed one older test: a new weapon from the chest fired in the collection frame and replaced Treasure Found as `AudioManager.LastClip`; the chest sound checks now read `AudioManager.RecentClips` (last 8). EditMode 471/471, PlayMode 171/171, save untouched (`D:/SoulHunter-Validation/run-20260929-firstchests2/`). Not yet played by the owner.
 
 `AutoplayBot` and `PerformanceBenchmark` press OPEN, then DONE (`ChestUI.OpenAndClose`), instead of closing the old panel by reflection.
 

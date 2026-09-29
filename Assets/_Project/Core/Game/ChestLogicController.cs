@@ -83,13 +83,34 @@ namespace SoulHunter.Gameplay.Core
             return 1;
         }
 
+        /// <summary>
+        /// VS wiki (Treasure_Chest): "The first six chests picked up in a save will always drop items in the set sequence
+        /// 1-1-3-1-1-5." Counted by GameData.ChestsOpened, which ChestUI raises for every chest (Arcana chests included).
+        /// </summary>
+        public static readonly int[] FirstChestSequence = { 1, 1, 3, 1, 1, 5 };
+
+        /// <summary>The item count fixed by the first-chests sequence, or 0 once the save has opened six chests.</summary>
+        public static int FirstChestItems(int chestsOpenedBefore) =>
+            chestsOpenedBefore >= 0 && chestsOpenedBefore < FirstChestSequence.Length ? FirstChestSequence[chestsOpenedBefore] : 0;
+
+        /// <summary>The first-chests sequence count if it still applies, else the Luck roll.</summary>
+        public int ItemCountFor(int chestsOpenedBefore, float luck, float roll01)
+        {
+            int fixedCount = FirstChestItems(chestsOpenedBefore);
+            return fixedCount > 0 ? fixedCount : RollItemCount(luck, roll01);
+        }
+
         public string ProcessChest(bool canEvolve = true)
         {
             var weaponManager = FindFirstObjectByType<WeaponManager>();
             var levelUpManager = FindFirstObjectByType<LevelUpManager>();
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
             float luck = player != null && player.Stats != null ? player.Stats.Luck : 1f;
-            return ProcessChest(weaponManager, levelUpManager, RollItemCount(luck, Random.value), canEvolve, Random.value);
+            SoulHunter.Core.Persistence.SaveService save = null;
+            SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
+            // Without a save (no services) the sequence is skipped and the chest rolls as usual.
+            int opened = save != null && save.CurrentData != null ? save.CurrentData.ChestsOpened : FirstChestSequence.Length;
+            return ProcessChest(weaponManager, levelUpManager, ItemCountFor(opened, luck, Random.value), canEvolve, Random.value);
         }
 
         /// <summary>

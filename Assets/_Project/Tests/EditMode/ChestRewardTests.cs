@@ -55,6 +55,21 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void FirstSixChests_FollowTheVsSequence_ThenLuckRolls()
+        {
+            // VS wiki (Treasure_Chest): the first six chests on a save give 1-1-3-1-1-5 items, whatever the roll or Luck.
+            int[] expected = { 1, 1, 3, 1, 1, 5 };
+            for (int opened = 0; opened < expected.Length; opened++)
+            {
+                Assert.That(_chest.ItemCountFor(opened, 1f, 0.99f), Is.EqualTo(expected[opened]), $"chest {opened + 1}, high roll");
+                Assert.That(_chest.ItemCountFor(opened, 10f, 0.0f), Is.EqualTo(expected[opened]), $"chest {opened + 1}, lucky roll");
+            }
+            Assert.That(ChestLogicController.FirstChestItems(6), Is.EqualTo(0), "The sequence ends after six chests.");
+            Assert.That(_chest.ItemCountFor(6, 1f, 0.02f), Is.EqualTo(5), "The seventh chest rolls again.");
+            Assert.That(_chest.ItemCountFor(6, 1f, 0.99f), Is.EqualTo(1));
+        }
+
+        [Test]
         public void RollItemCount_UsesThresholds_AndLuckRaisesThem()
         {
             // Learning Comment: Luck 1 par 3% (5 items) aur 10% (3 items); Luck 2 par dono double.

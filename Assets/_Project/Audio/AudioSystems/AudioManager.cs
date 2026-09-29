@@ -62,6 +62,9 @@ namespace SoulHunter.Gameplay.Audio
         /// <summary>The clip PlaySFX was last asked to play (tests read this; batchmode may not output sound).</summary>
         public AudioClip LastClip { get; private set; }
         public int PlayedCount { get; private set; }
+        /// <summary>The last few clips PlaySFX was asked to play, newest last (tests: a weapon firing in the same frame can replace LastClip).</summary>
+        public readonly System.Collections.Generic.List<AudioClip> RecentClips = new System.Collections.Generic.List<AudioClip>();
+        private const int RecentClipCount = 8;
 
         private const string ResourcePath = "AudioManager";
 
@@ -204,6 +207,8 @@ namespace SoulHunter.Gameplay.Audio
             if (clip == null) return;
             LastClip = clip;
             PlayedCount++;
+            RecentClips.Add(clip);
+            if (RecentClips.Count > RecentClipCount) RecentClips.RemoveAt(0);
 
             // Khali speaker (AudioSource) dhoondho
             for (int i = 0; i < _sfxSources.Length; i++)
