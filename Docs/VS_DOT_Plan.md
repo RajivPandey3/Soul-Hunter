@@ -27,10 +27,10 @@ Source table: `Docs/VS_DOT_Table.md` (177 VS rules from raw vampire.survivors.wi
 
 ## Phase 0: owner decisions (asked first)
 
-1. Confirm the reading of the 5% rule above.
-2. The dash deals 50 damage to enemies. It is not in VS or the GDD. Remove the damage?
-3. Six weapon unions are Soul Hunter inventions (and one can never fire). Remove them?
-4. Gem colours: VS 2 / 9 XP, or scaled to Soul Hunter's 10-XP gems?
+1. ~~5% rule~~ Confirmed 2026-09-30: numbers ±5%.
+2. ~~Dash damage~~ Decided 2026-09-30: remove it (the dash only moves and avoids damage).
+3. ~~Invented unions~~ Decided 2026-09-30: remove all 6.
+4. ~~Gem colours~~ Decided 2026-09-30: 20 / 90 XP (VS 2 / 9 scaled x10).
 5. Stage-clear revival gold: flat +100 (Stages page) or +100/+200/+300 (The_Reaper page)?
 6. Items Soul Hunter lacks: Ebony Wings, Silver/Gold Ring, Stone Mask, a second gun. Add Soul Hunter versions?
 7. Unlock gating (VS relics and achievements for modes, PowerUp ranks, items, coffins for characters): add, or keep everything open?
@@ -40,6 +40,7 @@ Source table: `Docs/VS_DOT_Table.md` (177 VS rules from raw vampire.survivors.wi
 
 | # | Row | Fix |
 |---|---|---|
+| 0 | Owner decisions | Remove dash damage; remove the 6 invented unions; gem colours at 20 / 90 XP |
 | 1 | Chest contents | Chests level up owned items only |
 | 2 | XP curve | +100% Growth at levels 20 and 40 |
 | 3 | Stat caps | Might/Area 1000%, Speed/Duration 500%, Amount 10 |
