@@ -1065,7 +1065,13 @@ Now (`VFXPoolManager.PlayBlood(neck, awayFromHero)`, called from `EnemyDrop` nex
 - **Nothing is left on the ground.** The floor splat, its prefab (`VFX_Blood`) and its texture and material were removed.
 - Disable Blood switches the spray off; the soul puff stays.
 - Level 7 ghosts (`EnemyController.IsSpectral`) do not bleed. The wiki is silent on this; it is Soul Hunter's choice, because ghosts have no body.
-- At most 32 sprays play at once (9,600 particles), with the oldest reused first. Colours, sizes, angles and timings are provisional. The spray is the same size on elites and bosses. **The look is not yet owner-approved.**
+- **Fewer particles when many die at once** (owner chose option 2, 2026-09-29):
+  - Up to 8 sprays in the air (`FullSprays`) get all 300 each.
+  - A spray started while more are playing shares that budget: 300 × 8 / (sprays playing + 1), at least 60 (`MinSprayParticles`) (`SprayParticlesFor`).
+  - `SetSprayParticles` lowers each pulse's burst count before the spray is switched on. With the pool full (32 sprays), a new spray gets 80.
+  - That is about 4,800 particles at most, instead of 9,600.
+  - Values are provisional.
+- At most 32 sprays play at once, with the oldest reused first. Kills in the same 0.01 s make one spray (the blood throttle). Colours, sizes, angles and timings are provisional. The spray is the same size on elites and bosses. **The look is not yet owner-approved.**
 - `AutoplayBot` option `-sh-autoplay-no-blood` plays with Disable Blood on, for A/B checks.
 
 Validation:
@@ -1082,6 +1088,16 @@ Validation:
   - About 5–13% slower, and the blood-on run went below the 30 FPS hard minimum in the GUI editor.
   - A repeat blood-on run (`-65`) killed only 2,981 and averaged 42.1 (minimum 34), so the runs are noisy.
   - Editor numbers are not build numbers; no build benchmark was run (`P` unverified).
+- **With the budget (option 2):**
+  - `BloodSprayBudgetTests` (T): the pulses add up to 300; up to 8 sprays get 300 each; above that fewer, never rising and never under 60.
+  - `BloodPlayModeTests.ManyKillsAtOnce_ShareTheBudget_AndALoneKillGets300Again` (R): of 20 kills 0.02 s apart, the first 8 sprays have 300 and the last fewer (at least 60); a lone kill afterwards gets 300 again.
+  - The 300-count test now warms up one spray first, because the first spray of a run can hitch past its first particles' 0.4 s life. It counted 272 once before that.
+  - EditMode 473/473, PlayMode 174/174, save untouched (`D:/SoulHunter-Validation/run-20260929-spraybudget3/`).
+  - GUI editor, same Stage 10 run:
+    - with the budget (`-66`): 6,448 kills; average 42.1 FPS, last minute 34.1, minimum 30 (it was 26 in `-63`);
+    - blood off (`-67`): only 3,804 kills; average 35.9, minimum 30.
+    - The editor runs are too noisy to measure the saving; only a build benchmark at a high kill rate can (`P` unverified).
+  - Stage 1 (`-68`): 0 errors, minimum 68 FPS.
 
 Not yet played by the owner.
 

@@ -281,17 +281,12 @@ namespace SoulHunter.Editor.Content
 
         private static readonly Color BloodBright = new Color(0.88f, 0.05f, 0.08f), BloodRed = new Color(0.7f, 0.02f, 0.06f);
 
-        /// <summary>Three spurts, like a heartbeat, each weaker than the last: (start seconds, particles per step), 10 steps 0.02 s apart.</summary>
-        public static readonly (float Time, int Count)[] SprayPulses = { (0f, 14), (0.25f, 10), (0.5f, 6) };
-        public const int SprayStepsPerPulse = 10;
-        public const float SprayStepSeconds = 0.02f;
-
         /// <summary>
         /// Blood on an enemy's death. Owner (2026-09-29): "blood effect enemy ke neck se spray particle ki tarah", then
         /// "jameen per blood effect nahi chahiye ... neck ke pass ... 300 particle mein dikhao". VS has blood that its
         /// "Disable blood" option switches off; the wiki does not show its look, so this is Soul Hunter's own.
         /// VFX_BloodSpray: exactly 300 particles (VFXPoolManager.SprayParticles) spurt from the neck in three pulses
-        /// (140, 100 and 60 particles over 0.7 s) along the effect's +Y, which VFXPoolManager.PlayBlood turns away from the
+        /// (140, 100 and 60 particles over 0.7 s; fewer when many sprays are in the air, see VFXPoolManager.SprayParticlesFor) along the effect's +Y, which VFXPoolManager.PlayBlood turns away from the
         /// hero and upwards. Stretched streaks and small round drops in one system, in world space, so the jet arcs and
         /// falls under gravity; nothing is left on the ground. Alpha blended. Sizes, colours and timings are provisional.
         /// </summary>
@@ -315,9 +310,11 @@ namespace SoulHunter.Editor.Content
             shape.rotation = new Vector3(-90f, 0f, 0f); // the cone points along the effect's +Y
             var emission = jet.emission;
             emission.rateOverTime = 0f;
-            var bursts = new ParticleSystem.Burst[SprayPulses.Length];
-            for (int i = 0; i < SprayPulses.Length; i++)
-                bursts[i] = new ParticleSystem.Burst(SprayPulses[i].Time, (short)SprayPulses[i].Count, SprayStepsPerPulse, SprayStepSeconds);
+            // The pulses live in VFXPoolManager, which lowers them when many sprays are in the air.
+            var pulses = VFXPoolManager.SprayPulses;
+            var bursts = new ParticleSystem.Burst[pulses.Length];
+            for (int i = 0; i < pulses.Length; i++)
+                bursts[i] = new ParticleSystem.Burst(pulses[i].Time, (short)pulses[i].Count, VFXPoolManager.SprayStepsPerPulse, VFXPoolManager.SprayStepSeconds);
             emission.SetBursts(bursts);
             jet.GetComponent<ParticleSystemRenderer>().velocityScale = 0.06f;
             library.BloodSpray = SaveVfx(spray, VfxFolder);

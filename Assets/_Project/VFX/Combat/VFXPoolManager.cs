@@ -54,8 +54,10 @@ namespace SoulHunter.Gameplay.VFX
         public static void PlayBlood(Vector3 neckPosition, Vector3 awayFromHero)
         {
             if (SoulHunter.Core.Persistence.GameSettings.DisableBlood) return;
+            var manager = EnsureInstance();
+            if (manager == null) return;
             Vector3 jet = SprayDirection(awayFromHero, Random.Range(-SprayYawJitter, SprayYawJitter));
-            Play(VfxKind.BloodSpray, neckPosition, Quaternion.FromToRotation(Vector3.up, jet), 1f);
+            manager.PlayInternal(VfxKind.BloodSpray, neckPosition, Quaternion.FromToRotation(Vector3.up, jet), 1f, manager.SetSprayParticles);
         }
 
         /// <summary>Tilt of the jet above the ground and the random turn either side (provisional).</summary>
@@ -63,6 +65,51 @@ namespace SoulHunter.Gameplay.VFX
 
         /// <summary>Blood particles in one neck spray (owner, 2026-09-29).</summary>
         public const int SprayParticles = 300;
+
+        /// <summary>
+        /// The three spurts of a spray, like a heartbeat, each weaker than the last: (start seconds, particles per step),
+        /// SprayStepsPerPulse steps SprayStepSeconds apart. 140 + 100 + 60 = SprayParticles.
+        /// </summary>
+        public static readonly (float Time, int Count)[] SprayPulses = { (0f, 14), (0.25f, 10), (0.5f, 6) };
+        public const int SprayStepsPerPulse = 10;
+        public const float SprayStepSeconds = 0.02f;
+
+        /// <summary>
+        /// Owner (2026-09-29, option 2): 300 particles for a normal kill, fewer when many enemies die at once. Up to
+        /// FullSprays sprays in the air each get all 300; every spray started while more are playing shares that budget
+        /// (300 × FullSprays / sprays playing), never below MinSprayParticles. Values provisional.
+        /// </summary>
+        public const int FullSprays = 8, MinSprayParticles = 60;
+
+        /// <summary>Particles a new spray gets while <paramref name="playing"/> other sprays are in the air.</summary>
+        public static int SprayParticlesFor(int playing)
+        {
+            int total = 0;
+            for (int i = 0; i < SprayPulses.Length; i++) total += SprayStepCount(playing, i) * SprayStepsPerPulse;
+            return total;
+        }
+
+        /// <summary>Particles per step of pulse <paramref name="pulse"/> while <paramref name="playing"/> sprays are in the air.</summary>
+        public static int SprayStepCount(int playing, int pulse)
+        {
+            float share = playing < FullSprays ? 1f : Mathf.Max((float)MinSprayParticles / SprayParticles, (float)FullSprays / (playing + 1));
+            return Mathf.Max(1, Mathf.RoundToInt(SprayPulses[pulse].Count * share));
+        }
+
+        // Sets the spray's pulses for how many other sprays are in the air (runs before it is switched on).
+        private void SetSprayParticles(GameObject spray)
+        {
+            int playing = PlayingCount(VfxKind.BloodSpray); // itself is not active yet
+            var jet = spray.GetComponentInChildren<ParticleSystem>(true);
+            if (jet == null) return;
+            var emission = jet.emission;
+            for (int i = 0; i < SprayPulses.Length && i < emission.burstCount; i++)
+            {
+                var burst = emission.GetBurst(i);
+                burst.count = new ParticleSystem.MinMaxCurve(SprayStepCount(playing, i));
+                emission.SetBurst(i, burst);
+            }
+        }
 
         /// <summary>The jet's direction: away from the hero on the ground plane (any way if unknown), tilted upwards.</summary>
         public static Vector3 SprayDirection(Vector3 awayFromHero, float yawDegrees)
@@ -103,7 +150,21 @@ namespace SoulHunter.Gameplay.VFX
         public List<GameObject> Playing(VfxKind kind) =>
             _pools.TryGetValue(kind, out var pool) ? pool.FindAll(v => v != null && v.activeSelf) : new List<GameObject>();
 
-        private void PlayInternal(VfxKind kind, Vector3 position, Quaternion? rotation, float scale)
+        private readonly Dictionary<VfxKind, GameObject> _last = new Dictionary<VfxKind, GameObject>();
+
+        /// <summary>The instance of a kind started most recently (tests).</summary>
+        public GameObject LastStarted(VfxKind kind) => _last.TryGetValue(kind, out var vfx) ? vfx : null;
+
+        /// <summary>How many instances of a kind are playing now.</summary>
+        public int PlayingCount(VfxKind kind)
+        {
+            if (!_pools.TryGetValue(kind, out var pool)) return 0;
+            int count = 0;
+            for (int i = 0; i < pool.Count; i++) if (pool[i] != null && pool[i].activeSelf) count++;
+            return count;
+        }
+
+        private void PlayInternal(VfxKind kind, Vector3 position, Quaternion? rotation, float scale, System.Action<GameObject> configure = null)
         {
             int k = (int)kind;
             if (Time.time - _lastPlayed[k] < MinInterval[k]) return;
@@ -116,7 +177,9 @@ namespace SoulHunter.Gameplay.VFX
             vfx.transform.SetPositionAndRotation(position, rotation.HasValue ? rotation.Value * prefab.transform.rotation : prefab.transform.rotation);
             vfx.transform.localScale = prefab.transform.localScale * Mathf.Max(0.05f, scale);
             if (vfx.activeSelf) vfx.SetActive(false); // a recycled one restarts cleanly
+            configure?.Invoke(vfx); // before it starts, so its particle setup is never changed mid-play
             vfx.SetActive(true);
+            _last[kind] = vfx;
             bool unscaled = PlaysWhilePaused(kind);
             foreach (var particles in vfx.GetComponentsInChildren<ParticleSystem>())
             {

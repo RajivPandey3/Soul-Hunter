@@ -25,6 +25,9 @@ namespace SoulHunter.Tests.PlayMode
         public IEnumerator AKill_Sprays300BloodParticlesFromTheNeck_AwayFromTheHero_AndNothingOnTheGround()
         {
             yield return BootIntoGameplay();
+            // Warm-up: the first spray of a run loads its prefab and shader, and that frame can outlast its first particles.
+            Kill(SpawnEnemyNearPlayer(), DamageType.Normal);
+            yield return new WaitForSeconds(0.1f);
             var enemy = SpawnEnemyNearPlayer();
             yield return WaitForNoBlood();
             Vector3 at = enemy.transform.position;
@@ -53,6 +56,7 @@ namespace SoulHunter.Tests.PlayMode
             var systems = sprays[0].GetComponentsInChildren<ParticleSystem>();
             Assert.That(systems, Has.Length.EqualTo(1), "One spray system, nothing else (no ground splat).");
             var particles = systems[0];
+            Assert.That(ParticlesIn(particles), Is.EqualTo(VFXPoolManager.SprayParticles), "A lone kill's spray is set up for 300 particles.");
             foreach (var renderer in sprays[0].GetComponentsInChildren<ParticleSystemRenderer>())
                 Assert.That(renderer.sharedMaterial.GetFloat("_DstBlend"), Is.EqualTo((float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha),
                     $"{renderer.name} is alpha blended (blood, not a glow).");
@@ -77,6 +81,56 @@ namespace SoulHunter.Tests.PlayMode
             yield return new WaitForSeconds(0.3f);
             Assert.That(sprays[0].activeSelf, Is.False, "The spray is over and back in the pool.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator ManyKillsAtOnce_ShareTheBudget_AndALoneKillGets300Again()
+        {
+            // Owner (2026-09-29, option 2): 300 particles for a normal kill, fewer when many enemies die at once.
+            yield return BootIntoGameplay();
+            var enemies = new List<GameObject>();
+            for (int i = 0; i < 20; i++) enemies.Add(SpawnEnemyNearPlayer(i));
+            yield return WaitForNoBlood();
+
+            var counts = new List<int>();
+            GameObject previous = null;
+            foreach (var enemy in enemies)
+            {
+                Kill(enemy, DamageType.Normal);
+                yield return new WaitForSeconds(0.02f); // past the blood throttle (one spray per 0.01 s)
+                var started = VFXPoolManager.Instance.LastStarted(VfxKind.BloodSpray);
+                Assert.That(started, Is.Not.SameAs(previous), "Every kill starts its own spray.");
+                previous = started;
+                counts.Add(ParticlesIn(started.GetComponentInChildren<ParticleSystem>()));
+            }
+            for (int i = 0; i < VFXPoolManager.FullSprays; i++)
+                Assert.That(counts[i], Is.EqualTo(300), $"Kill {i + 1} (few sprays in the air) gets all 300. Counts: {string.Join(",", counts)}");
+            Assert.That(counts[counts.Count - 1], Is.LessThan(300).And.GreaterThanOrEqualTo(VFXPoolManager.MinSprayParticles),
+                $"With many sprays in the air a new one gets fewer. Counts: {string.Join(",", counts)}");
+            int live = VFXPoolManager.Instance.Playing(VfxKind.BloodSpray).Sum(s => s.GetComponentInChildren<ParticleSystem>().particleCount);
+            Assert.That(live, Is.LessThan(20 * 300), "The shared budget keeps the particles in the air down.");
+
+            yield return WaitForNoBlood();
+            var lone = SpawnEnemyNearPlayer(0);
+            Kill(lone, DamageType.Normal);
+            yield return null;
+            var sprays = VFXPoolManager.Instance.Playing(VfxKind.BloodSpray);
+            Assert.That(sprays, Has.Count.EqualTo(1));
+            Assert.That(ParticlesIn(sprays[0].GetComponentInChildren<ParticleSystem>()), Is.EqualTo(300), "A lone kill gets all 300 again.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>Particles a spray will emit, from its burst setup.</summary>
+        private static int ParticlesIn(ParticleSystem jet)
+        {
+            var emission = jet.emission;
+            int total = 0;
+            for (int i = 0; i < emission.burstCount; i++)
+            {
+                var burst = emission.GetBurst(i);
+                total += Mathf.RoundToInt(burst.count.constant) * burst.cycleCount;
+            }
+            return total;
         }
 
         private static Bounds DrawnBody(GameObject enemy)
@@ -135,13 +189,15 @@ namespace SoulHunter.Tests.PlayMode
             yield return new WaitForSeconds(0.05f); // past the blood throttle
         }
 
-        private GameObject SpawnEnemyNearPlayer()
+        private GameObject SpawnEnemyNearPlayer(int ring = 0)
         {
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             spawner.enabled = false;
             foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
             var prefab = GetPrivateField<List<GameObject>>(spawner, "_stageEnemyPrefabs")[0];
-            return Object.Instantiate(prefab, PlayerController.Instance.transform.position + Vector3.forward * 6f, Quaternion.identity);
+            // Several enemies stand on a ring around the hero, 18 degrees apart.
+            var offset = Quaternion.Euler(0f, ring * 18f, 0f) * Vector3.forward * 6f;
+            return Object.Instantiate(prefab, PlayerController.Instance.transform.position + offset, Quaternion.identity);
         }
 
         private static void Kill(GameObject enemy, DamageType type) =>
