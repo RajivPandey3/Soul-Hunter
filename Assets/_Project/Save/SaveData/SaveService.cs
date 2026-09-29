@@ -102,6 +102,40 @@ namespace SoulHunter.Core.Persistence
         /// one is kept as ".prev". A crash or full disk mid-write leaves the last good save untouched.
         /// Returns false (and logs) if the save could not be written; the game keeps running.
         /// </summary>
+        /// <summary>Saves written since the game started (diagnostics: the performance benchmark counts them per segment).</summary>
+        public static int SavesWritten { get; private set; }
+
+        /// <summary>Unscaled time of the last save written (-1 before the first).</summary>
+        public float LastSaveTime { get; private set; } = -1f;
+
+        /// <summary>At most one coalesced save per this many seconds (SaveSoon).</summary>
+        public const float SaveSoonSeconds = 2f;
+
+        private bool _dirty;
+
+        /// <summary>True while a SaveSoon request has not been written yet.</summary>
+        public bool HasPendingSave => _dirty;
+
+        /// <summary>
+        /// Heavy-kill pass (2026-09-29): saves soon instead of now. Gold pickups saved the whole file on every coin, up to
+        /// several times a second with a strong hero. Writes at once when the last save is SaveSoonSeconds old, otherwise
+        /// marks the save pending; SaveFlusher writes it when that time has passed, and on quit. A crash can lose at most
+        /// the last SaveSoonSeconds of such changes.
+        /// </summary>
+        public void SaveSoon()
+        {
+            if (CurrentData == null) return;
+            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) { SaveGame(); return; }
+            _dirty = true;
+            SaveFlusher.Ensure(this);
+        }
+
+        /// <summary>Writes a pending SaveSoon now (quit, and when its time has come).</summary>
+        public void FlushPendingSave()
+        {
+            if (_dirty) SaveGame();
+        }
+
         public bool SaveGame()
         {
             if (CurrentData == null) return false;
@@ -113,7 +147,12 @@ namespace SoulHunter.Core.Persistence
                 File.WriteAllText(TempPath, json);
                 if (File.Exists(_filePath)) File.Replace(TempPath, _filePath, PreviousPath, true);
                 else File.Move(TempPath, _filePath);
+                SavesWritten++;
+                _dirty = false;
+                LastSaveTime = Time.unscaledTime;
+#if UNITY_EDITOR
                 Debug.Log($"[SaveService] Game Saved to: {_filePath}");
+#endif
                 return true;
             }
             catch (System.Exception e)

@@ -13,10 +13,10 @@ namespace SoulHunter.Gameplay.AI
     {
         [SerializeField] private GameObject _xpGemPrefab;
         [SerializeField] private GameObject _healthChickenPrefab;
-        [Tooltip("Chicken drop hone ka chance (0 se 100)")]
+        [Tooltip("Unused since 2026-09-29 (VS rule: enemies do not drop chickens); kept for saved data and old tests.")]
         public float ChickenDropChance = 5f;
         public bool DropsChest = false;
-        [Tooltip("Gold coin drop hone ka chance (0 se 100), Luck se badhta hai")]
+        [Tooltip("Unused since 2026-09-29 (VS rule: enemies do not drop coins); kept for saved data and old tests.")]
         public float GoldDropChance = 2f;
         public int GoldValue = 1;
         [Tooltip("XP in the dropped Soul Gem; its colour and size follow it")]
@@ -90,8 +90,6 @@ namespace SoulHunter.Gameplay.AI
             // Performance Optimization: Dushmano ki bheed (horde) marne par FindFirstObjectByType
             // call karne se game lag/freeze ho jati thi. Ab hum O(1) PlayerController.Instance use karte hain.
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
-            var stats = player != null ? player.Stats : null;
-            float luck = stats != null ? Mathf.Max(1f, stats.Luck) : 1f;
 
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
             // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
@@ -133,58 +131,15 @@ namespace SoulHunter.Gameplay.AI
                 return;
             }
 
-            // 1% Chance for Magnet
-            float magnetRoll = Random.Range(0f, 100f);
-            if (magnetRoll <= Mathf.Min(100f, 1f * luck))
+            // Owner (2026-09-29, heavy-kill pass): "VS rule: no enemy drops". VS wiki: Floor Chicken, Gold Coin, Coin Bag,
+            // Vacuum and Orologion drop from light sources (Floor_Chicken, Gold_Coin_(pickup), Coin_Bag, Vacuum and
+            // Orologion pages); enemies drop Experience Gems (Experience_Gem). Before, each kill also rolled a Magnet (1%),
+            // a Time Freeze (1%), a coin (2%) and a chicken (5%, which replaced the gem), and with a strong hero thousands of
+            // coins and chickens piled up on the ground and slowed the game. Those now come from Soul Lanterns, stage items,
+            // chests and Gold Fever only. EnemyData's DropChanceChicken/DropChanceGold/GoldValue are no longer used here.
+            if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
             {
-                var pickupPool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
-                if (pickupPool != null)
-                {
-                    pickupPool.SpawnMagnet(transform.position);
-                    Debug.Log("[EnemyDrop] Rare Drop: Magnet!");
-                }
-            }
-
-            // 1% Chance for Time Freeze
-            float timeRoll = Random.Range(0f, 100f);
-            if (timeRoll <= Mathf.Min(100f, 1f * luck))
-            {
-                var pickupPool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
-                if (pickupPool != null)
-                {
-                    pickupPool.SpawnTimeFreeze(transform.position);
-                    Debug.Log("[EnemyDrop] Rare Drop: Time Freeze (Orologion)!");
-                }
-            }
-
-            // Gold coin (independent roll, Luck se badhta hai; value par Greed pickup ke waqt lagta hai)
-            float goldRoll = Random.Range(0f, 100f);
-            if (goldRoll <= Mathf.Min(100f, GoldDropChance * luck))
-            {
-                var pickupPool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
-                if (pickupPool != null)
-                {
-                    // Nudge the coin aside so it does not sit exactly on the gem.
-                    pickupPool.SpawnGold(transform.position + new Vector3(0.6f, 0f, 0f), GoldValue);
-                }
-            }
-
-            // 5% chance chicken girne ka
-            float roll = Random.Range(0f, 100f);
-            if (roll <= Mathf.Min(100f, ChickenDropChance * luck))
-            {
-                if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
-                {
-                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChicken(transform.position);
-                    Debug.Log("Rare Drop: Floor Chicken!");
-                }
-            }
-            else
-            {
-                if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
-                {
-                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position, GemValue);
-                }
+                SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position, GemValue);
             }
         }
     }

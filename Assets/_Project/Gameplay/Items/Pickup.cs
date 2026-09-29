@@ -7,27 +7,27 @@ namespace SoulHunter.Gameplay.Pickups
     /// Base class for all ground pickups (Gold, Magnet, TimeFreeze, etc).
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    public abstract class Pickup : MonoBehaviour
+    public abstract class Pickup : MonoBehaviour, ITickedPickup
     {
         [SerializeField] protected float _pickupRadius = 1.5f;
+        [Tooltip("Unused since the heavy-kill pass (PlayerReach checks the Player layer); kept so prefabs keep their data.")]
         [SerializeField] protected LayerMask _playerLayer;
 
         protected bool _isCollected = false;
 
-        private readonly Collider[] _playerHits = new Collider[1];
+        public int TickerIndex { get; set; } = -1;
 
-        protected virtual void Update()
+        // Heavy-kill pass (2026-09-29): PickupTicker calls Tick for every pickup in one loop instead of an Update each.
+        protected virtual void OnEnable() => PickupTicker.Add(this);
+        protected virtual void OnDisable() => PickupTicker.Remove(this);
+
+        public virtual void Tick()
         {
             if (_isCollected) return;
 
-            if (_playerLayer.value == 0)
-                _playerLayer = LayerMask.GetMask("Player");
-
-            int hitCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, _pickupRadius, _playerHits, _playerLayer);
-            if (hitCount > 0)
-            {
-                Collect(_playerHits[0]);
-            }
+            // Same test as an overlap sphere on the Player layer, without a physics query per pickup per frame.
+            var player = PlayerReach.Within(transform.position, _pickupRadius);
+            if (player != null) Collect(player);
         }
 
         private void Collect(Collider player)

@@ -59,8 +59,11 @@ namespace SoulHunter.Gameplay.Core
         private void OnEnable() => Application.logMessageReceived += OnLog;
         private void OnDisable() => Application.logMessageReceived -= OnLog;
 
+        private int _logs;
+
         private void OnLog(string condition, string stackTrace, LogType type)
         {
+            _logs++;
             if ((type == LogType.Error || type == LogType.Exception) && _errors.Count < 20) _errors.Add(condition);
         }
 
@@ -72,6 +75,81 @@ namespace SoulHunter.Gameplay.Core
         /// <summary>-sh-benchmark-blood-ab: each late segment is measured with blood, without, then with it again.</summary>
         private static bool BloodAB => System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-sh-benchmark-blood-ab") >= 0;
         private const float AbWarmupSeconds = 3f;
+
+        /// <summary>
+        /// -sh-benchmark-heavy (heavy-kill pass, 2026-09-29): Stage 1 at 20:30, measured as HeavyWindows back-to-back
+        /// windows of HeavyWindowSeconds, so a decline over time shows. Each window also records what could build up or
+        /// cost time with many kills: log lines, save-file writes, gen-0 garbage collections, and live enemies, gems, VFX
+        /// and game objects. With -sh-benchmark-profile &lt;folder&gt; (development build) the first and last windows are
+        /// captured by the profiler for ProfileWindowSeconds each (Editor: Soul Hunter/Debug/Summarize Profile).
+        /// </summary>
+        private static bool Heavy => System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-sh-benchmark-heavy") >= 0;
+        private const int HeavyWindows = 6;
+        private const float HeavyWindowSeconds = 20f, ProfileWindowSeconds = 5f;
+
+        private static string ProfileFolder()
+        {
+            var args = System.Environment.GetCommandLineArgs();
+            int i = System.Array.IndexOf(args, "-sh-benchmark-profile");
+            return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+        }
+
+        private IEnumerator HeavyRun()
+        {
+            var progression = LevelProgressionManager.Instance;
+            yield return null;
+            typeof(LevelProgressionManager).GetProperty(nameof(LevelProgressionManager.StageElapsedTime))
+                .GetSetMethod(true).Invoke(progression, new object[] { LateStageTime });
+            ApplyBenchmarkSettings();
+            yield return WaitRealtime(WarmupSeconds);
+            string profile = ProfileFolder();
+            var inv = CultureInfo.InvariantCulture;
+            for (int w = 1; w <= HeavyWindows; w++)
+            {
+                bool capture = !string.IsNullOrEmpty(profile) && (w == 1 || w == HeavyWindows);
+                if (capture)
+                {
+                    System.IO.Directory.CreateDirectory(profile);
+                    UnityEngine.Profiling.Profiler.logFile = System.IO.Path.Combine(profile, $"window{w}");
+                    UnityEngine.Profiling.Profiler.enableBinaryLog = true;
+                    UnityEngine.Profiling.Profiler.enabled = true;
+                }
+                int kills0 = RunStatsTracker.Instance != null ? RunStatsTracker.Instance.TotalKills : 0;
+                int logs0 = _logs, saves0 = SoulHunter.Core.Persistence.SaveService.SavesWritten, gc0 = System.GC.CollectionCount(0);
+                var frames = new List<float>();
+                long enemies = 0;
+                float start = Time.realtimeSinceStartup, end = start + HeavyWindowSeconds;
+                while (Time.realtimeSinceStartup < end)
+                {
+                    yield return null;
+                    frames.Add(Time.unscaledDeltaTime * 1000f);
+                    enemies += EnemyController.ActiveEnemies.Count;
+                    if (capture && Time.realtimeSinceStartup - start > ProfileWindowSeconds && UnityEngine.Profiling.Profiler.enabled)
+                    {
+                        UnityEngine.Profiling.Profiler.enabled = false;
+                        UnityEngine.Profiling.Profiler.enableBinaryLog = false;
+                        UnityEngine.Profiling.Profiler.logFile = "";
+                    }
+                }
+                int kills = (RunStatsTracker.Instance != null ? RunStatsTracker.Instance.TotalKills : 0) - kills0;
+                int vfx = 0;
+                if (SoulHunter.Gameplay.VFX.VFXPoolManager.Instance != null)
+                    foreach (SoulHunter.Gameplay.VFX.VfxKind kind in System.Enum.GetValues(typeof(SoulHunter.Gameplay.VFX.VfxKind)))
+                        vfx += SoulHunter.Gameplay.VFX.VFXPoolManager.Instance.PlayingCount(kind);
+                int objects = FindObjectsByType<GameObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).Length;
+                frames.Sort();
+                float avg = frames.Average();
+                float p99 = frames[Mathf.Min(frames.Count - 1, (int)(frames.Count * 0.99f))];
+                _json.Append(string.Format(inv,
+                    "    {{\"segment\": \"Heavy window {0} (Stage 1 from 20:30)\", \"frames\": {1}, \"avgFps\": {2:F1}, \"onePercentLowFps\": {3:F1}, " +
+                    "\"maxMs\": {4:F1}, \"framesOver33ms\": {5}, \"kills\": {6}, \"avgEnemies\": {7:F0}, \"gems\": {8}, \"vfxPlaying\": {9}, " +
+                    "\"activeObjects\": {10}, \"logLines\": {11}, \"saves\": {12}, \"gen0GCs\": {13}, \"monoMB\": {14}, \"timeScale\": {15}}}{16}\n",
+                    w, frames.Count, 1000f / avg, 1000f / p99, frames[frames.Count - 1], frames.Count(f => f > 33.4f), kills,
+                    enemies / (double)Mathf.Max(1, frames.Count), SoulHunter.Gameplay.Pickups.XPGem.ActiveGems.Count, vfx, objects,
+                    _logs - logs0, SoulHunter.Core.Persistence.SaveService.SavesWritten - saves0, System.GC.CollectionCount(0) - gc0,
+                    UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() / (1024 * 1024), Time.timeScale, w < HeavyWindows ? "," : ""));
+            }
+        }
 
         private static void SetBlood(bool on)
         {
@@ -94,7 +172,12 @@ namespace SoulHunter.Gameplay.Core
             yield return new WaitForSecondsRealtime(1f);
             // The save is a throw-away one while benchmarking (SaveService).
             var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
-            if (save != null && save.CurrentData != null) save.CurrentData.DisableBlood = NoBlood;
+            if (save != null && save.CurrentData != null)
+            {
+                save.CurrentData.DisableBlood = NoBlood;
+                // A benchmark keeps measuring when its window loses focus (found 2026-09-29: two windows sat paused).
+                save.CurrentData.PauseOnFocusLoss = false;
+            }
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
@@ -118,9 +201,14 @@ namespace SoulHunter.Gameplay.Core
             _json.Append($"  \"quality\": \"{QualitySettings.names[QualitySettings.GetQualityLevel()]}\",\n");
             _json.Append($"  \"startLevel\": {startLevel},\n");
             _json.Append($"  \"blood\": \"{(BloodAB ? "A/B" : NoBlood ? "off" : "on")}\",\n");
+            _json.Append($"  \"mode\": \"{(Heavy ? "heavy" : BloodAB ? "blood-ab" : "standard")}\",\n");
             _json.Append("  \"segments\": [\n");
 
-            if (BloodAB)
+            if (Heavy)
+            {
+                yield return HeavyRun();
+            }
+            else if (BloodAB)
             {
                 // The same hero and loadout, so the kill rate stays comparable: blood, no blood, blood again.
                 foreach (var (label, stage, last) in new[] { ("Stage 1 at 20:30", (int?)null, false), ("Stage 10 at 20:30", (int?)10, true) })

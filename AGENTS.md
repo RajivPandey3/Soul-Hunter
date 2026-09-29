@@ -1145,7 +1145,60 @@ Validation:
   - with a 5 s watchdog, one "stall" was a 5-item chest that legitimately takes 6–7 s, so the threshold is now 15 s; the last two runs had 0 stalls and 0 errors.
 - Blood A/B in those runs again showed no cost (blood segments as fast or faster than the no-blood ones).
 
-Seen, not changed: with a level-60 hero, FPS falls from segment to segment regardless of blood. Run `ab-lv60-5` went 41.9, 31.0, 20.3, then about 21 in Stage 10, with 2,500–4,500 kills per 30 s. Something builds up with heavy killing; this belongs to the heavy-kill performance pass (`P`).
+Seen, not changed: with a level-60 hero, FPS falls from segment to segment regardless of blood. Run `ab-lv60-5` went 41.9, 31.0, 20.3, then about 21 in Stage 10, with 2,500–4,500 kills per 30 s. Something builds up with heavy killing; this belongs to the heavy-kill performance pass (`P`). Fixed by the heavy-kill pass below.
+
+### Heavy-kill performance pass (owner: "heavy kill performance pass shuru karo", 2026-09-29)
+
+Tools:
+- `PerformanceBenchmark -sh-benchmark-heavy`: a level-N hero (`-sh-benchmark-level 60`) plays Stage 1 from 20:30 as six back-to-back 20 s windows. Each window records FPS, kills, enemies, gems, playing VFX, live game objects, log lines, save-file writes, gen-0 GCs and managed memory.
+- `-sh-benchmark-profile <folder>` (development build: `SOULHUNTER_BUILD_DEVELOPMENT=1` for `SoulHunterBuildRunner`) captures 5 s of windows 1 and 6.
+- `ProfileSummary` (menu Soul Hunter/Debug/Summarize Profile, or `-executeMethod ...ProfileSummary.RunFromCommandLine -sh-profile <file.raw>`) writes the main thread's time per marker.
+- `D:\SoulHunter-Validation\heavy-run.ps1` syncs the copy, runs both suites, builds, benchmarks and summarises.
+- The benchmark turns off Pause When Unfocused on its throw-away save; a run sat paused when its window lost focus.
+
+What the profile showed (reference laptop, release build):
+- Live game objects grew from ~7,000 to 30,000 in two minutes, while FPS fell from 72 to 18.
+- **Floor chickens and coins piled up without limit:** a kill rolled a chicken at 5% and a coin at 2%.
+- Every coin and chicken on the ground ran `Physics.OverlapSphereNonAlloc` each frame (466 calls, 2 ms a frame), and 850 bobbing pickups each ran their own `Update` (1.2 ms).
+- Gold pickups wrote the whole save file on every coin (up to 75 writes per 20 s).
+- Per-kill and per-pickup `Debug.Log`s (for example "Rare Drop: Floor Chicken!" 733 times) each wrote a stack trace.
+
+Changes:
+- **Owner decision "VS rule: no enemy drops"** (AskUserQuestion; VS wiki: Floor Chicken, Gold Coin (pickup), Coin Bag, Vacuum and Orologion drop from light sources, and enemies drop Experience Gems). `EnemyDrop` now leaves only the gem.
+  - Magnet 1%, Time Freeze 1%, coin 2% and chicken 5% are gone; they come from Soul Lanterns, stage items, chests and Gold Fever.
+  - Defect fixed with it: a chicken used to **replace** the kill's gem, so 5% of kills gave no XP.
+  - `EnemyData.DropChanceChicken/DropChanceGold/GoldValue` and `EnemyDrop.ChickenDropChance/GoldDropChance` stay on the assets but are unused. `GoldRewardTests.Elites_DropMoreAndBiggerCoins_ThanStageEnemies` was removed (superseded rule).
+  - Balance note: fewer heals from kills; the owner chose it knowing that.
+- `PlayerReach.Within(point, radius)`: the same answer as an overlap sphere on the Player layer (`Collider.ClosestPoint` against the player's Player-layer colliders, after a distance reject), with no physics query. Used by `Pickup` and `HealthPickup`.
+- `PickupTicker` ticks every `Pickup` and `HealthPickup` in one loop (`ITickedPickup.Tick` replaces their `Update`). `PickupIdleMotionRunner` moves every bobbing pickup in one loop and skips pickups more than 30 units from the hero.
+  - Found by the tests: a pooled copy can carry its template's list index (every pooled chicken said 1, so none was ticked and none could be picked up). Both runners now trust an index only when the list agrees.
+- `SaveService.SaveSoon()`: gold is saved at most every 2 s (`SaveSoonSeconds`). `SaveFlusher` writes a pending save when due and on quit, so a crash can lose at most the last 2 s of gold. `EconomyService.AddGold` uses it; spending still saves at once. `SaveService.SavesWritten` counts writes.
+- Removed hot info logs: rare drops, Healed, +gold, Shadow Scythe. "Game Saved" is logged in the editor only.
+
+Validation:
+- `PickupPerformancePlayModeTests` (R):
+  - `PlayerReach` matches `Physics.CheckSphere` on 400 random points;
+  - a coin and a chicken next to the hero are collected, and one 12 units away is not;
+  - every enabled pickup is on the ticker once;
+  - the bobbing runner moves pickups and drops collected ones;
+  - a burst of 10 coins writes no save at once and exactly one after 2.5 s.
+- `EnemyDropPlayModeTests` (R): 60 kills at Luck 10 give 60 gems and no chicken, coin, magnet or time freeze.
+- EditMode 472/472, PlayMode 181/181, save untouched (`D:/SoulHunter-Validation/run-20260929-heavykill-fix4/`).
+
+Benchmark (release build, level-60 hero, Stage 1 from 20:30, six 20 s windows):
+
+| Run | Before (`run-20260929-heavykill`) | After (`-fix4`) |
+|---|---|---|
+| Live objects | 7,062 → 30,063 | flat, 7,500–9,200 |
+| FPS by window | 72 → 51 → 29 → 23 → 20 → 18 | run 1: 70 / 63 / 61 / 68 / 74 / 68; run 3: 64 / 64 / 63 / 63 / 64 / 65 (up to 2,790 kills per window) |
+| 1% low | fell to 9 | runs 1 and 3: 30–43 |
+| Save writes per window | up to 75 | 0–9 |
+
+- The profiled window 6 averages 16.7 ms (development build). Pickups are gone from the top of the profile: bobbing 0.23 ms. The rest is the normal horde (`EnemyController.FixedUpdate` 1.4 ms for ~300 enemies).
+- Still under the hard minimum: run 2's loadout killed 5,400–7,500 per window (over 300 kills a second) and held 25–49 FPS average with a 1% low of about 25. Its two paused windows came from the focus-loss pause (now off in the benchmark). Kill handling itself (death, gem, VFX, blood, damage numbers) is the next cost at such rates.
+- Not measured on a full 30-minute run or on the 8 GB reference.
+
+Not yet played by the owner.
 
 Not yet played by the owner.
 

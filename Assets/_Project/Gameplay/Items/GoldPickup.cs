@@ -38,13 +38,15 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>True while this coin is flying to the player.</summary>
         public bool IsPulled => _pullTarget != null;
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
             if (!ActiveCoins.Contains(this)) ActiveCoins.Add(this);
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
+            base.OnDisable();
             ActiveCoins.Remove(this);
         }
 
@@ -56,7 +58,7 @@ namespace SoulHunter.Gameplay.Pickups
             _pullSpeed = PullStartSpeed;
         }
 
-        protected override void Update()
+        public override void Tick()
         {
             if (_pullTarget != null && !_isCollected)
             {
@@ -67,7 +69,7 @@ namespace SoulHunter.Gameplay.Pickups
                     transform.position = Vector3.MoveTowards(transform.position, _pullTarget.position, _pullSpeed * Time.deltaTime);
                 }
             }
-            base.Update();
+            base.Tick();
         }
 
         public override void ResetPickup()
@@ -84,7 +86,6 @@ namespace SoulHunter.Gameplay.Pickups
                 ? GoldRewards.GrantFraction(GoldFever.FeverCoinBaseGold, stats)
                 : GoldRewards.Grant(_value, stats);
             GoldFever.OnCoinCollected(_value, IsFeverCoin);
-            if (!IsFeverCoin) Debug.Log($"[GoldPickup] +{gained} gold");
 
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFX(audio.GemPickupSound);

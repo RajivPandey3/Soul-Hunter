@@ -136,7 +136,6 @@ namespace SoulHunter.Gameplay.Combat
             
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
             
-            Debug.Log($"[HealthController] Healed for {amount}! Current: {_currentHealth}");
         }
 
         /// <summary>

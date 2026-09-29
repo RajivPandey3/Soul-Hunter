@@ -56,7 +56,8 @@ namespace SoulHunter.Editor.Build
                 scenes = enabledScenes,
                 locationPathName = outputExePath,
                 target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None
+                // SOULHUNTER_BUILD_DEVELOPMENT=1 makes a development build (profiler captures; slower than a release build).
+                options = Environment.GetEnvironmentVariable("SOULHUNTER_BUILD_DEVELOPMENT") == "1" ? BuildOptions.Development : BuildOptions.None
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(buildOptions);

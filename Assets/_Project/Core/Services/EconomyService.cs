@@ -41,7 +41,8 @@ namespace SoulHunter.Core.Services
             if (_saveService == null || _saveService.CurrentData == null) return;
             
             _saveService.CurrentData.Currency += amount;
-            _saveService.SaveGame(); // Save immediately (VS does this, or we can save at end of round)
+            // Heavy-kill pass: coins come several a second, so gold is saved at most every 2 s (SaveService.SaveSoon).
+            _saveService.SaveSoon();
             
             OnGoldChanged?.Invoke(_saveService.CurrentData.Currency);
         }

@@ -130,7 +130,6 @@ namespace SoulHunter.Gameplay.Weapons
             // Learning Comment: Har frame empty swing log karne se console choke ho jata hai.
             if (hitsCount > 0)
             {
-                Debug.Log($"[Shadow Scythe] Slashed {hitsCount} enemies!");
             }
         }
 

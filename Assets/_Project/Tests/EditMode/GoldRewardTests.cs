@@ -10,7 +10,7 @@ namespace SoulHunter.Tests.EditMode
 {
     /// <summary>
     /// Learning Comment: GoldRewardTests verifies VS-style gold: every gold reward is multiplied by Greed,
-    /// coin values never drop below 1, and elites drop more and bigger coins than ordinary enemies.
+    /// and coin values never drop below 1. (Enemies no longer drop coins: VS rule, 2026-09-29; see EnemyDropPlayModeTests.)
     /// </summary>
     public class GoldRewardTests
     {
@@ -63,29 +63,6 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(coin.Value, Is.EqualTo(1));
             coin.Value = 10;
             Assert.That(coin.Value, Is.EqualTo(10));
-        }
-
-        [Test]
-        public void Elites_DropMoreAndBiggerCoins_ThanStageEnemies()
-        {
-            // Learning Comment: Elite ka gold chance aur coin value normal dushman se zyada ho.
-            for (int stage = 1; stage <= CampaignLevelCatalog.Count; stage++)
-            {
-                var enemy = LoadData($"Assets/Prefabs/Enemies/Gameplay/SH10_L{stage:00}_EnemyGameplay.prefab");
-                var elite = LoadData($"Assets/Prefabs/Enemies/Gameplay/SH10_L{stage:00}_EliteGameplay.prefab");
-                Assert.That(enemy.DropChanceGold, Is.GreaterThan(0f), $"Stage {stage} enemy gold chance.");
-                Assert.That(elite.DropChanceGold, Is.GreaterThan(enemy.DropChanceGold), $"Stage {stage} elite gold chance.");
-                Assert.That(elite.GoldValue, Is.GreaterThan(enemy.GoldValue), $"Stage {stage} elite coin value.");
-            }
-        }
-
-        private static EnemyData LoadData(string path)
-        {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            Assert.That(prefab, Is.Not.Null, path);
-            var data = prefab.GetComponent<EnemyController>().Data;
-            Assert.That(data, Is.Not.Null, path);
-            return data;
         }
     }
 }
