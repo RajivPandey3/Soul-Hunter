@@ -204,6 +204,8 @@ namespace SoulHunter.Gameplay.Core
                    LevelProgressionManager.Instance == null) yield return null;
             // -sh-autoplay-early-shots: every 0.2 s for the first 3 s of the run (how the stage first appears).
             if (HasArg("-sh-autoplay-early-shots")) StartCoroutine(EarlyShots());
+            // -sh-autoplay-pause-shot: 20 s in, pause, screenshot the pause menu (stats panel), resume.
+            if (HasArg("-sh-autoplay-pause-shot")) StartCoroutine(PauseShot());
             yield return new WaitForSecondsRealtime(1f);
 
             _player = PlayerController.Instance;
@@ -380,7 +382,8 @@ namespace SoulHunter.Gameplay.Core
             if (!levelUp.IsLevelUpActive || choices == null || choices.Count == 0) yield break;
             var weapons = WeaponManager.Instance;
             UpgradeData pick = choices.OrderByDescending(c => Score(weapons, c)).First();
-            if (_experience.CurrentLevel % 5 == 0) yield return Shot($"levelup{_experience.CurrentLevel:00}");
+            // -sh-autoplay-levelup-shots: every level-up screen (the level-up stats panel); otherwise every fifth.
+            if (_experience.CurrentLevel % 5 == 0 || HasArg("-sh-autoplay-levelup-shots")) yield return Shot($"levelup{_experience.CurrentLevel:00}");
             Event("levelup", $"\"level\": {_experience.CurrentLevel}, \"choices\": [{string.Join(", ", choices.Select(c => $"\"{Escape(c.UpgradeName)}\""))}], \"picked\": \"{Escape(pick.UpgradeName)}\"");
             // Pick through the level-up screen like a player, so the panel closes (calling SelectUpgrade directly left it
             // on screen after the last level-up).
@@ -599,6 +602,18 @@ namespace SoulHunter.Gameplay.Core
             Event("powerups", string.Format(CultureInfo.InvariantCulture, "\"bought\": {0}, \"gold\": {1}", SoulHunter.Core.Persistence.PowerUps.TotalBought(data), data.Currency));
             navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
             yield return new WaitForSecondsRealtime(0.3f);
+        }
+
+        private IEnumerator PauseShot()
+        {
+            yield return new WaitForSecondsRealtime(20f);
+            var system = GameSystemManager.Instance;
+            if (system == null) yield break;
+            while (SoulHunter.Core.Services.GameTime.IsPaused) yield return null; // not over a level-up or chest
+            system.TogglePause();
+            yield return new WaitForSecondsRealtime(0.5f);
+            yield return Shot("pause-stats");
+            if (system.IsPaused) system.Resume();
         }
 
         private IEnumerator EarlyShots()

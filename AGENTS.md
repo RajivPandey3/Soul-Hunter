@@ -1377,6 +1377,20 @@ Validation:
 
 Not yet played by the owner.
 
+### Stats panel in pause and level-up (owner: "stats panel bana do", 2026-09-30)
+
+vampire.survivors.wiki/w/Player_stats: stats "can be seen before the player starts the game in the Character Selection menu, in-game when paused, or when leveling up". Soul Hunter showed them only on character select, so Hollow Heart's new Max Health was invisible.
+- `StatsPanel` (UI/HUD) lists the live stats in the wiki's order: Max Health, Recovery, Armor, Move Speed, Might, Area, Speed, Duration, Amount, Cooldown, Luck, Growth, Greed, Curse, Magnet, Revival, Reroll, Skip, Banish (`CharacterStatSheet.Live`, `InGameRows`). It uses the character select formats (absolute Max Health, +N, ±%, "-" when unchanged), with changed values in gold.
+- **Pause menu** (`PauseMenuUI`): a single column on the right, under the timer. On the left the HUD's kills, gold and item rows drew over it (seen in `autoplay-editor-84`).
+- **Level-up screen** (`LevelUpUI`): a 4-column grid that fits itself each frame between the "LEVEL UP!" text (its drawn bounds; the heading's rect reaches down to the cards) and the top card, at any window size. `ignoreLayout` keeps the card layout group from moving it.
+- Each column has a label text and a value text, sized together to fit (a long label ran into its value in `-86`). It refreshes every 0.25 s while shown, so several level-ups in a row update it.
+- The look is Soul Hunter's own. The wiki does not describe the layout.
+- Tests: `StatsPanelTests` (T: order and formats) and `StatsPanelPlayModeTests` (R: the pause panel shows the live values and is clear of the buttons, and hides on resume; on the level-up screen, Hollow Heart picked while it is open shows 100 → 120 in gold while current health stays, and the panel is clear of the cards and below the heading text).
+- `AutoplayBot` options `-sh-autoplay-pause-shot` (pause at 20 s, screenshot, resume) and `-sh-autoplay-levelup-shots` (every level-up screen).
+- EditMode 481/481, PlayMode 214/214, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260930-stats2/`).
+- Editor play `autoplay-editor-87` (Stage 1, 1 min): both screens readable, 0 errors, min 87 FPS (partial `V`).
+- Not yet played by the owner.
+
 ### Owner reports: Play did not boot; Max Health "does nothing" (2026-09-30)
 
 **Play started Level 1 directly** (owner: "game play button click karte hi direct level 1 start ho raha hai, boot kyun nahi ho raha"). Unity's Play button starts the open scene, and the owner's editor had `Main_Gameplay` open. The project never had a start-scene hook (the only earlier one was a loose tool script removed as clutter).

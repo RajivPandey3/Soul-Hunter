@@ -49,6 +49,9 @@ namespace SoulHunter.Gameplay.UI
             _options = CreateButton("Options_Button", new Vector2(0.38f, 0.42f), new Vector2(0.62f, 0.5f), "Options",
                 () => OptionsMenuUI.Open(() => Select(_options)));
             _quit = CreateButton("Quit_Button", new Vector2(0.38f, 0.32f), new Vector2(0.62f, 0.4f), "Quit", () => _system.QuitToMainMenu());
+            // VS: the player's stats are shown while paused (wiki Player_stats). A column on the right of the buttons, under
+            // the timer: the HUD's kills, gold and item rows sit top left and draw over anything placed there.
+            StatsPanel.Attach(transform, new Vector2(0.7f, 0.1f), new Vector2(0.96f, 0.84f), 1, 30f);
 
             // The old "GAME PAUSED" title sat in the middle, behind the buttons: move it above them.
             foreach (var title in GetComponentsInChildren<TMP_Text>(true))

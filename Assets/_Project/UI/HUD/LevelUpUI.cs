@@ -89,6 +89,12 @@ namespace SoulHunter.Gameplay.UI
     EnsureActionButtons();
     EnsureCardCount(choices.Count);
     StyleHeading();
+    // VS: the player's stats are shown when leveling up (wiki Player_stats); a 4-column grid between the heading and the cards.
+    if (_levelUpPanel != null)
+    {
+        var stats = StatsPanel.Attach(_levelUpPanel.transform, new Vector2(0.2f, 0.56f), new Vector2(0.8f, 0.78f), 4, 22f);
+        if (stats != null) stats.FitBetween(HeadingRect(), _upgradeButtons, 0.2f, 0.8f);
+    }
 
     Debug.Log($"[LevelUpUI] Panel={_levelUpPanel} | PanelActive={(_levelUpPanel != null && _levelUpPanel.activeSelf)}");
     Debug.Log($"[LevelUpUI] Buttons array null={_upgradeButtons == null} | count={(_upgradeButtons != null ? _upgradeButtons.Length : -1)}");
@@ -431,6 +437,19 @@ namespace SoulHunter.Gameplay.UI
         /// The panel's "LEVEL UP" heading (a text beside the cards in ButtonContainer) was drawn at the top of the screen,
         /// over the HUD stage name. It now sits at the bottom of its box, just above the cards, in gold (VS style).
         /// </summary>
+        /// <summary>The "LEVEL UP!" heading above the cards (null when the panel has none).</summary>
+        private RectTransform HeadingRect()
+        {
+            foreach (var button in _upgradeButtons)
+            {
+                if (button == null) continue;
+                foreach (Transform child in button.transform.parent)
+                    if (child.GetComponent<Button>() == null && child.TryGetComponent<TextMeshProUGUI>(out var heading)) return heading.rectTransform;
+                break;
+            }
+            return null;
+        }
+
         private void StyleHeading()
         {
             Button first = null;

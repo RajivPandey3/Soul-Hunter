@@ -26,6 +26,69 @@ namespace SoulHunter.Gameplay.Player
         public float Growth;
         public float Greed;
         public float Curse;
+        public int Reroll;
+        public int Skip;
+        public int Banish;
+
+        /// <summary>
+        /// The player's stats right now (for the in-game stats panel): the live PlayerStats values, the current Max
+        /// Health and the Reroll/Skip/Banish charges left.
+        /// </summary>
+        public static CharacterStatSheet Live(PlayerStats stats, int maxHealth, int reroll, int skip, int banish)
+        {
+            var sheet = Build(null);
+            sheet.MaxHealth = maxHealth;
+            if (stats != null)
+            {
+                sheet.Recovery = stats.Regen;
+                sheet.Armor = stats.Armor;
+                sheet.MoveSpeed = stats.MoveSpeedMultiplier;
+                sheet.Might = stats.Might;
+                sheet.Speed = stats.ProjectileSpeed;
+                sheet.Duration = stats.Duration;
+                sheet.Area = stats.Area;
+                sheet.Cooldown = stats.Cooldown;
+                sheet.Amount = stats.Amount;
+                sheet.Revivals = stats.Revivals;
+                sheet.Magnet = stats.Magnet;
+                sheet.Luck = stats.Luck;
+                sheet.Growth = stats.ExpBonus;
+                sheet.Greed = stats.Greed;
+                sheet.Curse = stats.Curse;
+            }
+            sheet.Reroll = reroll;
+            sheet.Skip = skip;
+            sheet.Banish = banish;
+            return sheet;
+        }
+
+        /// <summary>
+        /// The in-game list, in the order of vampire.survivors.wiki/w/Player_stats ("in-game when paused, or when leveling
+        /// up"): Max Health, Recovery, Armor, Move Speed, Might, Area, Speed, Duration, Amount, Cooldown, Luck, Growth,
+        /// Greed, Curse, Magnet, Revival, Reroll, Skip, Banish. Same formats as the character select screen.
+        /// </summary>
+        public Row[] InGameRows() => new[]
+        {
+            new Row("Max Health", MaxHealth.ToString(), MaxHealth != 100),
+            new Row("Recovery", Recovery > 0f ? Recovery.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "-", Recovery > 0f),
+            Flat("Armor", Armor),
+            Percent("Move Speed", MoveSpeed),
+            Percent("Might", Might),
+            Percent("Area", Area),
+            Percent("Speed", Speed),
+            Percent("Duration", Duration),
+            Flat("Amount", Amount),
+            Percent("Cooldown", Cooldown),
+            Percent("Luck", Luck),
+            Percent("Growth", Growth),
+            Percent("Greed", Greed),
+            Percent("Curse", Curse),
+            Percent("Magnet", Magnet),
+            Flat("Revival", Revivals),
+            Flat("Reroll", Reroll),
+            Flat("Skip", Skip),
+            Flat("Banish", Banish),
+        };
 
         /// <summary>Character stats plus meta power-up levels (0 when nothing was bought).</summary>
         /// <summary>Character stats plus the VS PowerUps bought in <paramref name="data"/> (none when null).</summary>
