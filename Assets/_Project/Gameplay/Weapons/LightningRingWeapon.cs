@@ -40,6 +40,8 @@ namespace SoulHunter.Gameplay.Combat
 
         public override void LevelUp() { CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1); }
 
+        public const float VsInterval = 0.05f;
+
         protected override void Attack()
         {
             if (LightningStrikePrefab == null) return;
@@ -63,19 +65,22 @@ namespace SoulHunter.Gameplay.Combat
             
             int strikesThisTurn = Mathf.Min(StrikeCount + ExtraAmount, validTargets.Count);
 
-            for (int i = 0; i < strikesThisTurn; i++)
+            // VS interval (wiki Lightning_Ring): the Amount of shots leave 0.05s apart.
+            FireInSuccession(strikesThisTurn, VsInterval, i =>
             {
                 // Owner decision: aim at the nearest enemy; strike the nearest remaining enemies first.
                 int nearestIndex = NearestIndex(validTargets);
-                if (nearestIndex < 0) break;
+                if (nearestIndex < 0) return;
                 EnemyController target = validTargets[nearestIndex];
                 validTargets.RemoveAt(nearestIndex); // Ek dushman pe 2 bijliyan na giren
+                // Strikes come 0.05 s apart now: an enemy killed or pooled in between is skipped.
+                if (target == null || !target.isActiveAndEnabled) return;
 
                 if (Vector3.Distance(transform.position, target.transform.position) <= StrikeRadius)
                 {
                     SpawnLightning(target.transform.position);
                 }
-            }
+            });
         }
 
         private int NearestIndex(List<EnemyController> candidates)

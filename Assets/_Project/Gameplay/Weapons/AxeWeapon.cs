@@ -85,10 +85,12 @@ namespace SoulHunter.Gameplay.Weapons
                 return;
             }
 
-            // VS rule: Amount throws extra axes, each a little further forward.
-            int amount = LevelAxeCount + ExtraAmount;
-            for (int i = 0; i < amount; i++) ThrowSingleAxe(1f + i * 0.35f);
+            // VS (wiki Axe): "subsequent axes from Amount are thrown in quick succession ... in progressively wider arcs";
+            // interval 0.2 s. Each later axe goes a little further (Soul Hunter's arc along the ground).
+            FireInSuccession(LevelAxeCount + ExtraAmount, VsInterval, i => ThrowSingleAxe(1f + i * 0.35f));
         }
+
+        public const float VsInterval = 0.2f;
 
         private void ThrowSingleAxe(float forwardScale)
         {

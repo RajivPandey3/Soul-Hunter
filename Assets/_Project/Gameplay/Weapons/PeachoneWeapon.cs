@@ -65,6 +65,9 @@ namespace SoulHunter.Gameplay.Combat
             StartCoroutine(BombingRun());
         }
 
+        /// <summary>VS interval (wiki Peachone): 0.025 s between bombs (it was 0.1 s).</summary>
+        public const float VsInterval = 0.025f;
+
         private IEnumerator BombingRun()
         {
             for (int i = 0; i < BombCount + ExtraAmount; i++)
@@ -86,7 +89,7 @@ namespace SoulHunter.Gameplay.Combat
                 var lifetime = bomb.GetComponent<PooledLifetime>();
                 if (lifetime != null) lifetime.Arm(1.5f);
                 else Destroy(bomb, 1.5f);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(VsInterval);
             }
         }
     }

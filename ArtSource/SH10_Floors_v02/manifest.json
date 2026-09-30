@@ -4,8 +4,10 @@
     "level": 1,
     "title": "The Cursed Graveyard",
     "size": 20.0,
-    "triangles": 2394,
-    "obstacles": 15,
+    "triangles": 1766,
+    "obstacles": 4,
+    "obstacles_placed": 15,
+    "obstacles_kept": 4,
     "model": "Assets/Art/Models/SH10_L01_Floor.fbx",
     "materials": {
       "SH10_L01_Floor_Base": [
@@ -92,8 +94,10 @@
     "level": 2,
     "title": "The Dark Forest",
     "size": 20.0,
-    "triangles": 2560,
-    "obstacles": 13,
+    "triangles": 1906,
+    "obstacles": 4,
+    "obstacles_placed": 13,
+    "obstacles_kept": 4,
     "model": "Assets/Art/Models/SH10_L02_Floor.fbx",
     "materials": {
       "SH10_L02_Floor_Base": [
@@ -178,8 +182,10 @@
     "level": 3,
     "title": "The Forgotten Village",
     "size": 20.0,
-    "triangles": 1725,
-    "obstacles": 9,
+    "triangles": 1377,
+    "obstacles": 3,
+    "obstacles_placed": 9,
+    "obstacles_kept": 3,
     "model": "Assets/Art/Models/SH10_L03_Floor.fbx",
     "materials": {
       "SH10_L03_Floor_Base": [
@@ -288,8 +294,10 @@
     "level": 4,
     "title": "The Ruined Castle",
     "size": 20.0,
-    "triangles": 1990,
-    "obstacles": 14,
+    "triangles": 1190,
+    "obstacles": 4,
+    "obstacles_placed": 14,
+    "obstacles_kept": 4,
     "model": "Assets/Art/Models/SH10_L04_Floor.fbx",
     "materials": {
       "SH10_L04_Floor_Base": [
@@ -356,8 +364,10 @@
     "level": 5,
     "title": "The Crimson Swamp",
     "size": 20.0,
-    "triangles": 1792,
-    "obstacles": 11,
+    "triangles": 1356,
+    "obstacles": 3,
+    "obstacles_placed": 11,
+    "obstacles_kept": 3,
     "model": "Assets/Art/Models/SH10_L05_Floor.fbx",
     "materials": {
       "SH10_L05_Floor_Base": [
@@ -436,8 +446,10 @@
     "level": 6,
     "title": "The Frozen Peaks",
     "size": 20.0,
-    "triangles": 1917,
-    "obstacles": 13,
+    "triangles": 1205,
+    "obstacles": 4,
+    "obstacles_placed": 13,
+    "obstacles_kept": 4,
     "model": "Assets/Art/Models/SH10_L06_Floor.fbx",
     "materials": {
       "SH10_L06_Floor_Base": [
@@ -506,8 +518,10 @@
     "level": 7,
     "title": "The Sea of Lost Souls",
     "size": 20.0,
-    "triangles": 1444,
-    "obstacles": 7,
+    "triangles": 1164,
+    "obstacles": 2,
+    "obstacles_placed": 7,
+    "obstacles_kept": 2,
     "model": "Assets/Art/Models/SH10_L07_Floor.fbx",
     "materials": {
       "SH10_L07_Floor_Base": [
@@ -595,8 +609,10 @@
     "level": 8,
     "title": "The Blood Arenas",
     "size": 20.0,
-    "triangles": 1643,
-    "obstacles": 10,
+    "triangles": 1127,
+    "obstacles": 3,
+    "obstacles_placed": 10,
+    "obstacles_kept": 3,
     "model": "Assets/Art/Models/SH10_L08_Floor.fbx",
     "materials": {
       "SH10_L08_Floor_Base": [
@@ -675,8 +691,10 @@
     "level": 9,
     "title": "The Throne of Death",
     "size": 20.0,
-    "triangles": 1824,
-    "obstacles": 15,
+    "triangles": 744,
+    "obstacles": 4,
+    "obstacles_placed": 15,
+    "obstacles_kept": 4,
     "model": "Assets/Art/Models/SH10_L09_Floor.fbx",
     "materials": {
       "SH10_L09_Floor_Base": [
@@ -757,8 +775,10 @@
     "level": 10,
     "title": "The Soul Core",
     "size": 20.0,
-    "triangles": 2476,
-    "obstacles": 16,
+    "triangles": 1692,
+    "obstacles": 5,
+    "obstacles_placed": 16,
+    "obstacles_kept": 5,
     "model": "Assets/Art/Models/SH10_L10_Floor.fbx",
     "materials": {
       "SH10_L10_Floor_Base": [

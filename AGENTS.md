@@ -766,7 +766,7 @@ Before: no options screen (only a master-volume slider inside the pause panel), 
 
 Now (checked against the VS wiki options page, https://vampire.survivors.wiki/w/Options, on 2026-09-25; VS-only items with nothing behind them in Soul Hunter are left out: language, classic sounds, borders, pixel font, defanged enemies, co-op, Twitch):
 - `OptionsMenuUI` (main menu Options button and pause menu), in VS-style sections. Sound: Sounds, Music. Display: Window Mode (Fullscreen Window / Exclusive Fullscreen / Maximised / Windowed), Resolution, V-Sync, Flashing VFX, Disable Blood (Blood Arenas floor stains switch to the plain floor material), Screen Shake. Gameplay: Damage Numbers, Show Stage Progression (HUD "Stage n/10: name"), Visible Joystick, Pause When Unfocused (extra). Controls (extra): remapping of keyboard (Move WASD, Dash, Ultimate, Pause) and controller (Dash, Ultimate, Pause) bindings with Reset. Stored in `GameData` via `GameSettings`; remaps are saved by action name + binding index because Unity's JSON uses per-launch random binding IDs and would never reload.
-- Flashing VFX off: no hit flash, and the low-HP warning becomes a steady tint. Damage Numbers off hides combat numbers (merchant cost popups stay). Screen Shake off stops `CameraShake`.
+- Flashing VFX off: no hit flash. (The low-HP red screen tint was removed on the owner's request, 2026-09-30.) Damage Numbers off hides combat numbers (merchant cost popups stay). Screen Shake off stops `CameraShake`.
 - Controller: Dash = A/Cross, Ultimate = Y/Triangle, Pause = Start, D-pad moves. Every screen focuses a control (menu, character select, pause, options, level-up, chest, game over, merchant), and focused controls turn orange (`OptionsMenuUI.ApplyFocusColors`; the old tint was invisible on dark buttons).
 - `PauseMenuUI`: Resume / Options / Quit (to main menu); `GameSystemManager` pauses on focus loss when the option is on.
 - The merchant shop is uGUI instead of IMGUI. Selected character cards also get an outline (not colour alone).
@@ -856,6 +856,8 @@ Found by the suites: the Wandering Merchant could stand on an obstacle. `Campaig
 Validation:
 - EditMode 327/327, PlayMode 89/89, 0 exceptions, save unchanged (`D:\SoulHunter-Validation\run-20260926-ground\`).
 - Editor play `autoplay-editor-16` (Stage 3, god mode, 3 min): 0 errors, min 51 FPS; the village shows wide lanes and the merchant on open grass (partial `V`).
+
+(2026-09-30: 70% of these obstacles were then removed; see "Owner play reports" below.)
 
 VS ground features: the owner chose "VS wala" (2026-09-26), built one at a time.
 
@@ -1372,6 +1374,34 @@ Validation:
   - Skip gives experience, and Preserve keeps some charges.
 - EditMode 483/483, PlayMode 190/190, save untouched, both before and after the final UI fix (`D:/SoulHunter-Validation/run-20260930-powerups/`, `-powerups2/`).
 - Editor play `autoplay-editor-80` (`-sh-autoplay-shop-shot`, 2 min): the shop screenshot shows all 23 cells readable, Recovery 5/5 green, Greed selected at price 242 (200 + fee after 8 ranks), 0 errors, min 84 FPS (partial `V`).
+
+Not yet played by the owner.
+
+### Owner play reports: Duplicator, low-health tint, obstacles (2026-09-30)
+
+The owner played Phase 0 and reported three things.
+
+**1. "Duplicator kaam nahi kar raha".** The +1 Amount per level (vampire.survivors.wiki/w/Duplicator: 2 levels, +1 each) reached the weapons, but most weapons fired their extra shots in the same frame from the same spot. Axe (same line), Cross (a ±15° fan), Gun (±5° wobble) and the Whip's third lash (the same side as the first) landed on top of each other, so the Duplicator looked like it did nothing.
+- VS rule, from each weapon's wiki infobox "interval": the Amount of projectiles leave one after another. `AutoAttackWeapon.FireInSuccession(count, interval, fireOne)` fires shot 0 at once and the rest on game time (a pause holds them; they stop if the weapon is switched off; Edit Mode fires them all at once).
+- Intervals: Whip 0.1, Knife 0.1, Cross 0.1, Axe 0.2, Runetracer 0.2, Gun (Phiera) 0.2 per volley of four, Santa Water 0.3, Cherry Bomb 0.3, Lightning Ring 0.05, Fire Wand 0.02, Peachone 0.025 (it was 0.1). The Magic Wand already used 0.1. Each is `VsInterval` in its script.
+- The Bone page gives no interval, so the Bone keeps firing together with its 15° spread (wiki silent).
+- The Cross no longer fans: VS fires every cross at the closest enemy, 0.1 s apart.
+- Lightning Ring strikes skip a target that died or was pooled in the 0.05 s between strikes.
+- `DuplicatorPlayModeTests` (R, 14 weapons): Duplicator level 2 gives +2 Amount, each weapon fires 2 more, and no two shots appear together at one spot heading the same way. Before the fix, Axe, Cross, Runetracer, Bone and Gun failed. (Runetracer and Bone were a measuring error: they fly by velocity, which the test now reads.) The King Bible is checked by its orbiting books (+2).
+
+**2. Low-health red screen removed** (owner: "player ka life kam hone per red flash pure screen pe aata hai, use hata do"). `LowHealthWarning` pulsed a red tint over the whole screen at 30% health and below; the wiki does not describe any such effect in VS. It is deleted, with its wiring in `GameHUDController` and its EditMode cases. Hit feedback on the hero's model (`DamageFlash`) stays. `LowHealthPlayModeTests` (R): at 10% health no overlay and no red full-screen image.
+
+**3. 70% of the ground obstacles removed** (owner: "ground ka obstacle 70% hata do"). `build_grounds.py` keeps `OBSTACLE_KEEP` = 30% of the obstacles it placed on each floor (at least 1; a fixed per-level seed picks which; `thin_obstacles`). All 10 floors were rebuilt in Blender 5.2.1 against the isolated copy (`SOULHUNTER_ROOT`) and the FBX files copied back; prefabs, colliders and materials are unchanged.
+
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Obstacles before | 15 | 13 | 9 | 14 | 11 | 13 | 7 | 10 | 15 | 16 |
+| Obstacles now | 4 | 4 | 3 | 4 | 3 | 4 | 2 | 3 | 4 | 5 |
+| Reachable ground | 92% | 94% | 93% | 94% | 95% | 93% | 93% | 95% | 95% | 93% |
+
+`StageFloorTests` now expects 1-5 blocker boxes per floor (it required at least 6). `FloorWalkabilityTests` (T) passes with no trapped pockets.
+
+Validation: EditMode 480/480 (5 low-health cases removed), PlayMode 212/212, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260930-ownerplay/`). Editor play `autoplay-editor-83` (Stage 1, 3 min, no god mode): 0 errors, min 77 FPS; the screenshots show one crypt and three gravestones per tile, and the Whip's two lashes as two arcs. The bot again left gems uncollected (131; `-78` left 383), which is bot behaviour.
 
 Not yet played by the owner.
 

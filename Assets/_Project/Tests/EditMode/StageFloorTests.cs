@@ -71,8 +71,10 @@ namespace SoulHunter.Tests.EditMode
 
                 var mesh = blocker.sharedMesh;
                 Assert.That(mesh, Is.Not.Null);
-                // Owner rule (2026-09-26): 70%+ open ground, VS-style scattered obstacles; the floors now carry 7-16.
-                Assert.That(mesh.triangles.Length / 3, Is.GreaterThanOrEqualTo(6 * 12), $"{floor.name} has at least 6 obstacles.");
+                // Owner (2026-09-30): "ground ka obstacle 70% hata do". Of the 7-16 obstacles each floor used to carry, 30% are
+                // kept: 2-5 per tile (build_grounds.py OBSTACLE_KEEP). Every blocker is one 12-triangle box.
+                int boxes = mesh.triangles.Length / 3 / 12;
+                Assert.That(boxes, Is.InRange(1, 5), $"{floor.name} keeps 30% of its obstacles: {boxes} blocker boxes.");
                 foreach (var local in mesh.vertices)
                 {
                     var p = blocker.transform.TransformPoint(local) - floor.transform.position;

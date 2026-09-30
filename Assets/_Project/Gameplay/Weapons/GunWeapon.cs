@@ -41,6 +41,8 @@ namespace SoulHunter.Gameplay.Combat
             AttackCooldown = VsCooldown;
         }
 
+        public const float VsInterval = 0.2f;
+
         protected override void Attack()
         {
             if (BulletPrefab == null) return;
@@ -56,9 +58,11 @@ namespace SoulHunter.Gameplay.Combat
                 Quaternion.Euler(0f, 270f, 0f) * aim
             };
 
-            foreach (var dir in directions)
+            // VS (wiki Phiera Der Tuphello): "Amount affects all four bullet streams"; interval 0.2 s, so each point of
+            // Amount is one more volley of four, 0.2 s after the last (they used to leave in one frame, on top of each other).
+            FireInSuccession(BulletsPerArm + ExtraAmount, VsInterval, volley =>
             {
-                for (int i = 0; i < BulletsPerArm + ExtraAmount; i++)
+                foreach (var dir in directions)
                 {
                     // Slight spread
                     Vector3 spreadDir = Quaternion.Euler(0f, Random.Range(-5f, 5f), 0f) * dir;
@@ -78,7 +82,7 @@ namespace SoulHunter.Gameplay.Combat
                     damageDealer.SourceWeaponName = "Gun";
                     AimAtHostiles(bullet);
                 }
-            }
+            });
         }
     }
 }

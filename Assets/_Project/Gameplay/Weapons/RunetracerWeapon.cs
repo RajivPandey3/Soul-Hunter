@@ -41,18 +41,21 @@ namespace SoulHunter.Gameplay.Combat
             AttackCooldown = VsCooldown;
         }
 
+        public const float VsInterval = 0.2f;
+
         protected override void Attack()
         {
             if (RunePrefab == null) return;
 
-            for (int i = 0; i < RunesPerAttack + ExtraAmount; i++)
+            // VS interval (wiki Runetracer): the Amount of shots leave 0.2s apart.
+            FireInSuccession(RunesPerAttack + ExtraAmount, VsInterval, i =>
             {
                 // Owner decision: aim at the nearest enemy; random when none. Extra runes fan out.
                 Vector3 aim = Quaternion.Euler(0f, (i - (RunesPerAttack + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
                 GameObject rune = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(RunePrefab, transform.position, Quaternion.identity)
                     : Instantiate(RunePrefab, transform.position, Quaternion.identity);
-                if (rune == null) continue;
+                if (rune == null) return;
                 ApplyArea(rune, RunePrefab);
 
                 var rb = rune.GetComponent<Rigidbody>();
@@ -73,7 +76,7 @@ namespace SoulHunter.Gameplay.Combat
                 var lifetime = rune.GetComponent<PooledLifetime>();
                 if (lifetime != null) lifetime.Arm(BaseDuration * DurationMultiplier);
                 else Destroy(rune, BaseDuration * DurationMultiplier); // compatibility when no pool exists
-            }
+            });
         }
     }
 }

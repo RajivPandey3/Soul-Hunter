@@ -78,16 +78,19 @@ namespace SoulHunter.Gameplay.Weapons
             }
         }
 
+        public const float VsInterval = 0.1f;
+
         protected override void Attack()
         {
             // Owner decision: lash toward the nearest enemy (facing side when none).
             // The second whip strikes the opposite side, then they alternate.
             Vector3 aim = AimDirection(HolderFacing);
             int whips = LevelWhipCount + ExtraAmount;
-            for (int i = 0; i < whips; i++)
+            // VS interval (wiki Whip): the Amount of shots leave 0.1s apart.
+            FireInSuccession(whips, VsInterval, i =>
             {
                 FireWhip(i % 2 == 0 ? aim : -aim);
-            }
+            });
         }
 
         private void FireWhip(Vector3 attackDirection)

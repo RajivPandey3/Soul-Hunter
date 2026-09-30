@@ -34,6 +34,10 @@ EDGE_MARGIN = 1.0      # half a walkway on each side of a tile seam, so neighbou
 # stuck. VS stages are open ground with scattered, easy-to-pass obstacles. Two obstacles are at least this far apart,
 # so the player (capsule radius 0.4) always fits between them with room to spare.
 MIN_GAP = 1.8
+# Owner (2026-09-30): "ground ka obstacle 70% hata do". After a floor is laid out, only this share of its placed
+# obstacles is kept (rounded, at least 1); a fixed per-level seed picks which, so a rebuild gives the same floor.
+OBSTACLE_KEEP = 0.3
+placed_log = []        # per placed obstacle: {layer: [objects]} it created, for thin_obstacles()
 
 palette = {}
 materials = {}
@@ -258,6 +262,7 @@ class Placer:
                 del blocker_log[logged:]
                 continue
             self.taken.append((x, y, fr))
+            placed_log.append({key: list(objs[counts.get(key, 0):]) for key, objs in layers.items() if key in ('obstacles', 'blockers')})
             placed += 1
         return placed
 
@@ -409,6 +414,22 @@ def pylon(x, y, r, rng):
     cone('Pylon', (x, y, 1.4), .3, .1, 2.0, 'Plate', 6)
     gem('Core', (x, y, 2.45), (.25, .25, .25), 'Glow')
     blocker(x, y, 1.1, 1.1)
+
+
+def thin_obstacles(level):
+    """Keeps OBSTACLE_KEEP of the placed obstacles (at least 1) and removes the rest with their blockers."""
+    total = len(placed_log)
+    keep = max(1, round(total * OBSTACLE_KEEP)) if total else 0
+    kept = set(random.Random(9000 + level).sample(range(total), keep)) if total else set()
+    for i, made in enumerate(placed_log):
+        if i in kept:
+            continue
+        for key, objs in made.items():
+            for obj in objs:
+                layers[key].remove(obj)
+                bpy.data.objects.remove(obj, do_unlink=True)
+    print('THINNED', level, 'placed', total, 'kept', keep, flush=True)
+    return total, keep
 
 
 # ---------- levels ----------
@@ -615,9 +636,11 @@ def build(level):
     for m in list(bpy.data.materials): bpy.data.materials.remove(m)
     materials, layers = {}, {}
     blocker_log.clear()
+    placed_log.clear()
     current[0] = 'ground'
     palette.clear(); palette.update(COMMON); palette.update(colors)
     fn(random.Random(2000 + level))
+    placed_total, placed_kept = thin_obstacles(level)
     asset = f'SH10_L{level:02}_Floor'
     preview(asset)
     meshes = [join(layers['ground'], asset)]
@@ -637,6 +660,7 @@ def build(level):
     triangles = sum(len(p.vertices) - 2 for m in meshes for p in m.data.polygons)
     print('FLOOR_DONE', asset, triangles, 'obstacles', counts['obstacles'], flush=True)
     return dict(name=asset, level=level, title=title, size=SIZE, triangles=triangles, obstacles=counts['obstacles'],
+                obstacles_placed=placed_total, obstacles_kept=placed_kept,
                 model=str(model.relative_to(ROOT)).replace('\\', '/'),
                 materials={asset + '_' + k: list(palette[k]) for k in materials},
                 textures={asset + '_' + k: texture_for(level, k) for k in materials},

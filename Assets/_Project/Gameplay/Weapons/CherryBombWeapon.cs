@@ -33,18 +33,21 @@ namespace SoulHunter.Gameplay.Combat
 
         public override void LevelUp() { CurrentLevel = Mathf.Min(MaxLevel, CurrentLevel + 1); }
 
+        public const float VsInterval = 0.3f;
+
         protected override void Attack()
         {
             if (BombPrefab == null) return;
 
-            for (int i = 0; i < BombCount + ExtraAmount; i++)
+            // VS interval (wiki Cherry_Bomb): the Amount of shots leave 0.3s apart.
+            FireInSuccession(BombCount + ExtraAmount, VsInterval, i =>
             {
                 // Owner decision: aim at the nearest enemy; random when none. On the ground plane (a Vector2 here sent bombs vertically).
                 Vector3 randomDir = Quaternion.Euler(0f, (i - (BombCount + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
                 GameObject bomb = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(BombPrefab, transform.position, Quaternion.identity)
                     : Instantiate(BombPrefab, transform.position, Quaternion.identity);
-                if (bomb == null) continue;
+                if (bomb == null) return;
                 bomb.transform.localScale = BombPrefab.transform.localScale * AreaMultiplier * LevelArea;
                 
                 var proj = bomb.GetComponent<Projectile>();
@@ -59,7 +62,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
                 damageDealer.SourceWeaponName = "Cherry Bomb";
                 AimAtHostiles(bomb);
-            }
+            });
         }
     }
 }

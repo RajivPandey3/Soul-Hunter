@@ -52,10 +52,7 @@ namespace SoulHunter.Gameplay.UI
                 // VS: a small HP bar under the hero instead of a strip across the bottom of the screen.
                 HealthBarFollow.Attach(_healthSlider, _playerHealth.transform);
 
-                // VS-style low-HP feedback: pulsing red tint at 30% HP or below.
-                var lowHealthWarning = GetComponent<LowHealthWarning>();
-                if (lowHealthWarning == null) lowHealthWarning = gameObject.AddComponent<LowHealthWarning>();
-                lowHealthWarning.Bind(_playerHealth);
+                // Owner (2026-09-30): no red full-screen tint at low health (the old LowHealthWarning was removed).
             }
 
             // VS inventory row: 6 weapon and 6 passive slots, top left.

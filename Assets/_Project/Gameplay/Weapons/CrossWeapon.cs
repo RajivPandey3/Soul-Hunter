@@ -120,14 +120,12 @@ namespace SoulHunter.Gameplay.Weapons
                 throwDirection.y = 0;
             }
 
-            // VS rule: Amount throws extra crosses fanned around the aim direction.
-            int amount = LevelCrossCount + ExtraAmount;
-            for (int i = 0; i < amount; i++)
-            {
-                float spread = amount > 1 ? Mathf.Lerp(-15f, 15f, i / (float)(amount - 1)) : 0f;
-                ThrowSingleCross(Quaternion.Euler(0f, spread, 0f) * throwDirection);
-            }
+            // VS (wiki Cross): every cross flies at the closest enemy; the Amount of crosses leave 0.1 s apart (interval).
+            // Soul Hunter used to fan them +/-15 degrees in one frame instead.
+            FireInSuccession(LevelCrossCount + ExtraAmount, VsInterval, i => ThrowSingleCross(throwDirection));
         }
+
+        public const float VsInterval = 0.1f;
 
         private void ThrowSingleCross(Vector3 direction)
         {

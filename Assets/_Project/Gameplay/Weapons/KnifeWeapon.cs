@@ -42,6 +42,8 @@ namespace SoulHunter.Gameplay.Combat
             AttackCooldown = VsCooldown;
         }
 
+        public const float VsInterval = 0.1f;
+
         protected override void Attack()
         {
             // Shadow Kael's mirrored copy has no player body: it throws toward its target (the player).
@@ -54,7 +56,8 @@ namespace SoulHunter.Gameplay.Combat
             else moveDir.Normalize();
             moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 
-            for (int i = 0; i < KnivesPerAttack + ExtraAmount; i++)
+            // VS interval (wiki Knife): the Amount of knives leave 0.1 s apart.
+            FireInSuccession(KnivesPerAttack + ExtraAmount, VsInterval, i =>
             {
                 Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-10f, 10f), 0) * moveDir;
                 Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
@@ -62,7 +65,7 @@ namespace SoulHunter.Gameplay.Combat
                 GameObject knife = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(_projectilePrefab, spawnPos, Quaternion.identity)
                     : Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
-                if (knife == null) continue;
+                if (knife == null) return;
                 ApplyArea(knife, _projectilePrefab);
                 knife.transform.forward = spreadDir;
 
@@ -74,7 +77,7 @@ namespace SoulHunter.Gameplay.Combat
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";
                 AimAtHostiles(knife);
-            }
+            });
         }
     }
 }
