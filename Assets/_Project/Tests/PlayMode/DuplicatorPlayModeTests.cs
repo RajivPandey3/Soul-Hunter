@@ -9,6 +9,7 @@ using SoulHunter.Gameplay.AI;
 using SoulHunter.Gameplay.Combat;
 using SoulHunter.Gameplay.Player;
 using SoulHunter.Gameplay.VFX;
+using SoulHunter.Gameplay.Weapons;
 using UpgradeType = SoulHunter.Gameplay.Combat.UpgradeData.UpgradeType;
 
 namespace SoulHunter.Tests.PlayMode
@@ -52,8 +53,7 @@ namespace SoulHunter.Tests.PlayMode
                 if (touch != null) touch.enabled = false;
                 var body = enemy.GetComponent<Rigidbody>();
                 if (body != null) body.isKinematic = true;
-                var controller = enemy.GetComponent<EnemyController>();
-                if (controller != null) controller.enabled = false;
+                // The controller stays on: Lightning Ring and Fire Wand pick their targets from the live enemy list.
             }
 
             var weapons = WeaponManager.Instance;
@@ -128,7 +128,14 @@ namespace SoulHunter.Tests.PlayMode
             timer.SetValue(weapon, 999f);
             var active = new HashSet<GameObject>(LiveShots());
             float start = Time.time;
-            typeof(AutoAttackWeapon).GetMethod("Attack", Private).Invoke(weapon, null);
+            if (weapon is MagicWandWeapon)
+            {
+                // The Magic Wand runs its own volley cycle in Update (1.2 s cooldown, shots 0.1 s apart) rather than
+                // Attack(): start a volley now through it, so the window always holds exactly one volley.
+                typeof(MagicWandWeapon).GetField("_remainingShots", Private).SetValue(weapon, 0);
+                typeof(MagicWandWeapon).GetField("_cooldownTimer", Private).SetValue(weapon, 0f);
+            }
+            else typeof(AutoAttackWeapon).GetMethod("Attack", Private).Invoke(weapon, null);
             while (Time.time < start + 1f)
             {
                 foreach (var go in LiveShots())
@@ -141,6 +148,8 @@ namespace SoulHunter.Tests.PlayMode
                     }
                 active.RemoveWhere(g => g == null || !g.activeInHierarchy);
                 timer.SetValue(weapon, 999f);
+                if (weapon is MagicWandWeapon && Time.time > start + 0.5f)
+                    typeof(MagicWandWeapon).GetField("_cooldownTimer", Private).SetValue(weapon, 999f); // no second volley in the window
                 yield return null;
             }
         }

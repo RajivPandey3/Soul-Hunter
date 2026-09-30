@@ -1377,6 +1377,20 @@ Validation:
 
 Not yet played by the owner.
 
+### Owner reports: Play did not boot; Max Health "does nothing" (2026-09-30)
+
+**Play started Level 1 directly** (owner: "game play button click karte hi direct level 1 start ho raha hai, boot kyun nahi ho raha"). Unity's Play button starts the open scene, and the owner's editor had `Main_Gameplay` open. The project never had a start-scene hook (the only earlier one was a loose tool script removed as clutter).
+- `PlayFromBootstrap` (Editor, `[InitializeOnLoad]`): while **Soul Hunter/Play From Bootstrap** is on (the default, stored in EditorPrefs), pressing Play on any game scene (one enabled in the build settings) starts from `Bootstrap`, as the build does. The test runner's own scene and batch mode are left alone. Switch the menu item off to play a single scene directly.
+- CLI check (`-executeMethod SoulHunter.Editor.Autoplay.PlayFromBootstrap.CheckFromCommandLine -sh-bootcheck <file>`, GUI editor on the isolated copy): with `Main_Gameplay` open, Play loaded Loading at 0.2 s and MainMenu at 2.0 s (`D:/SoulHunter-Validation/run-20260930-boot/bootcheck.txt`).
+
+**Max Health "does not increase"** (owner). Checked, and it works as VS says. vampire.survivors.wiki/w/Hollow_Heart: it "multiplies the current value of Max Health by 1.2" and "does not heal to fill up the newly increased Max Health". The HP bar shows current ÷ max, so after Hollow Heart at full health it looks emptier (100/120), and no number shows the new maximum. `PassivePlayModeTests` (R) confirms ×1.2 on the real player; `HealBalancePlayModeTests` (R) confirms the Max Health PowerUp (133/133 at rank 3). VS shows the stats in the pause and level-up screens; Soul Hunter does not yet (VS DOT table, Phase 3 "Stats panel").
+
+**Found while re-testing the Duplicator work:**
+- The Lightning Ring skipped a strike whose target died or was pooled in the 0.05 s gap. It now passes over dead targets to the next nearest one, so every strike lands while enemies remain.
+- `DuplicatorPlayModeTests` measured the Magic Wand wrongly: the wand runs its own volley cycle in `Update`, so a volley did not always fall inside the test's window. The test now starts the wand's volley through its cooldown. The dummy targets keep their controllers on, because the Lightning Ring and Fire Wand target only live enemies. The fixture then passed 3 runs out of 3.
+- Validation: EditMode 480/480, PlayMode 212/212, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260930-boot2/`).
+- Not yet played by the owner.
+
 ### Owner play reports: Duplicator, low-health tint, obstacles (2026-09-30)
 
 The owner played Phase 0 and reported three things.
