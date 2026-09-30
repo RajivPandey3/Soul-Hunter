@@ -42,8 +42,11 @@ namespace SoulHunter.Gameplay.UI
                 _levelUpPanel = gameObject;
             }
 
-            // Game shuru hote waqt LevelUp Panel ko hide rakhein (Awake mein ek martaba)
-            if (_levelUpPanel != null)
+            // Game shuru hote waqt LevelUp Panel ko hide rakhein (Awake mein ek martaba).
+            // Not while a level-up is waiting on it: a panel saved inactive in the scene runs this Awake only when the
+            // first level-up switches it on, and hiding it then left the game paused with no cards (owner, 2026-09-30).
+            bool roundOpen = _levelUpManager != null && _levelUpManager.IsLevelUpActive;
+            if (_levelUpPanel != null && !roundOpen)
             {
                 _levelUpPanel.SetActive(false);
             }

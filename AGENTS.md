@@ -1377,6 +1377,16 @@ Validation:
 
 Not yet played by the owner.
 
+### Game "hangs" at the first level-up (owner: "kabhi bhi hang ho ja raha hai", 2026-09-30)
+
+The owner's Editor log showed both runs stopping right after the first level-up paused the game. Cause: the owner's unsaved `Main_Gameplay` saves `LevelUp_Panel` inactive. The panel carries its own `LevelUpUI`, whose `Awake` hides the panel; with the panel inactive that `Awake` first ran when the first level-up switched it on (from the `LevelUpUI` on `UI_Bindings`), so it hid the panel again. The game stayed paused with no cards: a "hang". Later level-ups worked. The committed scene saves the panel active, so tests and bot runs never saw it.
+- Fix: `LevelUpUI.Awake` does not hide the panel while a level-up round is open (`LevelUpManager.IsLevelUpActive`).
+- `LevelUpPanelStartPlayModeTests` (R): a panel copy that has never woken is shown on the first level-up. It fails on the old code.
+- `AutoplayBot` logs `hitch` (frames over 0.25 s, not screenshot frames) and `stuck-pause` (paused over 20 s, with `GameTime.PauserNames()`) events, and with `-sh-autoplay-levelup-ui` a `levelup-ui` event (panel and card screen rects).
+- EditMode 491/491, PlayMode 222/222, save untouched (`D:/SoulHunter-Validation/run-20260930-hang/`).
+- Editor play with the owner's scene and HUD prefab: before the fix (`hang-03`) the first level-up panel was inactive; after it (`hang-04`, 5 min, Draven) all 19 level-ups showed their panel, 0 hitches, 0 errors, min 61 FPS. Bot runs on the committed scene (`hang-01`, 8 min) had no hitch or stuck pause either.
+- Seen, not changed: with the owner's HUD layout the level-up stats panel has room for only 2 of its rows (8 of 19 stats show).
+
 ### Level 1 Bug MIS fixed (owner: "sab bug fix karo safely", 2026-09-30)
 
 Owner's CTO brief: play Level 1 from the Play button to 30:00, only note bugs, show them, fix after approval. The register is `Docs/BUG_MIS_Level1.md` (runs `D:/SoulHunter-Validation/cto-level1-runA`, `-runC`; 17 bugs, 7 observations). All 17 are fixed:

@@ -265,6 +265,7 @@ namespace SoulHunter.Gameplay.Core
             if (_player == null || Finished) return;
             _frameTimes.Add(Time.unscaledDeltaTime);
             float now = Time.realtimeSinceStartup;
+            WatchForHangs(now);
             if (now >= _nextSteer)
             {
                 _nextSteer = now + 0.1f;
@@ -386,6 +387,7 @@ namespace SoulHunter.Gameplay.Core
             UpgradeData pick = choices.OrderByDescending(c => Score(weapons, c)).First();
             // -sh-autoplay-levelup-shots: every level-up screen (the level-up stats panel); otherwise every fifth.
             if (_experience.CurrentLevel % 5 == 0 || HasArg("-sh-autoplay-levelup-shots")) yield return Shot($"levelup{_experience.CurrentLevel:00}");
+            if (HasArg("-sh-autoplay-levelup-ui")) Event("levelup-ui", LevelUpUiState());
             Event("levelup", $"\"level\": {_experience.CurrentLevel}, \"choices\": [{string.Join(", ", choices.Select(c => $"\"{Escape(c.UpgradeName)}\""))}], \"picked\": \"{Escape(pick.UpgradeName)}\"");
             // Pick through the level-up screen like a player, so the panel closes (calling SelectUpgrade directly left it
             // on screen after the last level-up).
@@ -393,6 +395,40 @@ namespace SoulHunter.Gameplay.Core
             var select = typeof(LevelUpUI).GetMethod("OnUpgradeSelected", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (ui != null && select != null) select.Invoke(ui, new object[] { pick });
             else levelUp.SelectUpgrade(pick);
+        }
+
+        /// <summary>Where the level-up panel and its cards are on screen, and anything hiding them.</summary>
+        private static string LevelUpUiState()
+        {
+            var ui = FindFirstObjectByType<LevelUpUI>(FindObjectsInactive.Include);
+            if (ui == null) return "\"ui\": null";
+            var panel = typeof(LevelUpUI).GetField("_levelUpPanel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(ui) as GameObject;
+            var sb = new StringBuilder();
+            sb.Append($"\"ui\": \"{Escape(PathOf(ui.transform))}\", \"panel\": \"{(panel != null ? Escape(PathOf(panel.transform)) : "null")}\"");
+            if (panel == null) return sb.ToString();
+            sb.Append($", \"panelActive\": {(panel.activeInHierarchy ? "true" : "false")}, \"panelRect\": \"{ScreenRectOf(panel.transform)}\"");
+            var canvas = panel.GetComponentInParent<Canvas>(true);
+            if (canvas != null) sb.Append($", \"canvas\": \"{Escape(canvas.name)}\", \"canvasEnabled\": {(canvas.isActiveAndEnabled ? "true" : "false")}, \"sort\": {canvas.sortingOrder}, \"mode\": \"{canvas.renderMode}\"");
+            foreach (var group in panel.GetComponentsInParent<CanvasGroup>(true))
+                sb.Append($", \"group_{Escape(group.name)}\": {group.alpha.ToString(CultureInfo.InvariantCulture)}");
+            var buttons = panel.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+            sb.Append(", \"buttons\": [");
+            sb.Append(string.Join(", ", buttons.Select(b => $"\"{Escape(b.name)} {(b.gameObject.activeInHierarchy ? "on" : "off")} {ScreenRectOf(b.transform)}\"")));
+            sb.Append($"], \"screen\": \"{Screen.width}x{Screen.height}\"");
+            return sb.ToString();
+        }
+
+        private static string PathOf(Transform t) => t.parent == null ? t.name : PathOf(t.parent) + "/" + t.name;
+
+        private static string ScreenRectOf(Transform t)
+        {
+            if (!(t is RectTransform rect)) return "-";
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            var canvas = rect.GetComponentInParent<Canvas>();
+            Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+            Vector2 a = RectTransformUtility.WorldToScreenPoint(cam, corners[0]), b = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+            return string.Format(CultureInfo.InvariantCulture, "({0:0},{1:0})-({2:0},{3:0})", a.x, a.y, b.x, b.y);
         }
 
         private static int Score(WeaponManager weapons, UpgradeData upgrade)
@@ -647,8 +683,39 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
+        /// <summary>
+        /// Owner report 2026-09-30 ("kabhi bhi hang ho ja raha hai"): logs every frame longer than 0.25 s (not the
+        /// screenshot frames) and any pause held for more than 20 s, with who holds it.
+        /// </summary>
+        private void WatchForHangs(float now)
+        {
+            float dt = Time.unscaledDeltaTime;
+            if (dt > 0.25f && Time.frameCount > _shotFrame + 3 && Elapsed > 3f)
+            {
+                var progression = LevelProgressionManager.Instance;
+                Event("hitch", string.Format(CultureInfo.InvariantCulture,
+                    "\"ms\": {0:0}, \"stageTime\": {1:0.0}, \"paused\": {2}, \"pausers\": \"{3}\", \"enemies\": {4}, \"gems\": {5}, \"level\": {6}",
+                    dt * 1000f, progression != null ? progression.StageElapsedTime : 0f, GameTime.IsPaused ? "true" : "false",
+                    GameTime.PauserNames(), EnemyController.ActiveEnemies.Count, XPGem.ActiveGems.Count,
+                    _experience != null ? _experience.CurrentLevel : 0));
+            }
+            if (!GameTime.IsPaused) { _pausedSince = -1f; _pauseReported = false; return; }
+            if (_pausedSince < 0f) _pausedSince = now;
+            if (!_pauseReported && now - _pausedSince > 20f)
+            {
+                _pauseReported = true;
+                Event("stuck-pause", $"\"pausers\": \"{GameTime.PauserNames()}\"");
+                StartCoroutine(Shot("stuck-pause"));
+            }
+        }
+
+        private int _shotFrame = -10;
+        private float _pausedSince = -1f;
+        private bool _pauseReported;
+
         private IEnumerator Shot(string name)
         {
+            _shotFrame = Time.frameCount;
             string file = Path.Combine(Config.OutputFolder, "shots", $"{_shots.Count:000}_{name}.png");
             _shots.Add(Path.GetFileName(file));
             // No WaitForEndOfFrame: it never resumes in a batchmode editor, which hung the report.
