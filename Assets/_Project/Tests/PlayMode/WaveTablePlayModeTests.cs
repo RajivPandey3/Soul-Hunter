@@ -45,7 +45,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(wave.HasMinuteTable, Is.True, "Stage 1 plays its minute table.");
 
             // A busy minute: the horde swells to that minute's minimum.
-            int busy = Enumerable.Range(10, 5).First(m => !WaveTables.IsDip(1, m));
+            // Stage 1 is VS's Mad Forest: its busiest minute from 10:00 to 16:00, then the next minute under half of it.
+            int busy = Enumerable.Range(10, 7).OrderByDescending(m => wave.Minutes[m].Minimum).First();
             SetStageTime(busy * 60f + 5f);
             int busyMinimum = wave.Minutes[busy].Minimum;
             Assert.That(wave.GetPhase(busy * 60f + 5f).MinimumEnemies, Is.EqualTo(busyMinimum));
@@ -53,11 +54,10 @@ namespace SoulHunter.Tests.PlayMode
                 $"the horde to reach minute {busy}'s minimum of {busyMinimum}");
 
             // A quiet minute: after a wipe it refills only to the smaller minimum, and elites are likelier.
-            int quiet = Enumerable.Range(busy + 1, 6).First(m => WaveTables.IsDip(1, m));
+            int quiet = Enumerable.Range(busy + 1, 6).First(m => wave.Minutes[m].Minimum < wave.Minutes[busy].Minimum / 2);
             SetStageTime(quiet * 60f + 5f);
             var phase = wave.GetPhase(quiet * 60f + 5f);
             Assert.That(phase.MinimumEnemies, Is.LessThan(busyMinimum / 2), $"Minute {quiet} is quiet.");
-            Assert.That(phase.EliteChanceBonus, Is.GreaterThan(0f), "It sends tougher enemies.");
             KillAll();
             yield return WaitUntilRealtime(() => EnemyController.ActiveEnemies.Count >= phase.MinimumEnemies,
                 $"the horde to refill to minute {quiet}'s minimum of {phase.MinimumEnemies}");

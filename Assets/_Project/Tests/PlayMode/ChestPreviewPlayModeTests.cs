@@ -39,6 +39,11 @@ namespace SoulHunter.Tests.PlayMode
                 var hinge = stage.transform.Find("Visual(Clone)/LidHinge") ?? stage.GetComponentsInChildren<Transform>().FirstOrDefault(t => t.name == "LidHinge");
                 Assert.That(hinge, Is.Not.Null, "The lid hangs on a hinge.");
                 Assert.That(skull.transform.IsChildOf(hinge), Is.True, "The skull is part of the lid.");
+                // Bug MIS B11: only the lid swings; the body (its planks) and the glowing soul seam stay.
+                var shell = renderers.First(r => r.name == "Lid");
+                Assert.That(shell.transform.IsChildOf(hinge), Is.True, "The lid shell is on the hinge.");
+                foreach (var part in renderers.Where(r => r.name.StartsWith("Plank") || r.name == "SoulSeam"))
+                    Assert.That(part.transform.IsChildOf(hinge), Is.False, $"{part.name} belongs to the body and stays put.");
                 Vector3 skullClosed = skull.transform.position;
                 stage.Open(0);
                 yield return WaitUntilRealtime(() => stage.LidOpen, "the lid to open");

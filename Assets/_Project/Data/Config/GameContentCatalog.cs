@@ -46,6 +46,12 @@ namespace SoulHunter.Gameplay.Data
         public UnityEngine.Texture2D ChestFxFlash;
         [UnityEngine.Tooltip("Stars behind each revealed item, and the 5-item fireworks.")]
         public UnityEngine.Texture2D ChestFxSparkle;
+
+        [UnityEngine.Header("Reward icons (Bug MIS B10, 2026-09-30)")]
+        [UnityEngine.Tooltip("Gold Pouch level-up card and the chest's coin-bag card: the approved gold Soul Coin, rendered.")]
+        public UnityEngine.Sprite GoldPouchIcon;
+        [UnityEngine.Tooltip("Roast Chicken level-up card.")]
+        public UnityEngine.Sprite RoastChickenIcon;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
 
         /// <summary>The weapon/passive definition of <paramref name="type"/>, or null when none exists.</summary>

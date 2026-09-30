@@ -16,6 +16,14 @@ namespace SoulHunter.Gameplay.UI
 
         public const float WorldFontSize = 7f;
 
+        /// <summary>
+        /// Bug MIS B07 (2026-09-30): numbers showed cut ("3Ↄ") where enemy models stood in front of them. The camera is
+        /// orthographic, so moving the text toward it changes neither its place nor its size on screen, only its depth:
+        /// it is drawn this far in front of its point, ahead of the models.
+        /// </summary>
+        public const float TowardCamera = 4f;
+        private Vector3 _anchor;
+
         private float _fadeSpeed;
         private Color _textColor;
         private float _timer;
@@ -34,14 +42,24 @@ namespace SoulHunter.Gameplay.UI
 
             _timer = _lifeTime;
             _fadeSpeed = 1f / _lifeTime;
+            _anchor = transform.position; // the hit point (the manager places the popup there before Setup)
+            Place();
+        }
+
+        /// <summary>At the anchor on screen, facing the camera and pulled toward it (see TowardCamera).</summary>
+        private void Place()
+        {
+            var cam = Camera.main;
+            if (cam == null) { transform.position = _anchor; return; }
+            transform.rotation = cam.transform.rotation;
+            transform.position = _anchor - cam.transform.forward * (cam.orthographic ? TowardCamera : 0f);
         }
 
         private void Update()
         {
             // Upar ki taraf udna, camera ki taraf mooh karke (tilted camera: flat text would look skewed)
-            transform.position += Vector3.up * _moveSpeed * Time.deltaTime;
-            var cam = Camera.main;
-            if (cam != null) transform.rotation = cam.transform.rotation;
+            _anchor += Vector3.up * _moveSpeed * Time.deltaTime;
+            Place();
 
             // Gayab (Fade out) hona
             _timer -= Time.deltaTime;

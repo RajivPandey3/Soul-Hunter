@@ -39,6 +39,27 @@ namespace SoulHunter.Gameplay.Combat
         [Header("Result")]
         public GameObject EvolvedWeaponPrefab;
         public string EvolvedName;
+
+        /// <summary>
+        /// The player-facing name of an evolution or union ID: "Evo_BloodyTear" -> "Bloody Tear". The chest reel showed the
+        /// raw IDs (Bug MIS B03, 2026-09-30); the IDs themselves stay as they are, since other code keys on them.
+        /// </summary>
+        public static string DisplayName(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return id;
+            string name = id;
+            foreach (var prefix in new[] { "Evo_", "Union_" })
+                if (name.StartsWith(prefix)) { name = name.Substring(prefix.Length); break; }
+            name = name.Replace('_', ' ');
+            var text = new System.Text.StringBuilder(name.Length + 4);
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (i > 0 && char.IsUpper(c) && name[i - 1] != ' ' && !char.IsUpper(name[i - 1])) text.Append(' ');
+                text.Append(c);
+            }
+            return text.ToString();
+        }
         public Sprite EvolvedIcon;
     }
 }

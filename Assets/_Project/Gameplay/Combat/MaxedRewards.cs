@@ -29,6 +29,13 @@ namespace SoulHunter.Gameplay.Combat
             var chicken = ScriptableObject.CreateInstance<UpgradeData>();
             chicken.UpgradeName = "Roast Chicken";
             chicken.Description = $"Restores {HealAmount} health.";
+            // Bug MIS B10 (2026-09-30): the two cards had no icon.
+            var content = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            if (content != null)
+            {
+                gold.Icon = content.GoldPouchIcon;
+                chicken.Icon = content.RoastChickenIcon;
+            }
             Cards[gold] = true;
             Cards[chicken] = false;
             return new List<UpgradeData> { gold, chicken };

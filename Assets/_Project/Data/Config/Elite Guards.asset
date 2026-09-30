@@ -27,102 +27,152 @@ MonoBehaviour:
     Minimum: 56
     Interval: 0.5
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 1
     Minimum: 92
     Interval: 0.488
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 2
     Minimum: 30
     Interval: 0.712
     EliteBonus: 0.46
+    EnemyTypes: []
   - Minute: 3
     Minimum: 108
     Interval: 0.463
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 4
     Minimum: 122
     Interval: 0.45
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 5
     Minimum: 146
     Interval: 0.438
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 6
     Minimum: 173
     Interval: 0.425
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 7
     Minimum: 57
     Interval: 0.619
     EliteBonus: 0.46
+    EnemyTypes: []
   - Minute: 8
     Minimum: 190
     Interval: 0.4
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 9
     Minimum: 180
     Interval: 0.387
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 10
     Minimum: 175
     Interval: 0.375
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 11
     Minimum: 186
     Interval: 0.363
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 12
     Minimum: 64
     Interval: 0.525
     EliteBonus: 0.46
+    EnemyTypes: []
   - Minute: 13
     Minimum: 243
     Interval: 0.338
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 14
     Minimum: 258
     Interval: 0.325
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 15
     Minimum: 252
     Interval: 0.312
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 16
     Minimum: 234
     Interval: 0.3
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 17
     Minimum: 67
     Interval: 0.431
     EliteBonus: 0.46
+    EnemyTypes: []
   - Minute: 18
     Minimum: 235
     Interval: 0.275
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 19
     Minimum: 266
     Interval: 0.262
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 20
     Minimum: 299
     Interval: 0.25
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 21
     Minimum: 314
     Interval: 0.237
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 22
     Minimum: 91
     Interval: 0.337
     EliteBonus: 0.46
+    EnemyTypes: []
   - Minute: 23
     Minimum: 279
     Interval: 0.213
     EliteBonus: 0
+    EnemyTypes: []
   - Minute: 24
     Minimum: 265
     Interval: 0.2
     EliteBonus: 0
+    EnemyTypes: []
+  - Minute: 25
+    Minimum: 271
+    Interval: 0.2
+    EliteBonus: 0
+    EnemyTypes: []
+  - Minute: 26
+    Minimum: 299
+    Interval: 0.2
+    EliteBonus: 0
+    EnemyTypes: []
+  - Minute: 27
+    Minimum: 328
+    Interval: 0.2
+    EliteBonus: 0
+    EnemyTypes: []
+  - Minute: 28
+    Minimum: 335
+    Interval: 0.2
+    EliteBonus: 0
+    EnemyTypes: []
+  - Minute: 29
+    Minimum: 316
+    Interval: 0.2
+    EliteBonus: 0
+    EnemyTypes: []
   Phases: []
   Events:
   - TimeSeconds: 120

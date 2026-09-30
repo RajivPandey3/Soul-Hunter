@@ -27,8 +27,24 @@ namespace SoulHunter.Gameplay.Data
             "Assets/_Project/Data/Config/Shadow Kael Clones.asset",
         };
 
-        /// <summary>The boss arrives at 25:00, so the table covers minutes 0-24.</summary>
-        public const int Minutes = 25;
+        /// <summary>
+        /// Every stage lasts 30:00 (owner decision 2026-09-27), so the table covers minutes 0-29. It used to cover 0-24 and
+        /// minutes 25-29 reused minute 24's row; when minute 24 was a quiet minute, the last six minutes of the stage held
+        /// only ~84 enemies (Bug MIS B01, 2026-09-30).
+        /// </summary>
+        public const int Minutes = 30;
+
+        /// <summary>Minutes of the stage's own rising curve (0-24); minutes 25-29 hold its peak.</summary>
+        private const int CurveMinutes = 25;
+
+        /// <summary>
+        /// Stage 1 plays VS's Mad Forest (the stage-bonus and light-source mapping use it too). vampire.survivors.wiki/w/
+        /// Mad_Forest, "Waves": enemy minimum and spawn interval (seconds) for 0:00-29:00.
+        /// </summary>
+        public static readonly int[] MadForestMinimum =
+            { 15, 30, 50, 40, 30, 10, 20, 80, 100, 30, 10, 300, 20, 150, 20, 100, 100, 20, 60, 100, 100, 300, 200, 300, 300, 100, 150, 300, 300, 300 };
+        public static readonly float[] MadForestInterval =
+            { 1f, 1f, 0.5f, 0.25f, 1f, 1f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.1f, 0.25f, 0.5f, 0.1f, 0.1f, 0.1f, 1f, 0.5f, 0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
 
         // Stage 1 follows VS's Mad Forest opening closely (15 at 0:00, about 30 at 1:00, 50 by 2:00-3:00, about 100
         // around 8:00-12:00); later stages open bigger and peak higher, below the 300-enemy cap.
@@ -156,16 +172,25 @@ namespace SoulHunter.Gameplay.Data
         public static List<MinuteWave> Build(int stage, float baseInterval)
         {
             stage = Mathf.Clamp(stage, 1, 10);
-            int opening = OpeningMinimum(stage), peak = PeakMinimum(stage);
             var table = new List<MinuteWave>();
+            if (stage == 1)
+            {
+                // VS Mad Forest, minute by minute (no elite bonus: that is not a VS wave field).
+                for (int m = 0; m < Minutes; m++)
+                    table.Add(new MinuteWave { Minute = m, Minimum = MadForestMinimum[m], Interval = MadForestInterval[m], EliteBonus = 0f });
+                return table;
+            }
+            int opening = OpeningMinimum(stage), peak = PeakMinimum(stage);
             for (int m = 0; m < Minutes; m++)
             {
-                float t = m / (float)(Minutes - 1);
+                // Minutes 25-29 stay at the curve's end (its peak), never on a quiet minute.
+                bool tail = m >= CurveMinutes;
+                float t = Mathf.Min(m, CurveMinutes - 1) / (float)(CurveMinutes - 1);
                 float target = opening + (peak - opening) * Mathf.Pow(t, 0.6f); // a fast VS-like build-up, then a slower climb
                 target *= 1f + 0.12f * Mathf.Sin(0.9f * m + stage);         // the swell differs per stage
                 float interval = baseInterval * Mathf.Lerp(1f, 0.4f, t);
                 float elite = 0f;
-                if (IsDip(stage, m))
+                if (!tail && IsDip(stage, m))
                 {
                     target = Mathf.Max(8f, target * 0.3f);                  // few enemies ...
                     interval *= 1.5f;

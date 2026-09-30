@@ -34,6 +34,12 @@ namespace SoulHunter.UI
             foreach (var button in new[] { StartButton, PowerUpButton, CharacterBackButton, PowerUpBackButton, QuitButton })
                 if (button != null) button.onClick.AddListener(PlayClick);
             OptionsButton = CreateOptionsButton();
+            // Bug MIS B16 (2026-09-30): the focused Start button was pure blue, while every other screen focuses in orange.
+            foreach (var button in new[] { StartButton, PowerUpButton, OptionsButton, QuitButton })
+            {
+                var image = button != null ? button.targetGraphic as Image : null;
+                if (image != null) SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
+            }
             ShowHome();
         }
 

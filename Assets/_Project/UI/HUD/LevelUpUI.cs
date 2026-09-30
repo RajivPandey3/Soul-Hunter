@@ -76,8 +76,6 @@ namespace SoulHunter.Gameplay.UI
 
         private void ShowLevelUpScreen(List<UpgradeData> choices)
 {
-    Debug.Log($"[LevelUpUI] >>> ShowLevelUpScreen ENTER | choices={choices?.Count ?? -1}");
-
     if (choices == null)
     {
         Debug.LogError("[LevelUpUI] choices == NULL");
@@ -92,16 +90,13 @@ namespace SoulHunter.Gameplay.UI
     // VS: the player's stats are shown when leveling up (wiki Player_stats); a 4-column grid between the heading and the cards.
     if (_levelUpPanel != null)
     {
-        var stats = StatsPanel.Attach(_levelUpPanel.transform, new Vector2(0.2f, 0.56f), new Vector2(0.8f, 0.78f), 4, 22f);
-        if (stats != null) stats.FitBetween(HeadingRect(), _upgradeButtons, 0.2f, 0.8f);
+        var stats = StatsPanel.Attach(_levelUpPanel.transform, new Vector2(0.23f, 0.56f), new Vector2(0.83f, 0.78f), 4, 22f);
+        // From 23% of the width: the HUD's item slots end at about 21% (Bug MIS B09: the panel covered the 6th column).
+        if (stats != null) stats.FitBetween(HeadingRect(), _upgradeButtons, 0.23f, 0.83f);
     }
-
-    Debug.Log($"[LevelUpUI] Panel={_levelUpPanel} | PanelActive={(_levelUpPanel != null && _levelUpPanel.activeSelf)}");
-    Debug.Log($"[LevelUpUI] Buttons array null={_upgradeButtons == null} | count={(_upgradeButtons != null ? _upgradeButtons.Length : -1)}");
 
     if (SoulHunter.Gameplay.Audio.AudioManager.Instance != null)
     {
-        Debug.Log("[LevelUpUI] Playing LevelUp SFX");
         SoulHunter.Gameplay.Audio.AudioManager.Instance.PlaySFX(
             SoulHunter.Gameplay.Audio.AudioManager.Instance.LevelUpSound
         );
@@ -109,8 +104,6 @@ namespace SoulHunter.Gameplay.UI
 
     for (int i = 0; i < _upgradeButtons.Length; i++)
     {
-        Debug.Log($"[LevelUpUI] Processing button {i}");
-
         if (_upgradeButtons[i] == null)
         {
             Debug.LogError($"[LevelUpUI] Button {i} is NULL");
@@ -123,10 +116,6 @@ namespace SoulHunter.Gameplay.UI
 
             UpgradeData chosenUpgrade = choices[i];
 
-            Debug.Log(
-                $"[LevelUpUI] Button {i} -> {chosenUpgrade.UpgradeName} Lv.{chosenUpgrade.Level}"
-            );
-
             StyleCard(_upgradeButtons[i], chosenUpgrade);
 
             _upgradeButtons[i].onClick.RemoveAllListeners();
@@ -136,8 +125,6 @@ namespace SoulHunter.Gameplay.UI
             _upgradeButtons[i].onClick.AddListener(
                 () => OnCardClicked(finalUpgrade)
             );
-
-            Debug.Log($"[LevelUpUI] Button {i} configured successfully");
         }
         else
         {
@@ -145,19 +132,14 @@ namespace SoulHunter.Gameplay.UI
         }
     }
 
-    Debug.Log("[LevelUpUI] All buttons configured");
+    UpdateSpacers(Mathf.Min(choices.Count, _upgradeButtons.Length));
 
     BindActionButtons();
     RefreshActionButtons();
 
     if (_levelUpPanel != null)
     {
-        Debug.Log("[LevelUpUI] Activating LevelUpPanel");
         _levelUpPanel.SetActive(true);
-
-        Debug.Log(
-            $"[LevelUpUI] LevelUpPanel active AFTER SetActive = {_levelUpPanel.activeSelf}"
-        );
     }
     else
     {
@@ -172,8 +154,6 @@ namespace SoulHunter.Gameplay.UI
                 UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(card.gameObject);
                 break;
             }
-
-    Debug.Log("[LevelUpUI] <<< ShowLevelUpScreen EXIT");
 }
 
         private static int OwnedLevel(UpgradeData upgrade)
@@ -247,6 +227,10 @@ namespace SoulHunter.Gameplay.UI
             var text = CardPart<TextMeshProUGUI>(card, name, min, max);
             if (font != null) text.font = font;
             text.text = value;
+            // Bug MIS B12 (2026-09-30): the first level-up used larger fonts. The cards are built while the panel is still
+            // inactive, so TMP's Awake ran later and replaced the limits with its defaults (auto-size up to 72). A set size
+            // keeps them (the same fix as the character select screen).
+            text.fontSize = maxSize;
             text.enableAutoSizing = true;
             text.fontSizeMin = 14f;
             text.fontSizeMax = maxSize;
@@ -429,6 +413,45 @@ namespace SoulHunter.Gameplay.UI
                 template = card;
             }
             _upgradeButtons = cards.ToArray();
+        }
+
+        /// <summary>
+        /// Bug MIS B15 (2026-09-30): the cards sit in a layout group that shares the height among them, so with one choice
+        /// left the card stretched and the heading and stats panel jumped. Invisible spacers take the places of the missing
+        /// cards (up to the panel's 3), so every round keeps the 3-card layout. They are not buttons: focus skips them.
+        /// </summary>
+        public const int BaseCardCount = 3;
+
+        private void UpdateSpacers(int shown)
+        {
+            Button last = null;
+            for (int i = 0; i < _upgradeButtons.Length && i < Mathf.Max(1, shown); i++)
+                if (_upgradeButtons[i] != null) last = _upgradeButtons[i];
+            if (last == null) return;
+            Transform container = last.transform.parent;
+            int need = Mathf.Max(0, BaseCardCount - shown);
+            for (int i = 0; i < BaseCardCount; i++)
+            {
+                string name = "Card_Spacer_" + i;
+                Transform spacer = container.Find(name);
+                if (spacer == null && i < need)
+                {
+                    var go = new GameObject(name, typeof(RectTransform));
+                    go.layer = container.gameObject.layer;
+                    spacer = go.transform;
+                    spacer.SetParent(container, false);
+                }
+                if (spacer == null) continue;
+                // The same layout size as a card, so the group shares the height exactly as with three cards.
+                var cardRect = (RectTransform)last.transform;
+                var size = spacer.GetComponent<LayoutElement>() ?? spacer.gameObject.AddComponent<LayoutElement>();
+                size.minHeight = LayoutUtility.GetMinHeight(cardRect);
+                size.preferredHeight = LayoutUtility.GetPreferredHeight(cardRect);
+                size.flexibleHeight = LayoutUtility.GetFlexibleHeight(cardRect);
+                bool on = i < need;
+                spacer.gameObject.SetActive(on);
+                if (on) spacer.SetSiblingIndex(last.transform.GetSiblingIndex() + 1 + i);
+            }
         }
 
         public const string HeadingText = "LEVEL UP!";

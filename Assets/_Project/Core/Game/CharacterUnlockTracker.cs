@@ -57,8 +57,41 @@ namespace SoulHunter.Gameplay.Core
                 _lastCheckedSecond = second;
                 Evaluate();
             }
-            if (_notice != null && Time.unscaledTime >= _noticeUntil) Destroy(_notice);
+            UpdateNotice();
         }
+
+        /// <summary>
+        /// Bug MIS B05 (2026-09-30): an unlock during a level-up drew "New character unlocked" on top of "LEVEL UP!". While a
+        /// menu has the game paused the notice waits hidden and its time does not run; it shows (with its sound) once
+        /// play resumes, as the story card does.
+        /// </summary>
+        private void UpdateNotice()
+        {
+            if (_notice == null) return;
+            bool paused = SoulHunter.Core.Services.GameTime.IsPaused;
+            if (paused)
+            {
+                if (_notice.activeSelf) _notice.SetActive(false);
+                _noticeUntil += Time.unscaledDeltaTime;
+                return;
+            }
+            if (!_notice.activeSelf || !_noticeSounded)
+            {
+                _notice.SetActive(true);
+                if (!_noticeSounded)
+                {
+                    _noticeSounded = true;
+                    var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+                    if (audio != null) audio.PlaySFX(audio.UnlockSound);
+                }
+            }
+            if (Time.unscaledTime >= _noticeUntil) Destroy(_notice);
+        }
+
+        private bool _noticeSounded;
+
+        /// <summary>The unlock notice, while one exists (tests).</summary>
+        public GameObject Notice => _notice;
 
         private void HandleStageCleared(int stage)
         {
@@ -137,8 +170,8 @@ namespace SoulHunter.Gameplay.Core
             text.text = $"New character unlocked: {character.CharacterName}!";
             text.raycastTarget = false;
             _noticeUntil = Time.unscaledTime + NoticeSeconds;
-            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
-            if (audio != null) audio.PlaySFX(audio.UnlockSound);
+            _noticeSounded = false;
+            UpdateNotice(); // shown (with its sound) now, or held hidden until a menu closes
         }
     }
 }

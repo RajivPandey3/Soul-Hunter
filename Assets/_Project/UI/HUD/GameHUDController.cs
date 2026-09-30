@@ -66,6 +66,7 @@ namespace SoulHunter.Gameplay.UI
                 _stats.OnKillsChanged += UpdateKills;
                 UpdateKills(_stats.TotalKills);
                 _stats.OnGoldChanged += UpdateGoldUI;
+                HudGoldHold.Changed += RefreshGold;
                 UpdateGoldUI(_stats.TotalGoldCollected);
             }
         }
@@ -78,6 +79,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 _stats.OnKillsChanged -= UpdateKills;
                 _stats.OnGoldChanged -= UpdateGoldUI;
+                HudGoldHold.Changed -= RefreshGold;
             }
         }
 
@@ -89,13 +91,19 @@ namespace SoulHunter.Gameplay.UI
             }
         }
 
+        private int _runGold;
+
         private void UpdateGoldUI(int gold)
         {
+            _runGold = gold;
             if (_goldText != null)
             {
-                _goldText.text = "Gold: " + gold.ToString();
+                // Gold still being counted up on the chest screen is held back (HudGoldHold).
+                _goldText.text = "Gold: " + System.Math.Max(0, gold - HudGoldHold.Hidden).ToString();
             }
         }
+
+        private void RefreshGold() => UpdateGoldUI(_runGold);
 
         private void UpdateKills(int kills)
         {

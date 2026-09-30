@@ -22,7 +22,19 @@ namespace SoulHunter.Gameplay.VFX
         [SerializeField] private Color _flashColor = Color.white;
         [SerializeField] private float _flashDuration = 0.1f;
         [Tooltip("Tint multiplier during the flash. Values above 1 brighten the textured model toward white.")]
-        [SerializeField] private float _flashBrightness = 3f;
+        [SerializeField] private float _flashBrightness = 1.8f;
+
+        /// <summary>
+        /// Bug MIS B02 (2026-09-30): enemies (and the boss) looked like flat white silhouettes. A 3x flash saturated the model
+        /// to pure white, and every hit restarted it, so an enemy under constant fire (Garlic, several weapons) stayed white;
+        /// the timer also stood still while the game was paused. Now the flash is 1.8x, runs on real time, and after one
+        /// ends the next may start only after this gap, so a much-hit enemy blinks instead of staying white.
+        /// </summary>
+        public const float FlashGap = 0.15f;
+        private float _nextFlashAllowed = -1f;
+
+        /// <summary>True while the white hit flash is showing (tests).</summary>
+        public bool IsFlashing => _isFlashing;
 
         private readonly List<Renderer> _renderers = new List<Renderer>();
         private MaterialPropertyBlock _propBlock;
@@ -114,8 +126,8 @@ namespace SoulHunter.Gameplay.VFX
         private void TriggerFlash()
         {
             if (!SoulHunter.Core.Persistence.GameSettings.FlashingVfx) return; // Options: flashing VFX off
+            if (_isFlashing || Time.unscaledTime < _nextFlashAllowed) return; // a hit does not stretch or chain the flash
             _flashTimer = _flashDuration;
-            if (_isFlashing) return;
 
             _isFlashing = true;
             Color flash = _flashColor * _flashBrightness;
@@ -134,13 +146,14 @@ namespace SoulHunter.Gameplay.VFX
         {
             if (!_isFlashing) return;
 
-            _flashTimer -= Time.deltaTime;
+            _flashTimer -= Time.unscaledDeltaTime; // real time: a flash never freezes white during a pause
             if (_flashTimer <= 0f) EndFlash();
         }
 
         private void EndFlash()
         {
             _isFlashing = false;
+            _nextFlashAllowed = Time.unscaledTime + FlashGap;
             // Back to the material's own colour, or to the lasting tint (Defang).
             ApplyRest();
         }

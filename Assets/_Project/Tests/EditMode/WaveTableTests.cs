@@ -42,8 +42,35 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(late, Is.GreaterThan(early * 2), $"Stage {stage} grows over the stage.");
                 var drops = Enumerable.Range(1, table.Count - 1).Where(m => table[m].Minimum < table[m - 1].Minimum * 0.6f).ToList();
                 Assert.That(drops.Count, Is.GreaterThanOrEqualTo(3), $"Stage {stage} has quiet minutes, like VS's Mad Forest at 5:00.");
-                foreach (int m in drops) Assert.That(table[m].EliteBonus, Is.GreaterThan(0f), "A quiet minute sends tougher enemies.");
+                // Stage 1 is VS's own Mad Forest table, which has no elite bonus; the other stages' quiet minutes send tougher enemies.
+                if (stage > 1) foreach (int m in drops) Assert.That(table[m].EliteBonus, Is.GreaterThan(0f), "A quiet minute sends tougher enemies.");
                 Assert.That(table.Last().Interval, Is.LessThan(table.First().Interval), "Spawns come faster later on.");
+            }
+        }
+
+        /// <summary>
+        /// Bug MIS B01 (2026-09-30): the table covered 0-24 and minutes 25-29 reused minute 24; on Stage 1 that was a quiet
+        /// minute, so the last six minutes held ~84 enemies. Stage 1 now is VS's Mad Forest (wiki Mad_Forest, "Waves"), and
+        /// no stage ends on a quiet minute.
+        /// </summary>
+        [Test]
+        public void Stage1_IsVsMadForest_AndNoStageEndsOnAQuietMinute()
+        {
+            var stage1 = WaveTables.Build(1, 1f);
+            Assert.That(stage1.Count, Is.EqualTo(30), "Every stage lasts 30 minutes.");
+            int[] vsMinimum = { 15, 30, 50, 40, 30, 10, 20, 80, 100, 30, 10, 300, 20, 150, 20, 100, 100, 20, 60, 100, 100, 300, 200, 300, 300, 100, 150, 300, 300, 300 };
+            float[] vsInterval = { 1f, 1f, 0.5f, 0.25f, 1f, 1f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.1f, 0.25f, 0.5f, 0.1f, 0.1f, 0.1f, 1f, 0.5f, 0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
+            for (int m = 0; m < 30; m++)
+            {
+                Assert.That(stage1[m].Minimum, Is.EqualTo(vsMinimum[m]), $"Mad Forest minute {m} minimum");
+                Assert.That(stage1[m].Interval, Is.EqualTo(vsInterval[m]).Within(1e-4), $"Mad Forest minute {m} interval");
+            }
+            for (int stage = 2; stage <= 10; stage++)
+            {
+                var table = WaveTables.Build(stage, 1f);
+                Assert.That(table.Count, Is.EqualTo(30));
+                for (int m = 25; m < 30; m++)
+                    Assert.That(table[m].Minimum, Is.GreaterThanOrEqualTo(WaveTables.PeakMinimum(stage) * 0.8f), $"Stage {stage} minute {m} holds the peak.");
             }
         }
 

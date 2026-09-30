@@ -39,6 +39,11 @@ namespace SoulHunter.Tests.PlayMode
             var chestUI = LiveChestUI();
             Assert.IsFalse(chestUI.IsOpen, "No chest screen before a chest is collected.");
 
+            // Bug MIS B08: the HUD gold must not jump to the new total before the chest screen has counted it up.
+            var hud = Object.FindFirstObjectByType<SoulHunter.Gameplay.UI.GameHUDController>();
+            var hudGold = GetPrivateField<TMPro.TextMeshProUGUI>(hud, "_goldText");
+            int goldBefore = SoulHunter.Gameplay.Core.RunStatsTracker.Instance.TotalGoldCollected;
+
             var pool = PickupPoolManager.Instance;
             pool.SpawnChest(PlayerController.Instance.transform.position);
             var chest = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).FirstOrDefault(c => c.gameObject.activeInHierarchy);
@@ -57,6 +62,7 @@ namespace SoulHunter.Tests.PlayMode
 
             yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.WaitingToOpen, "the OPEN button");
             Assert.That(screen.OpenButton.gameObject.activeInHierarchy, Is.True);
+            Assert.That(hudGold.text, Is.EqualTo("Gold: " + goldBefore), "Before OPEN the HUD still shows the gold from before the chest.");
             Assert.That(screen.Preview, Is.Not.Null, "The chest is shown in 3D.");
             Assert.That(screen.Preview.Texture, Is.Not.Null);
             Assert.That(screen.Preview.LidOpen, Is.False, "The lid stays shut until OPEN.");
@@ -70,6 +76,7 @@ namespace SoulHunter.Tests.PlayMode
             var result = Object.FindFirstObjectByType<ChestLogicController>().LastResult;
             Assert.That(screen.RevealedCount, Is.EqualTo(result.Rewards.Count), "Every item is revealed.");
             Assert.That(screen.ShownGold, Is.EqualTo(result.Gold).And.GreaterThan(0), "The gold counts up to the chest's gold.");
+            Assert.That(hudGold.text, Is.EqualTo("Gold: " + (goldBefore + result.Gold)), "Once counted, the HUD shows the new total.");
             Assert.That(screen.DoneButton.gameObject.activeInHierarchy, Is.True);
             Assert.AreEqual(0f, Time.timeScale, "Still paused until DONE.");
 

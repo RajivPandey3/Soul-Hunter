@@ -505,10 +505,19 @@ namespace SoulHunter.Gameplay.Core
             return upgrades.Count - 1;
         }
 
-        /// <summary>A chest's item: the rarity-weighted draw without the level-up's owned-item checks.</summary>
+        /// <summary>
+        /// A chest's item. vampire.survivors.wiki/w/Treasure_Chest: chests contain "a random weapon or passive item the player
+        /// currently has, leveling up the item by one" (patch 0.2.7: "can now only level up existing weapons"). So only
+        /// owned items are drawn, by rarity weight. Nothing owned left to level: an empty list (the chest pays 25 gold).
+        /// Chests used to draw from the whole level-up pool and hand out new items (Bug MIS B04, 2026-09-30).
+        /// </summary>
         public List<UpgradeData> GetRandomValidUpgradesForChest()
         {
-            return GetRandomValidUpgrades(1, ownedChecks: false);
+            if (_weaponManager == null) return new List<UpgradeData>();
+            var owned = GetValidUpgrades().FindAll(up => _weaponManager.GetWeaponLevel(up.Type) > 0);
+            if (owned.Count == 0) return owned;
+            var weapons = _weaponManager;
+            return DrawChoices(owned, 1, type => weapons.GetWeaponLevel(type) > 0, 0f, () => Random.value);
         }
     }
 }

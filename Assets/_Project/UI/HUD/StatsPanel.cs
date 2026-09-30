@@ -27,6 +27,12 @@ namespace SoulHunter.Gameplay.UI
         private RectTransform _above;
         private Selectable[] _below;
         private float _minX, _maxX;
+        private float _fontSize;
+        private int _lines;
+        private float _bandHeight = -1f;
+
+        /// <summary>The row font size in use (tests).</summary>
+        public float FontSize => _fontSize;
         private float _nextRefresh;
         private LevelUpManager _levelUp;
 
@@ -146,6 +152,17 @@ namespace SoulHunter.Gameplay.UI
             float yMin = Mathf.Clamp01((cardsTop + gap - parentBottom) / span);
             float yMax = Mathf.Clamp01((top - gap - parentBottom) / span);
             if (yMax <= yMin) yMax = yMin; // no room: collapse rather than cover a card
+            // The font is sized from this whole free band (not from the panel, which then shrinks to the rows): sizing it from
+            // the shrunken panel fed back on itself and shrank the text every frame (seen in editor play, 2026-09-30).
+            _bandHeight = (yMax - yMin) * parent.rect.height;
+            // Bug MIS B09 (2026-09-30): the panel filled the whole band, leaving its lower half empty. It is only as tall
+            // as its rows need (the columns use 92% of the panel's height), hanging under the heading.
+            if (_fontSize > 0f && _lines > 0)
+            {
+                float needLocal = _lines * _fontSize * 1.25f / 0.92f;
+                float needWorld = needLocal * parent.lossyScale.y;
+                yMin = Mathf.Max(yMin, yMax - needWorld / span);
+            }
             var rect = (RectTransform)transform;
             rect.anchorMin = new Vector2(_minX, yMin);
             rect.anchorMax = new Vector2(_maxX, yMax);
@@ -183,10 +200,13 @@ namespace SoulHunter.Gameplay.UI
             int lines = perColumn + (title ? 1 : 0);
             // One font size for all columns: fits the column's height and its longest "label value" line.
             var columnRect = ((RectTransform)_columns[0].transform.parent).rect;
+            float columnHeight = _bandHeight > 0f ? _bandHeight * 0.92f : columnRect.height; // see Fit
             int longest = 0;
             foreach (var row in Rows) longest = Mathf.Max(longest, row.Label.Length + row.Value.Length + 2);
-            float size = Mathf.Min(_maxFontSize, columnRect.height / (lines * 1.25f), columnRect.width / Mathf.Max(1, longest * 0.55f));
+            float size = Mathf.Min(_maxFontSize, columnHeight / (lines * 1.25f), columnRect.width / Mathf.Max(1, longest * 0.55f));
             size = Mathf.Max(8f, size);
+            _fontSize = size;
+            _lines = lines;
             for (int c = 0; c < _columns.Length; c++)
             {
                 var labels = new System.Text.StringBuilder();

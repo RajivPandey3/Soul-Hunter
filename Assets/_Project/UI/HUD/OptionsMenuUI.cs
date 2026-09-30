@@ -415,7 +415,13 @@ namespace SoulHunter.Gameplay.UI
             colors.highlightedColor = new Color(0.3f, 0.34f, 0.52f, 1f);
             colors.selectedColor = new Color(0.85f, 0.45f, 0.08f, 1f);
             colors.pressedColor = new Color(1f, 0.7f, 0.2f, 1f);
+            // Bug MIS B17 (2026-09-30): a disabled button (Reroll/Skip/Banish with no charges) used Unity's light grey, so
+            // its white label was hard to read. Disabled is a dim dark instead.
+            colors.disabledColor = new Color(0.1f, 0.1f, 0.14f, 0.8f);
             colors.colorMultiplier = 1f;
+            // Bug MIS B13 (2026-09-30): a focused level-up card showed a dull brown, the midpoint of Unity's 0.1 s fade from
+            // the card colour to the focus orange. Focus changes at once.
+            colors.fadeDuration = 0f;
             selectable.colors = colors;
         }
 

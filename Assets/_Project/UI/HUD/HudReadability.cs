@@ -20,7 +20,15 @@ namespace SoulHunter.Gameplay.UI
 
         public void Setup(params TMP_Text[] labels)
         {
-            foreach (var label in labels) MakeReadable(label);
+            foreach (var label in labels)
+            {
+                MakeReadable(label);
+                if (label == null) continue;
+                // Bug MIS B14: "Total Kills:" wrapped onto two lines at four digits and the HUD shifted; one line.
+                label.textWrappingMode = TextWrappingModes.NoWrap;
+                label.overflowMode = TextOverflowModes.Overflow;
+                HudBacking.Add(label);
+            }
 
             var go = new GameObject("StageProgress_Text", typeof(RectTransform));
             var rect = (RectTransform)go.transform;
@@ -35,6 +43,7 @@ namespace SoulHunter.Gameplay.UI
             _stageLabel.fontSizeMax = 34f;
             _stageLabel.raycastTarget = false;
             MakeReadable(_stageLabel);
+            HudBacking.Add(_stageLabel);
 
             _progression = LevelProgressionManager.Instance;
             if (_progression != null) _progression.OnStageStarted += HandleStageStarted;
@@ -74,6 +83,57 @@ namespace SoulHunter.Gameplay.UI
             if (!label.gameObject.activeInHierarchy) return;
             label.outlineWidth = 0.25f;
             label.outlineColor = new Color32(0, 0, 0, 255);
+        }
+    }
+
+    /// <summary>
+    /// Bug MIS B06 (2026-09-30): white damage numbers flying behind the white HUD text made it unreadable ("Tota50 Kills").
+    /// A dark translucent bar sits behind each HUD label, sized to its text every frame, so numbers passing behind are
+    /// dimmed and the label stays clean. The HUD canvas draws over the world, so the bar covers them.
+    /// </summary>
+    public sealed class HudBacking : MonoBehaviour
+    {
+        public static readonly Color Color = new Color(0f, 0f, 0f, 0.55f);
+        private const float Padding = 10f;
+        private TMP_Text _label;
+        private RectTransform _rect;
+
+        public static HudBacking Add(TMP_Text label)
+        {
+            if (label == null || label.transform.parent == null) return null;
+            var go = new GameObject(label.name + "_Backing", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(label.transform.parent, false);
+            rect.SetSiblingIndex(label.transform.GetSiblingIndex()); // drawn just before (behind) the label
+            var image = go.GetComponent<UnityEngine.UI.Image>();
+            image.color = Color;
+            image.raycastTarget = false;
+            go.AddComponent<UnityEngine.UI.LayoutElement>().ignoreLayout = true;
+            var backing = go.AddComponent<HudBacking>();
+            backing._label = label;
+            backing._rect = rect;
+            return backing;
+        }
+
+        private void LateUpdate()
+        {
+            if (_label == null) { Destroy(gameObject); return; }
+            bool show = _label.isActiveAndEnabled && !string.IsNullOrEmpty(_label.text);
+            var image = GetComponent<UnityEngine.UI.Image>();
+            image.enabled = show;
+            if (!show) return;
+            // The label's drawn text, in the parent's space.
+            Bounds b = _label.textBounds;
+            var labelRect = _label.rectTransform;
+            Vector3 min = labelRect.TransformPoint(b.min), max = labelRect.TransformPoint(b.max);
+            var parent = (RectTransform)_rect.parent;
+            Vector3 pMin = parent.InverseTransformPoint(min), pMax = parent.InverseTransformPoint(max);
+            _rect.anchorMin = _rect.anchorMax = parent.pivot;
+            _rect.pivot = new Vector2(0.5f, 0.5f);
+            Vector2 centre = (pMin + pMax) * 0.5f, size = new Vector2(Mathf.Abs(pMax.x - pMin.x), Mathf.Abs(pMax.y - pMin.y)) + Vector2.one * Padding * 2f;
+            // anchors sit on the parent's pivot, so the position is relative to it
+            _rect.anchoredPosition = centre;
+            _rect.sizeDelta = size;
         }
     }
 }

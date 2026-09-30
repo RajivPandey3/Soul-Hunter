@@ -1377,6 +1377,29 @@ Validation:
 
 Not yet played by the owner.
 
+### Level 1 Bug MIS fixed (owner: "sab bug fix karo safely", 2026-09-30)
+
+Owner's CTO brief: play Level 1 from the Play button to 30:00, only note bugs, show them, fix after approval. The register is `Docs/BUG_MIS_Level1.md` (runs `D:/SoulHunter-Validation/cto-level1-runA`, `-runC`; 17 bugs, 7 observations). All 17 are fixed:
+- **B01 (waves):** every minute table covers 30 minutes (it covered 0-24, and minutes 25-29 reused minute 24; on Stage 1 that was a quiet minute, so the last six minutes held ~84 enemies). Stage 1 now plays the VS Mad Forest table exactly, from vampire.survivors.wiki/w/Mad_Forest "Waves" (`WaveTables.MadForestMinimum/Interval`; no elite bonus, which is not a VS field). Stages 2-10 keep their own curve for 0-24 and hold its peak for 25-29. The 10 wave assets were rebuilt.
+- **B02 (white silhouettes):** the hit flash is 1.8× (was 3×, which saturated models to flat white), runs on real time (it froze white during pauses), and waits 0.15 s (`DamageFlash.FlashGap`) before flashing again, so an enemy under constant hits blinks.
+- **B03:** `WeaponEvolutionData.DisplayName` shows evolution IDs as names on the chest ("Evo_BloodyTear" → "Bloody Tear"). The names themselves are still VS names (no-copy rule, Phase 2).
+- **B04 (VS):** chests draw only owned items (vampire.survivors.wiki/w/Treasure_Chest: "a random weapon or passive item the player currently has"); nothing owned left pays the 25-gold coin bag.
+- **B05:** the unlock notice waits hidden while a menu pauses the game.
+- **B06, B14:** HUD labels get a dark backing sized to their text (`HudBacking`) and stay on one line.
+- **B07:** damage numbers are drawn 4 units toward the orthographic camera (same screen spot), so models no longer cut them.
+- **B08:** the HUD holds back the chest's gold until the count-up reaches it (`HudGoldHold`).
+- **B09:** the level-up stats panel starts at 23% of the width (the HUD item slots end near 21%) and is only as tall as its rows. The font is sized from the free band; sizing it from the shrinking panel shrank the text every frame (caught in editor play, fixed before commit).
+- **B10:** Gold Pouch uses `SH10_Icon_GoldPouch.png` (the approved gold Soul Coin rendered in Blender, transparent); Roast Chicken uses the project's `Floor_Chicken` sprite (`GameContentCatalog.GoldPouchIcon/RoastChickenIcon`); the chest's coin-bag card uses the gold icon too.
+- **B11:** the chest preview's hinge seam used every part named "Lid*", including the wide LidBand rings, so most of the body swung up with the lid. Only the lid shell counts now; the body stays and the soul seam glows inside.
+- **B12:** level-up card texts get a size before auto-size (TMP defaults up to 72 replaced the limits on the first screen).
+- **B13, B16, B17:** `OptionsMenuUI.ApplyFocusColors` changes focus at once (no brown fade midpoint), sets a dark disabled colour (Reroll/Skip/Banish), and the main menu buttons use it (orange focus, not blue).
+- **B15:** invisible card-sized spacers keep the 3-card layout when fewer cards are offered.
+- Also: `LevelUpUI` no longer writes ~10 `Debug.Log` lines per level-up (costly in the editor; observation O2).
+- Tests: `WaveTableTests`, `WaveTablePlayModeTests`, `DamageFlashPlayModeTests`, `ChestNameTests`, `LevelUpActionTests`, `ChestRewardTests` (now owns the item first), `UnlockNoticePlayModeTests`, `HudFixesPlayModeTests`, `ChestFlowPlayModeTests`, `StatsPanelPlayModeTests`, `RewardIconTests`, `ChestPreviewPlayModeTests`, `LevelUpScreenPlayModeTests`.
+- The stats-panel font loop only shows at 1080p (in the test runner's small window the font is limited by width), so it was checked in editor play (`autoplay-editor` run `cto-level1-verify2`).
+- Editor play `cto-level1-verify` (8 min from the menu): 0 errors, min 57 FPS; the screenshots show the orange menu focus, the chest opening with only its lid, owned-item chest rewards, HUD backings and one-line kills. `cto-level1-verify2` (3 min): the level-up panel readable and clear of the HUD row.
+- Not yet played by the owner.
+
 ### Character select screen repaired (owner: "play button click karne ke baad aane bale panel to tumne bekar bana diya", 2026-09-30)
 
 The owner only started seeing this screen again once Play booted through the menu (`PlayFromBootstrap`). Three causes, all older than that change:

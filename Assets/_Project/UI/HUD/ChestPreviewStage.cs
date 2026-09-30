@@ -156,9 +156,12 @@ namespace SoulHunter.Gameplay.UI
         /// </summary>
         private void BuildHinge(Dictionary<Renderer, Bounds> turned)
         {
+            // The seam is the bottom of the lid shell itself ("Lid"). The LidBand rings are wide circles that reach far below
+            // it; counting them put the seam low, so most of the body swung up with the lid and an open chest showed a bare
+            // slab under an upright panel (Bug MIS B11, 2026-09-30).
             float seam = float.MaxValue;
             foreach (var pair in turned)
-                if (pair.Key.name.StartsWith("Lid")) seam = Mathf.Min(seam, pair.Value.min.y);
+                if (pair.Key.name.StartsWith("Lid") && !pair.Key.name.StartsWith("LidBand")) seam = Mathf.Min(seam, pair.Value.min.y);
             if (seam == float.MaxValue) seam = _bounds.center.y + _bounds.extents.y * 0.25f; // no named lid: the top quarter
 
             var hinge = new GameObject("LidHinge").transform;

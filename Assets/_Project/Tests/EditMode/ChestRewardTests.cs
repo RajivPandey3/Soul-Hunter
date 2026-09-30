@@ -54,6 +54,15 @@ namespace SoulHunter.Tests.EditMode
             typeof(LevelUpManager).GetField("_allUpgrades", Private).SetValue(_levelUps, new List<UpgradeData>(_pool));
         }
 
+        /// <summary>
+        /// VS (Treasure_Chest): chests only level up items the player has (Bug MIS B04), so the player owns the item first.
+        /// </summary>
+        private void Own(UpgradeData.UpgradeType type, int level)
+        {
+            var levels = (Dictionary<UpgradeData.UpgradeType, int>)typeof(WeaponManager).GetField("_weaponLevels", Private).GetValue(_weapons);
+            levels[type] = level;
+        }
+
         [Test]
         public void FirstSixChests_FollowTheVsSequence_ThenLuckRolls()
         {
@@ -86,10 +95,11 @@ namespace SoulHunter.Tests.EditMode
         public void ThreeItemChest_AppliesThreeUpgrades()
         {
             UsePool(UpgradeData.UpgradeType.Spinach, 8);
+            Own(UpgradeData.UpgradeType.Spinach, 1);
 
             string message = _chest.ProcessChest(_weapons, _levelUps, 3);
 
-            Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(3));
+            Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(4), "Three levels on top of the owned level 1.");
             Assert.That(message, Does.Contain("x3"));
         }
 
@@ -98,6 +108,7 @@ namespace SoulHunter.Tests.EditMode
         {
             // Learning Comment: Sirf 2 upgrades bache hon toh 5-item chest 2 hi de, crash ya loop na kare.
             UsePool(UpgradeData.UpgradeType.Spinach, 2);
+            Own(UpgradeData.UpgradeType.Spinach, 1);
 
             _chest.ProcessChest(_weapons, _levelUps, 5);
 
@@ -114,6 +125,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(ChestLogicController.ChestGold(5, 1f), Is.EqualTo(1000));
 
             UsePool(UpgradeData.UpgradeType.Spinach, 8);
+            Own(UpgradeData.UpgradeType.Spinach, 1);
             string message = _chest.ProcessChest(_weapons, _levelUps, 1, true, 0f);
             Assert.That(message, Does.Contain("Gold: +100"), "A chest with an upgrade still pays its gold.");
         }
@@ -123,15 +135,17 @@ namespace SoulHunter.Tests.EditMode
         {
             // VS Big Coin Bag: 25 gold for each item with nothing left to upgrade, on top of the chest gold.
             UsePool(UpgradeData.UpgradeType.Spinach, 2);
+            Own(UpgradeData.UpgradeType.Spinach, 1);
             string message = _chest.ProcessChest(_weapons, _levelUps, 5, true, 0f);
             Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(2));
-            Assert.That(message, Does.Contain("Gold: +575"), "500 chest gold + 3 maxed items x 25.");
+            Assert.That(message, Does.Contain("Gold: +600"), "500 chest gold + 4 maxed items x 25 (one level was left).");
         }
 
         [Test]
         public void Chest_RecordsWhatItGave_ForTheOpeningScreen()
         {
-            UsePool(UpgradeData.UpgradeType.Spinach, 2);
+            UsePool(UpgradeData.UpgradeType.Spinach, 3);
+            Own(UpgradeData.UpgradeType.Spinach, 1);
             _chest.ProcessChest(_weapons, _levelUps, 5, true, 0f);
             var result = _chest.LastResult;
             Assert.That(result.ItemCount, Is.EqualTo(5));

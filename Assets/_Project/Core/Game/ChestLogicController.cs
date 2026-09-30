@@ -156,8 +156,9 @@ namespace SoulHunter.Gameplay.Core
                 {
                     evolved = true;
                     Debug.Log($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
-                    rewards.Add($"<color=red>Ultimate Power: {evolvedName}</color>");
-                    result.Rewards.Add(new ChestReward { Name = evolvedName, Icon = weaponManager.LastEvolvedIcon, Level = 1, IsEvolution = true });
+                    string shownName = WeaponEvolutionData.DisplayName(evolvedName);
+                    rewards.Add($"<color=red>Ultimate Power: {shownName}</color>");
+                    result.Rewards.Add(new ChestReward { Name = shownName, Icon = weaponManager.LastEvolvedIcon, Level = 1, IsEvolution = true });
                     continue;
                 }
 
@@ -178,7 +179,8 @@ namespace SoulHunter.Gameplay.Core
                     continue;
                 }
 
-                result.Rewards.Add(new ChestReward { Name = "Coin Bag", IsCoinBag = true });
+                var content = GameContentCatalog.Load();
+                result.Rewards.Add(new ChestReward { Name = "Coin Bag", IsCoinBag = true, Icon = content != null ? content.GoldPouchIcon : null });
                 maxedItems++; // 3. nothing left to upgrade: VS pays a Big Coin Bag for this item
             }
 

@@ -134,6 +134,33 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(_manager.GetRandomValidUpgradesForChest().Exists(u => u.Type == banished.Type), Is.False);
         }
 
+        /// <summary>
+        /// Bug MIS B04 (2026-09-30): chests handed out new items ("Knife NEW!"). vampire.survivors.wiki/w/Treasure_Chest:
+        /// chests contain "a random weapon or passive item the player currently has, leveling up the item by one".
+        /// </summary>
+        [Test]
+        public void Chests_OnlyLevelUpOwnedItems()
+        {
+            UsePool(UpgradeData.UpgradeType.MagicWand, UpgradeData.UpgradeType.Whip);
+            Assert.That(_manager.GetRandomValidUpgradesForChest(), Is.Empty, "Nothing owned: the chest gives no item (it pays gold).");
+
+            var whip2 = ScriptableObject.CreateInstance<UpgradeData>();
+            whip2.Type = UpgradeData.UpgradeType.Whip;
+            whip2.Level = 2;
+            _pool.Add(whip2);
+            typeof(LevelUpManager).GetField("_allUpgrades", Private).SetValue(_manager, new List<UpgradeData>(_pool));
+            var levels = (Dictionary<UpgradeData.UpgradeType, int>)typeof(WeaponManager).GetField("_weaponLevels", Private).GetValue(_weapons);
+            levels[UpgradeData.UpgradeType.Whip] = 1;
+
+            for (int i = 0; i < 30; i++)
+            {
+                var drawn = _manager.GetRandomValidUpgradesForChest();
+                Assert.That(drawn.Count, Is.EqualTo(1));
+                Assert.That(drawn[0].Type, Is.EqualTo(UpgradeData.UpgradeType.Whip), "Only the owned Whip, never a new Magic Wand.");
+                Assert.That(drawn[0].Level, Is.EqualTo(2), "Levelled by one.");
+            }
+        }
+
         [Test]
         public void BanishingTheLastItem_OffersGoldOrChicken_ThenCloses()
         {

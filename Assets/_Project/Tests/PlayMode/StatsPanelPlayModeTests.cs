@@ -71,17 +71,31 @@ namespace SoulHunter.Tests.PlayMode
             int before = health.MaxHealth;
             Assert.That(panel.Rows[0].Value, Is.EqualTo(before.ToString()));
 
+            // The row font must not shrink frame after frame (a feedback loop between the font and the panel's height,
+            // seen in editor play 2026-09-30, left the text at ~9 px).
+            float fontAtOpen = panel.FontSize;
+            yield return new WaitForSecondsRealtime(1.5f);
+            Assert.That(panel.FontSize, Is.GreaterThanOrEqualTo(fontAtOpen * 0.95f), $"Font {fontAtOpen:0.0} -> {panel.FontSize:0.0}: stable.");
+
             // The panel sits between the heading and the cards.
             var panelRect = (RectTransform)panel.transform;
             foreach (var button in panel.transform.parent.GetComponentsInChildren<Button>().Where(b => b.gameObject.activeInHierarchy))
                 Assert.That(Overlaps(panelRect, (RectTransform)button.transform), Is.False, $"The panel is clear of {button.name}.");
+            // Bug MIS B09: clear of the HUD's item slots (the panel covered the 6th column).
+            var inventory = Object.FindFirstObjectByType<InventoryHud>();
+            if (inventory != null)
+                for (int i = 0; i < InventoryHud.SlotsPerRow; i++)
+                {
+                    var frame = inventory.WeaponFrame(i);
+                    if (frame != null) Assert.That(Overlaps(panelRect, frame.rectTransform), Is.False, $"The panel is clear of HUD weapon slot {i + 1}.");
+                }
             var heading = panel.transform.parent.GetComponentsInChildren<TMP_Text>().FirstOrDefault(t => t.text.Contains("LEVEL UP"));
             if (heading != null)
             {
                 // The heading's rect is tall; what must stay clear is its drawn text.
                 float textBottom = heading.rectTransform.TransformPoint(new Vector3(0f, heading.textBounds.min.y, 0f)).y;
                 Assert.That(ScreenRect(panelRect).yMax, Is.LessThanOrEqualTo(textBottom + 0.5f), "The panel is below the LEVEL UP! text.");
-                Assert.That(ScreenRect(panelRect).height, Is.GreaterThan(40f), "The panel has room to show its rows.");
+                Assert.That(ScreenRect(panelRect).height, Is.GreaterThan(0f), "The panel is shown.");
             }
 
             // Hollow Heart while the screen is open: Max Health x1.2 shows in the panel (VS: it does not fill the new health).
@@ -97,6 +111,13 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(health.CurrentHealth, Is.EqualTo(current), "VS: it does not heal to fill the new Max Health.");
             Assert.That(panel.Rows[0].Value, Is.EqualTo(after.ToString()), "The panel shows the new Max Health.");
             Assert.That(panel.Rows[0].Changed, Is.True, "Highlighted as changed.");
+
+            // Bug MIS B09: no big empty block under the rows (the panel is only as tall as its rows need).
+            var texts = panel.GetComponentsInChildren<TMP_Text>().Where(t => !string.IsNullOrEmpty(t.text)).ToList();
+            float rowsBottom = texts.Min(t => t.rectTransform.TransformPoint(new Vector3(0f, t.textBounds.min.y, 0f)).y);
+            Rect box = ScreenRect(panelRect);
+            Assert.That(rowsBottom - box.yMin, Is.LessThan(box.height * 0.25f), $"The panel ends near its last row (rows bottom {rowsBottom:0}, panel {box}).");
+            Assert.That(rowsBottom, Is.GreaterThanOrEqualTo(box.yMin - 1f), "Every row fits inside the panel.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

@@ -50,7 +50,17 @@ namespace SoulHunter.Gameplay.UI
         public bool CanSkip { get; private set; }
         public int ItemCount => _result != null ? _result.ItemCount : 0;
         public int RevealedCount { get; private set; }
-        public int ShownGold { get; private set; }
+        private int _shownGold;
+        /// <summary>The gold counted so far; the HUD holds back the rest (HudGoldHold) until the count-up reaches it.</summary>
+        public int ShownGold
+        {
+            get => _shownGold;
+            private set
+            {
+                _shownGold = value;
+                HudGoldHold.Set(gameObject.activeInHierarchy && _result != null ? _result.Gold - value : 0);
+            }
+        }
         public bool BackgroundLit => _circle != null && _circle.color.a > 0.05f;
         public int FireworksShown { get; private set; }
         public ChestPreviewStage Preview => _stage;
@@ -177,9 +187,9 @@ namespace SoulHunter.Gameplay.UI
             _result = result ?? new ChestResult { ItemCount = 1 };
             CanSkip = canSkip;
             RevealedCount = 0;
-            ShownGold = 0;
             FireworksShown = 0;
             gameObject.SetActive(true);
+            ShownGold = 0; // after activation: the HUD now holds back the whole chest gold
             transform.SetAsLastSibling();
             ClearCards();
             if (_stage != null) Destroy(_stage.gameObject);
@@ -285,12 +295,14 @@ namespace SoulHunter.Gameplay.UI
             if (_stage != null) { Destroy(_stage.gameObject); _stage = null; }
             foreach (var spark in _sparks) if (spark.img != null) Destroy(spark.img.gameObject);
             _sparks.Clear();
+            HudGoldHold.Set(0);
             gameObject.SetActive(false);
             Closed?.Invoke();
         }
 
         private void OnDestroy()
         {
+            HudGoldHold.Set(0);
             if (_stage != null) Destroy(_stage.gameObject);
         }
 
