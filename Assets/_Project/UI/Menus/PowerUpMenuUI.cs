@@ -43,7 +43,8 @@ namespace SoulHunter.UI
         };
 
         private static readonly Color PlainCell = new Color(0.13f, 0.1f, 0.13f, 0.92f), SelectedCell = new Color(0.62f, 0.4f, 0.08f, 0.95f),
-            MaxedCell = new Color(0.12f, 0.32f, 0.14f, 0.92f);
+            MaxedCell = new Color(0.12f, 0.32f, 0.14f, 0.92f), LockedCell = new Color(0.07f, 0.07f, 0.08f, 0.92f),
+            LockedText = new Color(0.55f, 0.55f, 0.58f, 1f);
 
         private EconomyService _economy;
         private SaveService _saveService;
@@ -188,7 +189,8 @@ namespace SoulHunter.UI
         public void BuySelected()
         {
             var data = _saveService != null ? _saveService.CurrentData : null;
-            if (_economy == null || data == null || PowerUps.IsMaxed(data, _selected)) return;
+            // VS: a locked rank cannot be bought (PowerUpUnlocks).
+            if (_economy == null || data == null || !PowerUps.CanBuyNext(data, _selected)) return;
             int price = PowerUps.Price(data, _selected);
             if (!_economy.SpendGold(price)) { Debug.Log("[PowerUpMenu] Not enough gold!"); return; }
             PowerUps.SetRank(data, _selected, PowerUps.Rank(data, _selected) + 1);
@@ -218,27 +220,32 @@ namespace SoulHunter.UI
             {
                 var info = PowerUps.Info(pair.Key);
                 int rank = PowerUps.Rank(data, pair.Key);
+                bool locked = PowerUpUnlocks.UnlockedRanks(data, pair.Key) == 0;
                 var text = pair.Value.GetComponentInChildren<TextMeshProUGUI>();
                 if (text != null)
                 {
                     text.fontSize = 24f;
-                    text.color = Color.white;
+                    text.color = locked ? LockedText : Color.white;
                     text.alignment = TextAlignmentOptions.MidlineLeft;
-                    text.text = $"{info.Name}\n{rank}/{info.MaxRank}";
+                    text.text = locked ? $"{info.Name}\nLOCKED" : $"{info.Name}\n{rank}/{info.MaxRank}";
                 }
                 // Dark cells so the white names read on the menu art; gold for the selected one, green once maxed.
-                pair.Value.image.color = pair.Key == _selected ? SelectedCell : (rank >= info.MaxRank ? MaxedCell : PlainCell);
+                pair.Value.image.color = pair.Key == _selected ? SelectedCell : (rank >= info.MaxRank ? MaxedCell : (locked ? LockedCell : PlainCell));
             }
             if (_info != null)
             {
                 var info = PowerUps.Info(_selected);
                 int rank = PowerUps.Rank(data, _selected);
                 bool maxed = rank >= info.MaxRank;
-                string price = maxed ? "MAX" : $"Price: {PowerUps.Price(data, _selected)}";
-                _info.text = $"<b>{info.Name}</b>  {rank}/{info.MaxRank}\n{info.Description}\n{price}";
+                int unlocked = PowerUpUnlocks.UnlockedRanks(data, _selected);
+                string condition = PowerUpUnlocks.NextConditionText(data, _selected);
+                string price = maxed ? "MAX" : (rank >= unlocked ? "LOCKED" : $"Price: {PowerUps.Price(data, _selected)}");
+                string unlock = condition == null ? "" : $"\n<color=#FFB347>Unlock{(unlocked > 0 ? " next rank" : "")}: {condition}</color>";
+                if (unlocked > 0 && unlocked < info.MaxRank) unlock = $"\nUnlocked ranks: {unlocked}/{info.MaxRank}" + unlock;
+                _info.text = $"<b>{info.Name}</b>  {rank}/{info.MaxRank}\n{info.Description}\n{price}{unlock}";
             }
             if (_buyButton != null)
-                _buyButton.interactable = data != null && !PowerUps.IsMaxed(data, _selected) && _economy != null && _economy.CurrentGold >= PowerUps.Price(data, _selected);
+                _buyButton.interactable = data != null && PowerUps.CanBuyNext(data, _selected) && _economy != null && _economy.CurrentGold >= PowerUps.Price(data, _selected);
             if (_refundButton != null) _refundButton.interactable = data != null && PowerUps.TotalBought(data) > 0;
         }
     }

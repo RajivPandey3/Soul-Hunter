@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.Linq;
 using SoulHunter.Gameplay.Player;
 using SoulHunter.Gameplay.Combat;
 
@@ -310,21 +311,37 @@ namespace SoulHunter.Gameplay.UI
             if (_levelUpManager == null) return;
             foreach (var action in new[] { _rerollButton, _skipButton, _banishButton })
                 WhitenLabels(action); // readable on the dark action buttons (was red)
+            // VS (wiki Level_up): Reroll, Skip and Banish "become available in this screen if the player invests in these
+            // PowerUps" or plays a character that starts with them; they start at 0 (Reroll/Skip/Banish pages). So a
+            // button shows only while it has a use left (owner, 2026-10-01: the "(0)" buttons looked broken).
             if (_rerollButton != null)
             {
                 SetButtonLabel(_rerollButton, $"Reroll ({_levelUpManager.RerollsLeft})");
-                _rerollButton.interactable = _levelUpManager.RerollsLeft > 0;
+                ShowAction(_rerollButton, _levelUpManager.RerollsLeft > 0);
             }
             if (_skipButton != null)
             {
                 SetButtonLabel(_skipButton, $"Skip ({_levelUpManager.SkipsLeft})");
-                _skipButton.interactable = _levelUpManager.SkipsLeft > 0;
+                ShowAction(_skipButton, _levelUpManager.SkipsLeft > 0);
             }
             if (_banishButton != null)
             {
                 SetButtonLabel(_banishButton, _banishMode ? "Cancel Banish" : $"Banish ({_levelUpManager.BanishesLeft})");
-                _banishButton.interactable = _banishMode || _levelUpManager.BanishesLeft > 0;
+                ShowAction(_banishButton, _banishMode || _levelUpManager.BanishesLeft > 0);
             }
+            // The shared row goes too when it has nothing to offer, so the cards do not keep an empty strip.
+            var anyAction = new[] { _rerollButton, _skipButton, _banishButton }.FirstOrDefault(b => b != null);
+            if (anyAction != null && anyAction.transform.parent != null && anyAction.transform.parent.name == ActionBarName)
+            {
+                bool anyShown = new[] { _rerollButton, _skipButton, _banishButton }.Any(b => b != null && b.gameObject.activeSelf);
+                if (anyAction.transform.parent.gameObject.activeSelf != anyShown) anyAction.transform.parent.gameObject.SetActive(anyShown);
+            }
+        }
+
+        private static void ShowAction(Button button, bool available)
+        {
+            button.interactable = available;
+            if (button.gameObject.activeSelf != available) button.gameObject.SetActive(available);
         }
 
         /// <summary>

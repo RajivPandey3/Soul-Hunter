@@ -142,13 +142,14 @@ namespace SoulHunter.Tests.PlayMode
                     .Concat(card.GetComponentsInChildren<UnityEngine.UI.Text>().Select(t => t.text)).ToList();
                 Assert.That(stray, Is.Empty, "Stray labels on the card: " + string.Join(", ", stray));
             }
-            // Reroll / Skip / Banish: white labels (their label is a legacy Text, which stayed red).
+            // Reroll / Skip / Banish: white labels (their label is a legacy Text, which stayed red). With 0 uses they are hidden
+            // (VS, 2026-10-01), so the hidden buttons are checked too.
             foreach (var actionName in new[] { "Reroll_Button", "Skip_Button", "Banish_Button" })
             {
-                var action = Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None).FirstOrDefault(b => b.isActiveAndEnabled && b.name == actionName);
+                var action = Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.name == actionName);
                 Assert.That(action, Is.Not.Null, actionName);
-                var colours = action.GetComponentsInChildren<UnityEngine.UI.Text>().Select(t => t.color)
-                    .Concat(action.GetComponentsInChildren<TMPro.TextMeshProUGUI>().Where(t => !t.name.StartsWith("Card_")).Select(t => t.color)).ToList();
+                var colours = action.GetComponentsInChildren<UnityEngine.UI.Text>(true).Select(t => t.color)
+                    .Concat(action.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).Where(t => !t.name.StartsWith("Card_")).Select(t => t.color)).ToList();
                 Assert.That(colours, Is.Not.Empty, actionName + " has a visible label.");
                 Assert.That(colours.All(c => c == Color.white), $"{actionName} label colours: {string.Join(", ", colours)}");
             }

@@ -30,7 +30,7 @@ namespace SoulHunter.Tests.PlayMode
             GameTime.Pause(this);
             try
             {
-                show.Invoke(tracker, new object[] { character });
+                show.Invoke(tracker, new object[] { $"New character unlocked: {character.CharacterName}!" });
                 yield return null;
                 Assert.That(tracker.Notice, Is.Not.Null, "The notice exists.");
                 Assert.That(tracker.Notice.activeSelf, Is.False, "Hidden while a menu has the game paused.");

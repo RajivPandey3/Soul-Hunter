@@ -68,6 +68,7 @@ namespace SoulHunter.Tests.PlayMode
             {
                 save.PowerUpRanks.Clear();
                 save.SoulEggs?.Clear();
+                PowerUpUnlocks.UnlockEverything(save); // VS locked PowerUps (2026-10-01)
                 foreach (var info in PowerUps.All) PowerUps.SetRank(save, info.Id, info.MaxRank);
             });
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
@@ -137,6 +138,7 @@ namespace SoulHunter.Tests.PlayMode
             {
                 save.PowerUpRanks.Clear();
                 save.SoulEggs?.Clear();
+                PowerUpUnlocks.UnlockEverything(save);
                 PowerUps.SetRank(save, PowerUpId.Skip, 5);
                 PowerUps.SetRank(save, PowerUpId.Reroll, 5);
                 PowerUps.SetRank(save, PowerUpId.Preserve, 5);

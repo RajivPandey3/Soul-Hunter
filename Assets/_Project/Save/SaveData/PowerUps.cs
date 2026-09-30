@@ -37,8 +37,7 @@ namespace SoulHunter.Core.Persistence
     /// PowerUp's page, fetched 2026-09-30). Every value, rank limit and initial cost is the wiki's. Price of the next rank:
     /// InitialPrice when nothing at all has been bought, else InitialPrice x (1 + Bought) + floor(20 x 1.1^TotalBought).
     /// Refund returns every rank's price. The four Seals are left out: they are used in VS's Collection menu, which Soul
-    /// Hunter does not have. VS unlocks some ranks (Reroll, Skip, Banish, Omni, Charm, Defang) through achievements and
-    /// items that Soul Hunter does not have; here every rank can be bought.
+    /// Hunter does not have. Some PowerUps are locked until unlocked, as in VS: see <see cref="PowerUpUnlocks"/>.
     /// </summary>
     public static class PowerUps
     {
@@ -111,6 +110,9 @@ namespace SoulHunter.Core.Persistence
 
         public static bool IsMaxed(GameData data, PowerUpId id) => Rank(data, id) >= Info(id).MaxRank;
 
+        /// <summary>A next rank exists and is unlocked (VS: locked ranks cannot be bought).</summary>
+        public static bool CanBuyNext(GameData data, PowerUpId id) => Rank(data, id) < PowerUpUnlocks.UnlockedRanks(data, id);
+
         /// <summary>Gold every bought rank cost (fees are additive since VS v0.7.2, so the order does not matter).</summary>
         public static int RefundValue(GameData data)
         {
@@ -151,5 +153,136 @@ namespace SoulHunter.Core.Persistence
         /// Might 500, Armor 300, Greed 400, Revival 1000, and the 2026-09-29 Max Health / Recovery buttons 200.
         /// </summary>
         public const int OldMightPrice = 500, OldArmorPrice = 300, OldGreedPrice = 400, OldRevivalPrice = 1000, OldMaxHealthPrice = 200, OldRecoveryPrice = 200;
+    }
+
+    /// <summary>
+    /// VS locked PowerUps (owner, 2026-10-01: "adopt vs rule"; each PowerUp's page on vampire.survivors.wiki, fetched
+    /// 2026-10-01). A locked rank cannot be bought. VS conditions use VS characters, stages and items, so the owner chose
+    /// Soul Hunter ones:
+    /// - Reroll: one rank per character that reaches level 80, for 5 set characters (VS: level 80 with Mortaccio, Yatta
+    ///   Cavallo, Bianca Ramba, O'Sole Meeo and Sir Ambrojoe).
+    /// - Skip: one rank per survival in Levels 6-10 (VS: 15 min in Il Molise, 30 in Green Acres, 30 in The Bone Zone,
+    ///   15 in Moongolow, 15 in Boss Rash).
+    /// - Banish (VS: 60/70/80/90/100 Collection entries), Omni (VS: Torrona's Box at max level), Charm, Defang and
+    ///   Preserve (VS: the Apoplexy, Antidote and Wax Fetish relics): locked until Soul Hunter's Collection, relics and
+    ///   item come (Phases 2-3).
+    /// Every other PowerUp is open from the start, as in VS. Unlocks are ids in <see cref="GameData.UnlockedAchievements"/>.
+    /// </summary>
+    public static class PowerUpUnlocks
+    {
+        public const int RerollLevel = 80;
+        public static readonly string[] RerollCharacters = { "Corvan", "Aria", "Draven", "Gideon", "Kaelen" };
+
+        /// <summary>(Level, seconds survived) for Skip ranks 1-5.</summary>
+        public static readonly (int Level, int Seconds)[] SkipSurvivals = { (6, 900), (7, 1800), (8, 1800), (9, 900), (10, 900) };
+
+        public static readonly int[] BanishCollectionEntries = { 60, 70, 80, 90, 100 };
+
+        public static string RerollId(string character) => "PowerUp.Reroll.Level80." + character;
+        public static string SkipId(int level, int seconds) => $"PowerUp.Skip.L{level}.{seconds / 60}m";
+        public static string BanishId(int entries) => "PowerUp.Banish.Collection" + entries;
+        public static string WholeId(PowerUpId id) => "PowerUp." + id + ".Unlocked";
+
+        public static bool IsLockable(PowerUpId id) =>
+            id == PowerUpId.Reroll || id == PowerUpId.Skip || id == PowerUpId.Banish ||
+            id == PowerUpId.Omni || id == PowerUpId.Charm || id == PowerUpId.Defang || id == PowerUpId.Preserve;
+
+        private static bool Has(GameData data, string achievement) => data?.UnlockedAchievements != null && data.UnlockedAchievements.Contains(achievement);
+
+        /// <summary>How many ranks of <paramref name="id"/> can be bought.</summary>
+        public static int UnlockedRanks(GameData data, PowerUpId id)
+        {
+            int max = PowerUps.Info(id).MaxRank;
+            int n = 0;
+            switch (id)
+            {
+                case PowerUpId.Reroll:
+                    foreach (var c in RerollCharacters) if (Has(data, RerollId(c))) n++;
+                    return Mathf.Min(n, max);
+                case PowerUpId.Skip:
+                    foreach (var s in SkipSurvivals) if (Has(data, SkipId(s.Level, s.Seconds))) n++;
+                    return Mathf.Min(n, max);
+                case PowerUpId.Banish:
+                    foreach (var e in BanishCollectionEntries) if (Has(data, BanishId(e))) n++;
+                    return Mathf.Min(n, max);
+                case PowerUpId.Omni:
+                case PowerUpId.Charm:
+                case PowerUpId.Defang:
+                case PowerUpId.Preserve:
+                    return Has(data, WholeId(id)) ? max : 0;
+                default:
+                    return max;
+            }
+        }
+
+        /// <summary>What unlocks the next locked rank, or null when every rank is unlocked.</summary>
+        public static string NextConditionText(GameData data, PowerUpId id)
+        {
+            if (UnlockedRanks(data, id) >= PowerUps.Info(id).MaxRank) return null;
+            switch (id)
+            {
+                case PowerUpId.Reroll:
+                    foreach (var c in RerollCharacters) if (!Has(data, RerollId(c))) return $"Reach level {RerollLevel} with {c}.";
+                    break;
+                case PowerUpId.Skip:
+                    foreach (var s in SkipSurvivals) if (!Has(data, SkipId(s.Level, s.Seconds))) return $"Survive {s.Seconds / 60} minutes in Level {s.Level}.";
+                    break;
+                case PowerUpId.Banish:
+                    foreach (var e in BanishCollectionEntries) if (!Has(data, BanishId(e))) return $"Fill {e} entries in the Collection (coming soon).";
+                    break;
+                case PowerUpId.Omni: return "Max a new passive item (coming soon).";
+                case PowerUpId.Charm:
+                case PowerUpId.Defang:
+                case PowerUpId.Preserve: return "Find its relic on a stage (coming soon).";
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Records the Reroll and Skip unlocks this run has met (a set character at level 80; time survived in a level).
+        /// Returns a notice line for each new one.
+        /// </summary>
+        public static List<string> Record(GameData data, string character, int playerLevel, int level, float stageSeconds)
+        {
+            var news = new List<string>();
+            if (data == null) return news;
+            data.UnlockedAchievements ??= new List<string>();
+            if (playerLevel >= RerollLevel && System.Array.IndexOf(RerollCharacters, character) >= 0 && Add(data, RerollId(character)))
+                news.Add($"PowerUp unlocked: Reroll rank {UnlockedRanks(data, PowerUpId.Reroll)}");
+            foreach (var s in SkipSurvivals)
+                if (level == s.Level && stageSeconds >= s.Seconds && Add(data, SkipId(s.Level, s.Seconds)))
+                    news.Add($"PowerUp unlocked: Skip rank {UnlockedRanks(data, PowerUpId.Skip)}");
+            return news;
+        }
+
+        /// <summary>Every PowerUp unlock at once (tests and debug tools).</summary>
+        public static void UnlockEverything(GameData data)
+        {
+            if (data == null) return;
+            data.UnlockedAchievements ??= new List<string>();
+            foreach (var c in RerollCharacters) Add(data, RerollId(c));
+            foreach (var s in SkipSurvivals) Add(data, SkipId(s.Level, s.Seconds));
+            foreach (var e in BanishCollectionEntries) Add(data, BanishId(e));
+            foreach (var id in new[] { PowerUpId.Omni, PowerUpId.Charm, PowerUpId.Defang, PowerUpId.Preserve }) Add(data, WholeId(id));
+        }
+
+        private static bool Add(GameData data, string achievement)
+        {
+            if (data.UnlockedAchievements.Contains(achievement)) return false;
+            data.UnlockedAchievements.Add(achievement);
+            return true;
+        }
+
+        /// <summary>
+        /// A save that bought ranks now locked (possible between 2026-09-30 and 2026-10-01) gets the VS Refund: every
+        /// rank's gold back. Returns the gold refunded.
+        /// </summary>
+        public static int RefundIfLockedRanksOwned(GameData data)
+        {
+            if (data?.PowerUpRanks == null) return 0;
+            foreach (var info in PowerUps.All)
+                if (PowerUps.Rank(data, info.Id) > UnlockedRanks(data, info.Id)) return PowerUps.RefundAll(data);
+            return 0;
+        }
     }
 }

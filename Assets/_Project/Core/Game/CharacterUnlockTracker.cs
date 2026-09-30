@@ -96,6 +96,8 @@ namespace SoulHunter.Gameplay.Core
         private void HandleStageCleared(int stage)
         {
             _highestClearedStage = Mathf.Max(_highestClearedStage, stage);
+            // A stage clears at 30:00: that is the full stage survived, even though the clock moves on to the next one.
+            RecordPowerUpUnlocks(stage, 30f * 60f);
             Evaluate();
         }
 
@@ -124,10 +126,31 @@ namespace SoulHunter.Gameplay.Core
             foreach (var character in unlocked)
             {
                 Debug.Log($"[CharacterUnlockTracker] {character.CharacterName} unlocked ({CharacterUnlocks.ConditionText(character)})");
-                ShowNotice(character);
+                ShowNotice($"New character unlocked: {character.CharacterName}!");
                 OnCharacterUnlocked?.Invoke(character);
             }
-            if (unlocked.Count > 0) _save.SaveGame();
+            bool powerUps = RecordPowerUpUnlocks(_progression != null ? _progression.CurrentStage : 1, _progression != null ? _progression.StageElapsedTime : 0f, save: false);
+            if (unlocked.Count > 0 || powerUps) _save.SaveGame();
+        }
+
+        /// <summary>
+        /// VS locked PowerUps (owner, 2026-10-01): a set character at level 80 unlocks a Reroll rank, and time survived in
+        /// Levels 6-10 unlocks Skip ranks (<see cref="PowerUpUnlocks"/>). Returns true when something new was unlocked.
+        /// </summary>
+        private bool RecordPowerUpUnlocks(int stage, float stageSeconds, bool save = true)
+        {
+            var data = _save != null ? _save.CurrentData : null;
+            if (data == null) return false;
+            var experience = PlayerController.Instance != null ? PlayerController.Instance.GetComponent<PlayerExperience>() : null;
+            string character = GameContentCatalog.CurrentName(data.SelectedCharacterName);
+            var news = PowerUpUnlocks.Record(data, character, experience != null ? experience.CurrentLevel : 1, stage, stageSeconds);
+            foreach (var line in news)
+            {
+                Debug.Log($"[CharacterUnlockTracker] {line}");
+                ShowNotice(line);
+            }
+            if (news.Count > 0 && save) _save.SaveGame();
+            return news.Count > 0;
         }
 
         /// <summary>Marks every catalog character whose condition is met as unlocked in data; returns the new ones.</summary>
@@ -145,7 +168,7 @@ namespace SoulHunter.Gameplay.Core
             return unlocked;
         }
 
-        private void ShowNotice(CharacterData character)
+        private void ShowNotice(string message)
         {
             if (_notice != null) Destroy(_notice);
             _notice = new GameObject("CharacterUnlockedNotice");
@@ -167,7 +190,7 @@ namespace SoulHunter.Gameplay.Core
             text.fontSizeMin = 18f;
             text.fontSizeMax = 44f;
             text.color = new Color(1f, .85f, .25f);
-            text.text = $"New character unlocked: {character.CharacterName}!";
+            text.text = message;
             text.raycastTarget = false;
             _noticeUntil = Time.unscaledTime + NoticeSeconds;
             _noticeSounded = false;

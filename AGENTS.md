@@ -1330,7 +1330,7 @@ Everything is from vampire.survivors.wiki/w/PowerUps and each PowerUp's own page
 
 **Left out, and differences from VS:**
 - The four Seals are left out: they are used in VS's Collection menu, which Soul Hunter does not have.
-- VS unlocks some ranks through achievements and items (Reroll, Skip, Banish, Omni, Charm, Defang). Soul Hunter has none of those, so every rank can be bought. **That is a gap to raise with the owner.**
+- ~~VS unlocks some ranks through achievements and items; every rank could be bought.~~ Locked since 2026-10-01; see "VS locked PowerUps" below.
 
 **Save** (version 2):
 - `GameData.PowerUpRanks` holds the ranks.
@@ -1376,6 +1376,24 @@ Validation:
 - Editor play `autoplay-editor-80` (`-sh-autoplay-shop-shot`, 2 min): the shop screenshot shows all 23 cells readable, Recovery 5/5 green, Greed selected at price 242 (200 + fee after 8 ranks), 0 errors, min 84 FPS (partial `V`).
 
 Not yet played by the owner.
+
+### Level-up Reroll/Skip/Banish and VS locked PowerUps (owner, 2026-10-01)
+
+**"level up panel ke neeche skip etc 3 button kaam nahi karte".** They worked; the owner's save had no Reroll/Skip/Banish PowerUp, so all three were at 0 and disabled. vampire.survivors.wiki/w/Level_up: they "become available in this screen if the player invests in these PowerUps and/or uses a character that may start with these"; the Reroll, Skip and Banish pages: they start at 0, +2 per rank.
+- `LevelUpUI.RefreshActionButtons` shows each button only while it has a use left (Banish also while armed) and hides the row when all three are gone; the cards take the space.
+- `LevelUpActionButtonsPlayModeTests` (R): hidden at 0; with 1 use each, a click through the UI raycast rerolls, banishes the clicked card and skips with experience. It passes with the owner's scene and HUD prefab too.
+
+**VS locked PowerUps ("adopt vs rule").** Each PowerUp's wiki page (fetched 2026-10-01): Reroll ranks unlock by reaching level 80 with five characters; Skip ranks by surviving 15 or 30 minutes on five stages; Banish ranks by 60-100 Collection entries; Omni by maxing Torrona's Box; Charm, Defang and Preserve by relics. The other 16 PowerUps are open from the start. The owner chose Soul Hunter conditions (`PowerUpUnlocks`, Save/SaveData/PowerUps.cs):
+- Reroll: level 80 with Corvan, Aria, Draven, Gideon and Kaelen (one rank each).
+- Skip: survive 15 min in Level 6, 30 in Level 7, 30 in Level 8, 15 in Level 9, 15 in Level 10 (one rank each; a stage cleared at 30:00 counts as 30 minutes).
+- Banish, Omni, Charm, Defang and Preserve stay locked until Soul Hunter's Collection, relics and item exist (Phases 2-3).
+- Unlocks are ids in `GameData.UnlockedAchievements`. `CharacterUnlockTracker` records them during a run (every stage second and on a stage clear), saves, and shows "PowerUp unlocked: Skip rank 1" (held while a menu pauses).
+- The shop shows a locked PowerUp as LOCKED with its next condition, and Buy only sells unlocked ranks (`PowerUps.CanBuyNext`).
+- A save that owns ranks now locked gets the VS Refund once, in the save repair (`PowerUpUnlocks.RefundIfLockedRanksOwned`). The owner's save owned none.
+- `PowerUpUnlocks.UnlockEverything` is for tests and debug tools.
+- Tests: `PowerUpUnlockTests` (T) and `PowerUpUnlockPlayModeTests` (R: shop LOCKED with its condition, no sale, one rank sold once unlocked; 15:00 in Level 6 unlocks Skip rank 1 with a notice).
+- Validation: EditMode 496/496; PlayMode 224/225, the one failure being `UnlockNoticePlayModeTests` calling the old notice signature, fixed and rerun with the related fixtures 31/31; save untouched (`D:/SoulHunter-Validation/run-20261001-unlocks/`, `-unlocks2/`).
+- Not yet played by the owner.
 
 ### Game "hangs" at the first level-up (owner: "kabhi bhi hang ho ja raha hai", 2026-09-30)
 

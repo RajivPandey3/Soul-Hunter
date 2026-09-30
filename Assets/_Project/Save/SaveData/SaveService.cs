@@ -293,6 +293,9 @@ namespace SoulHunter.Core.Persistence
             foreach (var r in data.PowerUpRanks)
                 r.Rank = Mathf.Clamp(r.Rank, 0, PowerUps.Info((PowerUpId)System.Enum.Parse(typeof(PowerUpId), r.Id)).MaxRank);
             data.PowerUpRanks.RemoveAll(r => r.Rank == 0);
+            // VS locked PowerUps (2026-10-01): ranks bought before a PowerUp was locked are refunded (VS Refund).
+            int lockedRefund = PowerUpUnlocks.RefundIfLockedRanksOwned(data);
+            if (lockedRefund > 0) Debug.Log($"[SaveService] PowerUps with locked ranks refunded: +{lockedRefund} gold.");
             data.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
             data.FiveItemChestsOpened = Mathf.Max(0, data.FiveItemChestsOpened);
             // Run mode toggles (ModeHurry ... ModeLimitBreak) need no step: a save without them loads them as off, which
