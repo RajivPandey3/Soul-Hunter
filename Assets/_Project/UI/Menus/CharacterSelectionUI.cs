@@ -37,7 +37,7 @@ namespace SoulHunter.UI
 
         [Header("Grid Layout (VS style)")]
         [SerializeField] private Vector2 _cardSize = new Vector2(190f, 132f);
-        [SerializeField, Min(1)] private int _gridColumns = 4;
+        [SerializeField, Min(1)] private int _gridColumns = 5; // 13 characters in 3 rows: all visible without scrolling
         [SerializeField] private Color _panelColor = new Color(0.10f, 0.10f, 0.16f, 0.88f);
         [SerializeField] private Color _cardColor = new Color(0.28f, 0.30f, 0.42f, 1f);
         [SerializeField] private Color _selectedCardColor = new Color(0.86f, 0.66f, 0.22f, 1f);
@@ -61,6 +61,7 @@ namespace SoulHunter.UI
         private readonly List<Toggle> _modeToggles = new List<Toggle>();
         private TextMeshProUGUI _modeHintText;
         private ScrollRect _gridScroll;
+        private readonly System.Collections.Generic.List<TextMeshProUGUI> _modeLabels = new System.Collections.Generic.List<TextMeshProUGUI>();
         private Dictionary<UpgradeData.UpgradeType, UpgradeData> _weaponInfo;
         private EconomyService _economy;
 
@@ -391,6 +392,8 @@ namespace SoulHunter.UI
             var root = PanelRoot();
             if (root == null) return;
 
+            MainMenuNavigation.ScaleWithScreen(root.GetComponentInParent<CanvasScaler>()); // also set by the menu at load
+
             // Title and Back along the top.
             var title = root.Find("Text (TMP)") as RectTransform;
             if (title != null && title.TryGetComponent(out TextMeshProUGUI titleText))
@@ -433,6 +436,11 @@ namespace SoulHunter.UI
             grid.constraintCount = _gridColumns;
             grid.childAlignment = TextAnchor.UpperCenter;
             content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // The cards are sized from the box, so every card fits whatever the window (they were a fixed 190x132).
+            var fit = content.gameObject.AddComponent<GridFit>();
+            fit.Grid = grid;
+            fit.Viewport = viewport;
+            fit.Count = _availableCharacters.Count;
             _gridScroll = gridBox.gameObject.AddComponent<ScrollRect>();
             _gridScroll.horizontal = false;
             _gridScroll.movementType = ScrollRect.MovementType.Clamped;
@@ -457,7 +465,7 @@ namespace SoulHunter.UI
                 AutoSize(_characterDescriptionText, 12f, 28f);
             }
             _weaponIconDisplay = CreateImage("StartingWeapon_Icon", infoBox, new Vector2(0.81f, 0.3f), new Vector2(0.97f, 0.92f), null);
-            _weaponNameText = CreateText("StartingWeapon_Text", infoBox, new Vector2(0.79f, 0.04f), new Vector2(0.99f, 0.28f), "", TextAlignmentOptions.Center, 12f, 22f);
+            _weaponNameText = CreateText("StartingWeapon_Text", infoBox, new Vector2(0.79f, 0.04f), new Vector2(0.99f, 0.28f), "", TextAlignmentOptions.Center, 12f, 18f);
 
             // Bottom right: Confirm.
             if (_selectAndPlayButton != null)
@@ -468,7 +476,7 @@ namespace SoulHunter.UI
             }
 
             // Top left: gold, which buys unlocked characters.
-            _goldText = CreateText("Gold_Text", root, new Vector2(0.03f, 0.9f), new Vector2(0.25f, 0.97f), "", TextAlignmentOptions.Left, 18f, 40f);
+            _goldText = CreateText("Gold_Text", root, new Vector2(0.03f, 0.9f), new Vector2(0.25f, 0.97f), "", TextAlignmentOptions.Left, 18f, 32f);
             _goldText.color = _bonusColor;
 
             // Right: VS-style character filter by the stage each character comes from.
@@ -510,8 +518,9 @@ namespace SoulHunter.UI
                 toggle.graphic = checkImage;
 
                 var label = CreateText("Label", cell, new Vector2(0.24f, 0f), new Vector2(0.98f, 1f),
-                    RunModeOptions.Name(mode), TextAlignmentOptions.Left, 11f, 20f);
+                    RunModeOptions.Name(mode), TextAlignmentOptions.Left, 8f, 20f);
                 label.textWrappingMode = TextWrappingModes.NoWrap;
+                _modeLabels.Add(label);
 
                 toggle.SetIsOnWithoutNotify(RunModeOptions.Get(data, mode));
                 toggle.onValueChanged.AddListener(on => SetMode(mode, on));
@@ -520,6 +529,8 @@ namespace SoulHunter.UI
                 hint.Show = ShowModeHint;
                 _modeToggles.Add(toggle);
             }
+            // One size for all six labels (auto-size gave "Limit Break" a much smaller size than "Hurry").
+            box.gameObject.AddComponent<SameFontSize>().Labels = _modeLabels.ToArray();
             _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.04f), new Vector2(0.985f, 0.42f),
                 "Modes: select one to see what it does.", TextAlignmentOptions.Left, 10f, 18f);
             _modeHintText.color = new Color(0.82f, 0.85f, 0.95f);
@@ -532,10 +543,10 @@ namespace SoulHunter.UI
             var filterButton = toggleButton.gameObject.AddComponent<Button>();
             filterButton.targetGraphic = toggleButton.GetComponent<Image>();
             filterButton.onClick.AddListener(() => SetFilter(!_filterOn));
-            _filterButtonLabel = CreateText("Label", toggleButton, Vector2.zero, Vector2.one, "FILTER: OFF", TextAlignmentOptions.Center, 14f, 24f);
+            _filterButtonLabel = CreateText("Label", toggleButton, Vector2.zero, Vector2.one, "FILTER: OFF", TextAlignmentOptions.Center, 14f, 20f);
 
             var list = CreatePanel("StageFilter", root, new Vector2(0.76f, 0.22f), new Vector2(0.95f, 0.8f));
-            _filterCountText = CreateText("Count", list, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.99f), "", TextAlignmentOptions.Center, 14f, 30f);
+            _filterCountText = CreateText("Count", list, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.99f), "", TextAlignmentOptions.Center, 14f, 24f);
             int stages = _stageShown.Length;
             float rowHeight = 0.88f / stages;
             for (int stage = 1; stage <= stages; stage++)
@@ -582,7 +593,8 @@ namespace SoulHunter.UI
             var portrait = CreateImage("Portrait", card, new Vector2(0.05f, 0.05f), new Vector2(0.6f, 0.74f), character.CharacterIcon);
             var weapon = WeaponInfo(character.StartingWeapon);
             CreateImage("Weapon", card, new Vector2(0.62f, 0.05f), new Vector2(0.95f, 0.42f), weapon != null ? weapon.Icon : null);
-            var badge = CreateText("Badge", card, new Vector2(0.55f, 0.45f), new Vector2(0.97f, 0.74f), "", TextAlignmentOptions.Right, 10f, 20f);
+            var badge = CreateText("Badge", card, new Vector2(0.45f, 0.5f), new Vector2(0.97f, 0.74f), "", TextAlignmentOptions.Right, 8f, 18f);
+            badge.textWrappingMode = TextWrappingModes.NoWrap; // "LOCKED" wrapped to "LOCKE / D"
             badge.color = _bonusColor;
 
             _cards.Add(button);
@@ -659,9 +671,62 @@ namespace SoulHunter.UI
 
         private static void AutoSize(TextMeshProUGUI text, float min, float max)
         {
+            // The panel is built while it is still inactive, so TextMeshPro's Awake runs later, when the panel opens. A text
+            // whose size was never set gets TMP's defaults there (36, auto-size 18-72), which replaced these limits: Gold,
+            // FILTER, Whip and the LOCKED badges showed at up to 72 (found 2026-09-30). A set size keeps them.
+            text.fontSize = max;
             text.enableAutoSizing = true;
             text.fontSizeMin = min;
             text.fontSizeMax = max;
+        }
+    }
+
+    /// <summary>Sizes a grid's cells from its viewport: all Count cards fit in the grid's columns, 0.72 as tall as wide at most.</summary>
+    public sealed class GridFit : MonoBehaviour
+    {
+        public GridLayoutGroup Grid;
+        public RectTransform Viewport;
+        public int Count;
+        private Vector2 _lastSize;
+
+        private void LateUpdate()
+        {
+            if (Grid == null || Viewport == null || Count <= 0) return;
+            Vector2 size = Viewport.rect.size;
+            if (size == _lastSize || size.x <= 0f || size.y <= 0f) return;
+            _lastSize = size;
+            int columns = Mathf.Max(1, Grid.constraintCount);
+            int rows = Mathf.CeilToInt(Count / (float)columns);
+            float width = (size.x - Grid.spacing.x * (columns - 1)) / columns;
+            float height = Mathf.Min(width * 0.72f, (size.y - Grid.spacing.y * (rows - 1)) / rows);
+            Grid.cellSize = new Vector2(Mathf.Floor(width), Mathf.Floor(Mathf.Max(height, width * 0.45f)));
+        }
+    }
+
+    /// <summary>Gives every label the size the tightest of them needs (after auto-size has measured them once).</summary>
+    public sealed class SameFontSize : MonoBehaviour
+    {
+        public TextMeshProUGUI[] Labels;
+        private Vector2 _lastSize;
+
+        private void LateUpdate()
+        {
+            if (Labels == null || Labels.Length == 0 || Labels[0] == null) return;
+            Vector2 size = Labels[0].rectTransform.rect.size;
+            if (size == _lastSize || size.x <= 0f) return;
+            _lastSize = size;
+            float smallest = float.MaxValue;
+            foreach (var label in Labels)
+            {
+                label.enableAutoSizing = true;
+                label.ForceMeshUpdate();
+                smallest = Mathf.Min(smallest, label.fontSize);
+            }
+            foreach (var label in Labels)
+            {
+                label.enableAutoSizing = false;
+                label.fontSize = smallest;
+            }
         }
     }
 }

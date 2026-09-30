@@ -53,6 +53,71 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Owner report (2026-09-30): the character select screen was "bekar" outside 1920x1080. The canvas used Constant
+        /// Pixel Size, so fixed 190x132-pixel cards overflowed the grid, and the mode row pushed the last row under the info
+        /// box. The test window is not 1080p, which is the case that broke.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator SelectScreen_FitsTheWindow_EveryCardVisible_NothingOverlaps()
+        {
+            var load = SceneManager.LoadSceneAsync("Bootstrap");
+            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
+            yield return null;
+            Object.FindFirstObjectByType<MainMenuNavigation>().ShowCharacters();
+            yield return null;
+            yield return null;
+            yield return null;
+
+            var ui = Object.FindFirstObjectByType<CharacterSelectionUI>();
+            var scaler = ui.GetComponentInParent<UnityEngine.UI.CanvasScaler>() ?? Object.FindFirstObjectByType<UnityEngine.UI.CanvasScaler>();
+            Assert.That(scaler.uiScaleMode, Is.EqualTo(UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize), "The menu scales with the screen.");
+            Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
+
+            var viewport = (RectTransform)ui.Cards[0].transform.parent.parent;
+            Rect view = ScreenRect(viewport);
+            foreach (var card in ui.Cards)
+            {
+                Rect r = ScreenRect((RectTransform)card.transform);
+                Assert.That(r.xMin >= view.xMin - 1f && r.xMax <= view.xMax + 1f && r.yMin >= view.yMin - 1f && r.yMax <= view.yMax + 1f, Is.True,
+                    $"{card.name} is fully visible in the grid (card {r}, grid {view}, screen {Screen.width}x{Screen.height}).");
+            }
+
+            var root = viewport.parent.parent;
+            Rect grid = ScreenRect((RectTransform)root.Find("CharacterGrid"));
+            Assert.That(grid.Overlaps(ScreenRect((RectTransform)root.Find("SelectedInfo"))), Is.False, "The grid is clear of the info box.");
+            Assert.That(grid.Overlaps(ScreenRect((RectTransform)root.Find("RunModes"))), Is.False, "The grid is clear of the mode row.");
+
+            var modeLabels = root.Find("RunModes").GetComponentsInChildren<TMPro.TextMeshProUGUI>().Where(t => t.name == "Label").ToList();
+            Assert.That(modeLabels.Count, Is.EqualTo(6));
+            Assert.That(modeLabels.Select(l => l.fontSize).Distinct().Count(), Is.EqualTo(1),
+                "All six mode labels share one size: " + string.Join(", ", modeLabels.Select(l => $"{l.text} {l.fontSize:0.0}")));
+
+            // TextMeshPro's defaults (auto-size up to 72) used to replace these limits, because the panel is built inactive.
+            var texts = root.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+            foreach (var (name, max) in new[] { ("Gold_Text", 32f), ("StartingWeapon_Text", 18f) })
+            {
+                var text = texts.First(t => t.name == name);
+                Assert.That(text.fontSizeMax, Is.EqualTo(max), $"{name} keeps its size limit.");
+                Assert.That(text.fontSize, Is.LessThanOrEqualTo(max + 0.01f), $"{name} is at most {max}.");
+            }
+            var filter = texts.First(t => t.text.StartsWith("FILTER"));
+            Assert.That(filter.fontSize, Is.LessThanOrEqualTo(20.01f), "FILTER is at most 20.");
+            foreach (var badge in texts.Where(t => t.name == "Badge" && !string.IsNullOrEmpty(t.text)))
+            {
+                badge.ForceMeshUpdate();
+                Assert.That(badge.textInfo.lineCount, Is.EqualTo(1), $"'{badge.text}' stays on one line.");
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        private static Rect ScreenRect(RectTransform t)
+        {
+            var corners = new Vector3[4];
+            t.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
         [UnityTest]
         public IEnumerator ChosenCharacter_StatBlockAndAbilities_AreLiveInTheRun()
         {

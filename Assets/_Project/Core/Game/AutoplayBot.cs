@@ -199,6 +199,8 @@ namespace SoulHunter.Gameplay.Core
                 SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.Recovery, 5);
             }
             if (HasArg("-sh-autoplay-shop-shot")) yield return ShopShots(save.CurrentData);
+            // -sh-autoplay-select-shot: screenshot the main menu, then the character select screen (what Start opens).
+            if (HasArg("-sh-autoplay-select-shot")) yield return SelectShots();
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
@@ -578,6 +580,25 @@ namespace SoulHunter.Gameplay.Core
         /// -sh-autoplay-shop-shot: before the run, opens the VS PowerUps screen on the throw-away save (with gold), buys a
         /// few ranks like a player and screenshots it. The menu lives in the UI assembly, so it is reached by name.
         /// </summary>
+        private IEnumerator SelectShots()
+        {
+            MonoBehaviour Find(string type) => FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.GetType().Name == type);
+            yield return new WaitForSecondsRealtime(0.5f);
+            yield return Shot("mainmenu");
+            var navigation = Find("MainMenuNavigation");
+            navigation?.GetType().GetMethod("ShowCharacters")?.Invoke(navigation, null);
+            yield return new WaitForSecondsRealtime(1f);
+            yield return Shot("character-select");
+            var texts = FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None).Where(t => t.isActiveAndEnabled &&
+                (t.text.StartsWith("Gold") || t.text.StartsWith("FILTER") || t.name == "StartingWeapon_Text" || t.text == "Character Selection"));
+            var canvas = FindObjectsByType<Canvas>(FindObjectsSortMode.None).FirstOrDefault(c => c.isRootCanvas);
+            Event("select-layout", string.Format(CultureInfo.InvariantCulture, "\"screen\": \"{0}x{1}\", \"scale\": {2:0.00}, \"texts\": \"{3}\"",
+                Screen.width, Screen.height, canvas != null ? canvas.scaleFactor : 0f,
+                Escape(string.Join("; ", texts.Select(t => $"{t.name}='{t.text}' size {t.fontSize:0.0} auto {t.enableAutoSizing} max {t.fontSizeMax:0}")))));
+            navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
+            yield return new WaitForSecondsRealtime(0.3f);
+        }
+
         private IEnumerator ShopShots(SoulHunter.Core.Persistence.GameData data)
         {
             data.Currency = Mathf.Max(data.Currency, 20000);

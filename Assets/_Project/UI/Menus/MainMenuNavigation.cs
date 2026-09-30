@@ -9,8 +9,23 @@ namespace SoulHunter.UI
         public GameObject CharacterPanel;
         public GameObject PowerUpPanel;
         public Button StartButton, PowerUpButton, CharacterBackButton, PowerUpBackButton, QuitButton;
+        /// <summary>
+        /// Owner report (2026-09-30): the character select screen fell apart outside 1920x1080. The main menu canvas used
+        /// Constant Pixel Size, so fixed-pixel cards and fonts overflowed in a smaller window. Scale with the screen like
+        /// the gameplay HUD (1920x1080 reference, match 0.5): 1080p is unchanged and every other size looks the same.
+        /// </summary>
+        public static void ScaleWithScreen(CanvasScaler scaler)
+        {
+            if (scaler == null) return;
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+        }
+
         private void Start()
         {
+            ScaleWithScreen(GetComponentInParent<CanvasScaler>() ?? (HomePanel != null ? HomePanel.GetComponentInParent<CanvasScaler>() : null));
             StartButton.onClick.AddListener(ShowCharacters);
             PowerUpButton.onClick.AddListener(ShowPowerUps);
             CharacterBackButton.onClick.AddListener(ShowHome);

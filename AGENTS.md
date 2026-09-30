@@ -1377,6 +1377,17 @@ Validation:
 
 Not yet played by the owner.
 
+### Character select screen repaired (owner: "play button click karne ke baad aane bale panel to tumne bekar bana diya", 2026-09-30)
+
+The owner only started seeing this screen again once Play booted through the menu (`PlayFromBootstrap`). Three causes, all older than that change:
+- **Constant Pixel Size canvas.** The main menu's `CanvasScaler` used Constant Pixel Size, so the fixed 190×132-pixel cards (4 columns) overflowed the grid in any window smaller than 1920×1080. `MainMenuNavigation.ScaleWithScreen` now sets Scale With Screen Size, 1920×1080, match 0.5 (like the gameplay HUD) when the menu loads; 1080p is unchanged. The scene file is not edited.
+- **The mode row (2026-09-27) pushed the grid down,** and the last row (Valerius) hid behind the info box. The grid now has 5 columns, and `GridFit` sizes the cards from the grid box, so all 13 characters show without scrolling.
+- **TextMeshPro defaults replaced the text limits.** The panel is built while inactive, so each created text ran TMP's `Awake` later and took its defaults (size 36, auto-size up to 72). Gold, FILTER, Whip and the LOCKED badges (which wrapped to "LOCKE / D") rendered at 53-68. `AutoSize` now sets a size first, so the limits hold (Gold 32, FILTER 20, Whip 18). The six mode labels share one size (`SameFontSize`), so "Limit Break" fits on one line.
+- `AutoplayBot -sh-autoplay-select-shot` screenshots the main menu and this screen, and logs the canvas scale and the key text sizes.
+- `CharacterSelectionPlayModeTests.SelectScreen_FitsTheWindow_EveryCardVisible_NothingOverlaps` (R, in the test runner's non-1080p window): the menu scales with the screen; every card is fully inside the grid; the grid is clear of the mode row and the info box; the mode labels share one size; Gold/FILTER/Whip stay within their limits; each LOCKED badge is one line. It failed on the old code.
+- EditMode 481/481, PlayMode 215/215, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20260930-charselect2/`).
+- Editor play `autoplay-editor-91`: screenshots of the main menu and the character select screen, 0 errors (partial `V`). The portrait in the info box is still very dark (the hero render; Art section).
+
 ### Stats panel in pause and level-up (owner: "stats panel bana do", 2026-09-30)
 
 vampire.survivors.wiki/w/Player_stats: stats "can be seen before the player starts the game in the Character Selection menu, in-game when paused, or when leveling up". Soul Hunter showed them only on character select, so Hollow Heart's new Max Health was invisible.
