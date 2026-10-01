@@ -88,6 +88,7 @@ namespace SoulHunter.Gameplay.UI
 
     _currentChoices = choices;
     _banishMode = false;
+    EnsureOwnCanvas();
     EnsureActionButtons();
     EnsureCardCount(choices.Count);
     StyleHeading();
@@ -491,6 +492,43 @@ namespace SoulHunter.Gameplay.UI
         /// over the HUD stage name. It now sits at the bottom of its box, just above the cards, in gold (VS style).
         /// </summary>
         /// <summary>The "LEVEL UP!" heading above the cards (null when the panel has none).</summary>
+        public const string ScreenCanvasName = "LevelUpScreenCanvas";
+        public const int ScreenSortingOrder = 300; // above the HUD, below the chest screen (400) and unlock notices (500)
+
+        /// <summary>
+        /// Owner, 2026-10-01 ("level up screen bhi chest jaisa kar do"): the panel moves (once) from the HUD canvas, which
+        /// scales by width only, to its own overlay canvas that expands to fit, like the chest screen. In a wide, short
+        /// window the HUD canvas is shorter than 1080 and the lower cards and Reroll/Skip/Banish could fall off the bottom.
+        /// The HUD keeps its own scaling; the panel's prefab and scene are not edited.
+        /// </summary>
+        private void EnsureOwnCanvas()
+        {
+            if (_levelUpPanel == null) return;
+            var current = _levelUpPanel.transform.parent != null ? _levelUpPanel.transform.parent.GetComponentInParent<Canvas>(true) : null;
+            if (current != null && current.name == ScreenCanvasName) return;
+            Transform home = current != null ? current.rootCanvas.transform.parent : null;
+            var existing = home != null ? home.Find(ScreenCanvasName) : null;
+            GameObject go;
+            if (existing != null) go = existing.gameObject;
+            else
+            {
+                go = new GameObject(ScreenCanvasName, typeof(RectTransform));
+                if (home != null) go.transform.SetParent(home, false);
+                var canvas = go.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = ScreenSortingOrder;
+                var scaler = go.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+                go.AddComponent<GraphicRaycaster>();
+            }
+            var rect = (RectTransform)_levelUpPanel.transform;
+            Vector2 anchorMin = rect.anchorMin, anchorMax = rect.anchorMax, offsetMin = rect.offsetMin, offsetMax = rect.offsetMax;
+            rect.SetParent(go.transform, false);
+            rect.anchorMin = anchorMin; rect.anchorMax = anchorMax; rect.offsetMin = offsetMin; rect.offsetMax = offsetMax;
+        }
+
         private RectTransform HeadingRect()
         {
             foreach (var button in _upgradeButtons)

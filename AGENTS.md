@@ -1383,7 +1383,8 @@ The owner's screenshot showed the chest screen ("TREASURE x3!") with no OPEN but
 - Fix: the chest canvas uses `ScreenMatchMode.Expand`, so the whole 1920x1080 layout fits any window.
 - `ChestScreenFitPlayModeTests` (R): OPEN and DONE inside 1366x575, 2560x1080, 3440x1440, 1920x1080, 1280x1024 and 1080x1920. It fails on the old code ("OPEN at (0, -430) is off a 1366x575 window (canvas half 404)").
 - EditMode 496/496, PlayMode 227/227 (`D:/SoulHunter-Validation/run-20261001-chestfit/`). The tests wrote only temp saves; the real save changed during the run because the owner was playing in their editor at the time (its Editor.log shows those saves).
-- Not checked by eye at that window size (the editor launcher cannot set the Game view size). The HUD canvas (level-up screen) also matches width only; it was left alone because the owner has uncommitted changes in `HUD_Canvas.prefab` and reported the level-up screen OK.
+- Not checked by eye at that window size (the editor launcher cannot set the Game view size).
+- **Level-up screen too** (owner: "level up screen bhi chest jaisa kar do"): `LevelUpUI.EnsureOwnCanvas` moves the panel, once, when it first opens, from the HUD canvas (width-only scaling) to its own overlay canvas `LevelUpScreenCanvas` (Expand, 1920x1080, sorting order 300: above the HUD, below the chest screen and unlock notices). The HUD keeps its own scaling; `HUD_Canvas.prefab` and the scene are not edited. `LevelUpScreenFitPlayModeTests` (R): own Expand canvas, every card and Reroll/Skip/Banish button on screen. EditMode 496/496, PlayMode 228/228, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-levelupfit-full/`). Editor play with the owner's scene (`levelupfit-01`): same look at 1920x1080, 0 errors.
 
 ### Level-up Reroll/Skip/Banish and VS locked PowerUps (owner, 2026-10-01)
 
