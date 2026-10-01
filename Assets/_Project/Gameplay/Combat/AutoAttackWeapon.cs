@@ -83,7 +83,9 @@ namespace SoulHunter.Gameplay.Combat
             foreach (var touch in TouchDamageBuffer) touch.TargetTag = tag;
         }
 
-        protected float MightMultiplier => OwnerStats != null ? OwnerStats.Might : 1f;
+        protected float MightMultiplier => OwnerStats != null ? (IgnoresMightCap ? OwnerStats.RawMight : OwnerStats.Might) : 1f;
+        /// <summary>VS (wiki Player_stats): the 1000% Might cap "does not affect Soul Eater".</summary>
+        protected virtual bool IgnoresMightCap => false;
         protected float CooldownMultiplier => OwnerStats != null ? OwnerStats.Cooldown : 1f;
         protected float AreaMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Area) : 1f;
         protected float DurationMultiplier => OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Duration) : 1f;

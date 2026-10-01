@@ -56,6 +56,9 @@ namespace SoulHunter.Gameplay.Weapons
             set => _enemyLayer = value;
         }
 
+        /// <summary>Soul Eater (this script with life steal) is not held to the Might cap (wiki Player_stats).</summary>
+        protected override bool IgnoresMightCap => _lifeStealPerHit > 0f;
+
         public override int MaxLevel => 8;
         /// <summary>Area bonus from levels (multiplies the Area stat).</summary>
         public float LevelAreaMultiplier { get; private set; } = 1f;

@@ -11,26 +11,49 @@ namespace SoulHunter.Gameplay.Player
     /// </summary>
     public class PlayerStats : MonoBehaviour
     {
+        // VS stat caps (vampire.survivors.wiki/w/Player_stats, "Max value", fetched 2026-10-01): Might 1000% (not for Soul
+        // Eater), Area 1000%, Speed 500%, Duration 500%, Amount 10, Armor 50. Cooldown's 10% floor is applied where it changes.
+        public const float MaxMight = 10f, MaxArea = 10f, MaxProjectileSpeed = 5f, MaxDuration = 5f;
+        public const int MaxAmount = 10, MaxArmor = 50;
+
         // Default modifiers (1.0 = 100%)
-        public float Might { get; private set; } = 1.0f; // Damage multiplier
+        /// <summary>The Might gathered from every source, before the VS cap (wiki Player_stats).</summary>
+        public float RawMight { get; private set; } = 1.0f;
+        /// <summary>Might as the game uses it: capped at the VS maximum (MaxMight).</summary>
+        public float Might => Mathf.Min(RawMight, MaxMight);
         public float Cooldown { get; private set; } = 1.0f; // Cooldown multiplier (lower is faster)
-        public float Area { get; private set; } = 1.0f; // Size multiplier
+        /// <summary>The Area gathered from every source, before the VS cap (wiki Player_stats).</summary>
+        public float RawArea { get; private set; } = 1.0f;
+        /// <summary>Area as the game uses it: capped at the VS maximum (MaxArea).</summary>
+        public float Area => Mathf.Min(RawArea, MaxArea);
         public float MoveSpeedMultiplier { get; private set; } = 1.0f; // Speed multiplier
         
         // --- Advanced VS Stats ---
-        public int Armor { get; private set; } = 0; // Flat damage reduction
+        /// <summary>The Armor gathered from every source, before the VS cap (wiki Player_stats).</summary>
+        public int RawArmor { get; private set; } = 0;
+        /// <summary>Armor as the game uses it: capped at the VS maximum (MaxArmor).</summary>
+        public int Armor => Mathf.Min(RawArmor, MaxArmor);
         public float Luck { get; private set; } = 1.0f; // Critical hits, better chest RNG
         public float Greed { get; private set; } = 1.0f; // Gold multiplier
         public float Curse { get; private set; } = 1.0f; // Enemy speed/health/spawn multiplier
         public int Revivals { get; private set; } = 0; // Number of times player can revive
         
         // --- Expansion 4 Stats ---
-        public int Amount { get; private set; } = 0; // Extra projectiles (Duplicator)
-        public float Duration { get; private set; } = 1.0f; // Weapon duration multiplier (Spellbinder)
+        /// <summary>The Amount gathered from every source, before the VS cap (wiki Player_stats).</summary>
+        public int RawAmount { get; private set; } = 0;
+        /// <summary>Amount as the game uses it: capped at the VS maximum (MaxAmount).</summary>
+        public int Amount => Mathf.Min(RawAmount, MaxAmount);
+        /// <summary>The Duration gathered from every source, before the VS cap (wiki Player_stats).</summary>
+        public float RawDuration { get; private set; } = 1.0f;
+        /// <summary>Duration as the game uses it: capped at the VS maximum (MaxDuration).</summary>
+        public float Duration => Mathf.Min(RawDuration, MaxDuration);
         public float Regen { get; private set; } = 0f; // HP per second (Pummarola)
         public float Magnet { get; private set; } = 1.0f; // Pickup radius multiplier (Attractorb)
         public float ExpBonus { get; private set; } = 1.0f; // EXP multiplier (Crown)
-        public float ProjectileSpeed { get; private set; } = 1.0f; // Projectile speed multiplier (Bracer)
+        /// <summary>The ProjectileSpeed gathered from every source, before the VS cap (wiki Player_stats).</summary>
+        public float RawProjectileSpeed { get; private set; } = 1.0f;
+        /// <summary>ProjectileSpeed as the game uses it: capped at the VS maximum (MaxProjectileSpeed).</summary>
+        public float ProjectileSpeed => Mathf.Min(RawProjectileSpeed, MaxProjectileSpeed);
 
         // Learning Comment:
         // Wandering Merchant blessings aur upgrades ke zariye permanent bonus max health track karta hai.
@@ -69,14 +92,14 @@ namespace SoulHunter.Gameplay.Player
             if (data == null) return;
             int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Rank(data, id);
             float Bonus(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Bonus(id, Rank(id));
-            Might += Bonus(SoulHunter.Core.Persistence.PowerUpId.Might);
-            Armor += Rank(SoulHunter.Core.Persistence.PowerUpId.Armor);
+            RawMight += Bonus(SoulHunter.Core.Persistence.PowerUpId.Might);
+            RawArmor += Rank(SoulHunter.Core.Persistence.PowerUpId.Armor);
             Regen += Bonus(SoulHunter.Core.Persistence.PowerUpId.Recovery);
             Cooldown = Mathf.Max(0.1f, Cooldown - Bonus(SoulHunter.Core.Persistence.PowerUpId.Cooldown));
-            Area += Bonus(SoulHunter.Core.Persistence.PowerUpId.Area);
-            ProjectileSpeed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Speed);
-            Duration += Bonus(SoulHunter.Core.Persistence.PowerUpId.Duration);
-            Amount += Rank(SoulHunter.Core.Persistence.PowerUpId.Amount);
+            RawArea += Bonus(SoulHunter.Core.Persistence.PowerUpId.Area);
+            RawProjectileSpeed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Speed);
+            RawDuration += Bonus(SoulHunter.Core.Persistence.PowerUpId.Duration);
+            RawAmount += Rank(SoulHunter.Core.Persistence.PowerUpId.Amount);
             MoveSpeedMultiplier += Bonus(SoulHunter.Core.Persistence.PowerUpId.MoveSpeed);
             Magnet *= SoulHunter.Core.Persistence.PowerUps.MagnetMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.Magnet));
             Luck += Bonus(SoulHunter.Core.Persistence.PowerUpId.Luck);
@@ -86,7 +109,7 @@ namespace SoulHunter.Gameplay.Player
             Revivals += Rank(SoulHunter.Core.Persistence.PowerUpId.Revival);
             // Omni: Might, Projectile Speed, Duration and Area +2% per rank.
             float omni = Bonus(SoulHunter.Core.Persistence.PowerUpId.Omni);
-            Might += omni; ProjectileSpeed += omni; Duration += omni; Area += omni;
+            RawMight += omni; RawProjectileSpeed += omni; RawDuration += omni; RawArea += omni;
             Charm += Mathf.RoundToInt(Bonus(SoulHunter.Core.Persistence.PowerUpId.Charm));
             Defang += Bonus(SoulHunter.Core.Persistence.PowerUpId.Defang);
             Preserve += Bonus(SoulHunter.Core.Persistence.PowerUpId.Preserve);
@@ -108,10 +131,10 @@ namespace SoulHunter.Gameplay.Player
         {
             _isMirror = true;
             if (source == null) return;
-            Might = source.Might; Cooldown = source.Cooldown; Area = source.Area; MoveSpeedMultiplier = source.MoveSpeedMultiplier;
-            Armor = source.Armor; Luck = source.Luck; Greed = source.Greed; Curse = source.Curse; Revivals = source.Revivals;
-            Amount = source.Amount; Duration = source.Duration; Regen = source.Regen; Magnet = source.Magnet;
-            ExpBonus = source.ExpBonus; ProjectileSpeed = source.ProjectileSpeed; MaxHealthBonus = source.MaxHealthBonus;
+            RawMight = source.RawMight; Cooldown = source.Cooldown; RawArea = source.RawArea; MoveSpeedMultiplier = source.MoveSpeedMultiplier;
+            RawArmor = source.RawArmor; Luck = source.Luck; Greed = source.Greed; Curse = source.Curse; Revivals = source.Revivals;
+            RawAmount = source.RawAmount; RawDuration = source.RawDuration; Regen = source.Regen; Magnet = source.Magnet;
+            ExpBonus = source.ExpBonus; RawProjectileSpeed = source.RawProjectileSpeed; MaxHealthBonus = source.MaxHealthBonus;
             CritDamageMultiplier = source.CritDamageMultiplier; ExtraProjectileBounces = source.ExtraProjectileBounces;
             SyncArmor();
         }
@@ -137,15 +160,15 @@ namespace SoulHunter.Gameplay.Player
             if (character == null || _characterApplied) return;
             _characterApplied = true;
             _character = character;
-            Might += character.StartingMight - 1f;
-            Area += character.StartingArea - 1f;
+            RawMight += character.StartingMight - 1f;
+            RawArea += character.StartingArea - 1f;
             Cooldown = Mathf.Max(0.1f, Cooldown + (character.StartingCooldown - 1f));
-            Armor += character.StartingArmor;
+            RawArmor += character.StartingArmor;
             MoveSpeedMultiplier = Mathf.Max(0.1f, MoveSpeedMultiplier + (character.BaseMoveSpeed - 1f));
             Regen += character.StartingRecovery;
-            ProjectileSpeed = Mathf.Max(0.1f, ProjectileSpeed + (character.StartingSpeed - 1f));
-            Duration = Mathf.Max(0.1f, Duration + (character.StartingDuration - 1f));
-            Amount += character.StartingAmount;
+            RawProjectileSpeed = Mathf.Max(0.1f, RawProjectileSpeed + (character.StartingSpeed - 1f));
+            RawDuration = Mathf.Max(0.1f, RawDuration + (character.StartingDuration - 1f));
+            RawAmount += character.StartingAmount;
             Revivals += character.StartingRevivals;
             Magnet = Mathf.Max(0.1f, Magnet + (character.StartingMagnet - 1f));
             Luck += character.StartingLuck - 1f;
@@ -210,25 +233,25 @@ namespace SoulHunter.Gameplay.Player
             if (health != null) health.Armor = Armor;
         }
 
-        public void AddMight(float amount) { Might += amount; }
+        public void AddMight(float amount) { RawMight += amount; }
         public void ReduceCooldown(float amount) { Cooldown = Mathf.Max(0.1f, Cooldown - amount); }
-        public void AddArea(float amount) { Area += amount; }
+        public void AddArea(float amount) { RawArea += amount; }
         public void AddMoveSpeed(float amount) { MoveSpeedMultiplier += amount; }
 
-        public void AddArmor(int amount) { Armor += amount; SyncArmor(); }
+        public void AddArmor(int amount) { RawArmor += amount; SyncArmor(); }
         public void AddLuck(float amount) { Luck += amount; }
         public void AddGreed(float amount) { Greed += amount; }
         public void AddCurse(float amount) { Curse += amount; }
         public void AddRevival(int amount) { Revivals += amount; }
         
-        public void AddAmount(int amount) { Amount += amount; }
-        public void AddDuration(float amount) { Duration += amount; }
+        public void AddAmount(int amount) { RawAmount += amount; }
+        public void AddDuration(float amount) { RawDuration += amount; }
         public void AddRegen(float amount) { Regen += amount; }
         public void AddMagnet(float amount) { Magnet += amount; }
         /// <summary>VS Attractorb: its Magnet bonus multiplies (wiki: "Multiplicative").</summary>
         public void MultiplyMagnet(float factor) { if (factor > 0f) Magnet *= factor; }
         public void AddExpBonus(float amount) { ExpBonus += amount; }
-        public void AddProjectileSpeed(float amount) { ProjectileSpeed += amount; }
+        public void AddProjectileSpeed(float amount) { RawProjectileSpeed += amount; }
 
         // Learning Comment:
         // Permanent max health bonus barhata hai aur agar HealthController present ho toh usay IncreaseMaxHealth ke zariye notify karta hai.

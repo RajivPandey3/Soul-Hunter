@@ -1386,6 +1386,13 @@ Step 1 (Bug MIS O1 and O2), done; neither needed a game change:
 - **O2:** `AutoplayBot` options `-sh-autoplay-xp-burst-after S` / `-sh-autoplay-xp-burst-levels N` (a chain of N level-ups), `-sh-autoplay-levelup-hold S` (keep each screen open), and a `levelup-frames` event (open-screen frames, average FPS, worst frame). Editor play, Stage 1: with a PNG per level-up the run fell to 14 FPS (`o2-shots`); without, never under 72 (`o2-noshots`); screens held 1 s: 88 FPS average over 1,816 open-screen frames, worst 98 ms (the opening frame) (`o2-hold`). The old 8-10 FPS came from the bot's screenshots.
 - Validation: EditMode 496/496; PlayMode 228/229 (`D:/SoulHunter-Validation/run-20261001-step1/`). The one failure, `ChestFlowPlayModeTests.TheChestScreen_HasItsOwnCanvas_AndSurvivesATemporaryCanvasGoingAway`, timed out waiting for the reveal with no error logged; the chest fixtures then passed 9/9 three times and 6/6 once more. Not explained: the test's timeout now reports the screen's phase, the time scale and who holds the pause. No test wrote the real save.
 
+### Level 1 step 2, Phase 1 row 3: VS stat caps (2026-10-01)
+
+vampire.survivors.wiki/w/Player_stats, "Max value": Might 1000% ("Does not affect Soul Eater"), Area 1000%, Speed 500%, Duration 500%, Amount 10, Armor 50; Cooldown 10% (its floor was already applied).
+- `PlayerStats` keeps what every source gathers (`RawMight`, `RawArea`, `RawProjectileSpeed`, `RawDuration`, `RawAmount`, `RawArmor`) and gives the game the capped value (`Might` ... `Armor`; `MaxMight` ... `MaxArmor`). Shadow Kael copies the raw values.
+- Soul Eater (`GarlicWeapon` with life steal) reads `RawMight` (`AutoAttackWeapon.IgnoresMightCap`).
+- `StatCapTests` (T). EditMode 498/498, PlayMode 230/230, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-caps/`).
+
 ### Level 1 step 2, Phase 1 row 2: level 20/40 Growth (2026-10-01)
 
 vampire.survivors.wiki/w/Level_up: "at levels 20 and 40 ... the player also gains +100% Growth, increasing their experience gain, until they reach the next level"; wiki Growth: base 100%, bonuses additive, "This bonus is reverted at level 21 and 41". The XP requirement curve already matched (5, +10, +13 from 21, +16 from 41; +600 at 20, +2400 at 40).
