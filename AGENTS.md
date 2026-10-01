@@ -1377,6 +1377,15 @@ Validation:
 
 Not yet played by the owner.
 
+### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
+
+Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).
+
+Step 1 (Bug MIS O1 and O2), done; neither needed a game change:
+- **O1:** wiki Experience_Gem: past 400 gems, XP "is instead accumulated into a single red Experience Gem". `GemCapPlayModeTests.TheMergedGem_IsARedGem_AndReachingItGivesAllItsXp` (R): the merged gem shows the red tier and is drawn, and reaching it gives all its XP (several levels at once). The bot never went back to it. The wiki does not say where the red gem lies.
+- **O2:** `AutoplayBot` options `-sh-autoplay-xp-burst-after S` / `-sh-autoplay-xp-burst-levels N` (a chain of N level-ups), `-sh-autoplay-levelup-hold S` (keep each screen open), and a `levelup-frames` event (open-screen frames, average FPS, worst frame). Editor play, Stage 1: with a PNG per level-up the run fell to 14 FPS (`o2-shots`); without, never under 72 (`o2-noshots`); screens held 1 s: 88 FPS average over 1,816 open-screen frames, worst 98 ms (the opening frame) (`o2-hold`). The old 8-10 FPS came from the bot's screenshots.
+- Validation: EditMode 496/496; PlayMode 228/229 (`D:/SoulHunter-Validation/run-20261001-step1/`). The one failure, `ChestFlowPlayModeTests.TheChestScreen_HasItsOwnCanvas_AndSurvivesATemporaryCanvasGoingAway`, timed out waiting for the reveal with no error logged; the chest fixtures then passed 9/9 three times and 6/6 once more. Not explained: the test's timeout now reports the screen's phase, the time scale and who holds the pause. No test wrote the real save.
+
 ### Chest screen OPEN off-screen in a wide window (owner: "HANG HO GAYA", 2026-10-01)
 
 The owner's screenshot showed the chest screen ("TREASURE x3!") with no OPEN button, in a wide, short Game view (about 1366x575). `ChestUI.ScreenCanvas` scaled its 1920x1080 layout by width only, so the canvas was only 808 units high and OPEN (430 below the centre, 96 high) fell off the bottom; the paused game waited for a button nobody could reach. A 21:9 monitor would do the same.

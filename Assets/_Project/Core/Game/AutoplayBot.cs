@@ -266,6 +266,7 @@ namespace SoulHunter.Gameplay.Core
             _frameTimes.Add(Time.unscaledDeltaTime);
             float now = Time.realtimeSinceStartup;
             WatchForHangs(now);
+            WatchLevelUpFrames();
             if (now >= _nextSteer)
             {
                 _nextSteer = now + 0.1f;
@@ -385,6 +386,9 @@ namespace SoulHunter.Gameplay.Core
             if (!levelUp.IsLevelUpActive || choices == null || choices.Count == 0) yield break;
             var weapons = WeaponManager.Instance;
             UpgradeData pick = choices.OrderByDescending(c => Score(weapons, c)).First();
+            // -sh-autoplay-levelup-hold S: keep each level-up screen open S seconds, as a player reading the cards would.
+            if (float.TryParse(ArgValue("-sh-autoplay-levelup-hold"), NumberStyles.Float, CultureInfo.InvariantCulture, out var hold) && hold > 0f)
+                yield return new WaitForSecondsRealtime(hold);
             // -sh-autoplay-levelup-ui: look at the screen as a player does, once its layout has settled.
             if (HasArg("-sh-autoplay-levelup-ui")) yield return new WaitForSecondsRealtime(0.5f);
             // -sh-autoplay-levelup-shots: every level-up screen (the level-up stats panel); otherwise every fifth.
@@ -721,6 +725,36 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
+        /// <summary>
+        /// Bug MIS O2 (2026-09-30: 8-10 FPS while level-up screens were open, measured with a PNG saved on every
+        /// level-up): frames while a level-up screen is open, without screenshot frames. With
+        /// -sh-autoplay-xp-burst-after S (and -sh-autoplay-xp-burst-levels N, default 30) a chain of N level-ups starts at S.
+        /// </summary>
+        private void WatchLevelUpFrames()
+        {
+            if (_levelUpManager == null) _levelUpManager = FindFirstObjectByType<LevelUpManager>();
+            if (_levelUpManager != null && _levelUpManager.IsLevelUpActive && Time.frameCount > _shotFrame + 3)
+            {
+                float dt = Time.unscaledDeltaTime;
+                _levelUpFrames++;
+                _levelUpSeconds += dt;
+                _levelUpWorst = Mathf.Max(_levelUpWorst, dt);
+            }
+            float burstAt = float.TryParse(ArgValue("-sh-autoplay-xp-burst-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var b) ? b : -1f;
+            if (burstAt >= 0f && !_xpBurstDone && Elapsed >= burstAt && _experience != null)
+            {
+                _xpBurstDone = true;
+                int levels = int.TryParse(ArgValue("-sh-autoplay-xp-burst-levels"), out var n) ? Mathf.Clamp(n, 1, 200) : 30;
+                Event("xp-burst", $"\"levels\": {levels}, \"fromLevel\": {_experience.CurrentLevel}");
+                for (int i = 0; i < levels; i++) _experience.AddXP(Mathf.Max(1, _experience.XPToNextLevel - _experience.CurrentXP));
+            }
+        }
+
+        private LevelUpManager _levelUpManager;
+        private int _levelUpFrames;
+        private float _levelUpSeconds, _levelUpWorst;
+        private bool _xpBurstDone;
+
         private int _shotFrame = -10;
         private float _pausedSince = -1f;
         private bool _pauseReported;
@@ -805,6 +839,9 @@ namespace SoulHunter.Gameplay.Core
                 reason, Elapsed, progression != null ? progression.CurrentStage : 0, _experience != null ? _experience.CurrentLevel : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, _maxEnemies,
                 _minFps == int.MaxValue ? 0 : _minFps, _errors, Escape(Config.Character), _shots.Count);
+            if (_levelUpFrames > 0)
+                Event("levelup-frames", string.Format(CultureInfo.InvariantCulture, "\"frames\": {0}, \"avgFps\": {1:0.0}, \"worstMs\": {2:0}",
+                    _levelUpFrames, _levelUpFrames / Mathf.Max(0.0001f, _levelUpSeconds), _levelUpWorst * 1000f));
             File.WriteAllText(Path.Combine(Config.OutputFolder, "summary.json"), summary);
             Debug.Log($"[AutoplayBot] Finished ({reason}). Report in {Config.OutputFolder}");
             yield return new WaitForSecondsRealtime(0.5f);

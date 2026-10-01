@@ -106,6 +106,18 @@ namespace SoulHunter.Tests.PlayMode
             for (int i = 0; i < 10; i++) yield return null;
         }
 
+        /// <summary>As <see cref="WaitUntilRealtime(System.Func{bool}, string)"/>, and on a timeout also reports <paramref name="state"/>.</summary>
+        protected IEnumerator WaitUntilRealtime(System.Func<bool> condition, string what, System.Func<string> state)
+        {
+            float deadline = Time.realtimeSinceStartup + TimeoutSeconds;
+            while (!condition())
+            {
+                if (Time.realtimeSinceStartup > deadline)
+                    Assert.Fail($"Timed out after {TimeoutSeconds}s waiting for {what} ({state()}). Active scene: {SceneManager.GetActiveScene().name}. " + Errors());
+                yield return null;
+            }
+        }
+
         protected IEnumerator WaitUntilRealtime(System.Func<bool> condition, string what)
         {
             float deadline = Time.realtimeSinceStartup + TimeoutSeconds;

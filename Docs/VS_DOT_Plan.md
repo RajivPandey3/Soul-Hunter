@@ -84,6 +84,25 @@ Shadow Kael details (owner, 2026-09-30): Clock Lancet slows the player to 50% fo
 - Modes: Random Events, Random LevelUp, Inverse flipped map; music selection.
 - Pause: evolution recipes (Grimoire) and map.
 
+## Level 1 to 100% (owner, 2026-10-01)
+
+Owner: "haan plan save karo aur step 1 se shuru karo". "Level 1 100%" means every VS rule that comes up in a 30-minute
+Level 1 run matches, and the owner plays a full run and signs it off. No date is promised: some steps wait on owner
+decisions and art approval. A cycle is wiki check, code, its test, both full suites (~30 min) and editor play.
+
+| Step | Work | Size | Status |
+|---|---|---|---|
+| 1 | Bug MIS O1 (the 400-gem merge gem is visible and reachable for a player) and O2 (level-up FPS without per-level-up bot screenshots) | 1 cycle | Done 2026-10-01: both verified, no game change (Bug MIS O1, O2) |
+| 2 | Phase 1 rows 2-12, one at a time (XP curve, stat caps, hit i-frames, weapon level-up fire, level-up rules, crits, weapon intervals and knockback, spawning, Orologion, Curse, traps) | 11 cycles | Next |
+| 3 | Phase 2 parts seen in Level 1: six missing evolutions, Metaglio stage items, chest looks | 8-10 cycles + art approval | |
+| 4 | VS results screen at the end of a run | 2 cycles | |
+| 5 | Balance (Bug MIS O3) and the owner's decision on Pentagram erasing chest elites (O4) | 2-3 cycles | |
+| 6 | The owner plays Level 1 from the menu to 30:00; new Bug MIS; fixes; final owner OK | owner's play | |
+
+Done before this plan: the 17 Level 1 Bug MIS fixes, the first level-up hang, Reroll/Skip/Banish hidden at 0, VS locked
+PowerUps, the stats panel's first frame, and the chest and level-up screens fitting any window (owner played the first
+three and said OK). Phase 1 rows 0 and 1 are built (Phase 0; Bug MIS B04).
+
 ## Status
 
-Nothing in Phases 0-3 is built yet (2026-09-30). Update this file as rows move to MATCH.
+Phase 0 is built (2026-09-30), and Phase 1 rows 0 and 1. Update this file as rows move to MATCH.

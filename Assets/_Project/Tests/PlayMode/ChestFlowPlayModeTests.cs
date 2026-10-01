@@ -153,7 +153,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(screen != null && screen.IsOpen, Is.True, "The screen is still there after the temporary canvas went away.");
             yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.WaitingToOpen, "the OPEN button");
             screen.PressOpen();
-            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.Done, "the reveal");
+            // Timed out once in a full run (2026-10-01) and passed in three reruns: the timeout now says where it stopped.
+            yield return WaitUntilRealtime(() => screen.Current == ChestOpeningScreen.Phase.Done, "the reveal",
+                () => $"phase {(screen != null ? screen.Current.ToString() : "screen gone")}, timeScale {Time.timeScale}, pausers {GameTime.PauserNames()}");
             screen.PressDone();
             yield return null;
             Assert.AreEqual(1f, Time.timeScale, "DONE resumes the game.");
