@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      SH10_Icon_GoldPouch_0: -1929607595165671533
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
