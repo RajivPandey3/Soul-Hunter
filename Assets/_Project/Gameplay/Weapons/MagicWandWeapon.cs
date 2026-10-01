@@ -55,6 +55,9 @@ namespace SoulHunter.Gameplay.Weapons
 
         public override void LevelUp() { CurrentLevel = Mathf.Min(8, CurrentLevel + 1); }
 
+        /// <summary>VS upgrade: the next volley starts at once (a volley already firing goes on).</summary>
+        public override void ResetCooldownAndFire() { if (_remainingShots == 0) _cooldownTimer = 0f; }
+
         protected override void Update()
         {
             if (Time.deltaTime <= 0f) return;

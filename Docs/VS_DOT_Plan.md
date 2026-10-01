@@ -93,7 +93,7 @@ decisions and art approval. A cycle is wiki check, code, its test, both full sui
 | Step | Work | Size | Status |
 |---|---|---|---|
 | 1 | Bug MIS O1 (the 400-gem merge gem is visible and reachable for a player) and O2 (level-up FPS without per-level-up bot screenshots) | 1 cycle | Done 2026-10-01: both verified, no game change (Bug MIS O1, O2) |
-| 2 | Phase 1 rows 2-12, one at a time (XP curve, stat caps, hit i-frames, weapon level-up fire, level-up rules, crits, weapon intervals and knockback, spawning, Orologion, Curse, traps) | 11 cycles | Rows 2-4 done 2026-10-01 (level 20/40 Growth; stat caps; 240 ms invulnerability); row 5 next |
+| 2 | Phase 1 rows 2-12, one at a time (XP curve, stat caps, hit i-frames, weapon level-up fire, level-up rules, crits, weapon intervals and knockback, spawning, Orologion, Curse, traps) | 11 cycles | Rows 2-5 done 2026-10-01 (level 20/40 Growth; stat caps; 240 ms invulnerability; upgrade fires at once); row 6 next |
 | 3 | Phase 2 parts seen in Level 1: six missing evolutions, Metaglio stage items, chest looks | 8-10 cycles + art approval | |
 | 4 | VS results screen at the end of a run | 2 cycles | |
 | 5 | Balance (Bug MIS O3) and the owner's decision on Pentagram erasing chest elites (O4) | 2-3 cycles | |

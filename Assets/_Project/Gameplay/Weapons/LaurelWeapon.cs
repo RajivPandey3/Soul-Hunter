@@ -72,6 +72,9 @@ namespace SoulHunter.Gameplay.Combat
 
         protected override void Update() { AdvanceTime(Time.deltaTime); }
 
+        /// <summary>VS upgrade: the cooldown is reset, so a missing shield charge comes back on the next frame.</summary>
+        public override void ResetCooldownAndFire() { if (_currentCharges < MaxCharges) _rechargeRemaining = 0f; }
+
         private void AdvanceTime(float scaledDeltaTime)
         {
             if (scaledDeltaTime <= 0f) return;

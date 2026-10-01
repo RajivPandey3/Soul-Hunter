@@ -1386,6 +1386,12 @@ Step 1 (Bug MIS O1 and O2), done; neither needed a game change:
 - **O2:** `AutoplayBot` options `-sh-autoplay-xp-burst-after S` / `-sh-autoplay-xp-burst-levels N` (a chain of N level-ups), `-sh-autoplay-levelup-hold S` (keep each screen open), and a `levelup-frames` event (open-screen frames, average FPS, worst frame). Editor play, Stage 1: with a PNG per level-up the run fell to 14 FPS (`o2-shots`); without, never under 72 (`o2-noshots`); screens held 1 s: 88 FPS average over 1,816 open-screen frames, worst 98 ms (the opening frame) (`o2-hold`). The old 8-10 FPS came from the bot's screenshots.
 - Validation: EditMode 496/496; PlayMode 228/229 (`D:/SoulHunter-Validation/run-20261001-step1/`). The one failure, `ChestFlowPlayModeTests.TheChestScreen_HasItsOwnCanvas_AndSurvivesATemporaryCanvasGoingAway`, timed out waiting for the reveal with no error logged; the chest fixtures then passed 9/9 three times and 6/6 once more. Not explained: the test's timeout now reports the screen's phase, the time scale and who holds the pause. No test wrote the real save.
 
+### Level 1 step 2, Phase 1 row 5: an upgrade fires at once (2026-10-01)
+
+vampire.survivors.wiki/w/Weapons: "Upgrading a weapon will also reset its Cooldown and activate it instantly."
+- `AutoAttackWeapon.ResetCooldownAndFire()`, called by `WeaponManager.ActivateOrUpgradeWeapon` whenever an owned weapon gains a level (level-up, chest, stage item). Magic Wand starts its next volley (not mid-volley); Laurel's missing shield charge comes back.
+- `WeaponUpgradeFirePlayModeTests` (R: the Whip, mid-cooldown, fires again the frame after its upgrade). EditMode 498/498, PlayMode 232/232, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-upgradefire-full/`).
+
 ### Level 1 step 2, Phase 1 row 4: 240 ms invulnerability (2026-10-01)
 
 vampire.survivors.wiki/w/Invulnerability_Time: "At base, the player starts with 240 milliseconds" of immunity after damage, added to every source of immunity, Floor Chicken included; Treasure_Chest (Patch 0.2.4): "a brief moment of invulnerability after picking up a treasure". The wiki gives the chicken and chest no length of their own; the owner chose 240 ms (AskUserQuestion).

@@ -271,6 +271,13 @@ namespace SoulHunter.Gameplay.Combat
             _holder.ShowWeaponAttack(target != null ? FlatDirectionTo(target) : Vector3.zero);
         }
 
+        /// <summary>
+        /// VS (wiki Weapons): "Upgrading a weapon will also reset its Cooldown and activate it instantly." Called by
+        /// WeaponManager when an owned weapon gains a level (level-up, chest or stage item). Weapons with their own timer
+        /// override it.
+        /// </summary>
+        public virtual void ResetCooldownAndFire() { _timer = 0f; }
+
         public virtual void LevelUp()
         {
             CurrentLevel++;

@@ -455,7 +455,12 @@ namespace SoulHunter.Gameplay.Combat
             {
                 // Agar pehle se paida ho chuka hai, toh uski power badhani hogi.
                 Debug.Log($"[WeaponManager] {weaponPrefab.name} Upgraded to Level {currentLevel}!");
-                ApplyWeaponLevel(_spawnedWeapons[weaponPrefab], currentLevel);
+                var spawned = _spawnedWeapons[weaponPrefab];
+                var upgraded = spawned != null ? spawned.GetComponent<AutoAttackWeapon>() : null;
+                int levelBefore = upgraded != null ? upgraded.CurrentLevel : 0;
+                ApplyWeaponLevel(spawned, currentLevel);
+                // VS (wiki Weapons): upgrading resets the weapon's Cooldown and fires it at once.
+                if (upgraded != null && upgraded.CurrentLevel > levelBefore) upgraded.ResetCooldownAndFire();
             }
         }
 
