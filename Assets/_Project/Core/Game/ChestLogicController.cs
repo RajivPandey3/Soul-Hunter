@@ -188,6 +188,7 @@ namespace SoulHunter.Gameplay.Core
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
             int gold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(
                 ChestGold(itemCount, goldRoll01) + maxedItems * GoldPerMaxedItem, player != null ? player.Stats : null);
+            SoulHunter.Gameplay.Pickups.GoldRewards.CountBigCoinBags(maxedItems); // VS: Big Coin Bags from any source count
             if (gold > 0) Debug.Log($"[ChestLogicController] Chest se {gold} Gold mile!");
             result.Gold = gold;
             LastResult = result;

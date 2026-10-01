@@ -47,6 +47,38 @@ namespace SoulHunter.Gameplay.Pickups
             return amount;
         }
 
+        /// <summary>
+        /// VS Big Coin Bags (25 gold each, then Greed): a maxed level-up's gold card, or a chest item with nothing left to
+        /// upgrade. Each is counted on the save (wiki Level_up: the "always" option comes "once the player has received
+        /// 100 Big Coin Bags from any source"). Returns the gold given.
+        /// </summary>
+        public static int GrantBigCoinBags(int bags, PlayerStats stats)
+        {
+            if (bags <= 0) return 0;
+            int given = Grant(BigCoinBagGold * bags, stats);
+            CountBigCoinBags(bags);
+            return given;
+        }
+
+        /// <summary>Counts Big Coin Bags whose gold was paid elsewhere (a chest pays its own gold and the bags together).</summary>
+        public static void CountBigCoinBags(int bags)
+        {
+            if (bags <= 0) return;
+            if (GameServices.Instance != null && GameServices.Instance.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) && save.CurrentData != null)
+            {
+                save.CurrentData.BigCoinBagsReceived += bags;
+                save.SaveSoon();
+            }
+        }
+
+        /// <summary>VS Big Coin Bag: 25 gold (wiki Big Coin Bag).</summary>
+        public const int BigCoinBagGold = 25;
+
+        /// <summary>Big Coin Bags this save has received (0 without a save).</summary>
+        public static int BigCoinBagsReceived =>
+            GameServices.Instance != null && GameServices.Instance.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) && save.CurrentData != null
+                ? save.CurrentData.BigCoinBagsReceived : 0;
+
         private static void Deposit(int amount)
         {
             if (amount <= 0) return;

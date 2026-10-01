@@ -61,6 +61,7 @@ namespace SoulHunter.Gameplay.Core
             // VS (Reroll, Skip and Banish pages): a run starts with none; the PowerUps give 2 per rank (AddPowerUpCharges),
             // and Soul Eggs add theirs. The scene's _starting* values (2 each, Soul Hunter's old default) are no longer used.
             RerollsLeft = SkipsLeft = BanishesLeft = 0;
+            MaxedRewards.Always = MaxedRewards.AlwaysChoice.None; // a run's "always gold/chicken" choice starts unset
 
             // Learning Comment:
             // "Read First, Match Later" aur Self-Healing pattern:
@@ -203,6 +204,15 @@ namespace SoulHunter.Gameplay.Core
         return;
     }
 
+    // VS (wiki Level_up): with "always" gold or chicken chosen, a maxed level-up pays out at once, with no screen.
+    if (AreMaxedRewardCards(choices) && MaxedRewards.Always != MaxedRewards.AlwaysChoice.None)
+    {
+        for (; _pendingLevelUps > 0; _pendingLevelUps--) MaxedRewards.ApplyAlways(_playerController);
+        _isLevelUpActive = false;
+        ResumeGameplay();
+        return;
+    }
+
     Debug.Log("[LevelUpManager] >>> Valid choices found:");
 
     for (int i = 0; i < choices.Count; i++)
@@ -219,6 +229,7 @@ namespace SoulHunter.Gameplay.Core
     {
         Debug.Log("[LevelUpManager] >>> Sending choices to LevelUpUI");
 
+        _offered = choices;
         OnLevelUpUIRound.Invoke(choices);
 
         Debug.Log("[LevelUpManager] <<< LevelUpUI event returned");
@@ -247,19 +258,32 @@ namespace SoulHunter.Gameplay.Core
             CompleteCurrentLevelUp();
         }
 
+        /// <summary>The choices on screen now (null between level-ups).</summary>
+        private List<UpgradeData> _offered;
+
+        /// <summary>VS (wiki Level_up): "Skips and Rerolls are unavailable when the player has maxed out their inventory."</summary>
+        public bool OfferingMaxedChoices => _offered != null && (AreMaxedRewardCards(_offered) || _offered.Any(LimitBreak.IsCard));
+        public bool CanReroll => _isLevelUpActive && RerollsLeft > 0 && !OfferingMaxedChoices;
+        public bool CanSkip => _isLevelUpActive && SkipsLeft > 0 && !OfferingMaxedChoices;
+
+        private static bool AreMaxedRewardCards(List<UpgradeData> choices) => choices != null && choices.Count > 0 && choices.All(MaxedRewards.IsCard);
+
         /// <summary>Offers a fresh set of choices for the current level-up. Returns false when not allowed.</summary>
         public bool Reroll()
         {
-            if (!_isLevelUpActive || RerollsLeft <= 0) return false;
+            if (!CanReroll) return false;
             if (!Preserved()) RerollsLeft--;
-            PresentChoicesOrPayOut(GetLevelUpChoices(_currentChoiceCount));
+            // VS (wiki Reroll): "The items that were discarded by a reroll cannot appear in the new set of items."
+            var discarded = new HashSet<UpgradeData.UpgradeType>();
+            if (_offered != null) foreach (var item in _offered) if (item != null) discarded.Add(item.Type);
+            PresentChoicesOrPayOut(GetLevelUpChoices(_currentChoiceCount, discarded));
             return true;
         }
 
         /// <summary>Gives up the current level-up without taking anything. Returns false when not allowed.</summary>
         public bool Skip()
         {
-            if (!_isLevelUpActive || SkipsLeft <= 0) return false;
+            if (!CanSkip) return false;
             if (!Preserved()) SkipsLeft--;
             Debug.Log("[LevelUpManager] Level-up skipped.");
             CompleteCurrentLevelUp();
@@ -295,11 +319,13 @@ namespace SoulHunter.Gameplay.Core
                 CompleteCurrentLevelUp();
                 return;
             }
+            _offered = choices;
             OnLevelUpUIRound?.Invoke(choices);
         }
 
         private void CompleteCurrentLevelUp()
         {
+            _offered = null;
             _pendingLevelUps = Mathf.Max(0, _pendingLevelUps - 1);
 
             // Agar aur level ups pending hain toh agla round dikhao, warna game resume karo
@@ -350,14 +376,16 @@ namespace SoulHunter.Gameplay.Core
         /// Limit Break cards (one per weapon held, picked at random). Chests keep using GetRandomValidUpgrades (VS: Limit
         /// Break does not change treasure chests).
         /// </summary>
-        public List<UpgradeData> GetLevelUpChoices(int count)
+        public List<UpgradeData> GetLevelUpChoices(int count) => GetLevelUpChoices(count, null);
+
+        private List<UpgradeData> GetLevelUpChoices(int count, HashSet<UpgradeData.UpgradeType> exclude)
         {
-            var choices = GetRandomValidUpgrades(count);
+            var choices = GetRandomValidUpgrades(count, true, exclude);
             if (choices.Count == 0 && SoulHunter.Gameplay.Data.RunModes.LimitBreak)
                 choices = LimitBreak.BuildCards(_weaponManager, count, IconFor);
             // VS wiki (Level_up): with nothing left to upgrade, the level-up offers gold or a Floor Chicken to choose from.
             if (choices.Count == 0 && _weaponManager != null)
-                choices = MaxedRewards.BuildCards();
+                choices = MaxedRewards.BuildCards(SoulHunter.Gameplay.Pickups.GoldRewards.BigCoinBagsReceived >= MaxedRewards.AlwaysAfterBags);
             return choices;
         }
 
@@ -375,10 +403,16 @@ namespace SoulHunter.Gameplay.Core
         /// </summary>
         public List<UpgradeData> GetRandomValidUpgrades(int count) => GetRandomValidUpgrades(count, ownedChecks: true);
 
-        private List<UpgradeData> GetRandomValidUpgrades(int count, bool ownedChecks)
+        private List<UpgradeData> GetRandomValidUpgrades(int count, bool ownedChecks, HashSet<UpgradeData.UpgradeType> exclude = null)
         {
             var validUpgrades = GetValidUpgrades();
             if (validUpgrades.Count == 0) return new List<UpgradeData>();
+            // A reroll's discarded items are left out of the new set; if nothing else is left, they may come back.
+            if (exclude != null && exclude.Count > 0)
+            {
+                var rest = validUpgrades.Where(u => !exclude.Contains(u.Type)).ToList();
+                if (rest.Count > 0) validUpgrades = rest;
+            }
 
             // VS "Receiving owned items": only while the player's inventory is not full.
             float ownedChance = ownedChecks && !_weaponManager.IsInventoryFull ? OwnedChance(CurrentLuck(), LevelBeingOffered()) : 0f;

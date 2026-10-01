@@ -76,6 +76,8 @@ namespace SoulHunter.Core.Persistence
         /// animations cannot be skipped; 5-item chests become skippable after 50 five-item chests or 500 chests.
         /// </summary>
         public int ChestsOpened;
+        /// <summary>VS (wiki Level_up): Big Coin Bags received from any source; at 100 the "always gold/chicken" option opens.</summary>
+        public int BigCoinBagsReceived;
         public int FiveItemChestsOpened;
 
         // --- Run modes (VS "List of Modes"), picked on the character select screen and copied into RunModes when a

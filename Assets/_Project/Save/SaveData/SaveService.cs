@@ -297,6 +297,7 @@ namespace SoulHunter.Core.Persistence
             int lockedRefund = PowerUpUnlocks.RefundIfLockedRanksOwned(data);
             if (lockedRefund > 0) Debug.Log($"[SaveService] PowerUps with locked ranks refunded: +{lockedRefund} gold.");
             data.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
+            data.BigCoinBagsReceived = Mathf.Max(0, data.BigCoinBagsReceived);
             data.FiveItemChestsOpened = Mathf.Max(0, data.FiveItemChestsOpened);
             // Run mode toggles (ModeHurry ... ModeLimitBreak) need no step: a save without them loads them as off, which
             // is the VS default, and a bool cannot hold an impossible value. The schema version stays at 1.

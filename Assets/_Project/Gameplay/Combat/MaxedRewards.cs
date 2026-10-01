@@ -4,52 +4,99 @@ using UnityEngine;
 namespace SoulHunter.Gameplay.Combat
 {
     /// <summary>
-    /// VS wiki (Level_up, fetched 2026-09-28): "When ... player has nothing left to upgrade, level ups will instead grant
-    /// the options to gain extra Gold or restore health with Floor Chicken." The level-up screen offers two cards and the
-    /// player picks one: 25 gold (a Big Coin Bag, then Greed) or 30 health (a Floor Chicken). Before this, both were given
-    /// silently with no screen. Soul Hunter's own card names.
+    /// VS wiki (Level_up, fetched 2026-09-28 and 2026-10-01): "When ... player has nothing left to upgrade, level ups will
+    /// instead grant the options to gain extra Gold or restore health with Floor Chicken, with the option to always
+    /// receive either Floor Chickens or Gold once the player has received 100 Big Coin Bags from any source." and "The
+    /// 'Always Floor Chicken' option will only give Floor Chickens if the player has missing health. If the player is
+    /// fully healed, they will receive Gold instead." The level-up screen offers the cards and the player picks one:
+    /// 25 gold (a Big Coin Bag, then Greed) or 30 health (a Floor Chicken). After 100 bags two more cards choose "always";
+    /// for the rest of the run, maxed level-ups then pay out at once with no screen. Soul Hunter's own card names.
     /// </summary>
     public static class MaxedRewards
     {
         public const int GoldAmount = 25;   // VS Big Coin Bag
         public const int HealAmount = 30;   // VS Floor Chicken
+        public const int AlwaysAfterBags = 100;
 
-        private static readonly Dictionary<UpgradeData, bool> Cards = new Dictionary<UpgradeData, bool>(); // card -> is gold
+        public enum Kind { Gold, Chicken, AlwaysGold, AlwaysChicken }
+        public enum AlwaysChoice { None, Gold, Chicken }
+
+        /// <summary>The run's "always" choice; reset when a run starts (LevelUpManager).</summary>
+        public static AlwaysChoice Always { get; set; } = AlwaysChoice.None;
+
+        private static readonly Dictionary<UpgradeData, Kind> Cards = new Dictionary<UpgradeData, Kind>();
 
         public static bool IsCard(UpgradeData upgrade) => upgrade != null && Cards.ContainsKey(upgrade);
-        public static bool IsGoldCard(UpgradeData upgrade) => upgrade != null && Cards.TryGetValue(upgrade, out var gold) && gold;
+        public static bool IsGoldCard(UpgradeData upgrade) => upgrade != null && Cards.TryGetValue(upgrade, out var kind) && (kind == Kind.Gold || kind == Kind.AlwaysGold);
+        public static bool TryGetKind(UpgradeData upgrade, out Kind kind) { kind = Kind.Gold; return upgrade != null && Cards.TryGetValue(upgrade, out kind); }
 
         /// <summary>The two choices of a level-up with nothing left to upgrade.</summary>
-        public static List<UpgradeData> BuildCards()
+        public static List<UpgradeData> BuildCards() => BuildCards(false);
+
+        /// <summary>The choices, with the two "always" cards once 100 Big Coin Bags have been received.</summary>
+        public static List<UpgradeData> BuildCards(bool withAlways)
         {
             Cards.Clear();
-            var gold = ScriptableObject.CreateInstance<UpgradeData>();
-            gold.UpgradeName = "Gold Pouch";
-            gold.Description = $"+{GoldAmount} gold.";
-            var chicken = ScriptableObject.CreateInstance<UpgradeData>();
-            chicken.UpgradeName = "Roast Chicken";
-            chicken.Description = $"Restores {HealAmount} health.";
-            // Bug MIS B10 (2026-09-30): the two cards had no icon.
             var content = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
-            if (content != null)
+            var list = new List<UpgradeData>
             {
-                gold.Icon = content.GoldPouchIcon;
-                chicken.Icon = content.RoastChickenIcon;
+                Card(Kind.Gold, "Gold Pouch", $"+{GoldAmount} gold.", content != null ? content.GoldPouchIcon : null),
+                Card(Kind.Chicken, "Roast Chicken", $"Restores {HealAmount} health.", content != null ? content.RoastChickenIcon : null),
+            };
+            if (withAlways)
+            {
+                list.Add(Card(Kind.AlwaysGold, "Always Gold Pouch", $"+{GoldAmount} gold now and at every maxed level-up this run.", content != null ? content.GoldPouchIcon : null));
+                list.Add(Card(Kind.AlwaysChicken, "Always Roast Chicken", $"Restores {HealAmount} health now and at every maxed level-up this run (gold when at full health).", content != null ? content.RoastChickenIcon : null));
             }
-            Cards[gold] = true;
-            Cards[chicken] = false;
-            return new List<UpgradeData> { gold, chicken };
+            return list;
+        }
+
+        private static UpgradeData Card(Kind kind, string name, string description, Sprite icon)
+        {
+            var card = ScriptableObject.CreateInstance<UpgradeData>();
+            card.UpgradeName = name;
+            card.Description = description;
+            card.Icon = icon;
+            Cards[card] = kind;
+            return card;
         }
 
         /// <summary>Applies a reward card to the player. False when <paramref name="card"/> is not one.</summary>
         public static bool TryApply(UpgradeData card, SoulHunter.Gameplay.Player.PlayerController player)
         {
-            if (!IsCard(card)) return false;
-            if (IsGoldCard(card))
-                SoulHunter.Gameplay.Pickups.GoldRewards.Grant(GoldAmount, player != null ? player.Stats : null);
-            else if (player != null)
-                player.GetComponent<HealthController>()?.Heal(SoulHunter.Gameplay.Pickups.HealthPickup.HealWithRecovery(HealAmount, player.Stats != null ? player.Stats.Regen : 0f));
+            if (!TryGetKind(card, out var kind)) return false;
+            switch (kind)
+            {
+                case Kind.Gold: GiveGold(player); break;
+                case Kind.Chicken: GiveChicken(player); break;
+                case Kind.AlwaysGold: Always = AlwaysChoice.Gold; ApplyAlways(player); break;
+                case Kind.AlwaysChicken: Always = AlwaysChoice.Chicken; ApplyAlways(player); break;
+            }
             return true;
+        }
+
+        /// <summary>Pays one maxed level-up by the run's "always" choice. False when none was chosen.</summary>
+        public static bool ApplyAlways(SoulHunter.Gameplay.Player.PlayerController player)
+        {
+            if (Always == AlwaysChoice.None) return false;
+            if (Always == AlwaysChoice.Chicken && HasMissingHealth(player)) GiveChicken(player);
+            else GiveGold(player); // "Always Floor Chicken" at full health gives gold (wiki)
+            return true;
+        }
+
+        private static bool HasMissingHealth(SoulHunter.Gameplay.Player.PlayerController player)
+        {
+            var health = player != null ? player.GetComponent<HealthController>() : null;
+            return health != null && health.CurrentHealth < health.MaxHealth;
+        }
+
+        private static void GiveGold(SoulHunter.Gameplay.Player.PlayerController player) =>
+            SoulHunter.Gameplay.Pickups.GoldRewards.GrantBigCoinBags(1, player != null ? player.Stats : null);
+
+        private static void GiveChicken(SoulHunter.Gameplay.Player.PlayerController player)
+        {
+            if (player == null) return;
+            player.GetComponent<HealthController>()?.Heal(SoulHunter.Gameplay.Pickups.HealthPickup.HealWithRecovery(HealAmount, player.Stats != null ? player.Stats.Regen : 0f));
         }
     }
 }

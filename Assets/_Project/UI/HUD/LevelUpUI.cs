@@ -287,7 +287,7 @@ namespace SoulHunter.Gameplay.UI
 
         private void OnSkipClicked()
         {
-            if (_levelUpManager == null || _levelUpManager.SkipsLeft <= 0) return;
+            if (_levelUpManager == null || !_levelUpManager.CanSkip) return;
             // Close first so a queued level-up can reopen the panel cleanly.
             if (_levelUpPanel != null) _levelUpPanel.SetActive(false);
             _levelUpManager.Skip();
@@ -328,12 +328,12 @@ namespace SoulHunter.Gameplay.UI
             if (_rerollButton != null)
             {
                 SetButtonLabel(_rerollButton, $"Reroll ({_levelUpManager.RerollsLeft})");
-                ShowAction(_rerollButton, _levelUpManager.RerollsLeft > 0);
+                ShowAction(_rerollButton, _levelUpManager.CanReroll); // also off on the maxed-out cards (wiki Level_up)
             }
             if (_skipButton != null)
             {
                 SetButtonLabel(_skipButton, $"Skip ({_levelUpManager.SkipsLeft})");
-                ShowAction(_skipButton, _levelUpManager.SkipsLeft > 0);
+                ShowAction(_skipButton, _levelUpManager.CanSkip);
             }
             if (_banishButton != null)
             {

@@ -1386,6 +1386,14 @@ Step 1 (Bug MIS O1 and O2), done; neither needed a game change:
 - **O2:** `AutoplayBot` options `-sh-autoplay-xp-burst-after S` / `-sh-autoplay-xp-burst-levels N` (a chain of N level-ups), `-sh-autoplay-levelup-hold S` (keep each screen open), and a `levelup-frames` event (open-screen frames, average FPS, worst frame). Editor play, Stage 1: with a PNG per level-up the run fell to 14 FPS (`o2-shots`); without, never under 72 (`o2-noshots`); screens held 1 s: 88 FPS average over 1,816 open-screen frames, worst 98 ms (the opening frame) (`o2-hold`). The old 8-10 FPS came from the bot's screenshots.
 - Validation: EditMode 496/496; PlayMode 228/229 (`D:/SoulHunter-Validation/run-20261001-step1/`). The one failure, `ChestFlowPlayModeTests.TheChestScreen_HasItsOwnCanvas_AndSurvivesATemporaryCanvasGoingAway`, timed out waiting for the reveal with no error logged; the chest fixtures then passed 9/9 three times and 6/6 once more. Not explained: the test's timeout now reports the screen's phase, the time scale and who holds the pause. No test wrote the real save.
 
+### Level 1 step 2, Phase 1 row 6: level-up rules (2026-10-01)
+
+vampire.survivors.wiki/w/Reroll: "The items that were discarded by a reroll cannot appear in the new set of items." wiki Level_up: "Skips and Rerolls are unavailable when the player has maxed out their inventory"; maxed level-ups offer gold or a Floor Chicken, "with the option to always receive either Floor Chickens or Gold once the player has received 100 Big Coin Bags from any source"; "Always Floor Chicken" gives gold at full health.
+- `LevelUpManager`: a reroll leaves the shown items out of the new set (they may return only if nothing else is left); `CanReroll`/`CanSkip` are false on maxed-out or Limit Break cards (`OfferingMaxedChoices`), and the level-up screen hides those buttons.
+- Big Coin Bags are counted on the save (`GameData.BigCoinBagsReceived`, repaired by `SaveService`): the Gold Pouch card and a chest item with nothing left to upgrade (`GoldRewards.GrantBigCoinBags` / `CountBigCoinBags`).
+- From 100 bags the maxed screen adds "Always Gold Pouch" and "Always Roast Chicken" (`MaxedRewards`); once picked, the run's later maxed level-ups pay out with no screen. Card names and text are Soul Hunter's; the wiki gives no UI.
+- `LevelUpRulesPlayModeTests` (R). EditMode 498/498, PlayMode 234/234, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-lvlrules-full/`).
+
 ### Level 1 step 2, Phase 1 row 5: an upgrade fires at once (2026-10-01)
 
 vampire.survivors.wiki/w/Weapons: "Upgrading a weapon will also reset its Cooldown and activate it instantly."
