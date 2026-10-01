@@ -1403,7 +1403,8 @@ The owner's Editor log showed both runs stopping right after the first level-up 
 - `AutoplayBot` logs `hitch` (frames over 0.25 s, not screenshot frames) and `stuck-pause` (paused over 20 s, with `GameTime.PauserNames()`) events, and with `-sh-autoplay-levelup-ui` a `levelup-ui` event (panel and card screen rects).
 - EditMode 491/491, PlayMode 222/222, save untouched (`D:/SoulHunter-Validation/run-20260930-hang/`).
 - Editor play with the owner's scene and HUD prefab: before the fix (`hang-03`) the first level-up panel was inactive; after it (`hang-04`, 5 min, Draven) all 19 level-ups showed their panel, 0 hitches, 0 errors, min 61 FPS. Bot runs on the committed scene (`hang-01`, 8 min) had no hitch or stuck pause either.
-- Seen, not changed: with the owner's HUD layout the level-up stats panel has room for only 2 of its rows (8 of 19 stats show).
+- ~~Seen, not changed: with the owner's HUD layout the level-up stats panel has room for only 2 of its rows.~~ Corrected 2026-10-01: that was the bot's screenshot 1-2 frames after the screen opened. The panel was fitted to the cards' positions before the layout rebuild (2 of 5 rows) and corrected itself a frame later; settled, all 19 stats showed. `LevelUpUI.ShowLevelUpScreen` now forces the canvas layout and refits the panel when it opens. Editor play with the owner's scene (`stats-03`, shot at the opening frame): all 19 stats, 0 errors. `StatsPanelFirstFramePlayModeTests` (R) guards it but does not reproduce it in the test runner's small window. `AutoplayBot` logs the stats panel's geometry with `-sh-autoplay-levelup-ui` (and waits 0.5 s first). EditMode 496/496, PlayMode 226/226, save untouched (`D:/SoulHunter-Validation/run-20261001-stats/`).
+- The owner played the hang fix, the Reroll/Skip/Banish change and the locked PowerUps (2026-10-01): "maine khel kar dekha abhi ok hai".
 
 ### Level 1 Bug MIS fixed (owner: "sab bug fix karo safely", 2026-09-30)
 

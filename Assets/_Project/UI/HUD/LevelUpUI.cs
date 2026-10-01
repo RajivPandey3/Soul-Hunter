@@ -144,6 +144,16 @@ namespace SoulHunter.Gameplay.UI
     if (_levelUpPanel != null)
     {
         _levelUpPanel.SetActive(true);
+        // Lay the cards out now, so the stats panel fits the real free band from the first frame (it measured the old
+        // card positions and showed only 2 of its 5 rows for a frame or two; owner, 2026-10-01).
+        Canvas.ForceUpdateCanvases();
+        var statsPanel = _levelUpPanel.transform.Find(StatsPanel.ObjectName)?.GetComponent<StatsPanel>();
+        if (statsPanel != null)
+        {
+            statsPanel.FitBetween(HeadingRect(), _upgradeButtons, 0.23f, 0.83f);
+            statsPanel.Refresh();
+            statsPanel.FitBetween(HeadingRect(), _upgradeButtons, 0.23f, 0.83f);
+        }
     }
     else
     {

@@ -385,6 +385,8 @@ namespace SoulHunter.Gameplay.Core
             if (!levelUp.IsLevelUpActive || choices == null || choices.Count == 0) yield break;
             var weapons = WeaponManager.Instance;
             UpgradeData pick = choices.OrderByDescending(c => Score(weapons, c)).First();
+            // -sh-autoplay-levelup-ui: look at the screen as a player does, once its layout has settled.
+            if (HasArg("-sh-autoplay-levelup-ui")) yield return new WaitForSecondsRealtime(0.5f);
             // -sh-autoplay-levelup-shots: every level-up screen (the level-up stats panel); otherwise every fifth.
             if (_experience.CurrentLevel % 5 == 0 || HasArg("-sh-autoplay-levelup-shots")) yield return Shot($"levelup{_experience.CurrentLevel:00}");
             if (HasArg("-sh-autoplay-levelup-ui")) Event("levelup-ui", LevelUpUiState());
@@ -415,6 +417,16 @@ namespace SoulHunter.Gameplay.Core
             sb.Append(", \"buttons\": [");
             sb.Append(string.Join(", ", buttons.Select(b => $"\"{Escape(b.name)} {(b.gameObject.activeInHierarchy ? "on" : "off")} {ScreenRectOf(b.transform)}\"")));
             sb.Append($"], \"screen\": \"{Screen.width}x{Screen.height}\"");
+            var stats = panel.GetComponentInChildren<StatsPanel>(true);
+            if (stats != null)
+            {
+                var sr = (RectTransform)stats.transform;
+                var pr = (RectTransform)sr.parent;
+                sb.Append(string.Format(CultureInfo.InvariantCulture,
+                    ", \"stats\": \"{0}\", \"statsFont\": {1:0.0}, \"statsRows\": {2}, \"parentScale\": \"{3:0.000},{4:0.000}\", \"parentRect\": \"{5:0}x{6:0}\", \"statsAnchors\": \"{7:0.000}-{8:0.000}\"",
+                    ScreenRectOf(sr), stats.FontSize, stats.Rows != null ? stats.Rows.Length : 0, pr.lossyScale.x, pr.lossyScale.y,
+                    pr.rect.width, pr.rect.height, sr.anchorMin.y, sr.anchorMax.y));
+            }
             return sb.ToString();
         }
 
