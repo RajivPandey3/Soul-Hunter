@@ -14,8 +14,8 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class GarlicWeapon : AutoAttackWeapon
     {
-        /// <summary>Garlic's own knockback (weak; provisional). Its VS effect is raising knockback taken.</summary>
-        public const float GarlicKnockback = 0.3f;
+        /// <summary>VS wiki Garlic and Soul Eater: knockback 0. Their effect is raising the enemy's knockback taken.</summary>
+        public override float Knockback => 0f;
 
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.None;
         [Header("Soul Hunter Theme: Aura of Death (Garlic)")]
@@ -117,7 +117,8 @@ namespace SoulHunter.Gameplay.Weapons
                         Amount = actualDamage,
                         HitPoint = _hitsBuffer[i].ClosestPoint(transform.position),
                         KnockbackDirection = (_hitsBuffer[i].transform.position - transform.position).normalized * 0.1f,
-                        WeaponKnockback = GarlicKnockback
+                        WeaponKnockback = Knockback,
+                        KnockbackSet = true
                     };
                     damageable.TakeDamage(packet);
                     var enemy = _hitsBuffer[i].GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();

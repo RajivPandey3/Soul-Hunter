@@ -60,7 +60,36 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(enemy.KnockbackTaken, Is.EqualTo(1.3f).Within(1e-5));
             for (int i = 0; i < 20; i++) enemy.AddKnockbackTaken(EnemyController.GarlicKnockbackStep);
             Assert.That(enemy.KnockbackTaken, Is.EqualTo(enemy.MaxKnockback).Within(1e-5), "Capped at the enemy's maximum.");
-            Assert.That(GarlicWeapon.GarlicKnockback, Is.LessThan(1f), "Garlic itself pushes weakly.");
+            var garlic = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Weapons/Garlic_Weapon.prefab").GetComponent<GarlicWeapon>();
+            Assert.That(garlic.Knockback, Is.EqualTo(0f), "VS wiki Garlic: knockback 0 (it raises knockback taken instead).");
+        }
+
+        /// <summary>VS DOT Phase 1 row 8 (2026-10-01): each weapon's knockback from its wiki infobox.</summary>
+        [TestCase("Assets/Prefabs/Weapons/Whip_Weapon.prefab", 1f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/Knife.prefab", 0.5f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/ThousandEdge.prefab", 0.5f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/Peachone.prefab", 2f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/SantaWater.prefab", 0f)]
+        [TestCase("Assets/Prefabs/Weapons/Cross_Weapon.prefab", 1f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/HeavenSword.prefab", 6f)]
+        [TestCase("Assets/Prefabs/Weapons/Bible_Weapon.prefab", 1f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/UnholyVespers.prefab", 4f)]
+        [TestCase("Assets/Prefabs/Weapons/Garlic_Weapon.prefab", 0f)]
+        [TestCase("Assets/Prefabs/Weapons/Generated/SoulEater.prefab", 0f)]
+        public void EachWeapon_HasItsVsKnockback(string path, float knockback)
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Assert.That(prefab, Is.Not.Null, path);
+            Assert.That(prefab.GetComponent<SoulHunter.Gameplay.Combat.AutoAttackWeapon>().Knockback, Is.EqualTo(knockback).Within(1e-5), path);
+        }
+
+        [Test]
+        public void APacketWithZeroKnockback_DoesNotPush_AndAnUnsetOneUsesTheDefault()
+        {
+            Assert.That(new SoulHunter.Gameplay.Combat.DamagePacket(1, Vector3.zero, Vector3.zero).KnockbackOrDefault, Is.EqualTo(1f));
+            Assert.That(new SoulHunter.Gameplay.Combat.DamagePacket(1, Vector3.zero, Vector3.zero).WithKnockback(0f).KnockbackOrDefault, Is.EqualTo(0f));
+            Assert.That(new SoulHunter.Gameplay.Combat.DamagePacket(1, Vector3.zero, Vector3.zero).WithKnockback(6f).KnockbackOrDefault, Is.EqualTo(6f));
+            Assert.That(new SoulHunter.Gameplay.Combat.DamagePacket(1, Vector3.zero, Vector3.zero).WithKnockback(-1f).KnockbackOrDefault, Is.EqualTo(1f));
         }
 
         [Test]

@@ -4,6 +4,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class BoneWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => BaseDuration;
         public GameObject BonePrefab;
         public float ThrowSpeed = 10f; // Soul Hunter speed tuning (kept); VS Speed level-ups scale it
 

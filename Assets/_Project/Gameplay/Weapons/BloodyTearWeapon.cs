@@ -7,7 +7,7 @@ namespace SoulHunter.Gameplay.Combat
     public class BloodyTearWeapon : AutoAttackWeapon
     {
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
-        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
+        protected override float BaseCritChance => 0.1f; // VS wiki Critical_Hit: Bloody Tear 10%, 2x
         [Header("Bloody Tear Settings (Evolved Whip)")]
         public GameObject WhipVisualPrefab; 
         public float HealAmount = 8f; 

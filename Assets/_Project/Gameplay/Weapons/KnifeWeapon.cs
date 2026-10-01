@@ -5,7 +5,11 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class KnifeWeapon : AutoAttackWeapon
     {
-        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
+        public override bool UsesPierce => true;
+        public override float Knockback => 0.5f; // VS wiki Knife: knockback 0.5
+        // VS wiki Critical_Hit: the Knife crits only with Slash (30%, 3x before Slash doubles it).
+        protected override float SlashCritChance => 0.3f;
+        protected override float SlashCritMultiplier => 3f;
         [SerializeField] private GameObject _projectilePrefab;
         public float KnifeSpeed = 15f; // Soul Hunter speed tuning (kept)
 
@@ -19,7 +23,7 @@ namespace SoulHunter.Gameplay.Combat
         public float BaseDamage => VsBaseDamage + (Level >= 3 ? 5f : 0f) + (Level >= 7 ? 5f : 0f);
         public int KnivesPerAttack => 1 + (Level >= 2 ? 1 : 0) + (Level >= 3 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 7 ? 1 : 0);
         /// <summary>Enemies each knife passes through (VS: +1 at levels 5 and 8).</summary>
-        public int Pierce => 1 + (Level >= 5 ? 1 : 0) + (Level >= 8 ? 1 : 0);
+        public int Pierce => 1 + (Level >= 5 ? 1 : 0) + (Level >= 8 ? 1 : 0) + ExtraPierce;
         private PlayerController _player;
 
         protected override void Awake()

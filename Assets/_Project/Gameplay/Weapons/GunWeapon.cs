@@ -4,6 +4,8 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class GunWeapon : AutoAttackWeapon
     {
+        public override bool UsesPierce => true;
+        public override float Knockback => 0.1f; // VS wiki Phiera Der Tuphello: knockback 0.1
         public GameObject BulletPrefab; 
         public bool ShootCorners = true; // Phiera shoots corners
         
@@ -19,7 +21,7 @@ namespace SoulHunter.Gameplay.Combat
         private int Level => Mathf.Clamp(CurrentLevel, 1, MaxLevel);
         public float BaseDamage => VsBaseDamage + (Level >= 5 ? 5f : 0f) + (Level >= 7 ? 5f : 0f);
         public int BulletsPerArm => 1 + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0);
-        public int Pierce => 1 + 2 * ((Level >= 3 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 8 ? 1 : 0));
+        public int Pierce => 1 + 2 * ((Level >= 3 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 8 ? 1 : 0)) + ExtraPierce;
         public float LevelSpeedMultiplier => Level >= 7 ? 1.5f : 1f;
 
         protected override void Awake()

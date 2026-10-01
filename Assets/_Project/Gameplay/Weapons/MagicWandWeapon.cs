@@ -10,6 +10,7 @@ namespace SoulHunter.Gameplay.Weapons
 {
     public class MagicWandWeapon : AutoAttackWeapon
     {
+        public override bool UsesPierce => true;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         [SerializeField] private GameObject _projectilePrefab;
         [SerializeField] private float _cooldown = 1.2f;
@@ -34,7 +35,7 @@ namespace SoulHunter.Gameplay.Weapons
         public override int MaxLevel => 8;
         public int BaseDamage => _damage + (Level >= 5 ? 10 : 0) + (Level >= 8 ? 10 : 0);
         public int ShotCount => Mathf.Max(1, 1 + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (_stats != null ? _stats.Amount : 0));
-        public int Pierce => Level >= 7 ? 2 : 1;
+        public int Pierce => (Level >= 7 ? 2 : 1) + ExtraPierce;
         public float EffectiveCooldown => Mathf.Max(0.01f, (_cooldown - (Level >= 3 ? 0.2f : 0f)) * (_stats != null ? _stats.Cooldown : 1f));
 
         protected override void Awake()

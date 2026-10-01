@@ -66,6 +66,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNotNull(weapon, $"{type} is equipped.");
             yield return new WaitForSeconds(1.5f); // the shot fired on equip dies down
 
+            // King Bible rests between cycles (VS, 2026-10-01): bring its books out before counting them.
+            if (type == UpgradeType.Bible) { weapon.ResetCooldownAndFire(); yield return null; yield return null; }
             int booksBefore = LiveBooks();
             var without = new List<Shot>();
             yield return MeasureOneAttack(weapon, without);
@@ -86,6 +88,9 @@ namespace SoulHunter.Tests.PlayMode
 
             if (type == UpgradeType.Bible)
             {
+                weapon.ResetCooldownAndFire();
+                yield return null;
+                yield return null;
                 // King Bible keeps its books orbiting (built in Update), so the live books are counted instead.
                 Assert.That(LiveBooks(), Is.EqualTo(booksBefore + 2), $"Two more books orbit ({booksBefore} before).");
                 Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
@@ -134,6 +139,13 @@ namespace SoulHunter.Tests.PlayMode
                 // Attack(): start a volley now through it, so the window always holds exactly one volley.
                 typeof(MagicWandWeapon).GetField("_remainingShots", Private).SetValue(weapon, 0);
                 typeof(MagicWandWeapon).GetField("_cooldownTimer", Private).SetValue(weapon, 0f);
+            }
+            else if (weapon is PeachoneWeapon)
+            {
+                // Peachone bombards in sets over its 4 s Duration (VS, 2026-10-01): stop the running activation and fire
+                // exactly one set, so the window holds one set.
+                weapon.StopAllCoroutines();
+                weapon.StartCoroutine((IEnumerator)typeof(PeachoneWeapon).GetMethod("BombingRun", Private).Invoke(weapon, null));
             }
             else typeof(AutoAttackWeapon).GetMethod("Attack", Private).Invoke(weapon, null);
             while (Time.time < start + 1f)

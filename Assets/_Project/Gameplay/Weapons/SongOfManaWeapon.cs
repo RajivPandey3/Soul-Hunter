@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class SongOfManaWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => ShotLifetime;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         public GameObject VerticalBeamPrefab;
         [Tooltip("Shot speed before the projectile Speed stat. Provisional.")]

@@ -4,6 +4,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class RunetracerWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => BaseDuration;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Magic;
         public GameObject RunePrefab;
         public float Speed = 8f; // Soul Hunter speed tuning (kept); VS Speed level-ups scale it

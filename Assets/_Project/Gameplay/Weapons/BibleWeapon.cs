@@ -10,11 +10,20 @@ namespace SoulHunter.Gameplay.Weapons
     /// Ye continuously rotate karti hai, aur jo dushman beech mein aaye usey damage karti hai.
     /// Level table (1-8): L2/L5/L8 ek aur bible, L3/L6 area + speed, L4/L7 damage.
     /// VS wiki (King Bible): 10 damage, 1 book, 3 s duration then 3 s cooldown; L2/L5/L8 +1 book;
-    /// L3/L6 Area +25%, Speed +30%; L4/L7 Duration +0.5, +10 damage. The duration/cooldown cycle is not built:
-    /// the books orbit all the time. VS wiki (Unholy Vespers, uses this script): 30 damage, 4 books (UnholyVespers.prefab).
+    /// L3/L6 Area +25%, Speed +30%; L4/L7 Duration +0.5, +10 damage. VS wiki (Unholy Vespers, uses this script): 30
+    /// damage, 4 books (UnholyVespers.prefab).
+    /// VS cycle (wiki King_Bible, 2026-10-01): the books orbit for the Duration, then rest; "its Cooldown is extended by
+    /// its Duration of 3 seconds to 6 seconds total ... not affected by other Duration bonuses". So a new cycle starts
+    /// every Cooldown + base Duration seconds and the books show for base Duration x the Duration stat; with enough
+    /// Duration they never rest. "King Bible has a 1.7 seconds Hitbox Delay": one book hits the same enemy at most every
+    /// 1.7 s.
     /// </summary>
     public class BibleWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => BaseDuration;
+        // VS wiki: King Bible knockback 1; Unholy Vespers (this script, UnholyVespers.prefab) 4.
+        [SerializeField, Min(0f)] private float _knockback = 1f;
+        public override float Knockback => _knockback;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.None;
         [Tooltip("Bible ka asli chhota 3D model (prefab) yahan assign karein")]
         [SerializeField] private GameObject _biblePrefab;
@@ -29,6 +38,25 @@ namespace SoulHunter.Gameplay.Weapons
         [SerializeField] private float _rotationSpeed = 180f;
 
         [SerializeField] private int _damage = 10;
+
+        [Tooltip("VS base Duration in seconds (King Bible 3; Unholy Vespers 3)")]
+        [SerializeField, Min(0.1f)] private float _duration = 3f;
+
+        /// <summary>VS King Bible cooldown (wiki infobox): 3 s, before the Duration extension.</summary>
+        public const float VsCooldown = 3f;
+        /// <summary>VS King Bible hitbox delay (wiki): 1.7 s per book and enemy.</summary>
+        public const float VsHitboxDelay = 1.7f;
+
+        /// <summary>Duration added by levels (L4/L7 +0.5 s).</summary>
+        public float LevelDuration { get; private set; }
+        public float BaseDuration => _duration + LevelDuration;
+        /// <summary>Seconds the books orbit in each cycle.</summary>
+        public float VisibleSeconds => BaseDuration * DurationMultiplier;
+        /// <summary>Seconds from one cycle's start to the next (Cooldown, plus the base Duration).</summary>
+        public float CycleSeconds => VsCooldown * CooldownMultiplier + BaseDuration;
+        /// <summary>True while the books orbit.</summary>
+        public bool BooksOut => _activeBibles.Count > 0;
+        private float _cycleTime;
 
         private float _currentAngle = 0f;
         private List<GameObject> _activeBibles = new List<GameObject>();
@@ -70,14 +98,22 @@ namespace SoulHunter.Gameplay.Weapons
                 case 3:
                 case 6: LevelAreaMultiplier += 0.25f; LevelSpeedMultiplier += 0.3f; break;
                 case 4:
-                case 7: DamageAmount += 10f; break; // VS also adds Duration +0.5 here; our books orbit without a duration
+                case 7: DamageAmount += 10f; LevelDuration += 0.5f; break;
                 default: LevelBookCount++; break; // 2, 5, 8
             }
         }
 
         private void OnEnable()
         {
+            _cycleTime = 0f;
             SpawnBibles();
+        }
+
+        /// <summary>VS upgrade: the cooldown is reset, so a new cycle starts with the books out.</summary>
+        public override void ResetCooldownAndFire()
+        {
+            _cycleTime = 0f;
+            if (isActiveAndEnabled) SpawnBibles();
         }
 
         private void OnDisable()
@@ -118,10 +154,11 @@ namespace SoulHunter.Gameplay.Weapons
                         trigger.isTrigger = true;
                     }
                     touchDamage = newBible.AddComponent<TouchDamage>();
-                    touchDamage.DamageInterval = 0.5f; // Har aadhe second baad dobara damage de sakta hai
+                    touchDamage.DamageInterval = VsHitboxDelay; // VS: the same enemy at most every 1.7 s per book
                 }
                 
                 touchDamage.DamageAmount = _spawnedDamage;
+                touchDamage.DamageInterval = VsHitboxDelay; // pooled books too
                 touchDamage.DamageType = DamageType.Holy; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
                 touchDamage.TargetTag = HostileTag;
                 touchDamage.SourceWeaponName = "Bible";
@@ -160,6 +197,15 @@ namespace SoulHunter.Gameplay.Weapons
         // Bibles orbit continuously, so this replaces the base timed attack.
         protected override void Update()
         {
+            // VS cycle: out for VisibleSeconds, then resting until the cycle restarts (always out if it outlasts it).
+            _cycleTime += Time.deltaTime;
+            if (_cycleTime >= CycleSeconds)
+            {
+                _cycleTime -= CycleSeconds;
+                if (_activeBibles.Count == 0) SpawnBibles();
+            }
+            bool shouldShow = VisibleSeconds >= CycleSeconds || _cycleTime < VisibleSeconds;
+            if (!shouldShow && _activeBibles.Count > 0) ClearBibles(detach: true);
             if (_activeBibles.Count == 0) return;
 
             // Stats rarely change, so only re-check a few times per second.

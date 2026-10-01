@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class SantaWaterWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => PoolDuration;
+        public override float Knockback => 0f; // VS wiki Santa Water: knockback N/A (none)
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         [Header("Santa Water Settings")]
         public GameObject WaterZonePrefab; // Zone jo zameen pe fire/water damage dega

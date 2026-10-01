@@ -4,6 +4,8 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class CherryBombWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => VsDuration;
+        public override bool HasChance => true;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
         public GameObject BombPrefab; 
         public GameObject ExplosionPrefab; // What spawns when it hits
@@ -35,6 +37,43 @@ namespace SoulHunter.Gameplay.Combat
 
         public const float VsInterval = 0.3f;
 
+        /// <summary>
+        /// VS (wiki Cherry_Bomb): "Depending on its level and the Luck stat, there is a chance for the bomb to explode":
+        /// 40% at level 1 (infobox), 50% from level 3, 60% from level 6, times Luck. Might and Area affect the
+        /// explosion; the wiki gives no separate explosion damage, so it deals the bomb's damage.
+        /// </summary>
+        public float ExplodeChance => (Level >= 6 ? 0.6f : Level >= 3 ? 0.5f : 0.4f) + LimitBreak.ChanceBonus(this); // + Limit Break Chance
+        public const float ExplosionSeconds = 0.4f;
+        /// <summary>Explosions and fizzles so far (tests).</summary>
+        public int Explosions { get; private set; }
+        public int Fizzles { get; private set; }
+
+        public static bool Explodes(float chance, float luck, float roll01) => roll01 < Mathf.Clamp01(chance * Mathf.Max(0f, luck));
+
+        private void OnBombDone(Projectile bomb)
+        {
+            if (bomb == null || this == null || !isActiveAndEnabled || !bomb.gameObject.scene.isLoaded) return; // not on scene teardown
+            float luck = OwnerStats != null ? OwnerStats.Luck : 1f;
+            if (!Explodes(ExplodeChance, luck, Random.value)) { Fizzles++; return; }
+            Explosions++;
+            Vector3 at = bomb.transform.position;
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Explosion, at);
+            if (ExplosionPrefab == null) return;
+            GameObject blast = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(ExplosionPrefab, at, Quaternion.identity)
+                : Instantiate(ExplosionPrefab, at, Quaternion.identity);
+            if (blast == null) return;
+            blast.transform.localScale = ExplosionPrefab.transform.localScale * AreaMultiplier * LevelArea;
+            var damage = blast.GetComponent<ProjectileDamage>();
+            if (damage == null) damage = blast.AddComponent<ProjectileDamage>();
+            damage.DamageAmount = ScaledDamage(BaseDamage);
+            damage.SourceWeaponName = "Cherry Bomb";
+            AimAtHostiles(blast);
+            var lifetime = blast.GetComponent<PooledLifetime>();
+            if (lifetime != null) lifetime.Arm(ExplosionSeconds);
+            else Destroy(blast, ExplosionSeconds);
+        }
+
         protected override void Attack()
         {
             if (BombPrefab == null) return;
@@ -55,9 +94,11 @@ namespace SoulHunter.Gameplay.Combat
                 
                 proj.Initialize(randomDir, ThrowSpeed * LevelSpeed * SpeedMultiplier, ScaledDamage(BaseDamage), VsDuration * DurationMultiplier);
                 proj.AddBounces(ExtraBounces);
+                // VS: only some bombs explode (the chance roll); the prefab's always-on explosion effect is off.
+                var alwaysBoom = bomb.GetComponent<SoulHunter.Gameplay.VFX.SpawnVfxOnDisable>();
+                if (alwaysBoom != null) alwaysBoom.enabled = false;
+                proj.Deactivated += OnBombDone;
                 
-                // Note: Needs a specialized collision script to spawn ExplosionPrefab on bounce.
-                // This is a simplified projectile implementation.
                 var damageDealer = bomb.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
                 damageDealer.SourceWeaponName = "Cherry Bomb";

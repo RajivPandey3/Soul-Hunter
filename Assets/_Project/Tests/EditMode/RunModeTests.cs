@@ -258,7 +258,7 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(LimitBreak.IsCard(card), Is.True);
                 Assert.That(UpgradeText.Tag(card, 1), Is.EqualTo("LIMIT BREAK"));
                 Assert.That(card.UpgradeName, Does.StartWith("Limit Break: "));
-                Assert.That(card.Description, Does.Contain("+10% damage"));
+                Assert.That(card.Description, Is.EqualTo(LimitBreak.Describe(LimitBreak.StatOf(card)) + " beyond max level."), "Each card names its stat (VS Limit Break table).");
                 targets.Add(LimitBreak.WeaponOf(card));
             }
             Assert.That(targets.Count, Is.EqualTo(2));
@@ -271,18 +271,52 @@ namespace SoulHunter.Tests.EditMode
             RunModes.LimitBreak = true;
             var (manager, weapons) = NewLevelUp(UpgradeData.UpgradeType.MagicWand);
             var wand = weapons.GetEquippedWeapons()[0].Value;
-            Assert.That(LimitBreak.DamageMultiplier(wand), Is.EqualTo(1f));
+            Assert.That(LimitBreak.CardsFor(wand), Is.EqualTo(0));
 
-            manager.SelectUpgrade(manager.GetLevelUpChoices(3)[0]);
+            var first = manager.GetLevelUpChoices(3)[0];
+            var stat = LimitBreak.StatOf(first);
+            manager.SelectUpgrade(first);
             Assert.That(LimitBreak.CardsFor(wand), Is.EqualTo(1));
-            Assert.That(LimitBreak.DamageMultiplier(wand), Is.EqualTo(1.1f).Within(1e-4f));
+            Assert.That(LimitBreak.Total(wand, stat), Is.EqualTo(LimitBreak.RowFor(stat).Step).Within(1e-4f), $"{stat} rose by its step.");
 
             manager.SelectUpgrade(manager.GetLevelUpChoices(3)[0]);
-            Assert.That(LimitBreak.DamageMultiplier(wand), Is.EqualTo(1.2f).Within(1e-4f), "Cards stack without end.");
+            Assert.That(LimitBreak.CardsFor(wand), Is.EqualTo(2), "Cards stack.");
             Assert.That(weapons.GetWeaponLevel(UpgradeData.UpgradeType.MagicWand), Is.EqualTo(1), "The weapon's level is not changed.");
 
             LimitBreak.Reset();
-            Assert.That(LimitBreak.DamageMultiplier(wand), Is.EqualTo(1f), "A new run starts without bonuses.");
+            Assert.That(LimitBreak.CardsFor(wand), Is.EqualTo(0), "A new run starts without bonuses.");
+            foreach (LimitBreak.Stat s in System.Enum.GetValues(typeof(LimitBreak.Stat))) Assert.That(LimitBreak.Total(wand, s), Is.EqualTo(0f));
+        }
+
+        /// <summary>
+        /// VS Limit Break "List of upgrades" (2026-10-01): stats drawn by rarity among those the weapon uses, each with its
+        /// step and cap; Base Damage has no cap.
+        /// </summary>
+        [Test]
+        public void LimitBreakStats_FollowTheWikiTable_RarityAndCaps()
+        {
+            RunModes.LimitBreak = true;
+            var (_, weapons) = NewLevelUp(UpgradeData.UpgradeType.MagicWand);
+            var wand = weapons.GetEquippedWeapons()[0].Value;
+            // The helper's weapon is a plain AutoAttackWeapon: no pierce, duration, crit or chance effect.
+            Assert.That(LimitBreak.CanRaise(wand, LimitBreak.Stat.Pierce), Is.False, "No pierce.");
+            Assert.That(LimitBreak.CanRaise(wand, LimitBreak.Stat.Duration), Is.False, "No duration.");
+            Assert.That(LimitBreak.CanRaise(wand, LimitBreak.Stat.CritChance), Is.False, "Cannot crit.");
+            Assert.That(LimitBreak.CanRaise(wand, LimitBreak.Stat.Chance), Is.False, "No chance effect.");
+
+            // Rarities: BaseDamage 10, Area 10, Speed 10, Amount 1 -> pool 31.
+            Assert.That(LimitBreak.DrawStat(wand, 0f, out var s0) && s0 == LimitBreak.Stat.BaseDamage, Is.True);
+            Assert.That(LimitBreak.DrawStat(wand, 10.5f / 31f, out var s1) && s1 == LimitBreak.Stat.Area, Is.True);
+            Assert.That(LimitBreak.DrawStat(wand, 20.5f / 31f, out var s2) && s2 == LimitBreak.Stat.Speed, Is.True);
+            Assert.That(LimitBreak.DrawStat(wand, 30.5f / 31f, out var s3) && s3 == LimitBreak.Stat.Amount, Is.True);
+
+            for (int i = 0; i < 20; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Amount);
+            Assert.That(LimitBreak.AmountBonus(wand), Is.EqualTo(10), "Amount stops at +10.");
+            Assert.That(LimitBreak.CanRaise(wand, LimitBreak.Stat.Amount), Is.False);
+            for (int i = 0; i < 300; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Area);
+            Assert.That(LimitBreak.AreaBonus(wand), Is.EqualTo(5f).Within(1e-4f), "Area stops at +500%.");
+            for (int i = 0; i < 50; i++) LimitBreak.Apply(wand, LimitBreak.Stat.BaseDamage);
+            Assert.That(LimitBreak.BaseDamageBonus(wand), Is.EqualTo(50f), "Base Damage has no cap.");
         }
 
         [Test]

@@ -9,6 +9,8 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public class ProjectileDamage : MonoBehaviour
     {
+        /// <summary>The knockback of the weapon that spawned this (VS infobox "knockback"); negative = the default 1.</summary>
+        [System.NonSerialized] public float Knockback = -1f;
         public float DamageAmount;
         public string TargetTag = "Enemy";
         public DamageType DamageType = DamageType.Normal;
@@ -26,7 +28,7 @@ namespace SoulHunter.Gameplay.Combat
                 {
                     Vector3 knockback = (collision.transform.position - transform.position).normalized;
                     int dmg = Mathf.RoundToInt(DamageAmount);
-                    damageable.TakeDamage(new DamagePacket(dmg, collision.contacts[0].point, knockback, DamageType));
+                    damageable.TakeDamage(new DamagePacket(dmg, collision.contacts[0].point, knockback, DamageType).WithKnockback(Knockback));
                     
                     if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                     {
@@ -47,7 +49,7 @@ namespace SoulHunter.Gameplay.Combat
                 {
                     Vector3 knockback = (other.transform.position - transform.position).normalized;
                     int dmg = Mathf.RoundToInt(DamageAmount);
-                    damageable.TakeDamage(new DamagePacket(dmg, transform.position, knockback, DamageType));
+                    damageable.TakeDamage(new DamagePacket(dmg, transform.position, knockback, DamageType).WithKnockback(Knockback));
                     
                     if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                     {

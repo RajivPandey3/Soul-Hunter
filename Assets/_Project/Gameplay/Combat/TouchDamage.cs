@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.Combat
     [RequireComponent(typeof(Collider))]
     public class TouchDamage : MonoBehaviour
     {
+        /// <summary>The knockback of the weapon that spawned this (VS infobox "knockback"); negative = the default 1.</summary>
+        [System.NonSerialized] public float Knockback = -1f;
         [SerializeField] private float _damageAmount = 5f;
         [SerializeField] private float _damageInterval = 0.5f; // Har 0.5 sec mein damage dega
 
@@ -119,7 +121,7 @@ namespace SoulHunter.Gameplay.Combat
                     // Target ko damage do
                     // Learning Comment: _damageType pass kiya gaya hai taaki Level 7 spectral enemies Holy damage wagera sahi se receive karein
                     Vector3 knockback = (transform.position - info.TargetTransform.position).normalized;
-                    target.TakeDamage(new DamagePacket(Mathf.RoundToInt(_damageAmount), transform.position, -knockback, _damageType));
+                    target.TakeDamage(new DamagePacket(Mathf.RoundToInt(_damageAmount), transform.position, -knockback, _damageType).WithKnockback(Knockback));
                     
                     if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null && SourceWeaponName != "Unknown")
                     {

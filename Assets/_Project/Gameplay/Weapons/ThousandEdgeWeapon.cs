@@ -5,7 +5,11 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class ThousandEdgeWeapon : AutoAttackWeapon
     {
-        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
+        public override float Knockback => 0.5f; // VS wiki Thousand Edge: knockback 0.5
+        // VS wiki Thousand_Edge: it crits only with Slash (30%, 3x before Slash doubles it to 6x). The Critical_Hit
+        // page leaves it out of its lists; the weapon's own page is followed.
+        protected override float SlashCritChance => 0.3f;
+        protected override float SlashCritMultiplier => 3f;
         public GameObject KnifePrefab;
         public float KnifeSpeed = 25f; // Soul Hunter speed tuning (kept)
 

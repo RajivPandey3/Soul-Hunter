@@ -5,6 +5,7 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class PentagramWeapon : AutoAttackWeapon
     {
+        public override bool HasChance => true;
         protected override bool ShowsAttackPose => false; // an orbit/aura/area weapon: no swing toward enemies
 
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Explosion;
@@ -14,6 +15,13 @@ namespace SoulHunter.Gameplay.Combat
         // L4 CD -10; L5 45%; L6 CD -5; L7 65%; L8 CD -5.
         public const float VsCooldown = 90f;
         public const float VsKeepChance = 0.1f;
+        /// <summary>VS wiki Pentagram: "a hard-coded limit of 15 seconds on how often Pentagram" can activate.</summary>
+        public const float VsMinimumCooldown = 15f;
+        /// <summary>VS wiki Pentagram infobox: duration 1 s (the glyph).</summary>
+        public const float VsDuration = 1f;
+        protected override float MinimumCooldown => VsMinimumCooldown;
+        /// <summary>Whether the last activation erased items (tests).</summary>
+        public bool LastActivationErasedItems { get; private set; }
 
         // Base chance at level 1; level-ups add on top (tests set it to 0 to erase every drop).
         private float _chanceToKeepGems = VsKeepChance;
@@ -24,7 +32,7 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>Items the last boss-held activation erased (tests).</summary>
         public int LastItemsErased { get; private set; } = -1;
 
-        public float KeepChance => _chanceToKeepGems + (Level >= 7 ? 0.55f : Level >= 5 ? 0.35f : Level >= 3 ? 0.15f : 0f);
+        public float KeepChance => _chanceToKeepGems + (Level >= 7 ? 0.55f : Level >= 5 ? 0.35f : Level >= 3 ? 0.15f : 0f) + LimitBreak.ChanceBonus(this); // + Limit Break Chance
 
         protected override void Awake()
         {
@@ -48,8 +56,8 @@ namespace SoulHunter.Gameplay.Combat
                 if (vfx != null)
                 {
                     var lifetime = vfx.GetComponent<PooledLifetime>();
-                    if (lifetime != null) lifetime.Arm(2f);
-                    else Destroy(vfx, 2f);
+                    if (lifetime != null) lifetime.Arm(VsDuration);
+                    else Destroy(vfx, VsDuration);
                 }
             }
 
@@ -63,6 +71,13 @@ namespace SoulHunter.Gameplay.Combat
                     LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
                 return;
             }
+
+            // VS (wiki Pentagram): one roll per activation. Usually the glyph erases "every enemy, their drops, and all
+            // items on the screen, except for stage items"; with the keep chance (x Luck) a blue symbol erases only the
+            // enemies. Before 2026-10-01 each enemy rolled on its own and items on the ground were never erased.
+            float playerLuck = OwnerStats != null ? OwnerStats.Luck : 1f;
+            bool eraseItems = SoulHunter.Gameplay.Pickups.GroundItemEraser.ErasesItems(KeepChance, playerLuck, Random.value);
+            LastActivationErasedItems = eraseItems;
 
             // Wipe all enemies on screen
             // KillSilently disables enemies immediately, and OnDisable removes
@@ -79,9 +94,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (enemy.IsStageBoss) continue;
                 // VS instant kill resistance (vampire.survivors.wiki/w/Enemies, "Resistances": immunity to Pentagram).
                 if (enemy.ResistsInstantKill) continue;
-                // Check chance to leave gem
-                bool keepDrop = Random.value < KeepChance;
-                if (!keepDrop)
+                if (eraseItems)
                 {
                     // Erase the drops of this life only. Disabling the component (as before) also stopped the kill
                     // being counted, lost chest elites' chests, and stayed off when the pool reused the enemy, so it
@@ -93,6 +106,7 @@ namespace SoulHunter.Gameplay.Combat
                 var health = enemy.GetComponent<HealthController>();
                 if (health != null) health.KillSilently();
             }
+            if (eraseItems) LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
         }
     }
 }

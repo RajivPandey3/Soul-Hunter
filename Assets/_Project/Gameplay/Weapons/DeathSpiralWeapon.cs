@@ -5,7 +5,9 @@ namespace SoulHunter.Gameplay.Combat
     public class DeathSpiralWeapon : AutoAttackWeapon
     {
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
-        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
+        // VS wiki Death_Spiral: it crits only with Slash (30%, 2x before Slash doubles it to 4x). The Critical_Hit page
+        // leaves it out of its lists; the weapon's own page is followed.
+        protected override float SlashCritChance => 0.3f;
         [Header("Death Spiral Settings (Evolved Axe)")]
         public GameObject ScythePrefab; 
         public float ExpansionSpeed = 8f; 

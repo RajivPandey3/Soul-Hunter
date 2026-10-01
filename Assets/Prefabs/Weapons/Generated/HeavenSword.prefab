@@ -53,6 +53,9 @@ MonoBehaviour:
   _speed: 16
   _returnTime: 1
   _damage: 77
+  _critChance: 0.1
+  _critMultiplier: 2.5
+  _knockback: 6
 --- !u!1001 &8186777334274060097
 PrefabInstance:
   m_ObjectHideFlags: 0

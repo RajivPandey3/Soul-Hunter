@@ -25,7 +25,16 @@ namespace SoulHunter.Gameplay.Combat
         /// the default 1, so packets built without it still knock back normally.
         /// </summary>
         public float WeaponKnockback;
-        public float KnockbackOrDefault => WeaponKnockback > 0f ? WeaponKnockback : 1f;
+        /// <summary>True when <see cref="WeaponKnockback"/> was set by the weapon, so 0 means no knockback (VS Garlic).</summary>
+        public bool KnockbackSet;
+        public float KnockbackOrDefault => KnockbackSet ? Mathf.Max(0f, WeaponKnockback) : (WeaponKnockback > 0f ? WeaponKnockback : 1f);
+
+        /// <summary>Sets the weapon's knockback when known (negative = not set: the default 1).</summary>
+        public DamagePacket WithKnockback(float knockback)
+        {
+            if (knockback >= 0f) { WeaponKnockback = knockback; KnockbackSet = true; }
+            return this;
+        }
         public DamagePacket(int amount, Vector3 hitPoint, Vector3 knockbackDirection)
             : this(amount, hitPoint, knockbackDirection, DamageType.Normal) { }
 
@@ -37,6 +46,7 @@ namespace SoulHunter.Gameplay.Combat
             Type = type;
             IgnoresHitInvulnerability = false;
             WeaponKnockback = 0f; // the default weapon knockback (1)
+            KnockbackSet = false;
         }
     }
 }

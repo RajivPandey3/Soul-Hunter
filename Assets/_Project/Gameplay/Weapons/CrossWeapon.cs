@@ -14,8 +14,15 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class CrossWeapon : AutoAttackWeapon
     {
+        // VS wiki: Cross knockback 1; Heaven Sword (this script, HeavenSword.prefab) 6.
+        [SerializeField, Min(0f)] private float _knockback = 1f;
+        public override float Knockback => _knockback;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
-        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
+        // VS wiki Critical_Hit: the Cross cannot crit; Heaven Sword (this script, HeavenSword.prefab) 10%, 2.5x.
+        [SerializeField, Range(0f, 1f)] private float _critChance = 0f;
+        [SerializeField, Min(1f)] private float _critMultiplier = 2f;
+        protected override float BaseCritChance => _critChance;
+        protected override float WeaponCritMultiplier => _critMultiplier;
         [Tooltip("Cross ka 3D model/prefab jisme Rigidbody aur TouchDamage laga ho")]
         [SerializeField] private GameObject _crossPrefab;
         

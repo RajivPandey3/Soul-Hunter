@@ -5,6 +5,8 @@ namespace SoulHunter.Gameplay.Combat
 {
     public class PeachoneWeapon : AutoAttackWeapon
     {
+        public override float LimitBreakBaseDuration => VsDuration;
+        public override float Knockback => 2f; // VS wiki Peachone: knockback 2
         protected override bool ShowsAttackPose => false; // an orbit/aura/area weapon: no swing toward enemies
 
         public GameObject BirdVisual; // Bird circling the player
@@ -24,7 +26,19 @@ namespace SoulHunter.Gameplay.Combat
         public float BaseDamage => DamageAmount + (Level >= 3 ? 10f : 0f) + (Level >= 6 ? 10f : 0f);
         public int BombCount => VsAmount + (Level - 1);
         public float LevelArea => 1f + 0.4f * ((Level >= 2 ? 1 : 0) + (Level >= 5 ? 1 : 0) + (Level >= 8 ? 1 : 0));
-        public float CooldownForLevel => VsCooldown - (Level >= 4 ? 0.3f : 0f) - (Level >= 7 ? 0.3f : 0f);
+        // wiki footnote: "Each Cooldown reduction level up actually reduces Cooldown by 0.25 seconds".
+        public float CooldownForLevel => VsCooldown - (Level >= 4 ? 0.25f : 0f) - (Level >= 7 ? 0.25f : 0f);
+
+        /// <summary>
+        /// VS (wiki Peachone): an activation bombards for the Duration (4 s), "1 second roughly equal to 1 set"; Amount
+        /// adds projectiles per set; Cooldown bonuses shorten the activation gap, the time between sets and between
+        /// projectiles. The next activation comes after the Duration plus the Cooldown.
+        /// </summary>
+        public const float VsDuration = 4f;
+        public const float VsSetInterval = 1f;
+        public float ActiveSeconds => VsDuration * DurationMultiplier;
+        /// <summary>Sets fired by the last activation (tests).</summary>
+        public int LastActivationSets { get; private set; }
 
         public const float BirdHeight = 1.6f;
 
@@ -62,7 +76,22 @@ namespace SoulHunter.Gameplay.Combat
         protected override void Attack()
         {
             if (BombPrefab == null || BirdVisual == null) return;
-            StartCoroutine(BombingRun());
+            SetNextAttackIn(ActiveSeconds + CooldownForLevel * CooldownMultiplier);
+            StartCoroutine(Activation());
+        }
+
+        private IEnumerator Activation()
+        {
+            LastActivationSets = 0;
+            float setInterval = VsSetInterval * CooldownMultiplier;
+            float elapsed = 0f;
+            while (elapsed < ActiveSeconds - 0.001f)
+            {
+                LastActivationSets++;
+                StartCoroutine(BombingRun());
+                yield return new WaitForSeconds(setInterval);
+                elapsed += setInterval;
+            }
         }
 
         /// <summary>VS interval (wiki Peachone): 0.025 s between bombs (it was 0.1 s).</summary>
@@ -89,7 +118,7 @@ namespace SoulHunter.Gameplay.Combat
                 var lifetime = bomb.GetComponent<PooledLifetime>();
                 if (lifetime != null) lifetime.Arm(1.5f);
                 else Destroy(bomb, 1.5f);
-                yield return new WaitForSeconds(VsInterval);
+                yield return new WaitForSeconds(VsInterval * CooldownMultiplier);
             }
         }
     }

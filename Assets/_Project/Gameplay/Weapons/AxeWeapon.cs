@@ -12,8 +12,10 @@ namespace SoulHunter.Gameplay.Weapons
     /// </summary>
     public class AxeWeapon : AutoAttackWeapon
     {
+        public override bool UsesPierce => true;
         protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.Slash;
-        protected override float BaseCritChance => 0.1f; // VS: this weapon can crit (provisional)
+        // VS wiki Critical_Hit: the Axe crits only with Slash (30%, 2x before Slash doubles it).
+        protected override float SlashCritChance => 0.3f;
         [Tooltip("Axe ki tasveer/mesh jisme Rigidbody laga ho")]
         [SerializeField] private GameObject _axePrefab;
 
@@ -112,7 +114,7 @@ namespace SoulHunter.Gameplay.Weapons
             // VS pierce: the axe is used up after hitting Pierce enemies.
             var pierce = axeObj.GetComponent<AxePierce>();
             if (pierce == null) pierce = axeObj.AddComponent<AxePierce>();
-            pierce.Arm(Pierce, projectileDamage);
+            pierce.Arm(Pierce + ExtraPierce, projectileDamage);
 
             // Rigidbody ko dhakka do
             Rigidbody rb = axeObj.GetComponent<Rigidbody>();

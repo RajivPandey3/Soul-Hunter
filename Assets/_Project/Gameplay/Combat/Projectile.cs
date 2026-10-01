@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.Combat
     [RequireComponent(typeof(Collider), typeof(Rigidbody))]
     public class Projectile : MonoBehaviour
     {
+        /// <summary>The knockback of the weapon that spawned this (VS infobox "knockback"); negative = the default 1.</summary>
+        [System.NonSerialized] public float Knockback = -1f;
         [SerializeField] private float _speed = 10f;
         [SerializeField] private int _damage = 10;
         [SerializeField] private float _lifetime = 3f;
@@ -113,7 +115,7 @@ namespace SoulHunter.Gameplay.Combat
                 Vector3 knockback = transform.forward;
                 var health = target as HealthController;
                 int healthBefore = health != null ? health.CurrentHealth : 0;
-                target.TakeDamage(new DamagePacket(_damage, transform.position, knockback, _damageType));
+                target.TakeDamage(new DamagePacket(_damage, transform.position, knockback, _damageType).WithKnockback(Knockback));
                 if (health != null && RunStatsTracker.Instance != null)
                 {
                     int applied = Mathf.Max(0, healthBefore - health.CurrentHealth);

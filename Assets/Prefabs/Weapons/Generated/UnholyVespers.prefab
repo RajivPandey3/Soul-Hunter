@@ -50,6 +50,7 @@ MonoBehaviour:
   _radius: 3.5
   _rotationSpeed: 240
   _damage: 30
+  _knockback: 4
 --- !u!1001 &1298153300534024565
 PrefabInstance:
   m_ObjectHideFlags: 0
