@@ -1405,7 +1405,8 @@ Owner: "step 3 shuru karo"; names chosen by the owner (AskUserQuestion), looks f
 - Tests: `NewEvolutionsPlayModeTests` (R: each evolves from its recipe in a fresh run and replaces its base weapon), `NewEvolutionRulesPlayModeTests` (R: Stormbound twice per spot; Severed Fate retaliation and Armor; Requiem slow and floor; Drowning Chalice creep; Eclipse Sigil's three phases), `EvolvedWeaponSweepPlayModeTests` (R: every evolution hurts enemies), `StageItemTests` (T) and `StageItemPlayModeTests` (R).
 - Found while testing: the first rules test waited on game time and hung 30 minutes when a level-up paused the game (test-side; its waits now answer level-ups); a single run evolving all six filled the six weapon slots (test-side; one run per evolution).
 - `StageHazardPlayModeTests.SoulMeteor...` read 0 damage once more in a full run (not alone); clearing invulnerability did not explain it, so its failure message now reports how far the player stood from the marker. Not yet explained.
-- Validation: EditMode 520/520, PlayMode 249/249, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-step3b/`). Not yet played by the owner; no editor play of the new evolutions yet.
+- Validation: EditMode 520/520, PlayMode 249/249, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-step3b/`).
+- Editor play with `AutoplayBot -sh-autoplay-evolve "Evo_A,Evo_B"` (new: starts the run with those evolutions), Stage 1, god mode, 90 s each: `evo-play-a` (Hellmaw Comet, Drowning Chalice, Severed Fate) and `evo-play-b` (Stormbound Halo, Eclipse Sigil, Requiem of Souls): all six evolved, 0 errors, 0 hitches; in play 60-86 FPS and 78-98 FPS (the 29 / 75 minimum rows are the loading screen). Screenshots show the meteors, the creeping pools and the double strikes (partial `V`). Not yet played by the owner.
 
 ### Level 1 step 2, Phase 1 rows 9-12: spawning, Orologion, Curse, traps (2026-10-01)
 

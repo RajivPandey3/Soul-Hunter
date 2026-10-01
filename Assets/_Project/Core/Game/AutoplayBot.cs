@@ -216,6 +216,10 @@ namespace SoulHunter.Gameplay.Core
             _bus = GameServices.Instance.Get<EventBus>();
             if (Config.God) _health.IsInvincible = true;
             if (Config.Stage > 1) LevelProgressionManager.Instance.StartStage(Config.Stage);
+            // -sh-autoplay-evolve "Evo_A,Evo_B": start with those evolutions (their base weapon at 8 and passive, then
+            // evolved), to watch new evolutions in play.
+            string evolve = ArgValue("-sh-autoplay-evolve");
+            if (!string.IsNullOrEmpty(evolve)) yield return GiveEvolutions(evolve.Split(','));
 
             // Every subscription is undone in OnDestroy: a level-up after the bot is gone (a gem collected while a test
             // tears down) used to start a coroutine on the destroyed bot (MissingReferenceException, found 2026-09-29).
@@ -445,6 +449,24 @@ namespace SoulHunter.Gameplay.Core
             Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
             Vector2 a = RectTransformUtility.WorldToScreenPoint(cam, corners[0]), b = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
             return string.Format(CultureInfo.InvariantCulture, "({0:0},{1:0})-({2:0},{3:0})", a.x, a.y, b.x, b.y);
+        }
+
+        private IEnumerator GiveEvolutions(string[] names)
+        {
+            var weapons = WeaponManager.Instance;
+            var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            if (weapons == null || catalog == null || catalog.Evolutions == null) yield break;
+            foreach (var name in names)
+            {
+                var evolution = System.Array.Find(catalog.Evolutions, e => e != null && e.EvolvedName == name.Trim());
+                if (evolution == null) { Event("evolve-missing", $"\"name\": \"{Escape(name)}\""); continue; }
+                weapons.GiveWeapon(evolution.BaseWeapon, 8);
+                weapons.GiveWeapon(evolution.RequiredPassive, 1);
+                yield return null;
+                bool ok = weapons.TryEvolveWeapon(out string evolved);
+                Event("evolve", $"\"name\": \"{Escape(name)}\", \"ok\": {(ok ? "true" : "false")}, \"got\": \"{Escape(evolved)}\"");
+                yield return null;
+            }
         }
 
         private static int Score(WeaponManager weapons, UpgradeData upgrade)
