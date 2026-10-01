@@ -1377,6 +1377,14 @@ Validation:
 
 Not yet played by the owner.
 
+### Chest screen OPEN off-screen in a wide window (owner: "HANG HO GAYA", 2026-10-01)
+
+The owner's screenshot showed the chest screen ("TREASURE x3!") with no OPEN button, in a wide, short Game view (about 1366x575). `ChestUI.ScreenCanvas` scaled its 1920x1080 layout by width only, so the canvas was only 808 units high and OPEN (430 below the centre, 96 high) fell off the bottom; the paused game waited for a button nobody could reach. A 21:9 monitor would do the same.
+- Fix: the chest canvas uses `ScreenMatchMode.Expand`, so the whole 1920x1080 layout fits any window.
+- `ChestScreenFitPlayModeTests` (R): OPEN and DONE inside 1366x575, 2560x1080, 3440x1440, 1920x1080, 1280x1024 and 1080x1920. It fails on the old code ("OPEN at (0, -430) is off a 1366x575 window (canvas half 404)").
+- EditMode 496/496, PlayMode 227/227 (`D:/SoulHunter-Validation/run-20261001-chestfit/`). The tests wrote only temp saves; the real save changed during the run because the owner was playing in their editor at the time (its Editor.log shows those saves).
+- Not checked by eye at that window size (the editor launcher cannot set the Game view size). The HUD canvas (level-up screen) also matches width only; it was left alone because the owner has uncommitted changes in `HUD_Canvas.prefab` and reported the level-up screen OK.
+
 ### Level-up Reroll/Skip/Banish and VS locked PowerUps (owner, 2026-10-01)
 
 **"level up panel ke neeche skip etc 3 button kaam nahi karte".** They worked; the owner's save had no Reroll/Skip/Banish PowerUp, so all three were at 0 and disabled. vampire.survivors.wiki/w/Level_up: they "become available in this screen if the player invests in these PowerUps and/or uses a character that may start with these"; the Reroll, Skip and Banish pages: they start at 0, +2 per rank.

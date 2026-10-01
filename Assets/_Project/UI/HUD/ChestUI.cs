@@ -103,7 +103,10 @@ namespace SoulHunter.Gameplay.UI
             var scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0f;
+            // Expand: the whole 1920x1080 layout always fits inside the window. Matching the width only pushed OPEN (430
+            // below the centre) off the bottom of a wide, short window such as 21:9, and the paused game could not go on
+            // (owner, 2026-10-01: "HANG HO GAYA" on the chest screen).
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             go.AddComponent<GraphicRaycaster>();
             return _canvas;
         }
