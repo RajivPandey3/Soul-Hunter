@@ -42,6 +42,10 @@ namespace SoulHunter.Gameplay.Player
             return gems;
         }
 
+        /// <summary>VS level 20/40 Growth: +1 (+100%) on reaching level 20 or 40, -1 on reaching 21 or 41, else 0.</summary>
+        public static float GrowthBonusChange(int newLevel) =>
+            newLevel == 20 || newLevel == 40 ? 1f : newLevel == 21 || newLevel == 41 ? -1f : 0f;
+
         public int XPRequiredForLevel(int level) => GemsToNextLevel(level) * Mathf.Max(1, _xpPerBasicGem);
 
         // UI ya Upgrade Menu ko batane ke liye events
@@ -93,6 +97,10 @@ namespace SoulHunter.Gameplay.Player
                 
                 // Agle level ke liye XP requirement (VS curve)
                 XPToNextLevel = XPRequiredForLevel(CurrentLevel);
+                // VS (wiki Growth, Level_up): +100% Growth at levels 20 and 40, removed again at 21 and 41. It is part of
+                // the Growth stat (additive), so the stats panel shows it.
+                float growthStep = GrowthBonusChange(CurrentLevel);
+                if (growthStep != 0f && stats != null) stats.AddExpBonus(growthStep);
                 
                 // Event fire karo (Game pause karna aur Upgrade menu kholna aage banayenge)
                 SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.LevelUp, transform.position);

@@ -16,6 +16,17 @@ namespace SoulHunter.Tests.EditMode
         private GameObject _object;
         private readonly List<UpgradeData> _upgrades = new List<UpgradeData>();
 
+        /// <summary>VS wiki Level_up / Growth: +100% Growth at levels 20 and 40, reverted at 21 and 41.</summary>
+        [Test]
+        public void TheGrowthStep_IsPlusOneAt20And40_AndMinusOneAt21And41()
+        {
+            for (int level = 2; level <= 60; level++)
+            {
+                float expected = level == 20 || level == 40 ? 1f : level == 21 || level == 41 ? -1f : 0f;
+                Assert.That(PlayerExperience.GrowthBonusChange(level), Is.EqualTo(expected), $"Level {level}");
+            }
+        }
+
         [TearDown]
         public void TearDown()
         {
