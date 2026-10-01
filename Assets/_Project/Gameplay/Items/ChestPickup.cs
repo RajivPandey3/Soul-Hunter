@@ -14,10 +14,21 @@ namespace SoulHunter.Gameplay.Pickups
         private bool _isCollected = false;
 
         /// <summary>VS: only chests from bosses at 10:00 or later (and the 1:00 chest) can evolve a weapon. Set when dropped.</summary>
-        public bool CanEvolve = true;
+        public bool CanEvolve { get => _canEvolve; set { _canEvolve = value; ApplyLook(); } }
+        private bool _canEvolve = true;
 
         /// <summary>VS Arcana mode: an Arcana chest (11:00 and 21:00) gives an Arcana choice instead of items.</summary>
-        public bool IsArcana;
+        public bool IsArcana { get => _isArcana; set { _isArcana = value; ApplyLook(); } }
+        private bool _isArcana;
+
+        /// <summary>VS: a bronze, silver or Arcana chest, shown by ChestLook.</summary>
+        public ChestKind Kind => ChestLook.KindFor(_canEvolve, _isArcana);
+
+        private void ApplyLook()
+        {
+            var visual = transform.Find("Visual");
+            ChestLook.Apply(visual != null ? visual : transform, Kind);
+        }
 
         private readonly Collider[] _playerHits = new Collider[1];
 
@@ -70,7 +81,9 @@ namespace SoulHunter.Gameplay.Pickups
             // UI call
             if (_chestUI != null)
             {
-                _chestUI.OpenChest(rewardMessage, _logicController != null ? _logicController.LastResult : null);
+                var result = _logicController != null ? _logicController.LastResult : null;
+                if (result != null) result.Kind = Kind;
+                _chestUI.OpenChest(rewardMessage, result);
             }
 
             gameObject.SetActive(false);
@@ -79,8 +92,9 @@ namespace SoulHunter.Gameplay.Pickups
         public void ResetPickup()
         {
             _isCollected = false;
-            CanEvolve = true;
-            IsArcana = false;
+            _canEvolve = true;
+            _isArcana = false;
+            ApplyLook();
         }
     }
 }

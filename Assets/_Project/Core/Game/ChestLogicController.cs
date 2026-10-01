@@ -33,6 +33,8 @@ namespace SoulHunter.Gameplay.Core
     {
         public int ItemCount;
         public bool IsArcana;
+        /// <summary>The chest's look (bronze, silver, Arcana), set by the ChestPickup that was opened.</summary>
+        public SoulHunter.Gameplay.Pickups.ChestKind Kind = SoulHunter.Gameplay.Pickups.ChestKind.Silver;
         public int Gold;
         public readonly List<ChestReward> Rewards = new List<ChestReward>();
         /// <summary>Every item became a coin bag (VS: such chests skip their animation once skipping is unlocked).</summary>

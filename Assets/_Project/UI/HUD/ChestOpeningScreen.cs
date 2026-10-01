@@ -193,7 +193,7 @@ namespace SoulHunter.Gameplay.UI
             transform.SetAsLastSibling();
             ClearCards();
             if (_stage != null) Destroy(_stage.gameObject);
-            _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana);
+            _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana, _result.Kind);
             _chestImage.texture = _stage.Texture;
             _chestImage.color = Color.white;
             _title.text = _result.IsArcana ? "ARCANA CHEST!" : _result.ItemCount >= 5 ? "TREASURE x5!" : _result.ItemCount >= 3 ? "TREASURE x3!" : "TREASURE!";

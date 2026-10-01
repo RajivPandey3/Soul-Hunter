@@ -34,12 +34,16 @@ namespace SoulHunter.Gameplay.UI
         private struct Coin { public Transform T; public Vector3 V; public float Age; public Vector3 Spin; }
         private readonly List<Coin> _coins = new List<Coin>();
 
-        public static ChestPreviewStage Create(GameObject chestPrefab, GameObject coinPrefab, bool arcana)
+        public static ChestPreviewStage Create(GameObject chestPrefab, GameObject coinPrefab, bool arcana,
+            SoulHunter.Gameplay.Pickups.ChestKind kind = SoulHunter.Gameplay.Pickups.ChestKind.Silver)
         {
             var go = new GameObject("ChestPreviewStage");
             go.transform.position = StagePosition;
             var stage = go.AddComponent<ChestPreviewStage>();
             stage.Build(chestPrefab, coinPrefab, arcana);
+            // The opened chest's own look (bronze, silver, Arcana) on the preview copy.
+            if (stage._chest != null)
+                SoulHunter.Gameplay.Pickups.ChestLook.Apply(stage._chest, arcana ? SoulHunter.Gameplay.Pickups.ChestKind.Arcana : kind);
             return stage;
         }
 
