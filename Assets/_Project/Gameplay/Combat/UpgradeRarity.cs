@@ -14,6 +14,10 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public static class UpgradeRarity
     {
+        /// <summary>VS: Metaglio Left and Right are found only as stage items, never offered by a level-up.</summary>
+        public static bool IsStageItemOnly(UpgradeData.UpgradeType type) =>
+            type == UpgradeData.UpgradeType.MetaglioLeft || type == UpgradeData.UpgradeType.MetaglioRight;
+
         /// <summary>Weight of an item with no known rarity (100 = VS's most common rarity value).</summary>
         public const int DefaultWeight = 100;
 

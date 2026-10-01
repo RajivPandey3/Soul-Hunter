@@ -127,6 +127,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(meteor != null && !meteor.HasStruck, Is.True, "No strike before 2 s.");
             Assert.That(health.CurrentHealth, Is.GreaterThanOrEqualTo(start), "The marker alone does not hurt.");
 
+            Vector3 dropAt = meteor.transform.position;
             int beforeStrike = health.CurrentHealth;
             float deadline = Time.realtimeSinceStartup + 3f;
             // Failed once in a full run (2026-10-01): the strike dealt 0, most likely blocked by a 240 ms invulnerability from
@@ -141,7 +142,7 @@ namespace SoulHunter.Tests.PlayMode
             }
             Assert.That(meteor == null, Is.True, "The marker struck and went.");
             int expected = Mathf.Max(1, StageHazardTable.MeteorPlayerDamage - health.Armor);
-            Assert.That(beforeStrike - health.CurrentHealth, Is.InRange(expected - 2, expected), $"The strike deals 30 (minus Armor {health.Armor}); invincible {health.IsInvincible}. " + Errors());
+            Assert.That(beforeStrike - health.CurrentHealth, Is.InRange(expected - 2, expected), $"The strike deals 30 (minus Armor {health.Armor}); invincible {health.IsInvincible}; the player stood {Vector3.Distance(new Vector3(player.transform.position.x, 0f, player.transform.position.z), new Vector3(dropAt.x, 0f, dropAt.z)):0.00} from the marker (radius {StageHazardTable.MeteorRadius}). " + Errors());
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

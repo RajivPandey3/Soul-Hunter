@@ -30,7 +30,7 @@ namespace SoulHunter.Tests.PlayMode
             PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
             _items = Object.FindFirstObjectByType<StageItemSpawner>();
             Assert.IsNotNull(_items, "Every run has a stage-item spawner. " + Errors());
-            yield return WaitUntilRealtime(() => _items.Placed.Count == 4, "the stage's four items");
+            yield return WaitUntilRealtime(() => _items.Placed.Count == 6, "the stage's six items");
             _start = PlayerController.Instance.transform.position;
         }
 
@@ -55,7 +55,7 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(plan.Min(e => Vector3.Distance(offset, e.Offset)), Is.LessThan(10f), $"{item.name} sits at its planned spot.");
                 Assert.That(GroundCheck.IsOpen(item.transform.position, 0.5f), Is.True, $"{item.name} lies on open ground.");
             }
-            Assert.That(_items.Placed.Count(i => i.GetComponent<StageItemPickup>() != null), Is.EqualTo(2), "A passive and a weapon.");
+            Assert.That(_items.Placed.Count(i => i.GetComponent<StageItemPickup>() != null), Is.EqualTo(4), "A passive, a weapon and the two Metaglios.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
@@ -88,8 +88,8 @@ namespace SoulHunter.Tests.PlayMode
             // Pooled chickens and Vacuums go back to their pools and may be handed straight out again as stage 2 items.
             Assert.That(old.All(i => i == null || !i.activeInHierarchy || _items.Placed.Contains(i)), Is.True, "Stage 1 leftovers are gone.");
             Assert.That(old.Where(i => i != null && i.GetComponent<StageItemPickup>() != null), Is.Empty, "Stage 1's passive and weapon are removed.");
-            Assert.That(_items.Placed.Count, Is.EqualTo(4), "Stage 2 has its own four items.");
-            var stage2Passive = StageItems.Plan(2).First(e => e.Kind == Kind.Passive).Upgrade;
+            Assert.That(_items.Placed.Count, Is.EqualTo(6), "Stage 2 has its own six items.");
+            var stage2Passive = StageItems.Plan(2).First(e => e.Kind == Kind.Passive && !UpgradeRarity.IsStageItemOnly(e.Upgrade)).Upgrade;
             Assert.That(_items.Placed.Any(i => i.GetComponent<StageItemPickup>()?.Upgrade == stage2Passive), Is.True);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }

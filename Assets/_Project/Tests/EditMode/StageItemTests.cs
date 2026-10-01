@@ -18,7 +18,14 @@ namespace SoulHunter.Tests.EditMode
             var passives = new System.Collections.Generic.HashSet<UpgradeData.UpgradeType>();
             for (int stage = 1; stage <= 10; stage++)
             {
-                var plan = StageItems.Plan(stage);
+                var full = StageItems.Plan(stage);
+                Assert.That(full.Count, Is.EqualTo(6), $"Stage {stage}: four diagonal items and the two Metaglios.");
+                // VS Metaglios (2026-10-01): Left west of the start, Right east.
+                var left = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.MetaglioLeft);
+                var right = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.MetaglioRight);
+                Assert.That(left.Offset.x, Is.LessThan(0f).And.EqualTo(-StageItems.MetaglioDistance).Within(0.01f), "Metaglio Left lies west.");
+                Assert.That(right.Offset.x, Is.EqualTo(StageItems.MetaglioDistance).Within(0.01f), "Metaglio Right lies east.");
+                var plan = full.Where(e => !UpgradeRarity.IsStageItemOnly(e.Upgrade) || e.Kind != Kind.Passive).ToList();
                 Assert.That(plan.Count, Is.EqualTo(4), $"Stage {stage}");
                 Assert.That(plan.Count(e => e.Kind == Kind.Passive), Is.EqualTo(1));
                 Assert.That(plan.Count(e => e.Kind == Kind.Weapon), Is.EqualTo(1));

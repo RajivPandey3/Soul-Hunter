@@ -78,6 +78,14 @@ namespace SoulHunter.Gameplay.Combat
             {
                 Instance = this;
             }
+            // VS evolutions built since 2026-10-01 live in GameContent (EvolutionBuilder), so the scene is not edited.
+            var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            if (catalog != null && catalog.Evolutions != null)
+            {
+                _availableEvolutions ??= new List<WeaponEvolutionData>();
+                foreach (var evolution in catalog.Evolutions)
+                    if (evolution != null && !_availableEvolutions.Contains(evolution)) _availableEvolutions.Add(evolution);
+            }
             else if (Instance != this)
             {
                 Destroy(gameObject);

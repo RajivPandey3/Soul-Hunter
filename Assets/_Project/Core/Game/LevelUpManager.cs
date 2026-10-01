@@ -406,6 +406,9 @@ namespace SoulHunter.Gameplay.Core
         private List<UpgradeData> GetRandomValidUpgrades(int count, bool ownedChecks, HashSet<UpgradeData.UpgradeType> exclude = null)
         {
             var validUpgrades = GetValidUpgrades();
+            // VS (wiki Metaglio_Left / _Right): they "cannot be obtained from level ups" (stage items only); a chest can
+            // still level one the player found.
+            if (ownedChecks) validUpgrades.RemoveAll(u => UpgradeRarity.IsStageItemOnly(u.Type));
             if (validUpgrades.Count == 0) return new List<UpgradeData>();
             // A reroll's discarded items are left out of the new set; if nothing else is left, they may come back.
             if (exclude != null && exclude.Count > 0)

@@ -152,6 +152,7 @@ namespace SoulHunter.Gameplay.AI
             ResetFreezeResistance(); // Garlic's freeze-resistance reduction lasts one life too
             RestartAbilities();     // VS skills start again on every spawn (pooling-safe)
             if (IsDefanged) SetDefanged(false); // Defang lasts one life
+            LingeringSlow = 1f;                 // Requiem of Souls' slow lasts one life
             if (Rigidbody != null)
             {
                 Rigidbody.linearVelocity = Vector3.zero;
@@ -354,7 +355,22 @@ namespace SoulHunter.Gameplay.AI
         public void ApplyCampaignSpeed(float multiplier)
         {
             CampaignSpeedMultiplier = Mathf.Max(0.1f, multiplier);
-            MoveSpeed = _baseMoveSpeed * Mathf.Max(0.1f, multiplier);
+            MoveSpeed = _baseMoveSpeed * CampaignSpeedMultiplier * LingeringSlow;
+        }
+
+        /// <summary>
+        /// Requiem of Souls' lasting slow (VS Mannajja, vampire.survivors.wiki/w/Mannajja): "each hit reduces the Movement
+        /// Speed of the affected enemy by an additional 5%, until it reaches a minimum of 20% of their original speed after
+        /// 16 hits", unless the enemy resists debuffs. Lasts one life.
+        /// </summary>
+        public float LingeringSlow { get; private set; } = 1f;
+
+        public bool ApplyLingeringSlow(float step, float floor)
+        {
+            if (ResistsDebuffs) return false;
+            LingeringSlow = Mathf.Max(floor, LingeringSlow - step);
+            MoveSpeed = _baseMoveSpeed * CampaignSpeedMultiplier * LingeringSlow;
+            return true;
         }
 
         public void ConfigureDamageVulnerability(SoulHunter.Gameplay.Combat.DamageType type, float multiplier, bool isSpectral = false)

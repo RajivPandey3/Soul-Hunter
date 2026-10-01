@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 120d34e42236e7a42a35b4196ffc89b0, type: 3}
+  m_Name: Evo_EclipseSigil
+  m_EditorClassIdentifier: 
+  BaseWeapon: 16
+  BaseWeaponMaxLevel: 8
+  RequiredPassive: 31
+  RequiredPassiveMaxLevel: 1
+  AdditionalPassives: []
+  EvolvedWeaponPrefab: {fileID: 6479361179383224644, guid: 1c1c56b7c46e5db4b87dd5fdd7702b9e, type: 3}
+  EvolvedName: Evo_EclipseSigil
+  EvolvedIcon: {fileID: 0}

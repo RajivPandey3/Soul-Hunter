@@ -41,6 +41,8 @@ namespace SoulHunter.Gameplay.Pickups
 
         /// <summary>VS pressure plates: four Rune Plates straight N/E/S/W of the start, between the item diagonals. Provisional.</summary>
         public const float PlateDistance = 30f;
+        /// <summary>How far west / east of the start the Metaglios lie (Soul Hunter's distance; the wiki gives none).</summary>
+        public const float MetaglioDistance = 45f;
 
         public static List<Vector3> PlateOffsets()
         {
@@ -66,6 +68,11 @@ namespace SoulHunter.Gameplay.Pickups
                     Offset = direction * Distances[i],
                 });
             }
+            // VS (wiki Metaglio_Left / Metaglio_Right): they "cannot be obtained from level ups, but can be found as a stage
+            // item in every stage"; "Generally, it will spawn west (east) of the starting area". The distance is Soul
+            // Hunter's. The VS guards (City and Volcano Atlanteans) are not built (they need their own enemies).
+            plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MetaglioLeft, Offset = Vector3.left * MetaglioDistance });
+            plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MetaglioRight, Offset = Vector3.right * MetaglioDistance });
             return plan;
         }
     }
@@ -291,7 +298,12 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 int current = weapons.GetWeaponLevel(Upgrade);
                 var next = FindUpgrade(Upgrade, current + 1);
-                if (next != null && weapons.HasSlotFor(Upgrade) && current + 1 <= weapons.GetMaxWeaponLevel(Upgrade))
+                if (next != null && current == 0 && WeaponManager.IsStagePassive(Upgrade))
+                {
+                    // Metaglio Left/Right: their own way in, beyond the six passive slots (WeaponManager.AcquireStagePassive).
+                    upgraded = weapons.AcquireStagePassive(next);
+                }
+                else if (next != null && weapons.HasSlotFor(Upgrade) && current + 1 <= weapons.GetMaxWeaponLevel(Upgrade))
                 {
                     weapons.ApplyUpgrade(next);
                     upgraded = weapons.GetWeaponLevel(Upgrade) == current + 1;
