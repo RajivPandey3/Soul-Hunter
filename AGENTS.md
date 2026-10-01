@@ -1394,6 +1394,7 @@ Step 1 (Bug MIS O1 and O2), done; neither needed a game change:
 - **Row 12, traps** (wiki Enemies, Traps): one global cooldown, "effectiveCooldown = trapCooldown x totalLuck" (`PressurePlate.GlobalReadyAt`, `EffectiveCooldown`); every plate dims while it runs; a stage's new plates start ready. The base 20 s stays (VS pressure plates, 2026-09-26).
 - Tests: `OffScreenSpawnPlayModeTests` and `OrologionCurseTrapPlayModeTests` (R).
 - Validation: EditMode 520/520; PlayMode 242/243, then 241/243 in a first run: three tests failed once each and passed on rerun, all test-side: the Duplicator Cherry Bomb count included random explosions (row 8; now counts bombs only), the lantern test identified the oldest lantern by place (two random spots can coincide; now by object), and the Soul Meteor test once read 0 damage, most likely a 240 ms invulnerability from something else (the test now clears it until the strike). The three fixtures then passed 24/24 twice. No test wrote the real save (`D:/SoulHunter-Validation/run-20261001-rows9to12-full2/`, `-fixtures-1/`, `-2/`).
+- Editor play after rows 2-12 (`phase1-play`, Stage 1, 6 min, Kael): 0 errors, 0 hitches over 0.25 s, min 70 FPS, level 12, 867 kills; at 5:50 the horde was 10, the VS Mad Forest minute-5 minimum (partial `V`).
 - Phase 1 rows 2-12 are built; not yet played by the owner.
 
 ### Level 1 step 2, Phase 1 rows 7-8: crits, weapon rules, Limit Break (2026-10-01)
