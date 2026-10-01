@@ -48,6 +48,11 @@ namespace SoulHunter.Gameplay.Pickups
 
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position);
 
+            // VS (wiki Treasure_Chest, Patch 0.2.4): "a brief moment of invulnerability after picking up a treasure"; 240 ms
+            // (owner, 2026-10-01). Game time stands still while the chest screen is open, so it covers the resume.
+            var pickerHealth = playerTransform != null ? playerTransform.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>() : null;
+            if (pickerHealth != null) pickerHealth.GrantInvulnerability(SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime);
+
             // Chest UI aur Backend Logic Trigger karo
             string rewardMessage = "";
             if (_logicController != null)

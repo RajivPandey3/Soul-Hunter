@@ -28,8 +28,6 @@ namespace SoulHunter.Gameplay.Player
         [SerializeField] private float _dashSpeed = 15f;
         [SerializeField] private float _dashDuration = 0.2f;
         [SerializeField] private float _dashCooldown = 1.5f;
-        [Tooltip("Seconds of immunity after taking a hit (VS-style), so a crowd cannot drain HP every frame. Provisional.")]
-        [SerializeField, Min(0f)] private float _hitInvulnerabilitySeconds = 0.5f;
         private float _campaignMovementMultiplier = 1f;
 
         private PlayerStats _stats;
@@ -142,7 +140,7 @@ namespace SoulHunter.Gameplay.Player
         {
             Instance = this;
             var ownHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            if (ownHealth != null) ownHealth.PostHitInvulnerability = _hitInvulnerabilitySeconds;
+            if (ownHealth != null) ownHealth.PostHitInvulnerability = SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime; // VS 240 ms
             Rigidbody = GetComponent<Rigidbody>();
             // Physics movement ko render frames ke beech smooth rakho.
             Rigidbody.interpolation = RigidbodyInterpolation.Interpolate;

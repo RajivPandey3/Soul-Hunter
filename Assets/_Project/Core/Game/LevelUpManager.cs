@@ -328,9 +328,10 @@ namespace SoulHunter.Gameplay.Core
 
         /// <summary>
         /// VS wiki (Level_up): "After selecting an item, the game resumes and the character gains a brief moment of
-        /// invulnerability." The wiki gives no length; Soul Hunter uses the hero's own hit invulnerability (0.5 s).
+        /// invulnerability." The wiki gives no length; Soul Hunter uses the hero's own hit invulnerability (VS
+        /// Invulnerability Time, 240 ms).
         /// </summary>
-        public const float FallbackInvulnerabilitySeconds = 0.5f;
+        public const float FallbackInvulnerabilitySeconds = SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime;
 
         private void ResumeGameplay()
         {

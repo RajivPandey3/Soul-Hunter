@@ -38,6 +38,14 @@ namespace SoulHunter.Gameplay.Combat
         /// hits land, and the player sets it. Separate from IsInvincible, which dash/revive toggle.
         /// </summary>
         public float PostHitInvulnerability { get; set; }
+
+        /// <summary>
+        /// VS Invulnerability Time (vampire.survivors.wiki/w/Invulnerability_Time): "At base, the player starts with 240
+        /// milliseconds", added to every source of immunity: being hit, a Floor Chicken, a treasure chest. Soul Hunter has
+        /// no Parm Aegis, so it stays at the base. The chicken and chest have no length of their own on the wiki; the owner
+        /// chose the 240 ms alone (2026-10-01).
+        /// </summary>
+        public const float VsInvulnerabilityTime = 0.24f;
         private float _hitInvulnerableUntil = -1f;
         public bool IsHitInvulnerable => Time.time < _hitInvulnerableUntil;
 

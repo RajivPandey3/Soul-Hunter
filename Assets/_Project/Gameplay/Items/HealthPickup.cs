@@ -84,6 +84,8 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 var stats = playerTransform.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerStats>();
                 health.Heal(HealWithRecovery(HealAmount, stats != null ? stats.Regen : 0f));
+                // VS: a Floor Chicken is a source of immunity (wiki Invulnerability_Time); 240 ms (owner, 2026-10-01).
+                health.GrantInvulnerability(SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime);
             }
 
             if (SoulHunter.Gameplay.Audio.AudioManager.Instance != null)
