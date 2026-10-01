@@ -47,18 +47,17 @@ namespace SoulHunter.Tests.PlayMode
                 placed.Add(lanterns.Spawn(spot));
             }
             Assert.That(lanterns.Active.Count, Is.EqualTo(max));
-            var oldestSpot = placed[0].transform.position;
             var others = new List<Vector3>();
             for (int i = 1; i < placed.Count; i++) others.Add(placed[i].transform.position);
             var fresh = lanterns.ReplaceOldest(player.transform.position);
             Assert.That(fresh, Is.Not.Null, "A replacement lantern appears.");
             Assert.That(lanterns.Active.Count, Is.EqualTo(max), "Still at the limit.");
             Assert.That(lanterns.Active[lanterns.Active.Count - 1], Is.SameAs(fresh), "The new one is the newest.");
-            // The pool may hand the same object back, so the oldest is checked by place: nothing stands there any more.
-            bool oldestStillThere = false;
-            foreach (var lantern in lanterns.Active)
-                if (lantern != fresh && (lantern.transform.position - oldestSpot).sqrMagnitude < 0.01f) oldestStillThere = true;
-            Assert.That(oldestStillThere, Is.False, "The oldest lantern is gone.");
+            // The pool may hand the oldest object back as the fresh one; otherwise it must have left the active list.
+            // (Checking by place failed once in a full run, 2026-10-01: two random spots can coincide.)
+            var oldest = placed[0];
+            bool oldestStillActive = oldest != fresh && lanterns.Active.Contains(oldest);
+            Assert.That(oldestStillActive, Is.False, "The oldest lantern is gone.");
             Assert.That(others.TrueForAll(p => lanterns.Active.Any(l => (l.transform.position - p).sqrMagnitude < 0.01f)), Is.True,
                 "The other lanterns stay.");
             Assert.That(lanterns.Replaced, Is.EqualTo(1));

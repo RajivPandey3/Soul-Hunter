@@ -13,9 +13,18 @@ namespace SoulHunter.Gameplay.Pickups
     {
         [SerializeField] private float _freezeDuration = 10f;
 
+        /// <summary>Game time at which the Orologion's freeze ends (new spawns freeze until then; VS wiki Orologion).</summary>
+        public static float WorldFreezeEndsAt { get; private set; } = -1f;
+        /// <summary>Seconds of Orologion freeze left (0 when none).</summary>
+        public static float WorldFreezeRemaining => Mathf.Max(0f, WorldFreezeEndsAt - Time.time);
+        public static bool WorldFrozen => WorldFreezeRemaining > 0f;
+        /// <summary>Starts (or extends) the Orologion's world freeze.</summary>
+        public static void BeginWorldFreeze(float seconds) => WorldFreezeEndsAt = Mathf.Max(WorldFreezeEndsAt, Time.time + Mathf.Max(0f, seconds));
+
         protected override void OnPickedUp(Collider player)
         {
             Debug.Log($"[TimeFreezePickup] THE WORLD! Freezing all enemies for {_freezeDuration} seconds!");
+            BeginWorldFreeze(_freezeDuration);
 
             var allEnemies = EnemyController.ActiveEnemies;
             for (int i = allEnemies.Count - 1; i >= 0; i--)

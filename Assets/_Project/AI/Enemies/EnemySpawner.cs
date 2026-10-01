@@ -20,6 +20,12 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField] private List<GameObject> _stageBossPrefabs = new List<GameObject>();
         [SerializeField] private float _spawnRadius = 20f;
         [SerializeField] private int _maxAliveEnemies = 300;
+
+        /// <summary>
+        /// VS (wiki Curse): "Total enemy quantity allowed on screen is capped at 500, regardless of Curse and Charm value."
+        /// Map events stop at it. Stage bosses and chest elites are not held back (Soul Hunter: never lose a boss or a chest).
+        /// </summary>
+        public const int HardCap = 500;
         [SerializeField] private int _prewarmPerEnemyType = 32;
         [SerializeField] private int _prewarmPerBossType = 1;
         [Tooltip("Most enemies spawned in one frame while refilling the wave's enemy minimum")]
@@ -225,13 +231,13 @@ namespace SoulHunter.Gameplay.AI
                         for (int i = 0; i < spawnCount; i++) GivePendingChest(Defang(SpawnEnemy(PickSwarmPrefab(level, phase))));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
                     // VS rule: Curse makes enemies arrive more often.
-                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (CurrentCurse() * RunModes.SpawnMultiplier));
+                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (MinuteCurse() * RunModes.SpawnMultiplier));
                 }
 
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
                 // VS: Curse raises the wave quantity, and Charm adds a flat number after it (Curse and Charm pages).
-                int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier * CurrentCurse()) + CurrentCharm();
+                int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier * MinuteCurse()) + CurrentCharm();
                 int missing = Mathf.Min(wanted, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
                 for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnEnemy(NextWavePrefab(level, phase))));
@@ -268,9 +274,11 @@ namespace SoulHunter.Gameplay.AI
             Vector3 playerPos = _playerTransform.position;
             float maxDistanceSqr = _relocateDistance * _relocateDistance;
             // Land inside the trigger distance, or enemies would be relocated again at once.
-            float minRadius = Mathf.Min(_spawnRadius, _relocateDistance * 0.5f);
-            float maxRadius = Mathf.Min(_spawnRadius + 10f, _relocateDistance * 0.9f);
             Vector3 heading = PlayerHeading();
+            // Re-enter just outside the screen ahead of the player, inside the trigger distance (or they would move again).
+            float edge = SpawnDistance(heading.sqrMagnitude > 1e-4f ? heading : Vector3.forward);
+            float minRadius = Mathf.Min(edge, _relocateDistance * 0.8f);
+            float maxRadius = Mathf.Min(edge + OffScreenSpread, _relocateDistance * 0.9f);
 
             var enemies = EnemyController.ActiveEnemies;
             for (int i = enemies.Count - 1; i >= 0; i--)
@@ -342,7 +350,8 @@ namespace SoulHunter.Gameplay.AI
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             // In a corridor the boss walks in from one end, like everything else.
             if (StageCorridor.Active) randomDir = new Vector2(randomDir.x >= 0f ? 1f : -1f, 0f);
-            Vector3 spawnPos = StageCorridor.Clamp(_playerTransform.position + new Vector3(randomDir.x * _spawnRadius, 0f, randomDir.y * _spawnRadius));
+            Vector3 bossDir = new Vector3(randomDir.x, 0f, randomDir.y);
+            Vector3 spawnPos = StageCorridor.Clamp(_playerTransform.position + bossDir * SpawnDistance(bossDir));
             
             // Spawn normal enemy but make it big and tanky to act as a boss
             if (!_bossPools.TryGetValue(basePrefab, out var bossPool))
@@ -369,7 +378,7 @@ namespace SoulHunter.Gameplay.AI
             }
             bossObj.SetActive(true);
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger
-            float curse = CurrentCurse();
+            float curse = MinuteCurse(); // speed: from the minute the Curse was gained in (VS wiki Curse)
             bossObj.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
                 SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse * RunModes.EnemySpeedMultiplier(StageMinutes));
             ConfigureStageDamageRule(bossObj);
@@ -418,6 +427,39 @@ namespace SoulHunter.Gameplay.AI
         /// A point on the spawn ring, from the stage's sides (Part 4: e.g. the Ruined Castle mostly left/right), and never
         /// inside a stage obstacle (VS: solid structures block spawns from their direction). Falls back to the last try.
         /// </summary>
+        /// <summary>
+        /// VS (wiki Enemies): "Enemies generally spawn just outside the screen." The distance from <paramref name="origin"/>
+        /// along <paramref name="direction"/> (ground plane) to the edge of the camera's view, found by bisection on the
+        /// viewport; <paramref name="fallback"/> without a camera.
+        /// </summary>
+        public static float DistanceToScreenEdge(Camera camera, Vector3 origin, Vector3 direction, float fallback, float maxDistance = 80f)
+        {
+            direction.y = 0f;
+            if (camera == null || direction.sqrMagnitude < 1e-6f) return fallback;
+            direction.Normalize();
+            bool Inside(float t)
+            {
+                Vector3 v = camera.WorldToViewportPoint(origin + direction * t);
+                return v.z > 0f && v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f;
+            }
+            if (!Inside(0f)) return fallback;
+            if (Inside(maxDistance)) return maxDistance;
+            float lo = 0f, hi = maxDistance;
+            for (int i = 0; i < 16; i++)
+            {
+                float mid = (lo + hi) * 0.5f;
+                if (Inside(mid)) lo = mid; else hi = mid;
+            }
+            return hi;
+        }
+
+        /// <summary>How far past the screen edge new enemies appear (units; Soul Hunter's own: the wiki says "just outside").</summary>
+        public const float OffScreenMargin = 1.5f;
+        public const float OffScreenSpread = 3f;
+
+        private float SpawnDistance(Vector3 direction) =>
+            DistanceToScreenEdge(Camera.main, _playerTransform.position, direction, _spawnRadius) + OffScreenMargin;
+
         private Vector3 PickSpawnPosition()
         {
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
@@ -426,7 +468,7 @@ namespace SoulHunter.Gameplay.AI
             for (int attempt = 0; attempt < 6; attempt++)
             {
                 Vector3 direction = WaveTables.SpawnDirection(side, bias, Random.value, Random.value, Random.value);
-                float distance = Random.Range(_spawnRadius, _spawnRadius + 10f);
+                float distance = SpawnDistance(direction) + Random.Range(0f, OffScreenSpread); // just outside the screen
                 spawnPos = _playerTransform.position + direction * distance;
                 spawnPos.y = _playerTransform.position.y;
                 spawnPos = StageCorridor.Clamp(spawnPos); // a corridor keeps its enemies between the walls
@@ -471,12 +513,15 @@ namespace SoulHunter.Gameplay.AI
             var enemyController = enemyToSpawn.GetComponent<EnemyController>();
             if (enemyController != null) enemyController.Target = _playerTransform;
             enemyToSpawn.SetActive(true);
-            float curse = CurrentCurse();
+            float curse = CurrentCurse(); // health: at once (VS wiki Curse)
             enemyToSpawn.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
-                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * curse * RunModes.EnemySpeedMultiplier(StageMinutes));
+                SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentLevel.EnemySpeedMultiplier * MinuteCurse() * RunModes.EnemySpeedMultiplier(StageMinutes));
             ConfigureStageDamageRule(enemyToSpawn);
             // VS movement skill: Floaty enemies weave, Fixed Direction ones take their line toward the player now.
             if (enemyController != null) enemyController.BeginMovement();
+            // VS (wiki Orologion): "Enemies will continue to spawn, and new enemies will also become frozen."
+            float frozenFor = SoulHunter.Gameplay.Pickups.TimeFreezePickup.WorldFreezeRemaining;
+            if (enemyController != null && frozenFor > 0f) enemyController.Freeze(frozenFor);
             
             var health = enemyToSpawn.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null)
@@ -500,6 +545,30 @@ namespace SoulHunter.Gameplay.AI
                 _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
             return _playerStats != null ? Mathf.Max(0.1f, _playerStats.Curse) : 1f;
         }
+
+        /// <summary>
+        /// VS (wiki Curse): "When Curse is gained during a run, the health multiplier effect is immediately applied to all
+        /// newly spawned enemies. All other effects are applied at the start of the next minute." Speed, frequency and
+        /// quantity use the Curse held when the current stage minute began.
+        /// </summary>
+        private float MinuteCurse()
+        {
+            int minute = Mathf.FloorToInt(StageMinutes);
+            int stage = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance != null ? SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage : 0;
+            if (minute != _curseMinute || stage != _curseStage)
+            {
+                _curseMinute = minute;
+                _curseStage = stage;
+                _minuteCurse = CurrentCurse();
+            }
+            return _minuteCurse;
+        }
+
+        private int _curseMinute = -1, _curseStage = -1;
+        private float _minuteCurse = 1f;
+
+        /// <summary>The Curse non-health effects use now (tests).</summary>
+        public float CurseForSpeedAndSpawns => MinuteCurse();
 
         /// <summary>VS Charm: enemies added to every wave.</summary>
         private int CurrentCharm()
@@ -565,7 +634,8 @@ namespace SoulHunter.Gameplay.AI
 
         /// <summary>
         /// Spawns one stage event's formation around the player and sends every member along its
-        /// fixed path. Returns the spawned enemies. Not blocked by the enemy cap (like chest elites).
+        /// fixed path. Returns the spawned enemies. Not blocked by the 300 cap (VS: "only bosses and enemies from map events
+        /// can spawn"), but by the 500 hard cap.
         /// </summary>
         private List<EnemyController> RunStageEvent(StageEventEntry stageEvent, CampaignLevelDefinition level, WavePhase phase)
         {
@@ -579,6 +649,7 @@ namespace SoulHunter.Gameplay.AI
             BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, _spawnRadius, _formation);
             foreach (var (position, flyDirection) in _formation)
             {
+                if (EnemyController.ActiveEnemies.Count >= HardCap) break; // VS: at most 500 on screen
                 var enemyObject = SpawnEnemy(PickSwarmPrefab(level, phase));
                 var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
                 if (enemy == null) continue;

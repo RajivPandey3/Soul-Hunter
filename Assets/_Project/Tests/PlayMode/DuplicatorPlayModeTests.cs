@@ -97,6 +97,13 @@ namespace SoulHunter.Tests.PlayMode
                 yield break;
             }
 
+            if (type == UpgradeType.CherryBomb)
+            {
+                // Since 2026-10-01 a bomb explodes only by chance (VS): explosions of earlier bombs can fall in the window,
+                // so only the thrown bombs are counted.
+                without.RemoveAll(shot => !shot.Name.Contains("CherryBomb"));
+                with.RemoveAll(shot => !shot.Name.Contains("CherryBomb"));
+            }
             string detail = $"{type}: {without.Count} shots without, {with.Count} with Duplicator 2. With: " +
                             string.Join("; ", with.Select(s => s.ToString()));
             Debug.Log("[DuplicatorTest] " + detail + " | stacked pairs: " + StackedPairs(with));

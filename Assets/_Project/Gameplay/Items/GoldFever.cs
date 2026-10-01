@@ -39,7 +39,8 @@ namespace SoulHunter.Gameplay.Pickups
 
         private void Update()
         {
-            if (RemainingSeconds > 0f) RemainingSeconds = Tick(RemainingSeconds, Time.deltaTime);
+            // VS (wiki Orologion): "Orologion slows down Gold Fever's duration decay by half".
+            if (RemainingSeconds > 0f) RemainingSeconds = Tick(RemainingSeconds, Time.deltaTime * (TimeFreezePickup.WorldFrozen ? 0.5f : 1f));
         }
 
         private void OnDestroy()

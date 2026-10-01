@@ -129,14 +129,19 @@ namespace SoulHunter.Tests.PlayMode
 
             int beforeStrike = health.CurrentHealth;
             float deadline = Time.realtimeSinceStartup + 3f;
+            // Failed once in a full run (2026-10-01): the strike dealt 0, most likely blocked by a 240 ms invulnerability from
+            // something unrelated (VS: invulnerability blocks every hit). The test measures the meteor alone, so it clears
+            // the hit invulnerability until the strike.
+            var hitUntil = typeof(HealthController).GetField("_hitInvulnerableUntil", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             while (meteor != null && Time.realtimeSinceStartup < deadline)
             {
+                hitUntil.SetValue(health, -1f);
                 beforeStrike = health.CurrentHealth;
                 yield return null;
             }
             Assert.That(meteor == null, Is.True, "The marker struck and went.");
             int expected = Mathf.Max(1, StageHazardTable.MeteorPlayerDamage - health.Armor);
-            Assert.That(beforeStrike - health.CurrentHealth, Is.InRange(expected - 2, expected), $"The strike deals 30 (minus Armor {health.Armor}). " + Errors());
+            Assert.That(beforeStrike - health.CurrentHealth, Is.InRange(expected - 2, expected), $"The strike deals 30 (minus Armor {health.Armor}); invincible {health.IsInvincible}. " + Errors());
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

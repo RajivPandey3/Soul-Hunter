@@ -25,7 +25,16 @@ namespace SoulHunter.Gameplay.Pickups
         private float _readyAt;
         private bool _dimmed;
 
-        public bool IsReady => Time.time >= _readyAt;
+        /// <summary>
+        /// VS (wiki Enemies, Traps): "The trap events have a global cooldown, which depends on Luck: effectiveCooldown =
+        /// trapCooldown x totalLuck". One cooldown for every plate on the stage; it starts again when a stage lays its plates.
+        /// </summary>
+        public static float GlobalReadyAt { get; private set; }
+        public static void ResetGlobalCooldown() => GlobalReadyAt = 0f;
+        /// <summary>The trap cooldown for a player with <paramref name="totalLuck"/> (1 = no Luck bonus).</summary>
+        public static float EffectiveCooldown(float trapCooldown, float totalLuck) => Mathf.Max(0f, trapCooldown) * Mathf.Max(0f, totalLuck);
+
+        public bool IsReady => Time.time >= Mathf.Max(_readyAt, GlobalReadyAt);
         public int TimesTriggered { get; private set; }
 
         /// <summary>Raised when the plate fires, with the event it started.</summary>
@@ -52,6 +61,7 @@ namespace SoulHunter.Gameplay.Pickups
         private void Update()
         {
             if (_dimmed && IsReady) SetDimmed(false);
+            else if (!_dimmed && !IsReady) SetDimmed(true); // another plate fired: all wait together
         }
 
         private void OnTriggerEnter(Collider other)
@@ -69,7 +79,9 @@ namespace SoulHunter.Gameplay.Pickups
             var type = (SoulHunter.Gameplay.Data.StageEventType)Random.Range(0, 3);
             var spawned = spawner.TriggerStageEvent(type, EventCount);
             if (spawned.Count == 0) return false; // boss fight or stage transition: nothing to start
-            _readyAt = Time.time + Mathf.Max(0f, CooldownSeconds);
+            var stats = PlayerController.Instance != null ? PlayerController.Instance.Stats : null;
+            GlobalReadyAt = Time.time + EffectiveCooldown(CooldownSeconds, stats != null ? stats.Luck : 1f);
+            _readyAt = GlobalReadyAt;
             TimesTriggered++;
             SetDimmed(true);
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Explosion, transform.position + Vector3.up * 0.2f);

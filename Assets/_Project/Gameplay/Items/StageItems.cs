@@ -163,6 +163,7 @@ namespace SoulHunter.Gameplay.Pickups
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             if (catalog == null || catalog.RunePlate == null) return;
             var plateOffsets = StageItems.PlateOffsets();
+            PressurePlate.ResetGlobalCooldown(); // a new stage's plates start ready
             for (int i = 0; i < plateOffsets.Count; i++)
             {
                 // A corridor has no north or south: its plates lie along it, two each way.
