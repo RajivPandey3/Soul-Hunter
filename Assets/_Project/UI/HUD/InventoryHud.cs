@@ -23,9 +23,13 @@ namespace SoulHunter.Gameplay.UI
         /// <summary>Gap under the label the row follows (canvas units).</summary>
         public const float GapBelowLabel = 22f;
 
-        private static readonly Color EmptyFrame = new Color(0.05f, 0.03f, 0.06f, 0.55f);
-        private static readonly Color FilledFrame = new Color(0.08f, 0.05f, 0.1f, 0.85f);
-        private static readonly Color EvolvedFrame = new Color(1f, 0.78f, 0.2f, 1f);
+        // Bug MIS v2 C09/C10 (2026-10-02): empty slots were see-through (a lantern or gravestone behind one looked like an
+        // item), and an evolved weapon's slot was a solid yellow square. Slots are now near-opaque, and an evolution
+        // keeps the dark slot inside a gold border.
+        public static readonly Color EmptyFrame = new Color(0.05f, 0.04f, 0.07f, 0.9f);
+        public static readonly Color FilledFrame = new Color(0.08f, 0.05f, 0.1f, 0.92f);
+        public static readonly Color EvolvedBorder = new Color(1f, 0.78f, 0.2f, 1f);
+        private static readonly Color PlainBorder = new Color(0.35f, 0.3f, 0.45f, 0.6f);
 
         private WeaponManager _weapons;
         private RectTransform _rect, _canvasRect, _followLabel;
@@ -88,6 +92,9 @@ namespace SoulHunter.Gameplay.UI
             var frame = frameGo.GetComponent<Image>();
             frame.raycastTarget = false;
             frame.color = EmptyFrame;
+            var border = frameGo.AddComponent<Outline>();
+            border.effectColor = PlainBorder;
+            border.effectDistance = new Vector2(2f, -2f);
 
             var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
             var iconRect = (RectTransform)iconGo.transform;
@@ -146,7 +153,14 @@ namespace SoulHunter.Gameplay.UI
             for (int i = 0; i < SlotsPerRow; i++)
             {
                 bool filled = i < items.Count;
-                frames[i].color = !filled ? EmptyFrame : items[i].Evolved ? EvolvedFrame : FilledFrame;
+                frames[i].color = filled ? FilledFrame : EmptyFrame;
+                var border = frames[i].GetComponent<Outline>();
+                if (border != null)
+                {
+                    bool evolved = filled && items[i].Evolved;
+                    border.effectColor = evolved ? EvolvedBorder : PlainBorder;
+                    border.effectDistance = evolved ? new Vector2(3f, -3f) : new Vector2(2f, -2f);
+                }
                 icons[i].sprite = filled ? items[i].Icon : null;
                 icons[i].enabled = filled && items[i].Icon != null;
             }

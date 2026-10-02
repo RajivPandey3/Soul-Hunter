@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 32
   IsPassive: 1
-  DisplayName: Skull O Maniac
+  DisplayName: "Skull O'Maniac"
   Description: '+10% curse: more and tougher enemies.'
   Icon: {fileID: 6968413500004054039, guid: 3c28eea5e26f940439c059d9888861a4, type: 3}
   WeaponPrefab: {fileID: 0}

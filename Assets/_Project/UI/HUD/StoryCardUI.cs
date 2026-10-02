@@ -87,8 +87,9 @@ namespace SoulHunter.Gameplay.UI
             var rect = (RectTransform)card.transform;
             rect.SetParent(HudReadability.CanvasRoot(transform), false);
             rect.SetAsFirstSibling(); // under the menus
-            rect.anchorMin = new Vector2(0.2f, 0.62f);
-            rect.anchorMax = new Vector2(0.8f, 0.86f);
+            // Bug MIS v2 C21 (2026-10-02): from 20% of the width the card covered the HUD's item slots (they end near 21%).
+            rect.anchorMin = new Vector2(0.24f, 0.62f);
+            rect.anchorMax = new Vector2(0.76f, 0.86f);
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var background = card.GetComponent<Image>();
             background.color = new Color(0.02f, 0.03f, 0.06f, 0.72f);

@@ -44,7 +44,9 @@ namespace SoulHunter.Tests.PlayMode
                 else run = 0;
             }
             Assert.That(white, Is.GreaterThan(0), "Hits still flash.");
-            Assert.That(white / (float)frames, Is.LessThanOrEqualTo(0.6f), $"White {white} of {frames} frames: it blinks.");
+            // Bug MIS v2 C06: a body under constant hits shows its own look at least ~3/4 of the time.
+            Assert.That(white / (float)frames, Is.LessThanOrEqualTo(0.3f), $"Flashing {white} of {frames} frames: it keeps its look.");
+            Assert.That(DamageFlash.MaxBrightness, Is.LessThanOrEqualTo(1.4f), "A tint, not a white-out.");
 
             // A flash that starts just before a pause ends during the pause (it used to stay white until the game resumed).
             yield return new WaitForSecondsRealtime(DamageFlash.FlashGap + 0.05f);

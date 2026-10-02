@@ -15,6 +15,8 @@ namespace SoulHunter.Gameplay.Combat
     public static class MaxedRewards
     {
         public const int GoldAmount = 25;   // VS Big Coin Bag
+        /// <summary>One name for the 25-gold reward on the level-up card and the chest card (Bug MIS v2 C17).</summary>
+        public const string GoldCardName = "Gold Pouch";
         public const int HealAmount = 30;   // VS Floor Chicken
         public const int AlwaysAfterBags = 100;
 
@@ -40,7 +42,7 @@ namespace SoulHunter.Gameplay.Combat
             var content = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             var list = new List<UpgradeData>
             {
-                Card(Kind.Gold, "Gold Pouch", $"+{GoldAmount} gold.", content != null ? content.GoldPouchIcon : null),
+                Card(Kind.Gold, GoldCardName, $"+{GoldAmount} gold.", content != null ? content.GoldPouchIcon : null),
                 Card(Kind.Chicken, "Roast Chicken", $"Restores {HealAmount} health.", content != null ? content.RoastChickenIcon : null),
             };
             if (withAlways)

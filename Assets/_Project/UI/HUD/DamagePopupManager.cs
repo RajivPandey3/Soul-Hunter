@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.UI
     /// </summary>
     public class DamagePopupManager : MonoBehaviour
     {
+        /// <summary>How far (units) a number may start from its hit point.</summary>
+        public const float PopupSpread = 0.7f;
         public static DamagePopupManager Instance { get; private set; }
 
         [SerializeField] private GameObject _damagePopupPrefab;
@@ -66,7 +68,10 @@ namespace SoulHunter.Gameplay.UI
             }
 
             // Popup ko chalu karo
-            popupToSpawn.transform.position = position;
+            // Bug MIS v2 C12 (2026-10-02): hits on one spot stacked their numbers into unreadable clumps ("6565"). Each
+            // number now starts a little to the side, at random (Soul Hunter's spread; the wiki gives no layout).
+            // Across the screen only (world X is the camera's right): moving along Z would change the number's depth.
+            popupToSpawn.transform.position = position + Vector3.right * Random.Range(-PopupSpread, PopupSpread);
             popupToSpawn.SetActive(true);
 
             // Script ko bolo apna animation shuru kare

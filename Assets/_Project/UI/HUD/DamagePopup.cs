@@ -15,6 +15,7 @@ namespace SoulHunter.Gameplay.UI
         [SerializeField] private float _lifeTime = 1f;
 
         public const float WorldFontSize = 7f;
+        public const float MaxLifetime = 0.65f;
 
         /// <summary>
         /// Bug MIS B07 (2026-09-30): numbers showed cut ("3Ↄ") where enemy models stood in front of them. The camera is
@@ -40,8 +41,9 @@ namespace SoulHunter.Gameplay.UI
             _textColor.a = 1f; // Full visible
             _textMesh.color = _textColor;
 
-            _timer = _lifeTime;
-            _fadeSpeed = 1f / _lifeTime;
+            // ...and lives a shorter time (0.65 s), so fewer stay on screen at once.
+            _timer = Mathf.Min(_lifeTime, MaxLifetime);
+            _fadeSpeed = 1f / _timer;
             _anchor = transform.position; // the hit point (the manager places the popup there before Setup)
             Place();
         }

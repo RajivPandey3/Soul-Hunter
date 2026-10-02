@@ -89,6 +89,7 @@ namespace SoulHunter.Gameplay.UI
     _currentChoices = choices;
     _banishMode = false;
     EnsureOwnCanvas();
+    EvenDim();
     EnsureActionButtons();
     EnsureCardCount(choices.Count);
     StyleHeading();
@@ -138,6 +139,7 @@ namespace SoulHunter.Gameplay.UI
     }
 
     UpdateSpacers(Mathf.Min(choices.Count, _upgradeButtons.Length));
+    FitCardWidth();
 
     BindActionButtons();
     RefreshActionButtons();
@@ -483,6 +485,47 @@ namespace SoulHunter.Gameplay.UI
                 spacer.gameObject.SetActive(on);
                 if (on) spacer.SetSiblingIndex(last.transform.GetSiblingIndex() + 1 + i);
             }
+        }
+
+        /// <summary>
+        /// Bug MIS v2 C05 (2026-10-02): on its own Expand canvas the cards ran edge to edge (0-1920), with the icon and the
+        /// NEW!/Level tag 1,600 px apart. The card column is now at most this wide, centred.
+        /// </summary>
+        public const float CardMaxWidth = 1100f;
+
+        /// <summary>
+        /// Bug MIS v2 C08 (2026-10-02): the panel's full-screen image was a tinted texture tile (sprite_1_0), so the HUD
+        /// behind the level-up screen looked dimmed in uneven blocks (labels dark, numbers bright). The panel is now one
+        /// even dark veil.
+        /// </summary>
+        public static readonly Color DimColor = new Color(0.02f, 0.02f, 0.05f, 0.62f);
+
+        private void EvenDim()
+        {
+            if (_levelUpPanel == null) return;
+            var image = _levelUpPanel.GetComponent<Image>();
+            if (image == null) return;
+            image.sprite = null;
+            image.type = Image.Type.Simple;
+            image.color = DimColor;
+        }
+        private RectOffset _basePadding;
+
+        private void FitCardWidth()
+        {
+            Button first = null;
+            foreach (var b in _upgradeButtons) if (b != null) { first = b; break; }
+            if (first == null) return;
+            var container = first.transform.parent as RectTransform;
+            var group = container != null ? container.GetComponent<HorizontalOrVerticalLayoutGroup>() : null;
+            if (group == null) return;
+            if (_basePadding == null) _basePadding = new RectOffset(group.padding.left, group.padding.right, group.padding.top, group.padding.bottom);
+            Canvas.ForceUpdateCanvases();
+            float width = container.rect.width;
+            int side = Mathf.Max(0, Mathf.RoundToInt((width - CardMaxWidth) * 0.5f));
+            group.padding.left = Mathf.Max(_basePadding.left, side);
+            group.padding.right = Mathf.Max(_basePadding.right, side);
+            LayoutRebuilder.MarkLayoutForRebuild(container);
         }
 
         public const string HeadingText = "LEVEL UP!";

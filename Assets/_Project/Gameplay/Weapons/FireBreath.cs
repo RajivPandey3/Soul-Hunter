@@ -153,6 +153,10 @@ namespace SoulHunter.Gameplay.Combat
                 body.useGravity = false;
             }
             template.name = "HellfireBreath_Flame";
+            // Bug MIS v2 C03: the Fire Wand fireball's opaque core sphere, grown by FireBreathFlame, drew flat yellow
+            // discs. The breath shows only the fireball's flame particles and halo.
+            foreach (var mesh in template.GetComponentsInChildren<MeshRenderer>(true))
+                if (mesh.name == "Core") mesh.enabled = false;
             if (template.GetComponent<Projectile>() == null) template.AddComponent<Projectile>();
             if (template.GetComponent<FireBreathFlame>() == null) template.AddComponent<FireBreathFlame>();
             _flameTemplate = template;

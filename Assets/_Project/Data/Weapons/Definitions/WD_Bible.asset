@@ -16,7 +16,7 @@ MonoBehaviour:
   IsPassive: 0
   DisplayName: Bible
   Description: Tomes circle around you and strike what they touch.
-  Icon: {fileID: -1183981058563071078, guid: e381c9e188dcd994b891deda7baee1a0, type: 3}
+  Icon: {fileID: 21300000, guid: 6a73e60804049684682de9efd4857f1d, type: 3}
   WeaponPrefab: {fileID: 3724841545492313711, guid: 3a8bad6f409658e4890ac2ad73322953, type: 3}
   MaxLevel: 8
   Rarity: 80

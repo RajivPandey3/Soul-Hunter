@@ -184,7 +184,7 @@ namespace SoulHunter.Tests.EditMode
 
             Assert.That(UpgradeText.DisplayName(levelOne), Is.EqualTo("Soul Aura"));
             Assert.That(UpgradeText.Describe(levelOne, 0), Is.EqualTo("Hurts what comes close."));
-            Assert.That(UpgradeText.Describe(levelTwo, 1), Is.EqualTo("Stronger Soul Aura: level 2."));
+            Assert.That(UpgradeText.Describe(levelTwo, 1), Is.EqualTo("+2 damage, +40% area."), "What VS Garlic level 2 adds (Bug MIS v2 C14).");
             Assert.That(UpgradeText.Describe(Upgrade(UpgradeData.UpgradeType.Garlic, 3, description: "Written by hand."), 2),
                 Is.EqualTo("Written by hand."), "A hand-written asset description is kept.");
 

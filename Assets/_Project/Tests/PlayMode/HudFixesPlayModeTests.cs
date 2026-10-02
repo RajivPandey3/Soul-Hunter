@@ -53,7 +53,9 @@ namespace SoulHunter.Tests.PlayMode
             DamagePopupManager.Instance.ShowDamage(30, hit);
             var popup = Object.FindObjectsByType<DamagePopup>(FindObjectsSortMode.None).First(p => p.gameObject.activeInHierarchy);
             Vector3 screenHit = cam.WorldToScreenPoint(hit), screenPopup = cam.WorldToScreenPoint(popup.transform.position);
-            Assert.That(Vector2.Distance(screenHit, screenPopup), Is.LessThan(1f), "Same place on screen.");
+            // Bug MIS v2 C12: a number now starts up to PopupSpread from its hit point (so hits on one spot do not stack).
+            float spread = Vector2.Distance(screenHit, cam.WorldToScreenPoint(hit + Vector3.right * DamagePopupManager.PopupSpread));
+            Assert.That(Vector2.Distance(screenHit, screenPopup), Is.LessThan(spread + 1f), "At its hit point on screen (within the spread).");
             Assert.That(Vector3.Dot(popup.transform.position - hit, -cam.transform.forward), Is.EqualTo(DamagePopup.TowardCamera).Within(0.05f),
                 "Pulled toward the camera, in front of the models (B07).");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));

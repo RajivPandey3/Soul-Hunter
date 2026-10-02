@@ -398,6 +398,8 @@ namespace SoulHunter.Gameplay.Core
             // -sh-autoplay-levelup-shots: every level-up screen (the level-up stats panel); otherwise every fifth.
             if (_experience.CurrentLevel % 5 == 0 || HasArg("-sh-autoplay-levelup-shots")) yield return Shot($"levelup{_experience.CurrentLevel:00}");
             if (HasArg("-sh-autoplay-levelup-ui")) Event("levelup-ui", LevelUpUiState());
+            // -sh-autoplay-ui-graphics: every visible UI graphic during the first level-up (what dims or covers the HUD).
+            if (HasArg("-sh-autoplay-ui-graphics") && !_graphicsDumped) { _graphicsDumped = true; Event("ui-graphics", UiGraphicsDump()); }
             Event("levelup", $"\"level\": {_experience.CurrentLevel}, \"choices\": [{string.Join(", ", choices.Select(c => $"\"{Escape(c.UpgradeName)}\""))}], \"picked\": \"{Escape(pick.UpgradeName)}\"");
             // Pick through the level-up screen like a player, so the panel closes (calling SelectUpgrade directly left it
             // on screen after the last level-up).
@@ -405,6 +407,29 @@ namespace SoulHunter.Gameplay.Core
             var select = typeof(LevelUpUI).GetMethod("OnUpgradeSelected", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (ui != null && select != null) select.Invoke(ui, new object[] { pick });
             else levelUp.SelectUpgrade(pick);
+        }
+
+        private bool _graphicsDumped;
+
+        private static string UiGraphicsDump()
+        {
+            var sb = new System.Text.StringBuilder("\"graphics\": [");
+            bool first = true;
+            foreach (var g in FindObjectsByType<UnityEngine.UI.Graphic>(FindObjectsSortMode.None))
+            {
+                if (g == null || !g.isActiveAndEnabled || g.color.a < 0.05f || g.canvas == null) continue;
+                var r = g.rectTransform;
+                var corners = new Vector3[4];
+                r.GetWorldCorners(corners);
+                Camera cam = g.canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : g.canvas.worldCamera;
+                Vector2 a = RectTransformUtility.WorldToScreenPoint(cam, corners[0]), b = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+                if (b.x - a.x < 200f && b.y - a.y < 200f) continue; // only big graphics can dim or cover
+                if (!first) sb.Append(", ");
+                first = false;
+                string sprite = g is UnityEngine.UI.Image img && img.sprite != null ? img.sprite.name : "";
+                sb.Append($"{{\"name\": \"{Escape(g.name)}\", \"parent\": \"{Escape(g.transform.parent != null ? g.transform.parent.name : "")}\", \"type\": \"{g.GetType().Name}\", \"canvas\": \"{Escape(g.canvas.rootCanvas.name)}\", \"sort\": {g.canvas.rootCanvas.sortingOrder}, \"color\": \"{g.color}\", \"sprite\": \"{Escape(sprite)}\", \"rect\": \"{a.x:0},{a.y:0}-{b.x:0},{b.y:0}\"}}");
+            }
+            return sb.Append("]").ToString();
         }
 
         /// <summary>Where the level-up panel and its cards are on screen, and anything hiding them.</summary>

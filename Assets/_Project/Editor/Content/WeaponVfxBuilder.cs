@@ -536,8 +536,10 @@ namespace SoulHunter.Editor.Content
 
             var mana = new Color(0.7f, 0.55f, 1f);
             root = NewWeaponObject("SH10_Proj_ManaShot", Body.Flying, 0.35f);
-            Core(root.transform, "Core", _sphere, CoreMaterial("SH10_Core_Mana", new Color(0.85f, 0.8f, 1f)), new Vector3(0.3f, 1.1f, 0.3f), default, new Vector3(0f, 0.5f, 0f));
-            Halo(root.transform, mana, 1.2f);
+            // Bug MIS v2 C01: the shot was an opaque, unlit stretched sphere that Area grew until it hid the hero. Now
+            // only additive light: a column of rising approved soul wisps over a soft halo, so the hero always shows.
+            AddParticles(root.transform, new Ps { Name = "Column", Material = _wisp, Loop = true, Rate = 28f, Lifetime = new Vector2(0.25f, 0.35f), Speed = Vector2.zero, Size = new Vector2(0.55f, 0.75f), ColorA = new Color(mana.r, mana.g, mana.b, 0.75f), ColorB = new Color(0.85f, 0.8f, 1f, 0.6f), Velocity = new Vector3(0f, 2.2f, 0f), Radius = 0.12f, MaxParticles = 14, RandomRotation = false });
+            Halo(root.transform, mana, 0.9f);
             Trail(root.transform, _star, mana, 0.3f, 0.3f);
             Save(root);
 
@@ -600,10 +602,11 @@ namespace SoulHunter.Editor.Content
             var line = boltGo.AddComponent<LineRenderer>();
             line.useWorldSpace = false;
             line.positionCount = 9;
-            line.widthCurve = AnimationCurve.Linear(0f, 0.18f, 1f, 0.4f);
+            // Bug MIS v2 C04: thick opaque white zigzags; now a thin blue-white bolt that fades (LightningBolt).
+            line.widthCurve = AnimationCurve.Linear(0f, 0.06f, 1f, 0.16f);
             line.sharedMaterial = _beam;
-            line.startColor = new Color(0.8f, 0.9f, 1f);
-            line.endColor = Color.white;
+            line.startColor = new Color(0.55f, 0.8f, 1f, 0.85f);
+            line.endColor = new Color(0.85f, 0.95f, 1f, 1f);
             line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             line.numCornerVertices = 2;
             boltGo.AddComponent<LightningBolt>();

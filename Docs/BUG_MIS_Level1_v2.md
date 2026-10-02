@@ -20,35 +20,35 @@ Owner's brief: "ab as a cto step 6 tum pura 30 mnt khelo bug ka mis bana kar sav
 
 **Severity:** S1 blocker/crash/data loss · S2 major (wrong rule or a feature broken in normal play) · S3 minor · S4 cosmetic.
 
-**Status:** awaiting the owner's approval. Nothing is fixed yet.
+**Status:** owner approved all fixes (2026-10-02: "1. approved, 2. as a cto tum recommend karo"). All 23 are fixed; see the Status column and AGENTS.md "Level 1 step 6: Bug MIS v2 fixes".
 
 ## Bugs
 
-| ID | Sev | Area | Bug | Evidence (shots) | Expected | Cause (where found) |
-|---|---|---|---|---|---|---|
-| C01 | S2 | Weapon look | Song of Mana's shot is a solid, unlit pale-lavender oval about 70×160 px. It often covers the hero completely, and sometimes the HUD. | 091, 130, 230, 269, 325, 433, 484 (seen by me: 269, 325) | A readable beam that never hides the hero | `WeaponVfxBuilder`: `SH10_Proj_ManaShot` core is an opaque stretched sphere (0.3×1.1×0.3), scaled further by Area |
-| C02 | S2 | HUD rule | The HUD Time is the run's total time, not the stage clock. Stage 2 opens at "30:06" and counts on, while its waves, elites and boss run on 0:00-30:00. | 471, 472, 489 | The stage's own 30-minute clock (wiki Stages: each stage has a 30:00 limit; its events follow that clock) | `TimerUI` shows `GameSessionManager.SurvivalTime` |
-| C03 | S3 | Weapon look | Hellfire Breath flames are clusters of flat, solid pale-yellow discs. | 137, 240, 303, 305 (seen by me: 303) | Flames | `FireBreath` uses the fireball's opaque core sphere, which grows while it flies |
-| C04 | S3 | Weapon look | Lightning Ring strikes are thick, opaque white zigzag lines, 300-500 px long, with no glow. One crossed the stage title. | 364, 368, 369, 426 (seen by me: 364) | The approved lightning VFX look | Lightning strike prefab |
-| C05 | S3 | Level-up UI | Level-up cards stretch edge to edge (x 0-1920) with 1, 2 or 3 cards. The icon and the NEW!/Level tag are about 1,600 px apart. | 004, 052, 297, 309, 442 (seen by me: 004, 052) | Cards sized like before, centred | Likely since the level-up screen moved to its own Expand canvas (2026-10-01) |
-| C06 | S3 | Hit flash | Big bodies under constant hits read as flat white most of the time: the boss in 4 of 8 frames, and elites. The 2026-09-30 B02 fix is not enough for them. | 269, 405, 406, 409, 411 (seen by me: 269) | Keep their look; flash briefly | `DamageFlash` |
-| C07 | S3 | Chest UI | The opened chest lid is see-through and banded, and the inside is a flat, solid cyan slab. | 024, 056, 085, 137, 423, 458 (seen by me: 423) | The approved Soul Reliquary, open | `ChestPreviewStage` lid materials |
-| C08 | S4 | Level-up UI | The dim behind the level-up screen covers the HUD unevenly. Labels are dimmed while numbers, the stage name, the Time and some slot icons stay bright. | 052, 095, 330, 374 (seen by me: 052) | All of the HUD dimmed alike | HUD draw order |
-| C09 | S4 | HUD | Empty item slots are see-through, so a lantern or gravestone behind them looks like an item in the slot. | 049, 050, 164, 192 | Slots with their own backing | `InventoryHud` |
-| C10 | S4 | HUD | An evolved weapon's slot becomes a solid yellow square, with low contrast to the orange icon. | 269 onward (seen by me) | A gold frame around the icon (AGENTS.md, HUD inventory row) | `InventoryHud` |
-| C11 | S4 | HUD | Fire, blood, lightning and damage numbers draw over the HUD (stage name, Gold, item slots). | 304, 361, 426, 446 ("3Gold: 6628"), 474 | The HUD stays readable | World effects drawn after the HUD backings |
-| C12 | S4 | Combat text | Under heavy kills, damage numbers stack into unreadable clumps ("6565", "3Ø30"). | 107, 244, 284, 364 (seen by me: 364) | Readable numbers (wiki silent on the layout) | `DamagePopup` |
-| C13 | S4 | UI | The unlock notice ("New character unlocked: Aria!") has no backing; yellow text sits over the horde. | 069, 076, 115 | Readable, like the HUD labels | `CharacterUnlockTracker` notice |
-| C14 | S4 | Level-up text | Weapon level-up cards say only "Stronger Whip: level 2." and not what changes. | 004, 095, 102 (seen by me: 004) | What the level adds (each weapon's wiki level table) | `UpgradeText` |
-| C15 | S4 | Names | "Song Of Mana" has a capital "Of". | 085, 095 | Consistent casing | `UpgradeText.DisplayName` |
-| C16 | S4 | Names | Item cards read like stat names: "Max Health" (Hollow Heart) and "Player Speed" (Wings). | 052, 205, 218 (seen by me: 052) | Item names (Soul Hunter's own; see O7) | `UpgradeText.DisplayName` from the enum |
-| C17 | S4 | Names | One reward has two names: the chest card says "Coin Bag +25 gold" and the maxed level-up card says "Gold Pouch +25 gold", with the same icon. | 423, 442 (seen by me: 423) | One name | Chest reward text |
-| C18 | S4 | Icons | Wrong or odd icons: Cross shows a blue comet, Bible a brass horn, and Duplicator and Spellbinder are opaque squares. | 052 (Cross, seen by me), 045 (Bible), 067 (Duplicator), 035 (Spellbinder) | An icon that shows the item | `UpgradeIconAssigner` picks |
-| C19 | S4 | Level-up UI | Through a chain of 30 level-ups, every screen shows the final level ("LV 50" on all 30) instead of stepping 21, 22 and so on. | 200-229, 374-402 | Each screen shows its own level. The wiki does not say | HUD reads the final level |
-| C20 | S4 | HUD | "LV n" is drawn over the right end of the XP bar. | every gameplay shot | Clear of the bar | HUD layout |
-| C21 | S4 | UI | The Level 1 story card covers the right column of the HUD item slots. | 002, 003 | Clear of the HUD | `StoryCardUI` position |
-| C22 | S4 | Chest UI | World effects (a lightning bolt) stay bright through the chest screen's dim, so the bolt looks attached to the chest. | 084, 423 (seen by me: 423) | Dimmed with the world | Effects drawn above the dim |
-| C23 | S4 | Pickups | A floor chicken and Gold Fever coins land on or against house walls, and may be unreachable. Low confidence. | 250, 252, 264, 265 | Pickups on open ground | Drop position, no `GroundCheck` |
+| ID | Sev | Area | Bug | Evidence (shots) | Expected | Cause (where found) | Status |
+|---|---|---|---|---|---|---|---|
+| C01 | S2 | Weapon look | Song of Mana's shot is a solid, unlit pale-lavender oval about 70×160 px. It often covers the hero completely, and sometimes the HUD. | 091, 130, 230, 269, 325, 433, 484 (seen by me: 269, 325) | A readable beam that never hides the hero | `WeaponVfxBuilder`: `SH10_Proj_ManaShot` core is an opaque stretched sphere (0.3×1.1×0.3), scaled further by Area | Fixed: additive soul-wisp column + soft halo, no mesh (WeaponVfxBuilder; SH10_Proj_ManaShot) |
+| C02 | S2 | HUD rule | The HUD Time is the run's total time, not the stage clock. Stage 2 opens at "30:06" and counts on, while its waves, elites and boss run on 0:00-30:00. | 471, 472, 489 | The stage's own 30-minute clock (wiki Stages: each stage has a 30:00 limit; its events follow that clock) | `TimerUI` shows `GameSessionManager.SurvivalTime` | Fixed: TimerUI shows LevelProgressionManager.StageElapsedTime |
+| C03 | S3 | Weapon look | Hellfire Breath flames are clusters of flat, solid pale-yellow discs. | 137, 240, 303, 305 (seen by me: 303) | Flames | `FireBreath` uses the fireball's opaque core sphere, which grows while it flies | Fixed: the breath template hides the fireball core (FireBreath) |
+| C04 | S3 | Weapon look | Lightning Ring strikes are thick, opaque white zigzag lines, 300-500 px long, with no glow. One crossed the stage title. | 364, 368, 369, 426 (seen by me: 364) | The approved lightning VFX look | Lightning strike prefab | Fixed: thin blue-white bolt, world-size regardless of Area, fades in 0.25 s (LightningBolt, builder) |
+| C05 | S3 | Level-up UI | Level-up cards stretch edge to edge (x 0-1920) with 1, 2 or 3 cards. The icon and the NEW!/Level tag are about 1,600 px apart. | 004, 052, 297, 309, 442 (seen by me: 004, 052) | Cards sized like before, centred | Likely since the level-up screen moved to its own Expand canvas (2026-10-01) | Fixed: card column at most 1100 wide, centred (LevelUpUI.FitCardWidth); the prefab had 1920-wide cards |
+| C06 | S3 | Hit flash | Big bodies under constant hits read as flat white most of the time: the boss in 4 of 8 frames, and elites. The 2026-09-30 B02 fix is not enough for them. | 269, 405, 406, 409, 411 (seen by me: 269) | Keep their look; flash briefly | `DamageFlash` | Fixed: warm tint at most 1.35x for 0.07 s, 0.25 s gap (DamageFlash) |
+| C07 | S3 | Chest UI | The opened chest lid is see-through and banded, and the inside is a flat, solid cyan slab. | 024, 056, 085, 137, 423, 458 (seen by me: 423) | The approved Soul Reliquary, open | `ChestPreviewStage` lid materials | Fixed: the lid draws both faces; the seam goes dark with a faint glow; softer preview light (ChestPreviewStage) |
+| C08 | S4 | Level-up UI | The dim behind the level-up screen covers the HUD unevenly. Labels are dimmed while numbers, the stage name, the Time and some slot icons stay bright. | 052, 095, 330, 374 (seen by me: 052) | All of the HUD dimmed alike | HUD draw order | Fixed: cause was a full-screen tinted texture tile (sprite_1_0) on the panel, found with the new bot dump -sh-autoplay-ui-graphics; now an even veil (LevelUpUI.EvenDim) |
+| C09 | S4 | HUD | Empty item slots are see-through, so a lantern or gravestone behind them looks like an item in the slot. | 049, 050, 164, 192 | Slots with their own backing | `InventoryHud` | Fixed: slots 90% opaque with a border (InventoryHud) |
+| C10 | S4 | HUD | An evolved weapon's slot becomes a solid yellow square, with low contrast to the orange icon. | 269 onward (seen by me) | A gold frame around the icon (AGENTS.md, HUD inventory row) | `InventoryHud` | Fixed: dark slot with a gold border (InventoryHud) |
+| C11 | S4 | HUD | Fire, blood, lightning and damage numbers draw over the HUD (stage name, Gold, item slots). | 304, 361, 426, 446 ("3Gold: 6628"), 474 | The HUD stays readable | World effects drawn after the HUD backings | Fixed: backings 85% (HudBacking); the HUD is an overlay, world could only show through the 55% backings |
+| C12 | S4 | Combat text | Under heavy kills, damage numbers stack into unreadable clumps ("6565", "3Ø30"). | 107, 244, 284, 364 (seen by me: 364) | Readable numbers (wiki silent on the layout) | `DamagePopup` | Fixed: numbers start up to 0.7 across the screen from the hit and live 0.65 s (DamagePopupManager, DamagePopup) |
+| C13 | S4 | UI | The unlock notice ("New character unlocked: Aria!") has no backing; yellow text sits over the horde. | 069, 076, 115 | Readable, like the HUD labels | `CharacterUnlockTracker` notice | Fixed: dark plate behind the notice (CharacterUnlockTracker) |
+| C14 | S4 | Level-up text | Weapon level-up cards say only "Stronger Whip: level 2." and not what changes. | 004, 095, 102 (seen by me: 004) | What the level adds (each weapon's wiki level table) | `UpgradeText` | Fixed: each level says what it adds, facts of each weapon's wiki level table in own words (UpgradeText.WeaponLevelText) |
+| C15 | S4 | Names | "Song Of Mana" has a capital "Of". | 085, 095 | Consistent casing | `UpgradeText.DisplayName` | Fixed: "Song of Mana" (WeaponDefinition; builder overrides) |
+| C16 | S4 | Names | Item cards read like stat names: "Max Health" (Hollow Heart) and "Player Speed" (Wings). | 052, 205, 218 (seen by me: 052) | Item names (Soul Hunter's own; see O7) | `UpgradeText.DisplayName` from the enum | Fixed (placeholder names until the Indian mythology pass): Hollow Heart, Wings |
+| C17 | S4 | Names | One reward has two names: the chest card says "Coin Bag +25 gold" and the maxed level-up card says "Gold Pouch +25 gold", with the same icon. | 423, 442 (seen by me: 423) | One name | Chest reward text | Fixed: both say Gold Pouch (MaxedRewards.GoldCardName) |
+| C18 | S4 | Icons | Wrong or odd icons: Cross shows a blue comet, Bible a brass horn, and Duplicator and Spellbinder are opaque squares. | 052 (Cross, seen by me), 045 (Bible), 067 (Duplicator), 035 (Spellbinder) | An icon that shows the item | `UpgradeIconAssigner` picks | Fixed: own icons, Cross and Bible rendered from their SH10 models on badges, Duplicator and Spellbinder from the approved VFX sprites (ItemIconBuilder, build_item_icons.py). Not owner-approved art |
+| C19 | S4 | Level-up UI | Through a chain of 30 level-ups, every screen shows the final level ("LV 50" on all 30) instead of stepping 21, 22 and so on. | 200-229, 374-402 | Each screen shows its own level. The wiki does not say | HUD reads the final level | Fixed (CTO recommendation, owner delegated): each screen of a chain shows its own level (XPBarUI, LevelUpManager.LevelOnScreen) |
+| C20 | S4 | HUD | "LV n" is drawn over the right end of the XP bar. | every gameplay shot | Clear of the bar | HUD layout | Fixed: label hangs under the bar (XPBarUI) |
+| C21 | S4 | UI | The Level 1 story card covers the right column of the HUD item slots. | 002, 003 | Clear of the HUD | `StoryCardUI` position | Fixed: card from 24% of the width (StoryCardUI) |
+| C22 | S4 | Chest UI | World effects (a lightning bolt) stay bright through the chest screen's dim, so the bolt looks attached to the chest. | 084, 423 (seen by me: 423) | Dimmed with the world | Effects drawn above the dim | Fixed: chest backdrop 0.94 (ChestOpeningScreen); the bolt now fades too |
+| C23 | S4 | Pickups | A floor chicken and Gold Fever coins land on or against house walls, and may be unreachable. Low confidence. | 250, 252, 264, 265 | Pickups on open ground | Drop position, no `GroundCheck` | Fixed: chicken, chest, magnet, freeze and coins move to the nearest open ground (PickupPoolManager.Reachable) |
 
 ## Observations (not counted as bugs; some need an owner decision)
 
@@ -89,3 +89,14 @@ Owner's brief: "ab as a cto step 6 tum pura 30 mnt khelo bug ka mis bana kar sav
 2. **C19:** should each chained level-up screen show its own level? The wiki does not say.
 3. **O7:** item names. Keep the VS names for now, or give Soul Hunter its own names (Phase 2)?
 4. **O2:** should the bronze coin look change? The model is approved art, but it reads as a dark ring from the game camera.
+
+
+## Owner answers (2026-10-02)
+
+1. Approved fixing C01-C23.
+2. C19: "as a cto tum recommend karo". Each chained screen shows its own level.
+3. Names: Indian mythology, but only after the game is final. The recommendation is in `Docs/Name_Recommendations_Indian_Mythology.md`.
+4. "jiska bhi look pro type nahi lage use badal do", and the ground must be comfortable for 30-minute stages:
+   - coins now glow in their own colour;
+   - floor colours are graded into a calm mid brightness band (`StageFloorImporter.ComfortGrade`);
+   - before/after: `D:/SoulHunter-Validation/ground-compare-1.png`, `-2.png`.

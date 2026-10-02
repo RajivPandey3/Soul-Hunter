@@ -124,29 +124,36 @@ namespace SoulHunter.Gameplay.Pickups
             if (tier != null) tier.SetValue(value);
         }
 
+        /// <summary>
+        /// Bug MIS v2 C23 (2026-10-02): enemies cross stage obstacles, so a chicken or coin dropped where one died could
+        /// lie on a house the player cannot enter. Such drops move to the nearest open ground (stage items already do).
+        /// Gems stay where they fall: there are many more of them, and the Vacuum gathers them.
+        /// </summary>
+        public static Vector3 Reachable(Vector3 position) => GroundCheck.NearestOpen(position, 0.5f);
+
         public GameObject SpawnChicken(Vector3 position)
         {
-            return SpawnFromPool(_chickenPool, _healthChickenPrefab, position);
+            return SpawnFromPool(_chickenPool, _healthChickenPrefab, Reachable(position));
         }
 
         public GameObject SpawnChest(Vector3 position)
         {
-            return SpawnFromPool(_chestPool, _chestPrefab, position);
+            return SpawnFromPool(_chestPool, _chestPrefab, Reachable(position));
         }
 
         public GameObject SpawnMagnet(Vector3 position)
         {
-            return SpawnFromPool(_magnetPool, _magnetPrefab, position);
+            return SpawnFromPool(_magnetPool, _magnetPrefab, Reachable(position));
         }
 
         public GameObject SpawnTimeFreeze(Vector3 position)
         {
-            return SpawnFromPool(_timeFreezePool, _timeFreezePrefab, position);
+            return SpawnFromPool(_timeFreezePool, _timeFreezePrefab, Reachable(position));
         }
 
         public GoldPickup SpawnGold(Vector3 position, int value)
         {
-            var coin = SpawnFromPool(_goldPool, _goldCoinPrefab, position);
+            var coin = SpawnFromPool(_goldPool, _goldCoinPrefab, Reachable(position));
             var gold = coin != null ? coin.GetComponent<GoldPickup>() : null;
             if (gold != null) gold.Value = value;
             var tier = coin != null ? coin.GetComponent<TieredVisual>() : null;

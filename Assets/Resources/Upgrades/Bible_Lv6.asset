@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UpgradeName: Bible Lv.6
   Description: Bible upgrade level 6.
-  Icon: {fileID: -1183981058563071078, guid: e381c9e188dcd994b891deda7baee1a0, type: 3}
+  Icon: {fileID: 21300000, guid: 6a73e60804049684682de9efd4857f1d, type: 3}
   Type: 6
   Level: 6

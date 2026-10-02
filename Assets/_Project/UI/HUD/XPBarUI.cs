@@ -74,6 +74,26 @@ namespace SoulHunter.Gameplay.UI
         private TMPro.TextMeshProUGUI _levelLabel;
 
         public static string FormatLevel(int level) => $"LV {level}";
+        public const float LabelHeight = 34f;
+
+        /// <summary>The level label (tests).</summary>
+        public TMPro.TextMeshProUGUI LevelLabel => _levelLabel;
+
+        private SoulHunter.Gameplay.Core.LevelUpManager _levelUps;
+
+        /// <summary>
+        /// Bug MIS v2 C19 (2026-10-02, owner: "as a cto tum recommend karo"): through a chain of level-ups every screen
+        /// showed the final level ("LV 50" on all 30). While a level-up screen is open the label shows the level that
+        /// screen is for (21, 22, ...), so the player can see how many are left; the wiki does not describe it.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (_levelLabel == null || _playerExperience == null) return;
+            if (_levelUps == null) _levelUps = FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>();
+            int level = _levelUps != null && _levelUps.IsLevelUpActive ? _levelUps.LevelOnScreen : _playerExperience.CurrentLevel;
+            string text = FormatLevel(level);
+            if (_levelLabel.text != text) _levelLabel.text = text;
+        }
 
         /// <summary>
         /// VS shows the player level at the right end of the XP bar. The HUD prefab has no label for it,
@@ -96,19 +116,22 @@ namespace SoulHunter.Gameplay.UI
             labelObject.transform.SetParent(bar, false);
             labelObject.transform.SetAsLastSibling(); // draw over the bar fill
 
+            // Bug MIS v2 C20 (2026-10-02): drawn on the thin bar, the label covered its right end. It now hangs just
+            // under the bar's right end.
             var rect = (RectTransform)labelObject.transform;
-            rect.anchorMin = new Vector2(1f, 0f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 0.5f);
-            rect.sizeDelta = new Vector2(140f, 0f);
-            rect.anchoredPosition = new Vector2(-8f, 0f);
+            rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.sizeDelta = new Vector2(150f, LabelHeight);
+            rect.anchoredPosition = new Vector2(-10f, -4f);
 
             _levelLabel = labelObject.AddComponent<TMPro.TextMeshProUGUI>();
             _levelLabel.alignment = TMPro.TextAlignmentOptions.MidlineRight;
             _levelLabel.enableAutoSizing = true;
             _levelLabel.fontSizeMin = 12f;
-            _levelLabel.fontSizeMax = 32f;
+            _levelLabel.fontSizeMax = 30f;
             _levelLabel.color = Color.white;
+            _levelLabel.outlineWidth = 0.25f;
+            _levelLabel.outlineColor = new Color32(0, 0, 0, 255);
             _levelLabel.raycastTarget = false;
         }
     }

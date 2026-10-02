@@ -1408,6 +1408,43 @@ Owner: "step 3 shuru karo"; names chosen by the owner (AskUserQuestion), looks f
 - Validation: EditMode 520/520, PlayMode 249/249, no test wrote the real save (`D:/SoulHunter-Validation/run-20261001-step3b/`).
 - Editor play with `AutoplayBot -sh-autoplay-evolve "Evo_A,Evo_B"` (new: starts the run with those evolutions), Stage 1, god mode, 90 s each: `evo-play-a` (Hellmaw Comet, Drowning Chalice, Severed Fate) and `evo-play-b` (Stormbound Halo, Eclipse Sigil, Requiem of Souls): all six evolved, 0 errors, 0 hitches; in play 60-86 FPS and 78-98 FPS (the 29 / 75 minimum rows are the loading screen). Screenshots show the meteors, the creeping pools and the double strikes (partial `V`). Not yet played by the owner.
 
+### Level 1 step 6: Bug MIS v2 fixes, ground comfort, names (owner, 2026-10-02)
+
+The step 6 CTO pass played Level 1 for 30 minutes and wrote `Docs/BUG_MIS_Level1_v2.md` (23 bugs, 0 S1). The owner answered: "1. approved, 2. as a cto tum recommend karo, 3. ... indian mithology ... game final ho jane ke baad, 4. jiska bhi look pro type nahi lage use badal do", and asked for a ground that does not tire the eyes over 30 minutes.
+
+**Fixes** (each row's status is in the register):
+- Song of Mana's shot is now additive light, not an opaque oval that hid the hero.
+- The HUD timer shows the stage clock.
+- Hellfire Breath has no core sphere.
+- Lightning bolts are thin, fading and keep their world size.
+- Level-up cards are at most 1100 wide and centred. The level-up veil is even: the panel's full-screen tinted texture tile caused the patchy dim; `AutoplayBot -sh-autoplay-ui-graphics` found it.
+- The hit flash is a short warm tint.
+- The open chest's lid is two-sided, with a dark inside.
+- HUD slots are opaque, and an evolution has a gold border. Backings are 85%.
+- Damage numbers spread across the screen and live 0.65 s.
+- The unlock notice has a backing.
+- Weapon level cards say what each level adds (the facts of each wiki "Levels" table, in own words).
+- Readable placeholder names: Song of Mana, Hollow Heart, Wings. The gold reward has one name.
+- Four new icons (`ItemIconBuilder` + `ArtSource/Generators/build_item_icons.py`; not owner-approved art).
+- **C19 (CTO call):** each chained level-up screen shows its own level, and "LV" sits under the bar.
+- The story card is clear of the slots, and the chest backdrop is 0.94.
+- Drops move to the nearest open ground.
+
+**Ground comfort:** `StageFloorImporter.ComfortGrade` puts every floor colour's brightness into 0.30-0.68 (it ran from 0.08 on Levels 9-10 to 1.0 snow on Level 6), caps saturation at 0.55 × 0.9, and lowers glows from 2.5x to 1x. The floors were re-imported; only materials changed. Before/after for all 10 levels: `D:/SoulHunter-Validation/ground-compare-1.png` and `-2.png`.
+- Not changed: the Level 2 Dark Forest still uses black fog and 0.18-0.22 ambient light with a flicker (`CampaignSignatureSystem`). The GDD's Level 2 mechanic is "the map gets progressively darker", which conflicts with eye comfort: **owner decision**.
+
+**Coins:** bronze, silver and gold coin metal is 0.55 metallic with a 0.38 glow of its own colour (`PickupV2Importer.RetuneCoins`). Before, they were fully metallic with nothing to reflect, so they read as dark rings.
+
+**Names:** `Docs/Name_Recommendations_Indian_Mythology.md` (recommendation only; renaming waits for the final game).
+
+**Tests:** `BugMisV2PlayModeTests` (R: stage clock, breath, bolt, cards and per-screen level, veil, chest lid/seam/light, slots, notice/story card, drops off obstacles) and `BugMisV2Tests` (T: mana shot, flash, backings, level texts for every weapon level, names, icons). Updated: `DamageFlashPlayModeTests`, `HudFixesPlayModeTests` (the number spread), `WeaponDefinitionTests`.
+
+**Validation:**
+- EditMode 531/531; final run PlayMode 259/259. No test wrote the real save (`D:/SoulHunter-Validation/run-20261002-bugmis2d/`).
+- Editor play `bugmis2-verify` to `-verify6`: 0 errors, min 37-78 FPS. Screenshots show the centred cards with level texts, the even veil, the gold-bordered evolution, the notice backing, the new icons and the darker chest inside (partial `V`).
+
+Not yet played by the owner.
+
 ### Level 1 step 3: chest looks (2026-10-02)
 
 vampire.survivors.wiki/w/Treasure_Chest, "Types" (fetched 2026-10-01): bronze chests "are usually incapable of providing weapon evolutions ... typically obtained as drops from bosses spawned before 10:00"; silver chests "are capable of providing weapon evolutions and unions"; Arcana chests give an Arcana. Golden and dark chests are not built (Soul Hunter has no chest that gives unowned weapons, nor dark chests).

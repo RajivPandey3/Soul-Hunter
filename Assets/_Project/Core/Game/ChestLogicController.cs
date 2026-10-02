@@ -182,7 +182,7 @@ namespace SoulHunter.Gameplay.Core
                 }
 
                 var content = GameContentCatalog.Load();
-                result.Rewards.Add(new ChestReward { Name = "Coin Bag", IsCoinBag = true, Icon = content != null ? content.GoldPouchIcon : null });
+                result.Rewards.Add(new ChestReward { Name = SoulHunter.Gameplay.Combat.MaxedRewards.GoldCardName, IsCoinBag = true, Icon = content != null ? content.GoldPouchIcon : null });
                 maxedItems++; // 3. nothing left to upgrade: VS pays a Big Coin Bag for this item
             }
 

@@ -93,6 +93,10 @@ namespace SoulHunter.Editor.Content
                 mat.SetColor("_EmissionColor", look.Emission * Mathf.Clamp(look.Strength / 3f, 0.35f, 1f));
                 mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             }
+            else if (IsCoinMetal(path))
+            {
+                CoinGlow(mat, look.Color);
+            }
             else
             {
                 mat.DisableKeyword("_EMISSION");
@@ -226,6 +230,47 @@ namespace SoulHunter.Editor.Content
                 PrefabUtility.SaveAsPrefabAsset(root, GemPrefab);
             }
             finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        /// <summary>
+        /// Bug MIS v2 O2 (owner, 2026-10-02: "jiska bhi look pro type nahi lage use badal do"): fully metallic coins with
+        /// nothing to reflect drew as dark brown rings ("donuts") on the stage. Coin metal is less metallic and carries a
+        /// soft glow of its own colour, so bronze reads as warm copper, silver as silver and gold as gold.
+        /// </summary>
+        public const float CoinMetallic = 0.55f, CoinGlowStrength = 0.38f;
+
+        private static bool IsCoinMetal(string path) => path.Contains("Coin_") && (path.Contains("_Metal") || path.Contains("_Emblem"));
+
+        private static void CoinGlow(Material mat, Color color)
+        {
+            mat.SetFloat("_Metallic", CoinMetallic);
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", color * CoinGlowStrength);
+            mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            EditorUtility.SetDirty(mat);
+        }
+
+        /// <summary>Re-tunes only the six coin materials (no prefab is rebuilt). Menu Soul Hunter/Content/Retune Coin Materials.</summary>
+        [MenuItem("Soul Hunter/Content/Retune Coin Materials")]
+        public static void RetuneCoins()
+        {
+            foreach (string guid in AssetDatabase.FindAssets("SH10_Pickup_Coin_ t:Material"))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!IsCoinMetal(path)) continue;
+                var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                CoinGlow(mat, mat.GetColor("_BaseColor"));
+                Debug.Log($"[PickupV2Importer] Coin glow: {path}");
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        public static void RetuneCoinsFromCommandLine()
+        {
+            int code = 0;
+            try { RetuneCoins(); }
+            catch (System.Exception e) { Debug.LogException(e); code = 1; }
+            EditorApplication.Exit(code);
         }
 
         private static void BuildCoin()

@@ -456,6 +456,9 @@ namespace SoulHunter.Gameplay.Core
             return stats != null ? stats.Luck : 1f;
         }
 
+        /// <summary>The level the open level-up screen is for (the player's level when none is open).</summary>
+        public int LevelOnScreen => _isLevelUpActive ? LevelBeingOffered() : (_experience != null ? _experience.CurrentLevel : 1);
+
         /// <summary>The level this level-up reaches (several queued level-ups are offered in order).</summary>
         private int LevelBeingOffered()
         {

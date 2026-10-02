@@ -177,6 +177,21 @@ namespace SoulHunter.Gameplay.UI
                 if (pair.Value.center.y > seam) lidParts.Add(pair.Key.transform);
             foreach (var part in lidParts) part.SetParent(hinge, true);
             _hinge = hinge;
+
+            // Bug MIS v2 C07: an opened lid shows its inside, which single-sided materials culled, so it looked
+            // see-through and banded. The preview's lid draws both faces (instances on this copy only).
+            foreach (var r in hinge.GetComponentsInChildren<Renderer>(true))
+            {
+                var mats = r.materials;
+                foreach (var m in mats)
+                    if (m != null && m.HasProperty("_Cull")) m.SetFloat("_Cull", 0f);
+                r.materials = mats;
+            }
+            // The soul-light seam left in the body (its top fills the opening once the lid is up).
+            _seams.Clear();
+            foreach (var r in _chest.GetComponentsInChildren<Renderer>(true))
+                if (!r.transform.IsChildOf(hinge) && System.Array.Exists(r.sharedMaterials, m => m != null && m.name.Contains("Chest_Soul")))
+                    _seams.Add(r);
             _hingeBase = hinge.rotation;
 
             // Lift the front edge (-Z) up and back.
@@ -197,6 +212,48 @@ namespace SoulHunter.Gameplay.UI
             _opening = true;
             _coinsLeft = coins;
             _glow.intensity = 1.2f;
+            DimSeams();
+            // Light pours out of the opening (the approved chest-open burst; it plays while the game is paused).
+            if (_chest != null)
+                SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen,
+                    new Vector3(_bounds.center.x, _bounds.max.y, _bounds.center.z));
+        }
+
+        private readonly List<Renderer> _seams = new List<Renderer>();
+        private static readonly int SeamBase = Shader.PropertyToID("_BaseColor"), SeamEmission = Shader.PropertyToID("_EmissionColor");
+
+        /// <summary>The seam glows dimly once the lid is up (Bug MIS v2 C07: it filled the opening as a flat cyan slab).</summary>
+        public const float OpenSeamGlow = 0.1f;
+
+        /// <summary>The preview light once the chest is open (it was 4).</summary>
+        public const float OpenGlowIntensity = 1.6f;
+
+        /// <summary>The preview light's intensity (tests).</summary>
+        public float GlowIntensity => _glow != null ? _glow.intensity : 0f;
+
+        /// <summary>The seam's glow relative to the closed chest (tests): 1 closed, OpenSeamGlow open.</summary>
+        public float SeamGlow { get; private set; } = 1f;
+
+        private void DimSeams()
+        {
+            if (SeamGlow < 1f) return;
+            SeamGlow = OpenSeamGlow;
+            var block = new MaterialPropertyBlock();
+            foreach (var r in _seams)
+            {
+                if (r == null) continue;
+                var mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    if (mats[i] == null || !mats[i].name.Contains("Chest_Soul")) continue;
+                    r.GetPropertyBlock(block, i);
+                    Color emission = block.HasColor(SeamEmission) ? block.GetColor(SeamEmission) : mats[i].GetColor(SeamEmission);
+                    Color baseColor = block.HasColor(SeamBase) ? block.GetColor(SeamBase) : mats[i].GetColor(SeamBase);
+                    block.SetColor(SeamEmission, emission * OpenSeamGlow);
+                    block.SetColor(SeamBase, baseColor * 0.12f); // a dark inside with a faint soul glow
+                    r.SetPropertyBlock(block, i);
+                }
+            }
         }
 
         /// <summary>Jumps straight to the open chest (the animation was skipped).</summary>
@@ -207,6 +264,7 @@ namespace SoulHunter.Gameplay.UI
             _lidT = 1f;
             _dropT = 1f;
             _coinsLeft = 0f;
+            DimSeams();
             ApplyPose();
         }
 
@@ -217,7 +275,8 @@ namespace SoulHunter.Gameplay.UI
             if (_dropT < 1f) _dropT = Mathf.Min(1f, _dropT + dt / 0.35f);
             if (_opening && _lidT < 1f) _lidT = Mathf.Min(1f, _lidT + dt / LidOpenSeconds);
             ApplyPose();
-            if (_opening && _glow != null) _glow.intensity = Mathf.Lerp(_glow.intensity, 4f, dt * 4f);
+            // Bug MIS v2 C07: at 4.0 the cyan glow lit the open chest's inside planks into a flat bright slab.
+            if (_opening && _glow != null) _glow.intensity = Mathf.Lerp(_glow.intensity, OpenGlowIntensity, dt * 4f);
 
             // Coin burst out of the open lid.
             if (_coinsLeft > 0f && _lidT > 0.5f && _coinTemplate != null)

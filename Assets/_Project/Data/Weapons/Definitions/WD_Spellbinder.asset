@@ -16,7 +16,7 @@ MonoBehaviour:
   IsPassive: 1
   DisplayName: Spellbinder
   Description: +10% weapon duration.
-  Icon: {fileID: -2084348082026221834, guid: e93ec3b06206aea42a0e9ee86739adaa, type: 3}
+  Icon: {fileID: 21300000, guid: 7077a037c318bd846b766c6f59098351, type: 3}
   WeaponPrefab: {fileID: 0}
   MaxLevel: 5
   Rarity: 100

@@ -93,7 +93,9 @@ namespace SoulHunter.Gameplay.UI
     /// </summary>
     public sealed class HudBacking : MonoBehaviour
     {
-        public static readonly Color Color = new Color(0f, 0f, 0f, 0.55f);
+        // Bug MIS v2 C11 (2026-10-02): at 55% the world showed through, so damage numbers, fire and blood read as drawn over
+        // the labels ("3Gold: 6628"). 85% keeps the labels clean.
+        public static readonly Color Color = new Color(0.02f, 0.02f, 0.04f, 0.85f);
         private const float Padding = 10f;
         private TMP_Text _label;
         private RectTransform _rect;

@@ -72,6 +72,11 @@ namespace SoulHunter.Gameplay.UI
         private ChestPreviewStage _stage;
         private RectTransform _root;
         private Image _backdrop;
+        /// <summary>
+        /// Bug MIS v2 C22 (2026-10-02): at 0.88 the paused world's brightest effects (a lightning bolt, damage numbers)
+        /// still read through, looking attached to the chest. The backdrop is darker.
+        /// </summary>
+        public const float BackdropAlpha = 0.94f;
         private RawImage _chestImage, _circle, _flash, _ring;
         private TextMeshProUGUI _title, _coinText, _skipHint;
         private Button _openButton, _doneButton;
@@ -215,7 +220,7 @@ namespace SoulHunter.Gameplay.UI
             // Intro blast: the backdrop dims, the chest drops in with a flash and a ring.
             for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime / 0.25f)
             {
-                _backdrop.color = new Color(_result.IsArcana ? 0.08f : 0f, 0f, _result.IsArcana ? 0.12f : 0.02f, 0.88f * t);
+                _backdrop.color = new Color(_result.IsArcana ? 0.08f : 0f, 0f, _result.IsArcana ? 0.12f : 0.02f, BackdropAlpha * t);
                 yield return null;
             }
             Blast(0.9f);
@@ -265,7 +270,7 @@ namespace SoulHunter.Gameplay.UI
             if (_sequence != null) StopCoroutine(_sequence);
             StopAllCoroutines();
             _openButton.gameObject.SetActive(false);
-            _backdrop.color = new Color(0f, 0f, 0.02f, 0.88f);
+            _backdrop.color = new Color(0f, 0f, 0.02f, BackdropAlpha);
             _stage.FinishNow();
             if (_cards.Count == 0) BuildCards();
             for (int i = 0; i < _cards.Count; i++) ShowCard(i);

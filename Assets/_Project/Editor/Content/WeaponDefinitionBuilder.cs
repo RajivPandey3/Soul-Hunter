@@ -27,6 +27,20 @@ namespace SoulHunter.Editor.Content
     /// </summary>
     public static class WeaponDefinitionBuilder
     {
+        /// <summary>
+        /// Bug MIS v2 C15/C16 (2026-10-02): names made from the enum read as stats or had odd casing ("Max Health", "Player
+        /// Speed", "Song Of Mana"). Placeholder item names until Soul Hunter's own names land (owner: after the game is final).
+        /// </summary>
+        private static readonly System.Collections.Generic.Dictionary<UpgradeData.UpgradeType, string> NameOverrides =
+            new System.Collections.Generic.Dictionary<UpgradeData.UpgradeType, string>
+            {
+                { UpgradeData.UpgradeType.SongOfMana, "Song of Mana" },
+                { UpgradeData.UpgradeType.MaxHealth, "Hollow Heart" },
+                { UpgradeData.UpgradeType.PlayerSpeed, "Wings" },
+                { UpgradeData.UpgradeType.SkullOManiac, "Skull O'Maniac" },
+                { UpgradeData.UpgradeType.Tiragisu, "Tirajisu" },
+            };
+
         public const string Folder = "Assets/_Project/Data/Weapons/Definitions";
         public const string GameplayScenePath = "Assets/Scenes/Gameplay/Main_Gameplay.unity";
         public const int StagePassiveMaxLevel = 9;
@@ -81,7 +95,8 @@ namespace SoulHunter.Editor.Content
                 definition.Type = type;
                 definition.IsPassive = !WeaponManager.LegacyIsWeaponType(type);
                 definition.Levels = levels;
-                definition.DisplayName = levelOne != null ? UpgradeText.NameFromAsset(levelOne) : ObjectNames.NicifyVariableName(type.ToString());
+                definition.DisplayName = NameOverrides.TryGetValue(type, out var named) ? named
+                    : levelOne != null ? UpgradeText.NameFromAsset(levelOne) : ObjectNames.NicifyVariableName(type.ToString());
                 definition.Description = UpgradeText.FallbackDescription(type) ?? "";
                 definition.Icon = levels.Select(u => u.Icon).FirstOrDefault(i => i != null);
                 definition.Rarity = UpgradeRarity.VsWeight(type);

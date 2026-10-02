@@ -16,7 +16,7 @@ MonoBehaviour:
   IsPassive: 0
   DisplayName: Cross
   Description: A holy cross flies at the nearest enemy and returns.
-  Icon: {fileID: 6203059290615345688, guid: 3505075ec2b93d34d86ad6a535864442, type: 3}
+  Icon: {fileID: 21300000, guid: 4b65b64c80f387f4d820eeea7cdcae22, type: 3}
   WeaponPrefab: {fileID: 8767656658600148067, guid: 6756b9c5b03f52e4fbc51dd694074a0d, type: 3}
   MaxLevel: 8
   Rarity: 80

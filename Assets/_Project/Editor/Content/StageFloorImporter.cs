@@ -107,10 +107,29 @@ namespace SoulHunter.Editor.Content
         /// URP Lit: the detail texture tinted by the palette colour (divided by the texture's mean so the average colour
         /// stays the palette colour), matte, lit by the stage light and receiving/casting its shadows.
         /// </summary>
+        /// <summary>
+        /// Eye comfort (owner, 2026-10-02: "ground ka colour ekdam se dark comfortable nahi lagta ... aankho ko chubhe
+        /// nahi", a stage lasts 30 minutes). The palettes ran from near-black (Levels 9-10 at 0.09 brightness) to blinding
+        /// white snow (Level 6 at 1.0), with strong glows. Every floor colour's brightness is pressed into a calm mid band
+        /// (ComfortMin..ComfortMax), keeping each level's order of light and dark, and strong colours are softened.
+        /// </summary>
+        public const float ComfortMin = 0.30f, ComfortMax = 0.68f, ComfortMaxSaturation = 0.55f, GlowStrength = 1.0f;
+
+        public static Color ComfortGrade(Color c)
+        {
+            Color.RGBToHSV(c, out float h, out float sat, out float v);
+            v = Mathf.Lerp(ComfortMin, ComfortMax, Mathf.Clamp01(v));
+            sat = Mathf.Min(sat, ComfortMaxSaturation) * 0.9f;
+            var graded = Color.HSVToRGB(h, sat, v);
+            graded.a = 1f;
+            return graded;
+        }
+
         public static void ApplyLook(Material mat, FloorMaterial look)
         {
             var texture = look.Texture != null ? DetailTexture(look.Texture) : null;
-            var tint = texture != null ? look.Color / TextureMean : look.Color;
+            var color = ComfortGrade(look.Color);
+            var tint = texture != null ? color / TextureMean : color;
             tint = new Color(Mathf.Min(1f, tint.r), Mathf.Min(1f, tint.g), Mathf.Min(1f, tint.b), 1f);
             mat.SetTexture("_BaseMap", texture);
             mat.SetTexture("_MainTex", texture);
@@ -123,7 +142,7 @@ namespace SoulHunter.Editor.Content
             if (look.Emissive)
             {
                 mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", look.Color.linear * 2.5f);
+                mat.SetColor("_EmissionColor", color.linear * GlowStrength); // was 2.5x the raw colour: harsh over a long stage
                 mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             }
             else

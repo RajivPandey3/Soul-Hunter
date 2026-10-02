@@ -30,7 +30,16 @@ namespace SoulHunter.Gameplay.VFX
         /// the timer also stood still while the game was paused. Now the flash is 1.8x, runs on real time, and after one
         /// ends the next may start only after this gap, so a much-hit enemy blinks instead of staying white.
         /// </summary>
-        public const float FlashGap = 0.15f;
+        public const float FlashGap = 0.25f;
+
+        /// <summary>
+        /// Bug MIS v2 C06 (2026-10-02): even after B02, the boss and elites under constant hits read as flat white in 4 of
+        /// 8 frames (pale models x 1.8 saturate). The flash is now a short warm tint (at most 1.35x, 0.07 s) with a 0.25 s
+        /// gap, so a much-hit body shows its own look at least three quarters of the time.
+        /// </summary>
+        public const float MaxBrightness = 1.35f;
+        public const float MaxDuration = 0.07f;
+        public static readonly Color FlashTint = new Color(1f, 0.82f, 0.78f);
         private float _nextFlashAllowed = -1f;
 
         /// <summary>True while the white hit flash is showing (tests).</summary>
@@ -127,10 +136,10 @@ namespace SoulHunter.Gameplay.VFX
         {
             if (!SoulHunter.Core.Persistence.GameSettings.FlashingVfx) return; // Options: flashing VFX off
             if (_isFlashing || Time.unscaledTime < _nextFlashAllowed) return; // a hit does not stretch or chain the flash
-            _flashTimer = _flashDuration;
+            _flashTimer = Mathf.Min(_flashDuration, MaxDuration);
 
             _isFlashing = true;
-            Color flash = _flashColor * _flashBrightness;
+            Color flash = _flashColor * FlashTint * Mathf.Min(_flashBrightness, MaxBrightness);
             flash.a = _flashColor.a;
             foreach (var target in _renderers)
             {
