@@ -110,12 +110,9 @@ namespace SoulHunter.Gameplay.Hazards
                 if (!_hitThisRun.Add(enemy.GetInstanceID())) continue;
                 var health = enemy.GetComponent<HealthController>();
                 if (health == null) continue;
-                int before = health.CurrentHealth;
-                health.TakeDamage(new DamagePacket(EnemyDamage, to, push) { WeaponKnockback = 3f });
+                using (SoulHunter.Gameplay.Combat.DamageSource.From(null, SourceName))
+                    health.TakeDamage(new DamagePacket(EnemyDamage, to, push) { WeaponKnockback = 3f });
                 EnemiesHit++;
-                int applied = Mathf.Max(0, before - health.CurrentHealth);
-                if (applied > 0 && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-                    SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordDamage(SourceName, applied);
             }
         }
     }

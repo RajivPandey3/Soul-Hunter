@@ -127,6 +127,7 @@ namespace SoulHunter.Gameplay.Core
             {
                 Debug.Log($"[CharacterUnlockTracker] {character.CharacterName} unlocked ({CharacterUnlocks.ConditionText(character)})");
                 ShowNotice($"New character unlocked: {character.CharacterName}!");
+                if (RunStatsTracker.Instance != null) RunStatsTracker.Instance.RecordUnlock($"Character: {character.CharacterName}");
                 OnCharacterUnlocked?.Invoke(character);
             }
             bool powerUps = RecordPowerUpUnlocks(_progression != null ? _progression.CurrentStage : 1, _progression != null ? _progression.StageElapsedTime : 0f, save: false);
@@ -148,6 +149,7 @@ namespace SoulHunter.Gameplay.Core
             {
                 Debug.Log($"[CharacterUnlockTracker] {line}");
                 ShowNotice(line);
+                if (RunStatsTracker.Instance != null) RunStatsTracker.Instance.RecordUnlock(line);
             }
             if (news.Count > 0 && save) _save.SaveGame();
             return news.Count > 0;

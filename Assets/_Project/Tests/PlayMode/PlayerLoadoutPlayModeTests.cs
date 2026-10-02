@@ -97,7 +97,8 @@ namespace SoulHunter.Tests.PlayMode
 
                 var stats = SoulHunter.Gameplay.Core.RunStatsTracker.Instance;
                 Assert.IsNotNull(stats, "RunStatsTracker missing. " + Errors());
-                yield return WaitUntilRealtime(() => stats.GetWeaponStats().TryGetValue("Song Of Mana", out int dealt) && dealt > 0,
+                // The Results screen credits each hit to the weapon that dealt it (RunStatsTracker.Weapons).
+                yield return WaitUntilRealtime(() => { foreach (var r in stats.Weapons) if (r.Weapon is SongOfManaWeapon && r.Damage > 0) return true; return false; },
                     "Song of Mana to damage the nearest enemy");
                 if (enemy != null) Object.Destroy(enemy);
             }

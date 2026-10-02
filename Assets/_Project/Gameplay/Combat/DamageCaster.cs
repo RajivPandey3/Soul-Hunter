@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.Combat
     {
         /// <summary>The knockback of the weapon that spawned this (VS infobox "knockback"); negative = the default 1.</summary>
         [System.NonSerialized] public float Knockback = -1f;
+        /// <summary>The weapon that spawned this (set by AutoAttackWeapon.AimAtHostiles), credited on the Results screen.</summary>
+        [System.NonSerialized] public AutoAttackWeapon SourceWeapon;
         [SerializeField] private Vector3 _hitboxSize = new Vector3(1, 1, 1);
         [SerializeField] private LayerMask _targetLayer;
         [SerializeField] private int _damageAmount = 10;
@@ -49,7 +51,7 @@ namespace SoulHunter.Gameplay.Combat
                 {
                     Vector3 knockback = (_hitColliders[i].transform.position - transform.position).normalized;
                     DamagePacket packet = new DamagePacket(_damageAmount, transform.position, knockback).WithKnockback(Knockback);
-                    target.TakeDamage(packet);
+                    using (DamageSource.From(SourceWeapon)) target.TakeDamage(packet);
                     hitSomething = true;
                     Debug.Log($"[DamageCaster] Hit and damaged: {_hitColliders[i].gameObject.name}");
                 }

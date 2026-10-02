@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class GildedCharmPickup : Pickup
     {
+        public override string ResultsName => DisplayName;
         public const string DisplayName = "Gilded Charm";
 
         private static readonly List<GoldPickup> Buffer = new List<GoldPickup>();

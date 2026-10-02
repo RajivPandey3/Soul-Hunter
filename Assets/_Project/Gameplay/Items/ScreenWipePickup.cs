@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class ScreenWipePickup : Pickup
     {
+        public override string ResultsName => DisplayName;
         public const string DisplayName = "Soul Toll";
 
         protected override void OnPickedUp(Collider player)

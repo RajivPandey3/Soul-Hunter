@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class TimeFreezePickup : Pickup
     {
+        public override string ResultsName => PickupNames.TimeFreeze;
         [SerializeField] private float _freezeDuration = 10f;
 
         /// <summary>Game time at which the Orologion's freeze ends (new spawns freeze until then; VS wiki Orologion).</summary>

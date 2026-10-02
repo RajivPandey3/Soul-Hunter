@@ -127,7 +127,7 @@ namespace SoulHunter.Gameplay.Weapons
                         HitPoint = _hitsBuffer[i].ClosestPoint(transform.position),
                         KnockbackDirection = attackDirection * 2f // Whip dushman ko thoda peeche dhakelta hai
                     };
-                    damageable.TakeDamage(packet);
+                    Hit(damageable, packet);
                 }
             }
 

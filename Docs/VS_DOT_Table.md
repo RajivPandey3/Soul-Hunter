@@ -13,7 +13,7 @@ Counts: MATCH 72, PARTIAL 62, MISSING 27, DIFFERS-OWNER 8, UNKNOWN 3, SH-ONLY 2,
 4. **Stat caps missing.** VS caps Might and Area at 1000%, Speed and Duration at 500%, Amount at 10. SH caps only Soul Eggs.
 5. **Invulnerability timings.** VS: 240 ms after a hit (SH 0.5 s); brief i-frames after a chicken and after a chest (SH none).
 6. **Base weapons crit.** In VS, Whip/Knife/Axe crit only with the Slash Arcana. SH gives 6 weapons 10% at 2x.
-7. **Results and menu shell.** No full results screen (per-weapon DPS, items, PowerUps), no Collection, Bestiary, Unlocks or Credits; quitting skips the results.
+7. **Results and menu shell.** The Results screen is built (Level 1 step 4, 2026-10-02); still no Collection, Bestiary, Unlocks or Credits.
 8. **Orologion and spawning.** New spawns are not frozen during Orologion; enemies can spawn on screen at the sides; event spawns have no 500 cap.
 9. **Arcana.** No choose screen at start and no pick-1-of-4 chest screen; only 4 Arcanas with partial effects, using VS names.
 
@@ -208,10 +208,10 @@ Counts: MATCH 72, PARTIAL 62, MISSING 27, DIFFERS-OWNER 8, UNKNOWN 3, SH-ONLY 2,
 | HUD | 6 + 6 slots | Passive_items | UI | InventoryHud | MATCH |  |
 | HUD | Timer, kills, gold, health bar | - | UI | Built | UNKNOWN | Wiki silent |
 | Pause | Options; Grimoire; Map | Options, Grim_Grimoire | UI | Resume/Options/Quit | PARTIAL |  |
-| Pause | Quit still shows results | Results | Behavior | Straight to menu | PARTIAL |  |
-| Results | Stage, mode, gold bonus, time, gold, level, kills | Results | UI | Time, kills, gold, level | PARTIAL |  |
-| Results | Per weapon: level, damage, time, DPS | Results | UI | Name + damage | PARTIAL |  |
-| Results | Character, eggs, items, PowerUps, Arcanas; DONE | Results | UI | None; Restart | MISSING |  |
+| Pause | Quit still shows results | Results | Behavior | Quit ends the run into Results (`GameSessionManager.QuitRun`) | MATCH | Level 1 step 4 |
+| Results | Stage, mode, gold bonus, time, gold, level, kills | Results | UI | `RunResultsScreen` top left | MATCH | Level 1 step 4; run time over all stages |
+| Results | Per weapon: level, damage, time, DPS | Results | UI | Every hit credited to its weapon (`DamageSource`); SI prefixes; top damage/DPS yellow | MATCH | Level 1 step 4; damage counts overkill (wiki silent) |
+| Results | Character, eggs, items, PowerUps, pickups, Arcanas; unlocks toggle; DONE | Results | UI | All built; DONE to the main menu | MATCH | Level 1 step 4; pickup names are Soul Hunter's, gems not listed (wiki silent); no mobile ad button |
 | Options | Favorites, Display, Sound, Gameplay | Options | UI | No Favorites; Controls extra | PARTIAL |  |
 | Options | Display incl. Refresh Rate | Options | UI | No Refresh Rate | PARTIAL |  |
 | Options | Gameplay options | Options | UI | Joystick Type missing | PARTIAL |  |

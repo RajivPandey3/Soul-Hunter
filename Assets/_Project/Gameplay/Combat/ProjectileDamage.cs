@@ -17,6 +17,8 @@ namespace SoulHunter.Gameplay.Combat
         
         [Tooltip("Damage report ke liye hathiyar ka naam (e.g. 'Axe')")]
         public string SourceWeaponName = "Unknown";
+        /// <summary>The weapon that spawned this (set by AutoAttackWeapon.AimAtHostiles), credited on the Results screen.</summary>
+        [System.NonSerialized] public AutoAttackWeapon SourceWeapon;
         private void OnCollisionEnter(Collision collision)
         {
             var projectile = GetComponent<Projectile>();
@@ -28,12 +30,8 @@ namespace SoulHunter.Gameplay.Combat
                 {
                     Vector3 knockback = (collision.transform.position - transform.position).normalized;
                     int dmg = Mathf.RoundToInt(DamageAmount);
-                    damageable.TakeDamage(new DamagePacket(dmg, collision.contacts[0].point, knockback, DamageType).WithKnockback(Knockback));
-                    
-                    if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-                    {
-                        SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordDamage(SourceWeaponName, dmg);
-                    }
+                    using (DamageSource.From(SourceWeapon, SourceWeaponName != "Unknown" ? SourceWeaponName : null))
+                        damageable.TakeDamage(new DamagePacket(dmg, collision.contacts[0].point, knockback, DamageType).WithKnockback(Knockback));
                 }
             }
         }
@@ -49,12 +47,8 @@ namespace SoulHunter.Gameplay.Combat
                 {
                     Vector3 knockback = (other.transform.position - transform.position).normalized;
                     int dmg = Mathf.RoundToInt(DamageAmount);
-                    damageable.TakeDamage(new DamagePacket(dmg, transform.position, knockback, DamageType).WithKnockback(Knockback));
-                    
-                    if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-                    {
-                        SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordDamage(SourceWeaponName, dmg);
-                    }
+                    using (DamageSource.From(SourceWeapon, SourceWeaponName != "Unknown" ? SourceWeaponName : null))
+                        damageable.TakeDamage(new DamagePacket(dmg, transform.position, knockback, DamageType).WithKnockback(Knockback));
                 }
             }
         }

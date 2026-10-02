@@ -23,6 +23,8 @@ namespace SoulHunter.Gameplay.Combat
         private int _bounceCount;
         private int _maxBounces;
         private string _sourceWeaponName;
+        /// <summary>The weapon that fired this (set by AutoAttackWeapon.AimAtHostiles), credited on the Results screen.</summary>
+        [System.NonSerialized] public AutoAttackWeapon SourceWeapon;
         public event System.Action<Projectile> Deactivated;
         /// <summary>Fired by a boss's mirrored weapon: hits only the player. Reset on every reuse from the pool.</summary>
         public bool TargetsPlayer { get; set; }
@@ -67,6 +69,7 @@ namespace SoulHunter.Gameplay.Combat
         private void OnEnable()
         {
             _sourceWeaponName = null;
+            SourceWeapon = null;
             TargetsPlayer = false;
             _currentLifetime = _lifetime;
             _bounceCount = 0;
@@ -113,14 +116,8 @@ namespace SoulHunter.Gameplay.Combat
                 if (_recentHits.TryGetValue(target, out float lastHit) && Time.time - lastHit < 0.1f) return;
                 _recentHits[target] = Time.time;
                 Vector3 knockback = transform.forward;
-                var health = target as HealthController;
-                int healthBefore = health != null ? health.CurrentHealth : 0;
-                target.TakeDamage(new DamagePacket(_damage, transform.position, knockback, _damageType).WithKnockback(Knockback));
-                if (health != null && RunStatsTracker.Instance != null)
-                {
-                    int applied = Mathf.Max(0, healthBefore - health.CurrentHealth);
-                    if (applied > 0) RunStatsTracker.Instance.RecordDamage(_sourceWeaponName, applied);
-                }
+                using (DamageSource.From(SourceWeapon, _sourceWeaponName))
+                    target.TakeDamage(new DamagePacket(_damage, transform.position, knockback, _damageType).WithKnockback(Knockback));
                 _remainingHits--;
                 if (_remainingHits <= 0) { gameObject.SetActive(false); return; }
                 if (_bounceCount < _maxBounces)

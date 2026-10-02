@@ -83,6 +83,9 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 var result = _logicController != null ? _logicController.LastResult : null;
                 if (result != null) result.Kind = Kind;
+                // VS Results: chests are listed by size (wiki Treasure_Chest: silver for 3 items, gold for 5).
+                if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
+                    SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(PickupNames.ForChest(result != null ? result.ItemCount : 1, IsArcana));
                 _chestUI.OpenChest(rewardMessage, result);
             }
 

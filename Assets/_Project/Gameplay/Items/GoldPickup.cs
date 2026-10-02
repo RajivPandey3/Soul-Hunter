@@ -12,6 +12,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class GoldPickup : Pickup
     {
+        public override string ResultsName => PickupNames.ForGold(Value);
         [SerializeField, Min(1)] private int _value = 1;
 
         /// <summary>Coins lying on the ground (the Gilded Charm gathers them all).</summary>

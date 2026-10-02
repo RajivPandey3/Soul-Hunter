@@ -76,7 +76,7 @@ Shadow Kael details (owner, 2026-09-30): Clock Lancet slows the player to 50% fo
 
 ## Phase 3: the shell around the run (VS flow, own UI look)
 
-- Results screen: stage, mode, per-weapon level/damage/time/DPS, items, PowerUps, Arcanas; shown on quit too; DONE to the main menu.
+- ~~Results screen~~: built in Level 1 step 4 (2026-10-02).
 - Stats panel in pause and level-up; evolution hints on level-up cards.
 - Main menu: Collection, Bestiary, Unlocks, Credits, Quick Start.
 - PowerUp on/off toggle for maxed PowerUps; character select colours, rows and sorting.
@@ -95,7 +95,7 @@ decisions and art approval. A cycle is wiki check, code, its test, both full sui
 | 1 | Bug MIS O1 (the 400-gem merge gem is visible and reachable for a player) and O2 (level-up FPS without per-level-up bot screenshots) | 1 cycle | Done 2026-10-01: both verified, no game change (Bug MIS O1, O2) |
 | 2 | Phase 1 rows 2-12, one at a time (XP curve, stat caps, hit i-frames, weapon level-up fire, level-up rules, crits, weapon intervals and knockback, spawning, Orologion, Curse, traps) | 11 cycles | Done 2026-10-01: rows 2-12 built (see AGENTS.md, Level 1 step 2) |
 | 3 | Phase 2 parts seen in Level 1: six missing evolutions, Metaglio stage items, chest looks | 8-10 cycles + art approval | Built: six evolutions and the Metaglio stage items (2026-10-01), bronze/silver/Arcana chest looks (2026-10-02; colours await owner approval) |
-| 4 | VS results screen at the end of a run | 2 cycles | |
+| 4 | VS results screen at the end of a run | 2 cycles | Built 2026-10-02: `RunResultsScreen` on death, victory and pause Quit; per-weapon damage/time/DPS for every hit (see AGENTS.md, Level 1 step 4). Not yet played by the owner |
 | 5 | Balance (Bug MIS O3) and the owner's decision on Pentagram erasing chest elites (O4) | 2-3 cycles | |
 | 6 | The owner plays Level 1 from the menu to 30:00; new Bug MIS; fixes; final owner OK | owner's play | 2026-10-02: CTO 30-minute pass, Bug MIS v2 (23 bugs) all fixed (`Docs/BUG_MIS_Level1_v2.md`); the owner played it: "all is well or ok". Open: chest look (procedural v3 rejected, current chest stays; chest flow stays VS), Level 2 darkness (owner decision). Final Level 1 OK after steps 4-5 |
 

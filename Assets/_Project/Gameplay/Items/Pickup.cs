@@ -34,6 +34,8 @@ namespace SoulHunter.Gameplay.Pickups
         {
             _isCollected = true;
             OnPickedUp(player);
+            // VS Results: "all the pickups and the amount of them".
+            if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null) SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(ResultsName);
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.GoldPickup, transform.position + Vector3.up * 0.5f);
 
             // Auto pool or destroy
@@ -41,6 +43,9 @@ namespace SoulHunter.Gameplay.Pickups
         }
 
         protected abstract void OnPickedUp(Collider player);
+
+        /// <summary>This pickup's name in the Results screen's pickup list (Soul Hunter's own names), or null.</summary>
+        public virtual string ResultsName => null;
 
         public virtual void ResetPickup()
         {

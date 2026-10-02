@@ -7,8 +7,7 @@ namespace SoulHunter.Gameplay.UI
 {
     /// <summary>
     /// Learning Comment:
-    /// Jab player marta hai, toh ye UI dikhti hai aur game ko pause kar deti hai.
-    /// Ye aapko aapka final survival time batati hai.
+    /// Jab run khatam hota hai (maut, jeet ya pause menu se Quit), ye VS Results screen dikhati hai aur game pause karti hai.
     /// </summary>
     public class GameOverUI : MonoBehaviour
     {
@@ -17,21 +16,17 @@ namespace SoulHunter.Gameplay.UI
         [SerializeField] private Button _restartButton;
         private GameSessionManager _session;
 
+        /// <summary>The Results screen now showing, or null.</summary>
+        public RunResultsScreen Screen { get; private set; }
+
         private void Start()
         {
-            // Learning Comment: Ensure EventSystem exists taake Restart button mouse clicks receive kar sake
+            // Learning Comment: Ensure EventSystem exists taake DONE button mouse clicks receive kar sake
             EnsureEventSystem();
 
-            if (_gameOverPanel != null)
-            {
-                _gameOverPanel.SetActive(false);
-            }
-
-            if (_restartButton != null)
-            {
-                _restartButton.onClick.RemoveListener(RestartGame);
-                _restartButton.onClick.AddListener(RestartGame);
-            }
+            // The old text panel is replaced by the VS Results screen (RunResultsScreen); its fields stay for the scene.
+            if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
+            if (_restartButton != null) _restartButton.gameObject.SetActive(false); // VS Results has only DONE
 
             _session = GameSessionManager.Instance;
             if (_session != null)
@@ -40,112 +35,53 @@ namespace SoulHunter.Gameplay.UI
                 _session.OnGameOver += ShowGameOverScreen;
                 _session.OnVictory -= ShowVictoryScreen;
                 _session.OnVictory += ShowVictoryScreen;
-                // Learning Comment: Jab scene naya load hota hai toh Game Over panel auto-show nahi hona chahiye.
-                // Game Over tabhi trigger hoga jab player waqai mare aur OnGameOver event fire ho.
+                _session.OnRunQuit -= ShowQuitScreen;
+                _session.OnRunQuit += ShowQuitScreen;
+                // Learning Comment: Jab scene naya load hota hai toh Results auto-show nahi hona chahiye.
             }
         }
 
         private void OnDestroy()
         {
-            if (_restartButton != null)
-            {
-                _restartButton.onClick.RemoveListener(RestartGame);
-            }
-
             if (_session != null)
             {
                 _session.OnGameOver -= ShowGameOverScreen;
                 _session.OnVictory -= ShowVictoryScreen;
+                _session.OnRunQuit -= ShowQuitScreen;
             }
             SoulHunter.Core.Services.GameTime.Resume(this);
         }
 
-        private void ShowVictoryScreen()
+        private void ShowVictoryScreen() => ShowResults(RunResults.EndKind.Victory);
+        private void ShowGameOverScreen() => ShowResults(RunResults.EndKind.Death);
+        private void ShowQuitScreen() => ShowResults(RunResults.EndKind.Quit);
+
+        /// <summary>
+        /// VS (vampire.survivors.wiki/w/Results): the Results screen "appears at the end of each run", also after quitting
+        /// from the pause menu (v0.2.2); its DONE button "leads back to the main menu".
+        /// </summary>
+        public void ShowResults(RunResults.EndKind end)
         {
-            ShowGameOverScreen();
-            if (_gameOverPanel != null)
-                foreach (var label in _gameOverPanel.GetComponentsInChildren<TextMeshProUGUI>(true))
-                    if (label != _survivalTimeText && label.text.Trim().ToUpperInvariant().Contains("GAME OVER"))
-                        label.text = "PACT COMPLETE";
-            if (_survivalTimeText != null)
-                // The owner's story, word for word (Docs/Game_Design_Document.md): the run is won by destroying Shadow Kael.
-                _survivalTimeText.text = "<b>SHADOW KAEL DESTROYED</b>\n" + SoulHunter.Gameplay.Data.CampaignStory.FinalLine + "\n\n" + _survivalTimeText.text;
+            SoulHunter.Core.Services.GameTime.Pause(this);
+            if (Screen != null) return;
+            if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
+            TMP_FontAsset font = _survivalTimeText != null ? _survivalTimeText.font : null;
+            if (font == null)
+                foreach (var text in FindObjectsByType<TMP_Text>(FindObjectsSortMode.None))
+                    if (text.font != null) { font = text.font; break; }
+            Screen = RunResultsScreen.Show(transform, RunResults.Capture(end), font);
+            Screen.Done += GoToMainMenu;
         }
 
-        private void ShowGameOverScreen()
+        private void GoToMainMenu()
         {
-            SoulHunter.Core.Services.GameTime.Pause(this); // Pause the game
-
-            if (_gameOverPanel != null)
-            {
-                _gameOverPanel.SetActive(true);
-                LayoutResults();
-            }
-
-            string finalStatsText = "";
-
-            // Survival Time
-            if (GameSessionManager.Instance != null)
-            {
-                finalStatsText += $"<color=yellow>You Survived For: {GameSessionManager.Instance.GetFormattedTime()}</color>\n\n";
-            }
-
-            // Kills aur Damage Report
-            if (RunStatsTracker.Instance != null)
-            {
-                finalStatsText += $"<color=red>Total Kills: {RunStatsTracker.Instance.TotalKills}</color>\n";
-                finalStatsText += $"<color=yellow>Gold Earned: {RunStatsTracker.Instance.TotalGoldCollected}</color>\n";
-                var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
-                var experience = player != null ? player.GetComponent<SoulHunter.Gameplay.Player.PlayerExperience>() : null;
-                if (experience != null) finalStatsText += $"Level Reached: {experience.CurrentLevel}\n";
-                finalStatsText += "------------------------\n";
-
-                var damageDict = RunStatsTracker.Instance.GetWeaponStats();
-                if (damageDict.Count > 0)
-                {
-                    finalStatsText += "Weapon Damage Output:\n";
-                    foreach (var kvp in damageDict)
-                    {
-                        finalStatsText += $"- {kvp.Key}: {kvp.Value} dmg\n";
-                    }
-                }
-                else
-                {
-                    finalStatsText += "No damage dealt!\n";
-                }
-            }
-
-            if (_survivalTimeText != null)
-            {
-                _survivalTimeText.text = finalStatsText;
-            }
-        }
-
-        private void RestartGame()
-        {
-            // Learning Comment: Game over ke waqt Time.timeScale = 0 hota hai.
-            // Scene reload se pehle timeScale ko wapas 1 karna zaroori hai taake physics aur animations unpause ho jayein.
             SoulHunter.Core.Services.GameTime.ResetAll();
-            Debug.Log("[GameOverUI] Restart button clicked! Reloading game session...");
-
-            // Learning Comment: Naye run se pehle session state aur run stats ko reset karna laazmi hai
-            if (GameSessionManager.Instance != null)
-            {
-                GameSessionManager.Instance.ResetSession();
-            }
-            if (RunStatsTracker.Instance != null)
-            {
-                RunStatsTracker.Instance.ResetStats();
-            }
-
-            // Learning Comment: "Bootstrap" load karne se Bootstrap -> Loading (3s wait) -> MainMenu khul jata tha.
-            // Restart button ko seedha "Main_Gameplay" reload karna chahiye taake player bina delay ke dubara match khel sake.
             try
             {
-                var scenes = SoulHunter.Core.Services.GameServices.Instance?.Get<SoulHunter.Core.Scenes.SceneService>();
-                if (scenes != null)
+                if (SoulHunter.Core.Services.GameServices.Instance != null &&
+                    SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Scenes.SceneService scenes))
                 {
-                    scenes.LoadSceneAsync("Main_Gameplay");
+                    scenes.LoadSceneAsync("MainMenu");
                     return;
                 }
             }
@@ -153,9 +89,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 Debug.LogWarning("[GameOverUI] GameServices SceneService unavailable: " + ex.Message);
             }
-
-            // Fallback: Direct Unity SceneManager ke zariye "Main_Gameplay" reload karo
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Main_Gameplay");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
         }
 
         private void EnsureEventSystem()
@@ -183,46 +117,6 @@ namespace SoulHunter.Gameplay.UI
 
                     Debug.Log("[GameOverUI] Auto-created missing EventSystem with InputModule.");
                 }
-            }
-        }
-
-        private void LayoutResults()
-        {
-            var panelRect = _gameOverPanel.GetComponent<RectTransform>();
-            if (panelRect == null) return;
-            panelRect.anchorMin = Vector2.zero;
-            panelRect.anchorMax = Vector2.one;
-            panelRect.offsetMin = Vector2.zero;
-            panelRect.offsetMax = Vector2.zero;
-            panelRect.localScale = Vector3.one;
-            panelRect.SetAsLastSibling();
-            var backdrop = _gameOverPanel.GetComponent<Image>();
-            if (backdrop == null) backdrop = _gameOverPanel.AddComponent<Image>();
-            backdrop.color = new Color(0.025f, 0.035f, 0.055f, 0.97f);
-            backdrop.raycastTarget = true;
-            if (_survivalTimeText != null)
-            {
-                var rect = _survivalTimeText.rectTransform;
-                rect.anchorMin = new Vector2(0.15f, 0.24f);
-                rect.anchorMax = new Vector2(0.85f, 0.85f);
-                rect.offsetMin = rect.offsetMax = Vector2.zero;
-                _survivalTimeText.enableAutoSizing = true;
-                _survivalTimeText.fontSizeMin = 14;
-                _survivalTimeText.fontSizeMax = 28;
-                _survivalTimeText.alignment = TextAlignmentOptions.Center;
-                _survivalTimeText.overflowMode = TextOverflowModes.Truncate;
-            }
-            if (_restartButton != null)
-            {
-                var rect = _restartButton.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.35f, 0.09f);
-                rect.anchorMax = new Vector2(0.65f, 0.18f);
-                rect.offsetMin = rect.offsetMax = Vector2.zero;
-                _restartButton.transform.SetAsLastSibling(); // Ensure button is in front of panel backdrop
-                _restartButton.gameObject.SetActive(true);
-                _restartButton.interactable = true;
-                if (UnityEngine.EventSystems.EventSystem.current != null) // keyboard/controller focus
-                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(_restartButton.gameObject);
             }
         }
     }

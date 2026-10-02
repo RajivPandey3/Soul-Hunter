@@ -61,6 +61,16 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
+        /// <summary>True for Shadow Kael's mirrored copy; its damage is not the player's (VS Results).</summary>
+        public bool IsHeldByEnemy => HeldByEnemy;
+
+        /// <summary>Deals one direct hit credited to this weapon on the Results screen (<see cref="DamageSource"/>).</summary>
+        protected void Hit(IDamageable target, DamagePacket packet)
+        {
+            if (target == null) return;
+            using (DamageSource.From(this)) target.TakeDamage(packet);
+        }
+
         private static readonly System.Collections.Generic.List<Projectile> ProjectileBuffer = new();
         private static readonly System.Collections.Generic.List<ProjectileDamage> ProjectileDamageBuffer = new();
         private static readonly System.Collections.Generic.List<TouchDamage> TouchDamageBuffer = new();
@@ -86,7 +96,15 @@ namespace SoulHunter.Gameplay.Combat
             foreach (var projectile in ProjectileBuffer) projectile.Knockback = knockback;
             foreach (var damage in ProjectileDamageBuffer) damage.Knockback = knockback;
             foreach (var touch in TouchDamageBuffer) touch.Knockback = knockback;
+            // VS Results: the spawned object's hits count for this weapon.
+            foreach (var projectile in ProjectileBuffer) projectile.SourceWeapon = this;
+            foreach (var damage in ProjectileDamageBuffer) damage.SourceWeapon = this;
+            foreach (var touch in TouchDamageBuffer) touch.SourceWeapon = this;
+            spawned.GetComponentsInChildren(true, DamageCasterBuffer);
+            foreach (var caster in DamageCasterBuffer) caster.SourceWeapon = this;
         }
+
+        private static readonly System.Collections.Generic.List<DamageCaster> DamageCasterBuffer = new();
 
         /// <summary>
         /// VS knockback of this weapon's hits (each weapon's wiki infobox, fetched 2026-10-01): 1 for most; weapons with
@@ -363,6 +381,7 @@ namespace SoulHunter.Gameplay.Combat
             if (_damageCaster != null)
             {
                 _damageCaster.Knockback = Knockback;
+                _damageCaster.SourceWeapon = this;
                 _damageCaster.CastDamage();
             }
         }

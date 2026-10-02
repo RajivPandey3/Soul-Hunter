@@ -75,10 +75,12 @@ namespace SoulHunter.Gameplay.Core
             if (_isPaused) TogglePause();
         }
 
-        /// <summary>Leaves the run for the main menu (VS pause menu "Quit").</summary>
+        /// <summary>Leaves the run (VS pause menu "Quit"): the Results screen first, then the main menu.</summary>
         public void QuitToMainMenu()
         {
             if (_isPaused) TogglePause();
+            // VS: quitting still shows the Results screen; its DONE button goes to the menu.
+            if (GameSessionManager.Instance != null && GameSessionManager.Instance.QuitRun()) return;
             SoulHunter.Core.Services.GameTime.ResetAll();
             if (SoulHunter.Core.Services.GameServices.Instance != null &&
                 SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Scenes.SceneService scenes))

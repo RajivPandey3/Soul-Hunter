@@ -9,6 +9,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class LuckCharmPickup : Pickup
     {
+        public override string ResultsName => DisplayName;
         public const string DisplayName = "Luck Charm";
         public const float LuckBonus = 0.1f;
 

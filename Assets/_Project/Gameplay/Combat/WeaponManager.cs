@@ -143,7 +143,7 @@ namespace SoulHunter.Gameplay.Combat
             }
             TrackAcquired(type, level);
             _weaponLevels[type] = level;
-            if (IsWeaponType(type)) ActivateOrUpgradeWeapon(GetWeaponObject(type), level);
+            if (IsWeaponType(type)) ActivateOrUpgradeWeapon(GetWeaponObject(type), level, type);
             OnInventoryChanged?.Invoke();
         }
 
@@ -244,7 +244,7 @@ namespace SoulHunter.Gameplay.Combat
             OnWeaponAcquiredOrUpgraded?.Invoke(upgrade);
 
             // VS = SH Logic: Jo weapon mila hai usay ON kar do ya upgrade kar do
-            if (IsWeaponType(upgrade.Type)) ActivateOrUpgradeWeapon(GetWeaponObject(upgrade.Type), upgrade.Level);
+            if (IsWeaponType(upgrade.Type)) ActivateOrUpgradeWeapon(GetWeaponObject(upgrade.Type), upgrade.Level, upgrade.Type);
             else ApplyPassiveStat(upgrade);
             OnInventoryChanged?.Invoke();
         }
@@ -441,7 +441,7 @@ namespace SoulHunter.Gameplay.Combat
 
         private static bool IsPassiveType(UpgradeData.UpgradeType type) => !IsWeaponType(type);
 
-        private void ActivateOrUpgradeWeapon(GameObject weaponPrefab, int currentLevel)
+        private void ActivateOrUpgradeWeapon(GameObject weaponPrefab, int currentLevel, UpgradeData.UpgradeType type)
         {
             if (weaponPrefab == null) return;
 
@@ -456,6 +456,8 @@ namespace SoulHunter.Gameplay.Combat
                     _spawnedWeapons[weaponPrefab] = newWeapon;
                     _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(weaponPrefab, newWeapon));
                     ApplyWeaponLevel(newWeapon, currentLevel);
+                    var definition = DefinitionOf(type);
+                    TrackForResults(newWeapon, UpgradeText.NameOf(type), definition != null ? definition.Icon : null, GetMaxWeaponLevel(type), false);
                     Debug.Log($"[WeaponManager] {weaponPrefab.name} is now SPAWNED and ACTIVE on Player!");
                 }
             }
@@ -526,6 +528,7 @@ namespace SoulHunter.Gameplay.Combat
                             newWep.SetActive(true);
                             _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(evo.EvolvedWeaponPrefab, newWep));
                             ApplyWeaponLevel(newWep, evo.BaseWeaponMaxLevel);
+                            TrackForResults(newWep, !string.IsNullOrEmpty(evo.EvolvedName) ? WeaponEvolutionData.DisplayName(evo.EvolvedName) : WeaponEvolutionData.DisplayName(evo.name), LastEvolvedIcon, 0, true);
                         }
 
                         evolvedWeaponName = evo.EvolvedName;
@@ -567,6 +570,7 @@ namespace SoulHunter.Gameplay.Combat
                             newWep.SetActive(true);
                             _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(union.UnionWeaponPrefab, newWep));
                             ApplyWeaponLevel(newWep, Mathf.Max(union.WeaponAMaxLevel, union.WeaponBMaxLevel));
+                            TrackForResults(newWep, !string.IsNullOrEmpty(union.UnionName) ? WeaponEvolutionData.DisplayName(union.UnionName) : union.name, union.UnionIcon, 0, true);
                         }
 
                         evolvedWeaponName = union.UnionName;
@@ -578,6 +582,14 @@ namespace SoulHunter.Gameplay.Combat
             }
 
             return false;
+        }
+
+        /// <summary>Starts the weapon's row on the VS Results screen (level, damage, time used, DPS).</summary>
+        private static void TrackForResults(GameObject instance, string name, Sprite icon, int maxLevel, bool evolved)
+        {
+            var tracker = SoulHunter.Gameplay.Core.RunStatsTracker.Instance;
+            var weapon = instance != null ? instance.GetComponent<AutoAttackWeapon>() : null;
+            if (tracker != null && weapon != null) tracker.TrackWeapon(weapon, name, icon, maxLevel, evolved);
         }
 
         private void DisableOldWeapon(UpgradeData.UpgradeType type)

@@ -111,11 +111,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (offset.sqrMagnitude > radiusSquared) continue;
                 var health = enemy.GetComponent<HealthController>();
                 if (health == null) continue;
-                int before = health.CurrentHealth;
-                health.TakeDamage(new DamagePacket(damage, enemy.transform.position, Vector3.zero));
-                int applied = Mathf.Max(0, before - health.CurrentHealth);
-                if (applied > 0 && RunStatsTracker.Instance != null)
-                    RunStatsTracker.Instance.RecordDamage("Crimson Shroud", applied);
+                Hit(health, new DamagePacket(damage, enemy.transform.position, Vector3.zero));
             }
             OnRetaliation?.Invoke(damage);
         }

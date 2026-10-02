@@ -11,6 +11,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class FireBreathPickup : Pickup
     {
+        public override string ResultsName => SoulHunter.Gameplay.Combat.FireBreath.DisplayName;
         protected override void OnPickedUp(Collider player)
         {
             var controller = player != null ? player.GetComponentInParent<PlayerController>() : null;

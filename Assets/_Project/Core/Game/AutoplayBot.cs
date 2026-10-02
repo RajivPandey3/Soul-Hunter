@@ -736,6 +736,31 @@ namespace SoulHunter.Gameplay.Core
             if (system.IsPaused) system.Resume();
         }
 
+        private IEnumerator ResultsShot(string reason)
+        {
+            var session = GameSessionManager.Instance;
+            var system = GameSystemManager.Instance;
+            if (reason == "time limit" && session != null && !session.IsRunFinished && system != null)
+            {
+                float until = Time.realtimeSinceStartup + 20f;
+                while (SoulHunter.Core.Services.GameTime.IsPaused && Time.realtimeSinceStartup < until) yield return null; // not over a level-up
+                if (!system.IsPaused) system.TogglePause();
+                yield return new WaitForSecondsRealtime(0.3f);
+                system.QuitToMainMenu();
+            }
+            yield return new WaitForSecondsRealtime(1f);
+            yield return Shot("results");
+            var stats = RunStatsTracker.Instance;
+            if (stats == null) yield break;
+            var rows = new List<string>();
+            foreach (var w in stats.Weapons)
+                rows.Add(string.Format(CultureInfo.InvariantCulture, "{{\"name\": \"{0}\", \"level\": {1}, \"damage\": {2:0}, \"seconds\": {3:0.0}, \"dps\": {4:0.0}}}",
+                    Escape(w.Name), w.Weapon != null ? w.Weapon.CurrentLevel : w.Level, w.Damage, w.SecondsUsed, w.Dps));
+            var pickups = new List<string>();
+            foreach (var p in stats.Pickups) pickups.Add($"\"{Escape(p.Key)}\": {p.Value}");
+            Event("results", $"\"weapons\": [{string.Join(", ", rows)}], \"items\": {stats.Items.Count}, \"pickups\": {{{string.Join(", ", pickups)}}}, \"unlocks\": {stats.Unlocks.Count}");
+        }
+
         private IEnumerator EarlyShots()
         {
             float start = Time.realtimeSinceStartup;
@@ -878,6 +903,9 @@ namespace SoulHunter.Gameplay.Core
         {
             _bus?.Raise(new PlayerMoveEvent(Vector2.zero));
             yield return Shot(reason == "died" ? "death" : "end");
+            // -sh-autoplay-results-shot: show the VS Results screen (quitting from the pause menu at the time limit, as a
+            // player would) and screenshot it, with its weapon table in the events.
+            if (HasArg("-sh-autoplay-results-shot")) yield return ResultsShot(reason);
             WriteTimeline();
             var stats = RunStatsTracker.Instance;
             var progression = LevelProgressionManager.Instance;

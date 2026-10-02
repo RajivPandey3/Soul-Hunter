@@ -79,6 +79,7 @@ namespace SoulHunter.Gameplay.Pickups
 
         private void Collect(Transform playerTransform)
         {
+            if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null) SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(PickupNames.Chicken);
             var health = playerTransform.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null)
             {

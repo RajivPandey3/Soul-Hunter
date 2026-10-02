@@ -112,6 +112,9 @@ namespace SoulHunter.Gameplay.Combat
             if (DamageModifier != null) incomingDamage = Mathf.Max(0, DamageModifier(incomingDamage));
             if (incomingDamage == 0) return;
             _currentHealth -= incomingDamage;
+            // VS Results: each weapon's damage. The hit's full damage counts, overkill included (the wiki gives no rule).
+            if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
+                SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, incomingDamage);
             if (PostHitInvulnerability > 0f && !packet.IgnoresHitInvulnerability)
                 _hitInvulnerableUntil = Time.time + PostHitInvulnerability;
             

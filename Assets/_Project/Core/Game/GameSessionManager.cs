@@ -33,6 +33,7 @@ namespace SoulHunter.Gameplay.Core
             _isGameActive = true;
             IsRunFinished = false;
             IsVictory = false;
+            IsQuit = false;
             SoulHunter.Core.Services.GameTime.ResetAll();
         }
 
@@ -119,6 +120,27 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Core.Services.GameTime.Pause(this);
 
             OnGameOver?.Invoke();
+        }
+
+        /// <summary>Raised when the player quits from the pause menu; the Results screen shows (wiki Results, v0.2.2).</summary>
+        public event Action OnRunQuit;
+        /// <summary>True when this run was ended from the pause menu.</summary>
+        public bool IsQuit { get; private set; }
+
+        /// <summary>
+        /// VS (vampire.survivors.wiki/w/Results, v0.2.2): "quitting from the Pause menu doesn't skip the score page". Ends
+        /// the run and asks for the Results screen. Returns false when nothing shows it, so the caller goes to the menu.
+        /// </summary>
+        public bool QuitRun()
+        {
+            if (IsRunFinished || OnRunQuit == null) return false;
+            IsRunFinished = true;
+            IsQuit = true;
+            _isGameActive = false;
+            GameSystemManager.Instance?.SaveHighScore(SurvivalTime);
+            SoulHunter.Core.Services.GameTime.Pause(this);
+            OnRunQuit.Invoke();
+            return true;
         }
 
         public string GetFormattedTime()

@@ -28,6 +28,8 @@ namespace SoulHunter.Gameplay.Combat
         public float DamageInterval { get => _damageInterval; set => _damageInterval = value; }
         public DamageType DamageType { get => _damageType; set => _damageType = value; }
         public string SourceWeaponName = "Unknown";
+        /// <summary>The weapon that spawned this (set by AutoAttackWeapon.AimAtHostiles), credited on the Results screen.</summary>
+        [System.NonSerialized] public AutoAttackWeapon SourceWeapon;
         public string TargetTag = "Player";
 
         private class ContactInfo
@@ -121,12 +123,8 @@ namespace SoulHunter.Gameplay.Combat
                     // Target ko damage do
                     // Learning Comment: _damageType pass kiya gaya hai taaki Level 7 spectral enemies Holy damage wagera sahi se receive karein
                     Vector3 knockback = (transform.position - info.TargetTransform.position).normalized;
-                    target.TakeDamage(new DamagePacket(Mathf.RoundToInt(_damageAmount), transform.position, -knockback, _damageType).WithKnockback(Knockback));
-                    
-                    if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null && SourceWeaponName != "Unknown")
-                    {
-                        SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordDamage(SourceWeaponName, Mathf.RoundToInt(_damageAmount));
-                    }
+                    using (DamageSource.From(SourceWeapon, SourceWeaponName != "Unknown" ? SourceWeaponName : null))
+                        target.TakeDamage(new DamagePacket(Mathf.RoundToInt(_damageAmount), transform.position, -knockback, _damageType).WithKnockback(Knockback));
                     
                     // Learning Comment: TakeDamage() ke baad check karein ke target abhi bhi _targets mein hai ya OnTriggerExit se remove ho chuka hai
                     if (_targets.TryGetValue(target, out var stillActiveInfo))

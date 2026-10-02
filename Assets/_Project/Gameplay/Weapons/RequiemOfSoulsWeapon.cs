@@ -78,7 +78,7 @@ namespace SoulHunter.Gameplay.Combat
                 var health = col.GetComponentInParent<HealthController>();
                 if (health == null || (_nextHit.TryGetValue(health, out float next) && Time.time < next)) continue;
                 _nextHit[health] = Time.time + VsHitboxDelay;
-                health.TakeDamage(new DamagePacket(amount, health.transform.position, (health.transform.position - transform.position).normalized, DamageType.Magic).WithKnockback(Knockback));
+                Hit(health, new DamagePacket(amount, health.transform.position, (health.transform.position - transform.position).normalized, DamageType.Magic).WithKnockback(Knockback));
                 var enemy = health.GetComponent<EnemyController>();
                 if (enemy != null) enemy.ApplyLingeringSlow(SlowStep, SlowFloor);
             }

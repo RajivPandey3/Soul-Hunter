@@ -119,6 +119,14 @@ namespace SoulHunter.Gameplay.Combat
             return NameFromAsset(upgrade);
         }
 
+        /// <summary>An item's player-facing name from its type alone (its WeaponDefinition first), for the Results screen.</summary>
+        public static string NameOf(UpgradeData.UpgradeType type)
+        {
+            var definition = SoulHunter.Gameplay.Data.WeaponDefinitionLookup.Find(type);
+            if (definition != null && !string.IsNullOrWhiteSpace(definition.DisplayName)) return definition.DisplayName;
+            return CamelSplit.Replace(type.ToString(), " ").Trim();
+        }
+
         /// <summary>The name derived from the UpgradeData asset alone (the pre-definition rule).</summary>
         public static string NameFromAsset(UpgradeData upgrade)
         {

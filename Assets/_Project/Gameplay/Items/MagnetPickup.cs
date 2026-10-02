@@ -10,6 +10,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public class MagnetPickup : Pickup
     {
+        public override string ResultsName => PickupNames.Magnet;
         protected override void OnPickedUp(Collider player)
         {
             Debug.Log("[MagnetPickup] Magnetic Vacuum Activated! All gems flying to player.");
