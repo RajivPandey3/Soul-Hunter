@@ -97,7 +97,7 @@ decisions and art approval. A cycle is wiki check, code, its test, both full sui
 | 3 | Phase 2 parts seen in Level 1: six missing evolutions, Metaglio stage items, chest looks | 8-10 cycles + art approval | Built: six evolutions and the Metaglio stage items (2026-10-01), bronze/silver/Arcana chest looks (2026-10-02; colours await owner approval) |
 | 4 | VS results screen at the end of a run | 2 cycles | |
 | 5 | Balance (Bug MIS O3) and the owner's decision on Pentagram erasing chest elites (O4) | 2-3 cycles | |
-| 6 | The owner plays Level 1 from the menu to 30:00; new Bug MIS; fixes; final owner OK | owner's play | |
+| 6 | The owner plays Level 1 from the menu to 30:00; new Bug MIS; fixes; final owner OK | owner's play | 2026-10-02: CTO 30-minute pass, Bug MIS v2 (23 bugs) all fixed (`Docs/BUG_MIS_Level1_v2.md`); the owner played it: "all is well or ok". Open: chest look (procedural v3 rejected, current chest stays; chest flow stays VS), Level 2 darkness (owner decision). Final Level 1 OK after steps 4-5 |
 
 Done before this plan: the 17 Level 1 Bug MIS fixes, the first level-up hang, Reroll/Skip/Banish hidden at 0, VS locked
 PowerUps, the stats panel's first frame, and the chest and level-up screens fitting any window (owner played the first
