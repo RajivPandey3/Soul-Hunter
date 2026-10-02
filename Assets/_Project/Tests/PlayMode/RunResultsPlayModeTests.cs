@@ -77,6 +77,39 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PentagramErase_CreditsEachEnemysMaxHealth()
+        {
+            // vampire.survivors.wiki/w/Pentagram: it "always deals damage equal to the max health of the enemy".
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            // The opening horde is already on screen; take it away so only these three are erased.
+            foreach (var other in EnemyController.ActiveEnemies.ToList()) if (other != null) other.gameObject.SetActive(false);
+            yield return null;
+            var prefab = GetPrivateField<List<GameObject>>(spawner, "_stageEnemyPrefabs")[0];
+            var enemies = new List<HealthController>();
+            for (int i = 0; i < 3; i++)
+            {
+                var enemy = Object.Instantiate(prefab, player.transform.position + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f, Quaternion.identity);
+                var touch = enemy.GetComponent<TouchDamage>();
+                if (touch != null) touch.enabled = false;
+                enemies.Add(enemy.GetComponent<HealthController>());
+            }
+            yield return null;
+            Assert.AreEqual(3, EnemyController.ActiveEnemies.Count, "Only the three test enemies are alive.");
+            int expected = enemies.Sum(h => h.MaxHealth);
+            WeaponManager.Instance.GiveWeapon(UpgradeData.UpgradeType.Pentagram, 1);
+            var stats = RunStatsTracker.Instance;
+            RunStatsTracker.WeaponRecord pentagram = null;
+            yield return WaitUntilRealtime(() => (pentagram = Record(stats, typeof(PentagramWeapon))) != null && pentagram.Damage > 0,
+                "the Pentagram's erase to be credited to it");
+            Assert.IsTrue(enemies.All(h => h == null || !h.gameObject.activeInHierarchy || h.CurrentHealth <= 0), "Every enemy on screen was erased.");
+            Assert.AreEqual(expected, pentagram.Damage, 1e-6, "Each erased enemy counts its max health.");
+        }
+
+        [UnityTest]
         public IEnumerator Pickups_AreCountedByName()
         {
             yield return BootIntoGameplay();

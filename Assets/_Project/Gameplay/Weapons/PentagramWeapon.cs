@@ -104,7 +104,7 @@ namespace SoulHunter.Gameplay.Combat
                 }
                 
                 var health = enemy.GetComponent<HealthController>();
-                if (health != null) health.KillSilently();
+                if (health != null) using (DamageSource.From(this)) health.EraseByInstantKill(); // VS: max-health damage
             }
             if (eraseItems) LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
         }

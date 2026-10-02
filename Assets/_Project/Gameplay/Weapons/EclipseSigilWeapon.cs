@@ -103,7 +103,7 @@ namespace SoulHunter.Gameplay.Combat
             if (target == null) return;
             Vector3 at = target.transform.position;
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.HitSpark, at);
-            EraseOne(target);
+            EraseOne(target, this);
         }
 
         private void Erase()
@@ -114,7 +114,7 @@ namespace SoulHunter.Gameplay.Combat
             {
                 if (i >= enemies.Count) continue;
                 var enemy = enemies[i];
-                if (Erasable(enemy) && OnScreen(enemy.transform.position)) EraseOne(enemy);
+                if (Erasable(enemy) && OnScreen(enemy.transform.position)) EraseOne(enemy, this);
             }
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Explosion, transform.position);
         }
@@ -142,11 +142,12 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>Erases an enemy (its usual drop stays) and leaves an extra 1-XP gem next to it.</summary>
-        private static void EraseOne(EnemyController enemy)
+        private static void EraseOne(EnemyController enemy, AutoAttackWeapon source)
         {
             Vector3 at = enemy.transform.position;
             var health = enemy.GetComponent<HealthController>();
-            if (health != null) health.KillSilently();
+            // VS Gorgeous Moon: both phases deal damage equal to the enemy's max health.
+            if (health != null) using (DamageSource.From(source)) health.EraseByInstantKill();
             var pickups = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
             if (pickups != null) pickups.SpawnGem(at + new Vector3(0.4f, 0f, 0.4f), ExtraGemXp);
         }

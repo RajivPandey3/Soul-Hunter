@@ -159,6 +159,27 @@ namespace SoulHunter.Gameplay.Combat
         /// Arena cleanup/boss transition ke liye silent instant death. Isse
         /// gameplay damage popup mein fake 99999 number nahi dikhta.
         /// </summary>
+        /// <summary>
+        /// VS instant kill (vampire.survivors.wiki/w/Pentagram and Gorgeous_Moon): it "always deals damage equal to the max
+        /// health of the enemy. If it is lower than 660, the damage number is overwritten to display it between 655 and
+        /// 665." The damage is credited to the current <see cref="DamageSource"/> for the Results screen, then the enemy dies.
+        /// </summary>
+        public void EraseByInstantKill()
+        {
+            if (_currentHealth <= 0) return;
+            int damage = Mathf.Max(1, _maxHealth);
+            var enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
+            if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
+                SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, damage);
+            if (SoulHunter.Core.Persistence.GameSettings.DamageNumbers && SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
+                SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(InstantKillShownDamage(damage, UnityEngine.Random.value), transform.position + Vector3.up * 1.5f);
+            KillSilently();
+        }
+
+        /// <summary>The number an instant kill shows: the damage, or 655-665 when it is under 660 (wiki Pentagram).</summary>
+        public static int InstantKillShownDamage(int damage, float roll01) =>
+            damage >= 660 ? damage : 655 + Mathf.Clamp(Mathf.FloorToInt(roll01 * 11f), 0, 10);
+
         public void KillSilently()
         {
             if (_currentHealth <= 0) return;

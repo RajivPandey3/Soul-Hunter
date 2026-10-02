@@ -94,6 +94,18 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void AnInstantKill_ShowsItsDamage_Or655To665WhenUnder660()
+        {
+            // vampire.survivors.wiki/w/Pentagram: "If it is lower than 660, the damage number is overwritten to display it
+            // between 655 and 665."
+            Assert.AreEqual(660, SoulHunter.Gameplay.Combat.HealthController.InstantKillShownDamage(660, 0.5f));
+            Assert.AreEqual(3000, SoulHunter.Gameplay.Combat.HealthController.InstantKillShownDamage(3000, 0.9f));
+            Assert.AreEqual(655, SoulHunter.Gameplay.Combat.HealthController.InstantKillShownDamage(10, 0f));
+            Assert.AreEqual(665, SoulHunter.Gameplay.Combat.HealthController.InstantKillShownDamage(10, 0.9999f));
+            Assert.AreEqual(665, SoulHunter.Gameplay.Combat.HealthController.InstantKillShownDamage(10, 1f));
+        }
+
+        [Test]
         public void PickupNames_FollowTheCoinValues_AndChestSizes()
         {
             Assert.AreEqual(PickupNames.Coin, PickupNames.ForGold(1));
