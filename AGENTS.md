@@ -1469,6 +1469,19 @@ Validation:
 
 Played by the owner after this change (2026-10-03): "level 1 khel kar dekha thik hai".
 
+### One dark UI theme for every panel (owner: "all panel jo bache huye hai sab ko pura advance or pura contrast or dark banao", 2026-10-04)
+
+Before: each panel had its own colours (navy buttons and cards from `OptionsMenuUI.ApplyFocusColors`, a bright blue FILTER button, green stats labels, grey Power Up cells, nearly invisible Buy/Refund), and the pause menu had no veil over the game.
+- `UITheme` (UI/HUD): near-black panels with a crimson edge, dark crimson buttons and cards with a red edge (Primary a brighter crimson), warm white text, gold for highlights and changed values, the game-wide orange for focus (Bug MIS B16 kept), a dark disabled colour (B17 kept), instant focus (B13 kept), and a black veil (0.9: the UI blends in linear space, so 0.74 only halved the brightness behind).
+- `OptionsMenuUI.ApplyFocusColors` now applies the theme, so every button and card that used it changed at once.
+- Applied to: Options (veil, panel, rows, text), pause menu (veil, crimson buttons, Resume primary, gold title), stats panel, level-up screen (veil, card text, gold tags), Power Up (backing panel, crimson cells, selected crimson-orange with a gold edge, maxed dark gold, Buy primary, Refund), character select (theme set in code over the scene's serialized colours; panels, cards with a gold edge on the selected one, FILTER, tick boxes, Confirm primary, white stats, gold title), main menu Back buttons and `MainMenuLayout` colours, chest screen (OPEN/DONE primary, item frames, black backdrop), Results screen (panels with edges, gold title, dim headers), the merchant shop (veil, panel, wares).
+- `AutoplayBot -sh-autoplay-options-shot`: the Options screen over the pause menu.
+- Test setup: `GameplayPlayModeTestBase.LevelUpUnstick` takes the first card of a level-up screen left open for 5 real seconds (`AutoCloseStuckLevelUps`, default on). Tests that wait on game time stalled whole runs behind an unanswered level-up three times (2026-10-02 to 2026-10-04); in the next full run it never had to act. `WeaponDurationRulesPlayModeTests` also clears the opening horde and gems.
+- Validation: the UI fixtures 41/41; full run EditMode 566/566, PlayMode 285/286, the one failure `WeaponSweepPlayModeTests` expecting pure white action labels (now the theme's warm white), which then passed 21/21 alone. 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261004-theme-full2/`, `-theme-sweep/`).
+- Build screenshots (`run-20261004-theme-build/panels`, `panels2`, 1366x768): Power Up, character select, pause with stats, Options, level-up and Results all dark with crimson edges and gold highlights; the veil darkens the game behind pause and level-up (partial `V`). The chest screen and the merchant shop were not captured (the bot did not open a chest in that run; the merchant is on Level 3).
+
+Not yet seen by the owner.
+
 ### Duplicator everywhere (owner: "duplicater ko check karo kya wo har bar kaam karta hai", 2026-10-04)
 
 vampire.survivors.wiki/w/Duplicator (+1 Amount per level, 2 levels) and /w/Amount ("how many extra projectiles most weapons have"); each weapon's own page says whether Amount affects it (fetched 2026-10-04): it does for Whip, Magic Wand, Knife, Axe, Cross, King Bible, Fire Wand, Santa Water, Runetracer, Lightning Ring, Peachone, Bone, Cherry Bomb, Gun, Bloody Tear, Holy Wand, Thousand Edge, Death Spiral, Heaven Sword, Unholy Vespers, La Borra, Hellfire, NO FUTURE, Thunder Loop; not for Garlic, Soul Eater, Song of Mana, Mannajja, Pentagram, Gorgeous Moon, Clock Lancet, Laurel. Crimson Shroud: "Amount creates more explosions" (it already adds one per Amount).

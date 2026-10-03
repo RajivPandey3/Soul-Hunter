@@ -42,6 +42,10 @@ namespace SoulHunter.Gameplay.UI
         private void Build()
         {
             if (_system.VolumeSlider != null) _system.VolumeSlider.gameObject.SetActive(false);
+            // Owner (2026-10-04): dark, full contrast. The game behind sits under a dark veil; the old panel image goes.
+            var oldBackground = GetComponent<Image>();
+            if (oldBackground != null) oldBackground.color = new Color(0f, 0f, 0f, 0f);
+            UITheme.AddVeil(transform);
             foreach (var child in GetComponentsInChildren<Button>(true))
                 if (child.name.Contains("Restart")) child.gameObject.SetActive(false);
 
@@ -64,6 +68,8 @@ namespace SoulHunter.Gameplay.UI
                     title.alignment = TextAlignmentOptions.Center;
                     title.enableAutoSizing = true;
                     title.fontSizeMax = 60f;
+                    title.color = UITheme.Accent;
+                    title.fontStyle = FontStyles.Bold;
                 }
         }
 
@@ -88,7 +94,7 @@ namespace SoulHunter.Gameplay.UI
             var image = go.AddComponent<Image>();
             var button = go.AddComponent<Button>();
             button.targetGraphic = image;
-            OptionsMenuUI.ApplyFocusColors(button, image);
+            UITheme.ApplyButton(button, image, primary: name == "Resume_Button");
             button.onClick.AddListener(() =>
             {
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
@@ -106,7 +112,9 @@ namespace SoulHunter.Gameplay.UI
             text.alignment = TextAlignmentOptions.Center;
             text.enableAutoSizing = true;
             text.fontSizeMin = 16f;
-            text.fontSizeMax = 40f;
+            text.fontSizeMax = 34f;
+            text.fontStyle = FontStyles.Bold;
+            text.color = UITheme.Text;
             text.raycastTarget = false;
             return button;
         }

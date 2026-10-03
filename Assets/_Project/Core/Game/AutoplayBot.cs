@@ -733,6 +733,15 @@ namespace SoulHunter.Gameplay.Core
             system.TogglePause();
             yield return new WaitForSecondsRealtime(0.5f);
             yield return Shot("pause-stats");
+            // -sh-autoplay-options-shot: the Options screen over the pause menu too.
+            if (HasArg("-sh-autoplay-options-shot"))
+            {
+                var options = SoulHunter.Gameplay.UI.OptionsMenuUI.Open();
+                yield return new WaitForSecondsRealtime(0.5f);
+                yield return Shot("options");
+                if (options != null) options.Close();
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
             if (system.IsPaused) system.Resume();
         }
 

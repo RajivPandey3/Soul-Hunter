@@ -18,8 +18,8 @@ namespace SoulHunter.Gameplay.UI
     public sealed class RunResultsScreen : MonoBehaviour
     {
         public const int SortingOrder = 450;
-        public static readonly Color Yellow = new Color(1f, 0.84f, 0.29f, 1f);
-        private static readonly Color Backing = new Color(0.05f, 0.06f, 0.1f, 0.85f);
+        public static readonly Color Yellow = new Color(1f, 0.84f, 0.29f, 1f); // the VS yellow rows (kept distinct from the theme gold)
+        private static readonly Color Backing = UITheme.Panel;
         private static readonly Color Green = new Color(0.16f, 0.55f, 0.24f, 1f);
 
         public RunResults Results { get; private set; }
@@ -62,10 +62,12 @@ namespace SoulHunter.Gameplay.UI
             Results = results;
             _root = (RectTransform)transform;
             // Opaque: the UI blends in linear space, so even a 0.97 dark layer let the game and the HUD show through.
-            var backdrop = Panel(_root, "Backdrop", Vector2.zero, Vector2.one, new Color(0.02f, 0.025f, 0.045f, 1f));
+            var backdrop = Panel(_root, "Backdrop", Vector2.zero, Vector2.one, new Color(0.012f, 0.008f, 0.01f, 1f));
             backdrop.GetComponent<Image>().raycastTarget = true;
 
             TitleText = Text(_root, "Title", new Vector2(0.2f, 0.9f), new Vector2(0.8f, 0.98f), TitleLine(results), 54f, TextAlignmentOptions.Center);
+            TitleText.color = UITheme.Accent;
+            TitleText.fontStyle = FontStyles.Bold;
 
             var summary = Panel(_root, "Summary", new Vector2(0.025f, 0.6f), new Vector2(0.535f, 0.885f), Backing);
             SummaryText = Text(summary, "SummaryText", new Vector2(0.03f, 0.05f), new Vector2(0.97f, 0.95f), SummaryLines(results), 30f, TextAlignmentOptions.TopLeft);
@@ -133,11 +135,11 @@ namespace SoulHunter.Gameplay.UI
             float rowHeight = Mathf.Min(0.085f, 0.94f / Mathf.Max(1, rows));
             float top = 0.97f;
             var header = Row(table, "Header", top, rowHeight);
-            Cell(header, 1, "WEAPON", TextAlignmentOptions.Left).color = new Color(0.6f, 0.64f, 0.75f);
-            Cell(header, 2, "LV", TextAlignmentOptions.Center).color = new Color(0.6f, 0.64f, 0.75f);
-            Cell(header, 3, "DAMAGE", TextAlignmentOptions.Right).color = new Color(0.6f, 0.64f, 0.75f);
-            Cell(header, 4, "TIME", TextAlignmentOptions.Right).color = new Color(0.6f, 0.64f, 0.75f);
-            Cell(header, 5, "DPS", TextAlignmentOptions.Right).color = new Color(0.6f, 0.64f, 0.75f);
+            Cell(header, 1, "WEAPON", TextAlignmentOptions.Left).color = UITheme.TextDim;
+            Cell(header, 2, "LV", TextAlignmentOptions.Center).color = UITheme.TextDim;
+            Cell(header, 3, "DAMAGE", TextAlignmentOptions.Right).color = UITheme.TextDim;
+            Cell(header, 4, "TIME", TextAlignmentOptions.Right).color = UITheme.TextDim;
+            Cell(header, 5, "DPS", TextAlignmentOptions.Right).color = UITheme.TextDim;
             for (int i = 0; i < results.Weapons.Count; i++)
             {
                 var data = results.Weapons[i];
@@ -214,7 +216,8 @@ namespace SoulHunter.Gameplay.UI
                 var cell = new GameObject(item.Name, typeof(RectTransform), typeof(Image));
                 cell.transform.SetParent(gridRect, false);
                 var frame = cell.GetComponent<Image>();
-                frame.color = item.IsWeapon ? new Color(0.16f, 0.12f, 0.2f, 1f) : new Color(0.1f, 0.14f, 0.2f, 1f);
+                frame.color = item.IsWeapon ? UITheme.Cell : UITheme.Row;
+                UITheme.Edge(cell, UITheme.PanelEdge, 1.5f);
                 frame.raycastTarget = false;
                 var icon = new GameObject("Icon", typeof(RectTransform), typeof(Image));
                 var iconRect = (RectTransform)icon.transform;
@@ -240,11 +243,11 @@ namespace SoulHunter.Gameplay.UI
         public static string Lists(RunResults results)
         {
             var text = new StringBuilder();
-            text.Append("<b><color=#9AA4C0>POWERUPS</color></b>\n");
+            text.Append("<b><color=#B3A39A>POWERUPS</color></b>\n");
             text.Append(results.PowerUps.Count == 0 ? "None" : Join(results.PowerUps, "  "));
-            text.Append("\n\n<b><color=#9AA4C0>PICKUPS</color></b>\n");
+            text.Append("\n\n<b><color=#B3A39A>PICKUPS</color></b>\n");
             text.Append(results.Pickups.Count == 0 ? "None" : Join(results.Pickups, " x"));
-            text.Append("\n\n<b><color=#9AA4C0>ARCANAS</color></b>\n");
+            text.Append("\n\n<b><color=#B3A39A>ARCANAS</color></b>\n");
             text.Append(results.Arcanas.Count == 0 ? "None" : string.Join(",   ", results.Arcanas));
             return text.ToString();
         }
@@ -284,6 +287,7 @@ namespace SoulHunter.Gameplay.UI
             var image = go.GetComponent<Image>();
             image.color = color;
             image.raycastTarget = false;
+            if (name != "Backdrop") UITheme.Edge(go, UITheme.PanelEdge, 2f); // the theme's crimson edge
             return rect;
         }
 
@@ -303,7 +307,7 @@ namespace SoulHunter.Gameplay.UI
             tmp.fontSizeMin = Mathf.Min(12f, size);
             tmp.fontSizeMax = size;
             tmp.alignment = align;
-            tmp.color = Color.white;
+            tmp.color = UITheme.Text;
             tmp.richText = true;
             tmp.raycastTarget = false;
             tmp.text = content;

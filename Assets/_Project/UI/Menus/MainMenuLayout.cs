@@ -21,10 +21,10 @@ namespace SoulHunter.UI
         public const float ButtonsTop = 0.43f, ButtonsBottom = 0.14f, ButtonHalfWidth = 0.105f;
         public const float ButtonGapShare = 0.22f; // of each button's slot
 
-        public static readonly Color ButtonNormal = new Color(0.17f, 0.04f, 0.05f, 0.94f);
-        public static readonly Color ButtonHighlight = new Color(0.36f, 0.07f, 0.08f, 1f);
-        public static readonly Color ButtonEdge = new Color(0.78f, 0.14f, 0.12f, 0.9f);
-        public static readonly Color LabelColour = new Color(0.96f, 0.91f, 0.84f, 1f);
+        public static readonly Color ButtonNormal = SoulHunter.Gameplay.UI.UITheme.Button;
+        public static readonly Color ButtonHighlight = SoulHunter.Gameplay.UI.UITheme.ButtonHover;
+        public static readonly Color ButtonEdge = SoulHunter.Gameplay.UI.UITheme.ButtonEdge;
+        public static readonly Color LabelColour = SoulHunter.Gameplay.UI.UITheme.Text;
 
         private Image _background;
         private RectTransform _area;

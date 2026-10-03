@@ -92,6 +92,43 @@ namespace SoulHunter.Tests.PlayMode
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             yield return WaitForFreshGameplay(previousPlayer: null);
             yield return CloseOpenLevelUps();
+            if (AutoCloseStuckLevelUps)
+            {
+                var levelUp = Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>();
+                if (levelUp != null && levelUp.GetComponent<LevelUpUnstick>() == null) levelUp.gameObject.AddComponent<LevelUpUnstick>();
+            }
+        }
+
+        /// <summary>
+        /// A test that waits on game time stalls forever behind a level-up screen nobody answers (three full runs stalled
+        /// for an hour or more, 2026-10-02 to 2026-10-04, once Level 1 opened with 1-HP bats). With this on (the default),
+        /// a level-up screen left open for <see cref="LevelUpUnstick.Seconds"/> real seconds takes its first card. A test
+        /// that holds a level-up screen open longer turns it off before booting.
+        /// </summary>
+        protected bool AutoCloseStuckLevelUps = true;
+
+        /// <summary>Takes the first card of a level-up screen open for longer than <see cref="Seconds"/> real seconds.</summary>
+        public sealed class LevelUpUnstick : MonoBehaviour
+        {
+            public const float Seconds = 5f;
+            private float _openSince = -1f;
+            private SoulHunter.Gameplay.Core.LevelUpManager _levelUp;
+
+            private void Update()
+            {
+                if (_levelUp == null) _levelUp = GetComponent<SoulHunter.Gameplay.Core.LevelUpManager>();
+                if (_levelUp == null || !_levelUp.IsLevelUpActive) { _openSince = -1f; return; }
+                if (_openSince < 0f) { _openSince = Time.realtimeSinceStartup; return; }
+                if (Time.realtimeSinceStartup - _openSince < Seconds) return;
+                var field = typeof(SoulHunter.Gameplay.Core.LevelUpManager).GetField("_offered", BindingFlags.NonPublic | BindingFlags.Instance);
+                var offered = field != null ? field.GetValue(_levelUp) as System.Collections.Generic.List<SoulHunter.Gameplay.Combat.UpgradeData> : null;
+                _openSince = -1f;
+                if (offered != null && offered.Count > 0)
+                {
+                    Debug.Log("[LevelUpUnstick] A level-up screen stayed open " + Seconds + " s in a test: took its first card.");
+                    _levelUp.SelectUpgrade(offered[0]);
+                }
+            }
         }
 
         /// <summary>

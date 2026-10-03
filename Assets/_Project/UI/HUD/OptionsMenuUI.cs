@@ -22,9 +22,9 @@ namespace SoulHunter.Gameplay.UI
     {
         public static OptionsMenuUI Current { get; private set; }
 
-        private static readonly Color PanelColor = new Color(0.08f, 0.08f, 0.13f, 1f);
-        private static readonly Color RowColor = new Color(0.22f, 0.24f, 0.34f, 1f);
-        private static readonly Color AccentColor = new Color(1f, 0.85f, 0.25f, 1f);
+        private static readonly Color PanelColor = UITheme.Panel;
+        private static readonly Color RowColor = UITheme.Row;
+        private static readonly Color AccentColor = UITheme.Accent;
 
         private readonly List<Action> _refreshers = new List<Action>();
         private readonly List<Selectable> _selectables = new List<Selectable>();
@@ -101,8 +101,9 @@ namespace SoulHunter.Gameplay.UI
             var pause = _input?.Actions?.FindAction(InputService.PauseAction);
             if (pause != null) { _pauseActionWasEnabled = pause.enabled; pause.Disable(); }
 
+            UITheme.AddVeil(transform); // the menu or game behind stays dark
             var panel = Rect("Panel", transform, new Vector2(0.18f, 0.05f), new Vector2(0.82f, 0.95f));
-            panel.gameObject.AddComponent<Image>().color = PanelColor;
+            UITheme.ApplyPanel(panel.gameObject.AddComponent<Image>(), PanelColor.a);
             Text("Title", panel, new Vector2(0f, 0.92f), new Vector2(1f, 0.99f), "Options", 44f, TextAlignmentOptions.Center).color = AccentColor;
 
             var data = GameSettings.Data;
@@ -208,7 +209,7 @@ namespace SoulHunter.Gameplay.UI
             _currentTab = Mathf.Clamp(index, 0, _tabs.Count - 1);
             for (int i = 0; i < _tabs.Count; i++) _tabs[i].gameObject.SetActive(i == _currentTab);
             for (int i = 0; i < _tabButtons.Count; i++)
-                _tabButtons[i].GetComponentInChildren<TextMeshProUGUI>().color = i == _currentTab ? AccentColor : Color.white;
+                _tabButtons[i].GetComponentInChildren<TextMeshProUGUI>().color = i == _currentTab ? AccentColor : UITheme.Text;
             var first = _tabItems[_currentTab].Count > 0 ? _tabItems[_currentTab][0] : null;
             if (first != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(first.gameObject);
         }
@@ -223,7 +224,7 @@ namespace SoulHunter.Gameplay.UI
             var line = Line(panel, ref y, row, label);
             var sliderRect = Rect("Slider", line, new Vector2(0.45f, 0.3f), new Vector2(0.95f, 0.7f));
             var background = sliderRect.gameObject.AddComponent<Image>();
-            background.color = new Color(0.12f, 0.12f, 0.18f, 1f);
+            background.color = UITheme.Row;
             var fillArea = Rect("Fill Area", sliderRect, Vector2.zero, Vector2.one);
             var fill = Rect("Fill", fillArea, Vector2.zero, Vector2.one);
             fill.gameObject.AddComponent<Image>().color = AccentColor;
@@ -263,7 +264,7 @@ namespace SoulHunter.Gameplay.UI
             });
             state = button.GetComponentInChildren<TextMeshProUGUI>();
             // Text as well as colour, so the state never depends on colour alone.
-            _refreshers.Add(() => { state.text = get() ? "ON" : "OFF"; state.color = get() ? AccentColor : Color.white; });
+            _refreshers.Add(() => { state.text = get() ? "ON" : "OFF"; state.color = get() ? AccentColor : UITheme.Text; });
             button.name = label;
             _selectables.Add(button);
             _building.Add(button);
@@ -407,23 +408,7 @@ namespace SoulHunter.Gameplay.UI
         /// ColorTint multiplies the graphic colour, so a dark graphic hides the focus tint. The graphic stays white
         /// and the state colours carry the look, making keyboard/controller focus clearly visible (orange).
         /// </summary>
-        public static void ApplyFocusColors(Selectable selectable, Image graphic)
-        {
-            graphic.color = Color.white;
-            var colors = selectable.colors;
-            colors.normalColor = new Color(0.14f, 0.16f, 0.26f, 1f);
-            colors.highlightedColor = new Color(0.3f, 0.34f, 0.52f, 1f);
-            colors.selectedColor = new Color(0.85f, 0.45f, 0.08f, 1f);
-            colors.pressedColor = new Color(1f, 0.7f, 0.2f, 1f);
-            // Bug MIS B17 (2026-09-30): a disabled button (Reroll/Skip/Banish with no charges) used Unity's light grey, so
-            // its white label was hard to read. Disabled is a dim dark instead.
-            colors.disabledColor = new Color(0.1f, 0.1f, 0.14f, 0.8f);
-            colors.colorMultiplier = 1f;
-            // Bug MIS B13 (2026-09-30): a focused level-up card showed a dull brown, the midpoint of Unity's 0.1 s fade from
-            // the card colour to the focus orange. Focus changes at once.
-            colors.fadeDuration = 0f;
-            selectable.colors = colors;
-        }
+        public static void ApplyFocusColors(Selectable selectable, Image graphic) => UITheme.ApplyButton(selectable, graphic);
 
         private static RectTransform Rect(string name, Transform parent, Vector2 min, Vector2 max)
         {
@@ -441,6 +426,7 @@ namespace SoulHunter.Gameplay.UI
             var label = Rect(name, parent, min, max).gameObject.AddComponent<TextMeshProUGUI>();
             label.text = text;
             label.fontSize = size;
+            label.color = UITheme.Text;
             label.enableAutoSizing = true;
             label.fontSizeMin = 12f;
             label.fontSizeMax = size;

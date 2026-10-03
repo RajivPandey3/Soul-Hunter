@@ -180,9 +180,11 @@ namespace SoulHunter.Gameplay.Core
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             _shopUI.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
+            // Owner (2026-10-04): dark, full contrast (UITheme), on a dark veil over the paused game.
+            SoulHunter.Gameplay.UI.UITheme.AddVeil(_shopUI.transform);
             var panel = ShopRect("Panel", _shopUI.transform, new Vector2(0.27f, 0.14f), new Vector2(0.73f, 0.86f));
-            panel.gameObject.AddComponent<UnityEngine.UI.Image>().color = new Color(0.08f, 0.07f, 0.12f, 0.96f);
-            ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f).color = new Color(1f, 0.82f, 0.3f);
+            SoulHunter.Gameplay.UI.UITheme.ApplyPanel(panel.gameObject.AddComponent<UnityEngine.UI.Image>());
+            ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f).color = SoulHunter.Gameplay.UI.UITheme.Accent;
             int gold = CurrentGold();
             ShopText("Gold", panel, new Vector2(0f, 0.81f), new Vector2(1f, 0.89f), $"Gold: {gold}", 28f);
 
@@ -220,8 +222,8 @@ namespace SoulHunter.Gameplay.Core
         }
 
         // Sold-out or unaffordable wares stay readable: dark button, grey text (Unity's default disabled tint is light grey).
-        private static readonly Color DisabledWare = new Color(0.09f, 0.09f, 0.12f, 1f);
-        private static readonly Color DisabledText = new Color(0.55f, 0.55f, 0.6f, 1f);
+        private static readonly Color DisabledWare = SoulHunter.Gameplay.UI.UITheme.Disabled;
+        private static readonly Color DisabledText = SoulHunter.Gameplay.UI.UITheme.TextLocked;
 
         private static void SetAvailable(UnityEngine.UI.Button button, bool available)
         {
@@ -230,7 +232,7 @@ namespace SoulHunter.Gameplay.Core
             colors.disabledColor = DisabledWare;
             button.colors = colors;
             foreach (var text in button.GetComponentsInChildren<TMPro.TextMeshProUGUI>())
-                text.color = available ? Color.white : DisabledText;
+                text.color = available ? SoulHunter.Gameplay.UI.UITheme.Text : DisabledText;
         }
 
         private void DestroyShopUI()

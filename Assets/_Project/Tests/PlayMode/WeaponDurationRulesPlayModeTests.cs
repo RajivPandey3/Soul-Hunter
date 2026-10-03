@@ -25,6 +25,11 @@ namespace SoulHunter.Tests.PlayMode
             yield return BootIntoGameplay();
             Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
             foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) weapon.enabled = false;
+            // The waits below run on game time. Level 1 opens with 1-HP bats (VS Mad Forest): a bomb that kills them levels
+            // the hero, and the paused level-up screen stalled a full run (2026-10-04). No enemies and no gems, so no level-up.
+            foreach (var enemy in EnemyController.ActiveEnemies.ToList()) if (enemy != null) enemy.gameObject.SetActive(false);
+            foreach (var gem in Object.FindObjectsByType<SoulHunter.Gameplay.Pickups.XPGem>(FindObjectsSortMode.None)) gem.gameObject.SetActive(false);
+            yield return CloseOpenLevelUps();
             WeaponManager.Instance.ApplyUpgrade(WeaponDefinitionLookup.Find(type).GetLevel(1));
             yield return null;
             yield return null;

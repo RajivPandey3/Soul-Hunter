@@ -281,6 +281,7 @@ namespace SoulHunter.UI
             }
             text.Append("\nStarting Weapon\n").Append(WeaponName(charData.StartingWeapon));
             _statsText.richText = true;
+            _statsText.color = SoulHunter.Gameplay.UI.UITheme.Text; // the scene's green labels read poorly on dark
             _statsText.text = text.ToString();
         }
 
@@ -391,6 +392,7 @@ namespace SoulHunter.UI
         {
             var root = PanelRoot();
             if (root == null) return;
+            ApplyTheme();
 
             MainMenuNavigation.ScaleWithScreen(root.GetComponentInParent<CanvasScaler>()); // also set by the menu at load
 
@@ -401,6 +403,8 @@ namespace SoulHunter.UI
                 Place(title, root, new Vector2(0.27f, 0.895f), new Vector2(0.73f, 0.975f));
                 titleText.text = "Character Selection";
                 titleText.alignment = TextAlignmentOptions.Center;
+                titleText.color = SoulHunter.Gameplay.UI.UITheme.Accent;
+                titleText.fontStyle = FontStyles.Bold;
                 AutoSize(titleText, 24f, 56f);
             }
             var back = root.Find("Back_Button") as RectTransform;
@@ -473,6 +477,7 @@ namespace SoulHunter.UI
                 Place((RectTransform)_selectAndPlayButton.transform, root, new Vector2(0.76f, 0.08f), new Vector2(0.95f, 0.19f));
                 _confirmLabel = _selectAndPlayButton.GetComponentInChildren<TextMeshProUGUI>();
                 if (_confirmLabel != null) _confirmLabel.text = "Confirm";
+                SoulHunter.Gameplay.UI.UITheme.ApplyButton(_selectAndPlayButton, _selectAndPlayButton.targetGraphic as Image, primary: true, labels: true);
             }
 
             // Top left: gold, which buys unlocked characters.
@@ -490,6 +495,18 @@ namespace SoulHunter.UI
         /// VS "List of Modes" toggles in one row above the character grid, with a line under them that says what the
         /// focused (or hovered) mode does. Keyboard/gamepad focus uses the options screen's orange focus colour.
         /// </summary>
+        /// <summary>
+        /// Owner (2026-10-04): every panel dark and full contrast (UITheme). The scene keeps older serialized colours for
+        /// these fields, so the theme is set in code before the layout is built.
+        /// </summary>
+        private void ApplyTheme()
+        {
+            _panelColor = SoulHunter.Gameplay.UI.UITheme.Panel;
+            _cardColor = SoulHunter.Gameplay.UI.UITheme.Cell;
+            _selectedCardColor = SoulHunter.Gameplay.UI.UITheme.CellSelected;
+            _bonusColor = SoulHunter.Gameplay.UI.UITheme.Accent;
+        }
+
         private void BuildModesRow(RectTransform root)
         {
             var box = CreatePanel("RunModes", root, new Vector2(0.27f, 0.795f), new Vector2(0.73f, 0.88f));
@@ -508,7 +525,8 @@ namespace SoulHunter.UI
 
                 var tickBox = CreateRect("Box", cell, new Vector2(0.04f, 0.18f), new Vector2(0.2f, 0.82f));
                 var tickBoxImage = tickBox.gameObject.AddComponent<Image>();
-                tickBoxImage.color = new Color(0.32f, 0.32f, 0.4f, 1f);
+                tickBoxImage.color = SoulHunter.Gameplay.UI.UITheme.Row;
+                SoulHunter.Gameplay.UI.UITheme.Edge(tickBox.gameObject, SoulHunter.Gameplay.UI.UITheme.PanelEdge, 1.5f);
                 tickBoxImage.raycastTarget = false;
                 tickBox.gameObject.AddComponent<AspectRatioFitter>().aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
                 var check = CreateRect("Check", tickBox, new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f));
@@ -533,15 +551,15 @@ namespace SoulHunter.UI
             box.gameObject.AddComponent<SameFontSize>().Labels = _modeLabels.ToArray();
             _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.04f), new Vector2(0.985f, 0.42f),
                 "Modes: select one to see what it does.", TextAlignmentOptions.Left, 10f, 18f);
-            _modeHintText.color = new Color(0.82f, 0.85f, 0.95f);
+            _modeHintText.color = SoulHunter.Gameplay.UI.UITheme.TextSoft;
         }
 
         private void BuildFilterPanel(RectTransform root)
         {
             var toggleButton = CreatePanel("FilterButton", root, new Vector2(0.76f, 0.82f), new Vector2(0.95f, 0.88f));
-            toggleButton.GetComponent<Image>().color = new Color(0.12f, 0.2f, 0.75f, 1f);
             var filterButton = toggleButton.gameObject.AddComponent<Button>();
             filterButton.targetGraphic = toggleButton.GetComponent<Image>();
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(filterButton, toggleButton.GetComponent<Image>()); // was bright blue
             filterButton.onClick.AddListener(() => SetFilter(!_filterOn));
             _filterButtonLabel = CreateText("Label", toggleButton, Vector2.zero, Vector2.one, "FILTER: OFF", TextAlignmentOptions.Center, 14f, 20f);
 
@@ -555,7 +573,8 @@ namespace SoulHunter.UI
                 var row = CreateRect($"Stage_{stage}", list, new Vector2(0.05f, top - rowHeight), new Vector2(0.97f, top));
                 var box = CreateRect("Box", row, new Vector2(0f, 0.18f), new Vector2(0.1f, 0.82f));
                 var boxImage = box.gameObject.AddComponent<Image>();
-                boxImage.color = new Color(0.32f, 0.32f, 0.4f, 1f);
+                boxImage.color = SoulHunter.Gameplay.UI.UITheme.Row;
+                SoulHunter.Gameplay.UI.UITheme.Edge(box.gameObject, SoulHunter.Gameplay.UI.UITheme.PanelEdge, 1.5f);
                 var check = CreateRect("Check", box, new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f));
                 var checkImage = check.gameObject.AddComponent<Image>();
                 checkImage.color = _bonusColor; // gold tick = shown
@@ -602,8 +621,8 @@ namespace SoulHunter.UI
             _cardPortraits.Add(portrait);
             // The selected card gets a white outline as well as its colour, so selection never depends on colour alone.
             var outline = card.gameObject.AddComponent<Outline>();
-            outline.effectColor = Color.white;
-            outline.effectDistance = new Vector2(5f, -5f);
+            outline.effectColor = SoulHunter.Gameplay.UI.UITheme.Accent; // gold edge on the selected card
+            outline.effectDistance = new Vector2(4f, -4f);
             outline.enabled = false;
             _cardOutlines.Add(outline);
             _cardBadges.Add(badge);
@@ -634,6 +653,7 @@ namespace SoulHunter.UI
             var rect = CreateRect(name, parent, anchorMin, anchorMax);
             var image = rect.gameObject.AddComponent<Image>();
             image.color = _panelColor;
+            SoulHunter.Gameplay.UI.UITheme.Edge(rect.gameObject, SoulHunter.Gameplay.UI.UITheme.PanelEdge, 2f);
             rect.SetSiblingIndex(0); // behind the scene's own texts and buttons
             return rect;
         }
@@ -654,6 +674,7 @@ namespace SoulHunter.UI
             if (_characterNameText != null) label.font = _characterNameText.font;
             label.text = text;
             label.alignment = alignment;
+            label.color = SoulHunter.Gameplay.UI.UITheme.Text;
             label.raycastTarget = false;
             AutoSize(label, minSize, maxSize);
             return label;

@@ -42,9 +42,10 @@ namespace SoulHunter.UI
             { PowerUpId.Growth, UpgradeType.Crown }, { PowerUpId.Curse, UpgradeType.SkullOManiac }, { PowerUpId.Revival, UpgradeType.Tiragisu },
         };
 
-        private static readonly Color PlainCell = new Color(0.13f, 0.1f, 0.13f, 0.92f), SelectedCell = new Color(0.62f, 0.4f, 0.08f, 0.95f),
-            MaxedCell = new Color(0.12f, 0.32f, 0.14f, 0.92f), LockedCell = new Color(0.07f, 0.07f, 0.08f, 0.92f),
-            LockedText = new Color(0.55f, 0.55f, 0.58f, 1f);
+        // Owner (2026-10-04): dark, full contrast (UITheme). Selected crimson-orange with a gold edge, maxed dark gold.
+        private static readonly Color PlainCell = SoulHunter.Gameplay.UI.UITheme.Cell, SelectedCell = SoulHunter.Gameplay.UI.UITheme.CellSelected,
+            MaxedCell = SoulHunter.Gameplay.UI.UITheme.CellMaxed, LockedCell = SoulHunter.Gameplay.UI.UITheme.CellLocked,
+            LockedText = SoulHunter.Gameplay.UI.UITheme.TextLocked;
 
         private EconomyService _economy;
         private SaveService _saveService;
@@ -96,6 +97,16 @@ namespace SoulHunter.UI
                 if (old != null) old.gameObject.SetActive(false);
             if (oldGrid != null && oldGrid != panel) oldGrid.gameObject.SetActive(false);
 
+            // A dark backing behind the grid, the info and the buttons, so the menu art never competes with them.
+            var backing = new GameObject("VS_PowerUpBacking", typeof(RectTransform), typeof(Image));
+            var backingRect = (RectTransform)backing.transform;
+            backingRect.SetParent(panel, false);
+            backingRect.SetAsFirstSibling();
+            Anchor(backingRect, 0.03f, 0.08f, 0.97f, 0.93f);
+            var backingImage = backing.GetComponent<Image>();
+            SoulHunter.Gameplay.UI.UITheme.ApplyPanel(backingImage, 0.93f);
+            backingImage.raycastTarget = false;
+
             // The grid: the wiki's order, 6 across.
             var grid = new GameObject("VS_PowerUpGrid", typeof(RectTransform)).GetComponent<RectTransform>();
             grid.SetParent(panel, false);
@@ -126,7 +137,7 @@ namespace SoulHunter.UI
             if (font != null) _info.font = font.font;
             _info.fontSize = 28f;
             _info.alignment = TextAlignmentOptions.TopLeft;
-            _info.color = Color.white;
+            _info.color = SoulHunter.Gameplay.UI.UITheme.Text;
 
             _buyButton = MakeButton(template, panel, "VS_Buy", "Buy", 0.62f, 0.24f, 0.77f, 0.34f, BuySelected);
             _refundButton = MakeButton(template, panel, "VS_Refund", "Refund PowerUps", 0.79f, 0.24f, 0.94f, 0.34f, Refund);
@@ -151,7 +162,8 @@ namespace SoulHunter.UI
             button.onClick.AddListener(action);
             Anchor((RectTransform)button.transform, xMin, yMin, xMax, yMax);
             var text = button.GetComponentInChildren<TextMeshProUGUI>();
-            if (text != null) text.text = label;
+            if (text != null) { text.text = label; text.fontStyle = FontStyles.Bold; }
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, button.image, primary: name == "VS_Buy", labels: true);
             return button;
         }
 
@@ -225,12 +237,14 @@ namespace SoulHunter.UI
                 if (text != null)
                 {
                     text.fontSize = 24f;
-                    text.color = locked ? LockedText : Color.white;
+                    text.color = locked ? LockedText : SoulHunter.Gameplay.UI.UITheme.Text;
                     text.alignment = TextAlignmentOptions.MidlineLeft;
                     text.text = locked ? $"{info.Name}\nLOCKED" : $"{info.Name}\n{rank}/{info.MaxRank}";
                 }
                 // Dark cells so the white names read on the menu art; gold for the selected one, green once maxed.
                 pair.Value.image.color = pair.Key == _selected ? SelectedCell : (rank >= info.MaxRank ? MaxedCell : (locked ? LockedCell : PlainCell));
+                SoulHunter.Gameplay.UI.UITheme.Edge(pair.Value.gameObject, pair.Key == _selected ? SoulHunter.Gameplay.UI.UITheme.Accent
+                    : SoulHunter.Gameplay.UI.UITheme.PanelEdge, pair.Key == _selected ? 3f : 1.5f);
             }
             if (_info != null)
             {

@@ -17,7 +17,7 @@ namespace SoulHunter.Gameplay.UI
     public sealed class StatsPanel : MonoBehaviour
     {
         public const string ObjectName = "Stats_Panel";
-        private static readonly Color PanelColor = new Color(0.08f, 0.08f, 0.13f, 0.86f);
+        private static readonly Color PanelColor = new Color(UITheme.Panel.r, UITheme.Panel.g, UITheme.Panel.b, 0.92f);
         private const string BonusColor = "#FFD940";
         private const float RefreshSeconds = 0.25f;
 
@@ -56,6 +56,7 @@ namespace SoulHunter.Gameplay.UI
             go.AddComponent<LayoutElement>().ignoreLayout = true;
             var image = go.GetComponent<Image>();
             image.color = PanelColor;
+            UITheme.Edge(image.gameObject, UITheme.PanelEdge, 2f);
             image.raycastTarget = false;
 
             var panel = go.AddComponent<StatsPanel>();
@@ -98,7 +99,7 @@ namespace SoulHunter.Gameplay.UI
             tmp.enableAutoSizing = false; // one size for every column, set in Refresh
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.overflowMode = TextOverflowModes.Truncate;
-            tmp.color = Color.white;
+            tmp.color = UITheme.Text;
             return tmp;
         }
 

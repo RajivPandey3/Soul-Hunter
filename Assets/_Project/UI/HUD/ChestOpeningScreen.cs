@@ -176,7 +176,7 @@ namespace SoulHunter.Gameplay.UI
             rect.anchoredPosition = position;
             rect.sizeDelta = new Vector2(340f, 96f);
             var button = go.GetComponent<Button>();
-            OptionsMenuUI.ApplyFocusColors(button, go.GetComponent<Image>());
+            UITheme.ApplyButton(button, go.GetComponent<Image>(), primary: true);
             button.onClick.AddListener(onClick);
             var label = Label("Label", Vector2.zero, rect.sizeDelta, 46f, rect);
             label.text = text;
@@ -220,7 +220,7 @@ namespace SoulHunter.Gameplay.UI
             // Intro blast: the backdrop dims, the chest drops in with a flash and a ring.
             for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime / 0.25f)
             {
-                _backdrop.color = new Color(_result.IsArcana ? 0.08f : 0f, 0f, _result.IsArcana ? 0.12f : 0.02f, BackdropAlpha * t);
+                _backdrop.color = new Color(_result.IsArcana ? 0.08f : 0f, 0f, _result.IsArcana ? 0.12f : 0f, BackdropAlpha * t);
                 yield return null;
             }
             Blast(0.9f);
@@ -270,7 +270,7 @@ namespace SoulHunter.Gameplay.UI
             if (_sequence != null) StopCoroutine(_sequence);
             StopAllCoroutines();
             _openButton.gameObject.SetActive(false);
-            _backdrop.color = new Color(0f, 0f, 0.02f, BackdropAlpha);
+            _backdrop.color = new Color(0f, 0f, 0f, BackdropAlpha);
             _stage.FinishNow();
             if (_cards.Count == 0) BuildCards();
             for (int i = 0; i < _cards.Count; i++) ShowCard(i);
@@ -329,7 +329,7 @@ namespace SoulHunter.Gameplay.UI
                 card.sizeDelta = new Vector2(width, 190f);
                 var frame = card.GetComponent<Image>();
                 frame.raycastTarget = false;
-                frame.color = reward.IsEvolution ? new Color(0.35f, 0.1f, 0.12f, 0.92f) : new Color(0.07f, 0.06f, 0.12f, 0.92f);
+                frame.color = reward.IsEvolution ? new Color(0.38f, 0.07f, 0.08f, 0.95f) : UITheme.Cell;
 
                 var star = new GameObject("Stars", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
                 star.rectTransform.SetParent(card, false);

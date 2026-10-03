@@ -151,7 +151,8 @@ namespace SoulHunter.Tests.PlayMode
                 var colours = action.GetComponentsInChildren<UnityEngine.UI.Text>(true).Select(t => t.color)
                     .Concat(action.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true).Where(t => !t.name.StartsWith("Card_")).Select(t => t.color)).ToList();
                 Assert.That(colours, Is.Not.Empty, actionName + " has a visible label.");
-                Assert.That(colours.All(c => c == Color.white), $"{actionName} label colours: {string.Join(", ", colours)}");
+                // The theme's warm white (UITheme.Text, 2026-10-04); before it, the labels were the card's red.
+                Assert.That(colours.All(c => c == SoulHunter.Gameplay.UI.UITheme.Text), $"{actionName} label colours: {string.Join(", ", colours)}");
             }
             // The "LEVEL UP!" heading sits above the cards and below the HUD stage name (it was drawn over it).
             var heading = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None)

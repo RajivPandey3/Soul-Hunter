@@ -184,8 +184,8 @@ namespace SoulHunter.Gameplay.UI
         // Each card now shows the upgrade's icon, a readable name, a NEW!/Level tag and what it does.
 
         public const string IconName = "Card_Icon", TitleName = "Card_Title", TagName = "Card_Tag", DescriptionName = "Card_Description";
-        private static readonly Color TagGold = new Color(1f, 0.8f, 0.3f);
-        private static readonly Color BanishRed = new Color(1f, 0.35f, 0.3f);
+        private static readonly Color TagGold = UITheme.Accent;
+        private static readonly Color BanishRed = UITheme.Danger;
 
         private void StyleCard(Button card, UpgradeData upgrade)
         {
@@ -212,12 +212,12 @@ namespace SoulHunter.Gameplay.UI
 
             int owned = OwnedLevel(upgrade);
             CardText(card.transform, TitleName, font, new Vector2(0.09f, 0.5f), new Vector2(0.8f, 0.95f), UpgradeText.DisplayName(upgrade),
-                44f, Color.white, TextAlignmentOptions.BottomLeft, FontStyles.Bold);
+                44f, UITheme.Text, TextAlignmentOptions.BottomLeft, FontStyles.Bold);
             CardText(card.transform, TagName, font, new Vector2(0.8f, 0.5f), new Vector2(0.985f, 0.95f),
                 _banishMode ? "BANISH" : UpgradeText.Tag(upgrade, owned), 34f, _banishMode ? BanishRed : TagGold,
                 TextAlignmentOptions.BottomRight, FontStyles.Bold);
             CardText(card.transform, DescriptionName, font, new Vector2(0.09f, 0.06f), new Vector2(0.985f, 0.5f),
-                UpgradeText.Describe(upgrade, owned), 30f, new Color(0.82f, 0.85f, 0.95f), TextAlignmentOptions.TopLeft, FontStyles.Normal);
+                UpgradeText.Describe(upgrade, owned), 30f, UITheme.TextSoft, TextAlignmentOptions.TopLeft, FontStyles.Normal);
         }
 
         private static T CardPart<T>(Transform card, string name, Vector2 min, Vector2 max) where T : Component
@@ -498,7 +498,7 @@ namespace SoulHunter.Gameplay.UI
         /// behind the level-up screen looked dimmed in uneven blocks (labels dark, numbers bright). The panel is now one
         /// even dark veil.
         /// </summary>
-        public static readonly Color DimColor = new Color(0.02f, 0.02f, 0.05f, 0.62f);
+        public static readonly Color DimColor = UITheme.Veil; // owner 2026-10-04: dark, full contrast
 
         private void EvenDim()
         {
@@ -611,9 +611,9 @@ namespace SoulHunter.Gameplay.UI
         {
             if (action == null) return;
             foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
-                if (!label.name.StartsWith("Card_")) label.color = Color.white;
+                if (!label.name.StartsWith("Card_")) label.color = UITheme.Text;
             foreach (var label in action.GetComponentsInChildren<Text>(true))
-                label.color = Color.white;
+                label.color = UITheme.Text;
         }
 
         private static void CreateActionButton(Button template, Transform parent, string name)
