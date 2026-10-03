@@ -24,6 +24,11 @@ namespace SoulHunter.Gameplay.Data
     public class EnemyData : ScriptableObject
     {
         public string EnemyName;
+        /// <summary>
+        /// A colour the model is drawn in (alpha 0 = its own colours). Level 1's VS enemy types share the Level 1 models
+        /// until they have their own (owner, 2026-10-03), so each type is told apart by its tint and size.
+        /// </summary>
+        public Color VisualTint = new Color(0f, 0f, 0f, 0f);
         public int MaxHealth = 10;
         public float MoveSpeed = 3f;
         public int DamageToPlayer = 5;

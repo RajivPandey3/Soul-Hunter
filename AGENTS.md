@@ -1430,6 +1430,45 @@ Validation:
 
 Not yet played by the owner.
 
+### Level 1 step 5: VS Mad Forest enemy types (owner, 2026-10-03)
+
+**O4 (Pentagram erasing chest elites) needs no decision:** vampire.survivors.wiki/w/Pentagram (tips): "if a boss that would have dropped one is erased, the Treasure Chest is then dropped by a different enemy", which is what `EnemyDrop.PendingChests` already does.
+
+**O3 (Level 1 too easy).** Cause: Level 1 had one enemy (10 HP, 5 damage) for all 30 minutes, while VS Mad Forest changes its enemies minute by minute (raw Mad_Forest "Waves" table and each enemy's statbox, fetched 2026-10-03). The owner chose "VS stats, existing models" (AskUserQuestion).
+- `MadForestEnemies` (Data/Config): 16 types with the wiki's health, damage, move speed (VS x `EnemyAbilityDefaults.VsSpeedToUnits`, VS 100 = 3 units/s), knockback and its cap, and XP x 10 (Soul Hunter's gem scale). "HP x Level" (wiki skill on Pipeestrello 4/5 and Flower Wall) multiplies health by the player's level (`EnemySpawner`, `EnemyData.HealthPerPlayerLevel`). Names, tints and sizes are Soul Hunter's own:
+
+  | Soul Hunter | VS variant | HP | Damage | Speed | Knockback | XP |
+  |---|---|---|---|---|---|---|
+  | Grave Bat | Pipeestrello 1 | 1 | 5 | 140 | 1 | 10 |
+  | Red-Eye Bat / Blood-Eye Bat | Pipeestrello 2 / 3 | 5 | 5 | 140 | 1 | 10 |
+  | Ember Bat / Ashen Bat | Pipeestrello 4 / 5 | 50 x level | 10 | 140 | 1 | 300 |
+  | Restless Corpse | Zombie | 10 | 10 | 100 | 0.8 | 10 |
+  | Bone Soldier | Skeleton | 15 | 10 | 100 | 1 | 20 |
+  | Grave Wisp | Ghost 1 | 10 | 5 | 200 | 0 | 15 |
+  | Ash / Moss Mire Fiend | Mudman 1 / 2 | 70 / 150 | 10 | 100 | 0.3 | 25 |
+  | Great Grave Bat | Giant Bat | 270 | 10 | 140 | 0.1 | 25 |
+  | Ghoul Hound | Werewolf | 180 | 14 | 130 | 0.8 | 20 |
+  | Mantis Wraith | Mantichana | 500 | 20 | 80 | 0 | 30 |
+  | Shroud Giant | Big Mummy | 500 | 20 | 80 | 0 | 30 |
+  | Thorn Wall | Flower Wall | 30 x level | 1 | 20 | 1 | 20 |
+  | Grave Lily | Venus | 500 | 20 | 80 | 0 | 30 |
+
+- `MadForestEnemies.ByMinute` lists each minute's types as the wiki table does; `WaveTables.EnemyTypesByStage[1]` uses it, so the spawner fills each minute's VS minimum with those types and adds one of each per tick (the existing wave-type rule).
+- `MadForestEnemyBuilder` (menu Soul Hunter/Content/Build Level 1 Enemy Types) writes `Assets/_Project/Data/Config/Enemies/MadForest/L01_<Type>_Data.asset` and `Assets/Prefabs/Enemies/Gameplay/MadForest/SH10_L01_<Type>_Gameplay.prefab` (variants of the Level 1 enemy or elite gameplay prefab, resized) and rebuilds the wave tables; only `Graveyard Wave.asset` changed. Run in the isolated copy and copied back.
+- `EnemyData.VisualTint` / `EnemyController.TypeTint`: each type is drawn in its own colour through `DamageFlash.SetTint`; Defang's green still wins while defanged.
+- **Look, not owner-approved:** the tint paints the whole model one flat colour, so the types read as pastel silhouettes, and the greens are weak on the graveyard grass. Own models per type are Art section work.
+
+Found while testing: Level 1 now opens with 1-5 HP bats, so the starting weapon levels the hero during a test's boot; tests that wait on game time then hung behind the paused level-up screen (`BibleCyclePlayModeTests` stalled two full runs for over an hour; Duplicator cases timed out; the Dash check saw the pick's 240 ms invulnerability). `GameplayPlayModeTestBase.CloseOpenLevelUps` takes the first card of any screen left open after boot; the Bible and Duplicator tests also clear the opening horde (and gems). `D:\SoulHunter-Validation\results-run.ps1` now stops a PlayMode run whose log stops growing for 10 minutes, but only a Unity whose command line has `-runTests` and the isolated copy's path.
+
+Mistake (2026-10-03): while the first stalled run was being cleaned up, the owner's open editor (PID 4388, canonical project, Hub-launched) was stopped by mistake; its command line was printed and the process stopped in one command. Unsaved editor work since the last save was lost; no backup scenes existed. The owner reopened the editor.
+
+Validation:
+- `MadForestEnemyTests` (T: each type's wiki stats, HP x Level holders, the minute table, the built assets, the wave asset's types per minute) and `MadForestEnemyPlayModeTests` (R: at 12:00 Ghoul Hounds spawn with 180 HP, 14 damage, speed 130 and their tint; at 28:00 Ember Bats have 50 x the player's level). `KnockbackTests`, `PickupV2Tests` and `WaveEnemyTypeTests` were adjusted for per-type values.
+- EditMode 566/566, PlayMode 266/266, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261003-madforest-full4/`).
+- Build play (`run-20261003-madforest-build/level1-30min`, Stage 1, no god mode): **the bot died at 11:32**, level 11, 2,944 kills, hurt 20 times (the old 30-minute run: hurt 7 times, level 123), 0 errors, min 57 FPS. From 4:00 the ground held the 400-gem cap: the bot flees the tougher horde and leaves its XP, so this run cannot judge VS balance. Needs the owner's play, or a bot that collects gems.
+
+Not yet played by the owner.
+
 ### Level 1 step 6: Bug MIS v2 fixes, ground comfort, names (owner, 2026-10-02)
 
 The step 6 CTO pass played Level 1 for 30 minutes and wrote `Docs/BUG_MIS_Level1_v2.md` (23 bugs, 0 S1). The owner answered: "1. approved, 2. as a cto tum recommend karo, 3. ... indian mithology ... game final ho jane ke baad, 4. jiska bhi look pro type nahi lage use badal do", and asked for a ground that does not tire the eyes over 30 minutes.

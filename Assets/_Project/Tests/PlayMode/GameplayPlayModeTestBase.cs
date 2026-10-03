@@ -91,6 +91,24 @@ namespace SoulHunter.Tests.PlayMode
 
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             yield return WaitForFreshGameplay(previousPlayer: null);
+            yield return CloseOpenLevelUps();
+        }
+
+        /// <summary>
+        /// Takes the first card of any level-up screen left open. Level 1 opens with the VS Mad Forest's 1-5 HP bats
+        /// (2026-10-03), so the starting weapon can level the hero during boot; a test that then waits on game time would
+        /// wait forever behind the paused screen (it hung the Bible, Duplicator and Dash tests).
+        /// </summary>
+        protected IEnumerator CloseOpenLevelUps()
+        {
+            var levelUp = Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>();
+            for (int i = 0; i < 50 && levelUp != null && levelUp.IsLevelUpActive; i++)
+            {
+                var offered = GetPrivateField<System.Collections.Generic.List<SoulHunter.Gameplay.Combat.UpgradeData>>(levelUp, "_offered");
+                if (offered == null || offered.Count == 0) break;
+                levelUp.SelectUpgrade(offered[0]);
+                yield return null;
+            }
         }
 
         protected IEnumerator WaitForFreshGameplay(PlayerController previousPlayer)

@@ -55,11 +55,14 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>Soul Hunter's shade for a defanged enemy (VS: "a green appearance").</summary>
         public static readonly Color DefangTint = new Color(0.55f, 1f, 0.55f, 1f);
 
+        /// <summary>The enemy type's own colour (EnemyData.VisualTint), or null for the model's colours.</summary>
+        public Color? TypeTint => _enemyData != null && _enemyData.VisualTint.a > 0f ? _enemyData.VisualTint : (Color?)null;
+
         public void SetDefanged(bool defanged)
         {
             IsDefanged = defanged;
             var flash = GetComponentInChildren<SoulHunter.Gameplay.VFX.DamageFlash>();
-            if (flash != null) flash.SetTint(defanged && SoulHunter.Core.Persistence.GameSettings.ShowDefangedEnemies ? DefangTint : (Color?)null);
+            if (flash != null) flash.SetTint(defanged && SoulHunter.Core.Persistence.GameSettings.ShowDefangedEnemies ? DefangTint : TypeTint);
         }
         /// <summary>A stage boss (set by EnemySpawner.SpawnBoss; bosses have their own pools). VS: immune to Pentagram.</summary>
         public bool IsStageBoss { get; set; }
@@ -120,6 +123,8 @@ namespace SoulHunter.Gameplay.AI
 
         private void Start()
         {
+            // The type's tint after every Awake (DamageFlash collects its renderers in Awake).
+            if (!IsDefanged && TypeTint.HasValue) SetDefanged(false);
             // Default behaviour
             if (_currentState == null)
             {
@@ -151,7 +156,7 @@ namespace SoulHunter.Gameplay.AI
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
             ResetFreezeResistance(); // Garlic's freeze-resistance reduction lasts one life too
             RestartAbilities();     // VS skills start again on every spawn (pooling-safe)
-            if (IsDefanged) SetDefanged(false); // Defang lasts one life
+            SetDefanged(false); // Defang lasts one life; this also restores the type's own tint
             LingeringSlow = 1f;                 // Requiem of Souls' slow lasts one life
             if (Rigidbody != null)
             {

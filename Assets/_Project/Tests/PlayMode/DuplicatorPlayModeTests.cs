@@ -41,6 +41,11 @@ namespace SoulHunter.Tests.PlayMode
             var player = PlayerController.Instance;
             player.GetComponent<HealthController>().IsInvincible = true;
             foreach (var existing in player.GetComponentsInChildren<AutoAttackWeapon>()) existing.gameObject.SetActive(false);
+            // Level 1 opens with 1-5 HP bats (VS Mad Forest, 2026-10-03): killing them would level the hero, and the paused
+            // level-up screen would stop the game-time waits below. Only the unkillable targets stay.
+            foreach (var other in EnemyController.ActiveEnemies.ToList()) if (other != null) other.gameObject.SetActive(false);
+            foreach (var gem in Object.FindObjectsByType<SoulHunter.Gameplay.Pickups.XPGem>(FindObjectsSortMode.None)) gem.gameObject.SetActive(false);
+            yield return CloseOpenLevelUps();
             yield return null;
 
             // Targets all round, too tough to die, harmless.

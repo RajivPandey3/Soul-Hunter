@@ -529,7 +529,10 @@ namespace SoulHunter.Gameplay.AI
                 // VS rule: Curse makes enemies tougher. Always scale from the EnemyData value so
                 // pooled enemies never compound it; enemies without data keep their own max health.
                 var data = enemyController != null ? enemyController.Data : null;
-                if (data != null) health.Initialize(ScaleHealthByCurse(ModeHealth(data.MaxHealth), curse));
+                // VS "HP x Level" (wiki Enemies, Skills): an enemy with that skill multiplies its health by the player's
+                // level when it spawns (EnemyData.HealthPerPlayerLevel > 0).
+                if (data != null) health.Initialize(ScaleHealthByCurse(ModeHealth(data.HealthPerPlayerLevel > 0
+                    ? data.HealthForPlayerLevel(CurrentPlayerLevel()) : data.MaxHealth), curse));
                 else health.ResetHealth();
             }
             return enemyToSpawn;

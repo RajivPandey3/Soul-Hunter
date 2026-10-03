@@ -23,6 +23,10 @@ namespace SoulHunter.Tests.PlayMode
             yield return BootIntoGameplay();
             Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
             var player = PlayerController.Instance;
+            // The waits below run on game time: a kill's gem could open a level-up screen that pauses the game, and the
+            // test would wait forever (it hung twice, 2026-10-02/03). No enemies and no starting weapon, so no level-up.
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            foreach (var enemy in EnemyController.ActiveEnemies.ToList()) if (enemy != null) enemy.gameObject.SetActive(false);
             WeaponManager.Instance.ApplyUpgrade(WeaponDefinitionLookup.Find(UpgradeData.UpgradeType.Bible).GetLevel(1));
             yield return null;
             var bible = player.GetComponentsInChildren<BibleWeapon>().First();

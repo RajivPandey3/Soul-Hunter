@@ -47,7 +47,7 @@ namespace SoulHunter.Tests.EditMode
             WaveTables.EnemyTypesByStage[10] = new List<(int, string[])> { (0, new[] { "A" }), (10, new[] { "A", "B" }) };
             Assert.That(WaveTables.EnemyTypePaths(10, 3), Is.EqualTo(new[] { "A" }));
             Assert.That(WaveTables.EnemyTypePaths(10, 12), Is.EqualTo(new[] { "A", "B" }));
-            Assert.That(WaveTables.EnemyTypePaths(1, 12), Is.Empty, "A stage with no entries keeps its own enemy.");
+            Assert.That(WaveTables.EnemyTypePaths(2, 12), Is.Empty, "A stage with no entries keeps its own enemy.");
         }
 
         [Test]

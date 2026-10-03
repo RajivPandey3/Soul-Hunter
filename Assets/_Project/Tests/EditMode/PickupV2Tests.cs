@@ -73,7 +73,9 @@ namespace SoulHunter.Tests.EditMode
         {
             foreach (string guid in AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/Data/Config/Enemies" }))
             {
-                var data = AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(guid));
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (path.Contains("/MadForest/")) continue; // VS XP x10 per type (MadForestEnemyTests)
+                var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
                 int expected = data.name.Contains("_Boss_") ? 250 : data.name.Contains("_Elite_") ? 50 : 10;
                 Assert.That(data.ExperienceValue, Is.EqualTo(expected), data.name);
             }

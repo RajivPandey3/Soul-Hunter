@@ -157,7 +157,11 @@ namespace SoulHunter.Gameplay.Data
         /// Assets/Prefabs/Enemies/Gameplay/SH10_Lxx_EnemyGameplay.prefab), list it here, run Build Wave Tables.
         /// </summary>
         public static readonly Dictionary<int, List<(int fromMinute, string[] prefabPaths)>> EnemyTypesByStage =
-            new Dictionary<int, List<(int, string[])>>();
+            new Dictionary<int, List<(int, string[])>>
+            {
+                // Level 1: the VS Mad Forest enemies minute by minute (owner, 2026-10-03; MadForestEnemies).
+                [1] = MadForestEnemies.StageOneRows()
+            };
 
         /// <summary>The enemy type prefab paths of a stage's minute (empty: the stage's own enemy).</summary>
         public static string[] EnemyTypePaths(int stage, int minute)
