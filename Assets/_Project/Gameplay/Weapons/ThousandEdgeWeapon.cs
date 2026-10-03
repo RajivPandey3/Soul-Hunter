@@ -46,8 +46,9 @@ namespace SoulHunter.Gameplay.Combat
             else moveDir.Normalize();
             moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 
-            // Amount adds knives per volley.
-            for (int i = 0; i < KnivesPerAttack + ExtraAmount; i++)
+            // Amount adds knives per volley, thrown one after another (VS interval 0.05 s): all in one frame from one spot
+            // they looked like a single knife, so the Duplicator seemed to do nothing (2026-10-04).
+            FireInSuccession(KnivesPerAttack + ExtraAmount, VsInterval, i =>
             {
                 Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * moveDir;
                 Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
@@ -55,7 +56,7 @@ namespace SoulHunter.Gameplay.Combat
                 GameObject knife = WeaponPoolManager.Instance != null
                     ? WeaponPoolManager.Instance.GetFromPool(KnifePrefab, spawnPos, Quaternion.identity)
                     : Instantiate(KnifePrefab, spawnPos, Quaternion.identity);
-                if (knife == null) continue;
+                if (knife == null) return;
                 ApplyArea(knife, KnifePrefab);
                 knife.transform.forward = spreadDir;
 
@@ -68,7 +69,10 @@ namespace SoulHunter.Gameplay.Combat
                 if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
                 damageDealer.SourceWeaponName = "Thousand Edge";
                 AimAtHostiles(knife);
-            }
+            });
         }
+
+        /// <summary>vampire.survivors.wiki/w/Thousand_Edge: "interval = 0.05 seconds" between the knives of one volley.</summary>
+        public const float VsInterval = 0.05f;
     }
 }

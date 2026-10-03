@@ -1469,6 +1469,17 @@ Validation:
 
 Played by the owner after this change (2026-10-03): "level 1 khel kar dekha thik hai".
 
+### Duplicator everywhere (owner: "duplicater ko check karo kya wo har bar kaam karta hai", 2026-10-04)
+
+vampire.survivors.wiki/w/Duplicator (+1 Amount per level, 2 levels) and /w/Amount ("how many extra projectiles most weapons have"); each weapon's own page says whether Amount affects it (fetched 2026-10-04): it does for Whip, Magic Wand, Knife, Axe, Cross, King Bible, Fire Wand, Santa Water, Runetracer, Lightning Ring, Peachone, Bone, Cherry Bomb, Gun, Bloody Tear, Holy Wand, Thousand Edge, Death Spiral, Heaven Sword, Unholy Vespers, La Borra, Hellfire, NO FUTURE, Thunder Loop; not for Garlic, Soul Eater, Song of Mana, Mannajja, Pentagram, Gorgeous Moon, Clock Lancet, Laurel. Crimson Shroud: "Amount creates more explosions" (it already adds one per Amount).
+- Code check: every weapon the wiki lists reads Amount, and none of the ignoring ones does.
+- Found and fixed (the same look as the owner's 2026-09-30 report): **Thousand Edge** threw all its knives in one frame from one spot, and **Bloody Tear**'s extra lashes landed on top of the first ones, so the Duplicator looked like it did nothing. Both now fire one after another at the wiki interval (`FireInSuccession`): Thousand Edge 0.05 s, Bloody Tear 0.1 s (`VsInterval`).
+- `DuplicatorEverywherePlayModeTests` (R): each of the 10 evolutions that use Amount fires 2 more, none on top of another (Thousand Edge 6 to 8, Bloody Tear 2 to 4, Holy Wand 1 to 3, Death Spiral 9 to 11, Heaven Sword 3 to 5, Unholy Vespers +2 books, Drowning Chalice 4 to 6, Hellmaw Comet 2 to 4, Severed Fate 1 to 3, Stormbound Halo 6 to 8); the 8 ignoring weapons fire the same; a Knife gained after the Duplicator throws 3 at once. With `DuplicatorPlayModeTests` (14 base weapons and the Bible) that is every Soul Hunter weapon.
+- Test-side fixes on the way: the shot counter waits for a volley still in flight and counts a pooled object reused in the same frame as a new shot; the targets are marked stage bosses so Eclipse Sigil cannot erase them (their gems levelled the hero and the paused level-up screen stalled a run, which the stall guard stopped); the Mad Forest health/speed checks allow for Curse (the shared boot can take Skull O'Maniac from a leftover level-up).
+- EditMode 566/566, PlayMode 286/286, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261004-dup-full2/`).
+
+Not yet played by the owner.
+
 ### Main menu layout (owner: "main menu panel thik karo", 2026-10-03)
 
 The owner played Level 1 after step 5 and said it is fine, then asked for the main menu panel; they chose "Layout + look" (AskUserQuestion; not the Power Up or character select panels, not the VS menu items).

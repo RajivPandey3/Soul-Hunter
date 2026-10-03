@@ -117,7 +117,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
-        private struct Shot
+        internal struct Shot
         {
             public string Name;
             public Vector3 Position;
@@ -127,7 +127,7 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         /// <summary>Two shots that appeared together, at the same spot, flying the same way: they look like one.</summary>
-        private static int StackedPairs(List<Shot> shots)
+        internal static int StackedPairs(List<Shot> shots)
         {
             int pairs = 0;
             for (int i = 0; i < shots.Count; i++)
@@ -139,11 +139,19 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         /// <summary>Fires one attack by hand (the weapon's own timer held back) and records every weapon object that appears in the next second.</summary>
-        private IEnumerator MeasureOneAttack(AutoAttackWeapon weapon, List<Shot> shots)
+        internal static IEnumerator MeasureOneAttack(AutoAttackWeapon weapon, List<Shot> shots, float window = 1f)
         {
             var timer = typeof(AutoAttackWeapon).GetField("_timer", Private);
             timer.SetValue(weapon, 999f);
+            // A natural volley may still be firing its shots one after another (FireInSuccession): let it finish first,
+            // or its last shots fall into this window (Thousand Edge counted 10 for one 6-knife volley, 2026-10-04).
+            float settle = Time.time + 0.6f;
+            while (Time.time < settle) { timer.SetValue(weapon, 999f); yield return null; }
             var active = new HashSet<GameObject>(LiveShots());
+            // A pooled object reused in the same frame it ends never looks inactive (Bloody Tear's 0.3 s lash is reused by
+            // the lash fired 0.3 s later): an object that jumps to a new spot in one frame counts as a new shot.
+            var lastSeen = new Dictionary<GameObject, Vector3>();
+            foreach (var go in active) lastSeen[go] = go.transform.position;
             float start = Time.time;
             if (weapon is MagicWandWeapon)
             {
@@ -160,16 +168,20 @@ namespace SoulHunter.Tests.PlayMode
                 weapon.StartCoroutine((IEnumerator)typeof(PeachoneWeapon).GetMethod("BombingRun", Private).Invoke(weapon, null));
             }
             else typeof(AutoAttackWeapon).GetMethod("Attack", Private).Invoke(weapon, null);
-            while (Time.time < start + 1f)
+            while (Time.time < start + window)
             {
                 foreach (var go in LiveShots())
-                    if (active.Add(go))
+                {
+                    bool jumped = lastSeen.TryGetValue(go, out var was) && (go.transform.position - was).sqrMagnitude > 1.5f * 1.5f;
+                    lastSeen[go] = go.transform.position;
+                    if (active.Add(go) || jumped)
                     {
                         // Physics shots (Bone, Runetracer, Axe) fly by velocity, not by their facing.
                         var body = go.GetComponent<Rigidbody>();
                         Vector3 forward = body != null && !body.isKinematic && body.linearVelocity.sqrMagnitude > 0.01f ? body.linearVelocity.normalized : go.transform.forward;
                         shots.Add(new Shot { Name = go.name.Replace("(Clone)", "").Trim(), Position = go.transform.position, Forward = forward, Time = Time.time - start });
                     }
+                }
                 active.RemoveWhere(g => g == null || !g.activeInHierarchy);
                 timer.SetValue(weapon, 999f);
                 if (weapon is MagicWandWeapon && Time.time > start + 0.5f)
@@ -178,10 +190,10 @@ namespace SoulHunter.Tests.PlayMode
             }
         }
 
-        private static int LiveBooks() =>
+        internal static int LiveBooks() =>
             Object.FindObjectsByType<Transform>(FindObjectsSortMode.None).Count(t => t.gameObject.activeInHierarchy && t.name.StartsWith("SH10_Bible("));
 
-        private static IEnumerable<GameObject> LiveShots()
+        internal static IEnumerable<GameObject> LiveShots()
         {
             var found = new HashSet<GameObject>();
             void Add(Component c)

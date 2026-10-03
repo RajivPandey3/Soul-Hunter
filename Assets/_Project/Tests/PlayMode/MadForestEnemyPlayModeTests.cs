@@ -30,9 +30,11 @@ namespace SoulHunter.Tests.PlayMode
                 () => string.Join(", ", EnemyController.ActiveEnemies.Where(e => e != null && e.Data != null).Select(e => e.Data.EnemyName).Distinct()));
             yield return null;
             var health = hound.GetComponent<HealthController>();
-            Assert.AreEqual(180, health.MaxHealth, "Werewolf health 180 (no Curse).");
+            // The shared boot may take a level-up card (Skull O'Maniac raises Curse), so expect the wiki value x Curse.
+            float curse = PlayerController.Instance.GetComponent<PlayerStats>().Curse;
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(180, curse), health.MaxHealth, $"Werewolf health 180 x Curse {curse}.");
             Assert.AreEqual(14f, hound.GetComponent<TouchDamage>().DamageAmount, "Werewolf damage 14.");
-            Assert.AreEqual(130f * 0.03f, hound.MoveSpeed, 1e-4, "Werewolf speed 130.");
+            Assert.AreEqual(130f * 0.03f, hound.Data.MoveSpeed, 1e-4, "Werewolf speed 130 (its data; Curse speeds the live enemy).");
             Assert.AreEqual(0.8f, hound.Data.Knockback, 1e-5);
             Assert.AreEqual(MadForestEnemies.Find("GhoulHound").Tint, hound.TypeTint, "Drawn in its own tint.");
         }
@@ -49,7 +51,9 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => (bat = EnemyController.ActiveEnemies.FirstOrDefault(e => e != null && e.Data != null && e.Data.EnemyName == "Ember Bat")) != null,
                 "an Ember Bat (VS Pipeestrello 4) at 28:00");
             yield return null;
-            Assert.AreEqual(50 * experience.CurrentLevel, bat.GetComponent<HealthController>().MaxHealth, "HP x Level: 50 x the player's level.");
+            float curse = PlayerController.Instance.GetComponent<PlayerStats>().Curse;
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(50 * experience.CurrentLevel, curse), bat.GetComponent<HealthController>().MaxHealth,
+                $"HP x Level: 50 x the player's level x Curse {curse}.");
             Assert.AreEqual(10f, bat.GetComponent<TouchDamage>().DamageAmount);
         }
     }
