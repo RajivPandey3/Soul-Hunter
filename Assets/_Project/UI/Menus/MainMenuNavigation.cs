@@ -40,8 +40,12 @@ namespace SoulHunter.UI
                 var image = button != null ? button.targetGraphic as Image : null;
                 if (image != null) SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
             }
+            // Owner (2026-10-03): title and buttons inside the frame art's open area, in the menu's own button look.
+            Layout = MainMenuLayout.Attach(HomePanel, new[] { StartButton, PowerUpButton, OptionsButton, QuitButton });
             ShowHome();
         }
+
+        public MainMenuLayout Layout { get; private set; }
 
         /// <summary>VS main menu "Options": a copy of the Power Up button placed below it; Quit moves down one step.</summary>
         public Button OptionsButton { get; private set; }

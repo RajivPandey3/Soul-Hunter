@@ -1467,7 +1467,19 @@ Validation:
 - EditMode 566/566, PlayMode 266/266, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261003-madforest-full4/`).
 - Build play (`run-20261003-madforest-build/level1-30min`, Stage 1, no god mode): **the bot died at 11:32**, level 11, 2,944 kills, hurt 20 times (the old 30-minute run: hurt 7 times, level 123), 0 errors, min 57 FPS. From 4:00 the ground held the 400-gem cap: the bot flees the tougher horde and leaves its XP, so this run cannot judge VS balance. Needs the owner's play, or a bot that collects gems.
 
-Not yet played by the owner.
+Played by the owner after this change (2026-10-03): "level 1 khel kar dekha thik hai".
+
+### Main menu layout (owner: "main menu panel thik karo", 2026-10-03)
+
+The owner played Level 1 after step 5 and said it is fine, then asked for the main menu panel; they chose "Layout + look" (AskUserQuestion; not the Power Up or character select panels, not the VS menu items).
+- Found: the frame is drawn into the background picture (1672x941, kept at its aspect) with its centre ornament at x 56%, but the title and buttons were centred on the screen, and Quit fell onto the frame's bottom border (off screen in a short window). The logo is a TextMeshPro text with two sprites ("SOUL", "HUNTER") that were imported with a horizontal bearing of minus half their width, so each was drawn half its width left of its slot; the text was split over two lines with spaces to hide it.
+- `MainMenuLayout` (added by `MainMenuNavigation`): measures where the background picture is drawn, places the logo and Start / Power Up / Options / Quit in the frame's open area centred on the ornament, and refits on window changes. Buttons are dark crimson with a red edge; focus stays the game-wide orange. The scene is not edited.
+- `Assets/Art/UI/sprite_4.asset` and `sprite_5.asset`: horizontal bearing 0 (only the menu logo uses them); the logo is one centred line.
+- VS wiki Main_menu lists Collection, Unlocks, Credits and "Press to start", which Soul Hunter does not have yet (not asked for now).
+- `MainMenuLayoutPlayModeTests` (R): on the real main menu every button is on screen, inside the frame, centred on the ornament, not overlapping, with the crimson look; the drawn logo sprites (not just the text box) are centred above the buttons.
+- EditMode 566/566, PlayMode 267/267, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261003-menu-full/`). Build screenshots (`run-20261003-menu-build/hd4`, 1366x768): logo and buttons centred in the frame, Quit inside it (partial `V`). Other window sizes were not checked by eye (the build kept the same window size).
+
+Not yet seen by the owner.
 
 ### Level 1 step 6: Bug MIS v2 fixes, ground comfort, names (owner, 2026-10-02)
 
