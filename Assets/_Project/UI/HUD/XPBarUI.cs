@@ -129,9 +129,7 @@ namespace SoulHunter.Gameplay.UI
             _levelLabel.enableAutoSizing = true;
             _levelLabel.fontSizeMin = 12f;
             _levelLabel.fontSizeMax = 30f;
-            _levelLabel.color = Color.white;
-            _levelLabel.outlineWidth = 0.25f;
-            _levelLabel.outlineColor = new Color32(0, 0, 0, 255);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(_levelLabel, SoulHunter.Gameplay.UI.ThemedElement.TextRole.HudLabel);
             _levelLabel.raycastTarget = false;
         }
     }

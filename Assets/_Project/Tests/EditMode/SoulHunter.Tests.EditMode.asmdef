@@ -4,6 +4,8 @@
     "references": [
         "SoulHunter.Foundation",
         "SoulHunter.Gameplay",
+        "Unity.TextMeshPro",
+        "Unity.ugui",
         "Unity.InputSystem"
     ],
     "includePlatforms": [

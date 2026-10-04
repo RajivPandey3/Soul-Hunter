@@ -184,7 +184,7 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.UI.UITheme.AddVeil(_shopUI.transform);
             var panel = ShopRect("Panel", _shopUI.transform, new Vector2(0.27f, 0.14f), new Vector2(0.73f, 0.86f));
             SoulHunter.Gameplay.UI.UITheme.ApplyPanel(panel.gameObject.AddComponent<UnityEngine.UI.Image>());
-            ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f).color = SoulHunter.Gameplay.UI.UITheme.Accent;
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f), SoulHunter.Gameplay.UI.ThemedElement.TextRole.Title);
             int gold = CurrentGold();
             ShopText("Gold", panel, new Vector2(0f, 0.81f), new Vector2(1f, 0.89f), $"Gold: {gold}", 28f);
 
@@ -214,7 +214,7 @@ namespace SoulHunter.Gameplay.Core
             SetAvailable(egg, gold >= _soulEggPrice);
             if (focus == null && egg.interactable) focus = egg;
 
-            ShopText("Message", panel, new Vector2(0.05f, 0.24f), new Vector2(0.95f, 0.34f), LastMessage, 24f).color = new Color(0.55f, 0.95f, 1f);
+            ShopText("Message", panel, new Vector2(0.05f, 0.24f), new Vector2(0.95f, 0.34f), LastMessage, 24f).color = SoulHunter.Gameplay.UI.UITheme.Rewards.Soul;
             var leave = ShopButton(panel, 0.18f, "Leave (the merchant moves on)", Leave);
             if (focus == null) focus = leave;
             if (UnityEngine.EventSystems.EventSystem.current != null)
@@ -222,17 +222,12 @@ namespace SoulHunter.Gameplay.Core
         }
 
         // Sold-out or unaffordable wares stay readable: dark button, grey text (Unity's default disabled tint is light grey).
-        private static readonly Color DisabledWare = SoulHunter.Gameplay.UI.UITheme.Disabled;
-        private static readonly Color DisabledText = SoulHunter.Gameplay.UI.UITheme.TextLocked;
-
         private static void SetAvailable(UnityEngine.UI.Button button, bool available)
         {
             button.interactable = available;
-            var colors = button.colors;
-            colors.disabledColor = DisabledWare;
-            button.colors = colors;
+            // The theme's disabled button colour keeps sold-out wares dark; their text turns the theme's locked grey.
             foreach (var text in button.GetComponentsInChildren<TMPro.TextMeshProUGUI>())
-                text.color = available ? SoulHunter.Gameplay.UI.UITheme.Text : DisabledText;
+                SoulHunter.Gameplay.UI.UITheme.ApplyText(text, available ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body : SoulHunter.Gameplay.UI.ThemedElement.TextRole.Locked);
         }
 
         private void DestroyShopUI()
@@ -248,9 +243,12 @@ namespace SoulHunter.Gameplay.Core
             var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();
             var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();
             button.targetGraphic = image;
-            SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
             button.onClick.AddListener(() => onClick());
             ShopText("Text", rect, new Vector2(0.03f, 0f), new Vector2(0.97f, 1f), label, 26f);
+            bool leave = label.StartsWith("Leave");
+            // Wares keep their two-line, left-aligned text, so they carry no icon.
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, leave ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: false);
             return button;
         }
 

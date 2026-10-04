@@ -54,6 +54,12 @@ namespace SoulHunter.Gameplay.Data
         public UnityEngine.Sprite GoldPouchIcon;
         [UnityEngine.Tooltip("Roast Chicken level-up card.")]
         public UnityEngine.Sprite RoastChickenIcon;
+
+        /// <summary>
+        /// The game's UI theme: the single source of truth for every colour, picture, icon, font, motion and spacing of
+        /// the UI (owner, 2026-10-04). Designers switch and edit it in Soul Hunter > Theme Studio.
+        /// </summary>
+        public SoulHunter.Gameplay.UI.UiThemeAsset UiTheme;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
 
         /// <summary>The weapon/passive definition of <paramref name="type"/>, or null when none exists.</summary>

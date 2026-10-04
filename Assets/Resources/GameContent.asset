@@ -389,3 +389,4 @@ MonoBehaviour:
   ChestFxSparkle: {fileID: 2800000, guid: 52d027c78d673a7429f38f4a91ebddd5, type: 3}
   GoldPouchIcon: {fileID: -1929607595165671533, guid: feb1d854bc9563548976a498aedbd830, type: 3}
   RoastChickenIcon: {fileID: -8608535540412278260, guid: ede195099f7ae454ba05258ef007506c, type: 3}
+  UiTheme: {fileID: 11400000, guid: 04753fc92cecd0846a8cb23febaee324, type: 2}

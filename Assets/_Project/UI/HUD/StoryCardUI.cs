@@ -92,14 +92,14 @@ namespace SoulHunter.Gameplay.UI
             rect.anchorMax = new Vector2(0.76f, 0.86f);
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var background = card.GetComponent<Image>();
-            background.color = new Color(0.02f, 0.03f, 0.06f, 0.72f);
+            UITheme.ApplySurface(background, ThemedElement.SurfaceRole.StoryCard);
             background.raycastTarget = false;
             _group = card.GetComponent<CanvasGroup>();
             _group.blocksRaycasts = false;
             _group.interactable = false;
 
             _title = Label(rect, "Title", new Vector2(0.04f, 0.68f), new Vector2(0.96f, 0.96f), 30f, FontStyles.Bold);
-            _title.color = new Color(1f, 0.82f, 0.38f); // gold, like the level-up heading
+            UITheme.ApplyText(_title, ThemedElement.TextRole.Accent); // like the level-up heading
             _body = Label(rect, "Story", new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.68f), 24f, FontStyles.Italic);
             card.SetActive(false);
         }

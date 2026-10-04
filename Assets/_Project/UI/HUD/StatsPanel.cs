@@ -17,7 +17,6 @@ namespace SoulHunter.Gameplay.UI
     public sealed class StatsPanel : MonoBehaviour
     {
         public const string ObjectName = "Stats_Panel";
-        private static readonly Color PanelColor = new Color(UITheme.Panel.r, UITheme.Panel.g, UITheme.Panel.b, 0.92f);
         private const string BonusColor = "#FFD940";
         private const float RefreshSeconds = 0.25f;
 
@@ -55,8 +54,7 @@ namespace SoulHunter.Gameplay.UI
             // Never laid out by a layout group in the parent (the level-up screen stacks its heading and cards).
             go.AddComponent<LayoutElement>().ignoreLayout = true;
             var image = go.GetComponent<Image>();
-            image.color = PanelColor;
-            UITheme.Edge(image.gameObject, UITheme.PanelEdge, 2f);
+            UITheme.ApplyPanel(image, 0.92f);
             image.raycastTarget = false;
 
             var panel = go.AddComponent<StatsPanel>();
@@ -99,7 +97,7 @@ namespace SoulHunter.Gameplay.UI
             tmp.enableAutoSizing = false; // one size for every column, set in Refresh
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.overflowMode = TextOverflowModes.Truncate;
-            tmp.color = UITheme.Text;
+            UITheme.ApplyText(tmp, ThemedElement.TextRole.Body);
             return tmp;
         }
 

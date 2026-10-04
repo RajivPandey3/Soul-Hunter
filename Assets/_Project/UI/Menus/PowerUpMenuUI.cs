@@ -42,10 +42,11 @@ namespace SoulHunter.UI
             { PowerUpId.Growth, UpgradeType.Crown }, { PowerUpId.Curse, UpgradeType.SkullOManiac }, { PowerUpId.Revival, UpgradeType.Tiragisu },
         };
 
-        // Owner (2026-10-04): dark, full contrast (UITheme). Selected crimson-orange with a gold edge, maxed dark gold.
-        private static readonly Color PlainCell = SoulHunter.Gameplay.UI.UITheme.Cell, SelectedCell = SoulHunter.Gameplay.UI.UITheme.CellSelected,
-            MaxedCell = SoulHunter.Gameplay.UI.UITheme.CellMaxed, LockedCell = SoulHunter.Gameplay.UI.UITheme.CellLocked,
-            LockedText = SoulHunter.Gameplay.UI.UITheme.TextLocked;
+        // Cell looks come from the theme (Theme Studio > Cards): plain, selected, maxed and locked.
+        private static Color PlainCell => SoulHunter.Gameplay.UI.UITheme.Cell;
+        private static Color SelectedCell => SoulHunter.Gameplay.UI.UITheme.CellSelected;
+        private static Color MaxedCell => SoulHunter.Gameplay.UI.UITheme.CellMaxed;
+        private static Color LockedCell => SoulHunter.Gameplay.UI.UITheme.CellLocked;
 
         private EconomyService _economy;
         private SaveService _saveService;
@@ -137,7 +138,7 @@ namespace SoulHunter.UI
             if (font != null) _info.font = font.font;
             _info.fontSize = 28f;
             _info.alignment = TextAlignmentOptions.TopLeft;
-            _info.color = SoulHunter.Gameplay.UI.UITheme.Text;
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(_info, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body);
 
             _buyButton = MakeButton(template, panel, "VS_Buy", "Buy", 0.62f, 0.24f, 0.77f, 0.34f, BuySelected);
             _refundButton = MakeButton(template, panel, "VS_Refund", "Refund PowerUps", 0.79f, 0.24f, 0.94f, 0.34f, Refund);
@@ -163,7 +164,9 @@ namespace SoulHunter.UI
             Anchor((RectTransform)button.transform, xMin, yMin, xMax, yMax);
             var text = button.GetComponentInChildren<TextMeshProUGUI>();
             if (text != null) { text.text = label; text.fontStyle = FontStyles.Bold; }
-            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, button.image, primary: name == "VS_Buy", labels: true);
+            bool buy = name == "VS_Buy";
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, button.image, buy ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Primary : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger,
+                buy ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Buy : SoulHunter.Gameplay.UI.UITheme.IconSlot.None);
             return button;
         }
 
@@ -237,7 +240,7 @@ namespace SoulHunter.UI
                 if (text != null)
                 {
                     text.fontSize = 24f;
-                    text.color = locked ? LockedText : SoulHunter.Gameplay.UI.UITheme.Text;
+                    text.color = locked ? SoulHunter.Gameplay.UI.UITheme.TextLocked : SoulHunter.Gameplay.UI.UITheme.CardText; // cells are cards
                     text.alignment = TextAlignmentOptions.MidlineLeft;
                     text.text = locked ? $"{info.Name}\nLOCKED" : $"{info.Name}\n{rank}/{info.MaxRank}";
                 }

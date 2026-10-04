@@ -18,9 +18,8 @@ namespace SoulHunter.Gameplay.UI
     public sealed class RunResultsScreen : MonoBehaviour
     {
         public const int SortingOrder = 450;
-        public static readonly Color Yellow = new Color(1f, 0.84f, 0.29f, 1f); // the VS yellow rows (kept distinct from the theme gold)
-        private static readonly Color Backing = UITheme.Panel;
-        private static readonly Color Green = new Color(0.16f, 0.55f, 0.24f, 1f);
+        /// <summary>The VS yellow of the best values (theme: Rewards > Best).</summary>
+        public static Color Yellow => UITheme.Rewards.Best;
 
         public RunResults Results { get; private set; }
         public Button DoneButton { get; private set; }
@@ -62,33 +61,34 @@ namespace SoulHunter.Gameplay.UI
             Results = results;
             _root = (RectTransform)transform;
             // Opaque: the UI blends in linear space, so even a 0.97 dark layer let the game and the HUD show through.
-            var backdrop = Panel(_root, "Backdrop", Vector2.zero, Vector2.one, new Color(0.012f, 0.008f, 0.01f, 1f));
+            var backdrop = Panel(_root, "Backdrop", Vector2.zero, Vector2.one);
+            UITheme.ApplySurface(backdrop.GetComponent<Image>(), ThemedElement.SurfaceRole.Backdrop);
             backdrop.GetComponent<Image>().raycastTarget = true;
 
             TitleText = Text(_root, "Title", new Vector2(0.2f, 0.9f), new Vector2(0.8f, 0.98f), TitleLine(results), 54f, TextAlignmentOptions.Center);
-            TitleText.color = UITheme.Accent;
             TitleText.fontStyle = FontStyles.Bold;
+            UITheme.ApplyText(TitleText, ThemedElement.TextRole.Title);
 
-            var summary = Panel(_root, "Summary", new Vector2(0.025f, 0.6f), new Vector2(0.535f, 0.885f), Backing);
+            var summary = Panel(_root, "Summary", new Vector2(0.025f, 0.6f), new Vector2(0.535f, 0.885f));
             SummaryText = Text(summary, "SummaryText", new Vector2(0.03f, 0.05f), new Vector2(0.97f, 0.95f), SummaryLines(results), 30f, TextAlignmentOptions.TopLeft);
 
-            var table = Panel(_root, "Weapons", new Vector2(0.025f, 0.13f), new Vector2(0.535f, 0.585f), Backing);
+            var table = Panel(_root, "Weapons", new Vector2(0.025f, 0.13f), new Vector2(0.535f, 0.585f));
             BuildWeaponTable(table, results);
 
-            var side = Panel(_root, "Character", new Vector2(0.55f, 0.13f), new Vector2(0.975f, 0.885f), Backing);
+            var side = Panel(_root, "Character", new Vector2(0.55f, 0.13f), new Vector2(0.975f, 0.885f));
             BuildSide(side, results);
 
-            DoneButton = MakeButton(_root, "Done_Button", new Vector2(0.42f, 0.025f), new Vector2(0.58f, 0.105f), "DONE", null);
+            DoneButton = MakeButton(_root, "Done_Button", new Vector2(0.42f, 0.025f), new Vector2(0.58f, 0.105f), "DONE", UITheme.ButtonKind.Primary);
             DoneButton.onClick.AddListener(() => Done?.Invoke());
 
             if (results.Unlocks.Count > 0)
             {
                 UnlocksButton = MakeButton(_root, "Unlocks_Button", new Vector2(0.2f, 0.025f), new Vector2(0.4f, 0.105f),
-                    $"SHOW UNLOCKS ({results.Unlocks.Count})", Green);
+                    $"SHOW UNLOCKS ({results.Unlocks.Count})", UITheme.ButtonKind.Positive);
                 UnlocksButton.onClick.AddListener(ToggleUnlocks);
-                UnlocksPanel = Panel(_root, "UnlocksPanel", new Vector2(0.25f, 0.2f), new Vector2(0.75f, 0.8f), new Color(0.04f, 0.1f, 0.06f, 0.97f)).gameObject;
+                UnlocksPanel = Panel(_root, "UnlocksPanel", new Vector2(0.25f, 0.2f), new Vector2(0.75f, 0.8f)).gameObject;
                 Text((RectTransform)UnlocksPanel.transform, "UnlocksText", new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.95f),
-                    "<color=#FFD64A><b>UNLOCKED THIS RUN</b></color>\n\n" + string.Join("\n", results.Unlocks), 32f, TextAlignmentOptions.Top);
+                    $"<color=#{ColorUtility.ToHtmlStringRGB(UITheme.Accent)}><b>UNLOCKED THIS RUN</b></color>\n\n" + string.Join("\n", results.Unlocks), 32f, TextAlignmentOptions.Top);
                 UnlocksPanel.SetActive(false);
             }
             Focus(DoneButton);
@@ -135,11 +135,11 @@ namespace SoulHunter.Gameplay.UI
             float rowHeight = Mathf.Min(0.085f, 0.94f / Mathf.Max(1, rows));
             float top = 0.97f;
             var header = Row(table, "Header", top, rowHeight);
-            Cell(header, 1, "WEAPON", TextAlignmentOptions.Left).color = UITheme.TextDim;
-            Cell(header, 2, "LV", TextAlignmentOptions.Center).color = UITheme.TextDim;
-            Cell(header, 3, "DAMAGE", TextAlignmentOptions.Right).color = UITheme.TextDim;
-            Cell(header, 4, "TIME", TextAlignmentOptions.Right).color = UITheme.TextDim;
-            Cell(header, 5, "DPS", TextAlignmentOptions.Right).color = UITheme.TextDim;
+            UITheme.ApplyText(Cell(header, 1, "WEAPON", TextAlignmentOptions.Left), ThemedElement.TextRole.Dim);
+            UITheme.ApplyText(Cell(header, 2, "LV", TextAlignmentOptions.Center), ThemedElement.TextRole.Dim);
+            UITheme.ApplyText(Cell(header, 3, "DAMAGE", TextAlignmentOptions.Right), ThemedElement.TextRole.Dim);
+            UITheme.ApplyText(Cell(header, 4, "TIME", TextAlignmentOptions.Right), ThemedElement.TextRole.Dim);
+            UITheme.ApplyText(Cell(header, 5, "DPS", TextAlignmentOptions.Right), ThemedElement.TextRole.Dim);
             for (int i = 0; i < results.Weapons.Count; i++)
             {
                 var data = results.Weapons[i];
@@ -165,9 +165,9 @@ namespace SoulHunter.Gameplay.UI
                     Time = Cell(row, 4, RunResultsFormat.Time(data.SecondsUsed), TextAlignmentOptions.Right),
                     Dps = Cell(row, 5, RunResultsFormat.Damage(data.Dps), TextAlignmentOptions.Right)
                 };
-                if (data.Maxed) view.Level.color = Yellow;
-                if (i == results.TopDamageRow) view.Damage.color = Yellow;
-                if (i == results.TopDpsRow) view.Dps.color = Yellow;
+                if (data.Maxed) UITheme.ApplyText(view.Level, ThemedElement.TextRole.Best);
+                if (i == results.TopDamageRow) UITheme.ApplyText(view.Damage, ThemedElement.TextRole.Best);
+                if (i == results.TopDpsRow) UITheme.ApplyText(view.Dps, ThemedElement.TextRole.Best);
                 WeaponRows.Add(view);
             }
             if (results.Weapons.Count == 0)
@@ -216,8 +216,8 @@ namespace SoulHunter.Gameplay.UI
                 var cell = new GameObject(item.Name, typeof(RectTransform), typeof(Image));
                 cell.transform.SetParent(gridRect, false);
                 var frame = cell.GetComponent<Image>();
-                frame.color = item.IsWeapon ? UITheme.Cell : UITheme.Row;
-                UITheme.Edge(cell, UITheme.PanelEdge, 1.5f);
+                UITheme.ApplySurface(frame, item.IsWeapon ? ThemedElement.SurfaceRole.SlotFilled : ThemedElement.SurfaceRole.SlotEmpty);
+                UITheme.Edge(cell, UITheme.Hud.SlotBorder, 1.5f);
                 frame.raycastTarget = false;
                 var icon = new GameObject("Icon", typeof(RectTransform), typeof(Image));
                 var iconRect = (RectTransform)icon.transform;
@@ -229,10 +229,10 @@ namespace SoulHunter.Gameplay.UI
                 iconImage.sprite = item.Icon;
                 iconImage.preserveAspect = true;
                 iconImage.raycastTarget = false;
-                if (item.Icon == null) iconImage.color = new Color(1f, 1f, 1f, 0f);
+                if (item.Icon == null) iconImage.enabled = false;
                 var level = Text((RectTransform)cell.transform, "Level", new Vector2(0f, 0f), new Vector2(1f, 0.3f),
                     (item.Level > 0 ? "Lv " + item.Level : "-"), 20f, TextAlignmentOptions.Center);
-                level.color = item.Maxed ? Yellow : Color.white;
+                UITheme.ApplyText(level, item.Maxed ? ThemedElement.TextRole.Best : ThemedElement.TextRole.Body);
                 ItemLevelTexts.Add(level);
             }
 
@@ -276,7 +276,7 @@ namespace SoulHunter.Gameplay.UI
             if (events != null && target != null) events.SetSelectedGameObject(target.gameObject);
         }
 
-        private RectTransform Panel(RectTransform parent, string name, Vector2 min, Vector2 max, Color color)
+        private RectTransform Panel(RectTransform parent, string name, Vector2 min, Vector2 max)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));
             var rect = (RectTransform)go.transform;
@@ -285,9 +285,8 @@ namespace SoulHunter.Gameplay.UI
             rect.anchorMax = max;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var image = go.GetComponent<Image>();
-            image.color = color;
             image.raycastTarget = false;
-            if (name != "Backdrop") UITheme.Edge(go, UITheme.PanelEdge, 2f); // the theme's crimson edge
+            UITheme.ApplyPanel(image); // the theme's panel; the backdrop and buttons restyle it
             return rect;
         }
 
@@ -307,30 +306,23 @@ namespace SoulHunter.Gameplay.UI
             tmp.fontSizeMin = Mathf.Min(12f, size);
             tmp.fontSizeMax = size;
             tmp.alignment = align;
-            tmp.color = UITheme.Text;
+            UITheme.ApplyText(tmp, ThemedElement.TextRole.Body);
             tmp.richText = true;
             tmp.raycastTarget = false;
             tmp.text = content;
             return tmp;
         }
 
-        private Button MakeButton(RectTransform parent, string name, Vector2 min, Vector2 max, string label, Color? color)
+        private Button MakeButton(RectTransform parent, string name, Vector2 min, Vector2 max, string label, UITheme.ButtonKind kind)
         {
-            var rect = Panel(parent, name, min, max, Color.white);
+            var rect = Panel(parent, name, min, max);
             var image = rect.GetComponent<Image>();
             image.raycastTarget = true;
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
-            OptionsMenuUI.ApplyFocusColors(button, image);
-            if (color.HasValue)
-            {
-                var colors = button.colors;
-                colors.normalColor = color.Value;
-                colors.highlightedColor = color.Value * 1.25f;
-                button.colors = colors;
-            }
             var text = Text(rect, "Label", Vector2.zero, Vector2.one, label, 34f, TextAlignmentOptions.Center);
             text.fontStyle = FontStyles.Bold;
+            UITheme.ApplyButton(button, image, kind, kind == UITheme.ButtonKind.Primary ? UITheme.IconSlot.Confirm : UITheme.IconSlot.None);
             return button;
         }
     }

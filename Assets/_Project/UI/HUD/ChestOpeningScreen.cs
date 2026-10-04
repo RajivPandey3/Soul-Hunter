@@ -43,7 +43,18 @@ namespace SoulHunter.Gameplay.UI
     {
         public enum Phase { Intro, WaitingToOpen, Revealing, Done, Closed }
 
-        private static readonly Color Gold = new Color(1f, 0.82f, 0.25f), Soul = new Color(0.45f, 0.95f, 1f), ArcanaTint = new Color(0.78f, 0.5f, 1f);
+        // Reward colours come from the UI theme (Theme Studio > Rewards).
+        private static Color Gold => UITheme.Rewards.Gold;
+        private static Color Soul => UITheme.Rewards.Soul;
+        private static Color ArcanaTint => UITheme.Rewards.Arcana;
+        private static Color Evolution => UITheme.Rewards.Evolution;
+        /// <summary>The theme's veil colour at a given strength (the chest screen fades it in itself).</summary>
+        private static Color Veil(float alpha, bool arcana)
+        {
+            var veil = arcana ? Color.Lerp(UITheme.Veil, ArcanaTint, 0.12f) : UITheme.Veil;
+            veil.a = alpha;
+            return veil;
+        }
 
         public Phase Current { get; private set; } = Phase.Closed;
         public bool IsOpen => Current != Phase.Closed;
@@ -111,7 +122,7 @@ namespace SoulHunter.Gameplay.UI
             _sparkleTexture = content != null ? content.ChestFxSparkle : null;
 
             _backdrop = gameObject.AddComponent<Image>();
-            _backdrop.color = new Color(0f, 0f, 0f, 0f);
+            _backdrop.color = Veil(0f, false);
             _backdrop.raycastTarget = true; // the game underneath does not take clicks
 
             // Centred a little above the middle; the title sits under the HUD's stage name.
@@ -122,10 +133,10 @@ namespace SoulHunter.Gameplay.UI
 
             _title = Label("Title", new Vector2(0f, 330f), new Vector2(1200f, 110f), 78f);
             _coinText = Label("Coins", new Vector2(0f, -130f), new Vector2(700f, 90f), 64f);
-            _coinText.color = Gold;
+            UITheme.ApplyText(_coinText, ThemedElement.TextRole.Gold);
             _skipHint = Label("SkipHint", new Vector2(700f, -500f), new Vector2(420f, 50f), 26f);
             _skipHint.text = "Esc / Right click / B: skip";
-            _skipHint.color = new Color(1f, 1f, 1f, 0.6f);
+            UITheme.ApplyText(_skipHint, ThemedElement.TextRole.Dim);
 
             _openButton = MakeButton("OPEN", new Vector2(0f, -430f), PressOpen);
             _doneButton = MakeButton("DONE", new Vector2(0f, -430f), PressDone);
@@ -162,8 +173,8 @@ namespace SoulHunter.Gameplay.UI
             label.alignment = TextAlignmentOptions.Center;
             label.fontStyle = FontStyles.Bold;
             label.raycastTarget = false;
-            label.outlineWidth = 0.2f;
-            label.outlineColor = new Color32(0, 0, 0, 255);
+            UITheme.ApplyText(label, ThemedElement.TextRole.Body);
+            ThemedElement.Outline(label, UiThemeAsset.Active);
             return label;
         }
 
@@ -176,7 +187,7 @@ namespace SoulHunter.Gameplay.UI
             rect.anchoredPosition = position;
             rect.sizeDelta = new Vector2(340f, 96f);
             var button = go.GetComponent<Button>();
-            UITheme.ApplyButton(button, go.GetComponent<Image>(), primary: true);
+            UITheme.ApplyButton(button, go.GetComponent<Image>(), UITheme.ButtonKind.Primary, UITheme.IconSlot.Confirm);
             button.onClick.AddListener(onClick);
             var label = Label("Label", Vector2.zero, rect.sizeDelta, 46f, rect);
             label.text = text;
@@ -202,7 +213,7 @@ namespace SoulHunter.Gameplay.UI
             _chestImage.texture = _stage.Texture;
             _chestImage.color = Color.white;
             _title.text = _result.IsArcana ? "ARCANA CHEST!" : _result.ItemCount >= 5 ? "TREASURE x5!" : _result.ItemCount >= 3 ? "TREASURE x3!" : "TREASURE!";
-            _title.color = _result.IsArcana ? ArcanaTint : Gold;
+            UITheme.ApplyText(_title, _result.IsArcana ? ThemedElement.TextRole.Arcana : ThemedElement.TextRole.Gold);
             _coinText.text = "";
             _coinText.transform.localScale = Vector3.zero;
             _skipHint.gameObject.SetActive(canSkip);
@@ -220,7 +231,7 @@ namespace SoulHunter.Gameplay.UI
             // Intro blast: the backdrop dims, the chest drops in with a flash and a ring.
             for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime / 0.25f)
             {
-                _backdrop.color = new Color(_result.IsArcana ? 0.08f : 0f, 0f, _result.IsArcana ? 0.12f : 0f, BackdropAlpha * t);
+                _backdrop.color = Veil(BackdropAlpha * t, _result.IsArcana);
                 yield return null;
             }
             Blast(0.9f);
@@ -270,7 +281,7 @@ namespace SoulHunter.Gameplay.UI
             if (_sequence != null) StopCoroutine(_sequence);
             StopAllCoroutines();
             _openButton.gameObject.SetActive(false);
-            _backdrop.color = new Color(0f, 0f, 0f, BackdropAlpha);
+            _backdrop.color = Veil(BackdropAlpha, _result.IsArcana);
             _stage.FinishNow();
             if (_cards.Count == 0) BuildCards();
             for (int i = 0; i < _cards.Count; i++) ShowCard(i);
@@ -329,7 +340,8 @@ namespace SoulHunter.Gameplay.UI
                 card.sizeDelta = new Vector2(width, 190f);
                 var frame = card.GetComponent<Image>();
                 frame.raycastTarget = false;
-                frame.color = reward.IsEvolution ? new Color(0.38f, 0.07f, 0.08f, 0.95f) : UITheme.Cell;
+                UITheme.ApplySurface(frame, ThemedElement.SurfaceRole.Card);
+                if (reward.IsEvolution) UITheme.Edge(card.gameObject, Evolution, 4f); // an evolution's card has the theme's evolution frame
 
                 var star = new GameObject("Stars", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
                 star.rectTransform.SetParent(card, false);
@@ -350,9 +362,12 @@ namespace SoulHunter.Gameplay.UI
                 var name = Label("Name", new Vector2(0f, -52f), new Vector2(width - 8f, 40f), 22f, card);
                 name.text = reward.Name;
                 name.enableAutoSizing = true; name.fontSizeMin = 12f; name.fontSizeMax = 22f;
+                UITheme.ApplyText(name, ThemedElement.TextRole.Card); // on the theme's card
+                name.outlineWidth = 0f;
                 var level = Label("Level", new Vector2(0f, -80f), new Vector2(width - 8f, 28f), 20f, card);
                 level.text = reward.IsEvolution ? "EVOLUTION!" : reward.IsCoinBag ? "+25 gold" : reward.Level <= 1 ? "NEW!" : "Level " + reward.Level;
-                level.color = reward.IsEvolution ? new Color(1f, 0.4f, 0.35f) : Gold;
+                UITheme.ApplyText(level, reward.IsEvolution ? ThemedElement.TextRole.Evolution : ThemedElement.TextRole.Tag);
+                level.outlineWidth = 0f;
                 name.gameObject.SetActive(false);
                 level.gameObject.SetActive(false);
                 card.localScale = Vector3.zero;
@@ -390,7 +405,7 @@ namespace SoulHunter.Gameplay.UI
             RevealedCount = Mathf.Max(RevealedCount, index + 1);
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFX(audio.UIConfirmSound, 0.7f);
-            Burst(card.anchoredPosition + new Vector2(0f, 22f), 8, _result.Rewards[index].IsEvolution ? new Color(1f, 0.45f, 0.35f) : Gold);
+            Burst(card.anchoredPosition + new Vector2(0f, 22f), 8, _result.Rewards[index].IsEvolution ? Evolution : Gold);
         }
 
         private void ShowCard(int index)
@@ -463,7 +478,7 @@ namespace SoulHunter.Gameplay.UI
         private void Fireworks(int count)
         {
             FireworksShown++;
-            var colors = new[] { Gold, Soul, new Color(1f, 0.4f, 0.4f), new Color(0.6f, 1f, 0.5f), ArcanaTint };
+            var colors = new[] { Gold, Soul, Evolution, UITheme.Rarity.Good, ArcanaTint };
             for (int i = 0; i < count; i++)
                 Burst(new Vector2(Random.Range(-820f, 820f), Random.Range(-120f, 460f)), 10, colors[Random.Range(0, colors.Length)]);
         }

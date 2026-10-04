@@ -188,7 +188,7 @@ namespace SoulHunter.Gameplay.Core
             plate.anchorMax = new Vector2(.76f, .875f);
             plate.offsetMin = plate.offsetMax = Vector2.zero;
             var plateImage = plateGo.AddComponent<UnityEngine.UI.Image>();
-            plateImage.color = new Color(0.03f, 0.02f, 0.06f, 0.88f);
+            SoulHunter.Gameplay.UI.UITheme.ApplySurface(plateImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.HudBacking);
             plateImage.raycastTarget = false;
             var textGo = new GameObject("Text", typeof(RectTransform));
             textGo.transform.SetParent(_notice.transform, false);
@@ -202,7 +202,7 @@ namespace SoulHunter.Gameplay.Core
             text.fontSizeMin = 18f;
             text.fontSizeMax = 40f;
             text.margin = new Vector4(24f, 6f, 24f, 6f);
-            text.color = new Color(1f, .85f, .25f);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(text, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Accent);
             text.text = message;
             text.raycastTarget = false;
             _noticeUntil = Time.unscaledTime + NoticeSeconds;

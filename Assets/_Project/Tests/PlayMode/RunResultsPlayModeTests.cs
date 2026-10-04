@@ -178,7 +178,7 @@ namespace SoulHunter.Tests.PlayMode
             int knifeItem = results.Items.FindIndex(i => i.Name == "Knife");
             Assert.GreaterOrEqual(whipItem, 0, "The Whip is in the items list.");
             Assert.AreEqual(RunResultsScreen.Yellow, screen.ItemLevelTexts[whipItem].color, "A max item level is yellow.");
-            Assert.AreEqual(Color.white, screen.ItemLevelTexts[knifeItem].color, "A non-max item level is white.");
+            Assert.AreEqual(SoulHunter.Gameplay.UI.UITheme.Text, screen.ItemLevelTexts[knifeItem].color, "A non-max item level is in the theme's text colour.");
 
             Assert.IsNotNull(screen.UnlocksButton, "A run with an unlock has the unlocks button.");
             Assert.IsFalse(screen.UnlocksPanel.activeSelf);

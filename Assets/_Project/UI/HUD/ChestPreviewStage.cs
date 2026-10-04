@@ -76,7 +76,7 @@ namespace SoulHunter.Gameplay.UI
             lightGo.transform.SetParent(transform, false);
             _glow = lightGo.AddComponent<Light>();
             _glow.type = LightType.Point;
-            _glow.color = arcana ? new Color(0.75f, 0.45f, 1f) : new Color(0.45f, 0.95f, 1f);
+            _glow.color = arcana ? UITheme.Rewards.Arcana : UITheme.Rewards.Soul; // Theme Studio > Rewards
             _glow.intensity = 1.2f;
             _needsLayout = true;
         }

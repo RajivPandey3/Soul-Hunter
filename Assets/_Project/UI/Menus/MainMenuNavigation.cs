@@ -38,13 +38,14 @@ namespace SoulHunter.UI
             foreach (var button in new[] { StartButton, PowerUpButton, OptionsButton, QuitButton })
             {
                 var image = button != null ? button.targetGraphic as Image : null;
-                if (image != null) SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
+                if (image != null) SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal);
             }
             // Owner (2026-10-03): title and buttons inside the frame art's open area, in the menu's own button look.
             Layout = MainMenuLayout.Attach(HomePanel, new[] { StartButton, PowerUpButton, OptionsButton, QuitButton });
             // The Back buttons of the character select and Power Up screens in the same look (owner, 2026-10-04).
             foreach (var back in new[] { CharacterBackButton, PowerUpBackButton })
-                if (back != null) SoulHunter.Gameplay.UI.UITheme.ApplyButton(back, back.targetGraphic as Image, labels: true);
+                if (back != null) SoulHunter.Gameplay.UI.UITheme.ApplyButton(back, back.targetGraphic as Image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+                    SoulHunter.Gameplay.UI.UITheme.IconSlot.Back);
             ShowHome();
         }
 

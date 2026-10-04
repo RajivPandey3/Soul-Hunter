@@ -184,14 +184,12 @@ namespace SoulHunter.Gameplay.UI
         // Each card now shows the upgrade's icon, a readable name, a NEW!/Level tag and what it does.
 
         public const string IconName = "Card_Icon", TitleName = "Card_Title", TagName = "Card_Tag", DescriptionName = "Card_Description";
-        private static readonly Color TagGold = UITheme.Accent;
-        private static readonly Color BanishRed = UITheme.Danger;
 
         private void StyleCard(Button card, UpgradeData upgrade)
         {
             if (card == null || upgrade == null) return;
             var background = card.GetComponent<Image>();
-            if (background != null) OptionsMenuUI.ApplyFocusColors(card, background);
+            if (background != null) UITheme.ApplyButton(card, background, UITheme.ButtonKind.Card);
             TMP_FontAsset font = null;
             foreach (var label in card.GetComponentsInChildren<TextMeshProUGUI>(true))
                 if (!label.name.StartsWith("Card_"))
@@ -212,12 +210,12 @@ namespace SoulHunter.Gameplay.UI
 
             int owned = OwnedLevel(upgrade);
             CardText(card.transform, TitleName, font, new Vector2(0.09f, 0.5f), new Vector2(0.8f, 0.95f), UpgradeText.DisplayName(upgrade),
-                44f, UITheme.Text, TextAlignmentOptions.BottomLeft, FontStyles.Bold);
+                44f, ThemedElement.TextRole.Card, TextAlignmentOptions.BottomLeft, FontStyles.Bold);
             CardText(card.transform, TagName, font, new Vector2(0.8f, 0.5f), new Vector2(0.985f, 0.95f),
-                _banishMode ? "BANISH" : UpgradeText.Tag(upgrade, owned), 34f, _banishMode ? BanishRed : TagGold,
+                _banishMode ? "BANISH" : UpgradeText.Tag(upgrade, owned), 34f, _banishMode ? ThemedElement.TextRole.Danger : ThemedElement.TextRole.Tag,
                 TextAlignmentOptions.BottomRight, FontStyles.Bold);
             CardText(card.transform, DescriptionName, font, new Vector2(0.09f, 0.06f), new Vector2(0.985f, 0.5f),
-                UpgradeText.Describe(upgrade, owned), 30f, UITheme.TextSoft, TextAlignmentOptions.TopLeft, FontStyles.Normal);
+                UpgradeText.Describe(upgrade, owned), 30f, ThemedElement.TextRole.CardSoft, TextAlignmentOptions.TopLeft, FontStyles.Normal);
         }
 
         private static T CardPart<T>(Transform card, string name, Vector2 min, Vector2 max) where T : Component
@@ -239,7 +237,7 @@ namespace SoulHunter.Gameplay.UI
         }
 
         private static void CardText(Transform card, string name, TMP_FontAsset font, Vector2 min, Vector2 max, string value,
-            float maxSize, Color color, TextAlignmentOptions alignment, FontStyles style)
+            float maxSize, ThemedElement.TextRole role, TextAlignmentOptions alignment, FontStyles style)
         {
             var text = CardPart<TextMeshProUGUI>(card, name, min, max);
             if (font != null) text.font = font;
@@ -251,7 +249,7 @@ namespace SoulHunter.Gameplay.UI
             text.enableAutoSizing = true;
             text.fontSizeMin = 14f;
             text.fontSizeMax = maxSize;
-            text.color = color;
+            UITheme.ApplyText(text, role); // the theme's colour for this part of a card, kept live
             text.alignment = alignment;
             text.fontStyle = style;
             text.textWrappingMode = TextWrappingModes.Normal;
@@ -402,7 +400,7 @@ namespace SoulHunter.Gameplay.UI
             foreach (var action in bar.GetComponentsInChildren<Button>(true))
             {
                 var image = action.GetComponent<Image>();
-                if (image != null) OptionsMenuUI.ApplyFocusColors(action, image);
+                if (image != null) UITheme.ApplyButton(action, image, UITheme.ButtonKind.Normal);
                 WhitenLabels(action);
                 foreach (Transform part in action.transform)
                     if (part.name.StartsWith("Card_")) part.gameObject.SetActive(false); // clones of a styled card
@@ -498,7 +496,7 @@ namespace SoulHunter.Gameplay.UI
         /// behind the level-up screen looked dimmed in uneven blocks (labels dark, numbers bright). The panel is now one
         /// even dark veil.
         /// </summary>
-        public static readonly Color DimColor = UITheme.Veil; // owner 2026-10-04: dark, full contrast
+        public static Color DimColor => UITheme.Veil; // the theme's veil
 
         private void EvenDim()
         {
@@ -507,7 +505,7 @@ namespace SoulHunter.Gameplay.UI
             if (image == null) return;
             image.sprite = null;
             image.type = Image.Type.Simple;
-            image.color = DimColor;
+            UITheme.ApplySurface(image, ThemedElement.SurfaceRole.Veil);
         }
         private RectOffset _basePadding;
 
@@ -598,7 +596,7 @@ namespace SoulHunter.Gameplay.UI
                 heading.enableAutoSizing = false;
                 heading.fontSize = 64f;
                 heading.fontStyle = FontStyles.Bold;
-                heading.color = TagGold;
+                UITheme.ApplyText(heading, ThemedElement.TextRole.Title);
                 heading.raycastTarget = false;
             }
         }
@@ -611,9 +609,9 @@ namespace SoulHunter.Gameplay.UI
         {
             if (action == null) return;
             foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
-                if (!label.name.StartsWith("Card_")) label.color = UITheme.Text;
+                if (!label.name.StartsWith("Card_")) UITheme.ApplyText(label, ThemedElement.TextRole.Body);
             foreach (var label in action.GetComponentsInChildren<Text>(true))
-                label.color = UITheme.Text;
+                label.color = UITheme.Text; // legacy Text labels (no TMP): set once from the theme
         }
 
         private static void CreateActionButton(Button template, Transform parent, string name)

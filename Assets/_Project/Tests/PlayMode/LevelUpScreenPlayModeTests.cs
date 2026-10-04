@@ -83,8 +83,10 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             var menu = Object.FindFirstObjectByType<MainMenuNavigation>();
             Color selected = menu.StartButton.colors.selectedColor;
-            Assert.That(selected.r, Is.GreaterThan(0.6f), "Orange focus (B16), not blue.");
-            Assert.That(selected.b, Is.LessThan(0.3f), "Orange focus (B16), not blue.");
+            // B16 (2026-09-30): focus was Unity's blue. It is now the theme's focus colour (2026-10-04), which must stand
+            // apart from the button and must not be blue.
+            Assert.AreEqual(SoulHunter.Gameplay.UI.UITheme.Focus, selected, "The theme's focus colour.");
+            Assert.That(selected.b, Is.LessThan(Mathf.Max(selected.r, selected.g)), "Focus is not blue (B16).");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

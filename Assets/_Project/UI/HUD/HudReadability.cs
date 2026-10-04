@@ -74,15 +74,13 @@ namespace SoulHunter.Gameplay.UI
             return canvas != null ? canvas.rootCanvas.transform : t;
         }
 
-        /// <summary>White text with a black outline reads on every stage floor.</summary>
+        /// <summary>The theme's HUD label colour with its outline, readable on every stage floor.</summary>
         public static void MakeReadable(TMP_Text label)
         {
             if (label == null) return;
-            label.color = Color.white;
             // TMP builds its material on Awake; a label under an inactive parent cannot take an outline yet.
-            if (!label.gameObject.activeInHierarchy) return;
-            label.outlineWidth = 0.25f;
-            label.outlineColor = new Color32(0, 0, 0, 255);
+            if (!label.gameObject.activeInHierarchy) { label.color = UITheme.Hud.LabelText; return; }
+            UITheme.ApplyText(label, ThemedElement.TextRole.HudLabel);
         }
     }
 
@@ -95,7 +93,7 @@ namespace SoulHunter.Gameplay.UI
     {
         // Bug MIS v2 C11 (2026-10-02): at 55% the world showed through, so damage numbers, fire and blood read as drawn over
         // the labels ("3Gold: 6628"). 85% keeps the labels clean.
-        public static readonly Color Color = new Color(0.02f, 0.02f, 0.04f, 0.85f);
+        public static Color Color => UITheme.Hud.LabelBacking; // Theme Studio > HUD
         private const float Padding = 10f;
         private TMP_Text _label;
         private RectTransform _rect;
@@ -108,7 +106,7 @@ namespace SoulHunter.Gameplay.UI
             rect.SetParent(label.transform.parent, false);
             rect.SetSiblingIndex(label.transform.GetSiblingIndex()); // drawn just before (behind) the label
             var image = go.GetComponent<UnityEngine.UI.Image>();
-            image.color = Color;
+            UITheme.ApplySurface(image, ThemedElement.SurfaceRole.HudBacking);
             image.raycastTarget = false;
             go.AddComponent<UnityEngine.UI.LayoutElement>().ignoreLayout = true;
             var backing = go.AddComponent<HudBacking>();

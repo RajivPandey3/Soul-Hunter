@@ -68,8 +68,7 @@ namespace SoulHunter.Gameplay.UI
                     title.alignment = TextAlignmentOptions.Center;
                     title.enableAutoSizing = true;
                     title.fontSizeMax = 60f;
-                    title.color = UITheme.Accent;
-                    title.fontStyle = FontStyles.Bold;
+                    UITheme.ApplyText(title, ThemedElement.TextRole.Title);
                 }
         }
 
@@ -94,7 +93,9 @@ namespace SoulHunter.Gameplay.UI
             var image = go.AddComponent<Image>();
             var button = go.AddComponent<Button>();
             button.targetGraphic = image;
-            UITheme.ApplyButton(button, image, primary: name == "Resume_Button");
+            // The theme decides the look; each button says what it is and which icon it shows.
+            var kind = name == "Resume_Button" ? UITheme.ButtonKind.Primary : name == "Quit_Button" ? UITheme.ButtonKind.Danger : UITheme.ButtonKind.Normal;
+            var icon = name == "Resume_Button" ? UITheme.IconSlot.Resume : name == "Quit_Button" ? UITheme.IconSlot.Quit : UITheme.IconSlot.Options;
             button.onClick.AddListener(() =>
             {
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
@@ -114,7 +115,7 @@ namespace SoulHunter.Gameplay.UI
             text.fontSizeMin = 16f;
             text.fontSizeMax = 34f;
             text.fontStyle = FontStyles.Bold;
-            text.color = UITheme.Text;
+            UITheme.ApplyButton(button, image, kind, icon); // after the label exists, so it styles it too
             text.raycastTarget = false;
             return button;
         }

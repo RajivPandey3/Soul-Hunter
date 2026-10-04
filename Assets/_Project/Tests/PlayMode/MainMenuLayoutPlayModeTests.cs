@@ -45,8 +45,11 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(r.center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f), $"{button.name} is centred on the frame's ornament.");
                 if (i > 0) Assert.That(r.yMax, Is.LessThanOrEqualTo(previous.yMin + 0.5f), $"{button.name} does not overlap the button above.");
                 previous = r;
-                Assert.IsNotNull(button.GetComponent<Outline>(), $"{button.name} has the red edge.");
-                Assert.AreEqual(MainMenuLayout.ButtonNormal, button.colors.normalColor, $"{button.name} is dark crimson.");
+                // The look comes from the active theme (2026-10-04): Start is the main action, Quit the leaving one.
+                Assert.IsNotNull(button.GetComponent<SoulHunter.Gameplay.UI.ThemedElement>(), $"{button.name} is themed.");
+                var expected = i == 0 ? SoulHunter.Gameplay.UI.UITheme.Primary : i == 3 ? SoulHunter.Gameplay.UI.UITheme.DangerButton : SoulHunter.Gameplay.UI.UITheme.Button;
+                Assert.AreEqual(expected, button.colors.normalColor, $"{button.name} has its theme colour.");
+                AssertIconAndLabelAligned(button);
             }
             Rect title = ScreenRect(layout.Title.rectTransform);
             Assert.That(Inside(title, screen), "The title is on screen.");
@@ -83,6 +86,29 @@ namespace SoulHunter.Tests.PlayMode
             Vector2 a = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
             Vector2 b = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
             return Rect.MinMaxRect(a.x, a.y, b.x, b.y);
+        }
+
+        /// <summary>
+        /// The theme's icon sits on the button's left, vertically centred; the label is centred in the space beside it and
+        /// never overlaps the icon.
+        /// </summary>
+        private static void AssertIconAndLabelAligned(Button button)
+        {
+            var icon = button.transform.Find("ThemeIcon") as RectTransform;
+            if (SoulHunter.Gameplay.UI.UITheme.Icons.Start == null) return; // a theme without icons
+            Assert.IsNotNull(icon, $"{button.name} shows its theme icon.");
+            Assert.IsTrue(icon.GetComponent<Image>().enabled && icon.GetComponent<Image>().sprite != null, $"{button.name}'s icon is drawn.");
+            Rect b = ScreenRect((RectTransform)button.transform), ic = ScreenRect(icon);
+            Assert.That(ic.center.y, Is.EqualTo(b.center.y).Within(b.height * 0.08f), $"{button.name}'s icon is vertically centred.");
+            Assert.That(ic.xMin, Is.GreaterThanOrEqualTo(b.xMin - 0.5f), $"{button.name}'s icon is inside the button.");
+            Assert.That(ic.center.x, Is.LessThan(b.center.x), $"{button.name}'s icon is on the left.");
+            var label = button.GetComponentInChildren<TMPro.TMP_Text>();
+            label.ForceMeshUpdate();
+            var bounds = label.textBounds;
+            float textLeft = RectTransformUtility.WorldToScreenPoint(null, label.rectTransform.TransformPoint(bounds.min)).x;
+            Assert.That(textLeft, Is.GreaterThanOrEqualTo(ic.xMax - 1f), $"{button.name}'s label does not overlap its icon.");
+            Rect lr = ScreenRect(label.rectTransform);
+            Assert.That(lr.center.y, Is.EqualTo(b.center.y).Within(b.height * 0.08f), $"{button.name}'s label is vertically centred.");
         }
     }
 }

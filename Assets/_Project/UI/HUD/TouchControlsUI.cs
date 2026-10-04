@@ -44,8 +44,8 @@ namespace SoulHunter.Gameplay.UI
             _root.SetActive(false); // on-screen controls register their virtual device on enable
 
             // Movement stick.
-            var stickBase = Pad("StickBase", root, new Vector2(0.04f, 0.06f), new Vector2(0.2f, 0.34f), new Color(0f, 0f, 0f, 0.3f));
-            var knob = Pad("StickKnob", stickBase, new Vector2(0.3f, 0.3f), new Vector2(0.7f, 0.7f), new Color(1f, 1f, 1f, 0.6f));
+            var stickBase = Pad("StickBase", root, new Vector2(0.04f, 0.06f), new Vector2(0.2f, 0.34f), ThemedElement.SurfaceRole.TouchPad);
+            var knob = Pad("StickKnob", stickBase, new Vector2(0.3f, 0.3f), new Vector2(0.7f, 0.7f), ThemedElement.SurfaceRole.TouchKnob);
             var stick = knob.gameObject.AddComponent<OnScreenStick>();
             stick.controlPath = "<Gamepad>/leftStick";
             stick.movementRange = 90f;
@@ -55,7 +55,7 @@ namespace SoulHunter.Gameplay.UI
             TouchButton(root, "Pause", new Vector2(0.905f, 0.7f), new Vector2(0.975f, 0.82f), "<Gamepad>/start"); // below the timer
         }
 
-        private static RectTransform Pad(string name, Transform parent, Vector2 min, Vector2 max, Color color)
+        private static RectTransform Pad(string name, Transform parent, Vector2 min, Vector2 max, ThemedElement.SurfaceRole role)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
@@ -64,13 +64,13 @@ namespace SoulHunter.Gameplay.UI
             rect.anchorMax = max;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var image = go.AddComponent<Image>();
-            image.color = color;
+            UITheme.ApplySurface(image, role); // Theme Studio > HUD > touch controls
             return rect;
         }
 
         private static void TouchButton(RectTransform parent, string label, Vector2 min, Vector2 max, string controlPath)
         {
-            var rect = Pad(label + "Button", parent, min, max, new Color(0f, 0f, 0f, 0.4f)); // dark pad: white label reads on any floor
+            var rect = Pad(label + "Button", parent, min, max, ThemedElement.SurfaceRole.TouchPad); // dark pad: the label reads on any floor
             rect.gameObject.AddComponent<OnScreenButton>().controlPath = controlPath;
             var textGo = new GameObject("Text", typeof(RectTransform));
             var textRect = (RectTransform)textGo.transform;
@@ -84,7 +84,7 @@ namespace SoulHunter.Gameplay.UI
             text.enableAutoSizing = true;
             text.fontSizeMax = 30f;
             text.raycastTarget = false;
-            text.color = Color.white;
+            UITheme.ApplyText(text, ThemedElement.TextRole.HudLabel);
         }
     }
 }

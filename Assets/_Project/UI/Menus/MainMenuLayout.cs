@@ -21,10 +21,6 @@ namespace SoulHunter.UI
         public const float ButtonsTop = 0.43f, ButtonsBottom = 0.14f, ButtonHalfWidth = 0.105f;
         public const float ButtonGapShare = 0.22f; // of each button's slot
 
-        public static readonly Color ButtonNormal = SoulHunter.Gameplay.UI.UITheme.Button;
-        public static readonly Color ButtonHighlight = SoulHunter.Gameplay.UI.UITheme.ButtonHover;
-        public static readonly Color ButtonEdge = SoulHunter.Gameplay.UI.UITheme.ButtonEdge;
-        public static readonly Color LabelColour = SoulHunter.Gameplay.UI.UITheme.Text;
 
         private Image _background;
         private RectTransform _area;
@@ -82,7 +78,7 @@ namespace SoulHunter.UI
                 rect.SetParent(_area, false);
                 float top = ButtonsTop - slot * index;
                 Place(rect, FrameCentreX - ButtonHalfWidth, top - slot * (1f - ButtonGapShare), FrameCentreX + ButtonHalfWidth, top);
-                Style(button);
+                Style(button, index);
                 index++;
             }
             Fit();
@@ -175,28 +171,24 @@ namespace SoulHunter.UI
             rect.localScale = Vector3.one;
         }
 
-        /// <summary>Dark crimson with a red edge; focus stays the game-wide orange (OptionsMenuUI.ApplyFocusColors).</summary>
-        public static void Style(Button button)
+        /// <summary>
+        /// The four menu buttons in the theme's look (Theme Studio): Start is the main action, Quit the leaving one, and
+        /// each shows its theme icon.
+        /// </summary>
+        public static void Style(Button button, int index)
         {
             var image = button.targetGraphic as Image;
             if (image == null) return;
-            SoulHunter.Gameplay.UI.OptionsMenuUI.ApplyFocusColors(button, image);
-            var colors = button.colors;
-            colors.normalColor = ButtonNormal;
-            colors.highlightedColor = ButtonHighlight;
-            button.colors = colors;
-            var edge = button.GetComponent<Outline>();
-            if (edge == null) edge = button.gameObject.AddComponent<Outline>();
-            edge.effectColor = ButtonEdge;
-            edge.effectDistance = new Vector2(2f, -2f);
-            foreach (var label in button.GetComponentsInChildren<TMP_Text>(true))
+            var kind = index == 0 ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Primary
+                : index == 3 ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal;
+            var icon = index switch
             {
-                label.color = LabelColour;
-                label.enableAutoSizing = true;
-                label.fontSizeMin = 14f;
-                label.fontSizeMax = 40f;
-                label.fontStyle = FontStyles.Bold;
-            }
+                0 => SoulHunter.Gameplay.UI.UITheme.IconSlot.Start,
+                1 => SoulHunter.Gameplay.UI.UITheme.IconSlot.PowerUp,
+                2 => SoulHunter.Gameplay.UI.UITheme.IconSlot.Options,
+                _ => SoulHunter.Gameplay.UI.UITheme.IconSlot.Quit
+            };
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, kind, icon);
         }
     }
 }

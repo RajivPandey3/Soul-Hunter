@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8b40e12228d83744aabfe5bba5ebe91, type: 3}
+  m_Name: UiTheme_SoulCandy
+  m_EditorClassIdentifier: 
+  DisplayName: Soul Candy
+  Description: 'Bright, friendly and bouncy: candy-coloured buttons with thick outlines
+    on a violet night. Made to catch young players.'
+  Surfaces:
+    Veil: {r: 0.07, g: 0.03, b: 0.14, a: 0.82}
+    Panel: {r: 0.2, g: 0.1, b: 0.42, a: 0.96}
+    PanelEdge: {r: 0.11, g: 0.04, b: 0.2, a: 1}
+    Row: {r: 0.28, g: 0.16, b: 0.55, a: 1}
+    Backdrop: {r: 0.1, g: 0.04, b: 0.22, a: 1}
+  Buttons:
+    Normal: {r: 0.3, g: 0.86, b: 1, a: 1}
+    Hover: {r: 0.55, g: 0.94, b: 1, a: 1}
+    Primary: {r: 1, g: 0.8, b: 0.22, a: 1}
+    PrimaryHover: {r: 1, g: 0.9, b: 0.45, a: 1}
+    Danger: {r: 1, g: 0.36, b: 0.48, a: 1}
+    Focus: {r: 1, g: 0.95, b: 0.45, a: 1}
+    Pressed: {r: 0.85, g: 0.85, b: 0.85, a: 1}
+    Disabled: {r: 0.12, g: 0.08, b: 0.2, a: 0.92}
+    Edge: {r: 0.11, g: 0.04, b: 0.2, a: 1}
+  Cards:
+    Card: {r: 0.97, g: 0.95, b: 1, a: 1}
+    Selected: {r: 0.6, g: 0.96, b: 1, a: 1}
+    Maxed: {r: 1, g: 0.85, b: 0.4, a: 1}
+    Locked: {r: 0.45, g: 0.4, b: 0.55, a: 1}
+  Text:
+    OnDark: {r: 1, g: 0.98, b: 1, a: 1}
+    SoftOnDark: {r: 0.86, g: 0.82, b: 0.98, a: 1}
+    DimOnDark: {r: 0.7, g: 0.64, b: 0.88, a: 1}
+    OnLight: {r: 0.11, g: 0.04, b: 0.2, a: 1}
+    SoftOnLight: {r: 0.26, g: 0.19, b: 0.43, a: 1}
+    Locked: {r: 0.62, g: 0.58, b: 0.72, a: 1}
+    Accent: {r: 1, g: 0.9, b: 0.42, a: 1}
+    Danger: {r: 1, g: 0.35, b: 0.42, a: 1}
+    Tag: {r: 0.93, g: 0.17, b: 0.45, a: 1}
+    Outline: {r: 0.11, g: 0.04, b: 0.2, a: 1}
+    OutlineWidth: 0.22
+  Rarity:
+    Good: {r: 0.26, g: 0.88, b: 0.48, a: 1}
+    Rare: {r: 0.27, g: 0.64, b: 1, a: 1}
+    Epic: {r: 0.75, g: 0.44, b: 1, a: 1}
+    Legend: {r: 1, g: 0.76, b: 0.24, a: 1}
+  Hud:
+    LabelText: {r: 1, g: 1, b: 1, a: 1}
+    LabelBacking: {r: 0.08, g: 0.03, b: 0.16, a: 0.85}
+    HealthFill: {r: 1, g: 0.25, b: 0.38, a: 1}
+    HealthBack: {r: 0.08, g: 0.03, b: 0.16, a: 0.9}
+    SlotEmpty: {r: 0.1, g: 0.05, b: 0.2, a: 0.9}
+    SlotFilled: {r: 0.16, g: 0.08, b: 0.3, a: 0.92}
+    SlotBorder: {r: 0.45, g: 0.36, b: 0.7, a: 0.7}
+    SlotEvolved: {r: 1, g: 0.8, b: 0.25, a: 1}
+    StoryCard: {r: 0.08, g: 0.03, b: 0.16, a: 0.78}
+    TouchPad: {r: 0, g: 0, b: 0, a: 0.35}
+    TouchKnob: {r: 1, g: 1, b: 1, a: 0.65}
+  Rewards:
+    Gold: {r: 1, g: 0.85, b: 0.3, a: 1}
+    Soul: {r: 0.37, g: 0.95, b: 1, a: 1}
+    Arcana: {r: 0.78, g: 0.5, b: 1, a: 1}
+    Evolution: {r: 1, g: 0.45, b: 0.4, a: 1}
+    Best: {r: 1, g: 0.84, b: 0.29, a: 1}
+    Unlock: {r: 0.2, g: 0.72, b: 0.36, a: 1}
+  Shape:
+    Button: {fileID: 21300000, guid: bbe3b78933fd3234dbb0d5fb2760aa8e, type: 3}
+    Card: {fileID: 21300000, guid: 63d71950e130b674a9a10b8a0c4c19f1, type: 3}
+    Panel: {fileID: 21300000, guid: 17a579fb4008efd43bee4a46b1f85202, type: 3}
+    Shine: {fileID: 21300000, guid: 1f5c180f3a2189346821c87ff310e947, type: 3}
+    EdgeWidth: 0
+  Icon:
+    Start: {fileID: 21300000, guid: 7cecc2dac1618e44ba73058a3bdbd73e, type: 3}
+    PowerUp: {fileID: 21300000, guid: fa5ea6141dc351c41b6e32d852d8a866, type: 3}
+    Options: {fileID: 21300000, guid: 21bf164270d0f074486fb3598675453e, type: 3}
+    Quit: {fileID: 21300000, guid: a50bcb6d9dade324f92162261d522e06, type: 3}
+    Back: {fileID: 21300000, guid: 91d6ac2c6e8e38a45a364bf1542b72fd, type: 3}
+    Confirm: {fileID: 21300000, guid: 13ae41520fab5d14d9f2cbe4e770c1f8, type: 3}
+    Resume: {fileID: 21300000, guid: 7ba11d96fe17111459f4d57b509a297c, type: 3}
+    Buy: {fileID: 21300000, guid: 16181998387f6004f8a426d23a54aa18, type: 3}
+    Emblem: {fileID: 21300000, guid: bb9ce760c22dfe34baca3f0b4832621c, type: 3}
+  Font:
+    Title: {fileID: 0}
+    Body: {fileID: 0}
+  Motions:
+    Breathe: 1
+    BreatheAmount: 0.04
+    BreatheSpeed: 0.65
+    Shine: 1
+    ShineEvery: 3
+    HoverLift: 1
+    PressSquish: 1
+    TitleBounce: 0
+    IconMotion: 1
+  Layouts:
+    IconSize: 0.78
+    IconInset: 0.28
+    CentreLabelBesideIcon: 1
+    ButtonTextMax: 36
+    TitleTextMax: 72

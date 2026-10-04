@@ -51,10 +51,10 @@ namespace SoulHunter.Gameplay.UI
             slider.transition = Selectable.Transition.None;
             if (slider.handleRect != null) slider.handleRect.gameObject.SetActive(false);
             var background = transform.Find("Background");
-            if (background != null && background.TryGetComponent<Image>(out var back)) back.color = new Color(0.05f, 0.03f, 0.05f, 0.85f);
+            if (background != null && background.TryGetComponent<Image>(out var back)) UITheme.ApplySurface(back, ThemedElement.SurfaceRole.HealthBack);
             if (slider.fillRect != null)
             {
-                if (slider.fillRect.TryGetComponent<Image>(out var fill)) fill.color = new Color(0.9f, 0.12f, 0.12f, 1f);
+                if (slider.fillRect.TryGetComponent<Image>(out var fill)) UITheme.ApplySurface(fill, ThemedElement.SurfaceRole.HealthFill);
                 // The fill area can carry inset offsets sized for the wide strip; keep the fill inside the small bar.
                 var area = slider.fillRect.parent as RectTransform;
                 if (area != null)
