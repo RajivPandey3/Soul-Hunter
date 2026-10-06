@@ -1496,7 +1496,17 @@ Owner: "pure game ka single theme system banao, ... source of truth single hona 
 - Found by the tests: an icon change did not reach open buttons (they kept a sprite copy); unusable buttons were too light for their grey text (2.9:1, now at least 3:1 in every preset); the theme raised FILTER's text from 20 to 36 (the theme size is now only a ceiling).
 - Tests: `UiThemeTests` (T: active theme with icons and 9-sliced plates, every preset readable, no colour literals or second path, a theme change restyles elements at once) and `UiThemeLivePlayModeTests` (R: editing the theme with the pause menu open recolours its buttons, focus, icon, veil and the HUD backing at once; only the chosen button moves and wears the ring, and Flashing VFX off stops the motion but not the ring); `MainMenuLayoutPlayModeTests` checks icon and label alignment; `LevelUpScreenPlayModeTests`, `RunResultsPlayModeTests` read theme colours.
 - EditMode 570/570, PlayMode 288/288, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261004-theme2/`). The run before (282/287) found the defects above.
-- Open: Android 48dp touch sizes not measured; icons are PNG, not vector; build screenshots and owner sign-off pending.
+- Follow-up from the build screenshots (`run-20261004-theme2-build/panels`), 2026-10-06:
+  - a button's label picks light or dark text by contrast against its colour (`UITheme.LightTextReads`), with an outline only on light text;
+  - the "<- Back" arrow goes when the Back icon shows;
+  - locked cards are darker in every preset, and Ember Pact's danger colour is darker;
+  - in Options, the open tab uses the Primary button kind;
+  - Reroll/Skip/Banish labels are readable (`UiThemeTests`, `WeaponSweepPlayModeTests`).
+  - Validation: EditMode 570/570, PlayMode 286/288, save untouched (`D:/SoulHunter-Validation/run-20261006-theme4/`). The two failures passed when rerun twice (20/20 each, `-theme4-rerun1/`, `-rerun2/`):
+    - `AutoplayBotPlayModeTests` (its shots folder was missing when a screenshot was written);
+    - `DuplicatorEverywherePlayModeTests` Thousand Edge (the 1 s window caught 3 volleys without the Duplicator; the cooldown is 0.35 s).
+    - Both are flaky tests, not caused by this change.
+- Open: Android 48dp touch sizes not measured; icons are PNG, not vector; the owner has not yet chosen the default look.
 
 Not yet seen by the owner.
 

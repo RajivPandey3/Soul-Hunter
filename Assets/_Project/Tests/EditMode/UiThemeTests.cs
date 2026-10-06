@@ -49,6 +49,10 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(Contrast(t.Hud.LabelText, t.Hud.LabelBacking), Is.GreaterThanOrEqualTo(4.5f), $"{t.DisplayName}: HUD labels.");
                 Assert.That(Contrast(t.Text.Accent, t.Surfaces.Panel), Is.GreaterThanOrEqualTo(3f), $"{t.DisplayName}: highlights on windows.");
                 Assert.That(Contrast(t.Text.Locked, t.Buttons.Disabled), Is.GreaterThanOrEqualTo(3f), $"{t.DisplayName}: text on unusable buttons.");
+                Assert.That(Contrast(t.Text.Locked, t.Cards.Locked), Is.GreaterThanOrEqualTo(3f), $"{t.DisplayName}: locked cards.");
+                foreach (var (what, back) in new[] { ("ordinary", t.Buttons.Normal), ("main", t.Buttons.Primary), ("leaving", t.Buttons.Danger) })
+                    Assert.That(Mathf.Max(Contrast(t.Text.OnDark, back), Contrast(t.Text.OnLight, back)), Is.GreaterThanOrEqualTo(4.5f),
+                        $"{t.DisplayName}: {what} button labels (light or dark text, whichever reads best).");
                 Assert.That(t.Buttons.Focus, Is.Not.EqualTo(t.Buttons.Normal), $"{t.DisplayName}: the chosen button differs.");
                 Assert.IsFalse(string.IsNullOrWhiteSpace(t.DisplayName) || string.IsNullOrWhiteSpace(t.Description), $"{t.name} has a name and description.");
             }

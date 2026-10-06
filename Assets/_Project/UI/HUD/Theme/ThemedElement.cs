@@ -134,8 +134,15 @@ namespace SoulHunter.Gameplay.UI
                     var labelElement = label.GetComponent<ThemedElement>();
                     // A label with a role of its own (a card's title, a tab's highlight) keeps its colour; buttons still
                     // give it the cartoon outline and their layout.
-                    if (labelElement == null || labelElement == this) ApplyText(label, card ? TextRole.Card : TextRole.Body);
-                    if (!card) { Outline(label, theme); ButtonLabelLayout(label, theme); }
+                    // Light or dark text, whichever reads best on this button's colour; the outline only on light text.
+                    bool light = !card && UITheme.LightTextReads(normal);
+                    if (labelElement == null || labelElement == this) ApplyText(label, card ? TextRole.Card : light ? TextRole.Body : TextRole.Card);
+                    if (!card)
+                    {
+                        if (light) Outline(label, theme);
+                        else if (label.gameObject.activeInHierarchy && label.outlineWidth > 0f) label.outlineWidth = 0f;
+                        ButtonLabelLayout(label, theme);
+                    }
                 }
             var motion = GetComponent<ThemedMotion>();
             if (motion == null) motion = gameObject.AddComponent<ThemedMotion>();
@@ -187,6 +194,8 @@ namespace SoulHunter.Gameplay.UI
                 rect.offsetMax = new Vector2(Icon != null && !theme.Layouts.CentreLabelBesideIcon ? 0f : -h * 0.15f, 0f);
             }
             label.alignment = TextAlignmentOptions.Center;
+            // The Back icon already is the arrow: a "<- Back" label (from the scene) would show it twice.
+            if (IconSlot == UITheme.IconSlot.Back && label.text.StartsWith("<-")) label.text = label.text.Substring(2).TrimStart();
             // The theme's largest button text is a ceiling: a label its screen sized smaller (FILTER, 20) keeps its size.
             float max = label.enableAutoSizing && label.fontSizeMax > 0f ? Mathf.Min(label.fontSizeMax, theme.Layouts.ButtonTextMax) : theme.Layouts.ButtonTextMax;
             label.enableAutoSizing = true;

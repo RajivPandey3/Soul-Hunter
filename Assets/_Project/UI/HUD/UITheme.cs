@@ -60,6 +60,26 @@ namespace SoulHunter.Gameplay.UI
         public static UiThemeAsset.Shapes Shapes => T.Shape;
         public static UiThemeAsset.Fonts Fonts => T.Font;
 
+        /// <summary>WCAG contrast ratio of two colours (1 to 21).</summary>
+        public static float Contrast(Color a, Color b)
+        {
+            float la = Luminance(a), lb = Luminance(b);
+            return (Mathf.Max(la, lb) + 0.05f) / (Mathf.Min(la, lb) + 0.05f);
+        }
+
+        private static float Luminance(Color c)
+        {
+            float L(float v) => v <= 0.03928f ? v / 12.92f : Mathf.Pow((v + 0.055f) / 1.055f, 2.4f);
+            return 0.2126f * L(c.r) + 0.7152f * L(c.g) + 0.0722f * L(c.b);
+        }
+
+        /// <summary>
+        /// The theme's text colour that reads best on <paramref name="back"/>: its light text or its dark text, whichever
+        /// has more contrast (ui-ux-pro-max: 4.5:1 for normal text). Button labels use it, so a designer can make any
+        /// button light or dark and its label stays readable.
+        /// </summary>
+        public static bool LightTextReads(Color back) => Contrast(Text, back) >= Contrast(CardText, back);
+
         /// <summary>Which of the theme's icons a button shows; the picture itself is read from the theme every time, so a
         /// designer's new icon shows at once.</summary>
         public enum IconSlot { None, Start, PowerUp, Options, Quit, Back, Confirm, Resume, Buy, Emblem }

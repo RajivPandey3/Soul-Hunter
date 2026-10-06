@@ -126,7 +126,7 @@ namespace SoulHunter.Editor.Content
             var s = t.Surfaces; s.Veil = C("#060a1c", 0.84f); s.Panel = C("#1b2650", 0.96f); s.PanelEdge = C("#070b1e"); s.Row = C("#26346a"); s.Backdrop = C("#0b1230");
             var b = t.Buttons; b.Normal = C("#b8c6e8"); b.Hover = C("#d9e3ff"); b.Primary = C("#ffd36b"); b.PrimaryHover = C("#ffe39a");
             b.Danger = C("#e8728a"); b.Focus = C("#fff1a8"); b.Pressed = C("#a8a8b8"); b.Disabled = C("#151b33", 0.92f); b.Edge = C("#070b1e");
-            var k = t.Cards; k.Card = C("#eef2ff"); k.Selected = C("#ffe39a"); k.Maxed = C("#ffd36b"); k.Locked = C("#5a6488");
+            var k = t.Cards; k.Card = C("#eef2ff"); k.Selected = C("#ffe39a"); k.Maxed = C("#ffd36b"); k.Locked = C("#262e4f");
             var x = t.Text; x.OnDark = C("#f4f7ff"); x.SoftOnDark = C("#c9d3f2"); x.DimOnDark = C("#8f9cc8"); x.OnLight = C("#0d1433"); x.SoftOnLight = C("#33406e");
             x.Locked = C("#8a93b5"); x.Accent = C("#ffd36b"); x.Danger = C("#ff7a8f"); x.Tag = C("#3a59c9"); x.Outline = C("#070b1e"); x.OutlineWidth = 0.2f;
             var h = t.Hud; h.LabelBacking = C("#070b1e", 0.85f); h.HealthBack = C("#070b1e", 0.9f); h.SlotEmpty = C("#0b1230", 0.9f); h.SlotFilled = C("#1b2650", 0.92f);
@@ -142,8 +142,8 @@ namespace SoulHunter.Editor.Content
             t.Description = "Bold and fiery: ember orange and blood red on charcoal, the pact Kael sealed to save his daughter.";
             var s = t.Surfaces; s.Veil = C("#120604", 0.86f); s.Panel = C("#3a1610", 0.96f); s.PanelEdge = C("#140604"); s.Row = C("#55211a"); s.Backdrop = C("#1e0b07");
             var b = t.Buttons; b.Normal = C("#ff8a3d"); b.Hover = C("#ffab70"); b.Primary = C("#ffd23f"); b.PrimaryHover = C("#ffe27a");
-            b.Danger = C("#d8323c"); b.Focus = C("#fff07a"); b.Pressed = C("#b0a090"); b.Disabled = C("#26140f", 0.92f); b.Edge = C("#140604");
-            var k = t.Cards; k.Card = C("#fff1e2"); k.Selected = C("#ffd9a8"); k.Maxed = C("#ffd23f"); k.Locked = C("#6e544c");
+            b.Danger = C("#b8202c"); b.Focus = C("#fff07a"); b.Pressed = C("#b0a090"); b.Disabled = C("#26140f", 0.92f); b.Edge = C("#140604");
+            var k = t.Cards; k.Card = C("#fff1e2"); k.Selected = C("#ffd9a8"); k.Maxed = C("#ffd23f"); k.Locked = C("#3a2620");
             var x = t.Text; x.OnDark = C("#fff6ee"); x.SoftOnDark = C("#f2cfb8"); x.DimOnDark = C("#c79a82"); x.OnLight = C("#2a0c06"); x.SoftOnLight = C("#5e2c1e");
             x.Locked = C("#a08478"); x.Accent = C("#ffd23f"); x.Danger = C("#ff5a5a"); x.Tag = C("#d8323c"); x.Outline = C("#140604"); x.OutlineWidth = 0.22f;
             var h = t.Hud; h.LabelBacking = C("#140604", 0.85f); h.HealthBack = C("#140604", 0.9f); h.SlotEmpty = C("#1e0b07", 0.9f); h.SlotFilled = C("#3a1610", 0.92f);

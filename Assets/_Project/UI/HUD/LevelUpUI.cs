@@ -608,10 +608,12 @@ namespace SoulHunter.Gameplay.UI
         private static void WhitenLabels(Button action)
         {
             if (action == null) return;
+            // Light or dark text, whichever reads best on the button's theme colour (as every themed button label).
+            bool light = UITheme.LightTextReads(UITheme.Button);
             foreach (var label in action.GetComponentsInChildren<TextMeshProUGUI>(true))
-                if (!label.name.StartsWith("Card_")) UITheme.ApplyText(label, ThemedElement.TextRole.Body);
+                if (!label.name.StartsWith("Card_")) UITheme.ApplyText(label, light ? ThemedElement.TextRole.Body : ThemedElement.TextRole.Card);
             foreach (var label in action.GetComponentsInChildren<Text>(true))
-                label.color = UITheme.Text; // legacy Text labels (no TMP): set once from the theme
+                label.color = light ? UITheme.Text : UITheme.CardText; // legacy Text labels (no TMP): set from the theme
         }
 
         private static void CreateActionButton(Button template, Transform parent, string name)

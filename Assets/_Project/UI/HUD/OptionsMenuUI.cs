@@ -206,7 +206,7 @@ namespace SoulHunter.Gameplay.UI
             _currentTab = Mathf.Clamp(index, 0, _tabs.Count - 1);
             for (int i = 0; i < _tabs.Count; i++) _tabs[i].gameObject.SetActive(i == _currentTab);
             for (int i = 0; i < _tabButtons.Count; i++)
-                UITheme.ApplyText(_tabButtons[i].GetComponentInChildren<TextMeshProUGUI>(), i == _currentTab ? ThemedElement.TextRole.Accent : ThemedElement.TextRole.Body);
+                UITheme.ApplyButton(_tabButtons[i], _tabButtons[i].targetGraphic as Image, i == _currentTab ? UITheme.ButtonKind.Primary : UITheme.ButtonKind.Normal); // the open section is the main-action colour
             var first = _tabItems[_currentTab].Count > 0 ? _tabItems[_currentTab][0] : null;
             if (first != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(first.gameObject);
         }

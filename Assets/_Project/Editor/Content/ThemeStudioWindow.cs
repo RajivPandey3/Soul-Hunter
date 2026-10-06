@@ -380,12 +380,16 @@ namespace SoulHunter.Editor.Content
             Check("Highlights on windows", t.Text.Accent, t.Surfaces.Panel, 3f);
             Check("In-game labels", t.Hud.LabelText, t.Hud.LabelBacking, 4.5f);
             Check("Text on unusable buttons", t.Text.Locked, t.Buttons.Disabled, 3f);
-            bool outlined = t.Text.OutlineWidth >= 0.15f;
-            Check("Button labels" + (outlined ? " (with outline)" : ""), t.Text.OnDark, t.Buttons.Normal, outlined ? 1.5f : 4.5f);
-            Check("Main button labels" + (outlined ? " (with outline)" : ""), t.Text.OnDark, t.Buttons.Primary, outlined ? 1.5f : 4.5f);
+            // Button labels take the light or the dark text, whichever reads best (UITheme.LightTextReads).
+            Check("Button labels", Best(t, t.Buttons.Normal), t.Buttons.Normal, 4.5f);
+            Check("Main button labels", Best(t, t.Buttons.Primary), t.Buttons.Primary, 4.5f);
+            Check("Leaving button labels", Best(t, t.Buttons.Danger), t.Buttons.Danger, 4.5f);
+            Check("Locked cards", t.Text.Locked, t.Cards.Locked, 3f);
             float focusGap = Mathf.Abs(Luminance(t.Buttons.Focus) - Luminance(t.Buttons.Normal)) + ColourDistance(t.Buttons.Focus, t.Buttons.Normal);
             Row("Chosen button stands out", focusGap > 0.25f, focusGap > 0.25f ? "yes" : "make Focus differ more from Normal");
         }
+
+        private static Color Best(UiThemeAsset t, Color back) => Contrast(t.Text.OnDark, back) >= Contrast(t.Text.OnLight, back) ? t.Text.OnDark : t.Text.OnLight;
 
         private static void Check(string what, Color text, Color back, float needed)
         {

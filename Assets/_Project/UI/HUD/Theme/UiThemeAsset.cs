@@ -67,7 +67,7 @@ namespace SoulHunter.Gameplay.UI
             [Tooltip("A Power Up that is fully bought.")]
             public Color Maxed = new Color(1f, 0.85f, 0.40f, 1f);
             [Tooltip("Something still locked.")]
-            public Color Locked = new Color(0.45f, 0.40f, 0.55f, 1f);
+            public Color Locked = new Color(0.22f, 0.17f, 0.32f, 1f);
         }
 
         [Serializable] public sealed class TextColours
