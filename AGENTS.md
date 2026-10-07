@@ -1506,7 +1506,12 @@ Owner: "pure game ka single theme system banao, ... source of truth single hona 
     - `AutoplayBotPlayModeTests` (its shots folder was missing when a screenshot was written);
     - `DuplicatorEverywherePlayModeTests` Thousand Edge (the 1 s window caught 3 volleys without the Duplicator; the cooldown is 0.35 s).
     - Both are flaky tests, not caused by this change.
-- Open: Android 48dp touch sizes not measured; icons are PNG, not vector; the owner has not yet chosen the default look.
+- **Default look: Ember Pact** (owner, 2026-10-07: "Ember Pact"), chosen from a side-by-side comparison of three Windows builds that differed only in the theme (7 screens each, 0 errors; `D:/SoulHunter-Validation/run-20261006-looks/looks.html`).
+  - `GameContent.UiTheme` now names `UiTheme_EmberPact`, and `UiThemeBuilder` picks it when no theme is set.
+  - Soul Candy, Moonlit Reaper and Classic Crimson stay available in Theme Studio.
+  - `UiThemeTests.TheDefaultLook_IsEmberPact_TheOwnersChoice` (T).
+  - EditMode 571/571, PlayMode 288/288, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261007-ember/`).
+- Open: Android 48dp touch sizes not measured; icons are PNG, not vector; the owner has not played with Ember Pact yet.
 
 Not yet seen by the owner.
 

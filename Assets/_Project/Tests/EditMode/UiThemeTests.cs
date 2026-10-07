@@ -38,6 +38,14 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void TheDefaultLook_IsEmberPact_TheOwnersChoice()
+        {
+            // Owner, 2026-10-07, after the side-by-side build comparison (run-20261006-looks): "Ember Pact".
+            Assert.AreEqual("Assets/_Project/Data/Config/UiThemes/UiTheme_EmberPact.asset",
+                AssetDatabase.GetAssetPath(GameContentCatalog.Load().UiTheme), "GameContent's active theme is Ember Pact.");
+        }
+
+        [Test]
         public void EveryPreset_IsReadable()
         {
             var presets = Presets();

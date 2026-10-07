@@ -10,7 +10,7 @@ namespace SoulHunter.Editor.Content
     /// <summary>
     /// Sets up the UI theme system once (owner, 2026-10-04): imports the theme art made by
     /// ArtSource/Generators/build_ui_theme_art.py (icons and 9-slice plates in Assets/Art/UI/Theme), creates the four
-    /// preset themes and makes Soul Candy the active one in GameContent. After this, designers only use Theme Studio.
+    /// preset themes and makes Ember Pact (owner choice, 2026-10-07) the active one in GameContent. After this, designers only use Theme Studio.
     /// Menu Soul Hunter/Content/Build UI Themes; batch: -executeMethod SoulHunter.Editor.Content.UiThemeBuilder.BuildFromCommandLine.
     /// Existing preset assets are left as the designers edited them; only missing ones are created.
     /// </summary>
@@ -39,15 +39,15 @@ namespace SoulHunter.Editor.Content
             foreach (var icon in IconNames) ImportSprite($"{ArtFolder}/{icon}.png", Vector4.zero);
 
             Directory.CreateDirectory(ThemeFolder);
-            var soulCandy = Preset("UiTheme_SoulCandy", SoulCandy);
+            Preset("UiTheme_SoulCandy", SoulCandy);
             Preset("UiTheme_MoonlitReaper", MoonlitReaper);
-            Preset("UiTheme_EmberPact", EmberPact);
+            var emberPact = Preset("UiTheme_EmberPact", EmberPact);
             Preset("UiTheme_ClassicCrimson", ClassicCrimson);
 
             var catalog = AssetDatabase.LoadAssetAtPath<GameContentCatalog>("Assets/Resources/GameContent.asset");
             if (catalog != null && catalog.UiTheme == null)
             {
-                catalog.UiTheme = soulCandy;
+                catalog.UiTheme = emberPact;
                 EditorUtility.SetDirty(catalog);
             }
             AssetDatabase.SaveAssets();
@@ -110,7 +110,7 @@ namespace SoulHunter.Editor.Content
 
         // ---------------------------------------------------------------- presets (the B1-B3 samples the owner saw)
 
-        /// <summary>B1 Soul Candy: bright soul-candy buttons on violet night, cartoon outlines (the default).</summary>
+        /// <summary>B1 Soul Candy: bright soul-candy buttons on violet night, cartoon outlines (the default until 2026-10-07).</summary>
         private static void SoulCandy(UiThemeAsset t)
         {
             t.DisplayName = "Soul Candy";
