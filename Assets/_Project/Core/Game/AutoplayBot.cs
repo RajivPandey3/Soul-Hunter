@@ -210,6 +210,8 @@ namespace SoulHunter.Gameplay.Core
             if (HasArg("-sh-autoplay-early-shots")) StartCoroutine(EarlyShots());
             // -sh-autoplay-pause-shot: 20 s in, pause, screenshot the pause menu (stats panel), resume.
             if (HasArg("-sh-autoplay-pause-shot")) StartCoroutine(PauseShot());
+            // -sh-autoplay-unlock-shot: screenshot every unlock notice while it is on screen (not hidden behind a menu).
+            if (HasArg("-sh-autoplay-unlock-shot")) StartCoroutine(UnlockNoticeShots());
             yield return new WaitForSecondsRealtime(1f);
 
             _player = PlayerController.Instance;
@@ -685,6 +687,25 @@ namespace SoulHunter.Gameplay.Core
         /// Opens the UI style sample (UI assembly, reached by name), waits for it to settle and captures it at twice the
         /// window's resolution, so text and icons are judged sharp.
         /// </summary>
+        private IEnumerator UnlockNoticeShots()
+        {
+            GameObject seen = null;
+            while (this != null)
+            {
+                var notice = GameObject.Find("CharacterUnlockedNotice");
+                var canvas = notice != null ? notice.GetComponent<Canvas>() : null;
+                if (notice != null && notice != seen && canvas != null && canvas.enabled && !SoulHunter.Core.Services.GameTime.IsPaused)
+                {
+                    seen = notice;
+                    yield return new WaitForSecondsRealtime(0.3f);
+                    var text = notice.GetComponentInChildren<TMPro.TMP_Text>();
+                    Event("unlock-notice", $"\"text\": \"{Escape(text != null ? text.text : "")}\"");
+                    yield return Shot("unlock-notice");
+                }
+                yield return new WaitForSecondsRealtime(0.1f);
+            }
+        }
+
         private IEnumerator StyleSampleShot()
         {
             var type = System.AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("SoulHunter.UI.UiStyleSampleScreen")).FirstOrDefault(t => t != null);
