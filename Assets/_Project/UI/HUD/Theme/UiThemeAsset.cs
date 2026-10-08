@@ -117,6 +117,8 @@ namespace SoulHunter.Gameplay.UI
             public Color HealthFill = new Color(1f, 0.25f, 0.38f, 1f);
             [Tooltip("Behind the health bar.")]
             public Color HealthBack = new Color(0.08f, 0.03f, 0.16f, 0.9f);
+            [Tooltip("The experience bar's fill (top of the screen).")]
+            public Color XpFill = new Color(0.25f, 0.55f, 1f, 1f);
             [Tooltip("An empty item slot.")]
             public Color SlotEmpty = new Color(0.10f, 0.05f, 0.20f, 0.9f);
             [Tooltip("A filled item slot.")]

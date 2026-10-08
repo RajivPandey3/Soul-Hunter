@@ -14,7 +14,7 @@ namespace SoulHunter.Gameplay.UI
     {
         public enum Role { None, Button, Panel, Text, Surface }
         public enum TextRole { Body, Soft, Dim, Card, CardSoft, Title, Accent, Tag, Locked, Danger, HudLabel, Best, Gold, Arcana, Evolution, TitleArcana }
-        public enum SurfaceRole { Accent, Veil, Row, Backdrop, HudBacking, HealthFill, HealthBack, SlotEmpty, SlotFilled, StoryCard, TouchPad, TouchKnob, Card, CardSelected, CardMaxed, CardLocked, Groove, Knob, SwitchOn, SwitchOff, TickBox, Tick }
+        public enum SurfaceRole { Accent, Veil, Row, Backdrop, HudBacking, HealthFill, HealthBack, SlotEmpty, SlotFilled, StoryCard, TouchPad, TouchKnob, Card, CardSelected, CardMaxed, CardLocked, Groove, Knob, SwitchOn, SwitchOff, TickBox, Tick, XpFill }
 
         public Role Kind;
         /// <summary>An ON/OFF switch (Options): a track with a sliding knob and the word; <see cref="SwitchOn"/> is its state.</summary>
@@ -485,6 +485,7 @@ namespace SoulHunter.Gameplay.UI
                 SurfaceRole.SwitchOn => t.Rewards.Unlock,
                 SurfaceRole.SwitchOff => t.Surfaces.Backdrop,
                 SurfaceRole.TickBox => t.Shape.TickBox != null ? t.Text.OnDark : t.Surfaces.Row,
+                SurfaceRole.XpFill => t.Hud.XpFill,
                 SurfaceRole.Tick => t.Text.Accent,
                 _ => image.color
             };
@@ -500,6 +501,7 @@ namespace SoulHunter.Gameplay.UI
             Sprite shape = Surface switch
             {
                 SurfaceRole.Groove => t.Shape.Inset,
+                SurfaceRole.HealthBack => t.Shape.Inset, // the health bar sits in a groove too
                 SurfaceRole.Knob => t.Shape.Knob,
                 SurfaceRole.TickBox => t.Shape.TickBox,
                 SurfaceRole.Tick => t.Shape.Tick,

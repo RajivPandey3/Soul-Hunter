@@ -95,6 +95,23 @@ def free_vfx(layers):
     return Image.alpha_composite(dark, art)
 
 
+def soul_egg():
+    """The merchant's Soul Egg (Soul Hunter's Golden Egg): a gold egg with a soul crack and sparks, drawn like the Power Up
+    glyphs (same gold, same ink, outline and shadow)."""
+    from PIL import ImageDraw
+    g = pu.canvas()
+    d = ImageDraw.Draw(g)
+    c = pu.c
+    d.ellipse((c(0.24), c(0.12), c(0.76), c(0.88)), fill=pu.GOLD_DARK)              # the shell's shaded rim
+    d.ellipse((c(0.27), c(0.14), c(0.73), c(0.83)), fill=pu.GOLD)
+    d.ellipse((c(0.33), c(0.22), c(0.55), c(0.48)), fill=(255, 238, 170, 255))      # a light shine on the shell
+    crack = [(0.30, 0.50), (0.38, 0.44), (0.45, 0.53), (0.52, 0.43), (0.59, 0.52), (0.66, 0.45), (0.71, 0.49)]
+    d.line([(c(x), c(y)) for x, y in crack], fill=pu.INK, width=c(0.03), joint="curve")
+    for x, y, r in ((0.80, 0.22, 0.05), (0.18, 0.30, 0.035), (0.82, 0.62, 0.03)):  # sparks
+        d.polygon([(c(x), c(y - r)), (c(x + r * 0.45), c(y)), (c(x), c(y + r)), (c(x - r * 0.45), c(y))], fill=pu.GOLD)
+    return glossy(g, None)
+
+
 BUILDS = {
     "SH10_PowerUp_Area": lambda: free_powerup(pu.area),
     "SH10_PowerUp_Greed": lambda: free_powerup(pu.greed),
@@ -110,6 +127,7 @@ BUILDS = {
     "SH10_Icon_Duplicator": lambda: free_vfx([("impact_star", (80, 170, 255), 0.8, 1.0, -70, 56),
                                               ("impact_star", (190, 240, 255), 1.0, 1.0, 50, -36),
                                               ("sparkle", (255, 255, 255), 0.45, 1.0, 50, -36)]),
+    "SH10_Icon_SoulEgg": soul_egg,
     "SH10_Icon_Spellbinder": lambda: free_vfx([("magic_circle", (215, 150, 255), 0.9, 1.0, 0, 0),
                                                ("sparkle", (255, 230, 255), 0.42, 1.0, 0, 0)]),
 }

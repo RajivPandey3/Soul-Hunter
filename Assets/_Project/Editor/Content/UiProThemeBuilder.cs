@@ -116,6 +116,15 @@ namespace SoulHunter.Editor.Content
             pro.Buttons.Disabled = new Color(0.40f, 0.31f, 0.27f, 1f);
             pro.Text.Locked = new Color(0.90f, 0.83f, 0.77f, 1f);
 
+            // The in-game HUD (owner, 2026-10-08: "change all rest panel"): ember plates with a visible bevel, slots like
+            // the rows, a story card in the window colour; the bars sit in the groove picture.
+            pro.Hud.LabelBacking = new Color(0.22f, 0.09f, 0.06f, 0.92f);
+            pro.Hud.SlotEmpty = new Color(0.20f, 0.08f, 0.05f, 0.9f);
+            pro.Hud.SlotFilled = new Color(0.36f, 0.15f, 0.09f, 0.95f);
+            pro.Hud.SlotBorder = new Color(0.75f, 0.50f, 0.26f, 0.65f);
+            pro.Hud.StoryCard = new Color(0.30f, 0.12f, 0.08f, 0.94f);
+            pro.Hud.HealthBack = new Color(0.10f, 0.04f, 0.03f, 1f);
+
             pro.Layouts.CentreIconWithLabel = true;
             pro.Layouts.IconSize = 0.62f;
             pro.Layouts.IconGap = 0.16f;
@@ -126,7 +135,13 @@ namespace SoulHunter.Editor.Content
             EditorUtility.SetDirty(pro);
             var catalog = AssetDatabase.LoadAssetAtPath<GameContentCatalog>("Assets/Resources/GameContent.asset");
             // Owner 2026-10-08: "ok pass now apply it in project every where" - Ember Pact Pro is the game's look.
-            if (catalog != null) { catalog.UiTheme = pro; catalog.UiThemePreview = pro; EditorUtility.SetDirty(catalog); }
+            if (catalog != null)
+            {
+                catalog.UiTheme = pro;
+                catalog.UiThemePreview = pro;
+                catalog.SoulEggIcon = Icon("Assets/Art/UI/SH10_Icon_SoulEgg.png"); // the merchant's Soul Egg ware
+                EditorUtility.SetDirty(catalog);
+            }
             AssetDatabase.SaveAssets();
             Debug.Log($"[UiProThemeBuilder] {pro.DisplayName} is the game's look ({path}).");
         }
@@ -194,6 +209,21 @@ namespace SoulHunter.Editor.Content
             m.SetFloat(ShaderUtilities.ID_UnderlaySoftness, softness);
             EditorUtility.SetDirty(m);
             return m;
+        }
+
+        /// <summary>An icon imported as a sharp, uncompressed single sprite.</summary>
+        private static Sprite Icon(string path)
+        {
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.mipmapEnabled = false;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().FirstOrDefault();
         }
 
         /// <summary>A 3D plate imported as a sharp, uncompressed 9-sliced sprite (borders from plates.txt).</summary>

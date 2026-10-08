@@ -1602,6 +1602,21 @@ Owner: "pure game ka single theme system banao, ... source of truth single hona 
       - two checks written for the old look, fake bold and a dark sold-out plate (they now check the heavy font and a readable 3:1 sold-out text);
       - the Pentagram chest test once, which passed on rerun.
   - Build screenshots of every screen (`run-20261008-pro-screens6`, `-7`), 0 errors (partial `V`). The Wandering Merchant shop was not captured.
+- **The rest of the panels in the Pro look** (owner, 2026-10-08: "change all rest panel with my approval, and show me", then "approved now apply safely no mismatch"; before/after sheet `D:/SoulHunter-Validation/ui_pro_rest_panels.png`):
+  - HUD (`UiProThemeBuilder` HUD colours):
+    - the Kills, Gold, Time and stage plates are bevelled ember plates;
+    - the item slots are bevelled (`InventoryHud` uses the slot roles);
+    - the XP bar sits in the groove with the theme's `Hud.XpFill` (`XPBarUI.StyleBar`, `SurfaceRole.XpFill`), and the HP bar's back is the groove too;
+    - the unlock notice uses the same plate.
+  - Story card: an ember plate, with the title in the title look.
+  - Wandering Merchant shop:
+    - the gold is shown with the coin;
+    - each ware is a card like the Power Up cells (`WanderingMerchant.WareCard`): item icon, name, what it does, and the price with the coin instead of "G". OWNED / NO FREE SLOT stay words, and are the card's first text;
+    - unusable wares are the theme's stone plate (`ShowUsable`);
+    - every shop text uses the theme's font (the gold line used the scene default).
+  - New art, owner-approved: the Soul Egg icon (`SH10_Icon_SoulEgg`, `build_icons_free.soul_egg`, `GameContent.SoulEggIcon`), a gold egg with a crack and sparks in the gold-icon style.
+  - Already matching, unchanged: Game Over (the Results screen), chest, level-up. The loading screen is a picture only.
+  - Validation: EditMode 572/572 and the merchant, accessibility, HUD, story card and inventory fixtures 29/29, save untouched (`run-20261008-rest2`). Full run: EditMode 572/572, PlayMode 291/291, 0 exceptions, save untouched (`run-20261008-rest-full`). Build screenshots `run-20261008-rest-screens`, `-screens2`, 0 errors (partial `V`).
 - Open: Android 48dp touch sizes not measured (a 54-unit tab is about 18dp on a 360dp-tall phone); icons are PNG, not vector; the owner has not played with the Pro look yet.
 
 Not yet seen by the owner.

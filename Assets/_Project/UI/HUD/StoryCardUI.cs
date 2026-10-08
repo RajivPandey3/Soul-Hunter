@@ -99,7 +99,7 @@ namespace SoulHunter.Gameplay.UI
             _group.interactable = false;
 
             _title = Label(rect, "Title", new Vector2(0.04f, 0.68f), new Vector2(0.96f, 0.96f), 30f, FontStyles.Bold);
-            UITheme.ApplyText(_title, ThemedElement.TextRole.Accent); // like the level-up heading
+            UITheme.ApplyText(_title, ThemedElement.TextRole.Title); // the title look, like LEVEL UP!
             _body = Label(rect, "Story", new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.68f), 24f, FontStyles.Italic);
             card.SetActive(false);
         }

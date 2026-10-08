@@ -92,7 +92,7 @@ namespace SoulHunter.Gameplay.UI
             frameRect.sizeDelta = new Vector2(SlotSize, SlotSize);
             var frame = frameGo.GetComponent<Image>();
             frame.raycastTarget = false;
-            frame.color = EmptyFrame;
+            UITheme.ApplySurface(frame, ThemedElement.SurfaceRole.SlotEmpty);
             var border = frameGo.AddComponent<Outline>();
             border.effectColor = PlainBorder;
             border.effectDistance = new Vector2(2f, -2f);
@@ -157,7 +157,9 @@ namespace SoulHunter.Gameplay.UI
             for (int i = 0; i < SlotsPerRow; i++)
             {
                 bool filled = i < items.Count;
-                frames[i].color = filled ? FilledFrame : EmptyFrame;
+                var look = ThemedElement.For(frames[i].gameObject);
+                var role = filled ? ThemedElement.SurfaceRole.SlotFilled : ThemedElement.SurfaceRole.SlotEmpty;
+                if (look.Surface != role) { look.Surface = role; look.Apply(); }
                 var border = frames[i].GetComponent<Outline>();
                 if (border != null)
                 {

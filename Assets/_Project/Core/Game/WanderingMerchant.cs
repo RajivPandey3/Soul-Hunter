@@ -5,6 +5,7 @@ using SoulHunter.Core.Persistence;
 using SoulHunter.Core.Services;
 using SoulHunter.Gameplay.Combat;
 using SoulHunter.Gameplay.Player;
+using SoulHunter.Gameplay.Data;
 
 namespace SoulHunter.Gameplay.Core
 {
@@ -186,7 +187,7 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.UI.UITheme.ApplyPanel(panel.gameObject.AddComponent<UnityEngine.UI.Image>());
             SoulHunter.Gameplay.UI.UITheme.ApplyText(ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f), SoulHunter.Gameplay.UI.ThemedElement.TextRole.Title);
             int gold = CurrentGold();
-            ShopText("Gold", panel, new Vector2(0f, 0.81f), new Vector2(1f, 0.89f), $"Gold: {gold}", 28f);
+            GoldRow(panel, gold);
 
             UnityEngine.UI.Button focus = null;
             float top = 0.79f;
@@ -202,7 +203,8 @@ namespace SoulHunter.Gameplay.Core
                 var levelOne = LevelOne(type);
                 string description = levelOne != null ? UpgradeText.Describe(levelOne, 0) : "";
                 var captured = type;
-                var button = ShopButton(panel, top, $"{Name(type)}  -  {suffix}\n<size=70%>{description}</size>", () => BuyWeapon(captured));
+                var icon = WeaponDefinitionLookup.Find(type)?.Icon;
+                var button = WareCard(panel, top, icon, Name(type), description, suffix, () => BuyWeapon(captured));
                 SetAvailable(button, state == WareState.Available);
                 if (focus == null && button.interactable) focus = button;
                 top -= 0.14f;
@@ -210,7 +212,8 @@ namespace SoulHunter.Gameplay.Core
 
             string character = GameServices.Instance != null && GameServices.Instance.TryGet<SaveService>(out var save) && save.CurrentData != null
                 ? save.CurrentData.SelectedCharacterName : "your hunter";
-            var egg = ShopButton(panel, top, $"Soul Egg  -  {_soulEggPrice} G\n<size=70%>Permanently raises a random stat of {character}, from the next run.</size>", () => BuySoulEgg());
+            var egg = WareCard(panel, top, GameContentCatalog.Load()?.SoulEggIcon, "Soul Egg",
+                $"Permanently raises a random stat of {character}, from the next run.", $"{_soulEggPrice} G", () => BuySoulEgg());
             SetAvailable(egg, gold >= _soulEggPrice);
             if (focus == null && egg.interactable) focus = egg;
 
@@ -221,13 +224,81 @@ namespace SoulHunter.Gameplay.Core
                 UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(focus.gameObject);
         }
 
-        // Sold-out or unaffordable wares stay readable: dark button, grey text (Unity's default disabled tint is light grey).
+        // Sold-out or unaffordable wares stay readable: the theme's unusable plate with its locked text colour
+        // (ThemedElement.ShowUsable restyles them when the button's state changes).
         private static void SetAvailable(UnityEngine.UI.Button button, bool available)
         {
             button.interactable = available;
-            // The theme's disabled button colour keeps sold-out wares dark; their text turns the theme's locked grey.
-            foreach (var text in button.GetComponentsInChildren<TMPro.TextMeshProUGUI>())
-                SoulHunter.Gameplay.UI.UITheme.ApplyText(text, available ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body : SoulHunter.Gameplay.UI.ThemedElement.TextRole.Locked);
+            if (!available) SoulHunter.Gameplay.UI.ThemedElement.For(button.gameObject).ShowUsable(false);
+        }
+
+        /// <summary>The player's gold with the theme's coin, like the Power Up screen.</summary>
+        private static void GoldRow(RectTransform panel, int gold)
+        {
+            var row = ShopRect("GoldRow", panel, new Vector2(0.3f, 0.81f), new Vector2(0.7f, 0.89f));
+            var coin = ShopRect("Coin", row, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            coin.sizeDelta = new Vector2(44f, 44f);
+            coin.anchoredPosition = new Vector2(-70f, 0f);
+            var coinImage = coin.gameObject.AddComponent<UnityEngine.UI.Image>();
+            coinImage.sprite = SoulHunter.Gameplay.UI.UITheme.IconFor(SoulHunter.Gameplay.UI.UITheme.IconSlot.Coin);
+            coinImage.preserveAspect = true;
+            coinImage.raycastTarget = false;
+            var text = ShopText("Gold", row, new Vector2(0.5f, 0f), new Vector2(1f, 1f), gold.ToString("N0"), 34f);
+            text.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
+            ((RectTransform)text.transform).offsetMin = new Vector2(-40f, 0f);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(text, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Gold);
+        }
+
+        /// <summary>
+        /// A ware as a card like the Power Up and level-up cards (owner, 2026-10-08: the Pro look everywhere): the item's
+        /// icon, its name and what it does, and its price with a coin (or OWNED / NO FREE SLOT). The state text is the
+        /// card's first text.
+        /// </summary>
+        private UnityEngine.UI.Button WareCard(RectTransform panel, float top, Sprite icon, string name, string description,
+            string state, Action onClick)
+        {
+            var rect = ShopRect("Ware", panel, new Vector2(0.05f, top - 0.12f), new Vector2(0.95f, top));
+            var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();
+            var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(() => onClick());
+            bool price = state.EndsWith(" G");
+            // A price shows its coin instead of the "G" (like the Power Up screen); OWNED / NO FREE SLOT stay words.
+            string shown = price && int.TryParse(state.Substring(0, state.Length - 2), out var amount) ? amount.ToString("N0") : state;
+            var stateText = ShopText("Price", rect, new Vector2(0.74f, 0.1f), new Vector2(0.97f, 0.9f), shown, 30f);
+            stateText.alignment = TMPro.TextAlignmentOptions.MidlineRight;
+            if (price)
+            {
+                // The coin sits just left of the number.
+                stateText.ForceMeshUpdate();
+                float width = stateText.GetPreferredValues(shown).x;
+                var coin = ShopRect("Coin", stateText.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f));
+                coin.pivot = new Vector2(1f, 0.5f);
+                coin.sizeDelta = new Vector2(34f, 34f);
+                coin.anchoredPosition = new Vector2(-(width + 10f), 0f);
+                var coinImage = coin.gameObject.AddComponent<UnityEngine.UI.Image>();
+                coinImage.sprite = SoulHunter.Gameplay.UI.UITheme.IconFor(SoulHunter.Gameplay.UI.UITheme.IconSlot.Coin);
+                coinImage.preserveAspect = true;
+                coinImage.raycastTarget = false;
+            }
+            var iconRect = ShopRect("Icon", rect, new Vector2(0.015f, 0.1f), new Vector2(0.015f, 0.9f));
+            iconRect.pivot = new Vector2(0f, 0.5f);
+            iconRect.sizeDelta = new Vector2(64f, 0f);
+            var iconImage = iconRect.gameObject.AddComponent<UnityEngine.UI.Image>();
+            iconImage.sprite = icon;
+            iconImage.enabled = icon != null;
+            iconImage.preserveAspect = true;
+            iconImage.raycastTarget = false;
+            var nameText = ShopText("Name", rect, new Vector2(0.14f, 0.5f), new Vector2(0.72f, 0.95f), name, 32f);
+            nameText.alignment = TMPro.TextAlignmentOptions.BottomLeft;
+            var descText = ShopText("Description", rect, new Vector2(0.14f, 0.06f), new Vector2(0.72f, 0.5f), description, 22f);
+            descText.alignment = TMPro.TextAlignmentOptions.TopLeft;
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Card, SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: false,
+                size: SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Free);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(nameText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Card);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(descText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.CardSoft);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(stateText, price ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Card : SoulHunter.Gameplay.UI.ThemedElement.TextRole.Tag);
+            return button;
         }
 
         private void DestroyShopUI()
@@ -273,6 +344,7 @@ namespace SoulHunter.Gameplay.Core
             label.fontSizeMin = 14f;
             label.fontSizeMax = size;
             label.raycastTarget = false;
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(label, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body); // the theme's font, never the scene default
             return label;
         }
 

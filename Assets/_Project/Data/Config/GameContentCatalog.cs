@@ -54,6 +54,8 @@ namespace SoulHunter.Gameplay.Data
         public UnityEngine.Sprite GoldPouchIcon;
         [UnityEngine.Tooltip("Roast Chicken level-up card.")]
         public UnityEngine.Sprite RoastChickenIcon;
+        [UnityEngine.Tooltip("Soul Egg ware in the Wandering Merchant's shop (build_icons_free.py; set by UiProThemeBuilder).")]
+        public UnityEngine.Sprite SoulEggIcon;
 
         /// <summary>An icon for a PowerUp that has no matching passive item (Power Up shop).</summary>
         [System.Serializable]

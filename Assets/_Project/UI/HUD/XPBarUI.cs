@@ -29,6 +29,18 @@ namespace SoulHunter.Gameplay.UI
             {
                 _xpSlider = GetComponent<Slider>();
             }
+            StyleBar();
+        }
+
+        /// <summary>The bar in the theme: a groove behind, the theme's XP colour in front (the HUD prefab is not edited).</summary>
+        private void StyleBar()
+        {
+            if (_xpSlider == null) return;
+            var back = _xpSlider.transform.Find("Background");
+            if (back != null && back.TryGetComponent<Image>(out var backImage))
+                SoulHunter.Gameplay.UI.UITheme.ApplySurface(backImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Groove);
+            if (_xpSlider.fillRect != null && _xpSlider.fillRect.TryGetComponent<Image>(out var fillImage))
+                SoulHunter.Gameplay.UI.UITheme.ApplySurface(fillImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.XpFill);
         }
 
         private void OnEnable()
