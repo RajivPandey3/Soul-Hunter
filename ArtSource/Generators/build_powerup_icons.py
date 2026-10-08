@@ -7,6 +7,9 @@ filled shapes (one style for the whole set; ui-ux-pro-max: "Filled vs Outline Di
 Only the rim colour changes per PowerUp. Shapes are drawn 4x large and scaled down for clean edges.
 Run: python ArtSource/Generators/build_powerup_icons.py  (needs Pillow). Writes Assets/Art/UI/SH10_PowerUp_<Id>.png.
 Soul Hunter's own art, not VS art.
+
+Superseded 2026-10-08 (owner: icons without the circle): the game uses build_icons_free.py, which reuses these
+glyphs and sprites without the badge. Running this script alone writes the circle versions back over them.
 """
 import math
 import os

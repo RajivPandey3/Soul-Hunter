@@ -4,6 +4,9 @@ The Duplicator and Spellbinder cards showed opaque squares (sprite_11 / sprite_1
 the approved sprites (Assets/Art/Textures/VFX/SH10_Vfx2_*.png) on a round dark badge like the other round item icons.
 The Cross and Bible icons are their SH10 models (rendered by ItemIconBuilder step 1) on the same badges.
 Run: python ArtSource/Generators/build_item_icons.py  (needs Pillow). Writes Assets/Art/UI/SH10_Icon_<Name>.png.
+
+Superseded 2026-10-08 (owner: icons without the circle): the game uses build_icons_free.py, which reuses these
+glyphs and sprites without the badge. Running this script alone writes the circle versions back over them.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter, ImageChops

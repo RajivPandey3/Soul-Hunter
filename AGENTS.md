@@ -1561,7 +1561,14 @@ Owner: "pure game ka single theme system banao, ... source of truth single hona 
 - **Full HD item icons** (owner, 2026-10-07: "without circle ... jo image dikha rahe ho change mat karna", "hd ilustration model"):
   - The 30 old item icons (`Assets/Art/UI/sprite_*.png`) were upscaled to 512 px with Real-ESRGAN (realesrgan-x4plus-anime, the owner's choice) and imported uncompressed. The pictures are unchanged; the originals are in `ArtSource/SH10_OldIcons_Original`.
   - Their empty margin was trimmed, so every icon fills its slot the same way (review, 2026-10-08).
-  - Open: the 9 Power Up badges and Bible, Cross, Duplicator and Spellbinder are still circle badges.
+  - The 9 Power Up badges and Bible, Cross, Duplicator and Spellbinder have no circle either (owner, 2026-10-08: "circle wale icons bhi bina circle ke banao"; the new sample was approved). Built by `ArtSource/Generators/build_icons_free.py`, 512 px, uncompressed:
+    - the Power Up icons keep their own gold pictures, with a dark outline and a soft shadow instead of the disc;
+    - Cross and Bible are their models with a glow;
+    - Duplicator and Spellbinder are the approved VFX sprites on a dark halo;
+    - empty space is trimmed so they fill their slot like the HD icons.
+    - A first try re-painted the glyphs in the old rim colours; it washed them out and broke Greed and Banish, so it was dropped.
+    - `build_item_icons.py` and `build_powerup_icons.py` would write the circle versions back, and are marked superseded.
+    - Validation: EditMode 572/572 and the shop, icon, level-up and Results fixtures 26/26, save untouched (`run-20261008-freeicons`). Build screenshot `run-20261008-freeicons-screens2/ember-pro/play/shots/000_powerups.png`, 0 errors (partial `V`).
 - **Ember Pact Pro, the game's look** (owner, 2026-10-08: "pro type ... brightness or contrast full ... text bilkul sharp ... icon full hd", then a style sample, "ok pass now apply it in project every where but safely, mismatch is not allow"):
   - Built first as one sample screen with every UI item (`UiStyleSampleScreen`, `AutoplayBot -sh-autoplay-style-sample`), reviewed and fixed four times, then approved. Then applied everywhere and approved from the build screenshots of every screen (`D:/SoulHunter-Validation/ui_pro_all_screens.png`, "approved").
   - `UiProThemeBuilder` (menu Soul Hunter/Content/Build Pro Look) makes `UiTheme_EmberPactPro` from Ember Pact and sets it as `GameContent.UiTheme` (and `UiThemePreview`). The other looks stay unchanged in Theme Studio.
