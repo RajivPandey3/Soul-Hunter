@@ -201,6 +201,8 @@ namespace SoulHunter.Gameplay.Core
             if (HasArg("-sh-autoplay-shop-shot")) yield return ShopShots(save.CurrentData);
             // -sh-autoplay-select-shot: screenshot the main menu, then the character select screen (what Start opens).
             if (HasArg("-sh-autoplay-select-shot")) yield return SelectShots();
+            // -sh-autoplay-style-sample: the UI style sample screen (the look waiting for approval), captured at 2x.
+            if (HasArg("-sh-autoplay-style-sample")) yield return StyleSampleShot();
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||
                    LevelProgressionManager.Instance == null) yield return null;
@@ -679,6 +681,25 @@ namespace SoulHunter.Gameplay.Core
         /// -sh-autoplay-shop-shot: before the run, opens the VS PowerUps screen on the throw-away save (with gold), buys a
         /// few ranks like a player and screenshots it. The menu lives in the UI assembly, so it is reached by name.
         /// </summary>
+        /// <summary>
+        /// Opens the UI style sample (UI assembly, reached by name), waits for it to settle and captures it at twice the
+        /// window's resolution, so text and icons are judged sharp.
+        /// </summary>
+        private IEnumerator StyleSampleShot()
+        {
+            var type = System.AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("SoulHunter.UI.UiStyleSampleScreen")).FirstOrDefault(t => t != null);
+            if (type == null) { Event("style-sample", "\"error\": \"UiStyleSampleScreen not found\""); yield break; }
+            type.GetMethod("Show")?.Invoke(null, null);
+            yield return new WaitForSecondsRealtime(1.5f);
+            string file = Path.Combine(Config.OutputFolder, "shots", "style_sample_2x.png");
+            ScreenCapture.CaptureScreenshot(file, 2);
+            yield return new WaitForSecondsRealtime(1f);
+            yield return Shot("style-sample");
+            Event("style-sample", string.Format(CultureInfo.InvariantCulture, "\"file\": \"{0}\", \"screen\": \"{1}x{2}\"", Escape(file), Screen.width, Screen.height));
+            type.GetMethod("Hide")?.Invoke(null, null);
+            yield return null;
+        }
+
         private IEnumerator SelectShots()
         {
             MonoBehaviour Find(string type) => FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.GetType().Name == type);
@@ -691,9 +712,21 @@ namespace SoulHunter.Gameplay.Core
             var texts = FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsSortMode.None).Where(t => t.isActiveAndEnabled &&
                 (t.text.StartsWith("Gold") || t.text.StartsWith("FILTER") || t.name == "StartingWeapon_Text" || t.text == "Character Selection"));
             var canvas = FindObjectsByType<Canvas>(FindObjectsSortMode.None).FirstOrDefault(c => c.isRootCanvas);
-            Event("select-layout", string.Format(CultureInfo.InvariantCulture, "\"screen\": \"{0}x{1}\", \"scale\": {2:0.00}, \"texts\": \"{3}\"",
+            // Every shown button's own size and its size on screen, in the 1920x1080 layout's units (the theme's sizes).
+            var buttons = FindObjectsByType<UnityEngine.UI.Selectable>(FindObjectsSortMode.None)
+                .Where(s => s.isActiveAndEnabled && !s.name.StartsWith("Card_") && !s.name.StartsWith("Stage_")).Select(s =>
+                {
+                    var r = (RectTransform)s.transform;
+                    var corners = new Vector3[4];
+                    r.GetWorldCorners(corners);
+                    float k = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+                    return string.Format(CultureInfo.InvariantCulture, "{0} {1:0}x{2:0} shown {3:0}x{4:0}", s.name, r.rect.width, r.rect.height,
+                        (corners[2].x - corners[0].x) / k, (corners[2].y - corners[0].y) / k);
+                });
+            Event("select-layout", string.Format(CultureInfo.InvariantCulture, "\"screen\": \"{0}x{1}\", \"scale\": {2:0.00}, \"texts\": \"{3}\", \"buttons\": \"{4}\"",
                 Screen.width, Screen.height, canvas != null ? canvas.scaleFactor : 0f,
-                Escape(string.Join("; ", texts.Select(t => $"{t.name}='{t.text}' size {t.fontSize:0.0} auto {t.enableAutoSizing} max {t.fontSizeMax:0}")))));
+                Escape(string.Join("; ", texts.Select(t => $"{t.name}='{t.text}' size {t.fontSize:0.0} auto {t.enableAutoSizing} max {t.fontSizeMax:0}"))),
+                Escape(string.Join("; ", buttons))));
             navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
             yield return new WaitForSecondsRealtime(0.3f);
         }
@@ -739,6 +772,17 @@ namespace SoulHunter.Gameplay.Core
                 var options = SoulHunter.Gameplay.UI.OptionsMenuUI.Open();
                 yield return new WaitForSecondsRealtime(0.5f);
                 yield return Shot("options");
+                // Every other section too (Display and Gameplay hold the ON/OFF switches, Controls the key bindings).
+                if (options != null)
+                    foreach (var section in new[] { "Display", "Gameplay", "Controls" })
+                    {
+                        var tab = options.GetComponentsInChildren<UnityEngine.UI.Button>(true)
+                            .FirstOrDefault(b => b.GetComponentInChildren<TMPro.TMP_Text>(true) is TMPro.TMP_Text t && t.text.Trim() == section);
+                        if (tab == null) continue;
+                        tab.onClick.Invoke();
+                        yield return new WaitForSecondsRealtime(0.4f);
+                        yield return Shot("options-" + section.ToLowerInvariant());
+                    }
                 if (options != null) options.Close();
                 yield return new WaitForSecondsRealtime(0.3f);
             }

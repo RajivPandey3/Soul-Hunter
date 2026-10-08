@@ -18,8 +18,7 @@ namespace SoulHunter.UI
         // inner edges about x 0.27-0.91, y 0.10-0.60; the centre ornaments sit at x 0.562.
         public const float FrameCentreX = 0.562f;
         public const float TitleTop = 0.595f, TitleBottom = 0.465f, TitleHalfWidth = 0.24f;
-        public const float ButtonsTop = 0.43f, ButtonsBottom = 0.14f, ButtonHalfWidth = 0.105f;
-        public const float ButtonGapShare = 0.22f; // of each button's slot
+        public const float ButtonsTop = 0.43f, ButtonsBottom = 0.14f; // the open area under the logo; buttons centre in it
 
 
         private Image _background;
@@ -67,21 +66,42 @@ namespace SoulHunter.UI
                 Place(_title.rectTransform, FrameCentreX - TitleHalfWidth, TitleBottom, FrameCentreX + TitleHalfWidth, TitleTop);
             }
 
+            int index = 0;
+            foreach (var button in _buttons)
+            {
+                if (button == null) continue;
+                button.transform.SetParent(_area, false);
+                Style(button, index++);
+            }
+            PlaceButtons();
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed += PlaceButtons;
+            Fit();
+        }
+
+        private void OnDestroy() => SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= PlaceButtons;
+
+        /// <summary>
+        /// A column of the theme's standard buttons with the theme's gap, centred on the frame's ornament in the open area
+        /// under the logo (one button size in the whole game, owner 2026-10-07; the frame no longer stretches them).
+        /// </summary>
+        private void PlaceButtons()
+        {
+            if (this == null || _buttons == null) return;
+            var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
             int count = 0;
             foreach (var button in _buttons) if (button != null) count++;
-            float slot = (ButtonsTop - ButtonsBottom) / Mathf.Max(1, count);
+            float step = layout.ButtonHeight + layout.ButtonGap;
             int index = 0;
             foreach (var button in _buttons)
             {
                 if (button == null) continue;
                 var rect = (RectTransform)button.transform;
-                rect.SetParent(_area, false);
-                float top = ButtonsTop - slot * index;
-                Place(rect, FrameCentreX - ButtonHalfWidth, top - slot * (1f - ButtonGapShare), FrameCentreX + ButtonHalfWidth, top);
-                Style(button, index);
+                rect.anchorMin = rect.anchorMax = new Vector2(FrameCentreX, (ButtonsTop + ButtonsBottom) * 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.sizeDelta = new Vector2(layout.ButtonWidth, layout.ButtonHeight);
+                rect.anchoredPosition = new Vector2(0f, ((count - 1) * 0.5f - index) * step);
                 index++;
             }
-            Fit();
         }
 
         private void LateUpdate()

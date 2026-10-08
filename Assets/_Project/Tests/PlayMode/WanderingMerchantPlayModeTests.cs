@@ -112,7 +112,10 @@ namespace SoulHunter.Tests.PlayMode
             var owned = merchant.ShopUI.GetComponentsInChildren<Button>()
                 .First(b => b.GetComponentInChildren<TMPro.TextMeshProUGUI>().text.Contains("OWNED"));
             Assert.That(owned.interactable, Is.False, "An owned weapon cannot be bought again.");
-            Assert.That(owned.colors.disabledColor.grayscale, Is.LessThan(0.2f), "Sold-out wares stay dark so their text is readable.");
+            yield return null; // the theme restyles an unusable ware on its next frame
+            var ownedText = owned.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            float contrast = SoulHunter.Gameplay.UI.UITheme.Contrast(ownedText.color, owned.colors.disabledColor);
+            Assert.That(contrast, Is.GreaterThanOrEqualTo(3f), $"A sold-out ware's text stays readable on its plate ({contrast:0.0}:1).");
 
             // Leaving sends the merchant away and resumes the game.
             merchant.Leave();

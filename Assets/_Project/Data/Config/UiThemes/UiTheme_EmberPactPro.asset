@@ -1,0 +1,137 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8b40e12228d83744aabfe5bba5ebe91, type: 3}
+  m_Name: UiTheme_EmberPactPro
+  m_EditorClassIdentifier: 
+  DisplayName: Ember Pact Pro
+  Description: Ember Pact with raised 3D buttons, embossed sharp text (Cinzel titles,
+    Barlow labels), brighter windows and Full HD icons.
+  Surfaces:
+    Veil: {r: 0.07058824, g: 0.023529412, b: 0.015686275, a: 0.86}
+    Panel: {r: 0.4, g: 0.16, b: 0.1, a: 1}
+    PanelEdge: {r: 1, g: 0.74, b: 0.32, a: 1}
+    Row: {r: 0.55, g: 0.23, b: 0.15, a: 1}
+    Backdrop: {r: 0.07, g: 0.025, b: 0.02, a: 1}
+  Buttons:
+    Normal: {r: 1, g: 0.5411765, b: 0.23921569, a: 1}
+    Hover: {r: 1, g: 0.67058825, b: 0.4392157, a: 1}
+    Primary: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    PrimaryHover: {r: 1, g: 0.8862745, b: 0.47843137, a: 1}
+    Danger: {r: 0.72156864, g: 0.1254902, b: 0.17254902, a: 1}
+    Focus: {r: 1, g: 0.9411765, b: 0.47843137, a: 1}
+    Pressed: {r: 0.6901961, g: 0.627451, b: 0.5647059, a: 1}
+    Disabled: {r: 0.4, g: 0.31, b: 0.27, a: 1}
+    Edge: {r: 0.078431375, g: 0.023529412, b: 0.015686275, a: 1}
+  Cards:
+    Card: {r: 1, g: 0.94509804, b: 0.8862745, a: 1}
+    Selected: {r: 1, g: 0.94509804, b: 0.8862745, a: 1}
+    Maxed: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    Locked: {r: 0.22745098, g: 0.14901961, b: 0.1254902, a: 1}
+    SelectedEdge: {r: 1, g: 0.82, b: 0.25, a: 1}
+    SelectedEdgeWidth: 5
+  Text:
+    OnDark: {r: 1, g: 0.98, b: 0.95, a: 1}
+    SoftOnDark: {r: 1, g: 0.88, b: 0.78, a: 1}
+    DimOnDark: {r: 1, g: 0.8, b: 0.62, a: 1}
+    OnLight: {r: 0.16470589, g: 0.047058824, b: 0.023529412, a: 1}
+    SoftOnLight: {r: 0.36862746, g: 0.17254902, b: 0.11764706, a: 1}
+    Locked: {r: 0.9, g: 0.83, b: 0.77, a: 1}
+    Accent: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
+    Danger: {r: 1, g: 0.3529412, b: 0.3529412, a: 1}
+    Tag: {r: 0.84705883, g: 0.19607843, b: 0.23529412, a: 1}
+    Outline: {r: 0.078431375, g: 0.023529412, b: 0.015686275, a: 1}
+    OutlineWidth: 0
+  Rarity:
+    Good: {r: 0.26, g: 0.88, b: 0.48, a: 1}
+    Rare: {r: 0.27, g: 0.64, b: 1, a: 1}
+    Epic: {r: 0.75, g: 0.44, b: 1, a: 1}
+    Legend: {r: 1, g: 0.76, b: 0.24, a: 1}
+  Hud:
+    LabelText: {r: 1, g: 1, b: 1, a: 1}
+    LabelBacking: {r: 0.078431375, g: 0.023529412, b: 0.015686275, a: 0.85}
+    HealthFill: {r: 1, g: 0.25, b: 0.38, a: 1}
+    HealthBack: {r: 0.078431375, g: 0.023529412, b: 0.015686275, a: 0.9}
+    SlotEmpty: {r: 0.11764706, g: 0.043137256, b: 0.02745098, a: 0.9}
+    SlotFilled: {r: 0.22745098, g: 0.08627451, b: 0.0627451, a: 0.92}
+    SlotBorder: {r: 0.627451, g: 0.3137255, b: 0.22745098, a: 0.7}
+    SlotEvolved: {r: 1, g: 0.8, b: 0.25, a: 1}
+    StoryCard: {r: 0.078431375, g: 0.023529412, b: 0.015686275, a: 0.78}
+    TouchPad: {r: 0, g: 0, b: 0, a: 0.35}
+    TouchKnob: {r: 1, g: 1, b: 1, a: 0.65}
+  Rewards:
+    Gold: {r: 1, g: 0.85, b: 0.3, a: 1}
+    Soul: {r: 1, g: 0.7019608, b: 0.36862746, a: 1}
+    Arcana: {r: 0.78, g: 0.5, b: 1, a: 1}
+    Evolution: {r: 1, g: 0.45, b: 0.4, a: 1}
+    Best: {r: 1, g: 0.84, b: 0.29, a: 1}
+    Unlock: {r: 0.2, g: 0.72, b: 0.36, a: 1}
+  Shape:
+    Button: {fileID: 21300000, guid: a2683b0ae19ca2140a2516bba064aab9, type: 3}
+    Card: {fileID: 21300000, guid: 237d4f8605eab16488d4075d4e01c60d, type: 3}
+    Panel: {fileID: 21300000, guid: e63292afa5c47014fa3a00ba13406b04, type: 3}
+    Shine: {fileID: 21300000, guid: 1f5c180f3a2189346821c87ff310e947, type: 3}
+    Row: {fileID: 21300000, guid: 1eb48a219026d4f4fa96568b9fea5d2b, type: 3}
+    Inset: {fileID: 21300000, guid: 63e320da7a9904b48866b508c29a34a0, type: 3}
+    Knob: {fileID: 21300000, guid: ca3a21b92516b344c83c1a26f10bfa53, type: 3}
+    Track: {fileID: 21300000, guid: 7b3d8fd4bcd59de49a05ec3a5dcf72d5, type: 3}
+    TickBox: {fileID: 21300000, guid: 3b234913e5c325840adbf84f7f1986e5, type: 3}
+    Tick: {fileID: 21300000, guid: 01828e640cc4cc84bbbb6ce2abfd1b9e, type: 3}
+    EdgeWidth: 0
+  Icon:
+    Start: {fileID: 21300000, guid: d6d47d976e85fb1429fa24f9be3247e4, type: 3}
+    PowerUp: {fileID: 21300000, guid: 91f88fc4247feb442934be3a062814f1, type: 3}
+    Options: {fileID: 21300000, guid: ad4919677db7fb9499be4cf70acb5bc9, type: 3}
+    Quit: {fileID: 21300000, guid: b1bb3d5fe9094f3459a09b358f82fb2b, type: 3}
+    Back: {fileID: 21300000, guid: 82b48f8bdf6d242419406636cc82d36a, type: 3}
+    Confirm: {fileID: 21300000, guid: 3ed2afa635af3684ba9d4c98e768f2bb, type: 3}
+    Resume: {fileID: 21300000, guid: d6d47d976e85fb1429fa24f9be3247e4, type: 3}
+    Buy: {fileID: 21300000, guid: 2fb5dce6e2a2f064ba4514fdf520f495, type: 3}
+    Emblem: {fileID: 21300000, guid: ad798e2bb664f3b4490b698164e58955, type: 3}
+    Coin: {fileID: 21300000, guid: 16181998387f6004f8a426d23a54aa18, type: 3}
+  Font:
+    Title: {fileID: 11400000, guid: 2491b416bc8f2764a8accf39333f9b8a, type: 2}
+    Body: {fileID: 11400000, guid: 0ade5e43deb2e734ea95f92ed60079de, type: 2}
+    TitleMaterial: {fileID: 2100000, guid: b184b2d85f317c44fae6df486f2550d2, type: 2}
+    OnDarkMaterial: {fileID: 2100000, guid: 6458d4a513556a345afeaa37646039ed, type: 2}
+    OnLightMaterial: {fileID: 2100000, guid: 17ad87a0e8855f14883d6f24898f8033, type: 2}
+    TitleGradient: 1
+    NoFakeBold: 1
+  Motions:
+    Breathe: 0
+    BreatheAmount: 0.04
+    BreatheSpeed: 0.65
+    Shine: 0
+    ShineEvery: 3
+    FocusRingWidth: 3
+    HoverLift: 1
+    PressSquish: 1
+    TitleBounce: 0
+    IconMotion: 1
+  Layouts:
+    IconSize: 0.62
+    IconInset: 0.28
+    CentreLabelBesideIcon: 1
+    ButtonTextMax: 34
+    TitleTextMax: 72
+    ButtonWidth: 300
+    ButtonHeight: 68
+    TabWidth: 150
+    TabHeight: 54
+    TabTextMax: 26
+    ButtonGap: 12
+    TickBoxSize: 0.5
+    CentreIconWithLabel: 1
+    IconGap: 0.16
+    IconsLikeLabel: 1
+    SwitchWidth: 132
+    SwitchHeight: 52
+    OpenTabBar: 1

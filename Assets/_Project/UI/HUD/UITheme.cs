@@ -46,6 +46,8 @@ namespace SoulHunter.Gameplay.UI
         public static Color CardTextSoft => T.Text.SoftOnLight;
         public static Color TextLocked => T.Text.Locked;
         public static Color Accent => T.Text.Accent;
+        /// <summary>Bold rich text, or the plain text when the theme's fonts are already heavy (no fake bold: it widens the letters).</summary>
+        public static string Bold(string text) => T.Font.NoFakeBold ? text : "<b>" + text + "</b>";
         public static Color Danger => T.Text.Danger;
         public static Color Tag => T.Text.Tag;
         public static Color Outline => T.Text.Outline;
@@ -82,7 +84,7 @@ namespace SoulHunter.Gameplay.UI
 
         /// <summary>Which of the theme's icons a button shows; the picture itself is read from the theme every time, so a
         /// designer's new icon shows at once.</summary>
-        public enum IconSlot { None, Start, PowerUp, Options, Quit, Back, Confirm, Resume, Buy, Emblem }
+        public enum IconSlot { None, Start, PowerUp, Options, Quit, Back, Confirm, Resume, Buy, Emblem, Coin }
 
         /// <summary>The active theme's picture for a slot (null when the slot is empty).</summary>
         public static Sprite IconFor(IconSlot slot) => slot switch
@@ -96,6 +98,7 @@ namespace SoulHunter.Gameplay.UI
             IconSlot.Resume => Icons.Resume,
             IconSlot.Buy => Icons.Buy,
             IconSlot.Emblem => Icons.Emblem,
+            IconSlot.Coin => Icons.Coin != null ? Icons.Coin : Icons.Buy,
             _ => null
         };
 
@@ -106,7 +109,8 @@ namespace SoulHunter.Gameplay.UI
         /// Styles a button or card from the theme and keeps it themed (re-applied on every theme change): state colours,
         /// the theme's button picture, its edge, an optional icon, the label's colour/font/outline, and its motion.
         /// </summary>
-        public static void ApplyButton(Selectable selectable, Image graphic, ButtonKind kind, IconSlot icon = IconSlot.None, bool labels = true)
+        public static void ApplyButton(Selectable selectable, Image graphic, ButtonKind kind, IconSlot icon = IconSlot.None, bool labels = true,
+            ThemedElement.SizeRole size = ThemedElement.SizeRole.Standard, RectTransform leading = null)
         {
             if (selectable == null) return;
             var element = ThemedElement.For(selectable.gameObject);
@@ -115,6 +119,8 @@ namespace SoulHunter.Gameplay.UI
             element.Graphic = graphic;
             element.StyleLabels = labels;
             element.IconSlot = icon;
+            element.Size = size; // every action button takes the theme's one standard size unless it says otherwise
+            if (leading != null) element.LeadingGraphic = leading;
             element.Apply();
         }
 

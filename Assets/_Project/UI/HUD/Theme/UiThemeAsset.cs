@@ -68,6 +68,9 @@ namespace SoulHunter.Gameplay.UI
             public Color Maxed = new Color(1f, 0.85f, 0.40f, 1f);
             [Tooltip("Something still locked.")]
             public Color Locked = new Color(0.22f, 0.17f, 0.32f, 1f);
+            [Tooltip("The frame around the chosen card (so the choice never depends on colour alone).")]
+            public Color SelectedEdge = new Color(1f, 0.82f, 0.25f, 1f);
+            [Tooltip("Thickness of that frame (0 = none).")] [Range(0f, 10f)] public float SelectedEdgeWidth = 5f;
         }
 
         [Serializable] public sealed class TextColours
@@ -156,6 +159,18 @@ namespace SoulHunter.Gameplay.UI
             public Sprite Panel;
             [Tooltip("The light band that sweeps across buttons (Shine).")]
             public Sprite Shine;
+            [Tooltip("Rows, info boxes, HUD labels and item slots (a light bevel). Leave empty for flat rows.")]
+            public Sprite Row;
+            [Tooltip("A recessed groove: slider tracks. Leave empty for flat.")]
+            public Sprite Inset;
+            [Tooltip("A round raised knob: slider handles and switch knobs.")]
+            public Sprite Knob;
+            [Tooltip("A capsule: switch tracks.")]
+            public Sprite Track;
+            [Tooltip("An empty tick box with a light rim (mode chips, filters).")]
+            public Sprite TickBox;
+            [Tooltip("The tick drawn in a ticked box.")]
+            public Sprite Tick;
             [Tooltip("Width of the coloured line around buttons and cards (0 = none).")]
             [Range(0f, 6f)] public float EdgeWidth = 0f;
         }
@@ -171,6 +186,8 @@ namespace SoulHunter.Gameplay.UI
             [Tooltip("Resume.")] public Sprite Resume;
             [Tooltip("Buy.")] public Sprite Buy;
             [Tooltip("Pause / moon emblem.")] public Sprite Emblem;
+            [Tooltip("The coin shown next to gold amounts and prices (in colour; the Buy button may use a one-colour coin). Empty = the Buy icon.")]
+            public Sprite Coin;
         }
 
         [Serializable] public sealed class Fonts
@@ -179,6 +196,16 @@ namespace SoulHunter.Gameplay.UI
             public TMP_FontAsset Title;
             [Tooltip("Buttons, cards and body text. Leave empty to keep the scene's font.")]
             public TMP_FontAsset Body;
+            [Tooltip("The title look (outline and shadow) made for the Title font. Leave empty for the plain look.")]
+            public Material TitleMaterial;
+            [Tooltip("Light text on dark windows and buttons: raised by a dark outline and a soft shadow (made for the Body font).")]
+            public Material OnDarkMaterial;
+            [Tooltip("Dark text on light cards and bright buttons: embossed by a thin light edge below (made for the Body font).")]
+            public Material OnLightMaterial;
+            [Tooltip("Titles get a light-to-deep gradient of their colour.")]
+            public bool TitleGradient;
+            [Tooltip("The Title and Body fonts are already heavy: never add Unity's fake bold (it widens letters and blurs them).")]
+            public bool NoFakeBold;
         }
 
         [Serializable] public sealed class Motion
@@ -204,6 +231,28 @@ namespace SoulHunter.Gameplay.UI
             public bool CentreLabelBesideIcon = true;
             [Tooltip("Largest text size on buttons.")] [Range(14f, 60f)] public float ButtonTextMax = 36f;
             [Tooltip("Largest title size.")] [Range(30f, 110f)] public float TitleTextMax = 72f;
+
+            // One size per kind of control for the whole game (owner, 2026-10-07: "button size sabka ek jaisa ... ek hee
+            // standard"). Sizes are in screen units of the 1920x1080 layout every menu scales from.
+            [Tooltip("Width of every action button (Start, Back, Confirm, Buy, Resume, OPEN, DONE, Reroll...).")]
+            [Range(160f, 480f)] public float ButtonWidth = 300f;
+            [Tooltip("Height of every action button.")] [Range(40f, 120f)] public float ButtonHeight = 68f;
+            [Tooltip("Width of every tab and toggle chip (Options sections, run modes, FILTER).")]
+            [Range(90f, 300f)] public float TabWidth = 150f;
+            [Tooltip("Height of every tab and toggle chip.")] [Range(30f, 90f)] public float TabHeight = 54f;
+            [Tooltip("Largest text size on tabs.")] [Range(12f, 40f)] public float TabTextMax = 24f;
+            [Tooltip("Space between buttons placed side by side or in a column.")] [Range(4f, 40f)] public float ButtonGap = 12f;
+            [Tooltip("Size of a tick box on a toggle chip, as a share of its height.")] [Range(0.3f, 0.9f)] public float TickBoxSize = 0.5f;
+            [Tooltip("Buttons with an icon centre the icon and the label together as one group (instead of the label in the space beside the icon).")]
+            public bool CentreIconWithLabel;
+            [Tooltip("Space between a button's icon and its label, as a share of the button height.")] [Range(0f, 0.6f)] public float IconGap = 0.16f;
+            [Tooltip("Button icons take the label's colour (use one-colour icons), so they always stand out like the text.")]
+            public bool IconsLikeLabel;
+            [Tooltip("ON/OFF switches (Options): width and height.")]
+            public float SwitchWidth = 132f;
+            public float SwitchHeight = 52f;
+            [Tooltip("A gold bar under the open tab, so the open tab is never shown by colour alone.")]
+            public bool OpenTabBar = true;
         }
 
         public SurfaceColours Surfaces = new SurfaceColours();

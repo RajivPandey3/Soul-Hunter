@@ -21,6 +21,7 @@ namespace SoulHunter.Gameplay.UI
         private bool _hover, _pressed;
         private RectTransform _shine;
         private ThemeFocusRing _ring;
+        private int _shownUsable = -1;
 
         /// <summary>True while this button is the chosen one (keyboard/controller focus).</summary>
         public bool Focused => EventSystem.current != null && EventSystem.current.currentSelectedGameObject == gameObject;
@@ -49,6 +50,14 @@ namespace SoulHunter.Gameplay.UI
             var selectable = GetComponent<Selectable>();
             bool usable = selectable == null || selectable.IsInteractable();
             bool ambient = AmbientMotionAllowed;
+            // A button starts with the usable look, so only a change (or starting unusable) needs restyling.
+            int state = usable ? 1 : 0;
+            if (_shownUsable != state)
+            {
+                bool first = _shownUsable < 0;
+                _shownUsable = state;
+                if (!(first && usable)) GetComponent<ThemedElement>()?.ShowUsable(usable);
+            }
 
             Vector3 scale = Vector3.one;
             if (usable && focused && motion.Breathe && ambient)

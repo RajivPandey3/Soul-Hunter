@@ -55,11 +55,37 @@ namespace SoulHunter.Gameplay.Data
         [UnityEngine.Tooltip("Roast Chicken level-up card.")]
         public UnityEngine.Sprite RoastChickenIcon;
 
+        /// <summary>An icon for a PowerUp that has no matching passive item (Power Up shop).</summary>
+        [System.Serializable]
+        public struct PowerUpIcon
+        {
+            public SoulHunter.Core.Persistence.PowerUpId PowerUp;
+            public UnityEngine.Sprite Icon;
+        }
+
+        [UnityEngine.Header("Power Up shop icons (owner, 2026-10-07; PowerUpIconImporter)")]
+        [UnityEngine.Tooltip("Greed, Omni, Charm, Defang, Reroll, Skip, Banish and Preserve: Soul Hunter's own badges " +
+            "(ArtSource/Generators/build_powerup_icons.py). The others show their passive item's icon.")]
+        public PowerUpIcon[] PowerUpIcons;
+
+        /// <summary>The shop icon made for <paramref name="id"/>, or null when it uses its passive item's icon.</summary>
+        public UnityEngine.Sprite PowerUpIconFor(SoulHunter.Core.Persistence.PowerUpId id)
+        {
+            if (PowerUpIcons == null) return null;
+            foreach (var entry in PowerUpIcons) if (entry.PowerUp == id) return entry.Icon;
+            return null;
+        }
+
         /// <summary>
         /// The game's UI theme: the single source of truth for every colour, picture, icon, font, motion and spacing of
         /// the UI (owner, 2026-10-04). Designers switch and edit it in Soul Hunter > Theme Studio.
         /// </summary>
         public SoulHunter.Gameplay.UI.UiThemeAsset UiTheme;
+        /// <summary>
+        /// A look waiting for the owner's approval (2026-10-08: the "pro" style sample). Only the style sample screen
+        /// shows it; the game keeps <see cref="UiTheme"/> until the owner approves.
+        /// </summary>
+        public SoulHunter.Gameplay.UI.UiThemeAsset UiThemePreview;
         public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
 
         /// <summary>The weapon/passive definition of <paramref name="type"/>, or null when none exists.</summary>

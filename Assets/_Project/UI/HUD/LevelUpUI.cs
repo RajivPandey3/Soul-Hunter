@@ -395,8 +395,16 @@ namespace SoulHunter.Gameplay.UI
             }
 
             // Smaller, dark action buttons under the cards (VS style), with the same focus colours.
+            // The theme's standard button size, centred with the standard gap (not stretched across the row).
             var barLayout = bar.GetComponent<LayoutElement>();
-            if (barLayout != null) barLayout.preferredHeight = ((RectTransform)template.transform).sizeDelta.y * 0.55f;
+            if (barLayout != null) barLayout.preferredHeight = UITheme.Layout.ButtonHeight;
+            var barGroup = bar.GetComponent<HorizontalLayoutGroup>();
+            if (barGroup != null)
+            {
+                barGroup.childForceExpandWidth = barGroup.childForceExpandHeight = false;
+                barGroup.childAlignment = TextAnchor.MiddleCenter;
+                barGroup.spacing = UITheme.Layout.ButtonGap;
+            }
             foreach (var action in bar.GetComponentsInChildren<Button>(true))
             {
                 var image = action.GetComponent<Image>();

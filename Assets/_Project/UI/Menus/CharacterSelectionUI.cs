@@ -207,8 +207,8 @@ namespace SoulHunter.UI
             {
                 _characterDescriptionText.text = unlocked
                     ? charData.Description
-                    : $"<b>LOCKED</b>\nUnlock: {CharacterUnlocks.ConditionText(charData)}";
-                if (unlocked && !owned) _characterDescriptionText.text += $"\n<b>Unlocked!</b> Buy for {charData.GoldPrice} gold.";
+                    : $"{SoulHunter.Gameplay.UI.UITheme.Bold("LOCKED")}\nUnlock: {CharacterUnlocks.ConditionText(charData)}";
+                if (unlocked && !owned) _characterDescriptionText.text += $"\n{SoulHunter.Gameplay.UI.UITheme.Bold("Unlocked!")} Buy for {charData.GoldPrice} gold.";
             }
             if (_characterIconDisplay)
             {
@@ -259,7 +259,7 @@ namespace SoulHunter.UI
                 if (_cardBackgrounds[i] != null) SoulHunter.Gameplay.UI.UITheme.ApplySurface(_cardBackgrounds[i],
                     i == _currentIndex ? SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.CardSelected : SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Card);
             for (int i = 0; i < _cardOutlines.Count; i++)
-                if (_cardOutlines[i] != null) _cardOutlines[i].enabled = i == _currentIndex;
+                if (_cardOutlines[i] != null) { ApplySelectedEdge(_cardOutlines[i]); _cardOutlines[i].enabled = i == _currentIndex; }
             ScrollToSelected();
         }
 
@@ -270,7 +270,7 @@ namespace SoulHunter.UI
             var sheet = CharacterStatSheet.Build(charData, data);
 
             // One text with values in a column (<pos>), so labels and values always share a font size.
-            var text = new System.Text.StringBuilder("<b>Stats</b>\n");
+            var text = new System.Text.StringBuilder(SoulHunter.Gameplay.UI.UITheme.Bold("Stats") + "\n");
             string bonus = ColorUtility.ToHtmlStringRGB(BonusColor);
             foreach (var row in sheet.DisplayRows())
             {
@@ -422,7 +422,7 @@ namespace SoulHunter.UI
             }
 
             // Centre: scrollable grid of character cards.
-            var gridBox = CreatePanel("CharacterGrid", root, new Vector2(0.27f, 0.33f), new Vector2(0.73f, 0.785f));
+            var gridBox = CreatePanel("CharacterGrid", root, new Vector2(0.27f, 0.33f), new Vector2(0.73f, 0.725f));
             var viewport = CreateRect("Viewport", gridBox, Vector2.zero, Vector2.one);
             viewport.offsetMin = new Vector2(10f, 10f);
             viewport.offsetMax = new Vector2(-10f, -10f);
@@ -458,12 +458,14 @@ namespace SoulHunter.UI
                 Place(_characterNameText.rectTransform, infoBox, new Vector2(0.22f, 0.64f), new Vector2(0.78f, 0.95f));
                 _characterNameText.alignment = TextAlignmentOptions.TopLeft;
                 AutoSize(_characterNameText, 16f, 40f);
+                SoulHunter.Gameplay.UI.UITheme.ApplyText(_characterNameText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Accent); // the scene's text takes the theme's font
             }
             if (_characterDescriptionText != null)
             {
                 Place(_characterDescriptionText.rectTransform, infoBox, new Vector2(0.22f, 0.06f), new Vector2(0.78f, 0.62f));
                 _characterDescriptionText.alignment = TextAlignmentOptions.TopLeft;
                 AutoSize(_characterDescriptionText, 12f, 28f);
+                SoulHunter.Gameplay.UI.UITheme.ApplyText(_characterDescriptionText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body);
             }
             _weaponIconDisplay = CreateImage("StartingWeapon_Icon", infoBox, new Vector2(0.81f, 0.3f), new Vector2(0.97f, 0.92f), null);
             _weaponNameText = CreateText("StartingWeapon_Text", infoBox, new Vector2(0.79f, 0.04f), new Vector2(0.99f, 0.28f), "", TextAlignmentOptions.Center, 12f, 18f);
@@ -495,35 +497,40 @@ namespace SoulHunter.UI
         /// </summary>
         private void BuildModesRow(RectTransform root)
         {
-            var box = CreatePanel("RunModes", root, new Vector2(0.27f, 0.795f), new Vector2(0.73f, 0.88f));
+            var box = CreatePanel("RunModes", root, new Vector2(0.265f, 0.735f), new Vector2(0.735f, 0.88f));
             var data = SaveData();
             int count = RunModeOptions.All.Length;
-            float width = 0.98f / count;
+            // The chips sit in one themed row: the theme's tab size and gap, centred, shrunk as one piece if a narrow
+            // window cannot fit all six.
+            // Two rows of three, so every chip keeps the theme's full tab size and "Limit Break" is not squeezed (2026-10-08).
+            var chips = CreateRect("Chips", box, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.97f));
+            var chips2 = CreateRect("Chips2", box, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.6f));
+            int perRow = (count + 1) / 2;
             for (int i = 0; i < count; i++)
             {
                 var mode = RunModeOptions.All[i];
-                float left = 0.01f + i * width;
-                var cell = CreateRect($"Mode_{mode}", box, new Vector2(left + 0.004f, 0.44f), new Vector2(left + width - 0.004f, 0.95f));
+                var cell = CreateRect($"Mode_{mode}", i < perRow ? chips : chips2, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
                 var background = cell.gameObject.AddComponent<Image>();
                 var toggle = cell.gameObject.AddComponent<Toggle>();
                 toggle.targetGraphic = background;
-                SoulHunter.Gameplay.UI.UITheme.ApplyButton(toggle, background, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal, SoulHunter.Gameplay.UI.UITheme.IconSlot.None, false);
 
                 var tickBox = CreateRect("Box", cell, new Vector2(0.04f, 0.18f), new Vector2(0.2f, 0.82f));
                 var tickBoxImage = tickBox.gameObject.AddComponent<Image>();
-                SoulHunter.Gameplay.UI.UITheme.ApplySurface(tickBoxImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Row);
+                SoulHunter.Gameplay.UI.UITheme.ApplySurface(tickBoxImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.TickBox);
                 tickBoxImage.raycastTarget = false;
-                tickBox.gameObject.AddComponent<AspectRatioFitter>().aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
-                var check = CreateRect("Check", tickBox, new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f));
+                var check = CreateRect("Check", tickBox, new Vector2(0.16f, 0.16f), new Vector2(0.84f, 0.84f));
                 var checkImage = check.gameObject.AddComponent<Image>();
-                SoulHunter.Gameplay.UI.UITheme.ApplySurface(checkImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Accent); // tick = on
+                SoulHunter.Gameplay.UI.UITheme.ApplySurface(checkImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Tick); // tick = on
                 checkImage.raycastTarget = false;
                 toggle.graphic = checkImage;
 
                 var label = CreateText("Label", cell, new Vector2(0.24f, 0f), new Vector2(0.98f, 1f),
-                    RunModeOptions.Name(mode), TextAlignmentOptions.Left, 8f, 20f);
+                    RunModeOptions.Name(mode), TextAlignmentOptions.Left, 8f, 26f); // the theme's tab text size caps it
                 label.textWrappingMode = TextWrappingModes.NoWrap;
                 _modeLabels.Add(label);
+                // The theme's one tab size; the label takes light or dark text by contrast and sits beside the tick box.
+                SoulHunter.Gameplay.UI.UITheme.ApplyButton(toggle, background, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+                    SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Tab, tickBox);
 
                 toggle.SetIsOnWithoutNotify(RunModeOptions.Get(data, mode));
                 toggle.onValueChanged.AddListener(on => SetMode(mode, on));
@@ -532,21 +539,24 @@ namespace SoulHunter.UI
                 hint.Show = ShowModeHint;
                 _modeToggles.Add(toggle);
             }
+            chips.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
+            chips2.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
             // One size for all six labels (auto-size gave "Limit Break" a much smaller size than "Hurry").
             box.gameObject.AddComponent<SameFontSize>().Labels = _modeLabels.ToArray();
-            _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.04f), new Vector2(0.985f, 0.42f),
+            _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.02f), new Vector2(0.985f, 0.24f),
                 "Modes: select one to see what it does.", TextAlignmentOptions.Left, 10f, 18f);
             SoulHunter.Gameplay.UI.UITheme.ApplyText(_modeHintText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Soft);
         }
 
         private void BuildFilterPanel(RectTransform root)
         {
-            var toggleButton = CreatePanel("FilterButton", root, new Vector2(0.76f, 0.82f), new Vector2(0.95f, 0.88f));
+            var toggleButton = CreatePanel("FilterButton", root, new Vector2(0.76f, 0.81f), new Vector2(0.95f, 0.87f)); // clear of Back above, the stage list below
             var filterButton = toggleButton.gameObject.AddComponent<Button>();
             filterButton.targetGraphic = toggleButton.GetComponent<Image>();
             filterButton.onClick.AddListener(() => SetFilter(!_filterOn));
             _filterButtonLabel = CreateText("Label", toggleButton, Vector2.zero, Vector2.one, "FILTER: OFF", TextAlignmentOptions.Center, 14f, 20f);
-            SoulHunter.Gameplay.UI.UITheme.ApplyButton(filterButton, toggleButton.GetComponent<Image>(), SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal);
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(filterButton, toggleButton.GetComponent<Image>(), SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Tab);
 
             var list = CreatePanel("StageFilter", root, new Vector2(0.76f, 0.22f), new Vector2(0.95f, 0.8f));
             _filterCountText = CreateText("Count", list, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.99f), "", TextAlignmentOptions.Center, 14f, 24f);
@@ -558,10 +568,10 @@ namespace SoulHunter.UI
                 var row = CreateRect($"Stage_{stage}", list, new Vector2(0.05f, top - rowHeight), new Vector2(0.97f, top));
                 var box = CreateRect("Box", row, new Vector2(0f, 0.18f), new Vector2(0.1f, 0.82f));
                 var boxImage = box.gameObject.AddComponent<Image>();
-                SoulHunter.Gameplay.UI.UITheme.ApplySurface(boxImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Row);
-                var check = CreateRect("Check", box, new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f));
+                SoulHunter.Gameplay.UI.UITheme.ApplySurface(boxImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.TickBox);
+                var check = CreateRect("Check", box, new Vector2(0.16f, 0.16f), new Vector2(0.84f, 0.84f));
                 var checkImage = check.gameObject.AddComponent<Image>();
-                SoulHunter.Gameplay.UI.UITheme.ApplySurface(checkImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Accent); // tick = shown
+                SoulHunter.Gameplay.UI.UITheme.ApplySurface(checkImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Tick); // tick = shown
                 checkImage.raycastTarget = false;
                 var toggle = row.gameObject.AddComponent<Toggle>();
                 toggle.targetGraphic = boxImage;
@@ -592,8 +602,11 @@ namespace SoulHunter.UI
             focus.Index = index;
             focus.Selected = SelectCharacter;
 
-            SoulHunter.Gameplay.UI.UITheme.ApplyText(CreateText("Name", card, new Vector2(0.05f, 0.76f), new Vector2(0.95f, 0.97f), character.CharacterName,
+            var nameText = SoulHunter.Gameplay.UI.UITheme.ApplyText(CreateText("Name", card, new Vector2(0.07f, 0.74f), new Vector2(0.93f, 0.95f), character.CharacterName,
                 TextAlignmentOptions.TopLeft, 12f, 24f), SoulHunter.Gameplay.UI.ThemedElement.TextRole.Card);
+            nameText.fontStyle = FontStyles.Bold; // regular strokes are so thin at card size that dark text reads grey
+            nameText.textWrappingMode = TextWrappingModes.NoWrap;
+            nameText.overflowMode = TextOverflowModes.Ellipsis;
             var portrait = CreateImage("Portrait", card, new Vector2(0.05f, 0.05f), new Vector2(0.6f, 0.74f), character.CharacterIcon);
             var weapon = WeaponInfo(character.StartingWeapon);
             CreateImage("Weapon", card, new Vector2(0.62f, 0.05f), new Vector2(0.95f, 0.42f), weapon != null ? weapon.Icon : null);
@@ -606,11 +619,19 @@ namespace SoulHunter.UI
             _cardPortraits.Add(portrait);
             // The selected card gets a white outline as well as its colour, so selection never depends on colour alone.
             var outline = card.gameObject.AddComponent<Outline>();
-            outline.effectColor = SoulHunter.Gameplay.UI.UITheme.Focus; // the theme's focus colour around the selected card
-            outline.effectDistance = new Vector2(4f, -4f);
+            ApplySelectedEdge(outline);
             outline.enabled = false;
             _cardOutlines.Add(outline);
             _cardBadges.Add(badge);
+        }
+
+        /// <summary>The theme's frame around the chosen card: its colour and thickness (Theme Studio, Cards).</summary>
+        private static void ApplySelectedEdge(Outline outline)
+        {
+            var cards = SoulHunter.Gameplay.UI.UiThemeAsset.Active.Cards;
+            outline.effectColor = cards.SelectedEdge;
+            outline.effectDistance = new Vector2(cards.SelectedEdgeWidth, -cards.SelectedEdgeWidth);
+            outline.useGraphicAlpha = true;
         }
 
         private RectTransform PanelRoot()
@@ -692,6 +713,8 @@ namespace SoulHunter.UI
         public GridLayoutGroup Grid;
         public RectTransform Viewport;
         public int Count;
+        [Tooltip("Cells are at least this share of their width tall (0 = whatever height fits the viewport).")]
+        public float MinHeightRatio = 0.45f;
         private Vector2 _lastSize;
 
         private void LateUpdate()
@@ -704,7 +727,7 @@ namespace SoulHunter.UI
             int rows = Mathf.CeilToInt(Count / (float)columns);
             float width = (size.x - Grid.spacing.x * (columns - 1)) / columns;
             float height = Mathf.Min(width * 0.72f, (size.y - Grid.spacing.y * (rows - 1)) / rows);
-            Grid.cellSize = new Vector2(Mathf.Floor(width), Mathf.Floor(Mathf.Max(height, width * 0.45f)));
+            Grid.cellSize = new Vector2(Mathf.Floor(width), Mathf.Floor(Mathf.Max(height, width * MinHeightRatio)));
         }
     }
 
@@ -718,7 +741,9 @@ namespace SoulHunter.UI
         {
             if (Labels == null || Labels.Length == 0 || Labels[0] == null) return;
             Vector2 size = Labels[0].rectTransform.rect.size;
-            if (size == _lastSize || size.x <= 0f) return;
+            bool restyled = false; // a theme restyle turns auto-size back on: share the size again
+            foreach (var label in Labels) if (label != null && label.enableAutoSizing) restyled = true;
+            if ((size == _lastSize && !restyled) || size.x <= 0f) return;
             _lastSize = size;
             float smallest = float.MaxValue;
             foreach (var label in Labels)

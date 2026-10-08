@@ -109,7 +109,7 @@ namespace SoulHunter.Gameplay.UI
             for (int i = 0; i < sections.Length; i++)
             {
                 int index = i;
-                var tab = AddButton(panel, new Vector2(0.05f + i * 0.2275f, 0.83f), new Vector2(0.255f + i * 0.2275f, 0.9f), sections[i], () => ShowTab(index));
+                var tab = AddButton(panel, new Vector2(0.05f + i * 0.2275f, 0.83f), new Vector2(0.255f + i * 0.2275f, 0.9f), sections[i], () => ShowTab(index), ThemedElement.SizeRole.Tab);
                 tab.name = "Tab_" + sections[i];
                 _tabButtons.Add(tab);
             }
@@ -206,7 +206,7 @@ namespace SoulHunter.Gameplay.UI
             _currentTab = Mathf.Clamp(index, 0, _tabs.Count - 1);
             for (int i = 0; i < _tabs.Count; i++) _tabs[i].gameObject.SetActive(i == _currentTab);
             for (int i = 0; i < _tabButtons.Count; i++)
-                UITheme.ApplyButton(_tabButtons[i], _tabButtons[i].targetGraphic as Image, i == _currentTab ? UITheme.ButtonKind.Primary : UITheme.ButtonKind.Normal); // the open section is the main-action colour
+                UITheme.ApplyButton(_tabButtons[i], _tabButtons[i].targetGraphic as Image, i == _currentTab ? UITheme.ButtonKind.Primary : UITheme.ButtonKind.Normal, UITheme.IconSlot.None, true, ThemedElement.SizeRole.Tab); // the open section is the main-action colour
             var first = _tabItems[_currentTab].Count > 0 ? _tabItems[_currentTab][0] : null;
             if (first != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(first.gameObject);
         }
@@ -219,25 +219,26 @@ namespace SoulHunter.Gameplay.UI
         private void AddSlider(RectTransform panel, ref float y, float row, string label, Func<float> get, Action<float> set)
         {
             var line = Line(panel, ref y, row, label);
-            var sliderRect = Rect("Slider", line, new Vector2(0.45f, 0.3f), new Vector2(0.95f, 0.7f));
+            var sliderRect = Rect("Slider", line, new Vector2(0.45f, 0.3f), new Vector2(0.84f, 0.7f));
             var background = sliderRect.gameObject.AddComponent<Image>();
-            UITheme.ApplySurface(background, ThemedElement.SurfaceRole.Row);
+            UITheme.ApplySurface(background, ThemedElement.SurfaceRole.Groove);
             var fillArea = Rect("Fill Area", sliderRect, Vector2.zero, Vector2.one);
             var fill = Rect("Fill", fillArea, Vector2.zero, Vector2.one);
             UITheme.ApplySurface(fill.gameObject.AddComponent<Image>(), ThemedElement.SurfaceRole.Accent);
             var handleArea = Rect("Handle Area", sliderRect, Vector2.zero, Vector2.one);
-            var handle = Rect("Handle", handleArea, new Vector2(0f, -0.4f), new Vector2(0f, 1.4f));
-            handle.sizeDelta = new Vector2(18f, 0f);
+            // A round knob as tall as the row allows (the theme's knob picture; a plate in themes without one).
+            var handle = Rect("Handle", handleArea, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
+            handle.sizeDelta = new Vector2(40f, 40f);
             var handleImage = handle.gameObject.AddComponent<Image>();
             var slider = sliderRect.gameObject.AddComponent<Slider>();
             slider.fillRect = fill;
             slider.handleRect = handle;
             slider.targetGraphic = handleImage;
-            UITheme.ApplyButton(slider, handleImage, UITheme.ButtonKind.Normal, UITheme.IconSlot.None, false);
+            UITheme.ApplyButton(slider, handleImage, UITheme.ButtonKind.Normal, UITheme.IconSlot.None, false, ThemedElement.SizeRole.Free);
             slider.minValue = 0f;
             slider.maxValue = 1f;
             slider.SetValueWithoutNotify(get());
-            var value = Text("Value", line, new Vector2(0.96f, 0f), new Vector2(1.1f, 1f), "", 22f, TextAlignmentOptions.Left);
+            var value = Text("Value", line, new Vector2(0.86f, 0f), new Vector2(0.98f, 1f), "", 22f, TextAlignmentOptions.Right); // inside the row, clear of the handle
             slider.onValueChanged.AddListener(v =>
             {
                 set(v);
@@ -253,15 +254,21 @@ namespace SoulHunter.Gameplay.UI
         {
             var line = Line(panel, ref y, row, label);
             TextMeshProUGUI state = null;
-            var button = AddButton(line, new Vector2(0.45f, 0.08f), new Vector2(0.65f, 0.92f), "", () =>
+            var button = AddButton(line, new Vector2(0.45f, 0.5f), new Vector2(0.45f, 0.5f), "", () =>
             {
                 set(!get());
                 GameSettings.NotifyChanged();
                 RefreshAll();
-            });
+            }, ThemedElement.SizeRole.Free);
+            ((RectTransform)button.transform).pivot = new Vector2(0f, 0.5f); // the switch starts where the sliders start
+            var switchLook = ThemedElement.For(button.gameObject);
+            switchLook.IsSwitch = true;
+            switchLook.SwitchOn = get();
+            switchLook.Apply();
             state = button.GetComponentInChildren<TextMeshProUGUI>();
             // Text as well as colour, so the state never depends on colour alone.
-            _refreshers.Add(() => { state.text = get() ? "ON" : "OFF"; UITheme.ApplyText(state, get() ? ThemedElement.TextRole.Accent : ThemedElement.TextRole.Body); });
+            // The words carry the state; the switch's text takes light or dark by contrast with its colour (the theme decides).
+            _refreshers.Add(() => { switchLook.SwitchOn = get(); state.text = get() ? "ON" : "OFF"; switchLook.Apply(); });
             button.name = label;
             _selectables.Add(button);
             _building.Add(button);
@@ -278,7 +285,7 @@ namespace SoulHunter.Gameplay.UI
                 set((Mathf.Clamp(get(), 0, n - 1) + 1) % n);
                 GameSettings.NotifyChanged();
                 RefreshAll();
-            });
+            }, ThemedElement.SizeRole.Free);
             var text = button.GetComponentInChildren<TextMeshProUGUI>();
             _refreshers.Add(() => text.text = labelFor(Mathf.Clamp(get(), 0, Mathf.Max(1, count()) - 1)));
             button.name = label;
@@ -299,7 +306,7 @@ namespace SoulHunter.Gameplay.UI
         {
             if (index < 0) return;
             Button button = null;
-            button = AddButton(line, min, max, "", () => StartRebinding(action, index, device, button));
+            button = AddButton(line, min, max, "", () => StartRebinding(action, index, device, button), ThemedElement.SizeRole.Free);
             var label = button.GetComponentInChildren<TextMeshProUGUI>();
             _refreshers.Add(() => label.text = action.GetBindingDisplayString(index));
             button.name = $"{action.name}_{device}";
@@ -384,21 +391,23 @@ namespace SoulHunter.Gameplay.UI
             return line;
         }
 
-        private static Button AddButton(RectTransform parent, Vector2 min, Vector2 max, string label, Action onClick)
+        private static Button AddButton(RectTransform parent, Vector2 min, Vector2 max, string label, Action onClick,
+            ThemedElement.SizeRole size = ThemedElement.SizeRole.Standard)
         {
             var rect = Rect("Button", parent, min, max);
             var image = rect.gameObject.AddComponent<Image>();
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
+            Text("Text", rect, Vector2.zero, Vector2.one, label, 24f, TextAlignmentOptions.Center); // the same size as the row labels
+            // After the label exists, so the theme gives it its light-or-dark text and its place.
             UITheme.ApplyButton(button, image, label == "Back" ? UITheme.ButtonKind.Primary : UITheme.ButtonKind.Normal,
-                label == "Back" ? UITheme.IconSlot.Back : UITheme.IconSlot.None);
+                label == "Back" ? UITheme.IconSlot.Back : UITheme.IconSlot.None, true, size);
             button.onClick.AddListener(() =>
             {
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
                 if (audio != null) audio.PlaySFX(audio.UIClickSound);
                 onClick();
             });
-            Text("Text", rect, Vector2.zero, Vector2.one, label, 22f, TextAlignmentOptions.Center);
             return button;
         }
 

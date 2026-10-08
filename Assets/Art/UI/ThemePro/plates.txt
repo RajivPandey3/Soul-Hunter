@@ -1,0 +1,10 @@
+pro_button 52 56 52 52
+pro_chip 40 40 40 40
+pro_card 44 44 44 44
+pro_panel 60 60 60 60
+pro_row 28 30 28 28
+pro_inset 26 22 26 22
+pro_track 50 50 50 50
+pro_knob 0 0 0 0
+pro_tickbox 0 0 0 0
+pro_tick 0 0 0 0

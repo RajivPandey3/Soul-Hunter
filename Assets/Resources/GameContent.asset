@@ -389,4 +389,24 @@ MonoBehaviour:
   ChestFxSparkle: {fileID: 2800000, guid: 52d027c78d673a7429f38f4a91ebddd5, type: 3}
   GoldPouchIcon: {fileID: -1929607595165671533, guid: feb1d854bc9563548976a498aedbd830, type: 3}
   RoastChickenIcon: {fileID: -8608535540412278260, guid: ede195099f7ae454ba05258ef007506c, type: 3}
-  UiTheme: {fileID: 11400000, guid: ef2ffa58a3e2f284d90a0fdf96f46892, type: 2}
+  PowerUpIcons:
+  - PowerUp: 5
+    Icon: {fileID: 21300000, guid: a04a194a8f7806d419bff5844810c2e2, type: 3}
+  - PowerUp: 13
+    Icon: {fileID: 21300000, guid: a0b080779d6090d418a9c1cee213d6c4, type: 3}
+  - PowerUp: 16
+    Icon: {fileID: 21300000, guid: 817a554de5c4c5b4098e0d5407676078, type: 3}
+  - PowerUp: 17
+    Icon: {fileID: 21300000, guid: 28429e7639981ec4abea0a7b081c7992, type: 3}
+  - PowerUp: 18
+    Icon: {fileID: 21300000, guid: cc160863830d1844aa345ea17acdc207, type: 3}
+  - PowerUp: 19
+    Icon: {fileID: 21300000, guid: 27b950fd9441e0a46814bd2f920e7efb, type: 3}
+  - PowerUp: 20
+    Icon: {fileID: 21300000, guid: 51ca6ccd2938cbb45a3db468426655b5, type: 3}
+  - PowerUp: 21
+    Icon: {fileID: 21300000, guid: 488d5cab3d8f3da4b860b870bd9813f0, type: 3}
+  - PowerUp: 22
+    Icon: {fileID: 21300000, guid: e1b47584a24ea1c4386a426b2c880d15, type: 3}
+  UiTheme: {fileID: 11400000, guid: 5ce08e43e9d1741478261c5829ce34ea, type: 2}
+  UiThemePreview: {fileID: 11400000, guid: 5ce08e43e9d1741478261c5829ce34ea, type: 2}

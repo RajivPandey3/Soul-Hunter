@@ -132,6 +132,7 @@ namespace SoulHunter.Gameplay.UI
             _ring = Raw("Ring", content != null ? content.ChestFxRing : null, new Vector2(0f, 70f), 460f);
 
             _title = Label("Title", new Vector2(0f, 330f), new Vector2(1200f, 110f), 78f);
+            UITheme.ApplyText(_title, ThemedElement.TextRole.Title); // the same title look as LEVEL UP!, RESULTS and OPTIONS
             _coinText = Label("Coins", new Vector2(0f, -130f), new Vector2(700f, 90f), 64f);
             UITheme.ApplyText(_coinText, ThemedElement.TextRole.Gold);
             _skipHint = Label("SkipHint", new Vector2(700f, -500f), new Vector2(420f, 50f), 26f);
@@ -185,12 +186,13 @@ namespace SoulHunter.Gameplay.UI
             rect.SetParent(_root, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
-            rect.sizeDelta = new Vector2(340f, 96f);
+            rect.sizeDelta = new Vector2(UITheme.Layout.ButtonWidth, UITheme.Layout.ButtonHeight);
             var button = go.GetComponent<Button>();
-            UITheme.ApplyButton(button, go.GetComponent<Image>(), UITheme.ButtonKind.Primary, UITheme.IconSlot.Confirm);
             button.onClick.AddListener(onClick);
-            var label = Label("Label", Vector2.zero, rect.sizeDelta, 46f, rect);
+            var label = Label("Label", Vector2.zero, rect.sizeDelta, UITheme.Layout.ButtonTextMax, rect);
             label.text = text;
+            // After the label exists, so the theme lays it out too; the size is the theme's standard button size.
+            UITheme.ApplyButton(button, go.GetComponent<Image>(), UITheme.ButtonKind.Primary, UITheme.IconSlot.Confirm);
             go.SetActive(false);
             return button;
         }
@@ -213,7 +215,7 @@ namespace SoulHunter.Gameplay.UI
             _chestImage.texture = _stage.Texture;
             _chestImage.color = Color.white;
             _title.text = _result.IsArcana ? "ARCANA CHEST!" : _result.ItemCount >= 5 ? "TREASURE x5!" : _result.ItemCount >= 3 ? "TREASURE x3!" : "TREASURE!";
-            UITheme.ApplyText(_title, _result.IsArcana ? ThemedElement.TextRole.Arcana : ThemedElement.TextRole.Gold);
+            UITheme.ApplyText(_title, _result.IsArcana ? ThemedElement.TextRole.TitleArcana : ThemedElement.TextRole.Title);
             _coinText.text = "";
             _coinText.transform.localScale = Vector3.zero;
             _skipHint.gameObject.SetActive(canSkip);

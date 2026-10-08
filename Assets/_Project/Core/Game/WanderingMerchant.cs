@@ -246,9 +246,10 @@ namespace SoulHunter.Gameplay.Core
             button.onClick.AddListener(() => onClick());
             ShopText("Text", rect, new Vector2(0.03f, 0f), new Vector2(0.97f, 1f), label, 26f);
             bool leave = label.StartsWith("Leave");
-            // Wares keep their two-line, left-aligned text, so they carry no icon.
+            // Wares keep their two-line, left-aligned text and their row size; Leave is a standard action button.
             SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, leave ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
-                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: false);
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: leave,
+                size: leave ? SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Standard : SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Free);
             return button;
         }
 

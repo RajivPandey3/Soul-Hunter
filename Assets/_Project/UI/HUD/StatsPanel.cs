@@ -210,7 +210,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 var labels = new System.Text.StringBuilder();
                 var values = new System.Text.StringBuilder();
-                if (c == 0 && title) { labels.Append("<b>STATS</b>\n"); values.Append("\n"); }
+                if (c == 0 && title) { labels.Append(UITheme.Bold("STATS")).Append("\n"); values.Append("\n"); }
                 for (int r = c * perColumn; r < Mathf.Min(Rows.Length, (c + 1) * perColumn); r++)
                 {
                     var row = Rows[r];

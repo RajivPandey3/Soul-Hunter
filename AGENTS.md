@@ -1511,7 +1511,91 @@ Owner: "pure game ka single theme system banao, ... source of truth single hona 
   - Soul Candy, Moonlit Reaper and Classic Crimson stay available in Theme Studio.
   - `UiThemeTests.TheDefaultLook_IsEmberPact_TheOwnersChoice` (T).
   - EditMode 571/571, PlayMode 288/288, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261007-ember/`).
-- Open: Android 48dp touch sizes not measured; icons are PNG, not vector; the owner has not played with Ember Pact yet.
+- **One standard size per kind of control** (owner, 2026-10-07, from a character select screenshot: "teeno fix karo ... button size sabka ek jaisa banao bada nahi standered ... tab ka size sahi karo pure project mein ek hee standered banao double nahi"):
+  - Theme Studio, Text & spacing (`UiThemeAsset.Layout`):
+    - every action button is 300x68: Start, Power Up, Options, Quit, Back, Confirm, Buy, Refund, Resume, OPEN, DONE, Reroll/Skip/Banish, Leave and Reset;
+    - every tab or toggle chip is 150x54: the Options sections, the six run modes and FILTER;
+    - tab text max 24, gap 12, tick box 0.5 of the height.
+    - Units are the 1920x1080 layout's. ui-ux-pro-max: one size per control type, at least 8 between targets.
+  - `ThemedElement.SizeRole` (Standard / Tab / Free) sets the size. A button keeps the centre its screen gave it; inside a layout group it asks the group for the size.
+  - Free (the screen's own size) is for cards, the slider handle, controls inside Options rows and the merchant's two-line wares.
+  - A screen that places its buttons again gets the size back at the end of the frame. The main menu sets anchors one at a time, and reacting to each change gave wrong centres.
+  - `ThemedRow`: a row of standard controls, centred with the gap. It shrinks as one piece when a narrow window cannot fit it. Used for the run modes and for Buy/Refund.
+  - `MainMenuLayout.PlaceButtons` stacks the theme buttons with the gap. The chest screen and the level-up bar read the theme size; the hard-wired 340x96 and the stretched Reroll/Skip/Banish are gone.
+  - Labels:
+    - a label with only the plain text role takes its button's light-or-dark choice. White on orange was 1.4-2.2:1; now every label on a standard button or tab reaches 4.5:1. This affected the run modes, the Options tabs, Back and the ON/OFF switches.
+    - Labels stay on one line and shrink to fit, down to 12.
+    - A button without an icon pads its label evenly on both sides.
+  - The three screenshot fixes:
+    - the mode chips are tab size, with the tick box in the icon's place and the label beside it;
+    - card names are bold and padded (dark text at card size read grey);
+    - the chosen card has a frame from the theme (`Cards.SelectedEdge`, `SelectedEdgeWidth` 5).
+  - Also: Options slider values sit inside their row, clear of the handle.
+  - `AutoplayBot -sh-autoplay-select-shot` logs every button's size. In the build: Confirm and Back 300x68, FILTER 150x54, the mode chips 150x54, shown at 139x50 in the shrunk row.
+  - Tests: `UiStandardSizePlayModeTests` (R). On the main menu, character select, Power Up, pause, Options and level-up, every action button and tab has the theme's size. No two overlap, every label reads at 4.5:1 and stays inside its button. Plus the character select fixes.
+  - Validation:
+    - EditMode 571/571, PlayMode 290/290, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261007-sizes-full3/`).
+    - Then even label padding was added and the UI fixtures were rerun (`-sizes10/`).
+    - Earlier full runs failed once each in `LightSourcePlayModeTests`, `NewEvolutionRulesPlayModeTests`, `PlayerPresentationPlayModeTests` and the known `StageHazardPlayModeTests` Soul Meteor test. Each passed alone, and the final full run passed.
+  - Build screenshots, Ember Pact (`run-20261007-sizes-build4/ember-pact/play/shots`, 1366x768): 0 errors (partial `V`).
+- **Power Up shop redesign** (owner, 2026-10-07: "haan sab fix karo, icons bhi banao, skil through madad lo", after a screenshot review of nine problems; ui-ux-pro-max: state never by colour alone, locked items say why, 4.5:1 text, one icon size and style; frontend-design: one highlight per screen):
+  - Header inside the screen's backing: Back on the left (it stuck out over the panel's top edge), a "Power Up" title, and the gold with its coin on the right.
+  - The grid fills the space above the info box (`GridFit.MinHeightRatio` 0 here; four rows used to run under the box).
+  - Each cell has one icon slot (64), a bold name, then the rank, "MAX", or "LOCKED" with what unlocks it (`PowerUpUnlocks.NextConditionText`). A locked cell has its icon faded and readable light text. Every cell's text reaches 4.5:1 on its own colour.
+  - The chosen cell keeps its state's colour and wears the theme's frame (`Cards.SelectedEdge`, as the chosen character card).
+  - The info box (a themed Row surface): the chosen PowerUp's big icon, its name and rank, what it does, the price with a coin (gold, or red with "need N more gold"), then Buy and "Refund All" in a `ThemedRow`.
+  - **Icons** (Soul Hunter's own; not yet owner-approved): `ArtSource/Generators/build_powerup_icons.py` draws 9 badges in the round item-icon style (`build_item_icons.badge`):
+    - one warm-gold filled glyph each, only the rim colour differs;
+    - Area (rings spreading out; the Candelabrador candlestick read too small), Greed (coins), Omni (star with four sparks), Charm (bell), Defang (a whole and a snapped fang), Reroll (two chasing arrows), Skip (double chevron), Banish (card behind a forbidding ring) and Preserve (hourglass).
+    - `PowerUpIconImporter` (menu Soul Hunter/Content/Import Power Up Icons) imports them and lists them in `GameContent.PowerUpIcons` (`GameContentCatalog.PowerUpIconFor`).
+    - `PowerUpMenuUI.IconOf` uses them first, else the passive item's icon.
+  - Tests: `PowerUpShopLookPlayModeTests` (R):
+    - every PowerUp has an icon in the 64 slot;
+    - Back is inside the backing and clear of the grid and the title; the title and the gold coin are shown;
+    - only the chosen cell has the theme's frame;
+    - MAX and LOCKED with the unlock condition appear in words;
+    - every cell reads at 4.5:1;
+    - too little gold says "need" and Buy is off.
+  - The shop, unlock and heal tests kept their checks ("Price: 200", "MAX", "LOCKED", "Unlock").
+  - EditMode 571/571, PlayMode 291/291, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261007-shop-full/`). Build screenshot `run-20261007-shop-build2/ember-pact/play/shots/000_powerups.png`, 0 errors (partial `V`).
+- **Full HD item icons** (owner, 2026-10-07: "without circle ... jo image dikha rahe ho change mat karna", "hd ilustration model"):
+  - The 30 old item icons (`Assets/Art/UI/sprite_*.png`) were upscaled to 512 px with Real-ESRGAN (realesrgan-x4plus-anime, the owner's choice) and imported uncompressed. The pictures are unchanged; the originals are in `ArtSource/SH10_OldIcons_Original`.
+  - Their empty margin was trimmed, so every icon fills its slot the same way (review, 2026-10-08).
+  - Open: the 9 Power Up badges and Bible, Cross, Duplicator and Spellbinder are still circle badges.
+- **Ember Pact Pro, the game's look** (owner, 2026-10-08: "pro type ... brightness or contrast full ... text bilkul sharp ... icon full hd", then a style sample, "ok pass now apply it in project every where but safely, mismatch is not allow"):
+  - Built first as one sample screen with every UI item (`UiStyleSampleScreen`, `AutoplayBot -sh-autoplay-style-sample`), reviewed and fixed four times, then approved. Then applied everywhere and approved from the build screenshots of every screen (`D:/SoulHunter-Validation/ui_pro_all_screens.png`, "approved").
+  - `UiProThemeBuilder` (menu Soul Hunter/Content/Build Pro Look) makes `UiTheme_EmberPactPro` from Ember Pact and sets it as `GameContent.UiTheme` (and `UiThemePreview`). The other looks stay unchanged in Theme Studio.
+  - Fonts: Cinzel ExtraBold titles and Barlow Semi Condensed Bold text, both SIL OFL (`Assets/Art/Fonts`, `CREDITS.md`). They use sharp SDF assets (2048 atlas, 90 pt) and three raised-text materials: a title gradient with outline and shadow, light text with a dark outline and shadow, and dark text with a light emboss.
+  - Fake bold is off: the fonts' bold spacing and weight are 0, the theme's `NoFakeBold` is on, and every rich-text bold goes through `UITheme.Bold`. Fake bold had made labels wide and soft.
+  - Pictures (`ArtSource/Generators/build_ui_pro_plates.py`): 3D button, card and panel plates; bevelled rows (rows, info boxes, HUD plates, slots); a slider groove and round knob; a switch track; a tick box and tick; one-colour button icons that take the label's colour (`IconsLikeLabel`). Coins next to gold amounts stay in colour (`IconSlot.Coin`).
+  - Shared controls in `ThemedElement`:
+    - Options ON/OFF buttons are switches (`IsSwitch`): green ON or dark OFF, with a sliding knob and the word. A chosen switch keeps its colour and the gold ring marks it.
+    - Sliders have a round knob.
+    - Run-mode and level-filter tick boxes have a gold tick; the label starts just after the box.
+    - The open tab has a gold bar under it (not shown by colour alone).
+  - Owner fixes from the reviews:
+    - Every button looks the same size: no breathing on the chosen one, a thin ring instead.
+    - An unusable button (Buy without gold) is a stone plate with light text (`ShowUsable`).
+    - Windows are opaque.
+    - Selection is shown by the gold frame only.
+    - The light streak was removed.
+  - Also fixed for the look:
+    - Character select: run modes in two rows of three, and the name and description in the theme's font.
+    - Results: no colour written into its text; it uses the theme.
+    - Chest: the title is in the title style (`TextRole.TitleArcana` for Arcana chests).
+    - Options: row buttons use the row text size.
+  - Guards (`UiThemeTests`):
+    - The game's look has every picture and rule above.
+    - UI code holds no `<color=#...>` and no `<b>` outside `UITheme`.
+  - Validation:
+    - EditMode 572/572, PlayMode 291/291, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261008-apply-full2/`).
+    - The chest title fix after that: chest fixtures 12/12 (`-apply6`).
+    - The first full run (`-apply-full`) failed four tests:
+      - mode labels lost their shared size (a first-frame restyle; fixed);
+      - two checks written for the old look, fake bold and a dark sold-out plate (they now check the heavy font and a readable 3:1 sold-out text);
+      - the Pentagram chest test once, which passed on rerun.
+  - Build screenshots of every screen (`run-20261008-pro-screens6`, `-7`), 0 errors (partial `V`). The Wandering Merchant shop was not captured.
+- Open: Android 48dp touch sizes not measured (a 54-unit tab is about 18dp on a 360dp-tall phone); icons are PNG, not vector; the owner has not played with the Pro look yet.
 
 Not yet seen by the owner.
 

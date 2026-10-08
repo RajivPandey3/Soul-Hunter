@@ -88,7 +88,7 @@ namespace SoulHunter.Gameplay.UI
                 UnlocksButton.onClick.AddListener(ToggleUnlocks);
                 UnlocksPanel = Panel(_root, "UnlocksPanel", new Vector2(0.25f, 0.2f), new Vector2(0.75f, 0.8f)).gameObject;
                 Text((RectTransform)UnlocksPanel.transform, "UnlocksText", new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.95f),
-                    $"<color=#{ColorUtility.ToHtmlStringRGB(UITheme.Accent)}><b>UNLOCKED THIS RUN</b></color>\n\n" + string.Join("\n", results.Unlocks), 32f, TextAlignmentOptions.Top);
+                    $"<color=#{ColorUtility.ToHtmlStringRGB(UITheme.Accent)}>{UITheme.Bold("UNLOCKED THIS RUN")}</color>\n\n" + string.Join("\n", results.Unlocks), 32f, TextAlignmentOptions.Top);
                 UnlocksPanel.SetActive(false);
             }
             Focus(DoneButton);
@@ -96,7 +96,7 @@ namespace SoulHunter.Gameplay.UI
 
         private static string TitleLine(RunResults results) => results.End switch
         {
-            RunResults.EndKind.Victory => "<color=#FFD64A>SHADOW KAEL DESTROYED</color>",
+            RunResults.EndKind.Victory => $"<color=#{Gold}>SHADOW KAEL DESTROYED</color>",
             RunResults.EndKind.Death => "GAME OVER",
             _ => "RESULTS"
         };
@@ -107,13 +107,13 @@ namespace SoulHunter.Gameplay.UI
             if (results.End == RunResults.EndKind.Victory)
                 // The owner's story, word for word (Docs/Game_Design_Document.md).
                 text.Append("<i>").Append(SoulHunter.Gameplay.Data.CampaignStory.FinalLine).Append("</i>\n");
-            text.Append("<b>").Append(results.StageLine).Append("</b>\n");
+            text.Append(UITheme.Bold(results.StageLine)).Append("\n");
             text.Append("Mode: ").Append(results.Mode).Append("     Gold bonus: ")
                 .Append(results.GoldBonusPercent >= 0 ? "+" : "").Append(results.GoldBonusPercent).Append("%\n");
-            text.Append("Survived: <color=#FFD64A>").Append(RunResultsFormat.Time(results.SecondsSurvived)).Append("</color>\n");
-            text.Append("Gold earned: <color=#FFD64A>").Append(results.Gold).Append("</color>\n");
-            text.Append("Level reached: <color=#FFD64A>").Append(results.Level).Append("</color>\n");
-            text.Append("Enemies defeated: <color=#FFD64A>").Append(results.Kills).Append("</color>");
+            text.Append($"Survived: <color=#{Gold}>").Append(RunResultsFormat.Time(results.SecondsSurvived)).Append("</color>\n");
+            text.Append($"Gold earned: <color=#{Gold}>").Append(results.Gold).Append("</color>\n");
+            text.Append($"Level reached: <color=#{Gold}>").Append(results.Level).Append("</color>\n");
+            text.Append($"Enemies defeated: <color=#{Gold}>").Append(results.Kills).Append("</color>");
             return text.ToString();
         }
 
@@ -196,7 +196,7 @@ namespace SoulHunter.Gameplay.UI
         private void BuildSide(RectTransform side, RunResults results)
         {
             Text(side, "CharacterText", new Vector2(0.04f, 0.88f), new Vector2(0.96f, 0.97f),
-                $"<b>{results.Character}</b>" + (results.SoulEggs > 0 ? $"     <color=#FFD64A>Soul Eggs: {results.SoulEggs}</color>" : ""),
+                UITheme.Bold(results.Character) + (results.SoulEggs > 0 ? $"     <color=#{Gold}>Soul Eggs: {results.SoulEggs}</color>" : ""),
                 34f, TextAlignmentOptions.Left);
 
             // Items: icons in rows of 8, each with its level (yellow when max).
@@ -240,14 +240,18 @@ namespace SoulHunter.Gameplay.UI
         }
 
         /// <summary>The PowerUps, pickups and Arcanas lists, in the wiki's order.</summary>
+        // The theme's gold and dim text colours for rich-text highlights (no colour of this screen's own).
+        private static string Gold => ColorUtility.ToHtmlStringRGB(UITheme.Accent);
+        private static string Dim => ColorUtility.ToHtmlStringRGB(UITheme.TextDim);
+
         public static string Lists(RunResults results)
         {
             var text = new StringBuilder();
-            text.Append("<b><color=#B3A39A>POWERUPS</color></b>\n");
+            text.Append(UITheme.Bold($"<color=#{Dim}>POWERUPS</color>")).Append("\n");
             text.Append(results.PowerUps.Count == 0 ? "None" : Join(results.PowerUps, "  "));
-            text.Append("\n\n<b><color=#B3A39A>PICKUPS</color></b>\n");
+            text.Append("\n\n").Append(UITheme.Bold($"<color=#{Dim}>PICKUPS</color>")).Append("\n");
             text.Append(results.Pickups.Count == 0 ? "None" : Join(results.Pickups, " x"));
-            text.Append("\n\n<b><color=#B3A39A>ARCANAS</color></b>\n");
+            text.Append("\n\n").Append(UITheme.Bold($"<color=#{Dim}>ARCANAS</color>")).Append("\n");
             text.Append(results.Arcanas.Count == 0 ? "None" : string.Join(",   ", results.Arcanas));
             return text.ToString();
         }

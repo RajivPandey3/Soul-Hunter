@@ -38,11 +38,33 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void TheDefaultLook_IsEmberPact_TheOwnersChoice()
+        public void TheDefaultLook_IsEmberPactPro_TheOwnersChoice()
         {
-            // Owner, 2026-10-07, after the side-by-side build comparison (run-20261006-looks): "Ember Pact".
-            Assert.AreEqual("Assets/_Project/Data/Config/UiThemes/UiTheme_EmberPact.asset",
-                AssetDatabase.GetAssetPath(GameContentCatalog.Load().UiTheme), "GameContent's active theme is Ember Pact.");
+            // Owner, 2026-10-07: "Ember Pact"; 2026-10-08, after the style sample: "ok pass now apply it in project every where".
+            Assert.AreEqual("Assets/_Project/Data/Config/UiThemes/UiTheme_EmberPactPro.asset",
+                AssetDatabase.GetAssetPath(GameContentCatalog.Load().UiTheme), "GameContent's active theme is Ember Pact Pro.");
+        }
+
+        [Test]
+        public void ThePro_Look_HasEveryPictureFontAndRuleTheSampleShowed()
+        {
+            var t = GameContentCatalog.Load().UiTheme;
+            Assert.IsNotNull(t.Shape.Button, "3D button plate");
+            Assert.IsNotNull(t.Shape.Row, "bevelled rows, boxes, HUD plates and slots");
+            Assert.IsNotNull(t.Shape.Inset, "slider groove");
+            Assert.IsNotNull(t.Shape.Knob, "round knob");
+            Assert.IsNotNull(t.Shape.Track, "switch track");
+            Assert.IsNotNull(t.Shape.TickBox, "empty tick box");
+            Assert.IsNotNull(t.Shape.Tick, "tick mark");
+            Assert.IsNotNull(t.Font.Title, "Cinzel titles");
+            Assert.IsNotNull(t.Font.Body, "Barlow labels");
+            Assert.IsNotNull(t.Font.OnDarkMaterial, "raised text");
+            Assert.IsTrue(t.Font.NoFakeBold, "no fake bold over the heavy fonts");
+            Assert.IsTrue(t.Layouts.IconsLikeLabel, "button icons take the label's colour");
+            Assert.IsFalse(t.Motions.Breathe, "every button looks the same size (owner, 2026-10-08)");
+            Assert.IsNotNull(t.Icon.Coin, "gold amounts keep a coloured coin");
+            Assert.AreNotEqual(t.Icon.Buy, t.Icon.Coin, "the coloured coin is not the one-colour Buy icon");
+            Assert.IsTrue(t.Layouts.OpenTabBar, "the open tab is not shown by colour alone");
         }
 
         [Test]
@@ -86,6 +108,16 @@ namespace SoulHunter.Tests.EditMode
                 })
                 .Select(x => $"{Path.GetFileName(x.f)}:{x.n + 1}: {x.line.Trim()}").ToList();
             Assert.That(offenders, Is.Empty, "Colours that belong in the UI theme:\n" + string.Join("\n", offenders));
+            // Rich-text colours too: <color=#RRGGBB> written into a string is a colour of the screen's own (Results, 2026-10-08).
+            var hex = new Regex(@"<color=#[0-9A-Fa-f]{6}");
+            var hexOffenders = files.SelectMany(f => File.ReadAllLines(f).Select((line, n) => (f, n, line)))
+                .Where(x => hex.IsMatch(x.line)).Select(x => $"{Path.GetFileName(x.f)}:{x.n + 1}: {x.line.Trim()}").ToList();
+            Assert.That(hexOffenders, Is.Empty, "Rich-text colours that belong in the UI theme: " + string.Join(" | ", hexOffenders));
+            // Bold goes through UITheme.Bold, so a theme with heavy fonts adds no fake bold (Pro look, 2026-10-08).
+            var boldOffenders = files.Where(f => !f.Replace('\\', '/').EndsWith("HUD/UITheme.cs"))
+                .SelectMany(f => File.ReadAllLines(f).Select((line, n) => (f, n, line)))
+                .Where(x => x.line.Contains("<b>")).Select(x => $"{Path.GetFileName(x.f)}:{x.n + 1}").ToList();
+            Assert.That(boldOffenders, Is.Empty, "Bold text that should use UITheme.Bold: " + string.Join(", ", boldOffenders));
             var oldPath = files.Where(f => File.ReadAllText(f).Contains("ApplyFocusColors")).ToList();
             Assert.That(oldPath, Is.Empty, "No second styling path: " + string.Join(", ", oldPath));
         }
