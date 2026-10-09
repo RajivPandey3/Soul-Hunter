@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      mono_soul_flame_0: 5509141615512368562
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

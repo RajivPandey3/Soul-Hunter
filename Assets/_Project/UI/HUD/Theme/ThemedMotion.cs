@@ -21,6 +21,7 @@ namespace SoulHunter.Gameplay.UI
         private bool _hover, _pressed;
         private RectTransform _shine;
         private ThemeFocusRing _ring;
+        private Image _frame;
         private int _shownUsable = -1;
 
         /// <summary>True while this button is the chosen one (keyboard/controller focus).</summary>
@@ -37,7 +38,15 @@ namespace SoulHunter.Gameplay.UI
             if (_shine != null) _shine.gameObject.SetActive(false);
         }
 
-        public void OnPointerEnter(PointerEventData eventData) => _hover = true;
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _hover = true;
+            // The mouse chooses the button it points at, so only one button is ever highlighted (owner review 2026-10-08:
+            // the focused Start and a hovered Options lit up together).
+            var selectable = GetComponent<Selectable>();
+            if (selectable != null && selectable.IsInteractable() && EventSystem.current != null && !(selectable is Slider))
+                EventSystem.current.SetSelectedGameObject(gameObject);
+        }
         public void OnPointerExit(PointerEventData eventData) { _hover = false; _pressed = false; }
         public void OnPointerDown(PointerEventData eventData) => _pressed = true;
         public void OnPointerUp(PointerEventData eventData) => _pressed = false;
@@ -75,6 +84,29 @@ namespace SoulHunter.Gameplay.UI
         {
             var graphic = GetComponent<Selectable>() != null ? GetComponent<Selectable>().targetGraphic : null;
             if (graphic == null) return;
+            var frameSprite = theme.Shape.FocusFrame;
+            if (frameSprite != null && !IsCard)
+            {
+                // Inside the button's edge: the chosen button keeps exactly its size and its gap to the next one.
+                if (_ring != null) _ring.enabled = false;
+                if (_frame == null)
+                {
+                    if (!on) return;
+                    var go = new GameObject("ThemeFocusFrame", typeof(RectTransform), typeof(Image));
+                    go.transform.SetParent(graphic.transform, false);
+                    _frame = go.GetComponent<Image>();
+                    _frame.raycastTarget = false;
+                    var r = _frame.rectTransform;
+                    r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = r.offsetMax = Vector2.zero;
+                }
+                _frame.sprite = frameSprite;
+                _frame.type = Image.Type.Sliced;
+                _frame.pixelsPerUnitMultiplier = 2f;
+                _frame.color = theme.Buttons.Focus;
+                _frame.gameObject.SetActive(on);
+                return;
+            }
+            if (_frame != null) _frame.gameObject.SetActive(false);
             if (_ring == null)
             {
                 if (!on) return;

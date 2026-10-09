@@ -133,6 +133,37 @@ def tick(size, width):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def focus_frame(w, h, r, width):
+    """The focus ring drawn inside a button (owner review 2026-10-08: an outer ring made the chosen button look bigger)."""
+    W, H, R, Wd = w * S, h * S, r * S, width * S
+    d = rounded_mask(W, H, R)
+    alpha = np.clip(0.5 - d, 0, 1) * np.clip(d + Wd + 0.5, 0, 1)
+    one = np.ones_like(alpha)
+    img = Image.fromarray((np.dstack([one, one, one, alpha]) * 255).astype(np.uint8), "RGBA")
+    return img.resize((w, h), Image.LANCZOS)
+
+
+def mono_power(size=512):
+    """The Power Up button icon (owner review 2026-10-08: the soul gem read as a dark blob at button size): one clear
+    faceted gem, white (the button tints it like its label), its facets cut as thin gaps so the shape reads when small."""
+    from PIL import ImageDraw
+    N = size * S
+    im = Image.new("L", (N, N), 0)
+    d = ImageDraw.Draw(im)
+    P = lambda x, y: (x * N, y * N)
+    top_l, top_r, mid_l, mid_r, tip = P(0.32, 0.20), P(0.68, 0.20), P(0.10, 0.40), P(0.90, 0.40), P(0.50, 0.88)
+    d.polygon([top_l, top_r, mid_r, tip, mid_l], fill=255)
+    cut = int(0.035 * N)
+    for a_, b_ in ((mid_l, mid_r), (top_l, P(0.38, 0.40)), (top_r, P(0.62, 0.40)), (P(0.38, 0.40), tip), (P(0.62, 0.40), tip),
+                   (P(0.50, 0.20), P(0.38, 0.40)), (P(0.50, 0.20), P(0.62, 0.40))):
+        d.line([a_, b_], fill=0, width=cut)
+    a = np.asarray(im.resize((size, size), Image.LANCZOS), np.float32) / 255.0
+    one = np.ones_like(a)
+    path = os.path.join(OUT, "mono_power.png")
+    Image.fromarray((np.dstack([one, one, one, a]) * 255).astype(np.uint8), "RGBA").save(path)
+    print("wrote", path)
+
+
 def mono_icons():
     """One-colour copies of the theme's button icons (white; the button tints them like its label).
     Inner dark lines stay as a lighter cut, so a coin or a gear keeps its detail."""
@@ -161,6 +192,7 @@ PLATES = {
     "pro_track": (plate, (192, 96, 48, 6, 1.0, 0.72, 0.30, 0.16), (50, 50, 50, 50)),
     "pro_knob": (knob, (96,), (0, 0, 0, 0)),
     "pro_tickbox": (tickbox, (96, 18, 9), (0, 0, 0, 0)),
+    "pro_focus": (focus_frame, (160, 80, 26, 5), (34, 34, 34, 34)),
     "pro_tick": (tick, (96, 16), (0, 0, 0, 0)),
 }
 
@@ -175,3 +207,4 @@ if __name__ == "__main__":
         print("wrote", path, img.size)
     open(os.path.join(OUT, "plates.txt"), "w").write("\n".join(lines))
     mono_icons()
+    mono_power()

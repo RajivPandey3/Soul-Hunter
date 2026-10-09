@@ -85,7 +85,9 @@ namespace SoulHunter.Tests.PlayMode
             Color selected = menu.StartButton.colors.selectedColor;
             // B16 (2026-09-30): focus was Unity's blue. It is now the theme's focus colour (2026-10-04), which must stand
             // apart from the button and must not be blue.
-            Assert.AreEqual(SoulHunter.Gameplay.UI.UITheme.Focus, selected, "The theme's focus colour.");
+            // 2026-10-08: the Pro look keeps the button's own colour, brighter, when chosen (the ring marks it).
+            Assert.AreEqual(SoulHunter.Gameplay.UI.UITheme.SelectedColour(SoulHunter.Gameplay.UI.UITheme.Primary), selected, "The theme's focus colour.");
+            Assert.AreNotEqual(menu.StartButton.colors.normalColor, selected, "The chosen button differs from its normal look.");
             Assert.That(selected.b, Is.LessThan(Mathf.Max(selected.r, selected.g)), "Focus is not blue (B16).");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }

@@ -137,7 +137,8 @@ namespace SoulHunter.Gameplay.UI
             colors.normalColor = normal;
             colors.highlightedColor = hover;
             // A switch keeps its ON/OFF colour when chosen (the gold ring marks it), so its state stays readable.
-            colors.selectedColor = card ? theme.Cards.Selected : IsSwitch ? normal : theme.Buttons.Focus;
+            colors.selectedColor = card ? theme.Cards.Selected : IsSwitch ? normal
+                : UITheme.SelectedColour(normal);
             colors.pressedColor = theme.Buttons.Pressed;
             colors.disabledColor = theme.Buttons.Disabled;
             colors.colorMultiplier = 1f;

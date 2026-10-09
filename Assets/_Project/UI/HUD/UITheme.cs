@@ -46,6 +46,9 @@ namespace SoulHunter.Gameplay.UI
         public static Color CardTextSoft => T.Text.SoftOnLight;
         public static Color TextLocked => T.Text.Locked;
         public static Color Accent => T.Text.Accent;
+        /// <summary>A chosen (focused) button's colour: its own colour a little brighter when the theme keeps colours
+        /// (the ring marks it), else the theme's Focus colour.</summary>
+        public static Color SelectedColour(Color normal) => T.Motions.FocusKeepsColour ? Color.Lerp(normal, Color.white, 0.22f) : T.Buttons.Focus;
         /// <summary>Bold rich text, or the plain text when the theme's fonts are already heavy (no fake bold: it widens the letters).</summary>
         public static string Bold(string text) => T.Font.NoFakeBold ? text : "<b>" + text + "</b>";
         public static Color Danger => T.Text.Danger;

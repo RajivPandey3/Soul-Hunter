@@ -19,11 +19,17 @@ namespace SoulHunter.UI
         public const float FrameCentreX = 0.562f;
         public const float TitleTop = 0.595f, TitleBottom = 0.465f, TitleHalfWidth = 0.24f;
         public const float ButtonsTop = 0.43f, ButtonsBottom = 0.14f; // the open area under the logo; buttons centre in it
+        // Owner review 2026-10-08: the logo and buttons are one group in the middle of the frame's open area (y 0.10-0.60),
+        // with the HD logo larger and a clear gap above Start. Sizes in canvas units (1920x1080 reference).
+        public const float GroupCentreY = 0.35f, OpenTop = 0.60f, OpenBottom = 0.10f;
+        public const float LogoWidth = 640f, LogoGapButtons = 3f; // the logo's gap = 3 x the theme's button gap
 
 
         private Image _background;
         private RectTransform _area;
         private TMP_Text _title;
+        private Image _logo;
+        private RectTransform _group;
         private Button[] _buttons;
         private Vector2 _lastScreen;
         private Rect _lastPicture;
@@ -31,6 +37,8 @@ namespace SoulHunter.UI
         /// <summary>The frame's open area (a full-screen-anchored rect fitted to the drawn picture), for tests.</summary>
         public RectTransform Area => _area;
         public TMP_Text Title => _title;
+        /// <summary>The HD logo picture (GameContent.MenuLogo), or null when the catalog has none (then the text logo shows).</summary>
+        public Image Logo => _logo;
         public Button[] Buttons => _buttons;
 
         public static MainMenuLayout Attach(GameObject homePanel, Button[] buttons)
@@ -54,7 +62,28 @@ namespace SoulHunter.UI
             _area.SetParent(transform, false);
             _area.SetAsFirstSibling();
 
-            if (_title != null)
+            // The group: logo and buttons together, centred in the frame's open area, scaled down only if a window is too short.
+            var groupGo = new GameObject("MenuGroup", typeof(RectTransform));
+            _group = (RectTransform)groupGo.transform;
+            _group.SetParent(_area, false);
+            _group.anchorMin = _group.anchorMax = new Vector2(FrameCentreX, GroupCentreY);
+            _group.pivot = new Vector2(0.5f, 0.5f);
+            _group.sizeDelta = Vector2.zero;
+
+            var logoSprite = SoulHunter.Gameplay.Data.GameContentCatalog.Load()?.MenuLogo;
+            if (logoSprite != null)
+            {
+                // The HD logo (owner review 2026-10-08): the two small text sprites were stretched about 3x and blurred.
+                var logoGo = new GameObject("GameLogo", typeof(RectTransform), typeof(Image));
+                logoGo.transform.SetParent(_group, false);
+                _logo = logoGo.GetComponent<Image>();
+                _logo.sprite = logoSprite;
+                _logo.preserveAspect = true;
+                _logo.raycastTarget = false;
+                if (_title != null) _title.gameObject.SetActive(false);
+            }
+
+            if (_title != null && _logo == null)
             {
                 // The two logo sprites on one centred line (they were on two lines pushed apart with spaces).
                 _title.text = "<sprite name=\"sprite_5_0\"> <sprite name=\"sprite_4_0\">";
@@ -70,9 +99,13 @@ namespace SoulHunter.UI
             foreach (var button in _buttons)
             {
                 if (button == null) continue;
-                button.transform.SetParent(_area, false);
+                button.transform.SetParent(_logo != null ? _group : _area, false);
                 Style(button, index++);
             }
+            // "Power Up", as the shop's title writes it (the scene's label said "Power UP").
+            if (_buttons.Length > 1 && _buttons[1] != null)
+                foreach (var label in _buttons[1].GetComponentsInChildren<TMP_Text>(true))
+                    if (label.text.Trim().Equals("Power UP", System.StringComparison.Ordinal)) label.text = "Power Up";
             PlaceButtons();
             SoulHunter.Gameplay.UI.UiThemeAsset.Changed += PlaceButtons;
             Fit();
@@ -91,6 +124,33 @@ namespace SoulHunter.UI
             int count = 0;
             foreach (var button in _buttons) if (button != null) count++;
             float step = layout.ButtonHeight + layout.ButtonGap;
+            if (_logo != null)
+            {
+                // One group: the logo, a gap, then the button column, centred on the group's middle.
+                float logoHeight = LogoWidth * _logo.sprite.rect.height / _logo.sprite.rect.width;
+                float gap = layout.ButtonGap * LogoGapButtons;
+                float column = count * layout.ButtonHeight + (count - 1) * layout.ButtonGap;
+                float total = logoHeight + gap + column;
+                float top = total * 0.5f;
+                var logoRect = _logo.rectTransform;
+                logoRect.anchorMin = logoRect.anchorMax = logoRect.pivot = new Vector2(0.5f, 0.5f);
+                logoRect.sizeDelta = new Vector2(LogoWidth, logoHeight);
+                logoRect.anchoredPosition = new Vector2(0f, top - logoHeight * 0.5f);
+                float firstCentre = top - logoHeight - gap - layout.ButtonHeight * 0.5f;
+                int i = 0;
+                foreach (var button in _buttons)
+                {
+                    if (button == null) continue;
+                    var rect = (RectTransform)button.transform;
+                    rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+                    rect.sizeDelta = new Vector2(layout.ButtonWidth, layout.ButtonHeight);
+                    rect.anchoredPosition = new Vector2(0f, firstCentre - i * step);
+                    i++;
+                }
+                _group.sizeDelta = new Vector2(Mathf.Max(LogoWidth, layout.ButtonWidth), total);
+                FitGroup();
+                return;
+            }
             int index = 0;
             foreach (var button in _buttons)
             {
@@ -102,6 +162,19 @@ namespace SoulHunter.UI
                 rect.anchoredPosition = new Vector2(0f, ((count - 1) * 0.5f - index) * step);
                 index++;
             }
+        }
+
+        /// <summary>Shrinks the group as one piece when the frame's open area is too short or narrow for it (a short window).</summary>
+        private void FitGroup()
+        {
+            if (_group == null || _area == null) return;
+            float roomH = _area.rect.height * (OpenTop - OpenBottom) * 0.94f;
+            float roomW = _area.rect.width * 0.6f;
+            var size = _group.sizeDelta;
+            float scale = 1f;
+            if (size.y > 0f && roomH > 0f) scale = Mathf.Min(scale, roomH / size.y);
+            if (size.x > 0f && roomW > 0f) scale = Mathf.Min(scale, roomW / size.x);
+            _group.localScale = new Vector3(scale, scale, 1f);
         }
 
         private void LateUpdate()
@@ -117,7 +190,7 @@ namespace SoulHunter.UI
         /// </summary>
         private void CentreTitle()
         {
-            if (_title == null) return;
+            if (_title == null || _logo != null) return;
             var drawn = _title.textBounds;
             if (drawn.size.x <= 0f) return;
             var wanted = new Vector2(-drawn.center.x, -drawn.center.y);
@@ -137,7 +210,9 @@ namespace SoulHunter.UI
             _area.anchorMax = picture.max;
             _area.offsetMin = _area.offsetMax = Vector2.zero;
             _area.localScale = Vector3.one;
-            if (panel.rect.width <= 0f || _title == null) return;
+            Canvas.ForceUpdateCanvases();
+            FitGroup();
+            if (panel.rect.width <= 0f || _title == null || _logo != null) return;
             Canvas.ForceUpdateCanvases();
             _title.ForceMeshUpdate();
             CentreTitle();

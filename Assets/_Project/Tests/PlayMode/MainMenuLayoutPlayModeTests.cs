@@ -26,7 +26,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNotNull(nav, "MainMenuNavigation.");
             var layout = nav.Layout;
             Assert.IsNotNull(layout, "The menu has its frame layout.");
-            Assert.IsNotNull(layout.Title, "The logo was found.");
+            Assert.IsTrue(layout.Title != null || layout.Logo != null, "The logo was found.");
             Assert.That(layout.Buttons.Length, Is.EqualTo(4));
 
             Rect area = ScreenRect(layout.Area);
@@ -50,6 +50,36 @@ namespace SoulHunter.Tests.PlayMode
                 var expected = i == 0 ? SoulHunter.Gameplay.UI.UITheme.Primary : i == 3 ? SoulHunter.Gameplay.UI.UITheme.DangerButton : SoulHunter.Gameplay.UI.UITheme.Button;
                 Assert.AreEqual(expected, button.colors.normalColor, $"{button.name} has its theme colour.");
                 AssertIconAndLabelAligned(button);
+            }
+            if (layout.Logo != null)
+            {
+                // The HD logo (owner review 2026-10-08): on screen, inside the frame, centred on the ornament, a clear gap
+                // (at least the theme's button gap) above Start, and sharp: the picture has at least the pixels it is drawn with.
+                Rect logo = ScreenRect(layout.Logo.rectTransform);
+                Rect start = ScreenRect((RectTransform)layout.Buttons[0].transform);
+                Assert.That(Inside(logo, screen), $"The logo {logo} is on screen.");
+                Assert.That(logo.yMax, Is.LessThanOrEqualTo(innerTop + 1f), "The logo is inside the frame's open area.");
+                Assert.That(logo.center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f), "The logo is centred on the ornament.");
+                float scale = start.height / SoulHunter.Gameplay.UI.UITheme.Layout.ButtonHeight;
+                Assert.That(logo.yMin - start.yMax, Is.GreaterThanOrEqualTo(SoulHunter.Gameplay.UI.UITheme.Layout.ButtonGap * scale - 1f),
+                    "A clear gap between the logo and Start.");
+                Assert.That(layout.Logo.sprite.rect.width, Is.GreaterThanOrEqualTo(logo.width), "The logo is not stretched past its pixels.");
+                Assert.That(layout.Buttons[1].GetComponentInChildren<TMPro.TMP_Text>().text, Is.EqualTo("Power Up"), "Power Up, as the shop writes it.");
+                // Every button the same size, with the same gap between each (owner review 2026-10-08).
+                float gap0 = -1f;
+                for (int b = 0; b < layout.Buttons.Length; b++)
+                {
+                    Rect rb = ScreenRect((RectTransform)layout.Buttons[b].transform);
+                    Rect r0 = ScreenRect((RectTransform)layout.Buttons[0].transform);
+                    Assert.That(rb.width, Is.EqualTo(r0.width).Within(0.5f), $"{layout.Buttons[b].name} is as wide as Start.");
+                    Assert.That(rb.height, Is.EqualTo(r0.height).Within(0.5f), $"{layout.Buttons[b].name} is as tall as Start.");
+                    if (b == 0) continue;
+                    float g = ScreenRect((RectTransform)layout.Buttons[b - 1].transform).yMin - rb.yMax;
+                    if (gap0 < 0f) gap0 = g;
+                    Assert.That(g, Is.EqualTo(gap0).Within(0.5f), "The gaps between buttons are equal.");
+                }
+                Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+                yield break;
             }
             Rect title = ScreenRect(layout.Title.rectTransform);
             Assert.That(Inside(title, screen), "The title is on screen.");

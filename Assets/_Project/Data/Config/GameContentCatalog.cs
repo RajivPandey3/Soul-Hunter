@@ -56,6 +56,8 @@ namespace SoulHunter.Gameplay.Data
         public UnityEngine.Sprite RoastChickenIcon;
         [UnityEngine.Tooltip("Soul Egg ware in the Wandering Merchant's shop (build_icons_free.py; set by UiProThemeBuilder).")]
         public UnityEngine.Sprite SoulEggIcon;
+        [UnityEngine.Tooltip("The main menu's HD logo (SOUL HUNTER, the old logo sprites upscaled 4x; set by UiProThemeBuilder).")]
+        public UnityEngine.Sprite MenuLogo;
 
         /// <summary>An icon for a PowerUp that has no matching passive item (Power Up shop).</summary>
         [System.Serializable]

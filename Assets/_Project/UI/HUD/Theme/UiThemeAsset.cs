@@ -173,6 +173,8 @@ namespace SoulHunter.Gameplay.UI
             public Sprite TickBox;
             [Tooltip("The tick drawn in a ticked box.")]
             public Sprite Tick;
+            [Tooltip("A ring drawn inside the chosen button (keeps every button the same size). Empty = an outline outside.")]
+            public Sprite FocusFrame;
             [Tooltip("Width of the coloured line around buttons and cards (0 = none).")]
             [Range(0f, 6f)] public float EdgeWidth = 0f;
         }
@@ -219,6 +221,8 @@ namespace SoulHunter.Gameplay.UI
             [Tooltip("Seconds between sweeps.")] [Range(0.8f, 8f)] public float ShineEvery = 3f;
             [Tooltip("Thickness of the ring around the chosen button (keyboard/controller). 0 = colour only, which some players cannot see.")]
             [Range(0f, 8f)] public float FocusRingWidth = 4f;
+            [Tooltip("The chosen button keeps its own colour, a little brighter (the ring marks it), instead of turning the Focus colour.")]
+            public bool FocusKeepsColour;
             [Tooltip("Buttons lift a little under the mouse.")] public bool HoverLift = true;
             [Tooltip("Buttons squash a little when pressed.")] public bool PressSquish = true;
             [Tooltip("Titles (LEVEL UP!) bounce gently. Off by default: one moving thing per screen reads best.")] public bool TitleBounce = false;

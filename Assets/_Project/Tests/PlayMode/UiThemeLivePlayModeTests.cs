@@ -50,7 +50,7 @@ namespace SoulHunter.Tests.PlayMode
                 yield return null;
 
                 Assert.AreEqual(look.Buttons.Primary, resume.colors.normalColor, "The open menu's main button changed at once.");
-                Assert.AreEqual(look.Buttons.Focus, resume.colors.selectedColor, "Its focus colour too.");
+                Assert.AreEqual(UITheme.SelectedColour(look.Buttons.Primary), resume.colors.selectedColor, "Its focus colour too.");
                 Assert.AreSame(look.Icon.Quit, icon.GetComponent<Image>().sprite, "Its icon too.");
                 Assert.AreEqual(look.Surfaces.Veil, veil.color, "The veil changed.");
                 Assert.AreEqual(look.Hud.LabelBacking, hudBacking.color, "The HUD label backing changed.");
@@ -86,13 +86,23 @@ namespace SoulHunter.Tests.PlayMode
             float wait = 0f, biggest = 1f;
             while (wait < 2.5f) { wait += Time.unscaledDeltaTime; biggest = Mathf.Max(biggest, pause.ResumeButton.transform.localScale.x); yield return null; }
 
-            var ring = pause.ResumeButton.targetGraphic.GetComponent<ThemeFocusRing>();
-            Assert.IsTrue(ring != null && ring.enabled, "The chosen button wears the focus ring. " + Errors());
-            Assert.AreEqual(UiThemeAsset.Active.Buttons.Focus, ring.effectColor);
+            // The ring: an outline outside the button, or (Pro look, 2026-10-08) a frame inside its edge.
+            System.Func<Selectable, bool> ringOn = sel =>
+            {
+                var outline = sel.targetGraphic.GetComponent<ThemeFocusRing>();
+                var frame = sel.targetGraphic.transform.Find("ThemeFocusFrame");
+                return (outline != null && outline.enabled) || (frame != null && frame.gameObject.activeSelf);
+            };
+            Assert.IsTrue(ringOn(pause.ResumeButton), "The chosen button wears the focus ring. " + Errors());
+            var frameImage = pause.ResumeButton.targetGraphic.transform.Find("ThemeFocusFrame")?.GetComponent<Image>();
+            var outlineRing = pause.ResumeButton.targetGraphic.GetComponent<ThemeFocusRing>();
+            Assert.AreEqual(UiThemeAsset.Active.Buttons.Focus, frameImage != null && frameImage.gameObject.activeSelf ? frameImage.color : outlineRing.effectColor);
+            if (frameImage != null && frameImage.gameObject.activeSelf)
+                Assert.That(frameImage.rectTransform.rect.size, Is.EqualTo(((RectTransform)pause.ResumeButton.targetGraphic.transform).rect.size),
+                    "The ring is inside the button: the chosen button keeps its size.");
             foreach (var other in new[] { pause.OptionsButton, pause.QuitButton })
             {
-                var otherRing = other.targetGraphic.GetComponent<ThemeFocusRing>();
-                Assert.IsTrue(otherRing == null || !otherRing.enabled, $"{other.name} is not chosen: no ring.");
+                Assert.IsFalse(ringOn(other), $"{other.name} is not chosen: no ring.");
                 var otherShine = other.transform.Find("ThemeShineMask");
                 Assert.IsTrue(otherShine == null || !otherShine.GetComponentInChildren<Image>(true).gameObject.activeInHierarchy, $"{other.name} does not sweep.");
                 Assert.That(other.transform.localScale.x, Is.EqualTo(1f).Within(0.001f), $"{other.name} does not breathe.");
@@ -107,7 +117,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(scale, Is.EqualTo(1f).Within(0.002f), "With Flashing VFX off the chosen button stops breathing.");
             var shine = pause.ResumeButton.transform.Find("ThemeShineMask/ThemeShine");
             Assert.IsTrue(shine == null || !shine.gameObject.activeSelf, "and stops sweeping.");
-            Assert.IsTrue(ring.enabled, "The focus ring stays: it is information, not decoration.");
+            Assert.IsTrue(ringOn(pause.ResumeButton), "The focus ring stays: it is information, not decoration.");
 
             data.FlashingVfx = true;
             system.Resume();

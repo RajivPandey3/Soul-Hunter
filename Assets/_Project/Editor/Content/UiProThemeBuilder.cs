@@ -71,6 +71,7 @@ namespace SoulHunter.Editor.Content
             pro.Shape.Track = Plate("pro_track");
             pro.Shape.TickBox = Plate("pro_tickbox");
             pro.Shape.Tick = Plate("pro_tick");
+            pro.Shape.FocusFrame = Plate("pro_focus"); // the focus ring inside the button (same size for every button)
             pro.Shape.EdgeWidth = 0f; // the plates have their own rim
 
             pro.Font.Title = title;
@@ -96,7 +97,7 @@ namespace SoulHunter.Editor.Content
 
             // (8) one-colour button icons that take the label's colour, so they stand out on every button.
             pro.Icon.Start = Plate("mono_play");
-            pro.Icon.PowerUp = Plate("mono_soul_gem");
+            pro.Icon.PowerUp = Plate("mono_power"); // a clear faceted gem (owner review 2026-10-08)
             pro.Icon.Options = Plate("mono_gear");
             pro.Icon.Quit = Plate("mono_scythe");
             pro.Icon.Back = Plate("mono_back");
@@ -111,7 +112,10 @@ namespace SoulHunter.Editor.Content
             pro.Motions.Shine = false;
             // Owner 2026-10-08: every button must look the same size, so the chosen one no longer grows; the gold ring marks it.
             pro.Motions.Breathe = false;
+            pro.Motions.HoverLift = false; // owner review 2026-10-08: a hovered button grew and the sizes looked unequal
             pro.Motions.FocusRingWidth = 3f;
+            // Owner review 2026-10-08: a focused Start turned pale cream; buttons keep their colour, brighter, with the ring.
+            pro.Motions.FocusKeepsColour = true;
             // Owner 2026-10-08: the near-black disabled Buy looked bad. A muted stone plate with light text reads as "not now".
             pro.Buttons.Disabled = new Color(0.40f, 0.31f, 0.27f, 1f);
             pro.Text.Locked = new Color(0.90f, 0.83f, 0.77f, 1f);
@@ -130,6 +134,7 @@ namespace SoulHunter.Editor.Content
             pro.Layouts.IconGap = 0.16f;
             pro.Layouts.ButtonTextMax = 34f;
             pro.Layouts.TabTextMax = 26f;
+            pro.Layouts.ButtonGap = 16f; // owner review 2026-10-08: a little more air between buttons
             pro.Layouts.TabWidth = 150f; // (2) room for "Gameplay" and "Controls"
 
             EditorUtility.SetDirty(pro);
@@ -140,6 +145,7 @@ namespace SoulHunter.Editor.Content
                 catalog.UiTheme = pro;
                 catalog.UiThemePreview = pro;
                 catalog.SoulEggIcon = Icon("Assets/Art/UI/SH10_Icon_SoulEgg.png"); // the merchant's Soul Egg ware
+                catalog.MenuLogo = Icon("Assets/Art/UI/SH10_Logo.png"); // the main menu's HD logo
                 EditorUtility.SetDirty(catalog);
             }
             AssetDatabase.SaveAssets();

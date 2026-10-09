@@ -86,10 +86,11 @@ MonoBehaviour:
     Track: {fileID: 21300000, guid: 7b3d8fd4bcd59de49a05ec3a5dcf72d5, type: 3}
     TickBox: {fileID: 21300000, guid: 3b234913e5c325840adbf84f7f1986e5, type: 3}
     Tick: {fileID: 21300000, guid: 01828e640cc4cc84bbbb6ce2abfd1b9e, type: 3}
+    FocusFrame: {fileID: 21300000, guid: de159f3e58103234fb97551e348b542d, type: 3}
     EdgeWidth: 0
   Icon:
     Start: {fileID: 21300000, guid: d6d47d976e85fb1429fa24f9be3247e4, type: 3}
-    PowerUp: {fileID: 21300000, guid: 91f88fc4247feb442934be3a062814f1, type: 3}
+    PowerUp: {fileID: 21300000, guid: fa9335a86e1b83648bdac67f4fe41ff0, type: 3}
     Options: {fileID: 21300000, guid: ad4919677db7fb9499be4cf70acb5bc9, type: 3}
     Quit: {fileID: 21300000, guid: b1bb3d5fe9094f3459a09b358f82fb2b, type: 3}
     Back: {fileID: 21300000, guid: 82b48f8bdf6d242419406636cc82d36a, type: 3}
@@ -113,7 +114,8 @@ MonoBehaviour:
     Shine: 0
     ShineEvery: 3
     FocusRingWidth: 3
-    HoverLift: 1
+    FocusKeepsColour: 1
+    HoverLift: 0
     PressSquish: 1
     TitleBounce: 0
     IconMotion: 1
@@ -128,7 +130,7 @@ MonoBehaviour:
     TabWidth: 150
     TabHeight: 54
     TabTextMax: 26
-    ButtonGap: 12
+    ButtonGap: 16
     TickBoxSize: 0.5
     CentreIconWithLabel: 1
     IconGap: 0.16

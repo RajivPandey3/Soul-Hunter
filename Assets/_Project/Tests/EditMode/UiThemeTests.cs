@@ -62,6 +62,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.IsTrue(t.Font.NoFakeBold, "no fake bold over the heavy fonts");
             Assert.IsTrue(t.Layouts.IconsLikeLabel, "button icons take the label's colour");
             Assert.IsFalse(t.Motions.Breathe, "every button looks the same size (owner, 2026-10-08)");
+            Assert.IsFalse(t.Motions.HoverLift, "a hovered button does not grow either (owner, 2026-10-08)");
             Assert.IsNotNull(t.Icon.Coin, "gold amounts keep a coloured coin");
             Assert.AreNotEqual(t.Icon.Buy, t.Icon.Coin, "the coloured coin is not the one-colour Buy icon");
             Assert.IsTrue(t.Layouts.OpenTabBar, "the open tab is not shown by colour alone");

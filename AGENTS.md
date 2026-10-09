@@ -1617,6 +1617,24 @@ Owner: "pure game ka single theme system banao, ... source of truth single hona 
   - New art, owner-approved: the Soul Egg icon (`SH10_Icon_SoulEgg`, `build_icons_free.soul_egg`, `GameContent.SoulEggIcon`), a gold egg with a crack and sparks in the gold-icon style.
   - Already matching, unchanged: Game Over (the Results screen), chest, level-up. The loading screen is a picture only.
   - Validation: EditMode 572/572 and the merchant, accessibility, HUD, story card and inventory fixtures 29/29, save untouched (`run-20261008-rest2`). Full run: EditMode 572/572, PlayMode 291/291, 0 exceptions, save untouched (`run-20261008-rest-full`). Build screenshots `run-20261008-rest-screens`, `-screens2`, 0 errors (partial `V`).
+- **Main menu, owner review** (2026-10-08/09, from the owner's screenshots; "approved, please apply"):
+  - HD logo: the two logo sprites (85x45 and 130x46, stretched about 3x) were upscaled 4x with the illustration model and joined into one picture with a tight word gap (`ArtSource/Generators/build_logo_hd.py`, `Assets/Art/UI/SH10_Logo.png`, `GameContent.MenuLogo`).
+  - `MainMenuLayout` lays the logo and the four buttons out as one group in the middle of the frame's open area:
+    - a gap of 3 x the button gap between the logo and Start;
+    - the group shrinks as one piece in a short window;
+    - the old text logo shows only when no `MenuLogo` is set.
+  - "Power UP" became "Power Up", as the shop writes it.
+  - A clearer Power Up button icon: a faceted gem (`mono_power`).
+  - Every button keeps exactly its size and gap, on every screen:
+    - the focus ring is drawn inside the button's edge (`Shape.FocusFrame`, `pro_focus`; an outline outside made Start look bigger);
+    - no breathing and no hover growth;
+    - the chosen button keeps its own colour, a little brighter (`Motions.FocusKeepsColour`, `UITheme.SelectedColour`), instead of turning pale;
+    - the mouse chooses the button it points at, so only one button is ever lit;
+    - the button gap is 16.
+  - A poster hero above the frame was tried (a 3D model render, then a 2D hunter from the concept sheet). The owner rejected both ("iski jarurat nahi hai, old bala thhik tha"), and it was removed entirely.
+  - Tests: `MainMenuLayoutPlayModeTests` (R) also checks that the logo is sharp (not stretched past its pixels), centred and clear of Start, that "Power Up" is spelled right, and that the four buttons are the same size with equal gaps. `UiThemeLivePlayModeTests` accepts the inside ring. `UiThemeTests` guards no hover growth.
+  - Build screenshot `D:/SoulHunter-Validation/ui_mainmenu_sample3.png` (`run-20261009-menu-shots5`): all four buttons measured 213 px wide, 0 errors (partial `V`).
+  - Validation: EditMode 572/572, PlayMode 290/291, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-menu-full2/`). The one failure, `PentagramPlayModeTests.Bosses_AreImmune_AndAnErasedEliteHandsItsChestOn` ("the erased elite's chest is not dropped where it died": 1, expected 0), is not menu code; the fixture then passed 2/2 alone on the same copy (`-menu-pentagram/`). Not explained; seen once.
 - Open: Android 48dp touch sizes not measured (a 54-unit tab is about 18dp on a 360dp-tall phone); icons are PNG, not vector; the owner has not played with the Pro look yet.
 
 Not yet seen by the owner.
