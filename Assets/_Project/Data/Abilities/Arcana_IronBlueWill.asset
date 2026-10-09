@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e2a99d75a3d25d4d8664aebeba4c752, type: 3}
   m_Name: Arcana_IronBlueWill
   m_EditorClassIdentifier: 
-  CardNumber: X
+  CardNumber: VII
   CardName: Iron Blue Will
-  Description: Projectiles bounce once.
+  Description: Knife, Thousand Edge, Axe and Gun shots bounce off up to 3 enemies; Death Spiral bounces off the screen edge once.
   CardIcon: {fileID: 0}
   Type: 2

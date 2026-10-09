@@ -154,8 +154,11 @@ namespace SoulHunter.Tests.EditMode
             // The 3:00 Glowing Bat (0 / 5 / 40) never gives 5.
             Assert.That(ChestLogicController.RollItemCount(ChestTiers.Minute3, 10f, Rolls(0f, 0.99f, 0.99f)), Is.EqualTo(1));
             Assert.That(ChestLogicController.RollItemCount(ChestTiers.Minute3, 10f, Rolls(0f, 0f)), Is.EqualTo(3));
-            // OPEN OWNER QUESTION: the 7:00 Glowing Bat's level=2 is not defined by the wiki; 1 item is kept for now.
-            Assert.That(ChestLogicController.RollItemCount(ChestTiers.Minute7, 1f, Rolls(0.99f, 0.99f, 0.99f)), Is.EqualTo(1));
+            // The 7:00 Glowing Bat's level=2: Treasure_Chest's v1.6.0 notes call the 3-item screen "lvl 2", so all rolls
+            // failing gives 3 items.
+            Assert.That(ChestLogicController.RollItemCount(ChestTiers.Minute7, 1f, Rolls(0.99f, 0.99f, 0.99f)), Is.EqualTo(3));
+            Assert.That(ChestTiers.Minute7.FallbackItems, Is.EqualTo(3));
+            Assert.That(ChestTiers.Minute9.FallbackItems, Is.EqualTo(1));
         }
 
         [Test]
@@ -177,7 +180,7 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void WeaponSlots_LevelAnOwnedWeapon_AndFallBackToAnyItem()
+        public void WeaponSlots_LevelAnOwnedWeapon_AndPayCoinsWithNoWeaponLeft()
         {
             // vampire.survivors.wiki/w/Template:Treasure: a "rewardN=weapon" slot is "Upgrade (weapon)". The 9:00 Silver Bat
             // has weapon slots 1, 4 and 5, so a 5-item chest levels the Whip at least three times.
@@ -194,10 +197,12 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(whip - 1 + spinach - 1, Is.EqualTo(5), "Five items, five levels.");
             Assert.That(_chest.LastResult.Kind, Is.EqualTo(SoulHunter.Gameplay.Pickups.ChestKind.Bronze), "9:00 has evo= blank: bronze.");
 
-            // No weapon to level: the wiki is silent; the slot levels any owned item instead.
+            // No weapon to level: Patch 0.2.7, "or give extra coins if no weapons can be leveled up". The slot pays a Big
+            // Coin Bag and the passive is not levelled.
             Own(UpgradeData.UpgradeType.Whip, 0);
             _chest.ProcessChest(_weapons, _levelUps, 1, ChestTiers.Minute9, 0f);
-            Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(spinach + 1));
+            Assert.That(_weapons.GetWeaponLevel(UpgradeData.UpgradeType.Spinach), Is.EqualTo(spinach));
+            Assert.That(_chest.LastResult.Rewards.Exists(r => r.IsCoinBag), Is.True, "The weapon slot paid a coin bag.");
         }
 
         [Test]

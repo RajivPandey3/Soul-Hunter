@@ -117,14 +117,20 @@ namespace SoulHunter.Gameplay.Combat
         protected virtual bool IgnoresMightCap => false;
         protected float CooldownMultiplier => OwnerStats != null ? OwnerStats.Cooldown : 1f;
         // VS Limit Break (LimitBreak): this weapon's own bonuses on top of the player's stats.
-        protected float AreaMultiplier => (OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Area) : 1f) * (1f + LimitBreak.AreaBonus(this));
+        /// <summary>
+        /// VS Gemini (I): "Only Peachone ... can transfer their Limit Broken bonuses to their counterparts". A Gemini
+        /// counterpart sets this to its original weapon, whose Limit Break bonuses it then uses; null = its own.
+        /// </summary>
+        [System.NonSerialized] public AutoAttackWeapon LimitBreakSource;
+        private AutoAttackWeapon LimitBreakKey => LimitBreakSource != null ? LimitBreakSource : this;
+        protected float AreaMultiplier => (OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Area) : 1f) * (1f + LimitBreak.AreaBonus(LimitBreakKey));
         protected float DurationMultiplier => (OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.Duration) : 1f) * LimitBreakDurationFactor;
         protected float SpeedMultiplier => (OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f)
                                            * (OwnerStats != null ? SoulHunter.Gameplay.Data.RunModes.ProjectileSpeedMultiplier : 1f)
-                                           * (1f + LimitBreak.SpeedBonus(this));
-        protected int ExtraAmount => (OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0) + LimitBreak.AmountBonus(this);
+                                           * (1f + LimitBreak.SpeedBonus(LimitBreakKey));
+        protected int ExtraAmount => (OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0) + LimitBreak.AmountBonus(LimitBreakKey);
         /// <summary>Limit Break pierce added to the weapon's own pierce (weapons with <see cref="UsesPierce"/>).</summary>
-        protected int ExtraPierce => LimitBreak.PierceBonus(this);
+        protected int ExtraPierce => LimitBreak.PierceBonus(LimitBreakKey);
 
         /// <summary>The weapon's base duration in seconds, for Limit Break's +0.1 s (0 = the weapon has no duration).</summary>
         public virtual float LimitBreakBaseDuration => 0f;
@@ -139,7 +145,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             get
             {
-                float extra = LimitBreak.DurationSeconds(this);
+                float extra = LimitBreak.DurationSeconds(LimitBreakKey);
                 float baseDuration = LimitBreakBaseDuration;
                 return extra > 0f && baseDuration > 0f ? (baseDuration + extra) / baseDuration : 1f;
             }
@@ -175,6 +181,13 @@ namespace SoulHunter.Gameplay.Combat
         }
         /// <summary>Extra projectile bounces from the holder's character (e.g. Seraphina).</summary>
         protected int ExtraBounces => OwnerStats != null ? Mathf.Max(0, OwnerStats.ExtraProjectileBounces) : 0;
+        /// <summary>
+        /// VS Iron Blue Will (VII) / Waltz of Pearls (XI): enemy bounces this listed weapon's shots gain from the player's
+        /// Arcanas (0 for unlisted weapons and for Shadow Kael's mirrored copies).
+        /// </summary>
+        protected int ArcanaBounces => SoulHunter.Gameplay.Core.ArcanaManager.EnemyBouncesFor(this);
+        /// <summary>The same Arcanas' screen-edge bounces (Hellmaw Comet, Cross, Heaven Sword, Death Spiral).</summary>
+        protected int ArcanaScreenBounces => SoulHunter.Gameplay.Core.ArcanaManager.ScreenBouncesFor(this);
 
         /// <summary>
         /// Nearest live enemy on the ground plane within maxRange, or null. For a boss's mirrored copy
@@ -249,7 +262,7 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>Base damage scaled by Might.</summary>
-        protected float ScaledDamage(float baseDamage) => (baseDamage + LimitBreak.BaseDamageBonus(this)) * MightMultiplier;
+        protected float ScaledDamage(float baseDamage) => (baseDamage + LimitBreak.BaseDamageBonus(LimitBreakKey)) * MightMultiplier;
 
         /// <summary>
         /// VS (vampire.survivors.wiki/w/Critical_Hit, fetched 2026-10-01): "Not all weapons are capable of Critical Hits."
@@ -299,7 +312,7 @@ namespace SoulHunter.Gameplay.Combat
             float damage = ScaledDamage(baseDamage);
             float luck = OwnerStats != null ? OwnerStats.Luck : 1f;
             CritFor(BaseCritChance, WeaponCritMultiplier, SlashCritChance, SlashCritMultiplier, SlashArcanaActive, out float chance, out float multiplier);
-            if (chance > 0f) chance += LimitBreak.CritChanceBonus(this); // VS Limit Break: Crit Chance +2.5% per card
+            if (chance > 0f) chance += LimitBreak.CritChanceBonus(LimitBreakKey); // VS Limit Break: Crit Chance +2.5% per card
             return IsCrit(chance, luck, Random.value) ? damage * multiplier * CharacterCritFactor(OwnerStats) : damage;
         }
 

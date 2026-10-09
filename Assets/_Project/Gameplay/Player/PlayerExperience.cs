@@ -80,9 +80,10 @@ namespace SoulHunter.Gameplay.Player
                         continue;
                     }
                     // VS wiki (Magnet): other pickups are gathered too. Chests are never pulled (wiki Treasure_Chest:
-                    // "Doesn't get attracted to the player"); stage items stay walk-over (wiki silent).
+                    // "Doesn't get attracted to the player"), and neither are stage items: wiki Mad_Groove_(VIII) is "the
+                    // only way" to attract them, so a pickup the stage placed waits to be walked over.
                     var pickup = _magnetHits[i].GetComponentInParent<SoulHunter.Gameplay.Pickups.Pickup>();
-                    if (pickup != null) pickup.Magnetize(this.transform);
+                    if (pickup != null && !pickup.TryGetComponent<SoulHunter.Gameplay.Pickups.StageItemMark>(out _)) pickup.Magnetize(this.transform);
                 }
             }
         }

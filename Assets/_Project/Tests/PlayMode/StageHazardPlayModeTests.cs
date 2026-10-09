@@ -7,12 +7,15 @@ using SoulHunter.Gameplay.AI;
 using SoulHunter.Gameplay.Combat;
 using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Hazards;
+using SoulHunter.Gameplay.Pickups;
 using SoulHunter.Gameplay.Player;
+using UpgradeType = SoulHunter.Gameplay.Combat.UpgradeData.UpgradeType;
 
 namespace SoulHunter.Tests.PlayMode
 {
     /// <summary>
-    /// VS stage hazards in the real game (2026-09-27): Death's Shadow (Stalker) on Stage 5 at 8:00, a Soul Meteor
+    /// VS stage hazards in the real game (2026-09-27): Death's Shadow (the VS Stalker XL since 2026-10-09: a 30% roll at
+    /// 8:00 and 12:00 on Stage 5, a trail-and-dash chase, only instant kills defeat it, each with its VS chest), a Soul Meteor
     /// (Shooting Star) striking after 2 s for 30, a Pile Assault bullet hurting the player, and a Stage 3 rail cart that
     /// launches when hit and kills an enemy on its rail.
     /// </summary>
@@ -61,49 +64,199 @@ namespace SoulHunter.Tests.PlayMode
 
         private static int Kills() => RunStatsTracker.Instance != null ? RunStatsTracker.Instance.TotalKills : 0;
 
+        private const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        private const System.Reflection.BindingFlags PrivateStatic = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+
+        private static ChestPickup[] ActiveChests() =>
+            Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Where(c => c != null && c.gameObject.activeInHierarchy).ToArray();
+
+        /// <summary>A Death's Shadow held still (Orologion-style freeze, which goes through freeze resistance) at an offset.</summary>
+        private DeathsShadow HeldShadow(Vector3 offset)
+        {
+            var shadow = _hazards.SpawnDeathsShadow(60f);
+            Assert.That(shadow, Is.Not.Null, "Death's Shadow spawned. " + Errors());
+            shadow.transform.position = PlayerController.Instance.transform.position + offset;
+            shadow.GetComponent<EnemyController>().Freeze(60f);
+            UnityEngine.Physics.SyncTransforms();
+            return shadow;
+        }
+
         [UnityTest]
-        public IEnumerator DeathsShadow_ComesOnStage5At8_Chases_CannotBeKilled_AndLeaves()
+        public IEnumerator DeathsShadow_ComesOnStage5At8_IsTheStalkerXL_TrailsThenDashes_AndLeaves()
         {
             yield return Boot(5, invinciblePlayer: true);
             Assert.That(_hazards.Shadows, Is.Empty, "Nothing before 8:00.");
+            _hazards.ShadowRoll = () => 0f; // the 30% roll succeeds
             LevelProgressionManager.Instance.SkipTo(8f * 60f);
             yield return WaitUntilRealtime(() => _hazards.Shadows.Count == 1, "Death's Shadow at 8:00");
 
             var shadow = _hazards.Shadows[0];
             var enemy = shadow.GetComponent<EnemyController>();
             var health = shadow.GetComponent<HealthController>();
+            var touch = shadow.GetComponent<TouchDamage>();
             var player = PlayerController.Instance;
+            int level = player.GetComponent<PlayerExperience>().CurrentLevel;
+            float factor = _spawner.CurseForSpeedAndSpawns * SoulHunter.Gameplay.Data.RunModes.EnemySpeedMultiplier(LevelProgressionManager.Instance.StageElapsedTime / 60f);
             Assert.That(enemy.IsStageBoss, Is.False, "Not the stage boss: the boss logic is untouched.");
             Assert.That(shadow.transform.localScale.x, Is.EqualTo(_spawner.StageBossPrefab.transform.localScale.x * 1.5f).Within(0.01f), "The stage boss model, 1.5x.");
-            Assert.That(shadow.RemainingSeconds, Is.GreaterThan(115f), "It stays for 2 minutes.");
-            Assert.That(enemy.MoveSpeed, Is.EqualTo(StageHazardTable.ShadowMoveSpeed).Within(0.01f), "The player's base speed.");
+            Assert.That(shadow.RemainingSeconds, Is.InRange(115f, 120f), "The 8:00 event lasts 2 minutes.");
+            Assert.That(enemy.MoveSpeed, Is.EqualTo(StageHazardTable.ShadowMoveSpeed * factor).Within(0.05f), "VS speed 300 = 9 units/s (x Curse and modes).");
+            Assert.That(health.MaxHealth, Is.EqualTo(StageHazardTable.ShadowHealth(level)), "655,350 x player level.");
+            Assert.That(touch.DamageAmount, Is.EqualTo(Mathf.RoundToInt(50 * SoulHunter.Gameplay.Data.RunModes.EnemyDamageMultiplier)), "VS damage 50.");
+            Assert.That(health.KnockbackResistance, Is.EqualTo(1f), "VS knockback 0.");
+            Assert.That(enemy.FreezeResistance, Is.EqualTo(2f), "VS res-freeze 2.");
+            Assert.That(enemy.ResistsInstantKill, Is.False, "VS res-kill 0.");
+            Assert.That(enemy.ResistsDebuffs, Is.True, "VS res-debuff 1.");
 
+            // It closes in, then trails at its gap without touching.
             float before = Flat(shadow.transform.position, player.transform.position);
             yield return WaitGameSeconds(1.5f);
             float after = Flat(shadow.transform.position, player.transform.position);
-            Assert.That(after, Is.LessThan(before - 2f), $"It chases the player ({before:0.0} -> {after:0.0}). " + Errors());
+            Assert.That(after, Is.LessThan(before - 2f), $"It follows the player ({before:0.0} -> {after:0.0}). " + Errors());
+            yield return WaitGameSeconds(2f);
+            float trailing = Flat(shadow.transform.position, player.transform.position);
+            Assert.That(shadow.IsDashing, Is.False);
+            Assert.That(trailing, Is.GreaterThan(shadow.TrailGap - 0.75f), $"While trailing it keeps its gap ({trailing:0.00}, gap {shadow.TrailGap:0.00}).");
+
+            // Then it dashes in.
+            shadow.PhaseRemainingSeconds = 0.01f; // test hook: the trail lasts 8 s
+            yield return WaitGameSeconds(1f);
+            float dashing = Flat(shadow.transform.position, player.transform.position);
+            Assert.That(shadow.IsDashing, Is.True, "The 2 s dash.");
+            Assert.That(dashing, Is.LessThan(shadow.TrailGap - 1f), $"It closes in on a hero who stands still ({dashing:0.00}).");
 
             int kills = Kills();
-            health.TakeDamage(new DamagePacket(999999, shadow.transform.position, Vector3.forward));
-            Assert.That(health.CurrentHealth, Is.GreaterThan(0), "Weapons cannot hurt it.");
-            health.KillSilently(); // what Soul Toll, Pentagram and the stage-clear wipe do
-            yield return null;
-            Assert.That(shadow.gameObject.activeInHierarchy, Is.True, "A wipe does not remove it.");
-            Assert.That(health.CurrentHealth, Is.GreaterThan(0));
-            Assert.That(Kills(), Is.EqualTo(kills), "Never a kill.");
-
-            shadow.RemainingSeconds = 0.3f; // test hook: VS waits 120 s
+            int chests = ActiveChests().Length;
+            shadow.RemainingSeconds = 0.3f; // test hook
             yield return WaitGameSeconds(0.6f);
             Assert.That(enemy.gameObject.activeSelf, Is.False, "It leaves when its time is up.");
             Assert.That(Kills(), Is.EqualTo(kills), "Leaving is not a kill.");
-            Assert.That(Object.FindObjectsByType<SoulHunter.Gameplay.Pickups.ChestPickup>(FindObjectsSortMode.None).Count(c => c.isActiveAndEnabled),
-                Is.EqualTo(0), "No drops (the boss model would drop a chest).");
+            Assert.That(ActiveChests().Length, Is.EqualTo(chests), "Leaving drops nothing (the boss model would drop a chest).");
             yield return null;
             Assert.That(enemy.GetComponent<DeathsShadow>(), Is.Null, "The pooled enemy is ordinary again.");
             Assert.That(health.IsInvincible, Is.False);
             Assert.That(health.TryPreventDeath, Is.Null);
+            Assert.That(health.DamageInterceptor, Is.Null);
+            Assert.That(enemy.AttackDistance, Is.EqualTo(_spawner.StageBossPrefab.GetComponent<EnemyController>().AttackDistance));
+            Assert.That(enemy.ResistsDebuffs, Is.EqualTo(enemy.Data != null && enemy.Data.DebuffResistance), "The data's resistances again.");
             Assert.That(_hazards.Shadows, Is.Empty);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator DeathsShadow_ComesOnlyWhenIts30PercentRollSucceeds_AndTheNoonOneLastsAMinute()
+        {
+            yield return Boot(5, invinciblePlayer: true);
+            _hazards.ShadowRoll = () => 0.99f; // fails 30% / Luck
+            LevelProgressionManager.Instance.SkipTo(8f * 60f);
+            yield return WaitUntilRealtime(() => _hazards.ShadowEventsSkipped == 1, "the 8:00 roll");
+            yield return null;
+            Assert.That(_hazards.Shadows, Is.Empty, "A failed roll sends nothing.");
+
+            _hazards.ShadowRoll = () => 0.29f; // under 30% (Kael's Luck is 1)
+            LevelProgressionManager.Instance.SkipTo(12f * 60f);
+            yield return WaitUntilRealtime(() => _hazards.Shadows.Count == 1, "Death's Shadow at 12:00");
+            Assert.That(_hazards.Shadows[0].RemainingSeconds, Is.InRange(55f, 60f), "The 12:00 event lasts 1 minute.");
+            Assert.That(_hazards.ShadowEventsSkipped, Is.EqualTo(1));
+            _hazards.Shadows[0].Leave();
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator DeathsShadow_OrdinaryWeaponsWipesAndDebuffs_DoNothing()
+        {
+            yield return Boot(5, invinciblePlayer: true);
+            var shadow = HeldShadow(new Vector3(6f, 0f, 0f));
+            var enemy = shadow.GetComponent<EnemyController>();
+            var health = shadow.GetComponent<HealthController>();
+            var whip = PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>(true).First();
+            Assert.That(StageHazardTable.KillerOf(whip, null), Is.EqualTo(ShadowKiller.None), $"{whip.GetType().Name} is an ordinary weapon.");
+            int kills = Kills();
+            int chests = ActiveChests().Length;
+
+            using (DamageSource.From(whip)) health.TakeDamage(new DamagePacket(999999, shadow.transform.position, Vector3.forward));
+            health.TakeDamage(new DamagePacket(999999, shadow.transform.position, Vector3.forward));
+            Assert.That(health.CurrentHealth, Is.EqualTo(health.MaxHealth), "\"Otherwise intangible\": no damage at all.");
+            Assert.That(enemy.IsKnockedBack, Is.False, "No knockback.");
+            health.KillSilently(); // the stage-clear wipe: no source
+            yield return null;
+            Assert.That(shadow != null && shadow.gameObject.activeInHierarchy, Is.True, "A wipe does not remove it.");
+            Assert.That(health.CurrentHealth, Is.GreaterThan(0));
+            Assert.That(enemy.TryWeaponFreeze(1f, 2f), Is.False, "Clock Lancet (freeze chance 1) cannot freeze it (resistance 2).");
+            Assert.That(enemy.ApplyGarlicDebuff(), Is.False, "Debuff resistance: no Garlic debuff.");
+            Assert.That(enemy.ApplyLingeringSlow(0.05f, 0.2f), Is.False, "Debuff resistance: no Requiem slow.");
+            Assert.That(Kills(), Is.EqualTo(kills), "Never a kill.");
+            Assert.That(ActiveChests().Length, Is.EqualTo(chests));
+            Assert.That(XPGem.ActiveGems.Count(g => g != null && g.isActiveAndEnabled && Flat(g.transform.position, shadow.transform.position) < 3f), Is.EqualTo(0), "XP 0.");
+            shadow.Leave();
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator DeathsShadow_InstantKills_DefeatIt_WithTheirVsChests()
+        {
+            yield return Boot(5, invinciblePlayer: true);
+            var player = PlayerController.Instance;
+            int kills = Kills();
+
+            // Pentagram: defeated, no chest ("regardless of it being a good or bad proc").
+            WeaponManager.Instance.GiveWeapon(UpgradeType.Pentagram, 1);
+            yield return null;
+            var pentagram = player.GetComponentsInChildren<PentagramWeapon>(true).First();
+            pentagram.enabled = false; // fired by the test
+            yield return null;
+            var shadow = HeldShadow(new Vector3(6f, 0f, 0f));
+            int chests = ActiveChests().Length;
+            typeof(PentagramWeapon).GetMethod("Attack", Private).Invoke(pentagram, null);
+            yield return null;
+            Assert.That(shadow == null || !shadow.gameObject.activeInHierarchy, Is.True, "Pentagram defeats it. " + Errors());
+            Assert.That(DeathsShadow.LastDefeatedBy, Is.EqualTo(ShadowKiller.Pentagram));
+            Assert.That(DeathsShadow.LastChest.HasValue, Is.False);
+            Assert.That(ActiveChests().Length, Is.EqualTo(chests), "Pentagram: no chest.");
+            pentagram.gameObject.SetActive(false);
+
+            // Eclipse Sigil (VS Gorgeous Moon): a high-quality chest.
+            var evolution = SoulHunter.Gameplay.Data.GameContentCatalog.Load().Evolutions.First(e => e.EvolvedName == "Evo_EclipseSigil");
+            var sigil = Object.Instantiate(evolution.EvolvedWeaponPrefab, player.transform).GetComponent<EclipseSigilWeapon>();
+            sigil.enabled = false;
+            shadow = HeldShadow(new Vector3(-6f, 0f, 0f));
+            Vector3 at = shadow.transform.position;
+            typeof(EclipseSigilWeapon).GetMethod("EraseOne", PrivateStatic).Invoke(null, new object[] { shadow.GetComponent<EnemyController>(), sigil });
+            yield return null;
+            AssertDefeatedWithChest(shadow, at, ShadowKiller.EclipseSigil, ChestTiers.StalkerHighQuality);
+            Object.Destroy(sigil.gameObject);
+
+            // Crimson Shroud: a high-quality chest. Its pulse is placed by the shadow, away from the hero.
+            var shroudData = Resources.Load<WeaponEvolutionData>("Metaglio/CrimsonShroudEvolution");
+            Assert.That(shroudData != null && shroudData.EvolvedWeaponPrefab != null, Is.True, "The Crimson Shroud prefab.");
+            shadow = HeldShadow(new Vector3(0f, 0f, 7f));
+            at = shadow.transform.position;
+            var shroud = Object.Instantiate(shroudData.EvolvedWeaponPrefab, at + Vector3.right, Quaternion.identity).GetComponent<CrimsonShroudWeapon>();
+            shroud.enabled = false;
+            typeof(CrimsonShroudWeapon).GetMethod("Pulse", Private).Invoke(shroud, new object[] { 10 });
+            yield return null;
+            AssertDefeatedWithChest(shadow, at, ShadowKiller.CrimsonShroud, ChestTiers.StalkerHighQuality);
+            Object.Destroy(shroud.gameObject);
+
+            // Soul Toll (VS Rosary): a high-quality chest.
+            shadow = HeldShadow(new Vector3(0f, 0f, -7f));
+            at = shadow.transform.position;
+            ScreenWipePickup.Wipe(null);
+            yield return null;
+            AssertDefeatedWithChest(shadow, at, ShadowKiller.SoulToll, ChestTiers.StalkerHighQuality);
+
+            Assert.That(Kills(), Is.EqualTo(kills), "Defeating it is not a kill.");
+            Assert.That(_hazards.Shadows, Is.Empty);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        private static void AssertDefeatedWithChest(DeathsShadow shadow, Vector3 at, ShadowKiller killer, ChestTiers tiers)
+        {
+            Assert.That(shadow == null || !shadow.gameObject.activeInHierarchy, Is.True, $"{killer} defeats it.");
+            Assert.That(DeathsShadow.LastDefeatedBy, Is.EqualTo(killer));
+            Assert.That(DeathsShadow.LastChest, Is.EqualTo((ChestTiers?)tiers), $"{killer}'s chest config.");
+            Assert.That(ActiveChests().Count(c => c.Tiers.Equals(tiers) && Flat(c.transform.position, at) < 4f), Is.GreaterThanOrEqualTo(1),
+                $"{killer} drops its chest where the shadow was.");
         }
 
         [UnityTest]
@@ -204,6 +357,29 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => !cart.IsMoving, "the cart to reach the far end");
             Assert.That(Flat(cart.transform.position, track.EndB), Is.LessThan(0.5f), "It stops at the far end.");
             Assert.That(cart.Health.CurrentHealth, Is.EqualTo(RailCart.MaxHealth), "Ready to be launched back.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator RailCart_DefeatsDeathsShadow_WithALowerQualityChest()
+        {
+            yield return Boot(3, invinciblePlayer: true);
+            yield return WaitUntilRealtime(() => _hazards.Tracks.Count == StageHazardTable.RailCount, "the Stage 3 rails");
+            var track = _hazards.Tracks[0];
+            var cart = track.Cart;
+            var shadow = _hazards.SpawnDeathsShadow(60f);
+            Assert.That(shadow, Is.Not.Null, "Death's Shadow spawned. " + Errors());
+            shadow.transform.position = track.transform.position;
+            shadow.GetComponent<EnemyController>().Freeze(20f); // stays on the rail
+            yield return new WaitForFixedUpdate();
+            Vector3 at = shadow.transform.position;
+            int kills = Kills();
+
+            cart.Health.TakeDamage(new DamagePacket(RailCart.MaxHealth, cart.transform.position, Vector3.zero));
+            Assert.That(cart.IsMoving, Is.True);
+            yield return WaitUntilRealtime(() => shadow == null || !shadow.gameObject.activeInHierarchy, "the cart to defeat Death's Shadow");
+            AssertDefeatedWithChest(shadow, at, ShadowKiller.RailCart, ChestTiers.StalkerLowQuality);
+            Assert.That(Kills(), Is.EqualTo(kills), "Not a kill.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

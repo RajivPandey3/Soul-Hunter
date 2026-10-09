@@ -91,10 +91,18 @@ namespace SoulHunter.Gameplay.Combat
 
         private void SpawnFlame()
         {
+            Vector3 aim = AimDirection(HolderFacing);
+            SpawnFlame(aim);
+            // VS Gemini (I) (wiki Gemini_(I), fetched 2026-10-09): "Nduja Fritta Tanto ... create[s] another stream of flame
+            // ... from the back side of the character." Only for the player (Shadow Kael never holds the breath).
+            if (!IsHeldByEnemy && SoulHunter.Gameplay.Core.ArcanaManager.GeminiActive) SpawnFlame(-aim);
+        }
+
+        private void SpawnFlame(Vector3 aim)
+        {
             var template = FlameTemplate();
             if (template == null) return;
             float half = ConeDegrees * 0.5f;
-            Vector3 aim = AimDirection(HolderFacing);
             Vector3 direction = Quaternion.Euler(0f, Random.Range(-half, half), 0f) * aim;
             Vector3 origin = transform.position + direction * 0.5f;
             var rotation = Quaternion.LookRotation(direction, Vector3.up);

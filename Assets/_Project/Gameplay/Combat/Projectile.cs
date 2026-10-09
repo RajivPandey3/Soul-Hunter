@@ -39,6 +39,21 @@ namespace SoulHunter.Gameplay.Combat
         private bool _blockedByWalls;
         private readonly System.Collections.Generic.Dictionary<IDamageable, float> _recentHits = new();
 
+        /// <summary>Enemy bounces this shot has in total (tests and tools).</summary>
+        public int MaxBounces => _maxBounces;
+        /// <summary>Screen-edge bounces this shot has left (VS Arcanas: Hellfire, Cross, Death Spiral; tests and tools).</summary>
+        public int ScreenBouncesLeft => _screenBouncesLeft;
+        private int _screenBouncesLeft;
+
+        /// <summary>
+        /// VS Waltz of Pearls (XI) / Iron Blue Will (VII): a shot that "already has infinite pierce" bounces off the edges of
+        /// the screen instead of off enemies (Hellfire and Death Spiral once, Cross and Heaven Sword twice). Reset on reuse.
+        /// </summary>
+        public void AddScreenBounces(int extra)
+        {
+            if (extra > 0) _screenBouncesLeft += extra;
+        }
+
         /// <summary>Adds bounces on top of the current configuration (a character's extra bounces).</summary>
         public void AddBounces(int extra)
         {
@@ -73,19 +88,33 @@ namespace SoulHunter.Gameplay.Combat
             TargetsPlayer = false;
             _currentLifetime = _lifetime;
             _bounceCount = 0;
-            _maxBounces = ArcanaManager.Instance != null ? ArcanaManager.Instance.ProjectileBounceCount : 0;
+            // VS Arcana bounces apply only to each card's listed weapons, which add them when they fire
+            // (AutoAttackWeapon.ArcanaBounces). This used to read one global count, so every pooled projectile, Shadow
+            // Kael's mirrored shots included, bounced.
+            _maxBounces = 0;
+            _screenBouncesLeft = 0;
             ConfigureContacts(1, _maxBounces, false);
         }
 
         private void Update()
         {
             transform.position += transform.forward * (_speed * Time.deltaTime);
+            if (_screenBouncesLeft > 0) BounceOffScreenEdge();
 
             _currentLifetime -= Time.deltaTime;
             if (_currentLifetime <= 0f)
             {
                 gameObject.SetActive(false);
             }
+        }
+
+        /// <summary>Turns the shot back when it is leaving the camera's view, using up one screen bounce.</summary>
+        private void BounceOffScreenEdge()
+        {
+            Vector3 forward = transform.forward;
+            if (!ScreenEdge.Reflect(transform.position, ref forward)) return;
+            transform.forward = forward;
+            _screenBouncesLeft--;
         }
 
         /// <param name="pierce">Enemies this projectile can hit before it disappears (VS pierce). Default 1.</param>
@@ -98,7 +127,8 @@ namespace SoulHunter.Gameplay.Combat
             _damageType = damageType;
             _currentLifetime = lifetime;
             _bounceCount = 0;
-            _maxBounces = ArcanaManager.Instance != null ? ArcanaManager.Instance.ProjectileBounceCount : 0;
+            _maxBounces = 0;
+            _screenBouncesLeft = 0;
             ConfigureContacts(pierce, _maxBounces, false);
             transform.forward = direction;
         }

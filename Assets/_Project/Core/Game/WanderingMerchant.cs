@@ -52,12 +52,17 @@ namespace SoulHunter.Gameplay.Core
         [SerializeField] private int _rerollPrice = 1000;
         [SerializeField] private int _arcanaPrice = 20000;
 
+        [Header("Endless mode ware")]
+        [Tooltip("VS wiki Stages (Endless): the merchant \"sells '+1 Revival' instead of Golden Eggs\". The wiki gives no price; balance method (2026-10-09): 10,000, the Golden Egg it replaces and the Revival PowerUp's initial cost.")]
+        [SerializeField] private int _revivalPrice = 10000;
+
         private bool _isShopOpen;
         private bool _hasLeft;
         // Per visit: the charges held when the shop opened (the "already start with 20" case) and what was bought.
         private readonly Dictionary<ChargeWare, int> _heldAtOpen = new Dictionary<ChargeWare, int>();
         private readonly HashSet<ChargeWare> _chargesBought = new HashSet<ChargeWare>();
         private bool _arcanaBought;
+        private bool _revivalBought;
 
         public bool IsShopOpen => _isShopOpen;
         /// <summary>True once the player has closed the shop; the merchant never opens again.</summary>
@@ -69,6 +74,9 @@ namespace SoulHunter.Gameplay.Core
         public int BanishPrice => _banishPrice;
         public int RerollPrice => _rerollPrice;
         public int ArcanaPrice => _arcanaPrice;
+        public int RevivalPrice => _revivalPrice;
+        /// <summary>VS Endless: "+1 Revival" instead of Golden Eggs (Soul Hunter's Soul Egg), once per visit (one per cycle).</summary>
+        public static bool SellsRevival => RunModes.Endless;
         /// <summary>VS: Skips, Banishes, Rerolls and the extra Arcana are sold only in Inverse mode.</summary>
         public static bool SellsInverseWares => RunModes.Inverse;
         /// <summary>What the last purchase did, shown in the shop (e.g. "Soul Egg: +1% Might").</summary>
@@ -137,7 +145,7 @@ namespace SoulHunter.Gameplay.Core
         public bool TryBuySoulEgg(GameData data, string character, Func<int, bool> spendGold, System.Random rng, out SoulEggs.Stat stat)
         {
             stat = default;
-            if (data == null || string.IsNullOrEmpty(character) || spendGold == null) return false;
+            if (data == null || string.IsNullOrEmpty(character) || spendGold == null || SellsRevival) return false;
             if (!spendGold(_soulEggPrice)) return false;
             stat = SoulEggs.Add(data, character, rng);
             LastMessage = $"Soul Egg: {SoulEggs.Describe(stat)} for {character} (from the next run)";
@@ -207,6 +215,23 @@ namespace SoulHunter.Gameplay.Core
             return true;
         }
 
+        public WareState RevivalState(int gold)
+        {
+            if (!SellsRevival || _revivalBought) return WareState.SoldOut;
+            return gold < _revivalPrice ? WareState.TooExpensive : WareState.Available;
+        }
+
+        /// <summary>Endless mode only: +1 Revival for this run, once per visit.</summary>
+        public bool TryBuyRevival(PlayerStats stats, Func<int, bool> spendGold)
+        {
+            if (!SellsRevival || _revivalBought || stats == null || spendGold == null) return false;
+            if (!spendGold(_revivalPrice)) return false;
+            stats.AddRevival(1);
+            _revivalBought = true;
+            LastMessage = $"+1 Revival: you now have {stats.Revivals}";
+            return true;
+        }
+
         public WareState ArcanaState(ArcanaManager arcanas, int gold)
         {
             if (!SellsInverseWares || _arcanaBought || arcanas == null || arcanas.AvailableCount == 0) return WareState.SoldOut;
@@ -254,6 +279,15 @@ namespace SoulHunter.Gameplay.Core
             int price = ChargePrice(ware);
             bool bought = TryBuyCharge(ware, FindFirstObjectByType<LevelUpManager>(), economy.SpendGold);
             if (bought) ShowCost(price);
+            RefreshShopUI();
+            return bought;
+        }
+
+        public bool BuyRevival()
+        {
+            if (!TryGetEconomy(out var economy)) return false;
+            bool bought = TryBuyRevival(PlayerController.Instance != null ? PlayerController.Instance.Stats : null, economy.SpendGold);
+            if (bought) ShowCost(_revivalPrice);
             RefreshShopUI();
             return bought;
         }
@@ -366,7 +400,22 @@ namespace SoulHunter.Gameplay.Core
             string character = GameServices.Instance != null && GameServices.Instance.TryGet<SaveService>(out var save) && save.CurrentData != null
                 ? save.CurrentData.SelectedCharacterName : "your hunter";
             var catalog = GameContentCatalog.Load();
-            wares.Add(new Ware
+            if (SellsRevival)
+            {
+                var revivalState = RevivalState(gold);
+                var revivalIcon = catalog != null ? catalog.PowerUpIconFor(SoulHunter.Core.Persistence.PowerUpId.Revival) : null;
+                if (revivalIcon == null) revivalIcon = WeaponDefinitionLookup.Find(UpgradeData.UpgradeType.Tiragisu)?.Icon;
+                wares.Add(new Ware
+                {
+                    Icon = revivalIcon,
+                    Name = "Second Breath",
+                    Description = "+1 Revival for this run.",
+                    State = revivalState == WareState.SoldOut ? "BOUGHT" : $"{_revivalPrice} G",
+                    Available = revivalState == WareState.Available,
+                    OnClick = () => BuyRevival()
+                });
+            }
+            else wares.Add(new Ware
             {
                 Icon = catalog != null ? catalog.SoulEggIcon : null,
                 Name = "Soul Egg",

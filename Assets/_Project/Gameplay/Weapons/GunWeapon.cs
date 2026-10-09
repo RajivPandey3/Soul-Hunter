@@ -8,6 +8,14 @@ namespace SoulHunter.Gameplay.Combat
         public override float Knockback => 0.1f; // VS wiki Phiera Der Tuphello: knockback 0.1
         public GameObject BulletPrefab; 
         public bool ShootCorners = true; // Phiera shoots corners
+        /// <summary>
+        /// Turns the whole 4-way pattern by this many degrees. 0 for the Gun; a Gemini (I) counterpart uses
+        /// <see cref="GeminiArmOffsetDegrees"/> (wiki Gemini_(I): Phiera's counterpart "fires at a slightly different angle").
+        /// </summary>
+        [System.NonSerialized] public float ArmOffsetDegrees;
+        /// <summary>The wiki gives no number for "slightly different": 15 degrees is Soul Hunter's choice, far enough apart to
+        /// read as a second gun while both still sweep the same lanes.</summary>
+        public const float GeminiArmOffsetDegrees = 15f;
         
         // VS wiki (Gun = Phiera Der Tuphello): 5 damage, 1.4 s cooldown, 1 bullet, pierce 1. Level-ups: L2 +1 bullet;
         // L3 +2 pierce; L4 +1 bullet; L5 +5 damage; L6 +2 pierce; L7 +5 damage, Speed +50%; L8 +2 pierce.
@@ -52,7 +60,7 @@ namespace SoulHunter.Gameplay.Combat
             // Guns shoot in 4 diagonal directions
             // Owner decision: aim at the nearest enemy; the other three arms keep the 4-way pattern.
             // Built on the ground plane: Vector2 directions became (x, y, 0) and fired vertically.
-            Vector3 aim = AimDirection(new Vector3(1f, 0f, 1f));
+            Vector3 aim = Quaternion.Euler(0f, ArmOffsetDegrees, 0f) * AimDirection(new Vector3(1f, 0f, 1f));
             Vector3[] directions = {
                 aim,
                 Quaternion.Euler(0f, 90f, 0f) * aim,
@@ -77,7 +85,7 @@ namespace SoulHunter.Gameplay.Combat
                     var proj = bullet.GetComponent<Projectile>();
                     if (proj == null) proj = bullet.AddComponent<Projectile>();
                     proj.Initialize(spreadDir, BulletSpeed * LevelSpeedMultiplier * SpeedMultiplier, ScaledDamage(BaseDamage), BulletLifetime, pierce: Pierce);
-                    proj.AddBounces(ExtraBounces);
+                    proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
                     
                     var damageDealer = bullet.GetComponent<ProjectileDamage>();
                     if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();

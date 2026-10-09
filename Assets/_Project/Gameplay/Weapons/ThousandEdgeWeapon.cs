@@ -63,7 +63,7 @@ namespace SoulHunter.Gameplay.Combat
                 var proj = knife.GetComponent<Projectile>();
                 if (proj == null) proj = knife.AddComponent<Projectile>();
                 proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 3f, pierce: Pierce);
-                proj.AddBounces(ExtraBounces);
+                proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
 
                 var damageDealer = knife.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();

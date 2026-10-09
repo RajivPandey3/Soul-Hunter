@@ -106,13 +106,12 @@ namespace SoulHunter.Gameplay.Weapons
             // AGENTS.md Section 5: Spectral enemies ignore Normal damage and require Holy, Magic, or Spectral.
             // Magic Wand projectiles use DamageType.Magic to damage Level 7 spectral enemies.
             projectile.Initialize(direction, speed, damage, 3f, DamageType.Magic, "Magic Wand");
-            var arcana = ArcanaManager.Instance;
-            int bounces = arcana != null && arcana.HasArcana(ArcanaData.ArcanaType.WaltzOfPearls) ? 3 : 0;
-            projectile.ConfigureContacts(Pierce, bounces + ExtraBounces, true);
+            // Waltz of Pearls (XI): +3 bounces, only for the player's own wand (never Shadow Kael's mirrored copy).
+            projectile.ConfigureContacts(Pierce, ArcanaBounces + ExtraBounces, true);
             _activeProjectiles.Add(projectile);
             projectile.Deactivated += _releaseHandler;
             AimAtHostiles(shot);
-            // Gemini and Iron Blue Will do not apply to Magic Wand.
+            // Gemini (I) and Iron Blue Will (VII) do not list the Magic Wand.
             OnProjectileFired?.Invoke(projectile);
         }
 

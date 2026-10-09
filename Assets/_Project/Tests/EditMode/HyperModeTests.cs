@@ -20,14 +20,14 @@ namespace SoulHunter.Tests.EditMode
         private static readonly float[] HyperPlayerSpeed = { 2f, 1.9f, 1.9f, 1.9f, 2f, 2f, 2f, 2f, 2f, 2f };
         private static readonly float[] HyperProjectile = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f };
         private static readonly float[] HyperLuck = { 0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
-        // Hyper / normal enemy-speed. Level 2 (Inlaid Library: x1.25 in both columns) keeps the old flat 1.65: the
-        // infobox contradicts the Enemies page ("increases ... the movement speed of enemies"), an owner question.
+        // Hyper / normal enemy-speed. Level 2 (Inlaid Library: x1.25 in both columns) contradicts the Enemies page
+        // ("increases ... the movement speed of enemies"); balance method: Dairy Plant's and Gallo Tower's 1.9 / 1.25.
         private static readonly float[] HyperEnemyRatio =
         {
-            2f / 1.1f, 1.65f, 1.9f / 1.25f, 1.9f / 1.25f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f
+            2f / 1.1f, 1.9f / 1.25f, 1.9f / 1.25f, 1.9f / 1.25f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f
         };
-        // Stage gold + 0.5. L6-L10 use Soul Hunter's DLC 1.5, so Hyper gives 2.0 there, not Cappella Magna's
-        // greed2 x1.9: an owner question, pinned as built.
+        // Stage gold + 0.5. L6-L10 use Soul Hunter's DLC 1.5, and the DLC stages go +50% -> +100% in Hyper (wiki Stages:
+        // Mt.Moonspell, Lake Foscari, Polus Replica), so 2.0 there.
         private static readonly float[] HyperGold = { 1.5f, 1.5f, 1.7f, 1.8f, 1.9f, 2f, 2f, 2f, 2f, 2f };
 
         private GameObject _object;
@@ -158,6 +158,24 @@ namespace SoulHunter.Tests.EditMode
             RunModes.EndlessCycle = 2;
             Assert.That(RunModes.MinimumMultiplier, Is.EqualTo(1.25f * 2f).Within(1e-4f), "Endless: +50% quantity per cycle.");
             Assert.That(RunModes.FrequencyMultiplier, Is.EqualTo(2f).Within(1e-4f), "Endless: +50% frequency per cycle.");
+        }
+
+        [Test]
+        public void InverseAndEndlessHealth_Add()
+        {
+            // Endless: +100% of base HP per cycle; Inverse: x(3 + 0.05 per minute), "additive with other enemy bonus modifiers".
+            try
+            {
+                RunModes.Reset();
+                RunModes.Inverse = true;
+                Assert.That(RunModes.EnemyHealthMultiplier(10f), Is.EqualTo(3.5f).Within(1e-4f));
+                RunModes.Endless = true;
+                RunModes.EndlessCycle = 1;
+                Assert.That(RunModes.EnemyHealthMultiplier(10f), Is.EqualTo(4.5f).Within(1e-4f), "3 + 0.5 + 1, not 3.5 x 2.");
+                RunModes.Inverse = false;
+                Assert.That(RunModes.EnemyHealthMultiplier(10f), Is.EqualTo(2f).Within(1e-4f));
+            }
+            finally { RunModes.Reset(); }
         }
     }
 }

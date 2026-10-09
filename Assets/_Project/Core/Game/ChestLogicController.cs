@@ -202,10 +202,11 @@ namespace SoulHunter.Gameplay.Core
 
                 // 2. Give a free upgrade. Applied directly so the chest never touches
                 // the level-up queue or un-pauses the game. A "weapon" slot (Template:Treasure rewardN=weapon) levels an
-                // owned weapon. With no weapon left to level the wiki is silent; Soul Hunter then levels any owned item.
+                // owned weapon. With no weapon left to level, it pays coins: Treasure_Chest Patch 0.2.7, chests "can now only
+                // level up existing weapons (or give extra coins if no weapons can be leveled up)". The wiki gives no amount for
+                // one slot; balance method: one Big Coin Bag, as for any slot with nothing left (wiki research 2026-10-09).
                 List<UpgradeData> upgrades = null;
-                if (levelUpManager != null && tiers.IsWeaponSlot(i)) upgrades = levelUpManager.GetRandomValidUpgradesForChest(weaponsOnly: true);
-                if (levelUpManager != null && (upgrades == null || upgrades.Count == 0)) upgrades = levelUpManager.GetRandomValidUpgradesForChest();
+                if (levelUpManager != null) upgrades = levelUpManager.GetRandomValidUpgradesForChest(weaponsOnly: tiers.IsWeaponSlot(i));
                 if (weaponManager != null && upgrades != null && upgrades.Count > 0)
                 {
                     weaponManager.ApplyUpgrade(upgrades[0]);

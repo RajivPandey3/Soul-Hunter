@@ -10,6 +10,8 @@ namespace SoulHunter.Gameplay.Pickups
     public class HealthPickup : MonoBehaviour, ITickedPickup
     {
         public int HealAmount = 30;
+        /// <summary>How close the hero must come to a stage-placed chicken (the walk-over distance of every Pickup).</summary>
+        public const float StageItemTouchRadius = 1.5f;
         [Tooltip("Unused: the radius is PlayerStats.MagnetRadius (one radius for every pickup, VS). Kept so prefabs keep their data.")]
         [SerializeField] private float _magnetRadius = 3f;
         [SerializeField] private float _flySpeed = 15f;
@@ -39,8 +41,10 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 // Player ko dhoondho. Heavy-kill pass: no physics query or component lookup per chicken per frame.
                 if (_playerStats == null && _playerTransform != null) _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
-                // VS wiki (Magnet, Attractorb): one Magnet radius for every pickup, the Floor Chicken included.
-                float pickupRadius = _playerStats != null ? _playerStats.MagnetRadius : SoulHunter.Gameplay.Player.PlayerStats.BaseMagnetRadius;
+                // VS wiki (Magnet, Attractorb): one Magnet radius for every pickup, the Floor Chicken included. A chicken the
+                // stage placed is a stage item: only walking over it picks it up (wiki Mad_Groove_(VIII): "the only way").
+                float pickupRadius = TryGetComponent<StageItemMark>(out _) ? StageItemTouchRadius
+                    : _playerStats != null ? _playerStats.MagnetRadius : SoulHunter.Gameplay.Player.PlayerStats.BaseMagnetRadius;
                 var hit = PlayerReach.Within(transform.position, pickupRadius);
                 if (hit != null)
                 {

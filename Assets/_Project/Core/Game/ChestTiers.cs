@@ -51,12 +51,11 @@ namespace SoulHunter.Gameplay.Core
 
         /// <summary>
         /// The item count when all three rolls fail. Treasure_Chest: "this specific Silver Bat has a level 1 fallback, so it
-        /// will drop a level 1 (1-item) chest if all 3 rolls fail." The wiki defines only level 1.
-        /// OPEN OWNER QUESTION (P1-14): the Mad Forest 7:00 Glowing Bat has level=2, and neither Treasure_Chest nor
-        /// Template:Treasure (which only prints "Level: 2") says what a level 2 chest holds. 1 item is kept for it until the
-        /// owner decides; no value is invented.
+        /// will drop a level 1 (1-item) chest if all 3 rolls fail." Its v1.6.0 notes name the three chest screens "lvl 1",
+        /// "lvl 2" and "lvl 3" (the 3-item screen's reels are "lvl 2", the 5-item one's ribbon "lvl 3"), so level 2 = 3 items
+        /// and level 3 = 5 items (wiki research 2026-10-09).
         /// </summary>
-        public int FallbackItems => 1;
+        public int FallbackItems => Level >= 3 ? 5 : Level == 2 ? 3 : 1;
 
         /// <summary>The same chest opened as a regular chest that can or cannot evolve (an Arcana chest with no Arcana left).</summary>
         public ChestTiers AsRegular(bool canEvolve)
@@ -88,6 +87,21 @@ namespace SoulHunter.Gameplay.Core
         public static readonly ChestTiers Late = new ChestTiers(1, true, 3f, 10f, 100f);
         /// <summary>The 25:00 stage boss (Mad Forest's Giant Blue Venus config). Also a pooled chest's default.</summary>
         public static ChestTiers StageBoss => Late;
+
+        // vampire.survivors.wiki/w/The_Stalker (raw, fetched 2026-10-09), "Behavior": what an instantly killed Stalker
+        // drops (Soul Hunter's Death's Shadow). Neither config gives "level"; the only fallback the wiki defines is level 1.
+        // Both also say reward4=evo|reward5=evo ("Both chests can exceptionally evolve up to 3 weapons if higher tier"),
+        // which ChestTiers cannot express (Soul Hunter evolves at most one weapon per chest): not built.
+        /// <summary>
+        /// Stalker killed by "Gorgeous Moon, Infinite Corridor, Crimson Shroud, Victory Sword, and Rosary" (Soul Hunter:
+        /// Eclipse Sigil, Crimson Shroud, Soul Toll): {{treasure|evo=1|tier3=6|tier2=66|tier1=100|reward4=evo|reward5=evo}}.
+        /// </summary>
+        public static readonly ChestTiers StalkerHighQuality = new ChestTiers(1, true, 6f, 66f, 100f);
+        /// <summary>
+        /// Stalker killed by "Dairy Cart and Stained Glass windows" (Soul Hunter: the rail cart):
+        /// {{treasure|evo=1|tier3=3|tier2=10|tier1=100|reward4=evo|reward5=evo}}.
+        /// </summary>
+        public static readonly ChestTiers StalkerLowQuality = new ChestTiers(1, true, 3f, 10f, 100f);
 
         /// <summary>
         /// The Mad Forest config of the boss scheduled at <paramref name="minute"/> (1, 3, 5, 7, 9, 10, 11, 12, 14, 15, 16,

@@ -96,14 +96,15 @@ namespace SoulHunter.Gameplay.Data
         // - Enemy speed: the ratio hyper / normal of the infobox's enemy-speed, applied on top of Soul Hunter's own stage
         //   pace (CampaignLevelDefinition.EnemySpeedMultiplier): Mad Forest 2 / 1.1, Dairy Plant and Gallo Tower
         //   1.9 / 1.25, Cappella Magna 2 / 1.4. Inlaid Library gives x1.25 in both columns (ratio 1), which contradicts
-        //   the Enemies page ("Hyper mode in each stage increases ... the movement speed of enemies"), so Level 2 keeps
-        //   the old flat x1.65 until the owner decides.
+        //   the Enemies page ("Hyper mode in each stage increases ... the movement speed of enemies"). Balance method
+        //   (owner rule 2026-10-09): every other base stage's Hyper enemy speed equals its Hyper player speed, and Dairy
+        //   Plant and Gallo Tower share Inlaid Library's normal x1.25, so Level 2 uses their 1.9 / 1.25.
         private static readonly float[] HyperPlayerSpeed = { 2.0f, 1.9f, 1.9f, 1.9f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f };
         private static readonly float[] HyperProjectileSpeed = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f };
         private static readonly float[] HyperLuck = { 0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
         private static readonly float[] HyperEnemySpeed =
         {
-            2.0f / 1.1f, 1.65f, 1.9f / 1.25f, 1.9f / 1.25f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f
+            2.0f / 1.1f, 1.9f / 1.25f, 1.9f / 1.25f, 1.9f / 1.25f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f
         };
 
         public static float HyperPlayerSpeedFor(int stage) => HyperPlayerSpeed[Mathf.Clamp(stage, 1, HyperPlayerSpeed.Length) - 1];

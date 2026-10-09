@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: XI
   CardName: Waltz of Pearls
-  Description: Magic Wands and Crosses bounce 3 times.
+  Description: Magic Wand, Holy Wand and Fire Wand shots bounce off up to 3 enemies; Hellmaw Comet bounces off the screen edge once, Cross and Heaven Sword twice.
   CardIcon: {fileID: 0}
   Type: 3

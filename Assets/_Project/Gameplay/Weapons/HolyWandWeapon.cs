@@ -46,7 +46,7 @@ namespace SoulHunter.Gameplay.Combat
             var proj = projObj.GetComponent<Projectile>();
             if (proj == null) proj = projObj.AddComponent<Projectile>();
             proj.Initialize(shootDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(40f), 5f, DamageType.Holy);
-            proj.AddBounces(ExtraBounces);
+            proj.AddBounces(ExtraBounces + ArcanaBounces); // + Waltz of Pearls (XI)
 
             var damageDealer = projObj.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = projObj.AddComponent<ProjectileDamage>();

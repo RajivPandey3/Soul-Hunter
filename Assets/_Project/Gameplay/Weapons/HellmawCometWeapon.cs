@@ -52,6 +52,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (proj == null) proj = meteor.AddComponent<Projectile>();
                 proj.Initialize(dir, MeteorSpeed * SpeedMultiplier, RollDamage(DamageAmount), FlightSeconds, DamageType.Magic, "Hellmaw Comet", InfinitePierce);
                 proj.ConfigureContacts(InfinitePierce, ExtraBounces, false); // passes through walls (VS)
+                proj.AddScreenBounces(ArcanaScreenBounces); // Waltz of Pearls (XI): bounces off the screen edge once
                 var damage = meteor.GetComponent<ProjectileDamage>();
                 if (damage == null) damage = meteor.AddComponent<ProjectileDamage>();
                 damage.SourceWeaponName = "Hellmaw Comet";

@@ -618,15 +618,15 @@ Balance baseline from the first run: level 70 at 30:00, 18,350 kills, 17 chests,
   - Arcana chests at 11:00 and 21:00, carried by chest elites (`EnemyDrop.CarryArcanaThisLife`, `ChestPickup.IsArcana`, `ChestLogicController.ProcessArcanaChest`), up to 3 Arcanas.
   - **Changed:** `ArcanaManager` used to give an Arcana at 11:00 and 21:00 of every stage without any mode. VS gives none without the mode, so that is gone.
   - Not built: the VS pick-from-four choice screen (here the Arcana is random) and showing the start-of-run Arcana on screen.
+  - The four Arcanas Soul Hunter has follow their wiki pages since 2026-10-09; see "Arcanas" under "Release push, wave 1".
 - **Limit Break:** once nothing is left to level, level-ups offer "LIMIT BREAK" cards: +10% damage to one held weapon per card (`LimitBreak`, hooked in `AutoAttackWeapon.ScaledDamage`; provisional). VS's random stat per card is not built.
-- The Results screen shows the active modes and the Endless cycle (`RunResults.ModeText`). The HUD does not (the wiki is silent; owner question).
+- The Results screen shows the active modes and the Endless cycle (`RunResults.ModeText`). The HUD does not: VS shows none there (the wiki is silent, balance method).
 - Hooks: `RunModes` is read by `EnemySpawner`, `EnemyController`, `PlayerExperience`, `AutoAttackWeapon` and `CampaignLevelCatalog.CurrentGold` / `CurrentPlayerSpeed`.
 - `GameplayPlayModeTestBase.BootIntoGameplay` turns every mode off for the other tests.
 
 **Stage hazards** (`StageHazards`, added by `GameSessionManager`; table in `StageHazardTable`). All numbers are provisional, and placement follows the story's stages:
-- **Death's Shadow** (VS Stalker): Stages 5 and 9 at 8:00 and 12:00.
-  - The stage boss model at 1.5×, tinted dark, 18 units out, at the player's base speed, with 30 contact damage.
-  - It cannot be hurt, pushed or killed (not even by Soul Toll, Pentagram or the stage-clear wipe), drops nothing, and leaves after 120 s.
+- **Death's Shadow** (VS Stalker): Stages 5 and 9 at 8:00 and 12:00. Since 2026-10-09 it is the VS Stalker XL; see "Stalker XL" under "Release push, wave 1". The old version (30 damage, unkillable, always spawned) is gone.
+  - The stage boss model at 1.5×, tinted dark, 18 units out.
   - It is not a stage boss. It restores the pooled enemy when it goes.
 - **Soul Meteors** (VS Shooting Star): Stages 6 and 10, every even minute from 2:00 to 28:00.
   - A volley of 8 ground markers (the first on the player); each strikes 2 s later for 30 to the player (minus Armor) and 30 to enemies within 1.6.
@@ -1424,17 +1424,44 @@ Build play (`D:/SoulHunter-Validation/run-20261009-wave1-screens/`, script `wave
 - Revive on Level 10: the screen showed and the hero revived at 50/100.
 - **Defect found and fixed:** the game behind the Revive screen was not dimmed. The screen was a canvas nested in the HUD, so it kept a 100x100 rect: the veil was a small square behind the panel and the Expand scaler did nothing. It is now a root object in the HUD's scene. `RevivalPlayModeTests.TheReviveScreen_VeilsTheWholeScreen` (R) checks for a root canvas and a veil that covers the screen. Revival fixture 6/6, EditMode 614/614 (`-reveil2/`).
 
-Open owner questions (the wiki is silent or contradicts itself):
-- Magnet: the base radius (4 units kept, so the chicken went from 3 to 4); whether stage items are pulled.
-- Chests: what the 7:00 row's fallback "level=2" gives (1 item kept); whether stages 2-10 use Mad Forest's rows (built) or their mapped stages' tables; whether a weapon slot with no weapon left may level any item.
-- Revival: the invulnerability length; whether the game stays paused under the Revive button; the screen's wording; Soul Hunter's own revive animation and sound. Shadow Kael's revive now has the same 1.74 s game-time window (it was 1.5 s of real time).
-- Character rules: a cap for Valerius' +1 Armor every 5 levels; the price rounding.
-- Hyper: L2 enemy speed (the infobox says no change, the Enemies page says faster); L6-L10 gold 1.9 or 2.0; Hyper starting spawns; the Stages summary's "65%-75%" against the per-stage values.
-- Endless/Inverse: the Endless "max incoming damage cap"; the Inverse speed unit; how Inverse and Endless health stack; the Endless Revival ware's price, and whether it replaces the Soul Egg.
-- Draw a Fate: a random Arcana or a choice screen; whether it needs Arcana mode on.
-- P3-07: whether the HUD shows the active modes.
-- P1-15 Stalker (not built): the Dairy Plant schedule Soul Hunter copied belongs to the Stalker XL (655,350 HP, speed 300), while the 2,550 x Level variant is Cappella Magna's. Rosary calls it "intangible" while its statbox gives it health. Which variant, and whether it can be killed.
-- P3-01 evolution hints (not built): the indicator's look (art) and when it shows.
+**Owner answers (2026-10-09):** "jis question ka jabab wiki ke pass nahi hai waha balance method apnayegein". Each question was first checked on the wiki again, by a research agent with a second agent that tried to refute it (`D:/SoulHunter-Validation/release-answers-wave1.md`). Where the wiki has no answer, the value comes from the balance method, with the reason given. Stalker: the owner chose the latest VS version.
+- **Chest level=2: wiki answers.** Treasure_Chest's v1.6.0 notes name the chest screens "lvl 1", "lvl 2" and "lvl 3" (1, 3 and 5 items), and Template:Treasure/doc says tier3/tier2/tier1 are "The % chance for 5 rewards / 3 rewards / 1 reward". So a level-2 row that fails all three rolls gives 3 items (`ChestTiers.FallbackItems`).
+- **Weapon slot with no weapon left: wiki partly answers.** Treasure_Chest Patch 0.2.7: chests "can now only level up existing weapons (or give extra coins if no weapons can be leveled up)". The amount is not given; balance method: one Big Coin Bag (25 × Greed), as for any slot with nothing left. Before, the slot levelled any owned item.
+- **Stages 2-10 chest rows: balance method.** The wiki has each mapped stage's own rows (Inlaid Library, Dairy Plant, Gallo Tower, Cappella Magna), but their minutes differ from the chest-elite minutes the owner fixed for every stage (Mad Forest's). The Mad Forest rows stay on all stages.
+- **Valerius: wiki answers.** VS Divano Thelma has the same "+1 Armor every 5 levels", "until level 25" (+5 at most), so `Char_Valerius.asset` has `LevelBonusUntilLevel` 25.
+- **Character price rounding: balance method.** Rounded down, as VS rounds the PowerUp fee (`floor(20 × 1.1^TotalBought)`).
+- **Revival invulnerability: wiki silent** ("a large amount of invulnerability frames"; no patch note gives a length). Balance method: 1.5 s + the base 240 ms, which is clearly longer than the 1 s cap on the Invulnerability Time stat. The game stays paused under the Revive button: the wiki says the hero "resumes control ... exactly where they left off".
+- **L2 Hyper enemy speed: the wiki contradicts itself.** The Inlaid Library infobox gives x1.25 in both columns; the Enemies page says Hyper speeds enemies up "in each stage". Balance method: every other base stage's Hyper enemy speed equals its Hyper player speed, and Dairy Plant and Gallo Tower share Inlaid Library's normal x1.25, so Level 2 uses their 1.9 / 1.25 (was 1.65).
+- **L6-L10 Hyper gold: wiki answers.** The DLC stages go from +50% to +100% in Hyper (Mt.Moonspell, Lake Foscari, Polus Replica); Soul Hunter's L6-L10 use the DLC +50%, so 2.0 stays.
+- **Endless Revival ware: wiki gives no price.** Balance method: 10,000, the price of the Golden Egg it replaces and of the Revival PowerUp. "Second Breath" is sold in place of the Soul Egg in Endless mode ("instead of Golden Eggs"), once per visit, so once per cycle (`WanderingMerchant.TryBuyRevival`).
+- **Endless "max incoming damage cap": wiki silent** (it is never defined). Soul Hunter has no such cap, so nothing is built.
+- **Inverse speed: wiki answers.** The infoboxes write "+0.005 per minute" added to the stage's enemy speed. Soul Hunter adds 0.5% of its own pace per minute, within 3% of that at 30:00 (±5% rule).
+- **Inverse + Endless health: balance method.** They now add, x(3 + 0.05 × minute + cycle), not multiply: Endless raises "their base HP" and Inverse bonuses are "additive with other enemy bonus modifiers" (`RunModes.EnemyHealthMultiplier`).
+- **Draw a Fate: wiki answers.** "All unlocked Arcanas are available as choices": the player chooses. Until the Arcana choice screen exists (P2-01) it stays random.
+- **Hyper starting spawns: wiki answers** (10 → 15 on Mad Forest, 50 → 60 on Inlaid Library and Gallo Tower). Soul Hunter fills the minute-0 minimum at once, which on Level 1 already covers 15 (minimum 15, ×1.25 in Hyper). Not built separately.
+- **Magnet radius: the wiki contradicts itself.** One tip puts off-screen reach at about 16× base Magnet, another calls 12× "around 4 times". Balance method: 4 units stays, the radius that bot runs were already balanced on.
+- **Stage items and Magnet: wiki answers.** Mad_Groove_(VIII) is "the only way" to attract stage items, so a pickup the stage placed (chicken, Vacuum, Time Freeze) is not pulled and is picked up only by walking over it.
+- **Modes on the HUD: wiki silent.** VS shows no modes on the HUD, so none are shown; Results shows them.
+- Validation of these answers with the Stalker XL and the Arcanas below: EditMode 627/627, PlayMode 316/316, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-wave1b-full/`). Not played by eye yet (`V`).
+- **Not changed:** the Passive_items "Stage items" rule that a stage passive found with 6 passives held becomes an extra passive (Soul Hunter pays a coin bag). It is a separate gap for a later wave.
+- P3-01 evolution hints (not built): the indicator's look is art for the owner.
+
+**Stalker XL (P1-15, owner: "letest", 2026-10-09).** The wiki has three Stalkers side by side (The_Stalker); the XL is the one that comes as a stage event and drops chests, so Death's Shadow follows it:
+- 655,350 × player level health, speed VS 300 (9 units/s) × Curse × run-mode enemy speed, 50 contact damage (× the Endless multiplier), no knockback, freeze resistance 2 (Clock Lancet cannot freeze it; Orologion still does), debuff resistance 1, no XP (statbox).
+- Stages 5 and 9 (Soul Hunter's placement): 8:00 at 30% for 120 s and 12:00 at 30% for 60 s (Dairy Plant rows). The chance is divided by Luck (wiki Luck: "chanceWithLuck = eventChance / totalLuck").
+- Ordinary weapons cannot hurt it ("otherwise intangible"). Only instant kills defeat it: Pentagram (no chest: "they do not drop chests from the blast"); Eclipse Sigil, Crimson Shroud and Soul Toll (a high-quality chest that can evolve, 6/66/100); rail carts (a lower-quality chest, 3/10/100). It gives no gem and counts as no kill.
+- The chase follows the wiki's "will follow the player around but will not actively make contact. Occasionally, it will speed up or slow down". The wiki gives no rhythm; balance method: 8 s trailing 3 units off, then 2 s closing in, at its own speed. A hero who keeps moving stays ahead; one who stands still is hit.
+- Not built: the chests' extra evolutions (`reward4/5=evo`, "can exceptionally evolve up to 3 weapons"), the 1% event at 0:00, the red-ghost jingle, and the killers Soul Hunter does not have.
+- Tests: `StageHazardTests` (T) and `StageHazardPlayModeTests` (R): stats, rhythm, the 30% roll, the 60 s event, that ordinary hits, the stage wipe, Clock Lancet, Garlic and Requiem do nothing, and each killer with its chest.
+
+**Arcanas (part of P2-01).** The four Arcanas Soul Hunter has now follow their own wiki pages (fetched 2026-10-09):
+- **Awake:** "Gives +3 Revivals. Consuming a Revival gives +10% Max Health, +1 Armor, and +5% Might, Area, Duration, and Speed", on every revive from any source. Before, it gave +1 Armor and +10% Max Health once. The extra Max Health is not filled in (wiki silent; Hollow Heart's rule).
+- **Iron Blue Will:** only Knife, Thousand Edge, Axe and Gun get up to 3 bounces; Death Spiral bounces off the screen edge once. Before, every projectile got 1 bounce.
+- **Waltz of Pearls:** only Magic Wand, Holy Wand and Fire Wand get up to 3 bounces; Hellmaw Comet bounces off the screen edge once, Cross and Heaven Sword twice. Before, every projectile got 3 bounces.
+- **Gemini:** Peachone, Gun and Hellfire Breath get a counterpart. It levels with its weapon, takes no slot, cannot evolve and is not in the weapon list (`GeminiCounterpart`). The Peachone twin flies 1.5 units further out and the Gun twin's pattern is turned 15°: the wiki says only "slightly", so these are balance values. Before, Gemini did nothing.
+- Shadow Kael's mirrored weapons never get Arcana effects (a leak gave his Magic Wand Waltz bounces).
+- Tests: `ArcanaEffectTests` (T) and `ArcanaEffectsPlayModeTests` (R).
+- Still to build in P2-01: the other 18 Arcanas, the start-of-run pick and the pick-from-four chest screen, and Soul Hunter's own card names and art (owner).
 
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 

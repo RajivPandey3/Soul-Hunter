@@ -64,6 +64,7 @@ namespace SoulHunter.Gameplay.Combat
                 // Pierces everything
                 proj.Initialize(shootDir, ExpansionSpeed * SpeedMultiplier, RollDamage(DamageAmount), 6f, pierce: UnlimitedPierce);
                 proj.AddBounces(ExtraBounces);
+                proj.AddScreenBounces(ArcanaScreenBounces); // Iron Blue Will (VII): +1 bounce off the screen edge
                 
                 var damageDealer = scythe.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = scythe.AddComponent<ProjectileDamage>();

@@ -13,10 +13,11 @@ namespace SoulHunter.Gameplay.Data
     {
         public enum ArcanaType
         {
-            Awake,          // +3 Revivals, +10% MaxHealth, +1 Armor, +5% Might per revive
-            Gemini,         // Hathiyaron (Weapons) ka judwa (twin) nikalta hai (Not fully implemented without UI, but backend ready)
-            IronBlueWill,   // Projectiles bounce karte hain
-            WaltzOfPearls   // Magic Wand aur Cross bounce karte hain
+            // Stored as an int in the assets: add new cards at the END only.
+            Awake,          // VS IV: +3 Revivals; each Revival used: Max Health x1.1, +1 Armor, +5% Might/Area/Duration/Speed
+            Gemini,         // VS I: Peachone and Gun get a counterpart (no slot, levels with them); Hellfire Breath a back stream
+            IronBlueWill,   // VS VII: Knife, Thousand Edge, Axe, Gun +3 enemy bounces; Death Spiral +1 screen-edge bounce
+            WaltzOfPearls   // VS XI: Magic/Holy/Fire Wand +3 enemy bounces; Hellmaw Comet 1, Cross and Heaven Sword 2 screen-edge bounces
         }
 
         [Header("Display Info")]

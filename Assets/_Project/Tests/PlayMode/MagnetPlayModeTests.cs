@@ -47,6 +47,34 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator StageItems_AreNotPulled_OnlyWalkedOver()
+        {
+            // wiki Mad_Groove_(VIII): attracting stage items is "the only way" to bring them in; Magnet does not.
+            yield return BootIntoGameplay();
+            StopTheHorde();
+            var player = PlayerController.Instance;
+            var stats = player.GetComponent<PlayerStats>();
+            float radius = stats.MagnetRadius;
+            var p = player.transform.position;
+            var pool = PickupPoolManager.Instance;
+            var freeze = pool.SpawnTimeFreeze(p + Vector3.forward * radius * 0.8f);
+            freeze.AddComponent<StageItemMark>();
+            var chicken = pool.SpawnChicken(p + Vector3.back * radius * 0.8f);
+            chicken.AddComponent<StageItemMark>();
+            var freezeStart = freeze.transform.position;
+            yield return new WaitForSeconds(1f);
+            Assert.That(freeze.activeInHierarchy && chicken.activeInHierarchy, Is.True, "Stage items inside the Magnet radius stay on the ground.");
+            Assert.That(Vector3.Distance(freeze.transform.position, freezeStart), Is.LessThan(0.01f));
+
+            // Walk onto it (the hero's body moves through its Rigidbody; a transform move alone is overwritten).
+            var body = player.GetComponent<Rigidbody>();
+            if (body != null) body.position = chicken.transform.position;
+            player.transform.position = chicken.transform.position;
+            Physics.SyncTransforms();
+            yield return WaitUntilRealtime(() => !chicken.activeInHierarchy, "the stage chicken to be picked up when walked over");
+        }
+
+        [UnityTest]
         public IEnumerator Attractorb_WidensTheRadius_ForCoins()
         {
             yield return BootIntoGameplay();

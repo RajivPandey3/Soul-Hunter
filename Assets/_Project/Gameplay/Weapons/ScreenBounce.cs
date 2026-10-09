@@ -24,26 +24,40 @@ namespace SoulHunter.Gameplay.Combat
 
         private void FixedUpdate()
         {
-            var camera = Camera.main;
-            if (camera == null || _body == null) return;
-            Vector3 v = camera.WorldToViewportPoint(transform.position);
+            if (_body == null) return;
             Vector3 velocity = _body.linearVelocity;
+            if (!ScreenEdge.Reflect(transform.position, ref velocity)) return;
+            _body.linearVelocity = velocity;
+            Bounces++;
+        }
+    }
+
+    /// <summary>The screen-edge bounce shared by projectiles that bounce off the edges of the view.</summary>
+    public static class ScreenEdge
+    {
+        /// <summary>
+        /// When <paramref name="position"/> is outside the main camera's view and <paramref name="motion"/> carries it
+        /// further out, reverses the outward part of the motion (on the ground plane) and returns true.
+        /// </summary>
+        public static bool Reflect(Vector3 position, ref Vector3 motion)
+        {
+            var camera = Camera.main;
+            if (camera == null) return false;
+            Vector3 v = camera.WorldToViewportPoint(position);
             Vector3 right = camera.transform.right; right.y = 0f; right.Normalize();
             Vector3 up = Vector3.ProjectOnPlane(camera.transform.up, Vector3.up).normalized;
             bool bounced = false;
-            if ((v.x < 0f && Vector3.Dot(velocity, right) < 0f) || (v.x > 1f && Vector3.Dot(velocity, right) > 0f))
+            if ((v.x < 0f && Vector3.Dot(motion, right) < 0f) || (v.x > 1f && Vector3.Dot(motion, right) > 0f))
             {
-                velocity -= 2f * Vector3.Dot(velocity, right) * right;
+                motion -= 2f * Vector3.Dot(motion, right) * right;
                 bounced = true;
             }
-            if ((v.y < 0f && Vector3.Dot(velocity, up) < 0f) || (v.y > 1f && Vector3.Dot(velocity, up) > 0f))
+            if ((v.y < 0f && Vector3.Dot(motion, up) < 0f) || (v.y > 1f && Vector3.Dot(motion, up) > 0f))
             {
-                velocity -= 2f * Vector3.Dot(velocity, up) * up;
+                motion -= 2f * Vector3.Dot(motion, up) * up;
                 bounced = true;
             }
-            if (!bounced) return;
-            _body.linearVelocity = velocity;
-            Bounces++;
+            return bounced;
         }
     }
 }

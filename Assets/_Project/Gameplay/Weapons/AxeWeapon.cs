@@ -114,7 +114,8 @@ namespace SoulHunter.Gameplay.Weapons
             // VS pierce: the axe is used up after hitting Pierce enemies.
             var pierce = axeObj.GetComponent<AxePierce>();
             if (pierce == null) pierce = axeObj.AddComponent<AxePierce>();
-            pierce.Arm(Pierce + ExtraPierce, projectileDamage);
+            // Iron Blue Will (VII): up to 3 bounces off enemies on top of the pierce.
+            pierce.Arm(Pierce + ExtraPierce, projectileDamage, ArcanaBounces);
 
             // Rigidbody ko dhakka do
             Rigidbody rb = axeObj.GetComponent<Rigidbody>();
@@ -157,13 +158,20 @@ namespace SoulHunter.Gameplay.Weapons
         private readonly System.Collections.Generic.HashSet<int> _hit = new();
         private ProjectileDamage _damage;
         private int _pierce = int.MaxValue;
+        private int _bouncesLeft;
         private bool _usedUp;
 
         public int HitCount => _hit.Count;
+        /// <summary>Hits this axe can make before it is used up: its pierce plus its Arcana bounces (tests).</summary>
+        public int HitLimit => _pierce;
+        /// <summary>Enemy bounces left (VS Iron Blue Will; tests).</summary>
+        public int BouncesLeft => _bouncesLeft;
 
-        public void Arm(int pierce, ProjectileDamage damage)
+        /// <param name="bounces">VS Iron Blue Will (VII): extra hits, each turning the axe away from the enemy it hit.</param>
+        public void Arm(int pierce, ProjectileDamage damage, int bounces = 0)
         {
-            _pierce = Mathf.Max(1, pierce);
+            _bouncesLeft = Mathf.Max(0, bounces);
+            _pierce = Mathf.Max(1, pierce) + _bouncesLeft;
             _damage = damage;
             _hit.Clear();
             _usedUp = false;
@@ -179,8 +187,25 @@ namespace SoulHunter.Gameplay.Weapons
             if (_usedUp || other == null || _damage == null || !other.CompareTag(_damage.TargetTag)) return;
             var damageable = other.GetComponentInParent<IDamageable>();
             if (damageable == null) return;
-            _hit.Add(damageable is Component body ? body.GetInstanceID() : other.GetInstanceID());
-            if (_hit.Count >= _pierce) _usedUp = true;
+            if (!_hit.Add(damageable is Component body ? body.GetInstanceID() : other.GetInstanceID())) return;
+            if (_hit.Count >= _pierce) { _usedUp = true; return; }
+            if (_bouncesLeft > 0) Bounce(other.transform.position);
+        }
+
+        /// <summary>Reflects the axe's flight off the enemy it hit, as Projectile bounces do.</summary>
+        private void Bounce(Vector3 enemyPosition)
+        {
+            var rb = GetComponent<Rigidbody>();
+            if (rb == null) return;
+            Vector3 velocity = rb.linearVelocity;
+            Vector3 normal = enemyPosition - transform.position;
+            normal.y = 0f;
+            if (velocity.sqrMagnitude < 0.0001f || normal.sqrMagnitude < 0.0001f) return;
+            Vector3 reflected = Vector3.Reflect(velocity, normal.normalized);
+            reflected.y = 0f;
+            if (reflected.sqrMagnitude < 0.0001f) reflected = -velocity;
+            rb.linearVelocity = reflected;
+            _bouncesLeft--;
         }
 
         private void LateUpdate()

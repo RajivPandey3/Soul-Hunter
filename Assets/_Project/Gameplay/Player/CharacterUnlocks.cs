@@ -77,13 +77,15 @@ namespace SoulHunter.Gameplay.Player
         public const float VsPriceStepPerPurchase = 0.1f;
 
         /// <summary>
-        /// The gold price now: base x (1 + 0.1 x characters purchased). Rounded to whole gold (Soul Hunter's choice; the
-        /// wiki gives no rounding). Free characters stay free and are not counted as purchases.
+        /// The gold price now: base x (1 + 0.1 x characters purchased), rounded down to whole gold. The wiki gives no rounding;
+        /// balance method: down, as VS rounds the PowerUp fee (floor(20 x 1.1^TotalBought)). Free characters stay free and
+        /// are not counted as purchases.
         /// </summary>
         public static int PriceFor(CharacterData character, GameData data)
         {
             if (character == null || character.GoldPrice <= 0) return 0;
-            return UnityEngine.Mathf.RoundToInt(character.GoldPrice * (1f + VsPriceStepPerPurchase * PurchasedCount(data)));
+            // Whole-number maths, so 900 x 1.1 is 990 and not 989.99 rounded down.
+            return character.GoldPrice * (10 + UnityEngine.Mathf.RoundToInt(VsPriceStepPerPurchase * 10f) * PurchasedCount(data)) / 10;
         }
 
         /// <summary>Characters bought with gold on this save (free characters in the list do not count).</summary>

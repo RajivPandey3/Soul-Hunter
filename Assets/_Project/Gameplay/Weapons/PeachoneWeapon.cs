@@ -15,6 +15,18 @@ namespace SoulHunter.Gameplay.Combat
         
         private float _angle = 0f;
 
+        /// <summary>
+        /// Gemini (I) counterpart setup (wiki: Peachone's counterpart "attacks slightly further outward than Peachone"):
+        /// a wider orbit, starting on the far side of the hero so the two birds do not overlap. The wiki gives no
+        /// number: +1.5 units (half the 3-unit orbit again) is Soul Hunter's choice.
+        /// </summary>
+        public const float GeminiExtraRadius = 1.5f;
+        public void SetOrbit(float radius, float phaseDegrees)
+        {
+            CircleRadius = radius;
+            _angle = phaseDegrees;
+        }
+
         // VS wiki (Peachone): 10 damage, 1.0 s cooldown, 4 bombs. Levels: +1 bomb every level; L2 Area +40%; L3 +10;
         // L4 CD -0.3; L5 Area +40%; L6 +10; L7 CD -0.3; L8 Area +40%. Area bonuses scale our own blast size.
         public const float VsBaseDamage = 10f;

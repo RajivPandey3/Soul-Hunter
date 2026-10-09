@@ -57,8 +57,13 @@ namespace SoulHunter.Gameplay.Data
             (Hyper ? CampaignLevelCatalog.HyperEnemySpeedFor(CampaignLevelCatalog.CurrentStage) : 1f)
             * (Inverse ? 1f + 0.005f * Mathf.Max(0f, stageMinutes) : 1f);
 
+        /// <summary>
+        /// Enemy health: Inverse x(3 + 0.05 per minute) (stage infoboxes enemy-health3 = 3, enemy-health per min3 = +0.05) and
+        /// Endless +100% of base health per cycle. They add: Endless raises "their base HP" and Inverse bonuses are "additive
+        /// with other enemy bonus modifiers" (wiki Stages; how the two stack is not stated, balance method 2026-10-09).
+        /// </summary>
         public static float EnemyHealthMultiplier(float stageMinutes) =>
-            (Inverse ? 3f + 0.05f * Mathf.Max(0f, stageMinutes) : 1f) * (1f + Mathf.Max(0, EndlessCycle));
+            (Inverse ? 3f + 0.05f * Mathf.Max(0f, stageMinutes) : 1f) + Mathf.Max(0, EndlessCycle);
 
         public static float EnemyDamageMultiplier => 1f + 0.25f * Mathf.Max(0, EndlessCycle);
 

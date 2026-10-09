@@ -43,7 +43,10 @@ namespace SoulHunter.Gameplay.Pickups
                 if (!IsOnScreen(camera, enemy.transform.position)) continue;
                 var health = enemy.GetComponent<HealthController>();
                 if (health == null || health.CurrentHealth <= 0) continue;
-                health.KillSilently(); // Die() -> OnDied: EnemyDrop drops normally and counts the kill
+                // Die() -> OnDied: EnemyDrop drops normally and counts the kill. The named source lets Death's Shadow (VS
+                // Stalker) know a Rosary struck it (vampire.survivors.wiki/w/Rosary: it can "defeat the otherwise
+                // intangible Stalkers ... causing them to drop Treasure Chests"). KillSilently records no Results damage.
+                using (DamageSource.From(null, DisplayName)) health.KillSilently();
                 killed++;
             }
             return killed;

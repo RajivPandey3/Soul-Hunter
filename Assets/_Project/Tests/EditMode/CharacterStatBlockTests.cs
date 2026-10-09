@@ -186,6 +186,9 @@ namespace SoulHunter.Tests.EditMode
             for (int level = 2; level <= 10; level++) stats.ApplyLevelBonus(level);
             Assert.That(stats.Armor, Is.EqualTo(start + 2));
             Assert.That(_object.GetComponent<HealthController>().Armor, Is.EqualTo(start + 2));
+            // VS Divano Thelma has the same +1 Armor every 5 levels "until level 25" (+5 at most): Valerius stops there too.
+            for (int level = 11; level <= 60; level++) stats.ApplyLevelBonus(level);
+            Assert.That(stats.Armor, Is.EqualTo(start + 5), "+1 at 5, 10, 15, 20 and 25; nothing after.");
         }
 
         [Test]

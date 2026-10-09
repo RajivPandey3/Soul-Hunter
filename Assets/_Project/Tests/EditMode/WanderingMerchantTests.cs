@@ -309,6 +309,32 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EndlessMode_SellsARevival_InsteadOfTheSoulEgg_OncePerVisit()
+        {
+            // VS wiki Stages (Endless): the merchant "sells '+1 Revival' instead of Golden Eggs". Price: balance method, 10,000.
+            var statsObject = new GameObject("TestStats");
+            try
+            {
+                var stats = statsObject.AddComponent<PlayerStats>();
+                var data = new GameData();
+                _gold = 25000;
+                Assert.That(_merchant.TryBuyRevival(stats, Spend), Is.False, "No Revival ware outside Endless.");
+                Assert.That(_merchant.RevivalState(_gold), Is.EqualTo(WanderingMerchant.WareState.SoldOut));
+
+                RunModes.Endless = true;
+                Assert.That(_merchant.TryBuySoulEgg(data, "Kael", Spend, new System.Random(1), out _), Is.False, "No Soul Egg in Endless.");
+                Assert.That(_merchant.RevivalPrice, Is.EqualTo(10000));
+                int before = stats.Revivals;
+                Assert.That(_merchant.TryBuyRevival(stats, Spend), Is.True);
+                Assert.That(stats.Revivals, Is.EqualTo(before + 1));
+                Assert.That(_gold, Is.EqualTo(15000));
+                Assert.That(_merchant.TryBuyRevival(stats, Spend), Is.False, "One per visit.");
+                Assert.That(_gold, Is.EqualTo(15000));
+            }
+            finally { Object.DestroyImmediate(statsObject); }
+        }
+
+        [Test]
         public void InverseMode_DrawAFate_Costs20000_GivesAnUnheldArcana_OncePerVisit()
         {
             RunModes.Inverse = true;

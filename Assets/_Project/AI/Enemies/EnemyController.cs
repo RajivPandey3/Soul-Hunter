@@ -154,8 +154,8 @@ namespace SoulHunter.Gameplay.AI
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
-            ResetFreezeResistance(); // Garlic's freeze-resistance reduction lasts one life too
-            RestartAbilities();     // VS skills start again on every spawn (pooling-safe)
+            ClearResistanceOverrides(); // Garlic's freeze-resistance reduction, and any override, last one life too
+            RestartAbilities();    // VS skills start again on every spawn (pooling-safe)
             SetDefanged(false); // Defang lasts one life; this also restores the type's own tint
             LingeringSlow = 1f;                 // Requiem of Souls' slow lasts one life
             if (Rigidbody != null)
@@ -192,9 +192,31 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>Current freeze resistance: the data's value, lowered by Garlic hits during this life.</summary>
         public float FreezeResistance => _freezeResistance;
         /// <summary>VS instant kill resistance (Pentagram, Soul Toll). Stage bosses are always immune.</summary>
-        public bool ResistsInstantKill => EnemyResistance.ResistsInstantKill(IsStageBoss, _enemyData != null && _enemyData.InstantKillResistance);
+        public bool ResistsInstantKill => EnemyResistance.ResistsInstantKill(IsStageBoss,
+            _instantKillResistanceOverride ?? (_enemyData != null && _enemyData.InstantKillResistance));
         /// <summary>VS debuff resistance: Garlic's knockback and freeze-resistance reductions do not land.</summary>
-        public bool ResistsDebuffs => _enemyData != null && _enemyData.DebuffResistance;
+        public bool ResistsDebuffs => _debuffResistanceOverride ?? (_enemyData != null && _enemyData.DebuffResistance);
+
+        // This life's resistances when they are not the data's (Death's Shadow takes the VS Stalker statbox on a pooled
+        // boss model). Cleared on every spawn (OnEnable). A stage boss stays immune to instant kills whatever the override.
+        private bool? _instantKillResistanceOverride;
+        private bool? _debuffResistanceOverride;
+
+        /// <summary>Gives this life its own VS resistances (freeze, instant kill, debuff) instead of its data's.</summary>
+        public void OverrideResistances(float freezeResistance, bool instantKillResistance, bool debuffResistance)
+        {
+            _freezeResistance = Mathf.Max(0f, freezeResistance);
+            _instantKillResistanceOverride = instantKillResistance;
+            _debuffResistanceOverride = debuffResistance;
+        }
+
+        /// <summary>Back to the data's resistances.</summary>
+        public void ClearResistanceOverrides()
+        {
+            _instantKillResistanceOverride = null;
+            _debuffResistanceOverride = null;
+            ResetFreezeResistance();
+        }
         /// <summary>This enemy's skill runner (null when its data has no abilities and none was ever started).</summary>
         public EnemyAbilities Abilities => _abilities;
 

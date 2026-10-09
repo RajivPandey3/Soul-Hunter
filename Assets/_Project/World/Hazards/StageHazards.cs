@@ -68,6 +68,7 @@ namespace SoulHunter.Gameplay.Hazards
             _schedule.Clear();
             _schedule.AddRange(StageHazardTable.For(stage));
             _next = 0;
+            ShadowEventsSkipped = 0;
             if (StageHazardTable.HasRailCarts(stage)) StartCoroutine(LayRailsWhenReady(stage));
         }
 
@@ -84,7 +85,7 @@ namespace SoulHunter.Gameplay.Hazards
             {
                 var entry = _schedule[_next++];
                 if (clock - entry.TimeSeconds > StageHazardTable.MissedAfterSeconds) continue; // skipped past (Debug)
-                Run(entry.Kind);
+                Run(entry);
             }
 
             // A volley's markers appear one after another (game time).
@@ -101,6 +102,35 @@ namespace SoulHunter.Gameplay.Hazards
             }
         }
 
+        /// <summary>
+        /// Roll for Death's Shadow's map-event chance (0-1). Null uses Random.value; tests set a fixed roll.
+        /// </summary>
+        public System.Func<float> ShadowRoll { get; set; }
+        /// <summary>Death's Shadow events whose chance roll failed on this stage (logs and tests).</summary>
+        public int ShadowEventsSkipped { get; private set; }
+
+        /// <summary>
+        /// A scheduled hazard. Death's Shadow rolls its VS chance first (The_Stalker XL: "30% chance"), divided by the
+        /// player's Luck (wiki Luck, "Skipping events"), and stays for the entry's duration.
+        /// </summary>
+        public void Run(StageHazardEntry entry)
+        {
+            if (entry.Kind == StageHazardKind.DeathsShadow)
+            {
+                float roll = ShadowRoll != null ? ShadowRoll() : Random.value;
+                if (!StageHazardTable.ShadowEventFires(entry.ChancePercent, PlayerLuck(), roll))
+                {
+                    ShadowEventsSkipped++;
+                    Debug.Log($"[StageHazards] Death's Shadow did not come on Stage {_stage} ({entry.ChancePercent:0}% chance).");
+                    return;
+                }
+                SpawnDeathsShadow(entry.DurationSeconds > 0f ? entry.DurationSeconds : StageHazardTable.ShadowLifetimeSeconds);
+                return;
+            }
+            Run(entry.Kind);
+        }
+
+        /// <summary>Starts a hazard now (no chance roll).</summary>
         public void Run(StageHazardKind kind)
         {
             switch (kind)
@@ -131,13 +161,30 @@ namespace SoulHunter.Gameplay.Hazards
             if (dir.sqrMagnitude < 0.01f) dir = Vector2.up;
             Vector3 at = player.transform.position + new Vector3(dir.x, 0f, dir.y) * StageHazardTable.ShadowSpawnDistance;
             var enemy = spawner.SpawnHazardEnemy(prefab, at);
-            var shadow = DeathsShadow.Begin(enemy, lifetimeSeconds);
+            // VS "HP x Level", and Curse ("allows it to move very fast") with the run modes' enemy speed.
+            float minutes = _progression != null ? _progression.StageElapsedTime / 60f : 0f;
+            float curseAndModes = spawner.CurseForSpeedAndSpawns * SoulHunter.Gameplay.Data.RunModes.EnemySpeedMultiplier(minutes);
+            var shadow = DeathsShadow.Begin(enemy, lifetimeSeconds, PlayerLevel(), curseAndModes);
             if (shadow != null)
             {
                 _shadows.Add(shadow);
                 Debug.Log($"[StageHazards] Death's Shadow follows the player on Stage {_stage} for {lifetimeSeconds:0} s.");
             }
             return shadow;
+        }
+
+        private static int PlayerLevel()
+        {
+            var player = PlayerController.Instance;
+            var experience = player != null ? player.GetComponent<PlayerExperience>() : null;
+            return experience != null ? experience.CurrentLevel : 1;
+        }
+
+        private static float PlayerLuck()
+        {
+            var player = PlayerController.Instance;
+            var stats = player != null ? player.GetComponent<PlayerStats>() : null;
+            return stats != null ? stats.Luck : 1f;
         }
 
         // ------------------------------------------------------------------ Soul Meteors

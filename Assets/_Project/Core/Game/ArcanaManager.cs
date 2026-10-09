@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SoulHunter.Gameplay.Data;
 using SoulHunter.Gameplay.Player;
 using SoulHunter.Gameplay.Combat;
+using SoulHunter.Gameplay.Weapons;
 using System;
 
 namespace SoulHunter.Gameplay.Core
@@ -28,9 +29,6 @@ namespace SoulHunter.Gameplay.Core
         [SerializeField] private List<ArcanaData> _availableArcanas = new List<ArcanaData>();
         /// <summary>VS: with three or more Arcanas, the Arcana elites drop regular chests.</summary>
         public const int MaxArcanasFromChests = 3;
-        public int ProjectileBounceCount { get; private set; }
-        public bool GeminiEnabled { get; private set; }
-        public float GeminiSpreadDegrees { get; private set; } = 12f;
         public event Action<ArcanaData> OnArcanaAwarded;
         /// <summary>The Arcana given at the start of an Arcana-mode run (null otherwise).</summary>
         public ArcanaData StartingArcana { get; private set; }
@@ -58,6 +56,8 @@ namespace SoulHunter.Gameplay.Core
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (_revivalPlayer != null) _revivalPlayer.OnRevived -= OnPlayerRevived;
+            if (_geminiWeapons != null) _geminiWeapons.OnInventoryChanged -= RefreshGemini;
         }
 
         /// <summary>True while an Arcana chest still gives an Arcana (fewer than three held and one left to give).</summary>
@@ -117,38 +117,211 @@ namespace SoulHunter.Gameplay.Core
 
         private void ExecuteArcanaEffect(ArcanaData.ArcanaType type)
         {
-            // The player's stats, never Shadow Kael's mirrored copy.
-            var playerStats = PlayerController.Instance != null ? PlayerController.Instance.Stats : FindFirstObjectByType<PlayerStats>();
-            if (playerStats == null) return;
-
             switch (type)
             {
                 case ArcanaData.ArcanaType.Awake:
-                    // Awake: Gives +3 Revivals. In VS, each time you revive, you get stronger.
-                    // For now, we give the revivals immediately.
-                    playerStats.AddRevival(3);
-                    playerStats.AddArmor(1);
-                    var health = playerStats.GetComponent<HealthController>();
-                    if (health != null) health.IncreaseMaxHealth(Mathf.Max(1, Mathf.RoundToInt(health.MaxHealth * 0.1f)));
-                    Debug.Log("[ArcanaManager] AWAKE Effect: +3 Extra Lives added!");
+                {
+                    // vampire.survivors.wiki/w/Awake_(IV) (raw, fetched 2026-10-09): "Gives +3 Revivals. Consuming a Revival
+                    // gives +10% Max Health, +1 Armor, and +5% Might, Area, Duration, and Speed." Only the Revivals come now;
+                    // the stats come each time a Revival is used (OnPlayerRevived). Before 2026-10-09 the card gave +1 Armor
+                    // and +10% Max Health at once and nothing on revival. The player's stats, never Shadow Kael's copy.
+                    var player = PlayerController.Instance;
+                    var playerStats = player != null ? player.Stats : null;
+                    if (playerStats == null) return;
+                    playerStats.AddRevival(AwakeRevivals);
+                    HookRevivals(player);
                     break;
-                
+                }
+
                 case ArcanaData.ArcanaType.IronBlueWill:
-                    // Ye backend flag set kar sakta hai jo projectiles (Axe/Cross) padhte hain.
-                    ProjectileBounceCount = Mathf.Max(ProjectileBounceCount, 1);
-                    Debug.Log("[ArcanaManager] IRON BLUE WILL Effect: Projectiles now bounce once.");
-                    break;
-                
-                case ArcanaData.ArcanaType.Gemini:
-                    // Twins for specific weapons
-                    GeminiEnabled = true;
-                    Debug.Log("[ArcanaManager] GEMINI Effect: Compatible projectiles now duplicate.");
-                    break;
-                    
                 case ArcanaData.ArcanaType.WaltzOfPearls:
-                    ProjectileBounceCount = Mathf.Max(ProjectileBounceCount, 3);
-                    Debug.Log("[ArcanaManager] WALTZ OF PEARLS Effect: Magic Wand and Cross bounce three times.");
+                    // Read per weapon when it fires (EnemyBouncesFor, ScreenBouncesFor): only each card's listed weapons
+                    // bounce. These cards used to set one global bounce count that every Projectile read, Shadow Kael's too.
                     break;
+
+                case ArcanaData.ArcanaType.Gemini:
+                    // Counterparts for the listed weapons held now and gained later (RefreshGemini).
+                    HookGemini();
+                    RefreshGemini();
+                    break;
+            }
+        }
+
+        // ------------------------------------------------------------------ Awake (IV)
+
+        /// <summary>Awake (IV): "Gives +3 Revivals."</summary>
+        public const int AwakeRevivals = 3;
+        /// <summary>Awake (IV), per Revival consumed: Max Health x1.1 (the page's Overview: "1.1x Max Health"), multiplied.</summary>
+        public const float AwakeMaxHealthFactor = 1.1f;
+        /// <summary>Awake (IV), per Revival consumed: "+1 Armor".</summary>
+        public const int AwakeArmor = 1;
+        /// <summary>Awake (IV), per Revival consumed: "+5% Might, Area, Duration, and Speed" (added, as VS stat bonuses are).</summary>
+        public const float AwakeStatBonus = 0.05f;
+        /// <summary>Revivals used while Awake was held; each gave the bonus once (tests).</summary>
+        public int AwakeBonusesGiven { get; private set; }
+
+        private PlayerController _revivalPlayer;
+
+        private void HookRevivals(PlayerController player)
+        {
+            if (player == null || _revivalPlayer == player) return;
+            if (_revivalPlayer != null) _revivalPlayer.OnRevived -= OnPlayerRevived;
+            _revivalPlayer = player;
+            player.OnRevived += OnPlayerRevived;
+        }
+
+        /// <summary>
+        /// Awake (IV): "The aforementioned bonus applies to all revives, including those from the Tirajisú, the Revival
+        /// PowerUp", so it hooks PlayerController.OnRevived, which every Revival goes through (ConfirmRevive). The bonus
+        /// stacks with each Revival. The wiki does not say whether the higher Max Health is filled: like Hollow Heart
+        /// ("does not heal to fill up the newly increased Max Health") it is not, so the Revival's own heal stays the
+        /// only heal (Soul Hunter's choice; the wiki is silent).
+        /// </summary>
+        private void OnPlayerRevived(int healed)
+        {
+            if (!HasArcana(ArcanaData.ArcanaType.Awake) || _revivalPlayer == null) return;
+            var stats = _revivalPlayer.Stats;
+            var health = _revivalPlayer.GetComponent<HealthController>();
+            if (health != null) health.MultiplyMaxHealth(AwakeMaxHealthFactor, healByIncrease: false);
+            if (stats != null)
+            {
+                stats.AddArmor(AwakeArmor);
+                stats.AddMight(AwakeStatBonus);
+                stats.AddArea(AwakeStatBonus);
+                stats.AddDuration(AwakeStatBonus);
+                stats.AddProjectileSpeed(AwakeStatBonus); // VS "Speed" is projectile Speed (wiki Player_stats), not Move Speed
+            }
+            AwakeBonusesGiven++;
+        }
+
+        // ------------------------------------------------------------------ Iron Blue Will (VII), Waltz of Pearls (XI)
+
+        /// <summary>Both cards: "Listed weapon projectiles gain up to 3 bounces."</summary>
+        public const int ArcanaEnemyBounces = 3;
+
+        /// <summary>
+        /// vampire.survivors.wiki/w/Iron_Blue_Will_(VII) (raw, fetched 2026-10-09), the weapons Soul Hunter has from its list:
+        /// Knife, Thousand Edge, Axe and Phiera Der Tuphello (Soul Hunter's Gun) bounce off enemies; Death Spiral instead
+        /// "bounces off the edges of the screen once". Eight The Sparrow, Carrello and the DLC weapons are not in Soul Hunter.
+        /// "the ability to pass through enemies and ignore walls": a bounce is an extra hit, so the shot goes on through
+        /// the enemy it hit; these shots already ignore walls (Projectile is not blocked by walls for these weapons, and
+        /// thrown axes fly on a layer the Obstacle layer does not collide with). The wiki gives no pass-through chance.
+        /// </summary>
+        public static bool IronBlueWillBouncesOffEnemies(AutoAttackWeapon weapon) =>
+            weapon is KnifeWeapon || weapon is ThousandEdgeWeapon || weapon is AxeWeapon || weapon is GunWeapon;
+
+        /// <summary>
+        /// vampire.survivors.wiki/w/Waltz_of_Pearls_(XI) (raw, fetched 2026-10-09): Magic Wand, Holy Wand and Fire Wand
+        /// "can hit 3 more targets per shot"; Hellfire (Soul Hunter's Hellmaw Comet) bounces off the screen edges once,
+        /// Cross and Heaven Sword twice ("They already have infinite pierce"). Carrello and the DLC weapons are not in
+        /// Soul Hunter.
+        /// </summary>
+        public static bool WaltzBouncesOffEnemies(AutoAttackWeapon weapon) =>
+            weapon is MagicWandWeapon || weapon is HolyWandWeapon || weapon is FireWandWeapon;
+
+        /// <summary>Enemy bounces a weapon's shots gain from the player's Arcanas: 3 for a listed weapon, else 0.</summary>
+        public static int EnemyBouncesFor(AutoAttackWeapon weapon)
+        {
+            // Shadow Kael's mirrored copies get none: the Arcanas are the player's, not part of the loadout he copies.
+            var manager = Instance;
+            if (weapon == null || weapon.IsHeldByEnemy || manager == null) return 0;
+            if (manager.HasArcana(ArcanaData.ArcanaType.IronBlueWill) && IronBlueWillBouncesOffEnemies(weapon)) return ArcanaEnemyBounces;
+            if (manager.HasArcana(ArcanaData.ArcanaType.WaltzOfPearls) && WaltzBouncesOffEnemies(weapon)) return ArcanaEnemyBounces;
+            return 0;
+        }
+
+        /// <summary>Screen-edge bounces a weapon's shots gain: Death Spiral 1 (Iron Blue Will); Hellmaw Comet 1, Cross and Heaven Sword 2 (Waltz).</summary>
+        public static int ScreenBouncesFor(AutoAttackWeapon weapon)
+        {
+            var manager = Instance;
+            if (weapon == null || weapon.IsHeldByEnemy || manager == null) return 0;
+            if (weapon is DeathSpiralWeapon) return manager.HasArcana(ArcanaData.ArcanaType.IronBlueWill) ? 1 : 0;
+            if (weapon is HellmawCometWeapon) return manager.HasArcana(ArcanaData.ArcanaType.WaltzOfPearls) ? 1 : 0;
+            if (weapon is CrossWeapon) return manager.HasArcana(ArcanaData.ArcanaType.WaltzOfPearls) ? 2 : 0; // Cross and Heaven Sword
+            return 0;
+        }
+
+        // ------------------------------------------------------------------ Gemini (I)
+
+        /// <summary>True while the player holds Gemini (I).</summary>
+        public static bool GeminiActive => Instance != null && Instance.HasArcana(ArcanaData.ArcanaType.Gemini);
+
+        /// <summary>
+        /// vampire.survivors.wiki/w/Gemini_(I) (raw, fetched 2026-10-09): of its list Soul Hunter has Peachone (its
+        /// counterpart "attacks slightly further outward") and Phiera Der Tuphello, the Gun (its counterpart "fires at a
+        /// slightly different angle"). Nduja Fritta Tanto (Hellfire Breath) gets its back stream in FireBreath. Ebony
+        /// Wings, Eight The Sparrow, Sorbetto and the rest are not in Soul Hunter.
+        /// </summary>
+        public static bool HasGeminiCounterpart(AutoAttackWeapon weapon) => weapon is PeachoneWeapon || weapon is GunWeapon;
+
+        private readonly Dictionary<Type, AutoAttackWeapon> _geminiCounterparts = new Dictionary<Type, AutoAttackWeapon>();
+        private WeaponManager _geminiWeapons;
+
+        /// <summary>The counterpart made for this weapon's kind, or null (tests and tools).</summary>
+        public AutoAttackWeapon GeminiCounterpartOf(AutoAttackWeapon original)
+        {
+            if (original == null || !_geminiCounterparts.TryGetValue(original.GetType(), out var twin) || twin == null) return null;
+            return twin;
+        }
+
+        private void HookGemini()
+        {
+            var weapons = WeaponManager.Instance;
+            if (weapons == null || _geminiWeapons == weapons) return;
+            if (_geminiWeapons != null) _geminiWeapons.OnInventoryChanged -= RefreshGemini;
+            _geminiWeapons = weapons;
+            weapons.OnInventoryChanged += RefreshGemini;
+        }
+
+        private void Update()
+        {
+            // Gemini granted before the WeaponManager was ready: hook it once it is.
+            if (_geminiWeapons == null && WeaponManager.Instance != null && HasArcana(ArcanaData.ArcanaType.Gemini))
+            {
+                HookGemini();
+                RefreshGemini();
+            }
+        }
+
+        /// <summary>
+        /// Gives every listed weapon the player uses one counterpart: a copy of the same weapon at the same level, on the
+        /// player, kept out of WeaponManager (no slot, no HUD, no evolution, not mirrored by Shadow Kael). "Having
+        /// multiple copies of certain weapon and Gemini (I) will only provide 1 counterpart", so one per weapon kind.
+        /// </summary>
+        public void RefreshGemini()
+        {
+            if (!HasArcana(ArcanaData.ArcanaType.Gemini)) return;
+            var weapons = WeaponManager.Instance;
+            if (weapons == null) return;
+            foreach (var pair in weapons.GetEquippedWeapons())
+            {
+                var original = pair.Value;
+                if (pair.Key == null || original == null || original.IsHeldByEnemy || !HasGeminiCounterpart(original)) continue;
+                if (_geminiCounterparts.TryGetValue(original.GetType(), out var existing) && existing != null) continue;
+
+                var copy = Instantiate(pair.Key, original.transform.parent);
+                copy.name = pair.Key.name + " (Gemini)";
+                copy.SetActive(true);
+                var twin = copy.GetComponent<AutoAttackWeapon>();
+                if (twin == null) { Destroy(copy); continue; }
+                copy.AddComponent<GeminiCounterpart>().Bind(original, twin);
+                if (twin is PeachoneWeapon bird && original is PeachoneWeapon originalBird)
+                {
+                    bird.SetOrbit(originalBird.CircleRadius + PeachoneWeapon.GeminiExtraRadius, 180f);
+                    // Gemini (I): "Only Peachone, Ebony Wings, Vandalier, Phieraggi, Gatti Amari, and Vicious Hunger can
+                    // transfer their Limit Broken bonuses to their counterparts." The Gun's counterpart keeps none.
+                    twin.LimitBreakSource = original;
+                }
+                if (twin is GunWeapon gun) gun.ArmOffsetDegrees = GunWeapon.GeminiArmOffsetDegrees;
+                WeaponManager.ApplyWeaponLevel(copy, original.CurrentLevel);
+                _geminiCounterparts[original.GetType()] = twin;
+
+                // Results: in VS the counterpart is a weapon of its own (own name and damage). Soul Hunter names it after
+                // its original ("<weapon> Twin") instead of using a VS counterpart name.
+                var type = original is PeachoneWeapon ? UpgradeData.UpgradeType.Peachone : UpgradeData.UpgradeType.Gun;
+                var definition = WeaponDefinitionLookup.Find(type);
+                var tracker = RunStatsTracker.Instance;
+                if (tracker != null) tracker.TrackWeapon(twin, UpgradeText.NameOf(type) + " Twin", definition != null ? definition.Icon : null, twin.MaxLevel, false);
             }
         }
 
@@ -156,7 +329,7 @@ namespace SoulHunter.Gameplay.Core
         {
             foreach (var a in ActiveArcanas)
             {
-                if (a.Type == type) return true;
+                if (a != null && a.Type == type) return true;
             }
             return false;
         }

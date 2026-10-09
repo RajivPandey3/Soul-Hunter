@@ -160,7 +160,8 @@ namespace SoulHunter.Gameplay.Weapons
             var boomerangLogic = crossObj.GetComponent<BoomerangProjectile>();
             if (boomerangLogic == null) boomerangLogic = crossObj.AddComponent<BoomerangProjectile>();
             
-            boomerangLogic.Initialize(direction, _speed * speed, _returnTime);
+            // Waltz of Pearls (XI): the Cross and Heaven Sword bounce off the screen edges twice.
+            boomerangLogic.Initialize(direction, _speed * speed, _returnTime, ArcanaScreenBounces);
         }
     }
 
@@ -174,14 +175,19 @@ namespace SoulHunter.Gameplay.Weapons
         private float _timer;
         private float _returnTime;
         private float _aliveTimer;
+        private int _screenBouncesLeft;
 
-        public void Initialize(Vector3 direction, float speed, float returnTime)
+        /// <summary>Screen-edge bounces left (VS Waltz of Pearls; tests).</summary>
+        public int ScreenBouncesLeft => _screenBouncesLeft;
+
+        public void Initialize(Vector3 direction, float speed, float returnTime, int screenBounces = 0)
         {
             _direction = direction;
             _speed = speed;
             _returnTime = returnTime;
             _timer = 0f;
             _aliveTimer = 0f;
+            _screenBouncesLeft = Mathf.Max(0, screenBounces);
             
             // Spinning effect
             var rb = GetComponent<Rigidbody>();
@@ -204,6 +210,7 @@ namespace SoulHunter.Gameplay.Weapons
             }
 
             transform.position += _direction * (_speed * Time.deltaTime);
+            if (_screenBouncesLeft > 0 && ScreenEdge.Reflect(transform.position, ref _direction)) _screenBouncesLeft--;
             
             // Ghoomne (spinning) ka effect
             transform.Rotate(0, 1000f * Time.deltaTime, 0);
