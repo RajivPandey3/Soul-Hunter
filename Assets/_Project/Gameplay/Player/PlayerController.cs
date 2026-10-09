@@ -206,25 +206,78 @@ namespace SoulHunter.Gameplay.Player
             if (health != null)
             {
                 health.OnDied += HandlePlayerDeath;
+                // VS Revival: a lethal hit with a Revival left never fires OnDied; it is held for the Revive button.
+                health.TryPreventDeath = HoldDeathForRevive;
             }
 
             ChangeState(new PlayerIdleState(this));
         }
 
-        private void HandlePlayerDeath()
+        /// <summary>
+        /// Opens the Revive screen (set by the HUD's ReviveScreen). Returns false when there is no screen; the player is
+        /// then revived at once. Gameplay does not reference the UI: the screen registers itself here.
+        /// </summary>
+        public Func<PlayerController, bool> ShowReviveScreen { get; set; }
+        /// <summary>Fires after every revival (VS Revival "On Revival" effects can hook here), with the health restored.</summary>
+        public event Action<int> OnRevived;
+        /// <summary>The player died with a Revival left and waits for the Revive button.</summary>
+        public bool IsAwaitingRevive
+        {
+            get
+            {
+                var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+                return health != null && health.IsAwaitingRevive;
+            }
+        }
+
+        /// <summary>
+        /// HealthController.TryPreventDeath: with a Revival left, the death is held at 0 health (no OnDied, no Game Over)
+        /// and the Revive screen opens. With none left, the player dies (OnDied, then Game Over).
+        /// </summary>
+        private bool HoldDeathForRevive()
         {
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            var stats = GetComponent<PlayerStats>();
-            if (health != null && stats != null && stats.UseRevival())
-            {
-                health.ReviveFromDeath();
-                Debug.Log($"[PlayerController] Revival consumed. Remaining revivals: {stats.Revivals}");
-                var weapons = GetComponentInChildren<SoulHunter.Gameplay.Combat.WeaponManager>();
-                if (weapons == null) weapons = SoulHunter.Gameplay.Combat.WeaponManager.Instance;
-                if (weapons != null) weapons.ReleaseSpentTirajisu(stats.Revivals);
-                return;
-            }
+            var stats = Stats;
+            if (health == null || stats == null || stats.Revivals <= 0) return false;
+            if (health.IsAwaitingRevive) return true; // already held: one death, one Revival (VS v1.6.0 "revives triggering twice")
+            health.HoldForRevive();
+            if (ShowReviveScreen == null || !ShowReviveScreen(this)) ConfirmRevive(); // no screen (tests without a HUD)
+            return true;
+        }
 
+        /// <summary>
+        /// The Revive button: spends exactly one Revival, revives with 50% of max health (VS Revival), releases a spent
+        /// Tirajisu (wiki Tirajisú: "only be removed from the inventory when the last Revive is used up") and plays the
+        /// revive effect. Does nothing unless a death is held, so a second press can never spend a second Revival.
+        /// </summary>
+        public bool ConfirmRevive()
+        {
+            var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+            var stats = Stats;
+            if (health == null || !health.IsAwaitingRevive) return false;
+            if (stats == null || !stats.UseRevival())
+            {
+                health.FinishDeath(); // nothing left to spend: the normal death and Game Over
+                return false;
+            }
+            int before = health.CurrentHealth;
+            health.ReviveFromDeath();
+            Debug.Log($"[PlayerController] Revival consumed. Remaining revivals: {stats.Revivals}");
+            var weapons = GetComponentInChildren<SoulHunter.Gameplay.Combat.WeaponManager>();
+            if (weapons == null) weapons = SoulHunter.Gameplay.Combat.WeaponManager.Instance;
+            if (weapons != null) weapons.ReleaseSpentTirajisu(stats.Revivals);
+            // Placeholder look and sound (existing level-up circle, heal effect and heal sound); the wiki shows an angel
+            // animation, and Soul Hunter's own revive art and audio wait for the owner.
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.LevelUp, transform.position);
+            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.Heal, transform.position);
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFX(audio.HealSound);
+            OnRevived?.Invoke(health.CurrentHealth - before);
+            return true;
+        }
+
+        private void HandlePlayerDeath()
+        {
             if (SoulHunter.Gameplay.Core.GameSessionManager.Instance != null)
             {
                 SoulHunter.Gameplay.Core.GameSessionManager.Instance.GameOver();

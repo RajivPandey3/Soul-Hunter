@@ -54,8 +54,9 @@ namespace SoulHunter.Gameplay.Player
         public event Action<int> OnSoulCollected; // Fired when a gem is absorbed
 
         [Header("Magnet Settings (Soul Gathering)")]
+        [Tooltip("Unused: the radius is PlayerStats.MagnetRadius (one radius for every pickup, VS). Kept so prefabs keep their data.")]
         [SerializeField] private float _magnetRadius = 4f;
-        private Collider[] _magnetHits = new Collider[100];
+        private Collider[] _magnetHits = new Collider[256];
         private float _magnetCheckTimer = 0f;
 
         private void Update()
@@ -66,7 +67,7 @@ namespace SoulHunter.Gameplay.Player
             {
                 _magnetCheckTimer = 0f;
                 var stats = GetComponent<PlayerStats>();
-                float pickupRadius = _magnetRadius * (stats != null ? Mathf.Max(0.1f, stats.Magnet) : 1f);
+                float pickupRadius = stats != null ? stats.MagnetRadius : PlayerStats.BaseMagnetRadius;
                 int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, pickupRadius, _magnetHits);
                 for (int i = 0; i < count; i++)
                 {
@@ -76,7 +77,12 @@ namespace SoulHunter.Gameplay.Player
                     if (gem != null)
                     {
                         gem.Magnetize(this.transform);
+                        continue;
                     }
+                    // VS wiki (Magnet): other pickups are gathered too. Chests are never pulled (wiki Treasure_Chest:
+                    // "Doesn't get attracted to the player"); stage items stay walk-over (wiki silent).
+                    var pickup = _magnetHits[i].GetComponentInParent<SoulHunter.Gameplay.Pickups.Pickup>();
+                    if (pickup != null) pickup.Magnetize(this.transform);
                 }
             }
         }

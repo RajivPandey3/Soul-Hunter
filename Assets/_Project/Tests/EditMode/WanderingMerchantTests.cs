@@ -5,6 +5,7 @@ using NUnit.Framework;
 using SoulHunter.Core.Persistence;
 using SoulHunter.Gameplay.Combat;
 using SoulHunter.Gameplay.Core;
+using SoulHunter.Gameplay.Data;
 using SoulHunter.Gameplay.Player;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace SoulHunter.Tests.EditMode
     public class WanderingMerchantTests
     {
         private readonly List<GameObject> _cleanup = new List<GameObject>();
+        private readonly List<Object> _assets = new List<Object>();
         private WanderingMerchant _merchant;
         private WeaponManager _weapons;
         private int _gold;
@@ -48,6 +50,9 @@ namespace SoulHunter.Tests.EditMode
         public void TearDown()
         {
             SoulHunter.Core.Services.GameTime.ResetAll();
+            RunModes.Reset();
+            foreach (var asset in _assets) if (asset != null) Object.DestroyImmediate(asset);
+            _assets.Clear();
             foreach (var go in _cleanup) if (go != null) Object.DestroyImmediate(go);
             _cleanup.Clear();
         }
@@ -185,6 +190,181 @@ namespace SoulHunter.Tests.EditMode
             _merchant.OpenShop();
             typeof(WanderingMerchant).GetMethod("OnDestroy", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(_merchant, null);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
+        }
+
+        // ---------------------------------------------------------------- Inverse mode wares
+        // vampire.survivors.wiki/w/Merchant (raw, 2026-10-09): Skip 100, Banish 500, Reroll 1,000, Pick a Card 20,000, all
+        // "Inverse mode only"; charges "can be purchased repeatedly until the player has 20 ... Can only buy once if the
+        // character already start with 20". Stages, Patch 1.0: "Skip, Banish, and Reroll (can carry up to 20) and 1 extra Arcana".
+
+        private LevelUpManager NewLevelUp()
+        {
+            var go = new GameObject("TestLevelUp");
+            _cleanup.Add(go);
+            return go.AddComponent<LevelUpManager>();
+        }
+
+        private ArcanaManager NewArcanas(int count)
+        {
+            var go = new GameObject("TestArcanas");
+            _cleanup.Add(go);
+            var manager = go.AddComponent<ArcanaManager>();
+            var arcanas = new List<ArcanaData>();
+            for (int i = 0; i < count; i++)
+            {
+                var arcana = ScriptableObject.CreateInstance<ArcanaData>();
+                _assets.Add(arcana);
+                arcana.CardNumber = (i + 1).ToString();
+                arcana.CardName = "Test Arcana " + i;
+                arcana.Type = ArcanaData.ArcanaType.IronBlueWill;
+                arcanas.Add(arcana);
+            }
+            manager.SetAvailableArcanas(arcanas);
+            return manager;
+        }
+
+        [Test]
+        public void InverseWares_HaveTheVsPrices_AndTheCapOf20()
+        {
+            Assert.That(_merchant.SkipPrice, Is.EqualTo(100));
+            Assert.That(_merchant.BanishPrice, Is.EqualTo(500));
+            Assert.That(_merchant.RerollPrice, Is.EqualTo(1000));
+            Assert.That(_merchant.ArcanaPrice, Is.EqualTo(20000));
+            Assert.That(_merchant.ChargePrice(WanderingMerchant.ChargeWare.Skip), Is.EqualTo(100));
+            Assert.That(_merchant.ChargePrice(WanderingMerchant.ChargeWare.Banish), Is.EqualTo(500));
+            Assert.That(_merchant.ChargePrice(WanderingMerchant.ChargeWare.Reroll), Is.EqualTo(1000));
+            Assert.That(WanderingMerchant.MaxRunCharges, Is.EqualTo(20));
+            Assert.That(WanderingMerchant.ChargeWareName(WanderingMerchant.ChargeWare.Skip), Is.EqualTo("Skip Sigil"), "Soul Hunter's own ware name.");
+            Assert.That(WanderingMerchant.ChargeWareName(WanderingMerchant.ChargeWare.Banish), Is.EqualTo("Banish Sigil"));
+            Assert.That(WanderingMerchant.ChargeWareName(WanderingMerchant.ChargeWare.Reroll), Is.EqualTo("Reroll Sigil"));
+        }
+
+        [Test]
+        public void WithoutInverseMode_NoInverseWareIsSold_AndNothingIsCharged()
+        {
+            RunModes.Inverse = false;
+            var levelUp = NewLevelUp();
+            var arcanas = NewArcanas(3);
+            _gold = 50000;
+            _merchant.OpenShop();
+
+            Assert.That(WanderingMerchant.SellsInverseWares, Is.False);
+            foreach (WanderingMerchant.ChargeWare ware in System.Enum.GetValues(typeof(WanderingMerchant.ChargeWare)))
+                Assert.That(_merchant.TryBuyCharge(ware, levelUp, Spend), Is.False, $"{ware} is Inverse mode only.");
+            Assert.That(_merchant.TryBuyArcana(arcanas, Spend, 0.5f), Is.False, "Pick a Card is Inverse mode only.");
+            Assert.That(_gold, Is.EqualTo(50000));
+            Assert.That(levelUp.RerollsLeft + levelUp.SkipsLeft + levelUp.BanishesLeft, Is.EqualTo(0));
+            Assert.That(arcanas.ActiveArcanas, Is.Empty);
+        }
+
+        [Test]
+        public void InverseMode_Charges_AreRepeatable_PlusOneEach_UntilTwentyAreHeld()
+        {
+            RunModes.Inverse = true;
+            var levelUp = NewLevelUp();
+            levelUp.AddCharges(0, 17, 0);
+            _gold = 10000;
+            _merchant.OpenShop();
+
+            Assert.That(WanderingMerchant.SellsInverseWares, Is.True);
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Skip, levelUp, Spend), Is.True);
+            Assert.That(levelUp.SkipsLeft, Is.EqualTo(18));
+            Assert.That(_gold, Is.EqualTo(9900), "Skip costs 100.");
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Skip, levelUp, Spend), Is.True);
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Skip, levelUp, Spend), Is.True);
+            Assert.That(levelUp.SkipsLeft, Is.EqualTo(20));
+            Assert.That(_merchant.ChargeState(WanderingMerchant.ChargeWare.Skip, levelUp, _gold), Is.EqualTo(WanderingMerchant.WareState.Full));
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Skip, levelUp, Spend), Is.False, "20 Skips held: no more.");
+            Assert.That(levelUp.SkipsLeft, Is.EqualTo(20));
+            Assert.That(_gold, Is.EqualTo(9700), "A refused purchase costs nothing.");
+
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Banish, levelUp, Spend), Is.True);
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Reroll, levelUp, Spend), Is.True);
+            Assert.That(levelUp.BanishesLeft, Is.EqualTo(1));
+            Assert.That(levelUp.RerollsLeft, Is.EqualTo(1));
+            Assert.That(_gold, Is.EqualTo(9700 - 500 - 1000));
+            Assert.That(_merchant.LastMessage, Does.Contain("Reroll Sigil"));
+        }
+
+        [Test]
+        public void InverseMode_AShopOpenedWithTwentyHeld_SellsExactlyOne()
+        {
+            RunModes.Inverse = true;
+            var levelUp = NewLevelUp();
+            levelUp.AddCharges(20, 0, 0);
+            _gold = 5000;
+            _merchant.OpenShop();
+
+            Assert.That(_merchant.ChargeState(WanderingMerchant.ChargeWare.Reroll, levelUp, _gold), Is.EqualTo(WanderingMerchant.WareState.Available));
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Reroll, levelUp, Spend), Is.True, "VS: can buy once when starting with 20.");
+            Assert.That(levelUp.RerollsLeft, Is.EqualTo(21));
+            Assert.That(_merchant.TryBuyCharge(WanderingMerchant.ChargeWare.Reroll, levelUp, Spend), Is.False, "Only once.");
+            Assert.That(levelUp.RerollsLeft, Is.EqualTo(21));
+            Assert.That(_gold, Is.EqualTo(4000));
+
+            Assert.That(WanderingMerchant.ChargeAllowed(19, 0, false), Is.True);
+            Assert.That(WanderingMerchant.ChargeAllowed(20, 19, true), Is.False);
+            Assert.That(WanderingMerchant.ChargeAllowed(20, 20, false), Is.True);
+            Assert.That(WanderingMerchant.ChargeAllowed(21, 20, true), Is.False);
+        }
+
+        [Test]
+        public void InverseMode_DrawAFate_Costs20000_GivesAnUnheldArcana_OncePerVisit()
+        {
+            RunModes.Inverse = true;
+            var arcanas = NewArcanas(4);
+            _gold = 19999;
+            _merchant.OpenShop();
+
+            Assert.That(_merchant.ArcanaState(arcanas, _gold), Is.EqualTo(WanderingMerchant.WareState.TooExpensive));
+            Assert.That(_merchant.TryBuyArcana(arcanas, Spend, 0.3f), Is.False);
+            Assert.That(arcanas.ActiveArcanas, Is.Empty);
+
+            _gold = 45000;
+            Assert.That(_merchant.TryBuyArcana(arcanas, Spend, 0.3f), Is.True);
+            Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(1));
+            Assert.That(_gold, Is.EqualTo(25000));
+            Assert.That(_merchant.LastMessage, Does.Contain(arcanas.ActiveArcanas[0].CardName));
+            Assert.That(_merchant.ArcanaState(arcanas, _gold), Is.EqualTo(WanderingMerchant.WareState.SoldOut), "VS: 1 extra Arcana.");
+            Assert.That(_merchant.TryBuyArcana(arcanas, Spend, 0.3f), Is.False);
+            Assert.That(_gold, Is.EqualTo(25000));
+        }
+
+        [Test]
+        public void InverseMode_DrawAFate_WithNoArcanaLeft_ChargesNothing()
+        {
+            RunModes.Inverse = true;
+            var arcanas = NewArcanas(1);
+            Assert.That(arcanas.GrantNextAvailableArcana(), Is.True, "The only Arcana is already held.");
+            Assert.That(arcanas.AvailableCount, Is.EqualTo(0));
+            _gold = 30000;
+
+            Assert.That(_merchant.ArcanaState(arcanas, _gold), Is.EqualTo(WanderingMerchant.WareState.SoldOut));
+            Assert.That(_merchant.TryBuyArcana(arcanas, Spend, 0.5f), Is.False);
+            Assert.That(_gold, Is.EqualTo(30000));
+        }
+
+        [Test]
+        public void WareCells_StayInsideTheWaresArea_WithoutOverlap_ForEveryCount()
+        {
+            for (int count = 1; count <= 8; count++)
+            {
+                var cells = new List<Rect>();
+                for (int i = 0; i < count; i++)
+                {
+                    WanderingMerchant.WareCell(i, count, out var min, out var max);
+                    Assert.That(min.x, Is.GreaterThanOrEqualTo(0f));
+                    Assert.That(max.x, Is.LessThanOrEqualTo(1f));
+                    Assert.That(min.y, Is.GreaterThanOrEqualTo(WanderingMerchant.WaresBottom - 1e-4f), $"{count} wares: card {i} runs into the message.");
+                    Assert.That(max.y, Is.LessThanOrEqualTo(WanderingMerchant.WaresTop + 1e-4f));
+                    var cell = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+                    foreach (var other in cells) Assert.That(cell.Overlaps(other), Is.False, $"{count} wares: card {i} overlaps another.");
+                    cells.Add(cell);
+                }
+            }
+            WanderingMerchant.WareCell(0, 3, out var oneMin, out var oneMax);
+            Assert.That(oneMax.y - oneMin.y, Is.EqualTo(0.12f).Within(1e-4f), "Three wares keep the approved one-column cards.");
+            Assert.That(WanderingMerchant.WareColumns(7), Is.EqualTo(2), "Inverse mode's seven wares go in two columns.");
         }
 
         [Test]

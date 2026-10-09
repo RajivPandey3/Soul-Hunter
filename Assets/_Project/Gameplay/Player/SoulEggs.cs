@@ -8,7 +8,8 @@ namespace SoulHunter.Gameplay.Player
     /// VS Golden Egg rule, as Soul Hunter's Soul Egg: each egg permanently raises one random stat of the
     /// character it was bought for, by a small fixed amount. It counts from that character's next run.
     /// Amounts and caps follow the VS egg table (vampire.survivors.wiki/w/Golden_Egg, checked 2026-09-26);
-    /// Magnet is +1% here because Soul Hunter's Magnet is a multiplier (VS lists +0.3 in its own unit).
+    /// Magnet is +0.01 here, VS's +0.3 on its base 30, added to the Magnet base before the character, PowerUp and
+    /// item multipliers (wiki Magnet; PlayerStats.AddMagnet).
     /// </summary>
     public static class SoulEggs
     {

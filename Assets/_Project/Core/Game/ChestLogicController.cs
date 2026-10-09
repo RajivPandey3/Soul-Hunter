@@ -46,10 +46,8 @@ namespace SoulHunter.Gameplay.Core
         /// <summary>The chest processed last (null before the first).</summary>
         public ChestResult LastResult { get; private set; }
 
-        [Tooltip("Base % chance (at Luck 1) that a chest holds 5 items. Provisional balance value.")]
-        [SerializeField, Range(0f, 100f)] private float _fiveItemChancePercent = 3f;
-        [Tooltip("Base % chance (at Luck 1) that a chest holds 3 items. Provisional balance value.")]
-        [SerializeField, Range(0f, 100f)] private float _threeItemChancePercent = 10f;
+        // The old global 3% / 10% chances (_fiveItemChancePercent/_threeItemChancePercent) are gone (P1-14, 2026-10-09):
+        // each boss carries its own ChestTiers. The scene may still hold their serialized values; Unity ignores them.
 
         public const int GoldWhenEmpty = 100;
         /// <summary>VS Big Coin Bag: an item slot with nothing left to upgrade pays this much gold (then Greed).</summary>
@@ -68,21 +66,27 @@ namespace SoulHunter.Gameplay.Core
         /// <summary>
         /// VS (Mad Forest wave table, evo flags): only chests from bosses at or after 10:00 can evolve a weapon, plus
         /// the first chest at 1:00. Earlier chests (3, 5, 7, 9) only give upgrades.
+        /// Since 2026-10-09 (P1-14) a scheduled chest takes its flag from its boss's ChestTiers, not from the clock at death;
+        /// this rule is only the fallback for chests with no scheduled config (ChestTiers.Unscheduled).
         /// </summary>
         public static bool CanEvolveAt(float stageSeconds) => stageSeconds >= 600f || (stageSeconds >= 60f && stageSeconds < 120f);
 
         /// <summary>
-        /// Rolls how many items a chest holds. Luck multiplies both the 5- and 3-item chances.
-        /// <paramref name="roll01"/> is a uniform random value in [0, 1).
+        /// Rolls how many items a chest holds, from its boss's config. vampire.survivors.wiki/w/Treasure_Chest (raw, fetched
+        /// 2026-10-09): "there is a base 3% chance for a 5-item chest, and if that roll fails then a 10% chance for a 3-item
+        /// chest, and if that roll fails then a 50% chance for a 1-item chest. If the third roll also fails, then this
+        /// specific Silver Bat has a level 1 fallback"; "chanceWithLuck = levelChance · totalLuck ... compared against a
+        /// randomly generated number between 0 and 100, with each check having a separate random number."
+        /// <paramref name="next01"/> gives a new uniform value in [0, 1) for each check.
+        /// Before 2026-10-09 one shared number was compared cumulatively against global 3% / 10% chances.
         /// </summary>
-        public int RollItemCount(float luck, float roll01)
+        public static int RollItemCount(ChestTiers tiers, float luck, System.Func<float> next01)
         {
             luck = Mathf.Max(0f, luck);
-            float five = _fiveItemChancePercent / 100f * luck;
-            float three = _threeItemChancePercent / 100f * luck;
-            if (roll01 < five) return 5;
-            if (roll01 < five + three) return 3;
-            return 1;
+            if (next01() * 100f < tiers.FivePercent * luck) return 5;
+            if (next01() * 100f < tiers.ThreePercent * luck) return 3;
+            if (next01() * 100f < tiers.OnePercent * luck) return 1;
+            return tiers.FallbackItems;
         }
 
         /// <summary>
@@ -95,14 +99,19 @@ namespace SoulHunter.Gameplay.Core
         public static int FirstChestItems(int chestsOpenedBefore) =>
             chestsOpenedBefore >= 0 && chestsOpenedBefore < FirstChestSequence.Length ? FirstChestSequence[chestsOpenedBefore] : 0;
 
-        /// <summary>The first-chests sequence count if it still applies, else the Luck roll.</summary>
-        public int ItemCountFor(int chestsOpenedBefore, float luck, float roll01)
+        /// <summary>The first-chests sequence count if it still applies (whatever the boss), else the boss's Luck rolls.</summary>
+        public static int ItemCountFor(int chestsOpenedBefore, ChestTiers tiers, float luck, System.Func<float> next01)
         {
             int fixedCount = FirstChestItems(chestsOpenedBefore);
-            return fixedCount > 0 ? fixedCount : RollItemCount(luck, roll01);
+            return fixedCount > 0 ? fixedCount : RollItemCount(tiers, luck, next01);
         }
 
-        public string ProcessChest(bool canEvolve = true)
+        /// <summary>A chest with no boss config of its own (old callers): the 3/10/100 config, evolving or not.</summary>
+        public string ProcessChest(bool canEvolve = true) =>
+            ProcessChest(canEvolve ? ChestTiers.StageBoss : ChestTiers.StageBoss.AsRegular(false));
+
+        /// <summary>Opens a chest dropped by a boss with <paramref name="tiers"/>: its item count, evolution flag and slots.</summary>
+        public string ProcessChest(ChestTiers tiers)
         {
             var weaponManager = FindFirstObjectByType<WeaponManager>();
             var levelUpManager = FindFirstObjectByType<LevelUpManager>();
@@ -112,21 +121,33 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
             // Without a save (no services) the sequence is skipped and the chest rolls as usual.
             int opened = save != null && save.CurrentData != null ? save.CurrentData.ChestsOpened : FirstChestSequence.Length;
-            return ProcessChest(weaponManager, levelUpManager, ItemCountFor(opened, luck, Random.value), canEvolve, Random.value);
+            return ProcessChest(weaponManager, levelUpManager, ItemCountFor(opened, tiers, luck, () => Random.value), tiers, Random.value);
         }
+
+        /// <summary>An Arcana chest with the Mad Forest 11:00 / 21:00 config.</summary>
+        public string ProcessArcanaChest() => ProcessArcanaChest(ChestTiers.ArcanaMinutes);
 
         /// <summary>
         /// VS Arcana chest (Arcana mode, the 11:00 and 21:00 elites): gives one Arcana the player does not hold instead of
         /// items. VS offers a choice of four; Soul Hunter has no Arcana choice screen yet, so a random one is given and
-        /// named in the chest message. With three or more Arcanas held (VS), or none left, it opens as a regular chest.
+        /// named in the chest message.
+        /// When no Arcana can be given it opens as a regular chest. vampire.survivors.wiki/w/Treasure_Chest (Arcana, raw,
+        /// fetched 2026-10-09): "If two Arcanas are obtained from these chests while extra Arcana chests exist on the stage,
+        /// they will turn into bronze chests. If a newer player has all of their unlocked arcanas in use ... any extra
+        /// Arcana chests will act like Silver chests instead." So the Arcana limit reached (or no Arcana system) gives a
+        /// bronze chest that cannot evolve, and every Arcana already in use gives a silver chest that can. Before 2026-10-09
+        /// the fallback took its evolution flag from the stage clock (11:00 and 21:00 are after 10:00, so it could evolve).
         /// </summary>
-        public string ProcessArcanaChest(bool canEvolve = true)
+        public string ProcessArcanaChest(ChestTiers tiers)
         {
             var arcanas = ArcanaManager.Instance;
-            if (arcanas == null || !arcanas.CanGrantFromChest) return ProcessChest(canEvolve);
-            var arcana = arcanas.GrantRandomAvailableArcana(Random.value);
-            if (arcana == null) return ProcessChest(canEvolve);
-            LastResult = new ChestResult { ItemCount = 1, IsArcana = true };
+            var arcana = arcanas != null && arcanas.CanGrantFromChest ? arcanas.GrantRandomAvailableArcana(Random.value) : null;
+            if (arcana == null)
+            {
+                bool silver = arcanas != null && arcanas.ActiveArcanas.Count < ArcanaManager.MaxArcanasFromChests && arcanas.AvailableCount == 0;
+                return ProcessChest(tiers.AsRegular(silver));
+            }
+            LastResult = new ChestResult { ItemCount = 1, IsArcana = true, Kind = SoulHunter.Gameplay.Pickups.ChestKind.Arcana };
             LastResult.Rewards.Add(new ChestReward { Name = $"Arcana {arcana.CardNumber} - {arcana.CardName}", Icon = arcana.CardIcon, Level = 1 });
             return ArcanaMessage(arcana);
         }
@@ -140,23 +161,38 @@ namespace SoulHunter.Gameplay.Core
         }
 
         /// <summary>
-        /// Opens a chest holding <paramref name="itemCount"/> items and returns the reward text. VS rules: at most one
-        /// evolution per chest (only when <paramref name="canEvolve"/>), one upgrade per other item, 25 gold for an item
-        /// with nothing left to upgrade, and the chest's own gold on top.
+        /// Opens a chest holding <paramref name="itemCount"/> items with no slot rules (every slot "any"), evolving or not.
         /// </summary>
         public string ProcessChest(WeaponManager weaponManager, LevelUpManager levelUpManager, int itemCount,
-                                   bool canEvolve = true, float goldRoll01 = 0f)
+                                   bool canEvolve = true, float goldRoll01 = 0f) =>
+            ProcessChest(weaponManager, levelUpManager, itemCount,
+                canEvolve ? ChestTiers.StageBoss : ChestTiers.StageBoss.AsRegular(false), goldRoll01);
+
+        /// <summary>
+        /// Opens a chest holding <paramref name="itemCount"/> items and returns the reward text. VS rules: at most one
+        /// evolution per chest (only when <paramref name="tiers"/> can evolve), one upgrade per other item, 25 gold for an
+        /// item with nothing left to upgrade, and the chest's own gold on top.
+        /// Slots follow vampire.survivors.wiki/w/Template:Treasure (raw, fetched 2026-10-09): slot 1 is "Evolution" when
+        /// evo=1 ("any = {{#ifexpr: evo|Evolution|Upgrade (any)}}", "weapon = {{#ifexpr: evo|Evolution|Upgrade (weapon)}}");
+        /// slots 2-5 are "Upgrade (any)", or "Upgrade (weapon)" when rewardN=weapon. Before 2026-10-09 any slot could
+        /// evolve (the first one that managed it).
+        /// </summary>
+        public string ProcessChest(WeaponManager weaponManager, LevelUpManager levelUpManager, int itemCount,
+                                   ChestTiers tiers, float goldRoll01 = 0f)
         {
             var rewards = new List<string>();
-            var result = new ChestResult { ItemCount = itemCount };
-            bool evolved = false;
+            var result = new ChestResult
+            {
+                ItemCount = itemCount,
+                Kind = tiers.CanEvolve ? SoulHunter.Gameplay.Pickups.ChestKind.Silver : SoulHunter.Gameplay.Pickups.ChestKind.Bronze
+            };
             int maxedItems = 0;
             for (int i = 0; i < itemCount; i++)
             {
-                // 1. Try Evolution / Union: VS gives at most one per chest, in the first reward.
-                if (canEvolve && !evolved && weaponManager != null && weaponManager.TryEvolveWeapon(out string evolvedName))
+                // 1. Evolution / Union: slot 1 of a chest that can evolve (Template:Treasure), so at most one per chest
+                // (Treasure_Chest: "Generally, only one weapon can be evolved per chest").
+                if (i == 0 && tiers.CanEvolve && weaponManager != null && weaponManager.TryEvolveWeapon(out string evolvedName))
                 {
-                    evolved = true;
                     Debug.Log($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
                     string shownName = WeaponEvolutionData.DisplayName(evolvedName);
                     rewards.Add($"<color=red>Ultimate Power: {shownName}</color>");
@@ -165,8 +201,11 @@ namespace SoulHunter.Gameplay.Core
                 }
 
                 // 2. Give a free upgrade. Applied directly so the chest never touches
-                // the level-up queue or un-pauses the game.
-                var upgrades = levelUpManager != null ? levelUpManager.GetRandomValidUpgradesForChest() : null;
+                // the level-up queue or un-pauses the game. A "weapon" slot (Template:Treasure rewardN=weapon) levels an
+                // owned weapon. With no weapon left to level the wiki is silent; Soul Hunter then levels any owned item.
+                List<UpgradeData> upgrades = null;
+                if (levelUpManager != null && tiers.IsWeaponSlot(i)) upgrades = levelUpManager.GetRandomValidUpgradesForChest(weaponsOnly: true);
+                if (levelUpManager != null && (upgrades == null || upgrades.Count == 0)) upgrades = levelUpManager.GetRandomValidUpgradesForChest();
                 if (weaponManager != null && upgrades != null && upgrades.Count > 0)
                 {
                     weaponManager.ApplyUpgrade(upgrades[0]);

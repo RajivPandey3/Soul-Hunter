@@ -65,9 +65,10 @@ namespace SoulHunter.Tests.PlayMode
             var health = PlayerController.Instance.GetComponent<HealthController>();
             Assert.IsNotNull(health, "Player has no HealthController.");
 
-            // Revivals (meta upgrades) can bring the player back; keep killing until the run ends.
+            // Revivals (meta upgrades) can bring the player back through the Revive screen; keep killing until the run ends.
             for (int attempt = 0; attempt < 10 && !GameSessionManager.Instance.IsRunFinished; attempt++)
             {
+                AnswerReviveScreen();
                 health.IsInvincible = false;
                 health.KillSilently();
                 yield return null;

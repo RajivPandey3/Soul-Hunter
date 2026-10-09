@@ -208,7 +208,7 @@ namespace SoulHunter.UI
                 _characterDescriptionText.text = unlocked
                     ? charData.Description
                     : $"{SoulHunter.Gameplay.UI.UITheme.Bold("LOCKED")}\nUnlock: {CharacterUnlocks.ConditionText(charData)}";
-                if (unlocked && !owned) _characterDescriptionText.text += $"\n{SoulHunter.Gameplay.UI.UITheme.Bold("Unlocked!")} Buy for {charData.GoldPrice} gold.";
+                if (unlocked && !owned) _characterDescriptionText.text += $"\n{SoulHunter.Gameplay.UI.UITheme.Bold("Unlocked!")} Buy for {CharacterUnlocks.PriceFor(charData, data)} gold.";
             }
             if (_characterIconDisplay)
             {
@@ -225,7 +225,7 @@ namespace SoulHunter.UI
                 bool cardOwned = CharacterUnlocks.IsOwned(card, data);
                 if (i < _cardPortraits.Count && _cardPortraits[i] != null) _cardPortraits[i].color = cardUnlocked ? Color.white : LockedPortraitColor;
                 if (i < _cardBadges.Count && _cardBadges[i] != null)
-                    _cardBadges[i].text = !cardUnlocked ? "LOCKED" : cardOwned ? "" : $"{card.GoldPrice} G";
+                    _cardBadges[i].text = !cardUnlocked ? "LOCKED" : cardOwned ? "" : $"{CharacterUnlocks.PriceFor(card, data)} G";
                 _cards[i].gameObject.SetActive(IsCardShown(i));
             }
 
@@ -233,9 +233,9 @@ namespace SoulHunter.UI
             int gold = _economy != null ? _economy.CurrentGold : 0;
             if (_goldText) _goldText.text = $"Gold: {gold}";
             if (_selectAndPlayButton)
-                _selectAndPlayButton.interactable = owned || (unlocked && gold >= charData.GoldPrice);
+                _selectAndPlayButton.interactable = owned || (unlocked && gold >= CharacterUnlocks.PriceFor(charData, data));
             if (_confirmLabel)
-                _confirmLabel.text = owned ? "Confirm" : unlocked ? $"Buy ({charData.GoldPrice} G)" : "Locked";
+                _confirmLabel.text = owned ? "Confirm" : unlocked ? $"Buy ({CharacterUnlocks.PriceFor(charData, data)} G)" : "Locked";
 
             if (_filterButtonLabel) _filterButtonLabel.text = _filterOn ? "FILTER: ON" : "FILTER: OFF";
             if (_filterCountText)
@@ -303,10 +303,11 @@ namespace SoulHunter.UI
             var data = SaveData();
             if (!CharacterUnlocks.IsOwned(charData, data))
             {
+                int price = CharacterUnlocks.PriceFor(charData, data);
                 if (_economy != null && CharacterUnlocks.TryBuy(charData, data, _economy.SpendGold))
                 {
                     GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>()?.SaveGame();
-                    Debug.Log($"[CharacterSelection] Bought {charData.CharacterName} for {charData.GoldPrice} gold.");
+                    Debug.Log($"[CharacterSelection] Bought {charData.CharacterName} for {price} gold.");
                 }
                 UpdateUI();
                 return;

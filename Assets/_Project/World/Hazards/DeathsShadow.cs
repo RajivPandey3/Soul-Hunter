@@ -86,7 +86,7 @@ namespace SoulHunter.Gameplay.Hazards
         private void Update()
         {
             if (IsLeaving) return;
-            if (_health != null) _health.IsInvincible = true; // a refused death's revival timer would clear it
+            if (_health != null) _health.IsInvincible = true; // kept on every frame (the old realtime revival timer cleared it; it is gone since P1-16)
             RemainingSeconds -= Time.deltaTime;                // game time: stops while paused
             if (RemainingSeconds <= 0f) Leave();
         }

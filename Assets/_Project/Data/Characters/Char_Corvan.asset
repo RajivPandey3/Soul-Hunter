@@ -36,6 +36,7 @@ MonoBehaviour:
   LevelBonus: 1
   LevelBonusEveryLevels: 10
   LevelBonusAmount: 0.1
+  LevelBonusUntilLevel: 50
   CritDamageMultiplier: 2
   ExtraProjectileBounces: 0
   LowHealthSpeedBonus: 0

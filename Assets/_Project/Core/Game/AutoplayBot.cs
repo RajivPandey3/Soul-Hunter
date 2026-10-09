@@ -550,6 +550,17 @@ namespace SoulHunter.Gameplay.Core
                         yield return Shot($"shadow-kael-{i + 1}");
                     }
                 }
+                var revive = ReviveScreen.Current;
+                if (revive != null && revive.IsOpen)
+                {
+                    // VS Revival: a death with a Revival left shows the Revive button; a player presses it.
+                    yield return Shot("revive");
+                    var reviveStats = PlayerController.Instance != null ? PlayerController.Instance.Stats : null;
+                    int left = reviveStats != null ? reviveStats.Revivals : 0;
+                    revive.PressRevive();
+                    Event("revive", string.Format(CultureInfo.InvariantCulture, "\"revivalsBefore\": {0}, \"revivalsLeft\": {1}, \"hp\": {2}, \"max\": {3}",
+                        left, reviveStats != null ? reviveStats.Revivals : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0));
+                }
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
                     if (chest != null && chest.IsOpen)
                     {

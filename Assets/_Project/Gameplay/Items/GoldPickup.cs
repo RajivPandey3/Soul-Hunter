@@ -18,12 +18,6 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>Coins lying on the ground (the Gilded Charm gathers them all).</summary>
         public static readonly List<GoldPickup> ActiveCoins = new List<GoldPickup>();
 
-        /// <summary>Speed a gathered coin starts flying at, and how fast it speeds up (units/s, units/s^2).</summary>
-        public const float PullStartSpeed = 12f, PullAcceleration = 40f;
-
-        private Transform _pullTarget;
-        private float _pullSpeed;
-
         public int Value
         {
             get => _value;
@@ -35,9 +29,6 @@ namespace SoulHunter.Gameplay.Pickups
         /// 0.01 s. Set after spawning; cleared when the pool reuses the coin.
         /// </summary>
         public bool IsFeverCoin { get; set; }
-
-        /// <summary>True while this coin is flying to the player.</summary>
-        public bool IsPulled => _pullTarget != null;
 
         protected override void OnEnable()
         {
@@ -51,33 +42,10 @@ namespace SoulHunter.Gameplay.Pickups
             ActiveCoins.Remove(this);
         }
 
-        /// <summary>Flies the coin to <paramref name="target"/>, where the normal pickup check collects it.</summary>
-        public void Magnetize(Transform target)
-        {
-            if (_isCollected || target == null) return;
-            _pullTarget = target;
-            _pullSpeed = PullStartSpeed;
-        }
-
-        public override void Tick()
-        {
-            if (_pullTarget != null && !_isCollected)
-            {
-                if (!_pullTarget.gameObject.activeInHierarchy) _pullTarget = null;
-                else
-                {
-                    _pullSpeed += PullAcceleration * Time.deltaTime;
-                    transform.position = Vector3.MoveTowards(transform.position, _pullTarget.position, _pullSpeed * Time.deltaTime);
-                }
-            }
-            base.Tick();
-        }
-
         public override void ResetPickup()
         {
             base.ResetPickup();
             IsFeverCoin = false;
-            _pullTarget = null;
         }
 
         protected override void OnPickedUp(Collider player)

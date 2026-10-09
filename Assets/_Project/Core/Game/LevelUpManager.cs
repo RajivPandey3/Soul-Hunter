@@ -552,10 +552,17 @@ namespace SoulHunter.Gameplay.Core
         /// owned items are drawn, by rarity weight. Nothing owned left to level: an empty list (the chest pays 25 gold).
         /// Chests used to draw from the whole level-up pool and hand out new items (Bug MIS B04, 2026-09-30).
         /// </summary>
-        public List<UpgradeData> GetRandomValidUpgradesForChest()
+        public List<UpgradeData> GetRandomValidUpgradesForChest() => GetRandomValidUpgradesForChest(weaponsOnly: false);
+
+        /// <summary>
+        /// As above; with <paramref name="weaponsOnly"/> only owned weapons are drawn (vampire.survivors.wiki/w/Template:Treasure:
+        /// a "rewardN=weapon" slot is "Upgrade (weapon)").
+        /// </summary>
+        public List<UpgradeData> GetRandomValidUpgradesForChest(bool weaponsOnly)
         {
             if (_weaponManager == null) return new List<UpgradeData>();
-            var owned = GetValidUpgrades().FindAll(up => _weaponManager.GetWeaponLevel(up.Type) > 0);
+            var owned = GetValidUpgrades().FindAll(up => _weaponManager.GetWeaponLevel(up.Type) > 0 &&
+                                                         (!weaponsOnly || WeaponManager.IsWeaponType(up.Type)));
             if (owned.Count == 0) return owned;
             var weapons = _weaponManager;
             return DrawChoices(owned, 1, type => weapons.GetWeaponLevel(type) > 0, 0f, () => Random.value);

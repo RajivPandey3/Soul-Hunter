@@ -23,7 +23,7 @@ namespace SoulHunter.Gameplay.Data
             switch (mode)
             {
                 case RunMode.Hurry: return "Hurry: the stage clock runs twice as fast. +25% experience.";
-                case RunMode.Hyper: return "Hyper: you and the horde move 65% faster, shots fly 15% faster. +50% gold, a bigger horde.";
+                case RunMode.Hyper: return "Hyper: you and the horde move faster and shots fly faster, by stage. +50% gold, +10% Luck after Level 1, a bigger horde.";
                 case RunMode.Inverse: return "Inverse: the horde starts at triple health and grows tougher every minute. +200% gold, +20% luck.";
                 case RunMode.Endless: return "Endless: clearing Level 10 starts the story again at Level 1, and each cycle the horde grows stronger.";
                 case RunMode.Arcana: return "Arcana: start with an Arcana card; Arcana chests come at 11:00 and 21:00.";

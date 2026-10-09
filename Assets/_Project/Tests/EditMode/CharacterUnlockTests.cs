@@ -96,6 +96,35 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void Price_RisesTenPercentOfBase_PerCharacterPurchased()
+        {
+            // VS wiki Characters: "purchased using gold, increased by 10% additively per characters purchased".
+            var data = new GameData();
+            var corvan = Catalog("Corvan");
+            int basePrice = corvan.GoldPrice;
+            Assert.That(CharacterUnlocks.PriceFor(corvan, data), Is.EqualTo(basePrice));
+            data.OwnedCharacters = new System.Collections.Generic.List<string> { "Kael" };
+            Assert.That(CharacterUnlocks.PriceFor(corvan, data), Is.EqualTo(basePrice), "A free character is not a purchase.");
+            data.OwnedCharacters.Add("Gideon");
+            Assert.That(CharacterUnlocks.PriceFor(corvan, data), Is.EqualTo(Mathf.RoundToInt(basePrice * 1.1f)));
+            data.OwnedCharacters.Add("Aria");
+            data.OwnedCharacters.Add("Aria");
+            Assert.That(CharacterUnlocks.PriceFor(corvan, data), Is.EqualTo(Mathf.RoundToInt(basePrice * 1.2f)), "A name listed twice counts once.");
+            Assert.That(CharacterUnlocks.PriceFor(Catalog("Kael"), data), Is.EqualTo(0), "Kael stays free.");
+        }
+
+        [Test]
+        public void TryBuy_SpendsTheScaledPrice()
+        {
+            var data = new GameData { OwnedCharacters = new System.Collections.Generic.List<string> { "Corvan" } };
+            var gideon = Catalog("Gideon");
+            CharacterUnlocks.MarkUnlocked(gideon, data);
+            int spent = -1;
+            Assert.That(CharacterUnlocks.TryBuy(gideon, data, price => { spent = price; return true; }), Is.True);
+            Assert.That(spent, Is.EqualTo(Mathf.RoundToInt(gideon.GoldPrice * 1.1f)));
+        }
+
+        [Test]
         public void OldSaves_WithoutCharacterLists_StillHaveKael()
         {
             // Learning Comment: Purani save mein nayi lists null hon to bhi crash na ho aur Kael khele.

@@ -139,9 +139,32 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Core.Services.GameTime.SetSlowMotion(1f);
             var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
             if (player != null) player.ResumeMovementAfterMenu();
+            ApplyHyperLuck(player != null ? player.Stats : null);
             var level = CurrentLevel;
             Debug.Log($"[LevelProgressionManager] Stage {CurrentStage}: {level.Name} Started! Modifier: {level.Modifier}");
             OnStageStarted?.Invoke(CurrentStage);
+        }
+
+        private SoulHunter.Gameplay.Player.PlayerStats _hyperLuckStats;
+        private float _hyperLuckApplied;
+
+        /// <summary>The Hyper Luck this run's player holds from the current stage (0 without Hyper or on Level 1).</summary>
+        public float HyperLuckApplied => _hyperLuckApplied;
+
+        /// <summary>
+        /// VS Hyper Luck follows the stage (+10% on the stages mapped to Inlaid Library, Dairy Plant, Gallo Tower and
+        /// Cappella Magna, none on Mad Forest; each stage infobox's luck2). On each stage start the previous stage's Hyper
+        /// Luck is taken back and the new one given, so it never stacks. Inverse's +20% is given once by PlayerStats.
+        /// </summary>
+        private void ApplyHyperLuck(SoulHunter.Gameplay.Player.PlayerStats stats)
+        {
+            if (stats == null) return;
+            if (stats != _hyperLuckStats) { _hyperLuckStats = stats; _hyperLuckApplied = 0f; }
+            float wanted = RunModes.HyperLuckBonus(CurrentStage);
+            float delta = wanted - _hyperLuckApplied;
+            if (Mathf.Approximately(delta, 0f)) return;
+            stats.AddLuck(delta);
+            _hyperLuckApplied = wanted;
         }
 
         /// <summary>

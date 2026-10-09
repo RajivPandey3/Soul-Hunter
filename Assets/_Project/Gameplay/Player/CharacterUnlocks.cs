@@ -70,12 +70,43 @@ namespace SoulHunter.Gameplay.Player
             return true;
         }
 
+        /// <summary>
+        /// VS wiki (Characters): "All non-secret characters need to be purchased using gold, increased by 10% additively
+        /// per characters purchased". Each paid character already bought adds 10% of the base price.
+        /// </summary>
+        public const float VsPriceStepPerPurchase = 0.1f;
+
+        /// <summary>
+        /// The gold price now: base x (1 + 0.1 x characters purchased). Rounded to whole gold (Soul Hunter's choice; the
+        /// wiki gives no rounding). Free characters stay free and are not counted as purchases.
+        /// </summary>
+        public static int PriceFor(CharacterData character, GameData data)
+        {
+            if (character == null || character.GoldPrice <= 0) return 0;
+            return UnityEngine.Mathf.RoundToInt(character.GoldPrice * (1f + VsPriceStepPerPurchase * PurchasedCount(data)));
+        }
+
+        /// <summary>Characters bought with gold on this save (free characters in the list do not count).</summary>
+        public static int PurchasedCount(GameData data)
+        {
+            if (data?.OwnedCharacters == null) return 0;
+            var seen = new HashSet<string>();
+            int count = 0;
+            foreach (var name in data.OwnedCharacters)
+            {
+                if (string.IsNullOrEmpty(name) || !seen.Add(name)) continue;
+                var character = GameContentCatalog.FindCharacterExact(GameContentCatalog.CurrentName(name));
+                if (character != null && character.GoldPrice > 0) count++;
+            }
+            return count;
+        }
+
         /// <summary>Buys an unlocked character. spendGold takes the price and returns false if the player cannot pay.</summary>
         public static bool TryBuy(CharacterData character, GameData data, Func<int, bool> spendGold)
         {
             if (character == null || data == null || !IsUnlocked(character, data)) return false;
             if (IsOwned(character, data)) return true;
-            if (spendGold == null || !spendGold(character.GoldPrice)) return false;
+            if (spendGold == null || !spendGold(PriceFor(character, data))) return false;
             if (data.OwnedCharacters == null) data.OwnedCharacters = new List<string>();
             data.OwnedCharacters.Add(character.CharacterName);
             return true;

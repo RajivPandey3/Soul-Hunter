@@ -83,8 +83,39 @@ namespace SoulHunter.Gameplay.Data
         public static float PlayerSpeedFor(int stage) => PlayerSpeedBonus[Mathf.Clamp(stage, 1, PlayerSpeedBonus.Length) - 1];
         public static float GoldFor(int stage) => GoldBonus[Mathf.Clamp(stage, 1, GoldBonus.Length) - 1];
 
-        /// <summary>The bonuses of the stage being played, or none outside a run (menus, EditMode tests).</summary>
-        public static float CurrentPlayerSpeed => (CurrentStage > 0 ? PlayerSpeedFor(CurrentStage) : 1f) * RunModes.PlayerSpeedMultiplier;
+        // VS Hyper mode, per stage (2026-10-09). The Stages page: "The overall bonuses granted by hyper mode differ with
+        // each stage". Each value is the stage infobox's Hyper column (raw pages fetched 2026-10-09), on the same mapping
+        // as the stage bonuses above: L1 Mad Forest, L2 Inlaid Library, L3 Dairy Plant, L4 Gallo Tower, L5-L10 Cappella
+        // Magna (a Soul Hunter choice, not a wiki fact).
+        // - Player speed (absolute, replaces the normal value): Mad Forest "player-speed2 = 2"; Inlaid Library, Dairy
+        //   Plant and Gallo Tower "x1.9"; Cappella Magna "x2". The Stages page lists the same: +100%, +90%, +90%, +90%,
+        //   +100% Move Speed.
+        // - Projectile speed: Mad Forest "projectile-speed2 = 1.25"; the others "x1.15".
+        // - Luck: "x1.1" on the four later stages (their pages: "+10% Luck bonuses", added like Inverse's +20%); Mad
+        //   Forest: "the only stage that does not grant a Luck bonus in its hyper mode".
+        // - Enemy speed: the ratio hyper / normal of the infobox's enemy-speed, applied on top of Soul Hunter's own stage
+        //   pace (CampaignLevelDefinition.EnemySpeedMultiplier): Mad Forest 2 / 1.1, Dairy Plant and Gallo Tower
+        //   1.9 / 1.25, Cappella Magna 2 / 1.4. Inlaid Library gives x1.25 in both columns (ratio 1), which contradicts
+        //   the Enemies page ("Hyper mode in each stage increases ... the movement speed of enemies"), so Level 2 keeps
+        //   the old flat x1.65 until the owner decides.
+        private static readonly float[] HyperPlayerSpeed = { 2.0f, 1.9f, 1.9f, 1.9f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f };
+        private static readonly float[] HyperProjectileSpeed = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f };
+        private static readonly float[] HyperLuck = { 0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
+        private static readonly float[] HyperEnemySpeed =
+        {
+            2.0f / 1.1f, 1.65f, 1.9f / 1.25f, 1.9f / 1.25f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f, 2.0f / 1.4f
+        };
+
+        public static float HyperPlayerSpeedFor(int stage) => HyperPlayerSpeed[Mathf.Clamp(stage, 1, HyperPlayerSpeed.Length) - 1];
+        public static float HyperProjectileSpeedFor(int stage) => HyperProjectileSpeed[Mathf.Clamp(stage, 1, HyperProjectileSpeed.Length) - 1];
+        public static float HyperLuckFor(int stage) => HyperLuck[Mathf.Clamp(stage, 1, HyperLuck.Length) - 1];
+        public static float HyperEnemySpeedFor(int stage) => HyperEnemySpeed[Mathf.Clamp(stage, 1, HyperEnemySpeed.Length) - 1];
+
+        /// <summary>The bonuses of the stage being played, or none outside a run (menus, EditMode tests). In Hyper mode
+        /// the stage's Hyper move speed replaces its normal one (VS infobox player-speed2).</summary>
+        public static float CurrentPlayerSpeed => CurrentStage > 0
+            ? (RunModes.Hyper ? HyperPlayerSpeedFor(CurrentStage) : PlayerSpeedFor(CurrentStage))
+            : 1f;
         /// <summary>VS: the stage's gold bonus and the run modes' gold bonuses add together.</summary>
         public static float CurrentGold => (CurrentStage > 0 ? GoldFor(CurrentStage) : 1f) + RunModes.GoldBonus;
 

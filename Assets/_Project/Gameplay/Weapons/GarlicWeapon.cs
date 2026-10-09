@@ -40,6 +40,44 @@ namespace SoulHunter.Gameplay.Weapons
         private HealthController _ownerHealth;
 
         /// <summary>
+        /// VS wiki (Soul_Eater): "Soul Eater gains +1 damage every 60 health healed, capping at +60 damage or 3,600 health
+        /// healed. ... only healing that actually takes place is counted, overhealing does not." A revival's heal counts too
+        /// (wiki Revival: "The health gained upon reviving counts as healing"). Read from the holder's
+        /// <see cref="HealthController.OnHealed"/>; Shadow Kael's copy listens to the boss's own health.
+        /// </summary>
+        public const int HealthPerDamageBonus = 60;
+        public const int MaxHealDamageBonus = 60;
+        /// <summary>Health the holder has really healed while this Soul Eater was held (counted up to the cap).</summary>
+        public int HealthHealed { get; private set; }
+        /// <summary>+1 damage per 60 health healed, at most +60 (0 for plain Garlic).</summary>
+        public int HealDamageBonus => HealDamageBonusFor(HealthHealed);
+        public static int HealDamageBonusFor(int healthHealed) =>
+            Mathf.Clamp(Mathf.Max(0, healthHealed) / HealthPerDamageBonus, 0, MaxHealDamageBonus);
+        private HealthController _healedSource;
+
+        private void OnEnable()
+        {
+            if (_lifeStealPerHit <= 0f) return; // only Soul Eater grows with healing
+            if (_ownerHealth == null) _ownerHealth = GetComponentInParent<HealthController>();
+            if (_ownerHealth == null || _healedSource == _ownerHealth) return;
+            _healedSource = _ownerHealth;
+            _healedSource.OnHealed += CountHealing;
+        }
+
+        private void OnDisable()
+        {
+            if (_healedSource != null) _healedSource.OnHealed -= CountHealing;
+            _healedSource = null;
+        }
+
+        /// <summary>Counts health actually healed toward the damage bonus (stops at the 3,600 cap).</summary>
+        public void CountHealing(int healed)
+        {
+            if (healed <= 0 || _lifeStealPerHit <= 0f) return;
+            HealthHealed = Mathf.Min(HealthHealed + healed, HealthPerDamageBonus * MaxHealDamageBonus);
+        }
+
+        /// <summary>
         /// Learning Comment:
         /// TargetLayer property allows external reconfiguration of the detection mask.
         /// When mirrored on Shadow Kael, this is reconfigured to target the Player layer.
@@ -99,7 +137,7 @@ namespace SoulHunter.Gameplay.Weapons
         private void ApplyDamageToEnemies()
         {
             float actualRadius = _damageRadius * AreaMultiplier * LevelAreaMultiplier;
-            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount));
+            int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount + HealDamageBonus)); // Soul Eater's healing bonus is base damage
 
             // Player ke center se ek bada gola (Sphere) phek kar usme aaye dushmano ko dhoondho (NonAlloc for max performance)
             int hitsCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, actualRadius, _hitsBuffer, _enemyLayer);

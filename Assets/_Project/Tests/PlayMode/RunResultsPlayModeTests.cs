@@ -150,7 +150,7 @@ namespace SoulHunter.Tests.PlayMode
             stats.RecordPickup(PickupNames.Chicken);
 
             var health = PlayerController.Instance.GetComponent<HealthController>();
-            for (int i = 0; i < 10 && !GameSessionManager.Instance.IsRunFinished; i++) { health.IsInvincible = false; health.KillSilently(); yield return null; }
+            for (int i = 0; i < 10 && !GameSessionManager.Instance.IsRunFinished; i++) { AnswerReviveScreen(); health.IsInvincible = false; health.KillSilently(); yield return null; }
             yield return null;
             var screen = Object.FindFirstObjectByType<GameOverUI>().Screen;
             Assert.IsNotNull(screen, "Results screen after death. " + Errors());

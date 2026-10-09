@@ -72,12 +72,16 @@ namespace SoulHunter.Tests.PlayMode
 
         private IEnumerator Kill(HealthController health)
         {
-            // Wait out the revival's invulnerability, then land a lethal hit.
-            yield return WaitUntilRealtime(() => !health.IsInvincible, "revival invulnerability to end");
+            // End the revival's invulnerability (game time), land a lethal hit, then press Revive (VS: the Revive button).
+            health.EndRevivalInvulnerability();
             health.ShieldedUntil = -1f;
             var packet = new DamagePacket(health.MaxHealth * 10, health.transform.position, Vector3.zero);
             packet.IgnoresHitInvulnerability = true;
             health.TakeDamage(packet);
+            yield return null;
+            var screen = SoulHunter.Gameplay.UI.ReviveScreen.Current;
+            Assert.That(screen != null && screen.IsOpen, Is.True, "A death with a Revival left shows the Revive screen. " + Errors());
+            Click(screen.ReviveButton, "Revive");
             yield return null;
         }
     }

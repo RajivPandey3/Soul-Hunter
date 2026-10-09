@@ -146,6 +146,37 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelBonus_StopsAtItsCap_LikeVsAntonio()
+        {
+            // VS wiki Antonio_Belpaese: "+10% Might every 10 levels until level 50. The maximum Might gained this way is +50%."
+            var stats = CreatePlayer();
+            var corvan = Catalog("Corvan");
+            Assert.That(corvan.LevelBonusUntilLevel, Is.EqualTo(50));
+            stats.ApplyCharacter(corvan);
+            float start = stats.Might;
+            for (int level = 2; level <= 100; level++) stats.ApplyLevelBonus(level);
+            Assert.That(stats.Might, Is.EqualTo(start + 0.5f).Within(0.001f), "+10% at 10, 20, 30, 40 and 50; nothing after.");
+        }
+
+        [Test]
+        public void LevelBonus_HasNoCap_WhenUntilLevelIsZero()
+        {
+            var character = ScriptableObject.CreateInstance<CharacterData>();
+            try
+            {
+                character.LevelBonus = CharacterData.LevelBonusStat.Might;
+                character.LevelBonusEveryLevels = 10;
+                character.LevelBonusAmount = 0.1f;
+                Assert.That(character.GrantsLevelBonusAt(90), Is.True);
+                Assert.That(character.GrantsLevelBonusAt(95), Is.False);
+                character.LevelBonusUntilLevel = 50;
+                Assert.That(character.GrantsLevelBonusAt(50), Is.True);
+                Assert.That(character.GrantsLevelBonusAt(60), Is.False);
+            }
+            finally { Object.DestroyImmediate(character); }
+        }
+
+        [Test]
         public void LevelBonus_ArmorEveryFifthLevel()
         {
             // Learning Comment: Valerius ko har 5 level par +1 Armor.

@@ -15,6 +15,26 @@ namespace SoulHunter.Gameplay.Pickups
 
         protected bool _isCollected = false;
 
+        /// <summary>Speed a pulled pickup starts flying at, and how fast it speeds up (units/s, units/s^2; Soul Hunter's numbers, wiki silent).</summary>
+        public const float PullStartSpeed = 12f, PullAcceleration = 40f;
+
+        private Transform _pullTarget;
+        private float _pullSpeed;
+
+        /// <summary>True while this pickup is flying to the player.</summary>
+        public bool IsPulled => _pullTarget != null;
+
+        /// <summary>
+        /// Flies the pickup to <paramref name="target"/>, where the normal pickup check collects it. VS wiki (Magnet):
+        /// "Experience Gems and other pickups will be collected" inside the Magnet radius (PlayerExperience's sweep).
+        /// </summary>
+        public void Magnetize(Transform target)
+        {
+            if (_isCollected || target == null || _pullTarget != null) return;
+            _pullTarget = target;
+            _pullSpeed = PullStartSpeed;
+        }
+
         public int TickerIndex { get; set; } = -1;
 
         // Heavy-kill pass (2026-09-29): PickupTicker calls Tick for every pickup in one loop instead of an Update each.
@@ -24,6 +44,16 @@ namespace SoulHunter.Gameplay.Pickups
         public virtual void Tick()
         {
             if (_isCollected) return;
+
+            if (_pullTarget != null)
+            {
+                if (!_pullTarget.gameObject.activeInHierarchy) _pullTarget = null;
+                else
+                {
+                    _pullSpeed += PullAcceleration * Time.deltaTime;
+                    transform.position = Vector3.MoveTowards(transform.position, _pullTarget.position, _pullSpeed * Time.deltaTime);
+                }
+            }
 
             // Same test as an overlap sphere on the Player layer, without a physics query per pickup per frame.
             var player = PlayerReach.Within(transform.position, _pickupRadius);
@@ -50,6 +80,7 @@ namespace SoulHunter.Gameplay.Pickups
         public virtual void ResetPickup()
         {
             _isCollected = false;
+            _pullTarget = null;
         }
     }
 }

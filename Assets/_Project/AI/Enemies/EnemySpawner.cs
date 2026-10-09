@@ -78,7 +78,7 @@ namespace SoulHunter.Gameplay.AI
 
         private void Start()
         {
-            EnemyDrop.PendingChests = 0; // a new run owes no chests
+            EnemyDrop.PendingChests.Clear(); // a new run owes no chests
             var player = FindFirstObjectByType<SoulHunter.Gameplay.Player.PlayerController>();
             if (player != null)
             {
@@ -230,14 +230,15 @@ namespace SoulHunter.Gameplay.AI
                     else
                         for (int i = 0; i < spawnCount; i++) GivePendingChest(Defang(SpawnEnemy(PickSwarmPrefab(level, phase))));
                     float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
-                    // VS rule: Curse makes enemies arrive more often.
-                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (MinuteCurse() * RunModes.SpawnMultiplier));
+                    // VS rule: Curse makes enemies arrive more often, and so does each Endless cycle. Hyper does not:
+                    // the wiki gives Hyper only the enemy minimum x1.25 (stage infoboxes, enemy-min2).
+                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (MinuteCurse() * RunModes.FrequencyMultiplier));
                 }
 
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
                 // VS: Curse raises the wave quantity, and Charm adds a flat number after it (Curse and Charm pages).
-                int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.SpawnMultiplier * MinuteCurse()) + CurrentCharm();
+                int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.MinimumMultiplier * MinuteCurse()) + CurrentCharm();
                 int missing = Mathf.Min(wanted, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
                 for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnEnemy(NextWavePrefab(level, phase))));
@@ -377,6 +378,9 @@ namespace SoulHunter.Gameplay.AI
                 bossController.SetCastsShadows(true);
             }
             bossObj.SetActive(true);
+            // P1-14: the 25:00 stage boss's chest uses Mad Forest's Giant Blue Venus config (3/10/100, evo=1). Set after
+            // SetActive, whose OnEnable clears the previous life's chest.
+            bossObj.GetComponent<EnemyDrop>()?.DropChestThisLife(SoulHunter.Gameplay.Core.ChestTiers.StageBoss);
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger
             float curse = MinuteCurse(); // speed: from the minute the Curse was gained in (VS wiki Curse)
             bossObj.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
@@ -609,14 +613,18 @@ namespace SoulHunter.Gameplay.AI
         public static bool EventFires(float chancePercent, float luck, float roll01) =>
             chancePercent >= 100f || roll01 * 100f < chancePercent / Mathf.Max(0.01f, luck);
 
-        /// <summary>VS Pentagram: a chest whose carrier was erased goes to the next ordinary enemy of the horde.</summary>
+        /// <summary>
+        /// VS Pentagram: a chest whose carrier was erased goes to the next ordinary enemy of the horde, with the erased
+        /// boss's ChestTiers (and Arcana flag) kept.
+        /// </summary>
         private static void GivePendingChest(GameObject enemy)
         {
-            if (EnemyDrop.PendingChests <= 0 || enemy == null) return;
+            if (EnemyDrop.PendingChests.Count == 0 || enemy == null) return;
             var drop = enemy.GetComponent<EnemyDrop>();
             if (drop == null || drop.WillDropChest) return;
-            drop.DropChestThisLife();
-            EnemyDrop.PendingChests--;
+            var tiers = EnemyDrop.PendingChests.Dequeue();
+            drop.DropChestThisLife(tiers);
+            if (tiers.IsArcana) drop.CarryArcanaThisLife();
         }
 
         /// <summary>True for a stage boss spawned by this spawner (QA tools and the autoplay bot).</summary>
@@ -748,7 +756,10 @@ namespace SoulHunter.Gameplay.AI
             var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && data != null)
                 health.Initialize(ScaleHealthByCurse(ModeHealth(ChestEliteHealth(minute, CurrentPlayerLevel())), CurrentCurse()));
-            elite.GetComponent<EnemyDrop>()?.DropChestThisLife();
+            // P1-14: the chest carries this minute's Mad Forest config (vampire.survivors.wiki/w/Mad_Forest, "Waves"), so its
+            // item chances and evolution flag belong to the boss, not to the clock when it dies. Off-table minutes (debug
+            // spawns) use ChestTiers.Unscheduled.
+            elite.GetComponent<EnemyDrop>()?.DropChestThisLife(SoulHunter.Gameplay.Core.ChestTiers.ForMinute(minute));
             Debug.Log($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
             return elite;
         }

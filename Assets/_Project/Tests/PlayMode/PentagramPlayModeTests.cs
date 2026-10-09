@@ -30,7 +30,7 @@ namespace SoulHunter.Tests.PlayMode
             yield return BootIntoGameplay();
             _spawner = Object.FindFirstObjectByType<EnemySpawner>();
             _spawner.enabled = false;
-            EnemyDrop.PendingChests = 0;
+            EnemyDrop.PendingChests.Clear();
             foreach (var stray in EnemyController.ActiveEnemies.ToList())
                 if (stray != null) stray.gameObject.SetActive(false);
             var player = PlayerController.Instance;
@@ -79,15 +79,46 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(RunStatsTracker.Instance.TotalKills, Is.EqualTo(kills + 2), "Erased enemies still count as kills.");
             Assert.That(Chests(), Is.EqualTo(chests), "The erased elite's chest is not dropped where it died...");
             Assert.That(Gems(), Is.EqualTo(gems), "...and erased enemies leave no gems (chance to keep set to 0).");
-            Assert.That(EnemyDrop.PendingChests, Is.EqualTo(1), "...but its chest passes on to another enemy.");
+            Assert.That(EnemyDrop.PendingChests.Count, Is.EqualTo(1), "...but its chest passes on to another enemy.");
 
             // The next ordinary enemy of the horde carries it.
             var carrier = Spawn(enemyPrefab, Vector3.forward * 6f);
             typeof(EnemySpawner).GetMethod("GivePendingChest", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { carrier });
             Assert.That(carrier.GetComponent<EnemyDrop>().WillDropChest, Is.True);
-            Assert.That(EnemyDrop.PendingChests, Is.EqualTo(0));
+            Assert.That(EnemyDrop.PendingChests.Count, Is.EqualTo(0));
             carrier.GetComponent<HealthController>().TakeDamage(new DamagePacket(1000000, carrier.transform.position, Vector3.zero, DamageType.Normal));
             yield return WaitUntilRealtime(() => Chests() == chests + 1, "the carrier to drop the passed-on chest");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator AnErasedCarrier_PassesOnItsBossesChestTiers()
+        {
+            // P1-14: the passed-on chest keeps the erased boss's config (vampire.survivors.wiki/w/Mad_Forest, 5:00 Mantichana:
+            // {{treasure|level=1|evo=|tier3=1|tier2=5|tier1=100|reward1=weapon}}), so it stays a bronze chest that cannot
+            // evolve, even when the next carrier dies after 10:00.
+            yield return Setup();
+            var elite = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(_spawner, new object[] { 5f });
+            elite.transform.position = PlayerController.Instance.transform.position + Vector3.right * 6f;
+            Fire();
+            yield return null;
+            Assert.That(EnemyDrop.PendingChests.Count, Is.EqualTo(1), "The erased 5:00 carrier's chest waits for another enemy.");
+            Assert.That(EnemyDrop.PendingChests.Peek(), Is.EqualTo(ChestTiers.Minute5));
+
+            LevelProgressionManager.Instance.SkipTo(10f * 60f + 30f);
+            yield return null;
+            var enemyPrefab = GetPrivateField<GameObject>(_spawner, "_stageEnemyPrefab");
+            var carrier = Spawn(enemyPrefab, Vector3.forward * 6f);
+            typeof(EnemySpawner).GetMethod("GivePendingChest", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { carrier });
+            Assert.That(carrier.GetComponent<EnemyDrop>().ChestTiersAtDeath, Is.EqualTo(ChestTiers.Minute5));
+            var before = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Where(c => c.gameObject.activeInHierarchy).ToList();
+            carrier.GetComponent<HealthController>().TakeDamage(new DamagePacket(1000000, carrier.transform.position, Vector3.zero, DamageType.Normal));
+            ChestPickup chest = null;
+            yield return WaitUntilRealtime(() => (chest = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None)
+                .FirstOrDefault(c => c.gameObject.activeInHierarchy && !before.Contains(c))) != null, "the carrier to drop the passed-on chest");
+            Assert.That(chest.Tiers, Is.EqualTo(ChestTiers.Minute5));
+            Assert.That(chest.CanEvolve, Is.False, "Still the 5:00 chest: no evolution after 10:00.");
+            Assert.That(chest.Kind, Is.EqualTo(ChestKind.Bronze));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

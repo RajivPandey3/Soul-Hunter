@@ -10,6 +10,7 @@ namespace SoulHunter.Gameplay.Pickups
     public class HealthPickup : MonoBehaviour, ITickedPickup
     {
         public int HealAmount = 30;
+        [Tooltip("Unused: the radius is PlayerStats.MagnetRadius (one radius for every pickup, VS). Kept so prefabs keep their data.")]
         [SerializeField] private float _magnetRadius = 3f;
         [SerializeField] private float _flySpeed = 15f;
         [SerializeField] private LayerMask _playerLayer;
@@ -38,7 +39,8 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 // Player ko dhoondho. Heavy-kill pass: no physics query or component lookup per chicken per frame.
                 if (_playerStats == null && _playerTransform != null) _playerStats = _playerTransform.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>();
-                float pickupRadius = _magnetRadius * (_playerStats != null ? Mathf.Max(0.1f, _playerStats.Magnet) : 1f);
+                // VS wiki (Magnet, Attractorb): one Magnet radius for every pickup, the Floor Chicken included.
+                float pickupRadius = _playerStats != null ? _playerStats.MagnetRadius : SoulHunter.Gameplay.Player.PlayerStats.BaseMagnetRadius;
                 var hit = PlayerReach.Within(transform.position, pickupRadius);
                 if (hit != null)
                 {

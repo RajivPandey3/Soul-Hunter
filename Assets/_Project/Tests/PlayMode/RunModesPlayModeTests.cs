@@ -15,7 +15,8 @@ namespace SoulHunter.Tests.PlayMode
 {
     /// <summary>
     /// VS run modes in the real game (owner 2026-09-27): modes saved on the character select screen reach the run.
-    /// Hurry runs the stage clock twice as fast, Hyper makes the player 65% faster, and in Arcana mode the run starts with
+    /// Hurry runs the stage clock twice as fast, Hyper gives the player the stage's Hyper move speed (Level 1: x2 instead
+    /// of x1.1, VS Mad Forest), and in Arcana mode the run starts with
     /// an Arcana and an Arcana chest gives another. Every test plays on a throw-away save (GameplayPlayModeTestBase).
     /// </summary>
     public class RunModesPlayModeTests : GameplayPlayModeTestBase
@@ -40,7 +41,10 @@ namespace SoulHunter.Tests.PlayMode
             RunModes.Hyper = false;
             float normalSpeed = player.MoveSpeed;
             RunModes.Hyper = true;
-            Assert.That(hyperSpeed / normalSpeed, Is.EqualTo(1.65f).Within(0.01f), "Hyper: the player moves 65% faster.");
+            // VS Mad Forest infobox (Level 1): player-speed x1.1 normal, player-speed2 = 2 in Hyper.
+            Assert.That(CampaignLevelCatalog.CurrentStage, Is.EqualTo(1), "The run starts on Level 1.");
+            Assert.That(hyperSpeed / normalSpeed, Is.EqualTo(2.0f / 1.1f).Within(0.01f),
+                "Hyper on Level 1 (VS Mad Forest): move speed x2 instead of x1.1.");
 
             var arcanas = ArcanaManager.Instance;
             if (arcanas != null) Assert.That(arcanas.ActiveArcanas, Is.Empty, "Without Arcana mode no Arcana is given.");

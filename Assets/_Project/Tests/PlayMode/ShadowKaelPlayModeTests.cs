@@ -321,7 +321,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy), Is.EqualTo(chestsBefore),
                 "A revival drops no chest.");
 
-            health.IsInvincible = false;
+            health.EndRevivalInvulnerability(); // the revival's immunity (game time) would block the next hit
             health.TakeDamage(new DamagePacket(health.CurrentHealth + 100, kael.transform.position, Vector3.zero, DamageType.Magic));
             yield return WaitUntilRealtime(() => (bool)typeof(LevelProgressionManager).GetField("_bossDefeated", Private).GetValue(LevelProgressionManager.Instance),
                 "the final death to defeat the Stage 10 boss");

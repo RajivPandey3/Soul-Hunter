@@ -116,5 +116,22 @@ namespace SoulHunter.Tests.EditMode
             Assert.AreEqual("Soul Reliquary", PickupNames.ForChest(1, false));
             Assert.AreEqual("Arcana Reliquary", PickupNames.ForChest(1, true));
         }
+
+        [Test]
+        public void ModeText_ListsTheActiveModes_AndTheEndlessCycle()
+        {
+            // VS wiki Results: the top left shows "the stage name, mode and gold bonus" of the run.
+            try
+            {
+                SoulHunter.Gameplay.Data.RunModes.Reset();
+                Assert.AreEqual("Normal", RunResults.ModeText());
+                SoulHunter.Gameplay.Data.RunModes.Hurry = SoulHunter.Gameplay.Data.RunModes.Hyper = SoulHunter.Gameplay.Data.RunModes.Inverse = true;
+                SoulHunter.Gameplay.Data.RunModes.Endless = SoulHunter.Gameplay.Data.RunModes.Arcana = SoulHunter.Gameplay.Data.RunModes.LimitBreak = true;
+                Assert.AreEqual("Hurry, Hyper, Inverse, Endless, Arcana, Limit Break", RunResults.ModeText());
+                SoulHunter.Gameplay.Data.RunModes.EndlessCycle = 1;
+                StringAssert.Contains("Endless (cycle 2)", RunResults.ModeText());
+            }
+            finally { SoulHunter.Gameplay.Data.RunModes.Reset(); }
+        }
     }
 }

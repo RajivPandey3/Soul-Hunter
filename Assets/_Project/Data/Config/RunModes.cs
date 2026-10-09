@@ -8,7 +8,10 @@ namespace SoulHunter.Gameplay.Data
     /// stages as one run, so each mode applies to the whole run. The multipliers below are the VS ones; Soul Hunter
     /// numbers are marked provisional.
     /// - Hurry: the stage clock runs twice as fast; XP +25%. Events still come at their clock times.
-    /// - Hyper: player and enemy move speed +65%, projectile speed +15%, gold +50%, enemy minimum x1.25.
+    /// - Hyper (per stage, 2026-10-09; each stage's wiki infobox, see CampaignLevelCatalog.HyperPlayerSpeedFor): player
+    ///   move speed, enemy speed (the VS hyper/normal ratio on top of Soul Hunter's own stage pace), projectile speed
+    ///   and Luck follow the stage; gold +50%; enemy minimum x1.25. No stage infobox and no wiki page gives Hyper a
+    ///   spawn-interval change, so Hyper no longer shortens the interval (it used to divide it by 1.25).
     /// - Inverse: enemies start at +200% health and gain +5% health and +0.5% speed per stage minute; gold +200%,
     ///   Luck +20%. (VS also flips and darkens the map; not built.)
     /// - Endless: the run does not end at Level 10; it starts again at Level 1 as a new cycle. Each cycle: enemy
@@ -32,22 +35,39 @@ namespace SoulHunter.Gameplay.Data
         public static float ClockSpeed => Hurry ? 2f : 1f;
         public static float XpMultiplier => Hurry ? 1.25f : 1f;
 
-        public static float PlayerSpeedMultiplier => Hyper ? 1.65f : 1f;
-        public static float ProjectileSpeedMultiplier => Hyper ? 1.15f : 1f;
+        // Hyper player move speed is a per-stage value, not a multiplier: CampaignLevelCatalog.CurrentPlayerSpeed.
+        /// <summary>VS Hyper projectile speed of the stage being played (Mad Forest x1.25, the others x1.15).</summary>
+        public static float ProjectileSpeedMultiplier =>
+            Hyper ? CampaignLevelCatalog.HyperProjectileSpeedFor(CampaignLevelCatalog.CurrentStage) : 1f;
 
         /// <summary>VS: a stage's and its modes' gold bonuses add together.</summary>
         public static float GoldBonus => (Hyper ? 0.5f : 0f) + (Inverse ? 2f : 0f);
+        /// <summary>The run-long Luck bonus, given once at the start (VS Inverse +20%). Hyper Luck depends on the stage:
+        /// HyperLuckBonus, applied by LevelProgressionManager when each stage starts.</summary>
         public static float LuckBonus => Inverse ? 0.2f : 0f;
 
+        /// <summary>VS Hyper Luck of the stage being played: +10% on every mapped stage except Mad Forest (Level 1).</summary>
+        public static float HyperLuckBonus(int stage) => Hyper ? CampaignLevelCatalog.HyperLuckFor(stage) : 0f;
+
+        /// <summary>
+        /// Enemy speed from the modes, on top of the stage's own pace: Hyper uses the VS ratio of the stage's hyper and
+        /// normal enemy speed (CampaignLevelCatalog.HyperEnemySpeedFor); Inverse adds +0.5% per stage minute.
+        /// </summary>
         public static float EnemySpeedMultiplier(float stageMinutes) =>
-            (Hyper ? 1.65f : 1f) * (Inverse ? 1f + 0.005f * Mathf.Max(0f, stageMinutes) : 1f);
+            (Hyper ? CampaignLevelCatalog.HyperEnemySpeedFor(CampaignLevelCatalog.CurrentStage) : 1f)
+            * (Inverse ? 1f + 0.005f * Mathf.Max(0f, stageMinutes) : 1f);
 
         public static float EnemyHealthMultiplier(float stageMinutes) =>
             (Inverse ? 3f + 0.05f * Mathf.Max(0f, stageMinutes) : 1f) * (1f + Mathf.Max(0, EndlessCycle));
 
         public static float EnemyDamageMultiplier => 1f + 0.25f * Mathf.Max(0, EndlessCycle);
 
-        /// <summary>Spawn rate and enemy minimum: Hyper x1.25 minimum; each Endless cycle +50%.</summary>
-        public static float SpawnMultiplier => (Hyper ? 1.25f : 1f) * (1f + 0.5f * Mathf.Max(0, EndlessCycle));
+        /// <summary>Enemy minimum: Hyper x1.25 (every stage infobox, enemy-min2); each Endless cycle +50% (Stages).</summary>
+        public static float MinimumMultiplier => (Hyper ? 1.25f : 1f) * EndlessSpawnMultiplier;
+
+        /// <summary>Spawn frequency: each Endless cycle +50% (Stages). Hyper has no spawn-interval value on the wiki.</summary>
+        public static float FrequencyMultiplier => EndlessSpawnMultiplier;
+
+        private static float EndlessSpawnMultiplier => 1f + 0.5f * Mathf.Max(0, EndlessCycle);
     }
 }

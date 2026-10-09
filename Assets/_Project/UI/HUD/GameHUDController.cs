@@ -43,6 +43,9 @@ namespace SoulHunter.Gameplay.UI
             var storyCard = GetComponent<StoryCardUI>();
             if (storyCard == null) storyCard = gameObject.AddComponent<StoryCardUI>();
             storyCard.Setup();
+            // VS Revival: a death with a Revival left shows the Revive button (P1-16).
+            if (SoulHunter.Gameplay.Player.PlayerController.Instance != null && GetComponentInChildren<ReviveScreen>(true) == null)
+                ReviveScreen.Attach(SoulHunter.Gameplay.Player.PlayerController.Instance, transform);
 
             // Health Bar setup
             if (_playerHealth != null)

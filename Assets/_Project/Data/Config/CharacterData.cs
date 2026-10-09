@@ -55,6 +55,13 @@ namespace SoulHunter.Gameplay.Data
         [Min(1)] public int LevelBonusEveryLevels = 10;
         [Tooltip("Multiplier stats: fraction (0.1 = +10%). Cooldown: fraction removed. Armor/MaxHealth: flat.")]
         public float LevelBonusAmount = 0.1f;
+        [Tooltip("Last player level that grants the bonus (0 = no cap). VS wiki Antonio_Belpaese: \"+10% Might every 10 levels until level 50. The maximum Might gained this way is +50%.\"")]
+        [Min(0)] public int LevelBonusUntilLevel = 0;
+
+        /// <summary>True when reaching <paramref name="level"/> grants the level-up bonus: every Nth level, up to the cap (VS).</summary>
+        public bool GrantsLevelBonusAt(int level) =>
+            LevelBonus != LevelBonusStat.None && level > 0 && level % Mathf.Max(1, LevelBonusEveryLevels) == 0
+            && (LevelBonusUntilLevel <= 0 || level <= LevelBonusUntilLevel);
 
         [Header("Special Abilities")]
         [Tooltip("Critical hit damage multiplier (default 2x).")]

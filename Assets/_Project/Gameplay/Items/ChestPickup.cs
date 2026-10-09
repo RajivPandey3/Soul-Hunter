@@ -13,16 +13,22 @@ namespace SoulHunter.Gameplay.Pickups
         [SerializeField] private LayerMask _playerLayer;
         private bool _isCollected = false;
 
-        /// <summary>VS: only chests from bosses at 10:00 or later (and the 1:00 chest) can evolve a weapon. Set when dropped.</summary>
-        public bool CanEvolve { get => _canEvolve; set { _canEvolve = value; ApplyLook(); } }
-        private bool _canEvolve = true;
+        /// <summary>
+        /// The config of the boss that dropped this chest (vampire.survivors.wiki/w/Treasure_Chest: "individually configured
+        /// per boss enemy"): its 5/3/1-item chances, fallback, evolution flag and item slots. Set when dropped (EnemyDrop);
+        /// a pooled chest starts with the stage boss's config.
+        /// </summary>
+        public SoulHunter.Gameplay.Core.ChestTiers Tiers { get => _tiers; set { _tiers = value; ApplyLook(); } }
+        private SoulHunter.Gameplay.Core.ChestTiers _tiers = SoulHunter.Gameplay.Core.ChestTiers.StageBoss;
+
+        /// <summary>VS: only chests whose boss config has evo=1 can evolve a weapon (silver); the others are bronze.</summary>
+        public bool CanEvolve { get => _tiers.CanEvolve; set { _tiers.CanEvolve = value; ApplyLook(); } }
 
         /// <summary>VS Arcana mode: an Arcana chest (11:00 and 21:00) gives an Arcana choice instead of items.</summary>
-        public bool IsArcana { get => _isArcana; set { _isArcana = value; ApplyLook(); } }
-        private bool _isArcana;
+        public bool IsArcana { get => _tiers.IsArcana; set { _tiers.IsArcana = value; ApplyLook(); } }
 
         /// <summary>VS: a bronze, silver or Arcana chest, shown by ChestLook.</summary>
-        public ChestKind Kind => ChestLook.KindFor(_canEvolve, _isArcana);
+        public ChestKind Kind => ChestLook.KindFor(_tiers.CanEvolve, _tiers.IsArcana);
 
         private void ApplyLook()
         {
@@ -70,8 +76,8 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 // VS Arcana mode: an Arcana chest gives an Arcana instead of items.
                 rewardMessage = IsArcana
-                    ? _logicController.ProcessArcanaChest(CanEvolve)
-                    : _logicController.ProcessChest(CanEvolve); // UI bypass / Backend processing
+                    ? _logicController.ProcessArcanaChest(_tiers)
+                    : _logicController.ProcessChest(_tiers); // UI bypass / Backend processing
             }
             else
             {
@@ -82,10 +88,13 @@ namespace SoulHunter.Gameplay.Pickups
             if (_chestUI != null)
             {
                 var result = _logicController != null ? _logicController.LastResult : null;
-                if (result != null) result.Kind = Kind;
+                // An Arcana chest that could give no Arcana opened as a bronze or silver chest (wiki Treasure_Chest, Arcana);
+                // ChestLogicController set that look. Every other chest shows its own look.
+                bool arcanaFellBack = IsArcana && result != null && !result.IsArcana;
+                if (result != null && !arcanaFellBack) result.Kind = Kind;
                 // VS Results: chests are listed by size (wiki Treasure_Chest: silver for 3 items, gold for 5).
                 if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-                    SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(PickupNames.ForChest(result != null ? result.ItemCount : 1, IsArcana));
+                    SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(PickupNames.ForChest(result != null ? result.ItemCount : 1, IsArcana && !arcanaFellBack));
                 _chestUI.OpenChest(rewardMessage, result);
             }
 
@@ -95,8 +104,7 @@ namespace SoulHunter.Gameplay.Pickups
         public void ResetPickup()
         {
             _isCollected = false;
-            _canEvolve = true;
-            _isArcana = false;
+            _tiers = SoulHunter.Gameplay.Core.ChestTiers.StageBoss; // silver, as before
             ApplyLook();
         }
     }

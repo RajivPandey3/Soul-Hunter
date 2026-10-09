@@ -377,6 +377,28 @@ namespace SoulHunter.Tests.EditMode
                 string regular = chest.ProcessArcanaChest();
                 Assert.That(regular, Does.Not.StartWith("ARCANA CHEST!"));
                 Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(3));
+                // vampire.survivors.wiki/w/Treasure_Chest (Arcana): past the Arcana limit "they will turn into bronze chests".
+                Assert.That(chest.LastResult.Kind, Is.EqualTo(SoulHunter.Gameplay.Pickups.ChestKind.Bronze));
+                Assert.That(chest.LastResult.IsArcana, Is.False);
+            }
+            finally
+            {
+                typeof(ArcanaManager).GetMethod("OnDestroy", Private).Invoke(arcanas, null);
+            }
+        }
+
+        [Test]
+        public void ArcanaChest_WithEveryArcanaInUse_ActsLikeASilverChest()
+        {
+            // vampire.survivors.wiki/w/Treasure_Chest (Arcana): "If a newer player has all of their unlocked arcanas in use
+            // ... any extra Arcana chests will act like Silver chests instead."
+            var arcanas = NewArcanaManager(1);
+            var chest = Track(new GameObject("Chest")).AddComponent<ChestLogicController>();
+            try
+            {
+                Assert.That(chest.ProcessArcanaChest(), Does.StartWith("ARCANA CHEST!"));
+                Assert.That(chest.ProcessArcanaChest(), Does.Not.StartWith("ARCANA CHEST!"), "No unlocked Arcana is left to give.");
+                Assert.That(chest.LastResult.Kind, Is.EqualTo(SoulHunter.Gameplay.Pickups.ChestKind.Silver));
             }
             finally
             {

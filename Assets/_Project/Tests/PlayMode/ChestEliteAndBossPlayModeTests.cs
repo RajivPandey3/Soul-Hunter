@@ -54,6 +54,68 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ChestElite_CarriesItsMinutesTiers()
+        {
+            // P1-14 (vampire.survivors.wiki/w/Treasure_Chest: "individually configured per boss enemy"; Mad_Forest "Waves"):
+            // the chest's config, and so its evolution flag and bronze/silver look, belong to the boss's minute, not to the
+            // stage clock when it dies. Before, a 9:00 elite killed after 10:00 dropped a silver chest that could evolve, and
+            // a 1:00 elite killed after 2:00 a bronze one that could not.
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            var progression = LevelProgressionManager.Instance;
+
+            var first = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 1f });
+            progression.SkipTo(2f * 60f + 30f);
+            yield return null;
+            ChestPickup silver = null;
+            yield return KillAndFindChest(first, c => silver = c);
+            Assert.That(silver.Tiers, Is.EqualTo(ChestTiers.Minute1), "The 1:00 Glowing Bat config: evo=1, 0/0/30.");
+            Assert.That(silver.CanEvolve, Is.True, "The 1:00 chest can evolve although its carrier died at 2:30.");
+            Assert.That(silver.Kind, Is.EqualTo(ChestKind.Silver));
+            silver.gameObject.SetActive(false);
+
+            var third = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 3f });
+            ChestPickup threeMinute = null;
+            yield return KillAndFindChest(third, c => threeMinute = c);
+            Assert.That(threeMinute.Tiers, Is.EqualTo(ChestTiers.Minute3));
+            for (int i = 0; i < 200; i++)
+                Assert.That(ChestLogicController.RollItemCount(threeMinute.Tiers, 3f, () => Random.value), Is.Not.EqualTo(5),
+                    "The 3:00 config has tier3=0: never 5 items, whatever the Luck.");
+            threeMinute.gameObject.SetActive(false);
+
+            var ninth = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 9f });
+            progression.SkipTo(10f * 60f + 5f);
+            yield return null;
+            ChestPickup bronze = null;
+            yield return KillAndFindChest(ninth, c => bronze = c);
+            Assert.That(bronze.Tiers, Is.EqualTo(ChestTiers.Minute9));
+            Assert.That(bronze.CanEvolve, Is.False, "The 9:00 chest cannot evolve although its carrier died after 10:00.");
+            Assert.That(bronze.Kind, Is.EqualTo(ChestKind.Bronze));
+            bronze.gameObject.SetActive(false);
+
+            // The stage boss's chest uses the 25:00 Giant Blue Venus config.
+            var bossPrefab = GetPrivateField<GameObject>(spawner, "_stageBossPrefab");
+            Assert.IsTrue((bool)typeof(EnemySpawner).GetMethod("SpawnBoss", Private).Invoke(spawner, new object[] { bossPrefab }));
+            var boss = EnemyController.ActiveEnemies.Last(e => e != null && spawner.IsBoss(e));
+            Assert.That(boss.GetComponent<EnemyDrop>().ChestTiersAtDeath, Is.EqualTo(ChestTiers.StageBoss));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        private IEnumerator KillAndFindChest(GameObject carrier, System.Action<ChestPickup> found)
+        {
+            Assert.IsNotNull(carrier, "SpawnChestEliteAt produced nothing. " + Errors());
+            var before = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Where(c => c.gameObject.activeInHierarchy).ToList();
+            carrier.GetComponent<HealthController>().KillSilently();
+            ChestPickup chest = null;
+            yield return WaitUntilRealtime(() => (chest = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None)
+                .FirstOrDefault(c => c.gameObject.activeInHierarchy && !before.Contains(c))) != null, "the chest elite to drop its chest");
+            found(chest);
+        }
+
+        [UnityTest]
         public IEnumerator StageBoss_HealthFollowsPlayerLevel()
         {
             yield return BootIntoGameplay();

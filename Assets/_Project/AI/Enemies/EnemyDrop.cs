@@ -34,12 +34,44 @@ namespace SoulHunter.Gameplay.AI
 
         /// <summary>
         /// VS Pentagram: "if a boss that would have dropped [a chest] is erased, the Treasure Chest is then dropped by a
-        /// different enemy". Chests of erased carriers wait here for the next enemy the spawner sends.
+        /// different enemy". Chests of erased carriers wait here, with their boss's ChestTiers (and Arcana flag), for the
+        /// next enemy the spawner sends. Before 2026-10-09 only a count was kept, so the passed-on chest lost its config.
         /// </summary>
-        public static int PendingChests;
+        public static readonly System.Collections.Generic.Queue<SoulHunter.Gameplay.Core.ChestTiers> PendingChests =
+            new System.Collections.Generic.Queue<SoulHunter.Gameplay.Core.ChestTiers>();
 
-        /// <summary>Makes this enemy drop a chest the next time it dies (timed chest elites). Cleared when it respawns.</summary>
+        // The chest config of this life's chest (null: none given, see ChestTiersAtDeath).
+        private SoulHunter.Gameplay.Core.ChestTiers? _tiersThisLife;
+
+        /// <summary>
+        /// Makes this enemy drop a chest the next time it dies, with no scheduled config (tests, debug spawns): its tiers
+        /// are judged at death (ChestTiers.Unscheduled). Cleared when it respawns.
+        /// </summary>
         public void DropChestThisLife() => _dropsChestThisLife = true;
+
+        /// <summary>
+        /// Makes this enemy drop a chest with its boss's config <paramref name="tiers"/> the next time it dies (timed chest
+        /// elites, the stage boss, a passed-on chest). vampire.survivors.wiki/w/Treasure_Chest: "The chances for obtaining
+        /// a 1, 3, or 5-item chest are individually configured per boss enemy." Cleared when it respawns.
+        /// </summary>
+        public void DropChestThisLife(SoulHunter.Gameplay.Core.ChestTiers tiers)
+        {
+            _dropsChestThisLife = true;
+            _tiersThisLife = tiers;
+        }
+
+        /// <summary>This life's chest config: the one given, else the unscheduled rule at the current stage clock.</summary>
+        public SoulHunter.Gameplay.Core.ChestTiers ChestTiersAtDeath
+        {
+            get
+            {
+                var tiers = _tiersThisLife ?? SoulHunter.Gameplay.Core.ChestTiers.Unscheduled(
+                    SoulHunter.Gameplay.Core.LevelProgressionManager.Instance != null
+                        ? SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.StageElapsedTime : 0f);
+                if (_arcanaThisLife) tiers.IsArcana = true;
+                return tiers;
+            }
+        }
 
         /// <summary>VS Pentagram: this life ends with no drops (a chest it carried passes to another enemy). Cleared on respawn.</summary>
         public void EraseDropsThisLife() => _erasedThisLife = true;
@@ -58,6 +90,7 @@ namespace SoulHunter.Gameplay.AI
             _dropsChestThisLife = false;
             _erasedThisLife = false;
             _arcanaThisLife = false;
+            _tiersThisLife = null;
             _health.OnDied += HandleDeath;
         }
 
@@ -109,7 +142,7 @@ namespace SoulHunter.Gameplay.AI
 
             if (_erasedThisLife)
             {
-                if (WillDropChest) PendingChests++;
+                if (WillDropChest) PendingChests.Enqueue(ChestTiersAtDeath); // the chest keeps its boss's config
                 return;
             }
 
@@ -122,10 +155,9 @@ namespace SoulHunter.Gameplay.AI
                 {
                     var chest = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChest(transform.position);
                     var chestPickup = chest != null ? chest.GetComponent<SoulHunter.Gameplay.Pickups.ChestPickup>() : null;
-                    var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
-                    if (chestPickup != null && progression != null)
-                        chestPickup.CanEvolve = SoulHunter.Gameplay.Core.ChestLogicController.CanEvolveAt(progression.StageElapsedTime);
-                    if (chestPickup != null) chestPickup.IsArcana = _arcanaThisLife;
+                    // P1-14 (2026-10-09): the chest's tiers and evolution flag (its bronze/silver look) come from the boss that
+                    // carried it, not from the stage clock at death: a 9:00 elite killed after 10:00 still drops a bronze chest.
+                    if (chestPickup != null) chestPickup.Tiers = ChestTiersAtDeath;
                     // Owner's story (2026-09-27): Kael harvests souls, so a boss or chest elite also leaves its big
                     // soul gem (EnemyData.ExperienceValue: 50 elite, 250 boss), set a little aside from the chest.
                     SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position + new Vector3(-1.2f, 0f, 0f), GemValue);

@@ -108,7 +108,7 @@ Before this, the shop took run "souls" that nothing ever granted (`AddSouls` had
 
 Soul Eggs (`SoulEggs`, `GameData.SoulEggs`, repaired by `SaveService.Migrate`):
 - Each egg raises one random stat of the character it was bought for, out of 19, by the VS egg amount, with the VS caps. It counts from that character's next run (`PlayerController` and `LevelUpManager` for Reroll/Skip/Banish).
-- Magnet is +1% because Soul Hunter's Magnet is a multiplier.
+- Magnet is +0.01, VS's +0.3 on its base 30, added to the Magnet base before the multipliers (2026-10-09, release wave 1).
 - The character select screen does not show egg bonuses yet (UI section).
 
 Model:
@@ -610,7 +610,7 @@ Balance baseline from the first run: level 70 at 30:00, 18,350 kills, 17 chests,
 
 **Run modes** (VS "List of Modes"). Toggled on the character select screen (a row above the character grid), saved in `GameData` (`ModeHurry` … `ModeLimitBreak`; an older save loads them as off). They are copied into `RunModes` when `LevelProgressionManager` wakes and reset when it is destroyed. Numbers are the VS ones unless marked:
 - **Hurry:** the stage clock runs 2× (`LevelProgressionManager.AdvanceClock`); XP +25%.
-- **Hyper:** player and enemy move speed +65%, projectile speed +15%, gold +50%, spawn rate and enemy minimum ×1.25.
+- **Hyper:** per-stage VS values since 2026-10-09 (release wave 1, P1-18); gold +50%, enemy minimum ×1.25 (no faster spawn interval).
 - **Inverse:** enemies start at +200% health and gain +5% health and +0.5% speed per stage minute; gold +200%; Luck +20% (applied once in `PlayerStats.Start`). The flipped, darker VS map is not built.
 - **Endless:** clearing Level 10 no longer wins. `RunModes.EndlessCycle` goes up and Level 1 starts again. Each cycle adds +100% enemy health, +50% spawn rate and count, and +25% enemy damage.
 - **Arcana:**
@@ -619,7 +619,7 @@ Balance baseline from the first run: level 70 at 30:00, 18,350 kills, 17 chests,
   - **Changed:** `ArcanaManager` used to give an Arcana at 11:00 and 21:00 of every stage without any mode. VS gives none without the mode, so that is gone.
   - Not built: the VS pick-from-four choice screen (here the Arcana is random) and showing the start-of-run Arcana on screen.
 - **Limit Break:** once nothing is left to level, level-ups offer "LIMIT BREAK" cards: +10% damage to one held weapon per card (`LimitBreak`, hooked in `AutoAttackWeapon.ScaledDamage`; provisional). VS's random stat per card is not built.
-- Not built: the HUD and game-over screen do not show the active modes or the Endless cycle.
+- The Results screen shows the active modes and the Endless cycle (`RunResults.ModeText`). The HUD does not (the wiki is silent; owner question).
 - Hooks: `RunModes` is read by `EnemySpawner`, `EnemyController`, `PlayerExperience`, `AutoAttackWeapon` and `CampaignLevelCatalog.CurrentGold` / `CurrentPlayerSpeed`.
 - `GameplayPlayModeTestBase.BootIntoGameplay` turns every mode off for the other tests.
 
@@ -794,7 +794,7 @@ Some older status documents are stale or contradictory. Current owner decisions 
 Owner decisions (2026-09-25): every character gets the full VS stat block, every ability its description promises must be real, and the character select screen follows VS. `CharacterData.BaseMoveSpeed` is a **multiplier** (1.0 = the player's base speed 5); Kael, Corvan and Elaria were 4/3/3.5 and are now 1.0. Antonio (a VS character name and description) was renamed **Corvan, The Grave Warden** (`Char_Corvan.asset`, same GUID); `GameContentCatalog.CurrentName` maps a save that still says "Antonio" to Corvan.
 
 - Data: `CharacterData` adds Recovery, Speed, Duration, Amount, Revival, Magnet, Luck, Growth, Greed and Curse, a level-up bonus (`LevelBonus` every N levels) and special abilities (crit multiplier, extra projectile bounces, low-health speed bonus, starting shield + its visual). `PlayerStats.ApplyCharacter` applies all of it; `CharacterStatSheet` computes character + gold power-ups for the screen and uses the same numbers.
-- Abilities now backed by data (values provisional): Aria Growth +20%, Draven Amount +2, Gideon Area +50% (Might set to 1.0 to match his description), Isolde Cooldown -15%, Kaelen crits 3x, Lumina Recovery 1 HP/s, Rurik up to +50% speed at 0 HP, Seraphina +3 bounces on every `Projectile` weapon (Magic Wand, Song of Mana, Knife, Thousand Edge, Fire Wand, Holy Wand, Gun, Cherry Bomb, Death Spiral), Sylas 10 s starting shield shown with the Laurel shield model (`StartingShieldVisual`, blinks for the last 2 s), Valerius +1 Armor every 5 levels, Corvan +10% Might every 10 levels.
+- Abilities now backed by data (values provisional): Aria Growth +20%, Draven Amount +2, Gideon Area +50% (Might set to 1.0 to match his description), Isolde Cooldown -15%, Kaelen crits 3x, Lumina Recovery 1 HP/s, Rurik up to +50% speed at 0 HP, Seraphina +3 bounces on every `Projectile` weapon (Magic Wand, Song of Mana, Knife, Thousand Edge, Fire Wand, Holy Wand, Gun, Cherry Bomb, Death Spiral), Sylas 10 s starting shield shown with the Laurel shield model (`StartingShieldVisual`, blinks for the last 2 s), Valerius +1 Armor every 5 levels, Corvan +10% Might every 10 levels (until level 50 since 2026-10-09, VS Antonio).
 - Screen: `CharacterSelectionUI` builds the layout at runtime inside the scene's existing panel: a grid of character cards (keyboard/gamepad focus selects), a stats panel on the left with bonuses highlighted, the selected character's info and starting weapon, and Confirm. Prev/Next are hidden.
 - Upgrade icons: every `UpgradeData` (279 assets) now has an icon from the project's own `Assets/Art/UI` sprites, assigned by `UpgradeIconAssigner` (menu Soul Hunter/Content). Shown on the select screen and the HUD weapon slots.
 - Character art: every character has its own rigged low-poly hero model, generated in Blender by `ArtSource/Generators/build_heroes.py` (sources and previews in `ArtSource/SH10_Heroes_v01/`) as `Assets/Art/Models/SH10_Hero_<Name>.fbx`, in Kael's faceted style with Kael's rig and clips, each with its own silhouette and palette. The right hand holds the character's actual starting weapon (`WEAPON_PROP` in the generator; `EveryHeroModel_HoldsItsCharactersStartingWeapon` checks the manifest against `StartingWeapon`). Kael's hero model `SH10_Hero_Kael` is his SH10_Kael geometry plus his Whip (the original `SH10_Kael` stays in `Player.prefab`). `HeroModelImporter` (menu Soul Hunter/Content/Import Hero Models) imports them, builds `Assets/Prefabs/Player/SH10_Hero_<Name>.prefab` (Animator on `SH10_Kael.controller` + `EntityAnimator`, so run/attack now play; Kael included), sets each `CharacterModelPrefab` and renders each menu portrait (`Assets/_Project/Art/Portraits/`). In play, `PlayerController.LoadVisualModel` spawns the selected hero (or replaces an authored 3D visual) and refreshes `DamageFlash`. Before this, every character appeared as the same placeholder sprite in play. Main_Gameplay's player also carried a `Hero_1_0` sprite child that was drawn next to every hero; it was removed and the ten `Hero_N_0` sprite prefabs were deleted (owner request, 2026-09-25). `CharacterSweepPlayModeTests` now fails if any sprite is drawn on the player. Weapons follow the VS rule (owner, 2026-09-25): a run starts with the character's starting weapon only (checked for all 13 characters by `CharacterSweepPlayModeTests`, R), any character can gain any weapon from level-ups and chests (the level-up pool is the whole catalog, S), up to 6 weapons and 6 passives (`CoreLoopFixTests`, T). No gold counter or co-op. Unlocks, buying and the stage filter: see "Character unlocks" below.
@@ -1376,6 +1376,60 @@ Validation:
 - Editor play `autoplay-editor-80` (`-sh-autoplay-shop-shot`, 2 min): the shop screenshot shows all 23 cells readable, Recovery 5/5 green, Greed selected at price 242 (200 + fee after 8 ranks), 0 errors, min 84 FPS (partial `V`).
 
 Not yet played by the owner.
+
+### Release push, wave 1 (owner: "release level tak DOT formula ke anusar full and final close karo", 2026-10-09)
+
+Specs for 9 items were written from the raw wiki pages and the code, then checked by a second agent that tried to refute each one (`D:/SoulHunter-Validation/release-specs-wave1.md`). Owner approvals and the open questions below are collected for the end, as the owner asked.
+
+- **P1-13 Magnet** (wiki Magnet, Pickups, Attractorb, Treasure_Chest, Vacuum):
+  - `PlayerStats.Magnet` = base × character × PowerUp × items ("Magnet = 30 * Character bonus * PowerUp multiplier"; "Magnet modifications stack multiplicatively"). The character bonus used to be added. A Soul Egg's +0.01 goes on the base. No cap.
+  - One radius for every pickup, `PlayerStats.MagnetRadius` = 4 units × Magnet (`BaseMagnetRadius`; Soul Hunter's mapping of VS 30, wiki silent). The chicken's own 3-unit base is gone.
+  - Coins, bags, Time Freeze, Vacuum, Soul Toll and the charms fly in inside it (`Pickup.Magnetize`, from `PlayerExperience`'s sweep). Before, they waited to be walked over (1.5 units). Chests are never pulled ("Doesn't get attracted to the player"); stage items stay walk-over (wiki silent).
+- **P1-14 Chest tiers per boss** (wiki Treasure_Chest, Template:Treasure, Mad_Forest):
+  - `ChestTiers`: each chest elite's minute and the 25:00 boss carry their Mad Forest row, on every stage: 1:00 0/0/30 with evolution; 3:00 0/5/40; 5:00 1/5/100; 7:00 and 9:00 3/10/50; 10:00 3/10/100 with evolution; 11:00 and 21:00 Arcana; 12:00 and 16:00 1/5/50 with evolution; later minutes 3/10/100 with evolution.
+  - Three separate rolls, 5 then 3 then 1, each `random × 100 < chance × Luck`, then the fallback. 1-1-3-1-1-5 still comes first.
+  - Whether a chest can evolve now comes from its boss, not the clock at the kill. An erased carrier passes its row on (`EnemyDrop.PendingChests` is a queue).
+  - Only slot 1 can be an evolution. "Weapon" slots level an owned weapon, or any owned item when no weapon is left (wiki silent).
+  - An Arcana chest with nothing to give opens bronze at the Arcana cap, and silver when every Arcana is in use (Treasure_Chest, Arcana).
+- **P1-16 Revival** (wiki Revival, Soul_Eater, Invulnerability_Time):
+  - A lethal hit with a Revival left pauses the game and shows a Revive button (`ReviveScreen`: its own Expand canvas, the theme's Primary button, the Pause action off). Revive spends exactly one Revival, restores 50% of Max Health where the hero fell, then resumes. With none left, the run ends as before.
+  - A revive no longer fires `OnDied` (`HealthController.TryPreventDeath`, as Shadow Kael's already did).
+  - The revive heal counts as healing (`HealthController.OnHealed`, overheal excluded). Soul Eater gains +1 damage per 60 healed, up to +60.
+  - The revival invulnerability runs on game time: 1.5 s (Soul Hunter's number for the wiki's "large amount") + the base 240 ms. A pause no longer uses it up, and a dash no longer ends it.
+  - The revive effect and sound are existing placeholders (level-up + heal).
+- **P1-17 Character rules** (wiki Antonio_Belpaese, Characters):
+  - Corvan's +10% Might every 10 levels stops at level 50 (`CharacterData.LevelBonusUntilLevel`, "+50%" max).
+  - A character's price rises by 10% of its base for each paid character already bought (`CharacterUnlocks.PriceFor`, rounded to whole gold, Soul Hunter's rounding). The select screen shows and charges that price.
+- **P1-18 Hyper per stage** (wiki Stages and each mapped stage's infobox), with the existing mapping (L1 Mad Forest, L2 Inlaid Library, L3 Dairy Plant, L4 Gallo Tower, L5-L10 Cappella Magna):
+  - Player speed 2.0 / 1.9 / 1.9 / 1.9 / 2.0 (L5-L10).
+  - Enemy speed is the VS hyper/normal ratio on top of Soul Hunter's own pace: L1 1.818, L3-L4 1.52, L5-L10 1.4286. L2 stays at 1.65 (owner question).
+  - Projectile speed 1.25 on L1 and 1.15 elsewhere. Luck +10% on L2-L10, swapped per stage (`LevelProgressionManager.ApplyHyperLuck`).
+  - Hyper no longer shortens the spawn interval; it only raises the enemy minimum ×1.25 (wiki Enemies: Hyper "increases the minimum amount of enemies spawned and the movement speed").
+- **P2-03 Merchant wares in Inverse** (wiki Merchant; Stages, Patch 1.0):
+  - Reroll Sigil 1,000, Skip Sigil 100 and Banish Sigil 500 gold, +1 each while fewer than 20 are held.
+  - Draw a Fate 20,000: one random Arcana not held, once.
+  - Past three wares the shop uses two columns, and it scales with Expand. The Soul Egg stays in every mode.
+  - The ware names and the Emblem icon on Draw a Fate are not owner-approved.
+- **P3-07 Modes on Results:** already built; `RunResultsTests.ModeText_ListsTheActiveModes_AndTheEndlessCycle` (T) pins it.
+
+Tests:
+- New EditMode (T): `MagnetVsTests`, `RevivalTests`, `SoulEaterHealingTests`, `HyperModeTests`. Extended: `ChestRewardTests` (tier table, separate rolls, odds), `CharacterStatBlockTests` and `CharacterUnlockTests` (cap, price), `WanderingMerchantTests`.
+- New PlayMode (R): `MagnetPlayModeTests`, `RevivalPlayModeTests`, `WanderingMerchantInversePlayModeTests`, `ChestEliteAndBossPlayModeTests.ChestElite_CarriesItsMinutesTiers`, `PentagramPlayModeTests.AnErasedCarrier_PassesOnItsBossesChestTiers`.
+- `TirajisuPlayModeTests`, `GameOverFlowPlayModeTests`, `RunResultsPlayModeTests` and the Shadow Kael tests now answer the Revive screen.
+
+Validation: EditMode 614/614, PlayMode 304/304, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-wave1-full/`). Not played in a build or the editor yet, so the Revive screen, the two-column shop and pickups flying in are unchecked by eye (`V`).
+
+Open owner questions (the wiki is silent or contradicts itself):
+- Magnet: the base radius (4 units kept, so the chicken went from 3 to 4); whether stage items are pulled.
+- Chests: what the 7:00 row's fallback "level=2" gives (1 item kept); whether stages 2-10 use Mad Forest's rows (built) or their mapped stages' tables; whether a weapon slot with no weapon left may level any item.
+- Revival: the invulnerability length; whether the game stays paused under the Revive button; the screen's wording; Soul Hunter's own revive animation and sound. Shadow Kael's revive now has the same 1.74 s game-time window (it was 1.5 s of real time).
+- Character rules: a cap for Valerius' +1 Armor every 5 levels; the price rounding.
+- Hyper: L2 enemy speed (the infobox says no change, the Enemies page says faster); L6-L10 gold 1.9 or 2.0; Hyper starting spawns; the Stages summary's "65%-75%" against the per-stage values.
+- Endless/Inverse: the Endless "max incoming damage cap"; the Inverse speed unit; how Inverse and Endless health stack; the Endless Revival ware's price, and whether it replaces the Soul Egg.
+- Draw a Fate: a random Arcana or a choice screen; whether it needs Arcana mode on.
+- P3-07: whether the HUD shows the active modes.
+- P1-15 Stalker (not built): the Dairy Plant schedule Soul Hunter copied belongs to the Stalker XL (655,350 HP, speed 300), while the 2,550 x Level variant is Cappella Magna's. Rosary calls it "intangible" while its statbox gives it health. Which variant, and whether it can be killed.
+- P3-01 evolution hints (not built): the indicator's look (art) and when it shows.
 
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 

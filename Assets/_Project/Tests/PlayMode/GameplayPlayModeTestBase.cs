@@ -114,8 +114,22 @@ namespace SoulHunter.Tests.PlayMode
             private float _openSince = -1f;
             private SoulHunter.Gameplay.Core.LevelUpManager _levelUp;
 
+            private float _reviveOpenSince = -1f;
+
             private void Update()
             {
+                // The same for the Revive screen (P1-16): a test that is not about revivals would otherwise wait behind it
+                // forever if the save's Revivals bring a stray death back (they used to revive at once).
+                var revive = SoulHunter.Gameplay.UI.ReviveScreen.Current;
+                if (revive == null || !revive.IsOpen) _reviveOpenSince = -1f;
+                else if (_reviveOpenSince < 0f) _reviveOpenSince = Time.realtimeSinceStartup;
+                else if (Time.realtimeSinceStartup - _reviveOpenSince >= Seconds)
+                {
+                    _reviveOpenSince = -1f;
+                    Debug.Log("[LevelUpUnstick] A Revive screen stayed open " + Seconds + " s in a test: pressed Revive.");
+                    revive.PressRevive();
+                }
+
                 if (_levelUp == null) _levelUp = GetComponent<SoulHunter.Gameplay.Core.LevelUpManager>();
                 if (_levelUp == null || !_levelUp.IsLevelUpActive) { _openSince = -1f; return; }
                 if (_openSince < 0f) { _openSince = Time.realtimeSinceStartup; return; }
@@ -182,6 +196,19 @@ namespace SoulHunter.Tests.PlayMode
                     Assert.Fail($"Timed out after {TimeoutSeconds}s waiting for {what}. Active scene: {SceneManager.GetActiveScene().name}. " + Errors());
                 yield return null;
             }
+        }
+
+        /// <summary>
+        /// A death with a Revival left holds the player for the Revive screen (VS Revival, P1-16). Tests that kill the
+        /// player until the run ends press Revive like a player and end the revival's invulnerability so the next hit lands.
+        /// </summary>
+        protected static void AnswerReviveScreen()
+        {
+            var screen = SoulHunter.Gameplay.UI.ReviveScreen.Current;
+            if (screen == null || !screen.IsOpen) return;
+            Click(screen.ReviveButton, "Revive");
+            var player = PlayerController.Instance;
+            if (player != null) player.GetComponent<SoulHunter.Gameplay.Combat.HealthController>().EndRevivalInvulnerability();
         }
 
         /// <summary>Clicks a UI button through the EventSystem, like a real mouse click.</summary>

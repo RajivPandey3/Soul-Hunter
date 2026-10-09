@@ -661,7 +661,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(deaths, Is.EqualTo(0), "The revival must not count as the boss's death.");
             Assert.That(_healthController.CurrentHealth, Is.GreaterThan(0));
 
-            _healthController.IsInvincible = false;
+            _healthController.EndRevivalInvulnerability(); // the revival's immunity (game time) would block the next hit
             _healthController.TakeDamage(new DamagePacket(500, Vector3.zero, Vector3.zero, DamageType.Normal));
             Assert.That(deaths, Is.EqualTo(1), "The last death is the kill.");
         }
@@ -766,7 +766,7 @@ namespace SoulHunter.Tests.EditMode
                 "Boss GameObject should still be active.");
 
             // Post-revival invulnerability flag reset karte hain taake agla hit register ho sake
-            _healthController.IsInvincible = false;
+            _healthController.EndRevivalInvulnerability(); // the revival's immunity (game time) would block the next hit
 
             // 2nd lethal hit: Revivals 0 hain, standard death hogi aur GameObject deactivate hoga
             _healthController.TakeDamage(new DamagePacket(500, Vector3.zero, Vector3.zero, DamageType.Normal));

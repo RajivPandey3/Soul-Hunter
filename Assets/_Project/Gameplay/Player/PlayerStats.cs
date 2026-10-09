@@ -48,7 +48,20 @@ namespace SoulHunter.Gameplay.Player
         /// <summary>Duration as the game uses it: capped at the VS maximum (MaxDuration).</summary>
         public float Duration => Mathf.Min(RawDuration, MaxDuration);
         public float Regen { get; private set; } = 0f; // HP per second (Pummarola)
-        public float Magnet { get; private set; } = 1.0f; // Pickup radius multiplier (Attractorb)
+        /// <summary>
+        /// VS wiki (Magnet): "Magnet = 30 * Character bonus * PowerUp multiplier", every modifier multiplies, and the
+        /// Golden Egg adds to the base before them. Soul Hunter's base 1 stands for VS 30 (a Soul Egg's +0.01 is VS +0.3);
+        /// Attractorb multiplies on top. No cap (wiki: "There is no upper limit").
+        /// </summary>
+        public float Magnet => _magnetBase * _magnetCharacter * _magnetPowerUp * _magnetItems;
+        private float _magnetBase = 1f, _magnetCharacter = 1f, _magnetPowerUp = 1f, _magnetItems = 1f;
+        /// <summary>
+        /// World radius that Magnet 1 reaches (Soul Hunter's mapping of VS Magnet 30; the wiki gives no unit). One radius for
+        /// every pickup (wiki Pickups: "The Magnet stat affects the radius pickups can be gathered from").
+        /// </summary>
+        public const float BaseMagnetRadius = 4f;
+        /// <summary>Radius inside which gems and pickups fly to the player.</summary>
+        public float MagnetRadius => BaseMagnetRadius * Mathf.Max(0.1f, Magnet);
         public float ExpBonus { get; private set; } = 1.0f; // EXP multiplier (Crown)
         /// <summary>The ProjectileSpeed gathered from every source, before the VS cap (wiki Player_stats).</summary>
         public float RawProjectileSpeed { get; private set; } = 1.0f;
@@ -101,7 +114,7 @@ namespace SoulHunter.Gameplay.Player
             RawDuration += Bonus(SoulHunter.Core.Persistence.PowerUpId.Duration);
             RawAmount += Rank(SoulHunter.Core.Persistence.PowerUpId.Amount);
             MoveSpeedMultiplier += Bonus(SoulHunter.Core.Persistence.PowerUpId.MoveSpeed);
-            Magnet *= SoulHunter.Core.Persistence.PowerUps.MagnetMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.Magnet));
+            _magnetPowerUp *= SoulHunter.Core.Persistence.PowerUps.MagnetMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.Magnet));
             Luck += Bonus(SoulHunter.Core.Persistence.PowerUpId.Luck);
             ExpBonus += Bonus(SoulHunter.Core.Persistence.PowerUpId.Growth);
             Greed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Greed);
@@ -133,7 +146,8 @@ namespace SoulHunter.Gameplay.Player
             if (source == null) return;
             RawMight = source.RawMight; Cooldown = source.Cooldown; RawArea = source.RawArea; MoveSpeedMultiplier = source.MoveSpeedMultiplier;
             RawArmor = source.RawArmor; Luck = source.Luck; Greed = source.Greed; Curse = source.Curse; Revivals = source.Revivals;
-            RawAmount = source.RawAmount; RawDuration = source.RawDuration; Regen = source.Regen; Magnet = source.Magnet;
+            RawAmount = source.RawAmount; RawDuration = source.RawDuration; Regen = source.Regen;
+            _magnetBase = source._magnetBase; _magnetCharacter = source._magnetCharacter; _magnetPowerUp = source._magnetPowerUp; _magnetItems = source._magnetItems;
             ExpBonus = source.ExpBonus; RawProjectileSpeed = source.RawProjectileSpeed; MaxHealthBonus = source.MaxHealthBonus;
             CritDamageMultiplier = source.CritDamageMultiplier; ExtraProjectileBounces = source.ExtraProjectileBounces;
             SyncArmor();
@@ -170,7 +184,7 @@ namespace SoulHunter.Gameplay.Player
             RawDuration = Mathf.Max(0.1f, RawDuration + (character.StartingDuration - 1f));
             RawAmount += character.StartingAmount;
             Revivals += character.StartingRevivals;
-            Magnet = Mathf.Max(0.1f, Magnet + (character.StartingMagnet - 1f));
+            _magnetCharacter = Mathf.Max(0.1f, character.StartingMagnet); // VS: the character bonus multiplies
             Luck += character.StartingLuck - 1f;
             ExpBonus = Mathf.Max(0.1f, ExpBonus + (character.StartingGrowth - 1f));
             Greed += character.StartingGreed - 1f;
@@ -199,8 +213,7 @@ namespace SoulHunter.Gameplay.Player
         public void ApplyLevelBonus(int level)
         {
             var c = _character;
-            if (c == null || c.LevelBonus == SoulHunter.Gameplay.Data.CharacterData.LevelBonusStat.None) return;
-            if (level <= 0 || level % Mathf.Max(1, c.LevelBonusEveryLevels) != 0) return;
+            if (c == null || !c.GrantsLevelBonusAt(level)) return;
             float amount = c.LevelBonusAmount;
             switch (c.LevelBonus)
             {
@@ -247,9 +260,10 @@ namespace SoulHunter.Gameplay.Player
         public void AddAmount(int amount) { RawAmount += amount; }
         public void AddDuration(float amount) { RawDuration += amount; }
         public void AddRegen(float amount) { Regen += amount; }
-        public void AddMagnet(float amount) { Magnet += amount; }
+        /// <summary>Adds to the Magnet base, before the character, PowerUp and item multipliers (VS Golden Egg).</summary>
+        public void AddMagnet(float amount) { _magnetBase += amount; }
         /// <summary>VS Attractorb: its Magnet bonus multiplies (wiki: "Multiplicative").</summary>
-        public void MultiplyMagnet(float factor) { if (factor > 0f) Magnet *= factor; }
+        public void MultiplyMagnet(float factor) { if (factor > 0f) _magnetItems *= factor; }
         public void AddExpBonus(float amount) { ExpBonus += amount; }
         public void AddProjectileSpeed(float amount) { RawProjectileSpeed += amount; }
 

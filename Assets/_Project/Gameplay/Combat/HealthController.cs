@@ -21,15 +21,42 @@ namespace SoulHunter.Gameplay.Combat
         public event Action<int, int> OnHealthChanged;
         public event Action OnDied;
         public event Action OnDamaged; // For Hit Flash VFX
+        /// <summary>
+        /// Health actually restored (overheal excluded), from <see cref="Heal"/> and from a revival. VS (vampire.survivors.wiki/w/
+        /// Revival): "The health gained upon reviving counts as healing"; Soul_Eater: "only healing that actually takes place
+        /// is counted, overhealing does not."
+        /// </summary>
+        public event Action<int> OnHealed;
         public Func<DamagePacket, bool> DamageInterceptor { get; set; }
         public Func<int, int> DamageModifier { get; set; }
         /// <summary>Flat damage reduction per hit. The player's PlayerStats keeps this in sync.</summary>
         public int Armor { get; set; }
         /// <summary>
-        /// Called on lethal damage before OnDied. Returning true means the owner revived (it called ReviveFromDeath),
-        /// so OnDied does not fire: a boss revival is not a kill (no stage clear, drops or kill count).
+        /// Called on lethal damage before OnDied. Returning true means the owner revived (it called ReviveFromDeath) or
+        /// holds the death for the Revive screen (<see cref="HoldForRevive"/>), so OnDied does not fire: a revival is not
+        /// a death (no stage clear, drops or kill count for a boss; no Game Over for the player).
         /// </summary>
         public Func<bool> TryPreventDeath { get; set; }
+
+        /// <summary>
+        /// The player died with a Revival left and waits at 0 health for the Revive button (VS Revival: "they will instead
+        /// be greeted with a 'Revive' button"). Nothing hurts or heals it until <see cref="ReviveFromDeath"/> or
+        /// <see cref="FinishDeath"/>.
+        /// </summary>
+        public bool IsAwaitingRevive { get; private set; }
+
+        /// <summary>
+        /// Seconds of immunity after a revival. VS Revival: "The player is additionally given a large amount of
+        /// invulnerability frames"; the wiki gives no length. 1.5 s is Soul Hunter's number (open owner question, P1-16).
+        /// The VS 240 ms (<see cref="VsInvulnerabilityTime"/>) is added on top: Invulnerability_Time "adds a flat amount
+        /// of time ... to another source of immunity the player receives".
+        /// </summary>
+        public const float RevivalInvulnerabilitySeconds = 1.5f;
+        private float _revivalInvulnerableUntil = -1f;
+        /// <summary>The revival's immunity is running (game time: a pause does not use it up, and the dash cannot end it).</summary>
+        public bool IsRevivalInvulnerable => Time.time < _revivalInvulnerableUntil;
+        /// <summary>Ends the revival's immunity now (tests and debug tools).</summary>
+        public void EndRevivalInvulnerability() => _revivalInvulnerableUntil = -1f;
 
         public bool IsInvincible { get; set; } = false;
 
@@ -69,6 +96,8 @@ namespace SoulHunter.Gameplay.Combat
             if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;
             _currentHealth = _maxHealth;
             _hitInvulnerableUntil = -1f;
+            _revivalInvulnerableUntil = -1f;
+            IsAwaitingRevive = false;
         }
 
         public void Initialize(int maxHealth)
@@ -85,6 +114,7 @@ namespace SoulHunter.Gameplay.Combat
         public void TakeDamage(DamagePacket packet)
         {
             if (_currentHealth <= 0 || IsInvincible) return; // Already dead or invincible
+            if (IsRevivalInvulnerable) return; // the revival's immunity blocks every hit
             if (IsShielded) return; // starting shield blocks every hit
             if (IsHitInvulnerable && !packet.IgnoresHitInvulnerability) return; // brief immunity after the last hit
             if (packet.Amount <= 0 || (DamageInterceptor != null && DamageInterceptor(packet))) return;
@@ -146,13 +176,12 @@ namespace SoulHunter.Gameplay.Combat
 
         public void Heal(int amount)
         {
-            if (_currentHealth <= 0) return; // Dead things don't heal
-            
-            _currentHealth += amount;
-            _currentHealth = Mathf.Min(_currentHealth, _maxHealth); // Cap to max
-            
+            if (_currentHealth <= 0 || amount <= 0) return; // Dead things don't heal
+            int before = _currentHealth;
+            _currentHealth = Mathf.Min(_currentHealth + amount, _maxHealth); // Cap to max
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
-            
+            int healed = _currentHealth - before; // overheal is not healing (wiki Soul_Eater)
+            if (healed > 0) OnHealed?.Invoke(healed);
         }
 
         /// <summary>
@@ -188,17 +217,42 @@ namespace SoulHunter.Gameplay.Combat
             Die();
         }
 
+        /// <summary>The health a revival restores: VS Revival, "revive once upon death with 50% of their Max Health".</summary>
+        public static int RevivalHealth(int maxHealth) => Mathf.Max(1, Mathf.CeilToInt(maxHealth * 0.5f));
+
         /// <summary>
-        /// Player revival hook. PlayerController calls this from OnDied when a
-        /// revival is available; the current death notification still fires,
-        /// but HealthController keeps the player object alive and restores HP.
+        /// Holds a lethal hit for the Revive screen: call it from <see cref="TryPreventDeath"/> and return true. The owner
+        /// stays alive at 0 health, nothing hurts it, and OnDied does not fire.
+        /// </summary>
+        public void HoldForRevive()
+        {
+            if (_currentHealth <= 0) IsAwaitingRevive = true;
+        }
+
+        /// <summary>A held death that will not be revived after all: runs the normal death (OnDied).</summary>
+        public void FinishDeath()
+        {
+            if (!IsAwaitingRevive) return;
+            IsAwaitingRevive = false;
+            DieWithoutPrevention();
+        }
+
+        /// <summary>
+        /// Revives with 50% of max health (VS Revival), counted as healing (<see cref="OnHealed"/>), and starts the revival's
+        /// immunity on game time (<see cref="IsRevivalInvulnerable"/>). Called from <see cref="TryPreventDeath"/> (Shadow
+        /// Kael's mirrored revivals), for a held death (the player's Revive button), or from an OnDied listener (the object
+        /// is then kept alive).
         /// </summary>
         public void ReviveFromDeath(int restoredHealth = -1)
         {
-            _keepAliveAfterDeath = true;
-            _currentHealth = restoredHealth > 0 ? Mathf.Min(restoredHealth, _maxHealth) : Mathf.Max(1, Mathf.CeilToInt(_maxHealth * 0.5f));
-            IsInvincible = true;
+            if (!IsAwaitingRevive) _keepAliveAfterDeath = true;
+            IsAwaitingRevive = false;
+            int before = Mathf.Max(0, _currentHealth);
+            _currentHealth = restoredHealth > 0 ? Mathf.Min(restoredHealth, _maxHealth) : RevivalHealth(_maxHealth);
+            _revivalInvulnerableUntil = Time.time + RevivalInvulnerabilitySeconds + VsInvulnerabilityTime;
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+            int healed = _currentHealth - before;
+            if (healed > 0) OnHealed?.Invoke(healed);
         }
 
         public void IncreaseMaxHealth(int amount)
@@ -229,12 +283,17 @@ namespace SoulHunter.Gameplay.Combat
 
         private void Die()
         {
-            if (TryPreventDeath != null && TryPreventDeath() && _currentHealth > 0)
+            if (TryPreventDeath != null && TryPreventDeath() && (_currentHealth > 0 || IsAwaitingRevive))
             {
+                // Revived at once (Shadow Kael, hazards) or held for the Revive screen: no OnDied either way.
                 _keepAliveAfterDeath = false;
-                StartCoroutine(EndRevivalInvulnerability());
                 return;
             }
+            DieWithoutPrevention();
+        }
+
+        private void DieWithoutPrevention()
+        {
             OnDied?.Invoke();
             // Learning Comment:
             // Generic cloned enemies (horde) ke marne par Debug.Log karne se Unity console freeze ho jata tha.
@@ -244,19 +303,9 @@ namespace SoulHunter.Gameplay.Combat
                 Debug.Log($"[HealthController] {gameObject.name} has died.");
             }
             
-            // Basic death logic (Disable object)
-            if (_keepAliveAfterDeath)
-            {
-                _keepAliveAfterDeath = false;
-                StartCoroutine(EndRevivalInvulnerability());
-            }
+            // Basic death logic (Disable object); an OnDied listener that revived keeps it alive.
+            if (_keepAliveAfterDeath) _keepAliveAfterDeath = false;
             else gameObject.SetActive(false);
-        }
-
-        private System.Collections.IEnumerator EndRevivalInvulnerability()
-        {
-            yield return new WaitForSecondsRealtime(1.5f);
-            IsInvincible = false;
         }
     }
 }
