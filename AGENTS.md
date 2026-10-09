@@ -1656,7 +1656,14 @@ Owner ("pura final karo", 2026-10-09). Answers: "VS waves + apne niyam"; source 
 - 110 ms `SaveFlusher.Update`. The timed gold save now writes on a worker thread (`SaveService.FlushPendingSaveInBackground`). The JSON is still made on the main thread; writes are queued in order on the file they were made for; quit, `UseFile` and loads wait for a queued write.
 - Tests: `SaveServiceTests.BackgroundWrites_LandInOrder_OnTheFileTheyWereQueuedFor` (T) and `AudioPlayModeTests.EveryEffect_IsLoaded_BeforeItFirstPlays` (R).
 - `AutoplayBot` hitch events also log gen-0/1/2 GCs, heap and object count. `ProfileSummary` lists the slowest frames with their top markers. The heap stayed at 7-15 MB, so the hitches were not GC.
-- **Not yet re-measured** with these fixes (the 30-minute run and the hitch profile).
+- Re-measured on a release build of `1b1832d1` (reference laptop, 1366x768, god mode; `D:/SoulHunter-Validation/run-20261010-perf-after/`, against `run-20261009-perf30/`), 0 errors, save untouched:
+
+  | Run | FPS median / 5th percentile / min | Hitches over 250 ms |
+  |---|---|---|
+  | Stage 1, 30 min, level-1 hero (level 50, 9,696 kills) | before 58 / 51 / 38; after 60 / 58 / 48 | before about 10 (345-541 ms); after 0 |
+  | Stage 1 from 10:00, level-60 hero, 6 min | before 57 / 43 / 20; after 60 / 54 / 37 | after 1 (350 ms, 42 s in, 25 enemies, no GC; not explained) |
+
+  These are 5 s samples, not a profiler capture. 1% lows were not measured, nor the 8 GB reference or Android (partial `P`).
 
 Validation:
 - First full run: EditMode 885/885, PlayMode 359/365, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261010-wave3-full/`). The failures:
