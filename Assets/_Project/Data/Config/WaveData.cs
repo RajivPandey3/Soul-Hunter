@@ -40,7 +40,7 @@ namespace SoulHunter.Gameplay.Data
         public int Minute;
         [Min(0)] public int Minimum;
         [Tooltip("Seconds between spawn ticks during this minute (before the level multiplier and Curse)")]
-        [Min(0.05f)] public float Interval = 1f;
+        [Min(0.02f)] public float Interval = 1f; // VS Cappella Magna 21:00 and 26:00: 0.02 s
         [Tooltip("Extra elite chance this minute: a quiet minute with tougher enemies")]
         [Range(0f, 1f)] public float EliteBonus;
         [Tooltip("VS wiki (Enemies, Waves): the enemy types of this minute's wave. Below the minimum they fill the quota in " +

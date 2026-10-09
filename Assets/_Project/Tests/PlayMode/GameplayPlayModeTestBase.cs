@@ -89,6 +89,11 @@ namespace SoulHunter.Tests.PlayMode
                 SoulHunter.Gameplay.Data.RunModeOptions.Set(save.CurrentData, mode, false);
             // Every maxed PowerUp on (VS On/Off, 2026-10-09), whatever the owner switched off; a test switches them itself.
             save.CurrentData.DisabledPowerUps?.Clear();
+            // Each level's own music at normal speed, and the Inverse look on (the defaults), whatever the owner chose (P3-05).
+            save.CurrentData.MusicChoice = 0;
+            save.CurrentData.MusicTempo = 0;
+            save.CurrentData.MusicLocked = false;
+            save.CurrentData.VisuallyInvertStages = true;
             configureSave?.Invoke(save.CurrentData);
 
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");

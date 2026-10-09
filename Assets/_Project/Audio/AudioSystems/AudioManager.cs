@@ -95,6 +95,7 @@ namespace SoulHunter.Gameplay.Audio
                 if (save != null) MasterVolume = Mathf.Clamp01(save.CurrentData.MasterVolume);
                 AudioListener.volume = MasterVolume;
                 InitializeAudioChannels();
+                PreloadEffects();
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
                 SoulHunter.Core.Persistence.GameSettings.Changed += RefreshVolumes;
                 HandleSceneLoaded(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), UnityEngine.SceneManagement.LoadSceneMode.Single);
@@ -103,6 +104,24 @@ namespace SoulHunter.Gameplay.Audio
             {
                 Destroy(gameObject);
             }
+        }
+
+        /// <summary>
+        /// The effect clips are imported without "Preload Audio Data", so each one was read from disk the first time it
+        /// played: a late-run profile (2026-10-09) showed 263 ms in SoundManager.LoadFMODSound / File.Read when the chest
+        /// screen played its jingle. Every effect (not the streamed music) is loaded once here, at startup.
+        /// </summary>
+        public int PreloadEffects()
+        {
+            int loaded = 0;
+            foreach (var field in typeof(AudioManager).GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
+            {
+                if (field.FieldType != typeof(AudioClip) || field.Name == nameof(MenuMusic)) continue;
+                var clip = field.GetValue(this) as AudioClip;
+                if (clip == null || clip.loadState == AudioDataLoadState.Loaded) continue;
+                if (clip.LoadAudioData()) loaded++;
+            }
+            return loaded;
         }
 
         private void OnDestroy()
@@ -127,21 +146,35 @@ namespace SoulHunter.Gameplay.Audio
             if (scene.name == "MainMenu") PlayMusic(MenuMusic);
         }
 
-        /// <summary>Loops a music clip; does nothing if it is already playing.</summary>
-        public void PlayMusic(AudioClip clip)
+        /// <summary>Loops a music clip at normal pitch; does nothing if it is already playing.</summary>
+        public void PlayMusic(AudioClip clip) => PlayMusic(clip, 1f);
+
+        /// <summary>
+        /// Loops a music clip at <paramref name="pitch"/> (VS Music Selection modifiers: speed and pitch together). A clip
+        /// already playing keeps playing and only takes the new pitch.
+        /// </summary>
+        public void PlayMusic(AudioClip clip, float pitch)
         {
             if (_musicSource == null || clip == null) return;
+            _musicSource.pitch = pitch;
             if (_musicSource.clip == clip && _musicSource.isPlaying) return;
             _musicSource.clip = clip;
             _musicSource.volume = MusicVolume * SoulHunter.Core.Persistence.GameSettings.MusicVolume;
             _musicSource.Play();
         }
 
+        /// <summary>
+        /// A stage's music: its own track by default, or the run's Soundtrack choice with its tempo (VS Music Selection,
+        /// MusicSelection: "if the player has ... manually selected a different track, that track will be played upon
+        /// entering a stage instead").
+        /// </summary>
         public void PlayStageMusic(int stage)
         {
-            if (StageMusic == null || StageMusic.Length == 0) return;
-            PlayMusic(StageMusic[Mathf.Clamp(stage, 1, StageMusic.Length) - 1]);
+            PlayMusic(MusicSelection.ClipFor(this, MusicSelection.RunChoice, stage), MusicSelection.PitchFor(MusicSelection.RunTempo));
         }
+
+        /// <summary>The pitch the music plays at now (1 = normal).</summary>
+        public float MusicPitch => _musicSource != null ? _musicSource.pitch : 1f;
 
         public void StopMusic()
         {

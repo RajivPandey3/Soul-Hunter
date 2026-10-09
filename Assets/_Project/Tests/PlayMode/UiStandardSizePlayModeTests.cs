@@ -36,8 +36,9 @@ namespace SoulHunter.Tests.PlayMode
             navigation.ShowCharacters();
             yield return Settle();
             var select = navigation.CharacterPanel.transform;
-            // Back, Confirm, Favourite; tabs: six run modes, FILTER, and the VS sort and order (2026-10-09).
-            CheckScreen(select, "Character select", 3, tabs: 6 + 1 + 2);
+            // Back, Confirm, Favourite; tabs: eight run modes (the two Randomizers since P3-05), FILTER, and the VS sort and
+            // order (2026-10-09). The Music card is a card (the screen's own size), not a tab.
+            CheckScreen(select, "Character select", 3, tabs: 8 + 1 + 2);
             CheckCharacterSelect(select);
 
             navigation.ShowPowerUps();
@@ -153,7 +154,7 @@ namespace SoulHunter.Tests.PlayMode
         {
             var theme = UiThemeAsset.Active;
             var modes = select.GetComponentsInChildren<Toggle>(false).Where(t => t.name.StartsWith("Mode_")).ToList();
-            Assert.That(modes.Count, Is.EqualTo(6));
+            Assert.That(modes.Count, Is.EqualTo(8)); // six modes and the two Randomizers (P3-05)
             foreach (var mode in modes)
             {
                 var label = mode.GetComponentsInChildren<TextMeshProUGUI>(true).First(t => t.name == "Label");

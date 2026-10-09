@@ -50,6 +50,44 @@ namespace SoulHunter.Tests.EditMode
             }
         }
 
+        [Test]
+        public void BackgroundWrites_LandInOrder_OnTheFileTheyWereQueuedFor()
+        {
+            // 2026-10-09: a late-run profile showed the timed save taking 110 ms on the main thread; the timed write now
+            // runs on a worker. The newest data must win, and a redirect must not move older data to the new file.
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json"), other = Path.Combine(directory, "other.json");
+                var service = Loaded(path);
+                for (int gold = 1; gold <= 20; gold++)
+                {
+                    service.CurrentData.Currency = gold;
+                    service.SaveSoon();
+                    service.FlushPendingSaveInBackground();
+                }
+                service.WaitForBackgroundWrite();
+                var saved = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(path), saved);
+                Assert.That(saved.Currency, Is.EqualTo(service.CurrentData.Currency), "The last queued data is on disk.");
+                Assert.That(File.Exists(path + ".tmp"), Is.False, "No temp file is left behind.");
+
+                service.CurrentData.Currency = 777;
+                service.FlushPendingSaveInBackground(); // nothing pending: no write
+                service.CurrentData.Currency = 778;
+                service.SaveSoon();
+                service.UseFile(other); // waits for the queued write, which stays on the old file
+                var old = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(path), old);
+                Assert.That(File.Exists(other), Is.False, "The redirect wrote nothing by itself.");
+                service.SaveGame();
+                var moved = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(other), moved);
+                Assert.That(moved.Currency, Is.EqualTo(778), "Later saves go to the new file.");
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
         // Learning Comment: Save kabhi aadha na likha jaye, aur kharab save par pichla achha save wapas mile.
         private static string NewDirectory()
         {

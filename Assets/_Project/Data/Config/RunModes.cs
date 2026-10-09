@@ -13,7 +13,8 @@ namespace SoulHunter.Gameplay.Data
     ///   and Luck follow the stage; gold +50%; enemy minimum x1.25. No stage infobox and no wiki page gives Hyper a
     ///   spawn-interval change, so Hyper no longer shortens the interval (it used to divide it by 1.25).
     /// - Inverse: enemies start at +200% health and gain +5% health and +0.5% speed per stage minute; gold +200%,
-    ///   Luck +20%. (VS also flips and darkens the map; not built.)
+    ///   Luck +20%. VS also turns the map 180 degrees and darkens it: InverseMap (P3-05), with the Options switch
+    ///   "Visually Invert Stages".
     /// - Endless: the run does not end at Level 10; it starts again at Level 1 as a new cycle. Each cycle: enemy
     ///   health +100%, spawn rate and count +50%, enemy damage +25%.
     /// - Arcana: Arcana chests at 11:00 and 21:00 (VS). - Limit Break: once everything is maxed, level-ups keep
@@ -23,12 +24,30 @@ namespace SoulHunter.Gameplay.Data
     {
         public static bool Hurry, Hyper, Inverse, Endless, Arcana, LimitBreak;
 
+        /// <summary>
+        /// VS Randomizers (wiki Stages, "Randomizers", fetched 2026-10-09): "Random Events ... At the 30-second mark of every
+        /// minute, the roulette selects a random event, which then triggers at the start of the following minute" (Soul
+        /// Hunter: Omens, RandomEventDirector); "Random LevelUp ... the game automatically designates a random weapon or
+        /// passive item to be added or upgraded" (Soul Hunter: Blind Fate, LevelUpManager). Owner (2026-10-09): unlocked from
+        /// the start, like the other six modes. Random LevelUp "can now be toggled during a run" (wiki Level_up, 1 April 2026
+        /// patch note), so the pause menu can change RandomLevelUp mid-run.
+        /// </summary>
+        public static bool RandomEvents, RandomLevelUp;
+
+        /// <summary>
+        /// Spawn-rate factor of a running Omens "Swelling Horde" (VS Ultra Wave: "Increases the enemy spawn rate for 1
+        /// minute"); 1 otherwise. RandomEventDirector sets and clears it; FrequencyMultiplier applies it.
+        /// </summary>
+        public static float EventFrequencyBoost = 1f;
+
         /// <summary>Endless cycle: 0 on the first pass through the ten stages, then 1, 2, ...</summary>
         public static int EndlessCycle;
 
         public static void Reset()
         {
             Hurry = Hyper = Inverse = Endless = Arcana = LimitBreak = false;
+            RandomEvents = RandomLevelUp = false;
+            EventFrequencyBoost = 1f;
             EndlessCycle = 0;
         }
 
@@ -70,8 +89,9 @@ namespace SoulHunter.Gameplay.Data
         /// <summary>Enemy minimum: Hyper x1.25 (every stage infobox, enemy-min2); each Endless cycle +50% (Stages).</summary>
         public static float MinimumMultiplier => (Hyper ? 1.25f : 1f) * EndlessSpawnMultiplier;
 
-        /// <summary>Spawn frequency: each Endless cycle +50% (Stages). Hyper has no spawn-interval value on the wiki.</summary>
-        public static float FrequencyMultiplier => EndlessSpawnMultiplier;
+        /// <summary>Spawn frequency: each Endless cycle +50% (Stages), times a running Omens spawn boost. Hyper has no
+        /// spawn-interval value on the wiki.</summary>
+        public static float FrequencyMultiplier => EndlessSpawnMultiplier * Mathf.Max(1f, EventFrequencyBoost);
 
         private static float EndlessSpawnMultiplier => 1f + 0.5f * Mathf.Max(0, EndlessCycle);
     }

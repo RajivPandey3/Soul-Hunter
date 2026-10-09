@@ -14,8 +14,18 @@ namespace SoulHunter.Tests.EditMode
     /// </summary>
     public class WaveEnemyTypeTests
     {
+        private Dictionary<int, List<(int, string[])>> _saved;
+
+        // Every level authors its types now (P2-02), so a test that swaps a stage's rows puts the real ones back.
+        [SetUp]
+        public void SetUp() => _saved = new Dictionary<int, List<(int, string[])>>(WaveTables.EnemyTypesByStage);
+
         [TearDown]
-        public void TearDown() => WaveTables.EnemyTypesByStage.Remove(10);
+        public void TearDown()
+        {
+            WaveTables.EnemyTypesByStage.Clear();
+            foreach (var entry in _saved) WaveTables.EnemyTypesByStage[entry.Key] = entry.Value;
+        }
 
         [Test]
         public void AMinutesEnemyTypes_ReachItsPhase()
@@ -47,6 +57,7 @@ namespace SoulHunter.Tests.EditMode
             WaveTables.EnemyTypesByStage[10] = new List<(int, string[])> { (0, new[] { "A" }), (10, new[] { "A", "B" }) };
             Assert.That(WaveTables.EnemyTypePaths(10, 3), Is.EqualTo(new[] { "A" }));
             Assert.That(WaveTables.EnemyTypePaths(10, 12), Is.EqualTo(new[] { "A", "B" }));
+            WaveTables.EnemyTypesByStage.Remove(2);
             Assert.That(WaveTables.EnemyTypePaths(2, 12), Is.Empty, "A stage with no entries keeps its own enemy.");
         }
 

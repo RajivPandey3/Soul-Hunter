@@ -89,9 +89,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(grid.Overlaps(ScreenRect((RectTransform)root.Find("RunModes"))), Is.False, "The grid is clear of the mode row.");
 
             var modeLabels = root.Find("RunModes").GetComponentsInChildren<TMPro.TextMeshProUGUI>().Where(t => t.name == "Label").ToList();
-            Assert.That(modeLabels.Count, Is.EqualTo(6));
+            Assert.That(modeLabels.Count, Is.EqualTo(8)); // six modes and the two Randomizers (P3-05)
             Assert.That(modeLabels.Select(l => l.fontSize).Distinct().Count(), Is.EqualTo(1),
-                "All six mode labels share one size: " + string.Join(", ", modeLabels.Select(l => $"{l.text} {l.fontSize:0.0}")));
+                "All eight mode labels share one size: " + string.Join(", ", modeLabels.Select(l => $"{l.text} {l.fontSize:0.0}")));
 
             // TextMeshPro's defaults (auto-size up to 72) used to replace these limits, because the panel is built inactive.
             var texts = root.GetComponentsInChildren<TMPro.TextMeshProUGUI>();

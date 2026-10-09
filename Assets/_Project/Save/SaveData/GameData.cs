@@ -125,6 +125,28 @@ namespace SoulHunter.Core.Persistence
         public bool ModeEndless;
         public bool ModeArcana;
         public bool ModeLimitBreak;
+        /// <summary>VS Random Events (release item P3-05): a wheel picks an event at every XX:30 that fires at XX:00.</summary>
+        public bool ModeRandomEvents;
+        /// <summary>VS Random LevelUp (release item P3-05): every level-up picks one of its choices at random.</summary>
+        public bool ModeRandomLevelUp;
+
+        /// <summary>
+        /// VS Options, Gameplay: "Visually Invert Stages" (wiki Options; Stages, Inverse Mode: "The layout inversion effect
+        /// can be toggled in the Settings"). The wiki names no default; on is the default because the option only exists to
+        /// turn the inverted look off (Patch 1.0: "Added option to disable inverted mode visually inverting stages"), so the
+        /// look is on until a player turns it off (balance method, 2026-10-09). A save written before this field loads it on.
+        /// </summary>
+        public bool VisuallyInvertStages = true;
+
+        /// <summary>
+        /// VS Music Selection (wiki Stages, "Music selection"; Music): the track chosen for the next run. 0 = each level's own
+        /// track (the VS default), 1 = the main menu theme, 2-11 = the tracks of Levels 1-10. Repaired by SaveService.
+        /// </summary>
+        public int MusicChoice;
+        /// <summary>VS music modifier: 0 Normal, 1 faster and higher (VS Hyper), 2 slower and lower (VS Forsaken).</summary>
+        public int MusicTempo;
+        /// <summary>VS Patch 1.0: "lock the selection of a music track so it persists between runs". Off: the choice lasts one run.</summary>
+        public bool MusicLocked;
 
         public GameData()
         {

@@ -72,6 +72,11 @@ namespace SoulHunter.Gameplay.Core
                 // Pile Assaults, and the rail carts of Stage 3.
                 if (GetComponent<SoulHunter.Gameplay.Hazards.StageHazards>() == null)
                     gameObject.AddComponent<SoulHunter.Gameplay.Hazards.StageHazards>();
+                // VS Random Events (Omens, P3-05): a wheel picks an event at every XX:30 that fires at XX:00 (mode on only).
+                if (GetComponent<RandomEventDirector>() == null) gameObject.AddComponent<RandomEventDirector>();
+                // VS Inverse look (P3-05): the darker, hue-turned floor while Inverse and "Visually Invert Stages" are on.
+                if (GetComponent<SoulHunter.Gameplay.Environment.InverseStageLook>() == null)
+                    gameObject.AddComponent<SoulHunter.Gameplay.Environment.InverseStageLook>();
             }
             else if (Instance != this)
             {

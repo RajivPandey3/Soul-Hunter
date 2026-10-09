@@ -179,7 +179,17 @@ namespace SoulHunter.Tests.EditMode
         public void TheBestiary_ListsEveryEnemyType_OnceEach_WithItsStats()
         {
             var enemies = BestiaryCatalog.All();
-            Assert.That(enemies.Count, Is.EqualTo(MadForestEnemies.Types.Length + 30), "Level 1's VS types, then 10 levels x enemy, elite, boss.");
+            int levelTypes = StageEnemyTables.All.Sum(t => t.Types.Length);
+            Assert.That(enemies.Count, Is.EqualTo(MadForestEnemies.Types.Length + levelTypes + 30),
+                "Level 1's VS types, Levels 2-10's VS types (P2-02), then 10 levels x enemy, elite, boss.");
+            int index = MadForestEnemies.Types.Length;
+            foreach (var table in StageEnemyTables.All)
+                foreach (var type in table.Types)
+                    Assert.That(enemies[index++].name, Is.EqualTo($"L{table.Level:00}_{type.Id}_Data"), "Level order, then the wiki table's order.");
+            var lanternSkull = enemies.First(e => e.name == "L02_LanternSkull_Data");
+            Assert.That(BestiaryCatalog.Health(lanternSkull), Is.EqualTo("6.5 x player level"), "VS Skullone (scaling): 6.5 x Level.");
+            var thrice = enemies.First(e => e.name == "L04_ThriceRisen_Data");
+            Assert.That(BestiaryCatalog.Skills(thrice), Does.Contain("3 lives"), "VS Scarleton: Has 3 lives.");
             Assert.That(enemies.Select(BestiaryCatalog.IdOf).Distinct().Count(), Is.EqualTo(enemies.Count));
             for (int i = 0; i < MadForestEnemies.Types.Length; i++)
                 Assert.That(enemies[i].name, Is.EqualTo($"L01_{MadForestEnemies.Types[i].Id}_Data"), "Grave Bat first, as VS opens on Pipeestrello.");

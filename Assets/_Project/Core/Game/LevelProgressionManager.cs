@@ -63,10 +63,14 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Core.Persistence.SaveService save = null;
             SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
             RunModeOptions.BeginRun(save != null ? save.CurrentData : null);
+            // VS Music Selection (P3-05): the Soundtrack choice plays all run; without the lock it lasts this run only.
+            SoulHunter.Gameplay.Audio.MusicSelection.BeginRun(save != null ? save.CurrentData : null);
             LimitBreak.Reset();
-            if (RunModes.Hurry || RunModes.Hyper || RunModes.Inverse || RunModes.Endless || RunModes.Arcana || RunModes.LimitBreak)
+            if (RunModes.Hurry || RunModes.Hyper || RunModes.Inverse || RunModes.Endless || RunModes.Arcana || RunModes.LimitBreak
+                || RunModes.RandomEvents || RunModes.RandomLevelUp)
                 Debug.Log($"[LevelProgressionManager] Run modes: Hurry={RunModes.Hurry} Hyper={RunModes.Hyper} Inverse={RunModes.Inverse} " +
-                          $"Endless={RunModes.Endless} Arcana={RunModes.Arcana} LimitBreak={RunModes.LimitBreak}");
+                          $"Endless={RunModes.Endless} Arcana={RunModes.Arcana} LimitBreak={RunModes.LimitBreak} " +
+                          $"Omens={RunModes.RandomEvents} BlindFate={RunModes.RandomLevelUp}");
         }
 
         private void Start()
@@ -91,6 +95,7 @@ namespace SoulHunter.Gameplay.Core
             if (_instance != this) return;
             CampaignLevelCatalog.CurrentStage = 0; // no stage bonuses outside a run
             RunModes.Reset(); // nor run modes: the next run copies them from the save again
+            SoulHunter.Gameplay.Audio.MusicSelection.Reset();
             LimitBreak.Reset();
             _instance = null;
         }

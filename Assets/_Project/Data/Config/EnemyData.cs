@@ -18,6 +18,11 @@ namespace SoulHunter.Gameplay.Data
         Homing = 0,
         Floaty = 1,
         FixedDirection = 2,
+        /// <summary>
+        /// VS statboxes that list both skills ("[[Floaty]], [[Fixed Direction]]": Sneaky Head, Big Sneaky Head; wiki
+        /// Sneaky_Head, fetched 2026-10-09): the enemy keeps its Fixed Direction line and weaves along it.
+        /// </summary>
+        FloatyFixedDirection = 3,
     }
 
     [CreateAssetMenu(fileName = "New Enemy Data", menuName = "Soul Hunter/Data/Enemy Data")]
@@ -59,6 +64,12 @@ namespace SoulHunter.Gameplay.Data
 
         [Tooltip("VS boss rule: when above 0, max health is this x the player's level (MaxHealth is then ignored)")]
         [Min(0)] public int HealthPerPlayerLevel = 0;
+        [Tooltip("VS HP x Level with a fraction (wiki Skullone (scaling): health 6.5): added to HealthPerPlayerLevel, and " +
+                 "the product is rounded. Only used while HealthPerPlayerLevel is above 0")]
+        [Range(0f, 0.99f)] public float HealthPerPlayerLevelFraction = 0f;
+
+        [Tooltip("VS lives (wiki Scarleton: \"Has 3 lives, meaning that it can resurrect twice\"). 1 = an ordinary enemy")]
+        [Min(1)] public int Lives = 1;
 
         // ---- VS resistances (vampire.survivors.wiki/w/Enemies, "Resistances"). Defaults: none, as before. ----
         [Tooltip("VS res-freeze: a weapon freeze (Clock Lancet) fails when this is higher than the weapon's freeze chance. " +
@@ -68,12 +79,16 @@ namespace SoulHunter.Gameplay.Data
         public bool InstantKillResistance = false;
         [Tooltip("VS res-debuff: immune to Garlic's knockback and freeze-resistance reductions")]
         public bool DebuffResistance = false;
+        [Tooltip("VS res-defang (wiki statboxes, e.g. Trinacria: res-defang 1): the Defang PowerUp never makes it harmless")]
+        public bool DefangResistance = false;
 
         [Tooltip("VS enemy/boss skills (EnemyAbilities runs them). Empty = an ordinary enemy")]
         public System.Collections.Generic.List<EnemyAbilitySpec> Abilities = new System.Collections.Generic.List<EnemyAbilitySpec>();
 
         /// <summary>Max health before Curse: per-level health for level-scaled enemies (bosses), else MaxHealth.</summary>
         public int HealthForPlayerLevel(int playerLevel) =>
-            HealthPerPlayerLevel > 0 ? HealthPerPlayerLevel * Mathf.Max(1, playerLevel) : MaxHealth;
+            HealthPerPlayerLevel > 0
+                ? Mathf.Max(1, Mathf.RoundToInt((HealthPerPlayerLevel + Mathf.Clamp01(HealthPerPlayerLevelFraction)) * Mathf.Max(1, playerLevel)))
+                : MaxHealth;
     }
 }

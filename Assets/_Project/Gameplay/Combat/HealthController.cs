@@ -262,8 +262,19 @@ namespace SoulHunter.Gameplay.Combat
             if (_currentHealth <= 0) return;
             _currentHealth = 0;
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
-            Die();
+            SilentKillDepth++;
+            try { Die(); }
+            finally { SilentKillDepth = Mathf.Max(0, SilentKillDepth - 1); }
         }
+
+        private static int SilentKillDepth;
+
+        /// <summary>
+        /// True while an instant kill (Pentagram, Eclipse Sigil, Soul Toll, an Arcana zone, the stage-clear wipe) is ending a
+        /// life. VS Scarleton (wiki Scarleton): "if killed by Pentagram, Gorgeous Moon, Rosary or Heaven Sword, it will not
+        /// resurrect" (EnemyLives).
+        /// </summary>
+        public static bool IsInstantKill => SilentKillDepth > 0;
 
         /// <summary>The health a revival restores: VS Revival, "revive once upon death with 50% of their Max Health".</summary>
         public static int RevivalHealth(int maxHealth) => Mathf.Max(1, Mathf.CeilToInt(maxHealth * 0.5f));

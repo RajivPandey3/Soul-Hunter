@@ -1600,6 +1600,75 @@ Tests:
 - `EvolutionDiscoveryTests` now forbids discovery only from the bot's `-evolve` debug start; the explicit `-discover` tool is allowed.
 - Tests: EditMode 673/673, then the pause, Evolutions, menu, theme and bot fixtures 19/19 (`-uifix2/`).
 
+### Release push, wave 3: enemy types on Levels 2-10, run modes, hitch fixes (2026-10-10)
+
+Owner ("pura final karo", 2026-10-09). Answers: "VS waves + apne niyam"; source stages "Theme ke hisaab se"; P3-05 "Sab banao, shuru se khule"; names "Apne English naam".
+
+**P2-02, VS waves and enemy types on Levels 2-10.** Each level plays its source stage's minute table and enemy statboxes (raw wiki pages fetched 2026-10-09, kept in `D:/SoulHunter-Validation/p2-02-wiki/`):
+- Sources: L2 Inlaid Library, L3 Dairy Plant, L4 Gallo Tower, L5 Abyss Foscari, L6 Mt.Moonspell, L7 Lake Foscari, L8-L10 Cappella Magna (each level with its own names).
+- 235 types with Soul Hunter names (`StageEnemyTables`, one table per source stage). `StageEnemyTypeBuilder` (menu Soul Hunter/Content/Build Level 2-10 Enemy Types) writes the EnemyData assets (`Data/Config/Enemies/Level02`-`Level10`) and prefab variants (`Prefabs/Enemies/Gameplay/Level02`-`Level10`), rebuilds the wave tables and orders the Bestiary.
+- A checker compared all 177 statbox rows and every minute's minimum and interval against the wiki pages.
+- New data: `FloatyFixedDirection` movement (Sneaky Heads), `HealthPerPlayerLevelFraction` (6.5 x Level), `Lives` (Thrice-Risen: 3 lives, no resurrection after an instant kill, never carries a chest), `DefangResistance`.
+- Owner rules kept:
+  - L2 and L7 homing types are Floaty, and every L7 type is spectral with no knockback;
+  - L8 uses the elite model and its events stay elite-only;
+  - **enemy pace stays the approved stage table** (L5 0.9 "a slow, heavy horde", L6 1.45 ...). The VS stage speeds (x1.25 / x1.4) are not applied, because an approved decision comes first.
+- **The spawn interval floor is gone for minute tables:** a 0.25 floor turned VS intervals under a quarter of the wave's own interval into that quarter, so Level 1's 0.1 s ticks were really 0.25 s. Minute tables now use the wiki interval (timer floor 0.02 s). This also changes Level 1.
+- Balance method:
+  - Lake Foscari 22:00 "0.8" is read as 80;
+  - its 25:00 "1 (150)" is read as 150, because Soul Hunter keeps its own boss;
+  - Level 10 holds the 29:00 row after 29:00;
+  - a VS XP of 0 becomes the smallest gem;
+  - size and model come from a health rule.
+- Not built:
+  - each source stage's own map events, chest bosses and spawn sides (the owner's stay);
+  - starting spawns above the minute-0 minimum;
+  - bullets that can be shot down;
+  - own models per type: tints on existing models, **not owner-approved art**.
+- Tests: `StageEnemyTypeTests` (T) and `StageEnemyTypePlayModeTests` (R). Updated: wave, pattern, ability, movement, knockback, pickup and Collection tests.
+
+**P3-05, run modes** (wiki Stages, Random_Events, Level_up, Options, Music):
+- **Omens** (VS Random Events): at XX:30 a wheel picks an event that fires at the next XX:00.
+  - 16 events with Soul Hunter names, among them Mending Ring, Feast Ring, Gilded Fever, Gallows Ring, Toll of Souls, Wandering Relic, Lantern Bloom, Swelling Horde, Soul Meteors, Fortune's Favour and the formations.
+  - Events that need VS-only enemies, items or hazards are left out.
+  - Balance method: every event is equally likely; there is no pick at 29:30; formations are not picked during a boss.
+- **Blind Fate** (VS Random LevelUp): each level-up picks one of its drawn cards with no screen, and the picked item shows over the hero. It can be switched in the pause menu.
+- **Inverse look:**
+  - stage items, Metaglios and Rune Plates turn 180° around the start;
+  - floor materials turn their hue by half and darken, staying in the comfort band;
+  - ambient light and fog are untouched, so Level 2's darkness is unchanged;
+  - Options, Gameplay: "Visually Invert Stages" (on by default).
+- **Music selection** (`MusicSelection`, Music card on character select):
+  - the 11 tracks, plus "Each Level's Own";
+  - Normal, Faster and Slower (two semitones each way);
+  - a Keep lock that persists between runs; without it the choice lasts one run.
+- All open from the start (owner).
+- Not built:
+  - Inverse alternate tracks (no audio);
+  - Hyper's music change (the wiki does not say what it is);
+  - character themes;
+  - a heart pickup (Mending Ring uses half-size chickens).
+- The Music screen got its own Expand canvas (as the chest, level-up and Arcana screens), with its lower rows stacked from the bottom edge in theme units. On the menu canvas, a short window pushed Keep out of the window and over the speed tabs. Its cards use the card text role (they read at 1.07:1 before).
+- Tests: `RandomizerModeTests` (T) and `RandomizersPlayModeTests` (R). The music tests make the AudioManager first, as `AudioPlayModeTests` does.
+
+**Late-run hitches (T-02/T-03).** A development-build profile (`D:/SoulHunter-Validation/run-20261009-hitchprof/capture.summary.txt`, level-90 hero, Stage 1 from 23:00) found two main-thread stalls:
+- 263 ms `SoundManager.LoadFMODSound` / `File.Read` when the chest screen played its jingle. The effect clips are imported without Preload Audio Data, so each was read from disk on its first play. `AudioManager.PreloadEffects` now loads every effect at startup (not the streamed music).
+- 110 ms `SaveFlusher.Update`. The timed gold save now writes on a worker thread (`SaveService.FlushPendingSaveInBackground`). The JSON is still made on the main thread; writes are queued in order on the file they were made for; quit, `UseFile` and loads wait for a queued write.
+- Tests: `SaveServiceTests.BackgroundWrites_LandInOrder_OnTheFileTheyWereQueuedFor` (T) and `AudioPlayModeTests.EveryEffect_IsLoaded_BeforeItFirstPlays` (R).
+- `AutoplayBot` hitch events also log gen-0/1/2 GCs, heap and object count. `ProfileSummary` lists the slowest frames with their top markers. The heap stayed at 7-15 MB, so the hitches were not GC.
+- **Not yet re-measured** with these fixes (the 30-minute run and the hitch profile).
+
+Validation:
+- First full run: EditMode 885/885, PlayMode 359/365, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261010-wave3-full/`). The failures:
+  - four music tests (no AudioManager in the test boot);
+  - the moth pace test (it expected the VS pace);
+  - Drowning Chalice in `DuplicatorEverywherePlayModeTests`: the counter missed one pool; it passed on rerun.
+- Fixed, then the related fixtures: 45/46, 38/39, 19/20, 21/22 and 20/20 (`-wave3-fix` to `-fix5`). These runs found the Music screen fit and contrast defects above.
+- Second full run: EditMode 885/885, PlayMode 364/365, 0 exceptions, save untouched (`-wave3-full2/`). The one failure was the same Drowning Chalice case with identical timings, so it was not random:
+  - the "with" volley started 4.6 s after the first one, while a pool lives 4 s;
+  - the first volley's last pool was reused in the same frame at the same distance from the hero, so the counter did not see a new shot.
+  - The test now waits, with the weapon's timer held, until the earlier shots are gone. The Duplicator fixtures then passed 33/33 (`-wave3-dup/`).
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

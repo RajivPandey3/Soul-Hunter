@@ -7,8 +7,7 @@ using UnityEngine;
 namespace SoulHunter.Tests.EditMode
 {
     /// <summary>
-    /// VS minute waves (Part 3): every stage has its own 25-minute table whose minimum rises and falls, with quiet
-    /// minutes of tougher enemies, and the stages differ from each other.
+    /// VS minute waves: every level plays its VS source stage's 30-minute table (Level 1 Mad Forest; P2-02 for Levels 2-10).
     /// </summary>
     public class WaveTableTests
     {
@@ -32,29 +31,12 @@ namespace SoulHunter.Tests.EditMode
             }
         }
 
-        [Test]
-        public void EveryTable_Rises_ButAlsoFalls_WithToughQuietMinutes()
-        {
-            for (int stage = 1; stage <= 10; stage++)
-            {
-                var table = WaveTables.Build(stage, 1f);
-                double early = table.Take(5).Average(m => m.Minimum), late = table.Skip(20).Average(m => m.Minimum);
-                Assert.That(late, Is.GreaterThan(early * 2), $"Stage {stage} grows over the stage.");
-                var drops = Enumerable.Range(1, table.Count - 1).Where(m => table[m].Minimum < table[m - 1].Minimum * 0.6f).ToList();
-                Assert.That(drops.Count, Is.GreaterThanOrEqualTo(3), $"Stage {stage} has quiet minutes, like VS's Mad Forest at 5:00.");
-                // Stage 1 is VS's own Mad Forest table, which has no elite bonus; the other stages' quiet minutes send tougher enemies.
-                if (stage > 1) foreach (int m in drops) Assert.That(table[m].EliteBonus, Is.GreaterThan(0f), "A quiet minute sends tougher enemies.");
-                Assert.That(table.Last().Interval, Is.LessThan(table.First().Interval), "Spawns come faster later on.");
-            }
-        }
-
         /// <summary>
-        /// Bug MIS B01 (2026-09-30): the table covered 0-24 and minutes 25-29 reused minute 24; on Stage 1 that was a quiet
-        /// minute, so the last six minutes held ~84 enemies. Stage 1 now is VS's Mad Forest (wiki Mad_Forest, "Waves"), and
-        /// no stage ends on a quiet minute.
+        /// Bug MIS B01 (2026-09-30): the table covered 0-24 and minutes 25-29 reused minute 24. Stage 1 is VS's Mad Forest
+        /// (wiki Mad_Forest, "Waves"), 30 minutes.
         /// </summary>
         [Test]
-        public void Stage1_IsVsMadForest_AndNoStageEndsOnAQuietMinute()
+        public void Stage1_IsVsMadForest()
         {
             var stage1 = WaveTables.Build(1, 1f);
             Assert.That(stage1.Count, Is.EqualTo(30), "Every stage lasts 30 minutes.");
@@ -64,27 +46,53 @@ namespace SoulHunter.Tests.EditMode
             {
                 Assert.That(stage1[m].Minimum, Is.EqualTo(vsMinimum[m]), $"Mad Forest minute {m} minimum");
                 Assert.That(stage1[m].Interval, Is.EqualTo(vsInterval[m]).Within(1e-4), $"Mad Forest minute {m} interval");
+                Assert.That(stage1[m].EliteBonus, Is.EqualTo(0f), "No elite bonus: not a VS wave field.");
             }
-            for (int stage = 2; stage <= 10; stage++)
+        }
+
+        /// <summary>
+        /// P2-02 (owner, 2026-10-09): Levels 2-10 play their VS source stage's minute table (raw wiki "Waves" tables, fetched
+        /// 2026-10-09), pinned here row by row, with no elite bonus. Lake Foscari's broken 22:00 cell ("0.8") is 80 and its
+        /// 25:00 "1 (150)" is 150 (LakeFoscariEnemies).
+        /// </summary>
+        [TestCase(2, new[] { 50, 80, 100, 60, 110, 100, 30, 80, 80, 200, 100, 120, 80, 120, 300, 100, 100, 200, 60, 120, 100, 100, 80, 120, 300, 300, 100, 300, 250, 250 },
+                     new[] { 3f, 3f, 4f, 4f, 4f, 4f, 2f, 2f, 1f, 0.5f, 0.5f, 2f, 1f, 0.5f, 0.1f, 0.1f, 1f, 1f, 0.5f, 0.5f, 0.1f, 0.1f, 1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f })] // Inlaid Library
+        [TestCase(3, new[] { 20, 30, 40, 40, 25, 10, 30, 60, 50, 30, 20, 100, 20, 200, 150, 50, 80, 40, 80, 80, 100, 200, 200, 200, 200, 100, 150, 150, 10, 10 },
+                     new[] { 1f, 1f, 0.5f, 0.25f, 0.25f, 1f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.5f, 1f, 0.1f, 0.5f, 0.5f, 0.5f, 0.1f, 0.5f, 0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f })] // Dairy Plant
+        [TestCase(4, new[] { 50, 80, 100, 60, 110, 100, 60, 80, 80, 200, 100, 60, 80, 120, 300, 100, 100, 100, 60, 200, 100, 100, 80, 100, 60, 300, 100, 100, 100, 50 },
+                     new[] { 3f, 3f, 4f, 4f, 4f, 4f, 2f, 2f, 1f, 0.5f, 0.5f, 2f, 1f, 0.5f, 0.1f, 0.1f, 1f, 0.8f, 0.1f, 0.5f, 0.5f, 0.1f, 1f, 0.1f, 0.1f, 0.1f, 0.1f, 1f, 1f, 1f })] // Gallo Tower
+        [TestCase(5, new[] { 100, 30, 40, 40, 25, 10, 30, 60, 50, 30, 20, 100, 20, 200, 150, 50, 80, 40, 90, 80, 100, 200, 200, 200, 200, 100, 200, 150, 50, 30 },
+                     new[] { 1f, 1f, 0.5f, 0.25f, 0.25f, 1f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.5f, 1f, 0.1f, 0.5f, 0.5f, 0.5f, 0.1f, 0.5f, 0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f })] // Abyss Foscari
+        [TestCase(6, new[] { 50, 80, 50, 40, 30, 100, 20, 80, 100, 40, 80, 300, 40, 150, 20, 50, 100, 100, 20, 100, 100, 150, 150, 200, 200, 50, 150, 300, 200, 200 },
+                     new[] { 3f, 3f, 0.5f, 0.25f, 0.5f, 4f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.1f, 0.25f, 0.5f, 0.1f, 0.1f, 1f, 0.8f, 1f, 0.5f, 0.1f, 0.1f, 1f, 0.1f, 0.1f, 0.1f, 0.1f, 1f, 1f, 1f })] // Mt.Moonspell
+        [TestCase(7, new[] { 50, 80, 100, 60, 110, 100, 30, 80, 80, 200, 100, 120, 80, 120, 300, 100, 100, 200, 60, 120, 100, 100, 80, 120, 200, 150, 100, 100, 100, 200 },
+                     new[] { 3f, 3f, 4f, 4f, 4f, 4f, 2f, 2f, 1f, 0.5f, 0.5f, 2f, 1f, 0.5f, 0.1f, 1f, 0.1f, 1f, 0.5f, 0.5f, 0.1f, 0.1f, 1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f })] // Lake Foscari
+        [TestCase(8, new[] { 20, 30, 40, 40, 25, 10, 30, 60, 50, 30, 20, 100, 20, 200, 150, 50, 80, 40, 80, 80, 100, 60, 200, 200, 200, 100, 250, 150, 10, 40 },
+                     new[] { 1f, 1f, 0.5f, 0.25f, 0.25f, 1f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.5f, 1f, 0.1f, 0.5f, 0.5f, 0.5f, 0.1f, 0.5f, 0.5f, 0.1f, 0.02f, 0.1f, 0.1f, 0.1f, 0.1f, 0.02f, 0.1f, 0.1f, 0.1f })] // Cappella Magna
+        public void LevelsTwoToTen_PlayTheirVsSourceStagesTable(int stage, int[] minimum, float[] interval)
+        {
+            int[] stages = stage == 8 ? new[] { 8, 9, 10 } : new[] { stage }; // Cappella Magna serves Levels 8-10
+            foreach (int level in stages)
             {
-                var table = WaveTables.Build(stage, 1f);
-                Assert.That(table.Count, Is.EqualTo(30));
-                for (int m = 25; m < 30; m++)
-                    Assert.That(table[m].Minimum, Is.GreaterThanOrEqualTo(WaveTables.PeakMinimum(stage) * 0.8f), $"Stage {stage} minute {m} holds the peak.");
+                var table = WaveTables.Build(level, 0.7f);
+                Assert.That(table.Count, Is.EqualTo(30), $"Level {level}");
+                for (int m = 0; m < 30; m++)
+                {
+                    Assert.That(table[m].Minute, Is.EqualTo(m));
+                    Assert.That(table[m].Minimum, Is.EqualTo(minimum[m]), $"Level {level} minute {m} minimum");
+                    Assert.That(table[m].Interval, Is.EqualTo(interval[m]).Within(1e-4), $"Level {level} minute {m} interval (absolute, not x the asset's)");
+                    Assert.That(table[m].EliteBonus, Is.EqualTo(0f), $"Level {level} minute {m}: no elite bonus");
+                }
             }
         }
 
         [Test]
-        public void Stages_HaveDifferentShapes()
+        public void PastTheTable_TheLastMinuteHolds_ForLevelTensEndlessFight()
         {
-            var dips1 = Enumerable.Range(0, WaveTables.Minutes).Where(m => WaveTables.IsDip(1, m)).ToList();
-            var dips2 = Enumerable.Range(0, WaveTables.Minutes).Where(m => WaveTables.IsDip(2, m)).ToList();
-            Assert.That(dips1, Is.Not.EqualTo(dips2), "Quiet minutes fall at different times on different stages.");
-            for (int stage = 2; stage <= 10; stage++)
-            {
-                Assert.That(WaveTables.OpeningMinimum(stage), Is.GreaterThan(WaveTables.OpeningMinimum(stage - 1)));
-                Assert.That(WaveTables.PeakMinimum(stage), Is.GreaterThanOrEqualTo(WaveTables.PeakMinimum(stage - 1)));
-            }
+            // Level 10 has no time limit (owner's ending): VS stops at 29:00 (30:00+ is the Reaper, which Soul Hunter has
+            // not), so later minutes hold the 29:00 row (balance method).
+            Assert.That(WaveTables.VsMinimum(10, 45), Is.EqualTo(WaveTables.VsMinimum(10, 29)));
+            Assert.That(WaveTables.VsInterval(10, 45), Is.EqualTo(WaveTables.VsInterval(10, 29)));
         }
 
         [Test]

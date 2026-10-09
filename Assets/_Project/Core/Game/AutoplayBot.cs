@@ -1095,18 +1095,25 @@ namespace SoulHunter.Gameplay.Core
         /// Owner report 2026-09-30 ("kabhi bhi hang ho ja raha hai"): logs every frame longer than 0.25 s (not the
         /// screenshot frames) and any pause held for more than 20 s, with who holds it.
         /// </summary>
+        private int _lastGc0, _lastGc1, _lastGc2;
+
         private void WatchForHangs(float now)
         {
             float dt = Time.unscaledDeltaTime;
+            // Garbage collections since the last frame (a full collection of a large heap is a usual cause of a long frame).
+            int gc0 = System.GC.CollectionCount(0), gc1 = System.GC.CollectionCount(1), gc2 = System.GC.CollectionCount(2);
             if (dt > 0.25f && Time.frameCount > _shotFrame + 3 && Elapsed > 3f)
             {
                 var progression = LevelProgressionManager.Instance;
                 Event("hitch", string.Format(CultureInfo.InvariantCulture,
-                    "\"ms\": {0:0}, \"stageTime\": {1:0.0}, \"paused\": {2}, \"pausers\": \"{3}\", \"enemies\": {4}, \"gems\": {5}, \"level\": {6}",
+                    "\"ms\": {0:0}, \"stageTime\": {1:0.0}, \"paused\": {2}, \"pausers\": \"{3}\", \"enemies\": {4}, \"gems\": {5}, \"level\": {6}, \"gc\": [{7}, {8}, {9}], \"heapMb\": {10:0.0}, \"objects\": {11}",
                     dt * 1000f, progression != null ? progression.StageElapsedTime : 0f, GameTime.IsPaused ? "true" : "false",
                     GameTime.PauserNames(), EnemyController.ActiveEnemies.Count, XPGem.ActiveGems.Count,
-                    _experience != null ? _experience.CurrentLevel : 0));
+                    _experience != null ? _experience.CurrentLevel : 0,
+                    gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2, System.GC.GetTotalMemory(false) / 1048576f,
+                    FindObjectsByType<Transform>(FindObjectsSortMode.None).Length));
             }
+            _lastGc0 = gc0; _lastGc1 = gc1; _lastGc2 = gc2;
             if (!GameTime.IsPaused) { _pausedSince = -1f; _pauseReported = false; return; }
             if (_pausedSince < 0f) _pausedSince = now;
             if (!_pauseReported && now - _pausedSince > 20f)
@@ -1196,11 +1203,12 @@ namespace SoulHunter.Gameplay.Core
             var weapons = WeaponManager.Instance != null ? WeaponManager.Instance.GetActiveWeaponTypes().Select(t => $"\"{t}:{WeaponManager.Instance.GetWeaponLevel(t)}\"") : Enumerable.Empty<string>();
             var stats = RunStatsTracker.Instance;
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}]}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
-                GameTime.IsPaused ? "true" : "false", string.Join(", ", weapons), XPGem.ActiveGems.Count));
+                GameTime.IsPaused ? "true" : "false", string.Join(", ", weapons), XPGem.ActiveGems.Count,
+                System.GC.GetTotalMemory(false) / 1048576f, System.GC.CollectionCount(0), System.GC.CollectionCount(1), System.GC.CollectionCount(2)));
             File.WriteAllText(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
         }
 

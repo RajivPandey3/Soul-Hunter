@@ -44,6 +44,8 @@ namespace SoulHunter.Editor.Debugging
             double frameMs = 0;
             int frames = 0;
             var children = new List<int>();
+            // The slowest frames, each with its own marker totals: averages hide spikes (2026-10-09, 0.3-0.7 s hitches).
+            var slow = new List<(int frame, double ms, Dictionary<string, double> totals)>();
             var stack = new Stack<int>();
             for (int f = first; f <= last; f++)
             {
@@ -54,6 +56,7 @@ namespace SoulHunter.Editor.Debugging
                     frames++;
                     frameMs += view.frameTimeMs;
                     var seen = new HashSet<string>();
+                    var frameTotals = view.frameTimeMs >= 100f ? new Dictionary<string, double>() : null;
                     stack.Clear();
                     stack.Push(view.GetRootItemID());
                     while (stack.Count > 0)
@@ -67,11 +70,17 @@ namespace SoulHunter.Editor.Debugging
                             if (!byName.TryGetValue(name, out var t)) byName[name] = t = new Totals();
                             t.Self += view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnSelfTime);
                             // Total time counted once per name per frame, so nested repeats do not add up twice.
-                            if (seen.Add(name)) t.Total += view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnTotalTime);
+                            if (seen.Add(name))
+                            {
+                                float total = view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnTotalTime);
+                                t.Total += total;
+                                if (frameTotals != null) frameTotals[name] = total;
+                            }
                             t.Calls += view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnCalls);
                             stack.Push(child);
                         }
                     }
+                    if (frameTotals != null) slow.Add((f, view.frameTimeMs, frameTotals));
                 }
             }
             var sb = new StringBuilder();
@@ -85,6 +94,14 @@ namespace SoulHunter.Editor.Debugging
             sb.AppendLine("Top 60 by total time (ms per frame):");
             foreach (var kv in byName.OrderByDescending(k => k.Value.Total).Take(60))
                 sb.AppendLine($"  {kv.Value.Total / frames,8:F3}  {kv.Key}");
+            sb.AppendLine();
+            sb.AppendLine($"Slowest frames (100 ms or more: {slow.Count}); top markers by total time in each:");
+            foreach (var s in slow.OrderByDescending(x => x.ms).Take(8))
+            {
+                sb.AppendLine($"  frame {s.frame}: {s.ms:F1} ms");
+                foreach (var kv in s.totals.OrderByDescending(k => k.Value).Take(25))
+                    sb.AppendLine($"      {kv.Value,9:F2}  {kv.Key}");
+            }
             string output = Path.ChangeExtension(rawPath, ".summary.txt");
             File.WriteAllText(output, sb.ToString());
             Debug.Log($"[ProfileSummary] Wrote {output}");

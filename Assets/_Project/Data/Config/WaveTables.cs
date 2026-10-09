@@ -4,11 +4,11 @@ using UnityEngine;
 namespace SoulHunter.Gameplay.Data
 {
     /// <summary>
-    /// Soul Hunter's per-stage VS minute tables (Part 3 of the owner-approved crowd plan, 2026-09-26). VS gives every
-    /// minute its own minimum and interval, rising and falling (vampire.survivors.wiki, Mad Forest: 15, 30, 50, 40 ...,
-    /// then 10 at 5:00 with tougher enemies). Each stage here gets its own curve: its own opening crowd, peak, minute-to-
-    /// minute swell, and "dip" minutes with few enemies but many elites, at stage-specific times. All numbers are
-    /// provisional balance; the builder writes them into each stage's WaveData.
+    /// Soul Hunter's per-stage VS minute tables. VS gives every minute its own minimum and interval (vampire.survivors.wiki,
+    /// Enemies, "Waves"). Every level plays its VS source stage's table (owner, 2026-10-09, release item P2-02): L1 Mad
+    /// Forest, L2 Inlaid Library, L3 Dairy Plant, L4 Gallo Tower, L5 Abyss Foscari, L6 Mt.Moonspell, L7 Lake Foscari,
+    /// L8-L10 Cappella Magna (StageEnemyTables). The builder writes them into each stage's WaveData. Before 2026-10-09 Levels
+    /// 2-10 ran Soul Hunter's provisional curve (a rising minimum with quiet "dip" minutes and an elite bonus).
     /// </summary>
     public static class WaveTables
     {
@@ -34,9 +34,6 @@ namespace SoulHunter.Gameplay.Data
         /// </summary>
         public const int Minutes = 30;
 
-        /// <summary>Minutes of the stage's own rising curve (0-24); minutes 25-29 hold its peak.</summary>
-        private const int CurveMinutes = 25;
-
         /// <summary>
         /// Stage 1 plays VS's Mad Forest (the stage-bonus and light-source mapping use it too). vampire.survivors.wiki/w/
         /// Mad_Forest, "Waves": enemy minimum and spawn interval (seconds) for 0:00-29:00.
@@ -46,16 +43,21 @@ namespace SoulHunter.Gameplay.Data
         public static readonly float[] MadForestInterval =
             { 1f, 1f, 0.5f, 0.25f, 1f, 1f, 0.5f, 0.5f, 1.5f, 0.5f, 0.5f, 0.1f, 0.25f, 0.5f, 0.1f, 0.1f, 0.1f, 1f, 0.5f, 0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
 
-        // Stage 1 follows VS's Mad Forest opening closely (15 at 0:00, about 30 at 1:00, 50 by 2:00-3:00, about 100
-        // around 8:00-12:00); later stages open bigger and peak higher, below the 300-enemy cap.
-        public static int OpeningMinimum(int stage) => 15 + 5 * (Mathf.Clamp(stage, 1, 10) - 1);
-        // VS (Mad Forest wave table): the enemy minimum reaches the 300 cap on the first stage already (11:00, 21-24,
-        // 27-29). Balance pass 2026-09-28: every stage peaks at 300; later stages are harder through enemy health,
-        // speed and damage. (It was 150 + 16 per stage, 166 on Stage 1: a 30-minute bot run was hurt 5 times.)
-        public static int PeakMinimum(int stage) => 300;
+        /// <summary>The VS minimum of a stage's minute (0-29; later minutes hold minute 29, as Level 10 has no time limit).</summary>
+        public static int VsMinimum(int stage, int minute)
+        {
+            minute = Mathf.Clamp(minute, 0, Minutes - 1);
+            stage = Mathf.Clamp(stage, 1, 10);
+            return stage == 1 ? MadForestMinimum[minute] : StageEnemyTables.For(stage).Minimum[minute];
+        }
 
-        /// <summary>Dip minutes: every fifth minute, shifted per stage, never the opening minute.</summary>
-        public static bool IsDip(int stage, int minute) => minute > 0 && (minute + Mathf.Clamp(stage, 1, 10)) % 5 == 0;
+        /// <summary>The VS spawn interval (seconds) of a stage's minute.</summary>
+        public static float VsInterval(int stage, int minute)
+        {
+            minute = Mathf.Clamp(minute, 0, Minutes - 1);
+            stage = Mathf.Clamp(stage, 1, 10);
+            return stage == 1 ? MadForestInterval[minute] : StageEnemyTables.For(stage).Interval[minute];
+        }
 
         // ---------------------------------------------------------------- Part 4: stage patterns
         // Owner-approved table (2026-09-26): L1 all sides, swarms; L2 all sides, closing rings; L3 all sides (houses
@@ -157,11 +159,16 @@ namespace SoulHunter.Gameplay.Data
         /// Assets/Prefabs/Enemies/Gameplay/SH10_Lxx_EnemyGameplay.prefab), list it here, run Build Wave Tables.
         /// </summary>
         public static readonly Dictionary<int, List<(int fromMinute, string[] prefabPaths)>> EnemyTypesByStage =
-            new Dictionary<int, List<(int, string[])>>
-            {
-                // Level 1: the VS Mad Forest enemies minute by minute (owner, 2026-10-03; MadForestEnemies).
-                [1] = MadForestEnemies.StageOneRows()
-            };
+            BuildEnemyTypes();
+
+        private static Dictionary<int, List<(int, string[])>> BuildEnemyTypes()
+        {
+            // Level 1: the VS Mad Forest enemies minute by minute (owner, 2026-10-03; MadForestEnemies).
+            var types = new Dictionary<int, List<(int, string[])>> { [1] = MadForestEnemies.StageOneRows() };
+            // Levels 2-10: their VS source stage's enemies (owner, 2026-10-09; StageEnemyTables).
+            foreach (var table in StageEnemyTables.All) types[table.Level] = table.Rows();
+            return types;
+        }
 
         /// <summary>The enemy type prefab paths of a stage's minute (empty: the stage's own enemy).</summary>
         public static string[] EnemyTypePaths(int stage, int minute)
@@ -173,41 +180,16 @@ namespace SoulHunter.Gameplay.Data
             return paths;
         }
 
+        /// <summary>
+        /// A stage's 30 minute rows: the VS minimum and interval (seconds) of its source stage, with no elite bonus (not a VS
+        /// wave field). baseInterval (the WaveData's own interval) is no longer used: the VS intervals are absolute.
+        /// </summary>
         public static List<MinuteWave> Build(int stage, float baseInterval)
         {
             stage = Mathf.Clamp(stage, 1, 10);
             var table = new List<MinuteWave>();
-            if (stage == 1)
-            {
-                // VS Mad Forest, minute by minute (no elite bonus: that is not a VS wave field).
-                for (int m = 0; m < Minutes; m++)
-                    table.Add(new MinuteWave { Minute = m, Minimum = MadForestMinimum[m], Interval = MadForestInterval[m], EliteBonus = 0f });
-                return table;
-            }
-            int opening = OpeningMinimum(stage), peak = PeakMinimum(stage);
             for (int m = 0; m < Minutes; m++)
-            {
-                // Minutes 25-29 stay at the curve's end (its peak), never on a quiet minute.
-                bool tail = m >= CurveMinutes;
-                float t = Mathf.Min(m, CurveMinutes - 1) / (float)(CurveMinutes - 1);
-                float target = opening + (peak - opening) * Mathf.Pow(t, 0.6f); // a fast VS-like build-up, then a slower climb
-                target *= 1f + 0.12f * Mathf.Sin(0.9f * m + stage);         // the swell differs per stage
-                float interval = baseInterval * Mathf.Lerp(1f, 0.4f, t);
-                float elite = 0f;
-                if (!tail && IsDip(stage, m))
-                {
-                    target = Mathf.Max(8f, target * 0.3f);                  // few enemies ...
-                    interval *= 1.5f;
-                    elite = Mathf.Min(0.6f, 0.3f + 0.02f * stage);         // ... but tough ones
-                }
-                table.Add(new MinuteWave
-                {
-                    Minute = m,
-                    Minimum = Mathf.RoundToInt(target),
-                    Interval = Mathf.Max(0.1f, (float)System.Math.Round(interval, 3)),
-                    EliteBonus = (float)System.Math.Round(elite, 3),
-                });
-            }
+                table.Add(new MinuteWave { Minute = m, Minimum = VsMinimum(stage, m), Interval = VsInterval(stage, m), EliteBonus = 0f });
             return table;
         }
     }

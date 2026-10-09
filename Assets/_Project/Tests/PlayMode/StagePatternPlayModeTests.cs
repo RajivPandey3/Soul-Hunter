@@ -111,7 +111,7 @@ namespace SoulHunter.Tests.PlayMode
             for (int i = 0; i < 3; i++) yield return new WaitForFixedUpdate();
             var member = members.First(m => m != null && m.isActiveAndEnabled);
             float flight = member.Rigidbody.linearVelocity.magnitude;
-            Assert.That(member.CampaignSpeedMultiplier, Is.LessThan(1f), "The swamp horde is slow.");
+            Assert.That(member.CampaignSpeedMultiplier, Is.LessThan(1f), "The swamp horde is slow (owner-approved pace).");
             Assert.That(flight, Is.GreaterThan(member.MoveSpeed * EnemyFlyState.SpeedMultiplier * 1.5f),
                 $"Swamp swarms fly fast ({flight:0.0} vs walk {member.MoveSpeed:0.0}).");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));

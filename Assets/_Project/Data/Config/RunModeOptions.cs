@@ -2,8 +2,11 @@ using SoulHunter.Core.Persistence;
 
 namespace SoulHunter.Gameplay.Data
 {
-    /// <summary>The six VS run modes the character select screen offers.</summary>
-    public enum RunMode { Hurry, Hyper, Inverse, Endless, Arcana, LimitBreak }
+    /// <summary>
+    /// The VS run modes the character select screen offers: the six modes, then the two VS Randomizers (release item
+    /// P3-05, owner 2026-10-09: unlocked from the start like the others). New values go at the end.
+    /// </summary>
+    public enum RunMode { Hurry, Hyper, Inverse, Endless, Arcana, LimitBreak, RandomEvents, RandomLevelUp }
 
     /// <summary>
     /// Learning Comment: bridge between the saved mode toggles (GameData, Foundation) and the run's RunModes flags
@@ -14,9 +17,23 @@ namespace SoulHunter.Gameplay.Data
     public static class RunModeOptions
     {
         public static readonly RunMode[] All =
-            { RunMode.Hurry, RunMode.Hyper, RunMode.Inverse, RunMode.Endless, RunMode.Arcana, RunMode.LimitBreak };
+            { RunMode.Hurry, RunMode.Hyper, RunMode.Inverse, RunMode.Endless, RunMode.Arcana, RunMode.LimitBreak,
+              RunMode.RandomEvents, RunMode.RandomLevelUp };
 
-        public static string Name(RunMode mode) => mode == RunMode.LimitBreak ? "Limit Break" : mode.ToString();
+        /// <summary>
+        /// The names the screens show. The two Randomizers get Soul Hunter's own names (no VS names for new things):
+        /// Omens (VS Random Events) and Blind Fate (VS Random LevelUp).
+        /// </summary>
+        public static string Name(RunMode mode)
+        {
+            switch (mode)
+            {
+                case RunMode.LimitBreak: return "Limit Break";
+                case RunMode.RandomEvents: return "Omens";
+                case RunMode.RandomLevelUp: return "Blind Fate";
+            }
+            return mode.ToString();
+        }
 
         public static string Description(RunMode mode)
         {
@@ -28,6 +45,8 @@ namespace SoulHunter.Gameplay.Data
                 case RunMode.Endless: return "Endless: clearing Level 10 starts the story again at Level 1, and each cycle the horde grows stronger.";
                 case RunMode.Arcana: return "Arcana: start with an Arcana card; Arcana chests come at 11:00 and 21:00.";
                 case RunMode.LimitBreak: return "Limit Break: once everything is maxed, level-ups keep strengthening your weapons.";
+                case RunMode.RandomEvents: return "Omens: at every half minute a wheel picks an event, and it happens on the next full minute.";
+                case RunMode.RandomLevelUp: return "Blind Fate: every level-up picks for you at random. You can switch it in the pause menu.";
             }
             return "";
         }
@@ -43,6 +62,8 @@ namespace SoulHunter.Gameplay.Data
                 case RunMode.Endless: return data.ModeEndless;
                 case RunMode.Arcana: return data.ModeArcana;
                 case RunMode.LimitBreak: return data.ModeLimitBreak;
+                case RunMode.RandomEvents: return data.ModeRandomEvents;
+                case RunMode.RandomLevelUp: return data.ModeRandomLevelUp;
             }
             return false;
         }
@@ -58,6 +79,8 @@ namespace SoulHunter.Gameplay.Data
                 case RunMode.Endless: data.ModeEndless = on; break;
                 case RunMode.Arcana: data.ModeArcana = on; break;
                 case RunMode.LimitBreak: data.ModeLimitBreak = on; break;
+                case RunMode.RandomEvents: data.ModeRandomEvents = on; break;
+                case RunMode.RandomLevelUp: data.ModeRandomLevelUp = on; break;
             }
         }
 
@@ -72,6 +95,8 @@ namespace SoulHunter.Gameplay.Data
                 case RunMode.Endless: return RunModes.Endless;
                 case RunMode.Arcana: return RunModes.Arcana;
                 case RunMode.LimitBreak: return RunModes.LimitBreak;
+                case RunMode.RandomEvents: return RunModes.RandomEvents;
+                case RunMode.RandomLevelUp: return RunModes.RandomLevelUp;
             }
             return false;
         }
@@ -87,6 +112,8 @@ namespace SoulHunter.Gameplay.Data
             RunModes.Endless = data.ModeEndless;
             RunModes.Arcana = data.ModeArcana;
             RunModes.LimitBreak = data.ModeLimitBreak;
+            RunModes.RandomEvents = data.ModeRandomEvents;
+            RunModes.RandomLevelUp = data.ModeRandomLevelUp;
         }
     }
 }

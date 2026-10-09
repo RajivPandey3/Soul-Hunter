@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7ea9dafbc0c2c145b6022abe980dc8a, type: 3}
+  m_Name: L04_GateSorcerer_Data
+  m_EditorClassIdentifier: 
+  EnemyName: Gate Sorcerer
+  VisualTint: {r: 0.8372001, g: 0.50600004, b: 0.92, a: 1}
+  MaxHealth: 220
+  MoveSpeed: 3.8999999
+  DamageToPlayer: 14
+  Knockback: 0
+  MaxKnockback: 0
+  Movement: 0
+  FloatyWeave: 0.7
+  FloatyPeriodSeconds: 1.8
+  DropChanceGem: 95
+  DropChanceChicken: 5
+  DropChanceGold: 2
+  GoldValue: 1
+  ExperienceValue: 30
+  DropsChest: 0
+  HealthPerPlayerLevel: 0
+  HealthPerPlayerLevelFraction: 0
+  Lives: 1
+  FreezeResistance: 0
+  InstantKillResistance: 0
+  DebuffResistance: 0
+  DefangResistance: 0
+  Abilities:
+  - Kind: 1
+    IntervalSeconds: 2
+    MaxIntervalSeconds: 0
+    FirstDelaySeconds: 0
+    ShrinkIntervalWithHealth: 0
+    MinIntervalSeconds: 0
+    Count: 1
+    SpawnBursts: 0
+    MaxAlive: 0
+    Prefab: {fileID: 0}
+    Speed: 7.5
+    SpreadDegrees: 0
+    SpeedMultiplier: 0
+    Damage: 25
+    Radius: 0
+    DurationSeconds: 0
+    TickSeconds: 0
+    PlacementSpread: 0
+    ArmDistance: 0
+    FuseSeconds: 0
+    DiscardAbsorbedDamage: 0

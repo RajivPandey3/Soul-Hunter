@@ -43,7 +43,7 @@ namespace SoulHunter.Tests.EditMode
                 var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
                 string file = System.IO.Path.GetFileName(path);
                 // Level 1's VS Mad Forest types carry each wiki statbox's own knockback (MadForestEnemyTests).
-                if (path.Contains("/MadForest/")) continue;
+                if (path.Contains("/MadForest/") || StageEnemyTables.IsTypeAsset(path)) continue; // and Levels 2-10's (StageEnemyTypeTests)
                 float expected = file.Contains("_Boss_") ? 0f : file.Contains("_Elite_") ? 0.5f
                                : file.StartsWith("L07") ? 0f : 1f;
                 Assert.That(data.Knockback, Is.EqualTo(expected).Within(1e-5), file);

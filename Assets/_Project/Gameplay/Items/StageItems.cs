@@ -145,7 +145,9 @@ namespace SoulHunter.Gameplay.Pickups
             var pool = PickupPoolManager.Instance;
             foreach (var entry in StageItems.Plan(stage))
             {
-                Vector3 spot = GroundCheck.NearestOpen(origin + CorridorOffset(entry.Offset), 0.9f);
+                // VS Inverse (wiki Stages): "On certain stages, stage items may be placed differently due to the inverted
+                // layout": with the inverted layout on, every planned spot is turned 180 degrees about the start (InverseMap).
+                Vector3 spot = GroundCheck.NearestOpen(origin + CorridorOffset(SoulHunter.Gameplay.Data.InverseMap.Layout(entry.Offset)), 0.9f);
                 spot.y = origin.y;
                 GameObject item = null;
                 switch (entry.Kind)
@@ -177,7 +179,7 @@ namespace SoulHunter.Gameplay.Pickups
                 Vector3 offset = SoulHunter.Gameplay.Data.StageCorridor.Active
                     ? new Vector3((i < 2 ? 1f : -1f) * (i % 2 == 0 ? StageItems.PlateDistance : StageItems.PlateDistance * 1.4f), 0f, 0f)
                     : plateOffsets[i];
-                Vector3 spot = GroundCheck.NearestOpen(origin + offset, 1.4f);
+                Vector3 spot = GroundCheck.NearestOpen(origin + SoulHunter.Gameplay.Data.InverseMap.Layout(offset), 1.4f);
                 spot.y = origin.y;
                 var plate = Instantiate(catalog.RunePlate, spot, Quaternion.Euler(0f, 22.5f, 0f)).GetComponent<PressurePlate>();
                 if (plate != null) _plates.Add(plate);

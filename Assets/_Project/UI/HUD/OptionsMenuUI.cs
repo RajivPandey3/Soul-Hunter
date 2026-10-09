@@ -16,8 +16,8 @@ namespace SoulHunter.Gameplay.UI
     /// opened from the main menu and the pause menu. Favorites: copies of Sounds, Music, Damage Numbers and Flashing VFX
     /// (VS: "a copy of some commonly changed options from other sections"; they change the same settings). Display: Window
     /// Mode, Resolution, Screen Refresh Rate (PC, Exclusive Fullscreen only), V-Sync, Flashing VFX, Disable Blood, Screen
-    /// Shake, Show Defanged Enemies. Sound: Sounds, Music. Gameplay: Damage Numbers, Show Stage Progression, Visible
-    /// Joystick, Joystick Type, Pause When Unfocused. Controls (Soul Hunter's own): keyboard and controller remapping.
+    /// Shake, Show Defanged Enemies. Sound: Sounds, Music. Gameplay: Damage Numbers, Show Stage Progression, Visually
+    /// Invert Stages, Visible Joystick, Joystick Type, Pause When Unfocused. Controls (Soul Hunter's own): keyboard and controller remapping.
     /// Fully usable with keyboard or controller; Esc / B closes it.
     /// Changes apply at once and are saved when the screen closes. Built at runtime on its own overlay canvas.
     /// </summary>
@@ -165,6 +165,9 @@ namespace SoulHunter.Gameplay.UI
             y = 1f;
             AddToggle(gameplay, ref y, row, "Damage Numbers", () => GameSettings.DamageNumbers, v => { if (data != null) data.DamageNumbers = v; });
             AddToggle(gameplay, ref y, row, "Show Stage Progression", () => GameSettings.ShowStageProgression, v => { if (data != null) data.ShowStageProgression = v; });
+            // VS Gameplay (wiki Options): "Visually Invert Stages", listed right after "Show stage progression". It turns the
+            // Inverse look (InverseMap: the turned layout and the darker hue) on or off; the Inverse numbers stay either way.
+            AddToggle(gameplay, ref y, row, "Visually Invert Stages", () => GameSettings.VisuallyInvertStages, v => { if (data != null) data.VisuallyInvertStages = v; });
             AddToggle(gameplay, ref y, row, "Visible Joystick", () => GameSettings.VisibleJoystick, v => { if (data != null) data.VisibleJoystick = v; });
             // VS Gameplay: "Joystick Type" (Legacy, Default), right after the touch screen control stick (TouchControlsUI).
             AddCycle(gameplay, ref y, row, "Joystick Type", () => GameSettings.JoystickType, () => GameSettings.JoystickTypeNames.Length,

@@ -226,6 +226,23 @@ namespace SoulHunter.Gameplay.Core
         return;
     }
 
+    // VS Random LevelUp (Soul Hunter: Blind Fate, release item P3-05): "removes the player's ability to manually select
+    // items during level-ups. Instead, the game automatically designates a random weapon or passive item to be added or
+    // upgraded ... If Limit Break is also enabled, Random LevelUp will continue to apply its effects to it as well" (wiki
+    // Stages); "each level up randomly chooses an option for the player" (wiki Level_up). No screen opens and the game
+    // never pauses.
+    if (SoulHunter.Gameplay.Data.RunModes.RandomLevelUp)
+    {
+        var pick = RandomPick(choices, Random.value);
+        if (pick != null)
+        {
+            Debug.Log($"[LevelUpManager] Blind Fate picked {pick.UpgradeName}.");
+            OnRandomPick?.Invoke(pick);
+            SelectUpgrade(pick); // the 240 ms after-pick invulnerability still comes from ResumeGameplay
+            return;
+        }
+    }
+
     Debug.Log("[LevelUpManager] >>> Valid choices found:");
 
     for (int i = 0; i < choices.Count; i++)
@@ -269,6 +286,26 @@ namespace SoulHunter.Gameplay.Core
             
             Debug.Log($"[LevelUpManager] Acquired Upgrade: {upgrade.UpgradeName}");
             CompleteCurrentLevelUp();
+        }
+
+        /// <summary>A Blind Fate (VS Random LevelUp) pick, raised before it is applied (the HUD shows its icon over the hero).</summary>
+        public event System.Action<UpgradeData> OnRandomPick;
+
+        /// <summary>
+        /// The Blind Fate pick among a level-up's choices. The wiki does not say how the random item is weighted; the choices
+        /// are already drawn with the VS rarity weights and owned-item checks (DrawChoices), so one of them is taken with equal
+        /// chance, and the pick follows the same odds as the cards a player would see (balance method, 2026-10-09).
+        /// Maxed-out levels: the wiki is silent; Gold Pouch and Roast Chicken are equally likely, and the "Always ..." cards are
+        /// never picked, because a random pick must not lock a run-long choice the player never made (balance method).
+        /// Reroll, Skip and Banish are not used: no screen opens, so nothing is spent and the charges stay for later.
+        /// </summary>
+        public static UpgradeData RandomPick(List<UpgradeData> choices, float roll01)
+        {
+            if (choices == null) return null;
+            var pool = choices.Where(c => c != null && !(MaxedRewards.TryGetKind(c, out var kind)
+                                                          && (kind == MaxedRewards.Kind.AlwaysGold || kind == MaxedRewards.Kind.AlwaysChicken))).ToList();
+            if (pool.Count == 0) return null;
+            return pool[Mathf.Clamp(Mathf.FloorToInt(Mathf.Clamp01(roll01) * pool.Count), 0, pool.Count - 1)];
         }
 
         /// <summary>The choices on screen now (null between level-ups).</summary>

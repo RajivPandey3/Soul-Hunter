@@ -98,11 +98,19 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(Near(SpawnSide.AllSides, Vector3.right), Is.InRange(0.4f, 0.6f), "All sides: no bias.");
         }
 
+        /// <summary>
+        /// Pace stays the owner-approved stage table (crowd plan Part 4: slow, heavy swamp 0.9; fast peaks 1.45); the owner
+        /// chose "VS waves + own rules" (2026-10-09). The VS minute intervals are used as they are (multiplier 1, P2-02).
+        /// </summary>
         [Test]
-        public void Pace_SwampIsSlowAndHeavy_FrozenPeaksIsFast()
+        public void Pace_IsTheApprovedStageTable_AndIntervalsAreVs()
         {
-            Assert.That(CampaignLevelCatalog.Get(5).EnemySpeedMultiplier, Is.LessThan(CampaignLevelCatalog.Get(1).EnemySpeedMultiplier));
-            Assert.That(CampaignLevelCatalog.Get(6).EnemySpeedMultiplier, Is.GreaterThan(CampaignLevelCatalog.Get(5).EnemySpeedMultiplier + 0.4f));
+            float[] vs = { 1f, 1.10f, 1.15f, 1.20f, 0.90f, 1.45f, 1.30f, 1.40f, 1.50f, 1.60f };
+            for (int level = 1; level <= 10; level++)
+            {
+                Assert.That(CampaignLevelCatalog.Get(level).EnemySpeedMultiplier, Is.EqualTo(vs[level - 1]).Within(1e-5f), $"Level {level} pace");
+                Assert.That(CampaignLevelCatalog.Get(level).SpawnIntervalMultiplier, Is.EqualTo(1f).Within(1e-5f), $"Level {level} interval");
+            }
         }
     }
 }

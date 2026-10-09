@@ -51,7 +51,9 @@ namespace SoulHunter.Gameplay.Data
 
         /// <summary>VS "HP": its health, or the VS "HP x Level" skill (health = this x the player's level).</summary>
         public static string Health(EnemyData enemy) =>
-            enemy.HealthPerPlayerLevel > 0 ? $"{enemy.HealthPerPlayerLevel} x player level" : enemy.MaxHealth.ToString();
+            enemy.HealthPerPlayerLevel > 0
+                ? $"{(enemy.HealthPerPlayerLevel + enemy.HealthPerPlayerLevelFraction).ToString(System.Globalization.CultureInfo.InvariantCulture)} x player level"
+                : enemy.MaxHealth.ToString();
 
         /// <summary>VS "Power": the damage it deals to the player.</summary>
         public static string Power(EnemyData enemy) => enemy.DamageToPlayer.ToString();
@@ -66,6 +68,7 @@ namespace SoulHunter.Gameplay.Data
             if (enemy.FreezeResistance > 0f) list.Add($"Freeze {enemy.FreezeResistance:0.#}");
             if (enemy.InstantKillResistance) list.Add("Instant kill");
             if (enemy.DebuffResistance) list.Add("Debuffs");
+            if (enemy.DefangResistance) list.Add("Defang");
             if (enemy.Knockback <= 0f) list.Add("Knockback");
             return list.Count > 0 ? string.Join(", ", list) : "None";
         }
@@ -75,7 +78,9 @@ namespace SoulHunter.Gameplay.Data
             var list = new List<string>();
             if (enemy.Movement == EnemyMovement.Floaty) list.Add("Floaty");
             else if (enemy.Movement == EnemyMovement.FixedDirection) list.Add("Fixed direction");
+            else if (enemy.Movement == EnemyMovement.FloatyFixedDirection) { list.Add("Floaty"); list.Add("Fixed direction"); }
             if (enemy.HealthPerPlayerLevel > 0) list.Add("HP x Level");
+            if (enemy.Lives > 1) list.Add($"{enemy.Lives} lives");
             if (enemy.Abilities != null)
                 foreach (var ability in enemy.Abilities)
                     if (ability != null) list.Add(Spaced(ability.Kind.ToString()));

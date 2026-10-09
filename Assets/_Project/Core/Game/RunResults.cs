@@ -168,6 +168,8 @@ namespace SoulHunter.Gameplay.Core
             if (RunModes.Endless) modes.Add(RunModes.EndlessCycle > 0 ? $"Endless (cycle {RunModes.EndlessCycle + 1})" : "Endless");
             if (RunModes.Arcana) modes.Add("Arcana");
             if (RunModes.LimitBreak) modes.Add("Limit Break");
+            if (RunModes.RandomEvents) modes.Add(RunModeOptions.Name(RunMode.RandomEvents));
+            if (RunModes.RandomLevelUp) modes.Add(RunModeOptions.Name(RunMode.RandomLevelUp));
             return modes.Count == 0 ? "Normal" : string.Join(", ", modes);
         }
     }

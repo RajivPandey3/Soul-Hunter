@@ -106,7 +106,7 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void EveryMode_HasANameAndADescription()
         {
-            Assert.That(RunModeOptions.All.Length, Is.EqualTo(6));
+            Assert.That(RunModeOptions.All.Length, Is.EqualTo(8)); // six modes and the two Randomizers (P3-05)
             foreach (var mode in RunModeOptions.All)
             {
                 Assert.That(RunModeOptions.Name(mode), Is.Not.Empty);

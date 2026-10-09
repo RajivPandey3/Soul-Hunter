@@ -42,6 +42,8 @@ namespace SoulHunter.Tests.EditMode
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
                 string file = System.IO.Path.GetFileName(path);
+                // Levels 2-10's VS wave types carry their statbox movement, Floaty on Levels 2 and 7 (StageEnemyTypeTests).
+                if (StageEnemyTables.IsTypeAsset(path)) continue;
                 bool floaty = file == "L02_DarkForest_Enemy_Data.asset" || file == "L07_SeaofLostSouls_Enemy_Data.asset";
                 Assert.That(data.Movement, Is.EqualTo(floaty ? EnemyMovement.Floaty : EnemyMovement.Homing), file);
             }

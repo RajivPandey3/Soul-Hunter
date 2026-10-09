@@ -229,10 +229,15 @@ namespace SoulHunter.Gameplay.AI
                     }
                     else
                         for (int i = 0; i < spawnCount; i++) GivePendingChest(Defang(SpawnEnemy(PickSwarmPrefab(level, phase))));
-                    float pressure = Mathf.Max(0.25f, level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier);
+                    float pressure = level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier;
+                    // A VS minute table's interval is used as the wiki gives it (Mad Forest 0.1 s, Cappella Magna 0.02 s at
+                    // 21:00 and 26:00). The old 0.25 floor on this factor turned every interval under a quarter of the
+                    // wave's SpawnInterval into that quarter (Level 1's 0.1 s ticks ran at 0.25 s). It stays for the
+                    // automatic phases of a wave without a table. (P2-02, 2026-10-09.)
+                    if (!_currentWave.HasMinuteTable) pressure = Mathf.Max(0.25f, pressure);
                     // VS rule: Curse makes enemies arrive more often, and so does each Endless cycle. Hyper does not:
                     // the wiki gives Hyper only the enemy minimum x1.25 (stage infoboxes, enemy-min2).
-                    _timer = Mathf.Max(0.05f, _currentWave.SpawnInterval * pressure / (MinuteCurse() * RunModes.FrequencyMultiplier));
+                    _timer = Mathf.Max(0.02f, _currentWave.SpawnInterval * pressure / (MinuteCurse() * RunModes.FrequencyMultiplier));
                 }
 
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
@@ -538,6 +543,8 @@ namespace SoulHunter.Gameplay.AI
                 if (data != null) health.Initialize(ScaleHealthByCurse(ModeHealth(data.HealthPerPlayerLevel > 0
                     ? data.HealthForPlayerLevel(CurrentPlayerLevel()) : data.MaxHealth), curse));
                 else health.ResetHealth();
+                // VS lives (wiki Scarleton, "Has 3 lives"): the type resurrects until its lives run out (EnemyLives).
+                if (data != null && data.Lives > 1) EnemyLives.Arm(enemyToSpawn, data.Lives);
             }
             return enemyToSpawn;
         }
@@ -595,6 +602,8 @@ namespace SoulHunter.Gameplay.AI
             if (controller == null) return enemy;
             CurrentCurse(); // resolves _playerStats
             float chance = _playerStats != null ? _playerStats.Defang : 0f;
+            // VS statboxes' res-defang (e.g. Trinacria "res-defang = 1"): such an enemy is never defanged.
+            if (controller.Data != null && controller.Data.DefangResistance) chance = 0f;
             controller.SetDefanged(chance > 0f && Random.value < chance);
             return enemy;
         }
@@ -622,6 +631,9 @@ namespace SoulHunter.Gameplay.AI
             if (EnemyDrop.PendingChests.Count == 0 || enemy == null) return;
             var drop = enemy.GetComponent<EnemyDrop>();
             if (drop == null || drop.WillDropChest) return;
+            // VS Scarleton: "It cannot drop a Treasure Chest." A type with lives passes the chest to the next enemy.
+            var typeController = enemy.GetComponent<EnemyController>();
+            if (typeController != null && typeController.Data != null && typeController.Data.Lives > 1) return;
             var tiers = EnemyDrop.PendingChests.Dequeue();
             drop.DropChestThisLife(tiers);
             if (tiers.IsArcana) drop.CarryArcanaThisLife();

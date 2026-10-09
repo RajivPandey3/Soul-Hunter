@@ -43,6 +43,13 @@ namespace SoulHunter.Gameplay.UI
             var storyCard = GetComponent<StoryCardUI>();
             if (storyCard == null) storyCard = gameObject.AddComponent<StoryCardUI>();
             storyCard.Setup();
+            // VS Randomizers (P3-05): the Omens wheel (bottom right, mode on only) and the Blind Fate pick over the hero.
+            var omens = GetComponent<OmenRouletteUI>();
+            if (omens == null) omens = gameObject.AddComponent<OmenRouletteUI>();
+            omens.Setup();
+            var blindFate = GetComponent<BlindFatePopup>();
+            if (blindFate == null) blindFate = gameObject.AddComponent<BlindFatePopup>();
+            blindFate.Setup();
             // VS Revival: a death with a Revival left shows the Revive button (P1-16).
             if (SoulHunter.Gameplay.Player.PlayerController.Instance != null && GetComponentInChildren<ReviveScreen>(true) == null)
                 ReviveScreen.Attach(SoulHunter.Gameplay.Player.PlayerController.Instance, transform);

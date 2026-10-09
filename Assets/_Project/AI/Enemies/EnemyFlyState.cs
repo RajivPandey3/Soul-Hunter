@@ -50,7 +50,15 @@ namespace SoulHunter.Gameplay.AI
         public void UpdatePhysics(ref SoulHunter.Gameplay.Physics.EnvironmentData envData)
         {
             // Seedha fly karo (player ko ignore), ground plane par hi.
-            var velocity = _flyDirection * (_controller.MoveSpeed * _speedMultiplier);
+            // VS "[[Floaty]], [[Fixed Direction]]" (Sneaky Heads): keep the line, weave along it.
+            Vector3 direction = _flyDirection;
+            if (_controller.Movement == SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection)
+            {
+                var data = _controller.Data;
+                direction = EnemyChaseState.FloatyDirection(direction, data != null ? data.FloatyWeave : 0.7f,
+                    data != null ? data.FloatyPeriodSeconds : 1.8f, Time.time, _controller.FloatyPhase);
+            }
+            var velocity = direction * (_controller.MoveSpeed * _speedMultiplier);
             velocity.y = _controller.Rigidbody.linearVelocity.y;
             _controller.Rigidbody.linearVelocity = velocity;
 

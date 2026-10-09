@@ -35,6 +35,8 @@ namespace SoulHunter.Core.Persistence
         public static bool VisibleJoystick => Data != null && Data.VisibleJoystick;
         public static bool PauseOnFocusLoss => Data == null || Data.PauseOnFocusLoss;
         public static bool ShowDefangedEnemies => Data == null || Data.ShowDefangedEnemies;
+        /// <summary>VS Options, Gameplay: "Visually Invert Stages" (the Inverse look; on without a save).</summary>
+        public static bool VisuallyInvertStages => Data == null || Data.VisuallyInvertStages;
         /// <summary>VS Screen Refresh Rate in whole hertz; 0 = Default (the display picks).</summary>
         public static int RefreshRateHz => Data != null && Data.RefreshRateHz > 0 ? Data.RefreshRateHz : 0;
         /// <summary>VS Joystick Type values, in the wiki's order.</summary>

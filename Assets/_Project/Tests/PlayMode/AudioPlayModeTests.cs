@@ -36,6 +36,23 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator EveryEffect_IsLoaded_BeforeItFirstPlays()
+        {
+            // 2026-10-09: effects were read from disk on their first play (263 ms on the chest jingle in a late-run profile).
+            yield return BootIntoGameplay();
+            var audio = AudioManager.Instance;
+            Assert.That(audio, Is.Not.Null);
+            var notLoaded = new System.Collections.Generic.List<string>();
+            foreach (var field in typeof(AudioManager).GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
+            {
+                if (field.FieldType != typeof(AudioClip) || field.Name == nameof(AudioManager.MenuMusic)) continue;
+                var clip = field.GetValue(audio) as AudioClip;
+                if (clip != null && clip.loadState != AudioDataLoadState.Loaded) notLoaded.Add($"{field.Name} ({clip.loadState})");
+            }
+            Assert.That(notLoaded, Is.Empty, "Effects still to be read from disk: " + string.Join(", ", notLoaded));
+        }
+
+        [UnityTest]
         public IEnumerator Menu_PlaysMenuMusic_AndEverySoundIsAudible()
         {
             AudioManager.EnsureInstance(); // earlier tests destroy DontDestroyOnLoad objects; the game creates it once at startup

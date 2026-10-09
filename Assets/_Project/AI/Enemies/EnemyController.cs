@@ -370,7 +370,9 @@ namespace SoulHunter.Gameplay.AI
         public void BeginMovement()
         {
             FloatyPhase = Random.value * Mathf.PI * 2f;
-            if (Movement != SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection || Target == null) return;
+            bool fixedCourse = Movement == SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection ||
+                               Movement == SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection;
+            if (!fixedCourse || Target == null) return;
             Vector3 toTarget = Target.position - transform.position;
             toTarget.y = 0f;
             // Long enough to cross the whole spawn ring and leave on the far side.

@@ -78,6 +78,13 @@ namespace SoulHunter.UI
         private CharacterSort _sort = CharacterSort.Default;
         private bool _sortDescending;
         private TextMeshProUGUI _sortLabel, _orderLabel, _favouriteLabel;
+        private Button _musicButton;
+        private TextMeshProUGUI _musicCardText;
+        private MusicSelectionScreen _musicScreen;
+        /// <summary>The Music card beside the modes (VS Music Selection) and its screen once opened (tests).</summary>
+        public Button MusicButton => _musicButton;
+        public string MusicCardText => _musicCardText != null ? _musicCardText.text : null;
+        public MusicSelectionScreen MusicScreen => _musicScreen;
         private Button _favouriteButton;
         private readonly List<int> _displayOrder = new List<int>();
 
@@ -93,7 +100,7 @@ namespace SoulHunter.UI
         public bool FilterOn => _filterOn;
         public string FilterCountText => _filterCountText != null ? _filterCountText.text : null;
         public IReadOnlyList<Toggle> StageToggles => _stageToggles;
-        /// <summary>The VS run mode toggles, in RunModeOptions.All order (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break).</summary>
+        /// <summary>The VS run mode toggles, in RunModeOptions.All order (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break, Omens, Blind Fate).</summary>
         public IReadOnlyList<Toggle> ModeToggles => _modeToggles;
         public string ModeHintText => _modeHintText != null ? _modeHintText.text : null;
         public CharacterSort Sort => _sort;
@@ -292,6 +299,7 @@ namespace SoulHunter.UI
         {
             // Keyboard/gamepad: when the panel is open and nothing is focused, focus the selected card.
             if (_cards.Count == 0 || EventSystem.current == null) return;
+            if (_musicScreen != null && _musicScreen.IsOpen) return; // the Music screen keeps its own focus
             var card = _cards[Mathf.Clamp(_currentIndex, 0, _cards.Count - 1)];
             if (card != null && card.gameObject.activeInHierarchy && EventSystem.current.currentSelectedGameObject == null)
                 EventSystem.current.SetSelectedGameObject(card.gameObject);
@@ -655,8 +663,11 @@ namespace SoulHunter.UI
             // The chips sit in one themed row: the theme's tab size and gap, centred, shrunk as one piece if a narrow
             // window cannot fit all six.
             // Two rows of three, so every chip keeps the theme's full tab size and "Limit Break" is not squeezed (2026-10-08).
-            var chips = CreateRect("Chips", box, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.97f));
-            var chips2 = CreateRect("Chips2", box, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.6f));
+            // P3-05 (2026-10-09): eight modes (the two Randomizers joined), two rows of four on the left, and the Soundtrack
+            // card on the right. The chips sit in their own area, so a narrow window shrinks them to it, never under the card.
+            var chipArea = CreateRect("ChipArea", box, new Vector2(0f, 0.25f), new Vector2(0.75f, 0.97f));
+            var chips = CreateRect("Chips", chipArea, new Vector2(0.5f, 0.52f), new Vector2(0.5f, 1f));
+            var chips2 = CreateRect("Chips2", chipArea, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.48f));
             int perRow = (count + 1) / 2;
             for (int i = 0; i < count; i++)
             {
@@ -698,6 +709,59 @@ namespace SoulHunter.UI
             _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.02f), new Vector2(0.985f, 0.24f),
                 "Modes: select one to see what it does.", TextAlignmentOptions.Left, 10f, 18f);
             SoulHunter.Gameplay.UI.UITheme.ApplyText(_modeHintText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Soft);
+            BuildMusicCard(box);
+        }
+
+        /// <summary>
+        /// VS Music Selection (wiki Stages: a window on the stage selection screen, "alongside the windows for modes"; Soul
+        /// Hunter has no stage selection screen, so it sits beside the modes here). A card that names the chosen track and
+        /// opens the Soundtrack screen (MusicSelectionScreen).
+        /// </summary>
+        private void BuildMusicCard(RectTransform box)
+        {
+            var rect = CreateRect("MusicCard", box, new Vector2(0.77f, 0.27f), new Vector2(0.985f, 0.95f));
+            var image = rect.gameObject.AddComponent<Image>();
+            _musicButton = rect.gameObject.AddComponent<Button>();
+            _musicButton.targetGraphic = image;
+            _musicButton.onClick.AddListener(OpenMusic);
+            var title = CreateText("Title", rect, new Vector2(0.06f, 0.52f), new Vector2(0.94f, 0.94f), "Music", TextAlignmentOptions.Center, 14f, 26f);
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            _musicCardText = CreateText("Track", rect, new Vector2(0.06f, 0.06f), new Vector2(0.94f, 0.5f), "", TextAlignmentOptions.Center, 10f, 18f);
+            _musicCardText.overflowMode = TextOverflowModes.Ellipsis;
+            // A card, not an action button: the screen's own size (Free), the theme's card look; the labels take light or
+            // dark text by contrast with it.
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(_musicButton, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Card,
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Free);
+            var hint = rect.gameObject.AddComponent<FocusHint>();
+            hint.Hint = "Music: pick the track for your next run, play it faster or slower, and keep it for later runs.";
+            hint.Show = ShowModeHint;
+            RefreshMusicCard();
+        }
+
+        /// <summary>Opens the Soundtrack screen over this one; closing it focuses the Music card again.</summary>
+        public void OpenMusic()
+        {
+            var root = PanelRoot();
+            if (root == null) return;
+            PlayUISound(false);
+            if (_musicScreen == null) _musicScreen = MusicSelectionScreen.Create(root, _characterNameText != null ? _characterNameText.font : null);
+            _musicScreen.Open(() =>
+            {
+                RefreshMusicCard();
+                if (_musicButton != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_musicButton.gameObject);
+            });
+        }
+
+        private void RefreshMusicCard()
+        {
+            if (_musicCardText == null) return;
+            var data = SaveData();
+            int choice = data != null ? data.MusicChoice : 0;
+            int tempo = data != null ? data.MusicTempo : 0;
+            string text = SoulHunter.Gameplay.Audio.MusicSelection.ChoiceName(choice);
+            if (tempo != 0) text += ", " + SoulHunter.Gameplay.Audio.MusicSelection.TempoNames[Mathf.Clamp(tempo, 0, 2)];
+            if (data != null && data.MusicLocked) text += " (kept)";
+            _musicCardText.text = text;
         }
 
         private void BuildFilterPanel(RectTransform root)

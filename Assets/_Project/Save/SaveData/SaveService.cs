@@ -88,6 +88,7 @@ namespace SoulHunter.Core.Persistence
         /// </summary>
         public void UseFile(string path)
         {
+            WaitForBackgroundWrite(); // a write already queued finishes on the old file first
             if (!string.IsNullOrEmpty(path)) _filePath = path;
         }
 
@@ -125,46 +126,102 @@ namespace SoulHunter.Core.Persistence
         public void SaveSoon()
         {
             if (CurrentData == null) return;
-            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) { SaveGame(); return; }
+            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) { WriteInBackground(); return; }
             _dirty = true;
             SaveFlusher.Ensure(this);
         }
 
-        /// <summary>Writes a pending SaveSoon now (quit, and when its time has come).</summary>
+        /// <summary>Writes a pending SaveSoon now, on this thread (quit, scene teardown and tests).</summary>
         public void FlushPendingSave()
         {
             if (_dirty) SaveGame();
+            WaitForBackgroundWrite();
+        }
+
+        /// <summary>
+        /// Writes a pending SaveSoon in the background when its time has come (SaveFlusher). A late-run profile
+        /// (2026-10-09) showed the disk write taking 110 ms on the main thread, a visible hitch after gold pickups.
+        /// </summary>
+        public void FlushPendingSaveInBackground()
+        {
+            if (_dirty) WriteInBackground();
+        }
+
+        // One write at a time: the background write and a direct SaveGame share this lock, so the temp file and the
+        // swap never interleave.
+        private readonly object _writeLock = new object();
+        private System.Threading.Tasks.Task _backgroundWrite;
+
+        /// <summary>
+        /// The JSON is made here, on the main thread (JsonUtility reads Unity objects only there); only the file write
+        /// and the atomic swap run on a worker thread. The newest pending JSON always wins.
+        /// </summary>
+        private void WriteInBackground()
+        {
+            if (CurrentData == null) return;
+            if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
+            string json = JsonUtility.ToJson(CurrentData, true);
+            _dirty = false;
+            LastSaveTime = Time.unscaledTime;
+            SavesWritten++;
+            var previous = _backgroundWrite;
+            string path = _filePath; // the file this data belongs to, even if the save is redirected meanwhile
+            _backgroundWrite = System.Threading.Tasks.Task.Run(() =>
+            {
+                try { previous?.Wait(); } catch (System.Exception) { }
+                WriteJson(json, path, fromWorker: true);
+            });
+        }
+
+        /// <summary>Blocks until a background write in flight has finished (quit, tests).</summary>
+        public void WaitForBackgroundWrite()
+        {
+            var write = _backgroundWrite;
+            if (write == null) return;
+            try { write.Wait(); } catch (System.Exception) { }
         }
 
         public bool SaveGame()
         {
             if (CurrentData == null) return false;
-
-            try
-            {
-                if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
-                string json = JsonUtility.ToJson(CurrentData, true);
-                File.WriteAllText(TempPath, json);
-                if (File.Exists(_filePath)) File.Replace(TempPath, _filePath, PreviousPath, true);
-                else File.Move(TempPath, _filePath);
-                SavesWritten++;
-                _dirty = false;
-                LastSaveTime = Time.unscaledTime;
+            if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
+            string json = JsonUtility.ToJson(CurrentData, true);
+            WaitForBackgroundWrite(); // an older background write must not land after this one
+            if (!WriteJson(json, _filePath, fromWorker: false)) return false;
+            SavesWritten++;
+            _dirty = false;
+            LastSaveTime = Time.unscaledTime;
 #if UNITY_EDITOR
-                Debug.Log($"[SaveService] Game Saved to: {_filePath}");
+            Debug.Log($"[SaveService] Game Saved to: {_filePath}");
 #endif
-                return true;
-            }
-            catch (System.Exception e)
+            return true;
+        }
+
+        private bool WriteJson(string json, string path, bool fromWorker)
+        {
+            string temp = path + ".tmp", previous = path + ".prev";
+            lock (_writeLock)
             {
-                Debug.LogError($"[SaveService] Could not write the save; the last good save is kept. Exception: {e.Message}");
-                try { if (File.Exists(TempPath)) File.Delete(TempPath); } catch (System.Exception) { }
-                return false;
+                try
+                {
+                    File.WriteAllText(temp, json);
+                    if (File.Exists(path)) File.Replace(temp, path, previous, true);
+                    else File.Move(temp, path);
+                    return true;
+                }
+                catch (System.Exception e)
+                {
+                    // Debug.LogError is thread-safe in Unity; the game keeps running with the last good save.
+                    Debug.LogError($"[SaveService] Could not write the save; the last good save is kept{(fromWorker ? " (background write)" : "")}. Exception: {e.Message}");
+                    try { if (File.Exists(temp)) File.Delete(temp); } catch (System.Exception) { }
+                    return false;
+                }
             }
         }
 
         public void LoadGame()
         {
+            WaitForBackgroundWrite(); // never read a file a queued write is about to replace
             if (!File.Exists(_filePath))
             {
                 // A crash between writing and replacing can leave only the previous save behind.
@@ -330,7 +387,13 @@ namespace SoulHunter.Core.Persistence
             // VS Options: Screen Refresh Rate (0 = Default, else whole hertz) and Joystick Type (0 Legacy, 1 Default).
             if (data.RefreshRateHz < 0 || data.RefreshRateHz > 1000) data.RefreshRateHz = 0;
             if (data.JoystickType < 0 || data.JoystickType > 1) data.JoystickType = 1;
+            // VS Music Selection (P3-05, 2026-10-09): 0 = each level's own track, 1-11 = a chosen track; 0-2 = the tempo.
+            if (data.MusicChoice < 0 || data.MusicChoice > MusicChoiceCount - 1) data.MusicChoice = 0;
+            if (data.MusicTempo < 0 || data.MusicTempo > 2) data.MusicTempo = 0;
         }
+
+        /// <summary>Music choices a save can hold: each level's own track, the main theme and the ten level tracks.</summary>
+        public const int MusicChoiceCount = 12;
 
         private static float Volume(float value) => float.IsFinite(value) ? Mathf.Clamp01(value) : 1f;
 

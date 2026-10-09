@@ -26,7 +26,7 @@ namespace SoulHunter.Core.Persistence
         private void Update()
         {
             if (_save != null && _save.HasPendingSave && Time.unscaledTime - _save.LastSaveTime >= SaveService.SaveSoonSeconds)
-                _save.FlushPendingSave();
+                _save.FlushPendingSaveInBackground(); // the disk write runs off the main thread
         }
 
         private void OnApplicationQuit() => _save?.FlushPendingSave();

@@ -34,6 +34,9 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(data.FreezeResistance, Is.EqualTo(0f));
                 Assert.That(data.InstantKillResistance, Is.False);
                 Assert.That(data.DebuffResistance, Is.False);
+                Assert.That(data.DefangResistance, Is.False, "P2-02: res-defang off by default.");
+                Assert.That(data.Lives, Is.EqualTo(1), "P2-02: one life by default.");
+                Assert.That(data.HealthPerPlayerLevelFraction, Is.EqualTo(0f));
             }
             finally { Object.DestroyImmediate(data); }
         }
@@ -140,6 +143,8 @@ namespace SoulHunter.Tests.EditMode
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
                 string file = System.IO.Path.GetFileName(path);
+                // Levels 2-10's VS wave types carry their statbox resistances and shooting (StageEnemyTypeTests).
+                if (StageEnemyTables.IsTypeAsset(path)) continue;
                 Assert.That(data.Abilities, Is.Not.Null.And.Empty, file + ": no abilities until the owner picks them.");
                 if (!file.Contains("_Boss_"))
                 {

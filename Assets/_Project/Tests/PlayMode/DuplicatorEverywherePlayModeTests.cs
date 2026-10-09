@@ -154,6 +154,11 @@ namespace SoulHunter.Tests.PlayMode
             GiveDuplicator();
             Assert.That(PlayerController.Instance.GetComponent<PlayerStats>().Amount, Is.EqualTo(2), "Duplicator level 2 gives +2 Amount.");
             yield return new WaitForSeconds(1.5f);
+            // Let the first measurement's shots end: a Drowning Chalice pool lives 4 s, and one reused by the pool in the
+            // same frame, at the same distance from the hero, was not seen as a new shot (2026-10-10, 5 counted of 6).
+            float clear = Time.time + 6f;
+            var timer = typeof(AutoAttackWeapon).GetField("_timer", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            while (Time.time < clear && DuplicatorPlayModeTests.LiveShots().Any()) { timer.SetValue(weapon, 999f); yield return null; }
 
             if (books)
             {

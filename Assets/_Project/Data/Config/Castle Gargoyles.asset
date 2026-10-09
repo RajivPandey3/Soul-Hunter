@@ -24,155 +24,207 @@ MonoBehaviour:
   SideBias: 1
   Minutes:
   - Minute: 0
-    Minimum: 27
-    Interval: 0.75
+    Minimum: 50
+    Interval: 3
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 7161797003886247374, guid: 274a5906a645d4143a6d1ddbbc53a529, type: 3}
   - Minute: 1
-    Minimum: 19
-    Interval: 1.097
-    EliteBonus: 0.38
-    EnemyTypes: []
+    Minimum: 80
+    Interval: 3
+    EliteBonus: 0
+    EnemyTypes:
+    - {fileID: 7161797003886247374, guid: 274a5906a645d4143a6d1ddbbc53a529, type: 3}
+    - {fileID: 2714502223129148644, guid: 0989cff8960c337469093ba73f95d9f9, type: 3}
   - Minute: 2
-    Minimum: 86
-    Interval: 0.712
+    Minimum: 100
+    Interval: 4
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 7161797003886247374, guid: 274a5906a645d4143a6d1ddbbc53a529, type: 3}
+    - {fileID: 2247560846284980535, guid: 198e22419241dfc45a2498fc5a2ff586, type: 3}
   - Minute: 3
-    Minimum: 113
-    Interval: 0.694
+    Minimum: 60
+    Interval: 4
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 9139455465765519950, guid: 8e98dcba29bd6084abc208b78a84e522, type: 3}
   - Minute: 4
-    Minimum: 136
-    Interval: 0.675
+    Minimum: 110
+    Interval: 4
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 7161797003886247374, guid: 274a5906a645d4143a6d1ddbbc53a529, type: 3}
+    - {fileID: 7080740248868937935, guid: feef87719e9e0c14d8670326b0c1ecc4, type: 3}
   - Minute: 5
-    Minimum: 148
-    Interval: 0.656
+    Minimum: 100
+    Interval: 4
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 4433104999571908635, guid: c739b31c5cba3fc44bb0cf998a4ae2db, type: 3}
+    - {fileID: 9139455465765519950, guid: 8e98dcba29bd6084abc208b78a84e522, type: 3}
   - Minute: 6
-    Minimum: 44
-    Interval: 0.956
-    EliteBonus: 0.38
-    EnemyTypes: []
+    Minimum: 60
+    Interval: 2
+    EliteBonus: 0
+    EnemyTypes:
+    - {fileID: 1000078123180215875, guid: 32fcf7bd6e7fb0944804b868ed3c6adc, type: 3}
+    - {fileID: 2714502223129148644, guid: 0989cff8960c337469093ba73f95d9f9, type: 3}
   - Minute: 7
-    Minimum: 144
-    Interval: 0.619
+    Minimum: 80
+    Interval: 2
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 1552795568065712749, guid: 230364e12bea1a842b157eaa5b5246ec, type: 3}
+    - {fileID: 5196042651743102331, guid: 30e6aa10a994559498cdfc6a4c2dc7c2, type: 3}
+    - {fileID: 2247560846284980535, guid: 198e22419241dfc45a2498fc5a2ff586, type: 3}
   - Minute: 8
-    Minimum: 150
-    Interval: 0.6
+    Minimum: 80
+    Interval: 1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 2714502223129148644, guid: 0989cff8960c337469093ba73f95d9f9, type: 3}
+    - {fileID: 2145050929819376257, guid: be902b83fa1735444b7d97a6e5ce1568, type: 3}
   - Minute: 9
-    Minimum: 170
-    Interval: 0.581
+    Minimum: 200
+    Interval: 0.5
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 1000078123180215875, guid: 32fcf7bd6e7fb0944804b868ed3c6adc, type: 3}
+    - {fileID: 2145050929819376257, guid: be902b83fa1735444b7d97a6e5ce1568, type: 3}
   - Minute: 10
-    Minimum: 199
-    Interval: 0.562
+    Minimum: 100
+    Interval: 0.5
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 702607816504721852, guid: d2f3649c0300e334685f6fae478795ae, type: 3}
   - Minute: 11
-    Minimum: 67
-    Interval: 0.816
-    EliteBonus: 0.38
-    EnemyTypes: []
+    Minimum: 60
+    Interval: 2
+    EliteBonus: 0
+    EnemyTypes:
+    - {fileID: 5987870959401884131, guid: f0aea19385ece6440b9eb0dd9dfccc54, type: 3}
+    - {fileID: 2951767092096824724, guid: dc56d4403dfb6a14d9e3c79521b265a1, type: 3}
   - Minute: 12
-    Minimum: 228
-    Interval: 0.525
+    Minimum: 80
+    Interval: 1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 5987870959401884131, guid: f0aea19385ece6440b9eb0dd9dfccc54, type: 3}
+    - {fileID: 1552795568065712749, guid: 230364e12bea1a842b157eaa5b5246ec, type: 3}
   - Minute: 13
-    Minimum: 217
-    Interval: 0.506
+    Minimum: 120
+    Interval: 0.5
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 7077465872949566741, guid: 6867acd1c2e1a214ca17b1e19d14ccc3, type: 3}
+    - {fileID: 1552795568065712749, guid: 230364e12bea1a842b157eaa5b5246ec, type: 3}
   - Minute: 14
-    Minimum: 204
-    Interval: 0.488
+    Minimum: 300
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 1000078123180215875, guid: 32fcf7bd6e7fb0944804b868ed3c6adc, type: 3}
+    - {fileID: 5987870959401884131, guid: f0aea19385ece6440b9eb0dd9dfccc54, type: 3}
+    - {fileID: 2145050929819376257, guid: be902b83fa1735444b7d97a6e5ce1568, type: 3}
   - Minute: 15
-    Minimum: 206
-    Interval: 0.469
+    Minimum: 100
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 7077465872949566741, guid: 6867acd1c2e1a214ca17b1e19d14ccc3, type: 3}
   - Minute: 16
-    Minimum: 69
-    Interval: 0.675
-    EliteBonus: 0.38
-    EnemyTypes: []
+    Minimum: 100
+    Interval: 1
+    EliteBonus: 0
+    EnemyTypes:
+    - {fileID: 2104309457994375700, guid: 81b7a1be501afc340851271022caa818, type: 3}
   - Minute: 17
-    Minimum: 263
-    Interval: 0.431
+    Minimum: 100
+    Interval: 0.8
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 2104309457994375700, guid: 81b7a1be501afc340851271022caa818, type: 3}
+    - {fileID: 8591271072063834083, guid: e37470436b30c1842a3d09c38042954c, type: 3}
   - Minute: 18
-    Minimum: 287
-    Interval: 0.413
+    Minimum: 60
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 3131212511981006877, guid: 2e488ff1e77a67947b98d13723f05d2e, type: 3}
+    - {fileID: 8591271072063834083, guid: e37470436b30c1842a3d09c38042954c, type: 3}
   - Minute: 19
-    Minimum: 289
-    Interval: 0.394
+    Minimum: 200
+    Interval: 0.5
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 9139455465765519950, guid: 8e98dcba29bd6084abc208b78a84e522, type: 3}
   - Minute: 20
-    Minimum: 272
-    Interval: 0.375
+    Minimum: 100
+    Interval: 0.5
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 2951767092096824724, guid: dc56d4403dfb6a14d9e3c79521b265a1, type: 3}
+    - {fileID: 1000078123180215875, guid: 32fcf7bd6e7fb0944804b868ed3c6adc, type: 3}
   - Minute: 21
-    Minimum: 76
-    Interval: 0.534
-    EliteBonus: 0.38
-    EnemyTypes: []
+    Minimum: 100
+    Interval: 0.1
+    EliteBonus: 0
+    EnemyTypes:
+    - {fileID: 74717493217874780, guid: 2d5792b37923c2b42b52617d0b4c6210, type: 3}
   - Minute: 22
-    Minimum: 253
-    Interval: 0.337
+    Minimum: 80
+    Interval: 1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 74717493217874780, guid: 2d5792b37923c2b42b52617d0b4c6210, type: 3}
+    - {fileID: 6634349255351818676, guid: 62a0f6fb6a772114f8ade949f67465f7, type: 3}
   - Minute: 23
-    Minimum: 278
-    Interval: 0.319
+    Minimum: 100
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 7302572149438728019, guid: 56955ee0c6f0e59419c507f0f8f8f55b, type: 3}
+    - {fileID: 7077465872949566741, guid: 6867acd1c2e1a214ca17b1e19d14ccc3, type: 3}
   - Minute: 24
-    Minimum: 316
-    Interval: 0.3
+    Minimum: 60
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 2446452830496656708, guid: ce83d7e14f53b4245a16a9ee4e5ee07e, type: 3}
   - Minute: 25
-    Minimum: 335
-    Interval: 0.3
+    Minimum: 300
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 2714502223129148644, guid: 0989cff8960c337469093ba73f95d9f9, type: 3}
   - Minute: 26
-    Minimum: 328
-    Interval: 0.3
+    Minimum: 100
+    Interval: 0.1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 3689618674716678623, guid: 88e046e23dcca3c45a2410a20f546a1a, type: 3}
   - Minute: 27
-    Minimum: 299
-    Interval: 0.3
+    Minimum: 100
+    Interval: 1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 3997599954932190270, guid: 528388b44a5511343bdf8881d70e8149, type: 3}
+    - {fileID: 2446452830496656708, guid: ce83d7e14f53b4245a16a9ee4e5ee07e, type: 3}
   - Minute: 28
-    Minimum: 271
-    Interval: 0.3
+    Minimum: 100
+    Interval: 1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 3689618674716678623, guid: 88e046e23dcca3c45a2410a20f546a1a, type: 3}
+    - {fileID: 3997599954932190270, guid: 528388b44a5511343bdf8881d70e8149, type: 3}
   - Minute: 29
-    Minimum: 265
-    Interval: 0.3
+    Minimum: 50
+    Interval: 1
     EliteBonus: 0
-    EnemyTypes: []
+    EnemyTypes:
+    - {fileID: 8636569884693360304, guid: 9953091acf3d4654fa63fb5365000052, type: 3}
+    - {fileID: 5941278288589895044, guid: cdd85178cf836e445a6669bed2d327ad, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 120
