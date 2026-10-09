@@ -53,6 +53,34 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator TheReviveScreen_VeilsTheWholeScreen()
+        {
+            // Seen in a build (2026-10-09): the game behind the Revive screen was as bright as in play. The screen was a
+            // canvas nested in the HUD, so its veil was a small square behind the panel.
+            yield return Boot(1);
+            LethalHit();
+            yield return null;
+            yield return null;
+            var screen = ReviveScreen.Current;
+            Assert.That(screen != null && screen.IsOpen, Is.True);
+            Assert.That(screen.Canvas.isRootCanvas, Is.True, "The Revive screen is its own root overlay canvas.");
+            var veil = screen.transform.Find("Root/Veil")?.GetComponent<UnityEngine.UI.Image>();
+            Assert.That(veil, Is.Not.Null, "The screen has a veil.");
+            Assert.That(veil.isActiveAndEnabled && veil.color.a > 0.8f, Is.True, $"veil active {veil.isActiveAndEnabled}, colour {veil.color}");
+            AssertCoversTheScreen((RectTransform)veil.transform);
+            screen.PressRevive();
+        }
+
+        /// <summary>An overlay canvas's world corners are screen pixels: the rect must reach every screen corner.</summary>
+        internal static void AssertCoversTheScreen(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            Assert.That(corners[0].x <= 1f && corners[0].y <= 1f && corners[2].x >= Screen.width - 1f && corners[2].y >= Screen.height - 1f, Is.True,
+                $"The veil spans {corners[0]} to {corners[2]} on a {Screen.width}x{Screen.height} screen.");
+        }
+
+        [UnityTest]
         public IEnumerator ALethalHit_WithARevival_PausesOnTheReviveButton_ThenRevivesWhereItFell()
         {
             yield return Boot(1);

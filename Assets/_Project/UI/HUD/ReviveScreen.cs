@@ -43,7 +43,9 @@ namespace SoulHunter.Gameplay.UI
         {
             if (player == null) return null;
             var go = new GameObject("ReviveScreen", typeof(RectTransform));
-            if (owner != null) go.transform.SetParent(owner, false);
+            // A root object in the HUD's scene, never a child of the HUD: a canvas nested in another canvas keeps its own
+            // (default 100x100) rect and ignores its scaler, so the veil was a small square hidden behind the panel.
+            if (owner != null) UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(go, owner.gameObject.scene);
             var screen = go.AddComponent<ReviveScreen>();
             screen._player = player;
             screen.Build();

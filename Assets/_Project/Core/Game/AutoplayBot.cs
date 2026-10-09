@@ -42,6 +42,8 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-start-level N             start at player level N (the bot picks every level-up), to measure later stages
     ///   -sh-autoplay-no-blood                  play with Disable Blood on (A/B checks of the blood spray's cost)
     ///   -sh-autoplay-heal-powerups             play with the VS Max Health and Recovery PowerUps bought (heal balance)
+    ///   -sh-autoplay-revival                   play with the VS Revival PowerUp bought (one Revive, to see the Revive screen)
+    ///   -sh-autoplay-inverse                   play in Inverse mode (e.g. the merchant's Inverse wares on stage 3)
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -72,6 +74,10 @@ namespace SoulHunter.Gameplay.Core
             public bool NoBlood;
             /// <summary>Plays with the VS Max Health (rank 3) and Recovery (rank 5) PowerUps bought (heal balance checks).</summary>
             public bool HealPowerUps;
+            /// <summary>Plays with the VS Revival PowerUp bought (one Revive).</summary>
+            public bool Revival;
+            /// <summary>Plays in Inverse mode.</summary>
+            public bool Inverse;
             public bool QuitWhenDone = true;
         }
 
@@ -147,6 +153,8 @@ namespace SoulHunter.Gameplay.Core
                 StartLevel = int.TryParse(ArgValue("-sh-autoplay-start-level"), out var startLevel) ? Mathf.Clamp(startLevel, 1, 400) : 1,
                 NoBlood = HasArg("-sh-autoplay-no-blood"),
                 HealPowerUps = HasArg("-sh-autoplay-heal-powerups"),
+                Revival = HasArg("-sh-autoplay-revival"),
+                Inverse = HasArg("-sh-autoplay-inverse"),
             };
             Launch(settings);
         }
@@ -198,6 +206,8 @@ namespace SoulHunter.Gameplay.Core
                 SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.MaxHealth, 3);
                 SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.Recovery, 5);
             }
+            if (Config.Revival) SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.Revival, 1);
+            if (Config.Inverse) save.CurrentData.ModeInverse = true;
             if (HasArg("-sh-autoplay-shop-shot")) yield return ShopShots(save.CurrentData);
             // -sh-autoplay-select-shot: screenshot the main menu, then the character select screen (what Start opens).
             if (HasArg("-sh-autoplay-select-shot")) yield return SelectShots();

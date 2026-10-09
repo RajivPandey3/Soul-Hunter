@@ -1417,7 +1417,12 @@ Tests:
 - New PlayMode (R): `MagnetPlayModeTests`, `RevivalPlayModeTests`, `WanderingMerchantInversePlayModeTests`, `ChestEliteAndBossPlayModeTests.ChestElite_CarriesItsMinutesTiers`, `PentagramPlayModeTests.AnErasedCarrier_PassesOnItsBossesChestTiers`.
 - `TirajisuPlayModeTests`, `GameOverFlowPlayModeTests`, `RunResultsPlayModeTests` and the Shadow Kael tests now answer the Revive screen.
 
-Validation: EditMode 614/614, PlayMode 304/304, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-wave1-full/`). Not played in a build or the editor yet, so the Revive screen, the two-column shop and pickups flying in are unchecked by eye (`V`).
+Validation: EditMode 614/614, PlayMode 304/304, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-wave1-full/`).
+
+Build play (`D:/SoulHunter-Validation/run-20261009-wave1-screens/`, script `wave1-screens.ps1`; new bot options `-sh-autoplay-revival` and `-sh-autoplay-inverse`): 0 errors, save untouched (partial `V`).
+- Inverse merchant on Level 3: all 7 wares in two columns inside the panel, and the game behind is dimmed.
+- Revive on Level 10: the screen showed and the hero revived at 50/100.
+- **Defect found and fixed:** the game behind the Revive screen was not dimmed. The screen was a canvas nested in the HUD, so it kept a 100x100 rect: the veil was a small square behind the panel and the Expand scaler did nothing. It is now a root object in the HUD's scene. `RevivalPlayModeTests.TheReviveScreen_VeilsTheWholeScreen` (R) checks for a root canvas and a veil that covers the screen. Revival fixture 6/6, EditMode 614/614 (`-reveil2/`).
 
 Open owner questions (the wiki is silent or contradicts itself):
 - Magnet: the base radius (4 units kept, so the chicken went from 3 to 4); whether stage items are pulled.
