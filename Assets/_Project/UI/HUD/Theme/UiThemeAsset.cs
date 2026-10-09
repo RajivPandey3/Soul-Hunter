@@ -194,6 +194,11 @@ namespace SoulHunter.Gameplay.UI
             [Tooltip("Pause / moon emblem.")] public Sprite Emblem;
             [Tooltip("The coin shown next to gold amounts and prices (in colour; the Buy button may use a one-colour coin). Empty = the Buy icon.")]
             public Sprite Coin;
+            // Main menu sections (P3-02, 2026-10-09). Owner: no new art, so the looks use icons already drawn for the theme.
+            [Tooltip("Collection (main menu).")] public Sprite Collection;
+            [Tooltip("Bestiary (main menu).")] public Sprite Bestiary;
+            [Tooltip("Unlocks (main menu).")] public Sprite Unlocks;
+            [Tooltip("Credits (main menu).")] public Sprite Credits;
         }
 
         [Serializable] public sealed class Fonts

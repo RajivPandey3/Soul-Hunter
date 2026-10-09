@@ -100,6 +100,10 @@ MonoBehaviour:
     Buy: {fileID: 21300000, guid: 2fb5dce6e2a2f064ba4514fdf520f495, type: 3}
     Emblem: {fileID: 21300000, guid: ad798e2bb664f3b4490b698164e58955, type: 3}
     Coin: {fileID: 21300000, guid: 16181998387f6004f8a426d23a54aa18, type: 3}
+    Collection: {fileID: 21300000, guid: 91f88fc4247feb442934be3a062814f1, type: 3}
+    Bestiary: {fileID: 21300000, guid: a7afb4a20784b854db46d0ab04a8e218, type: 3}
+    Unlocks: {fileID: 21300000, guid: 3ed2afa635af3684ba9d4c98e768f2bb, type: 3}
+    Credits: {fileID: 21300000, guid: ad798e2bb664f3b4490b698164e58955, type: 3}
   Font:
     Title: {fileID: 11400000, guid: 2491b416bc8f2764a8accf39333f9b8a, type: 2}
     Body: {fileID: 11400000, guid: 0ade5e43deb2e734ea95f92ed60079de, type: 2}

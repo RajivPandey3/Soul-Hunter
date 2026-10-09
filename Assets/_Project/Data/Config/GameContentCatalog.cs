@@ -80,6 +80,17 @@ namespace SoulHunter.Gameplay.Data
             return null;
         }
 
+        [UnityEngine.Header("Main menu sections (VS Collection, Bestiary, Credits; P3-02, 2026-10-09)")]
+        [UnityEngine.Tooltip("Every evolution in the game, in Collection order (the scene's list and Evolutions above). " +
+            "The Collection shows each one, found once the player has held it.")]
+        public SoulHunter.Gameplay.Combat.WeaponEvolutionData[] CollectionEvolutions;
+        [UnityEngine.Tooltip("Every Arcana in the game, in Collection order.")]
+        public ArcanaData[] Arcanas;
+        [UnityEngine.Tooltip("Every enemy type, in Bestiary order: Level 1's VS enemy types, then each level's enemy, elite and boss.")]
+        public EnemyData[] BestiaryEnemies;
+        [UnityEngine.Tooltip("The credit files the Credits screen shows (the CC0 audio and the OFL fonts CREDITS.md).")]
+        public UnityEngine.TextAsset[] Credits;
+
         /// <summary>
         /// The game's UI theme: the single source of truth for every colour, picture, icon, font, motion and spacing of
         /// the UI (owner, 2026-10-04). Designers switch and edit it in Soul Hunter > Theme Studio.

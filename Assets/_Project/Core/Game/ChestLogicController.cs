@@ -152,6 +152,20 @@ namespace SoulHunter.Gameplay.Core
             return ArcanaMessage(arcana);
         }
 
+        /// <summary>
+        /// Saves the evolution (or union) a chest just made as discovered on this save (P3-01/P3-06, 2026-10-09; wiki
+        /// Grim_Grimoire: "evolutions that have been obtained before ... discovered on their save file"). Only here, where a
+        /// chest in a run evolves the weapon: a debug or bot start (-sh-autoplay-evolve) calls WeaponManager.TryEvolveWeapon
+        /// directly and is not a discovery.
+        /// </summary>
+        private static void RecordDiscovery(string evolutionId)
+        {
+            SoulHunter.Core.Persistence.SaveService save = null;
+            SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
+            if (save == null || save.CurrentData == null) return;
+            if (SoulHunter.Core.Persistence.EvolutionDiscovery.MarkDiscovered(save.CurrentData, evolutionId)) save.SaveSoon();
+        }
+
         public static string ArcanaMessage(SoulHunter.Gameplay.Data.ArcanaData arcana)
         {
             var message = new StringBuilder("ARCANA CHEST!\n\n");
@@ -197,6 +211,7 @@ namespace SoulHunter.Gameplay.Core
                     string shownName = WeaponEvolutionData.DisplayName(evolvedName);
                     rewards.Add($"<color=red>Ultimate Power: {shownName}</color>");
                     result.Rewards.Add(new ChestReward { Name = shownName, Icon = weaponManager.LastEvolvedIcon, Level = 1, IsEvolution = true });
+                    RecordDiscovery(weaponManager.LastEvolutionId);
                     continue;
                 }
 

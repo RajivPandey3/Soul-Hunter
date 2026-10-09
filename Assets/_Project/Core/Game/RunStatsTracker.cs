@@ -132,11 +132,23 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
-        public void AddKill()
+        public void AddKill() => AddKill(null);
+
+        /// <summary>
+        /// Counts one kill. <paramref name="type"/> is the enemy's EnemyData (null when unknown); the VS Bestiary counts
+        /// defeats per type on the save (CollectionTracker listens to <see cref="EnemyKilled"/>).
+        /// </summary>
+        public void AddKill(SoulHunter.Gameplay.Data.EnemyData type)
         {
             TotalKills++;
             OnKillsChanged?.Invoke(TotalKills);
+            if (type != null) EnemyKilled?.Invoke(type);
         }
+
+        /// <summary>A player-side kill of an enemy type (VS Bestiary).</summary>
+        public static event System.Action<SoulHunter.Gameplay.Data.EnemyData> EnemyKilled;
+        /// <summary>A pickup collected, by its Results name (VS Collection: a pickup is found once used).</summary>
+        public static event System.Action<string> PickupRecorded;
 
         public void AddGold(int amount)
         {
@@ -210,6 +222,7 @@ namespace SoulHunter.Gameplay.Core
         public void RecordPickup(string pickupName)
         {
             if (string.IsNullOrEmpty(pickupName)) return;
+            PickupRecorded?.Invoke(pickupName);
             for (int i = 0; i < _pickups.Count; i++)
                 if (_pickups[i].Key == pickupName) { _pickups[i] = new KeyValuePair<string, int>(pickupName, _pickups[i].Value + 1); return; }
             _pickups.Add(new KeyValuePair<string, int>(pickupName, 1));

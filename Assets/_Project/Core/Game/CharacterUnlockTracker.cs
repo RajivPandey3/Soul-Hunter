@@ -175,6 +175,18 @@ namespace SoulHunter.Gameplay.Core
             return unlocked;
         }
 
+        /// <summary>
+        /// Shows and lists an unlock earned elsewhere (CollectionTracker: Banish ranks, favourites, the Bestiary), the same way
+        /// as a character or PowerUp unlock. The caller saves.
+        /// </summary>
+        public void AnnounceUnlock(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return;
+            Debug.Log($"[CharacterUnlockTracker] {line}");
+            ShowNotice(line);
+            if (RunStatsTracker.Instance != null) RunStatsTracker.Instance.RecordUnlock(line);
+        }
+
         private void ShowNotice(string message)
         {
             if (_notice != null) Destroy(_notice);

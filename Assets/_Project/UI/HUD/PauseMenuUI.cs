@@ -17,8 +17,14 @@ namespace SoulHunter.Gameplay.UI
         private Button _resume;
         private Button _options;
         private Button _quit;
+        private Button _evolutions;
+        private EvolutionRecipesScreen _recipes;
 
         public Button ResumeButton => _resume;
+        /// <summary>Opens the evolution recipes (release item P3-06; EvolutionRecipesScreen).</summary>
+        public Button EvolutionsButton => _evolutions;
+        /// <summary>The evolution recipes screen, once it has been opened (null before).</summary>
+        public EvolutionRecipesScreen RecipesScreen => _recipes;
         public Button OptionsButton => _options;
         public Button QuitButton => _quit;
 
@@ -37,6 +43,14 @@ namespace SoulHunter.Gameplay.UI
         private void OnDestroy()
         {
             if (_system != null) _system.OnPauseChanged -= HandlePauseChanged;
+            if (_recipes != null) Destroy(_recipes.gameObject);
+        }
+
+        /// <summary>Opens the evolution recipes over the pause menu; Back returns focus to the Evolutions button.</summary>
+        public void OpenEvolutions()
+        {
+            if (_recipes == null) _recipes = EvolutionRecipesScreen.Create();
+            _recipes.Open(() => Select(_evolutions));
         }
 
         private void Build()
@@ -53,6 +67,9 @@ namespace SoulHunter.Gameplay.UI
             _options = CreateButton("Options_Button", new Vector2(0.38f, 0.42f), new Vector2(0.62f, 0.5f), "Options",
                 () => OptionsMenuUI.Open(() => Select(_options)));
             _quit = CreateButton("Quit_Button", new Vector2(0.38f, 0.32f), new Vector2(0.62f, 0.4f), "Quit", () => _system.QuitToMainMenu());
+            // VS Grimoire (wiki Grim_Grimoire): with the Grimoire and the map, an "Open Grimoire" button "just to the left of
+            // the "RESUME" button". Soul Hunter has no relics yet, so it is open from the start (EvolutionRecipesScreen).
+            _evolutions = CreateButton("Evolutions_Button", new Vector2(0.1f, 0.52f), new Vector2(0.34f, 0.6f), "Evolutions", OpenEvolutions);
             // VS: the player's stats are shown while paused (wiki Player_stats). A column on the right of the buttons, under
             // the timer: the HUD's kills, gold and item rows sit top left and draw over anything placed there.
             StatsPanel.Attach(transform, new Vector2(0.7f, 0.1f), new Vector2(0.96f, 0.84f), 1, 30f);
@@ -75,6 +92,7 @@ namespace SoulHunter.Gameplay.UI
         private void HandlePauseChanged(bool paused)
         {
             if (paused) Select(_resume);
+            else if (_recipes != null) _recipes.Close(); // resumed with the pause key while the recipes were open
         }
 
         private static void Select(Selectable target)
@@ -95,7 +113,9 @@ namespace SoulHunter.Gameplay.UI
             button.targetGraphic = image;
             // The theme decides the look; each button says what it is and which icon it shows.
             var kind = name == "Resume_Button" ? UITheme.ButtonKind.Primary : name == "Quit_Button" ? UITheme.ButtonKind.Danger : UITheme.ButtonKind.Normal;
-            var icon = name == "Resume_Button" ? UITheme.IconSlot.Resume : name == "Quit_Button" ? UITheme.IconSlot.Quit : UITheme.IconSlot.Options;
+            // Evolutions has no icon of its own (no new art); the Options gear would say the wrong thing.
+            var icon = name == "Resume_Button" ? UITheme.IconSlot.Resume : name == "Quit_Button" ? UITheme.IconSlot.Quit
+                : name == "Evolutions_Button" ? UITheme.IconSlot.None : UITheme.IconSlot.Options;
             button.onClick.AddListener(() =>
             {
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;

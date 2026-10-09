@@ -106,6 +106,11 @@ namespace SoulHunter.Editor.Content
             pro.Icon.Buy = Plate("mono_coin");
             pro.Icon.Emblem = Plate("mono_moon");
             pro.Icon.Coin = ember.Icon.Buy; // gold amounts and prices keep the coloured coin
+            // Main menu sections (P3-02): one-colour icons already drawn (owner: no new art).
+            pro.Icon.Collection = Plate("mono_soul_gem");
+            pro.Icon.Bestiary = Plate("mono_soul_flame");
+            pro.Icon.Unlocks = Plate("mono_check");
+            pro.Icon.Credits = Plate("mono_moon");
             pro.Layouts.IconsLikeLabel = true;
 
             // (9) no light streak through the words; the focus ring and the gentle breath mark the chosen button.

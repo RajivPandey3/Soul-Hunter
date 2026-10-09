@@ -1502,6 +1502,40 @@ Validation:
 - The standard-size, character select and sort fixtures then passed 11/11 (`-p3-fav2/`).
 - Not seen by eye yet (`V`).
 
+### Release push, wave 2b: evolution hints, Evolutions list, Collection, Bestiary, Unlocks, Credits (2026-10-09)
+
+**P3-01 and P3-06** (wiki Level_up, Patch 0.3.2: "Added info for discovered evolutions on Level Up panels"; 1.4.200: passives get the indicator too; Grim_Grimoire: "view all the evolutions and unions that have been discovered on their save file"):
+- **Discovery record:** `GameData.DiscoveredEvolutions`, repaired by `EvolutionDiscovery.Repair`. An evolution is written only when a chest evolves a weapon in a real run (`ChestLogicController`). Debug and bot starts (`-sh-autoplay-evolve`) are not written.
+- **Level-up hint:** weapon and passive cards in a discovered recipe show the other item's icon, the result in the gold evolved frame, and a line such as "Evolves with Hollow Heart into Bloody Tear".
+  - Hidden for a recipe already made this run, in Banish mode, and on gold, chicken and Limit Break cards.
+  - Balance method (the wiki gives no condition): the hint shows whether or not the other item is held.
+- **Evolutions list:** an "Evolutions" button left of Resume on the pause screen (`EvolutionRecipesScreen`), with eight recipes per page.
+  - Discovered recipes come first. Undiscovered ones show as "?" rows: VS hides them, but Soul Hunter has no other place yet to show how many remain.
+  - Held items are framed and labelled "Held". The recipe made this run is framed whole; recipes that can no longer be made are faded and say why.
+  - Balance method: open from the start. VS gates it behind the Grim Grimoire relic, and Soul Hunter has no relics yet.
+  - The Milky Way map is not built.
+
+**P3-02 main menu sections** (wiki Main_menu, Collection, Banish, Mindbender, Ars_Gouda):
+- **Layout:** Collection, Unlocks, Credits and Bestiary join the menu. With more than four buttons it lays them out in two columns at the standard size and gap (`MainMenuLayout`). Back returns focus to the button that opened the screen (`MainMenuNavigation.Show`). **The new layout needs owner approval.**
+- **Collection:** 67 entries (weapons with their evolutions, passives, pickups, the Soul Egg, Arcanas). Unknown entries show "?"; a found entry is one "used at least once" (`GameData.CollectionFound`, filled by `CollectionTracker` during runs).
+  - Evolutions are read from `DiscoveredEvolutions`, so there is one record, not two.
+  - Found from the start: the Soul Gem and Soul Coin (VS: Experience Gem, Gold Coin). The Friendship Amulet has no counterpart, so a fresh save starts with 2 entries, not 3.
+  - Unlocks from the entry count: Banish ranks at 60/70/80/90/100 entries (wiki Banish) and favourites (Mindbender) at 50. With 67 entries today, only Banish rank 1 can be earned; the wiki numbers are kept.
+- **Bestiary:** 46 enemy types with kill counts (`GameData.BestiaryKills`, saved at most every 10 s), names hidden until the first kill, and stats.
+  - Balance method: it opens when a run first reaches Level 3, Dairy Plant's place, where VS puts the Ars Gouda. Soul Hunter has no relics.
+- **Unlocks:** every character and PowerUp task with Done / Not done, read only from the save.
+- **Credits:** the CC0 audio and OFL font credit files.
+- **Not built:** PRESS TO START and Quick Start (owner decisions), and Secrets, Adventures, Online, DLC and Account (no counterpart).
+- **New theme icons:** Collection, Bestiary, Unlocks and Credits use existing art. **They need owner approval.**
+
+Validation:
+- `EvolutionDiscoveryTests` and `CollectionBookTests` (T); `EvolutionRecipesPlayModeTests`, `MainMenuSectionsPlayModeTests` and `CollectionDiscoveryPlayModeTests` (R). `MainMenuLayoutPlayModeTests` and `UiStandardSizePlayModeTests` were updated.
+- Full run: EditMode 657/657, PlayMode 330/331, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-p3b-full2/`).
+  - The failure was the test's generic "more than 2 texts" check, which does not fit Credits: it has a title and one scrolling body.
+  - The menu fixtures then passed 4/4 (`-p3b-menu/`).
+- The first run (`-p3b-full`) failed the Collection tests because `results-run.ps1` did not sync `Assets/Resources`, where the new `GameContent` lists are. It now mirrors that folder too.
+- Not seen by eye yet (`V`).
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

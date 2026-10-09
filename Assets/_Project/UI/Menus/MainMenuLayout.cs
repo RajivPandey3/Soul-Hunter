@@ -31,6 +31,7 @@ namespace SoulHunter.UI
         private Image _logo;
         private RectTransform _group;
         private Button[] _buttons;
+        private SoulHunter.Gameplay.UI.UITheme.IconSlot[] _icons;
         private Vector2 _lastScreen;
         private Rect _lastPicture;
 
@@ -41,18 +42,36 @@ namespace SoulHunter.UI
         public Image Logo => _logo;
         public Button[] Buttons => _buttons;
 
-        public static MainMenuLayout Attach(GameObject homePanel, Button[] buttons)
+        /// <summary>
+        /// Buttons per row: one column for up to four buttons (the owner-approved menu of 2026-10-08), two columns beyond
+        /// that (P3-02, 2026-10-09: Collection, Bestiary, Unlocks and Credits joined Start, Power Up, Options and Quit). Two
+        /// columns of four keep the group exactly as tall as the approved column of four, so nothing shrinks further, and
+        /// the buttons read left to right, top to bottom, as the wiki's Main_menu lists VS's ("from top to bottom, left to
+        /// right"). A short last row is centred. The two-column layout waits for the owner's approval.
+        /// </summary>
+        public const int MaxSingleColumn = 4;
+        public int Columns => _buttons != null && Count(_buttons) > MaxSingleColumn ? 2 : 1;
+
+        public static MainMenuLayout Attach(GameObject homePanel, Button[] buttons, SoulHunter.Gameplay.UI.UITheme.IconSlot[] icons = null)
         {
             if (homePanel == null) return null;
             var layout = homePanel.GetComponent<MainMenuLayout>();
             if (layout == null) layout = homePanel.AddComponent<MainMenuLayout>();
-            layout.Setup(buttons);
+            layout.Setup(buttons, icons);
             return layout;
         }
 
-        private void Setup(Button[] buttons)
+        private static int Count(Button[] buttons)
+        {
+            int n = 0;
+            foreach (var button in buttons) if (button != null) n++;
+            return n;
+        }
+
+        private void Setup(Button[] buttons, SoulHunter.Gameplay.UI.UITheme.IconSlot[] icons)
         {
             _buttons = buttons;
+            _icons = icons;
             _background = FindBackground();
             foreach (var text in GetComponentsInChildren<TMP_Text>(true))
                 if (text.name == "GameLogo_Text") { _title = text; break; }
@@ -95,12 +114,15 @@ namespace SoulHunter.UI
                 Place(_title.rectTransform, FrameCentreX - TitleHalfWidth, TitleBottom, FrameCentreX + TitleHalfWidth, TitleTop);
             }
 
-            int index = 0;
-            foreach (var button in _buttons)
+            int index = 0, count = Count(_buttons);
+            for (int b = 0; b < _buttons.Length; b++)
             {
+                var button = _buttons[b];
                 if (button == null) continue;
                 button.transform.SetParent(_logo != null ? _group : _area, false);
-                Style(button, index++);
+                var icon = _icons != null && b < _icons.Length ? _icons[b] : DefaultIcon(index, count);
+                Style(button, index == 0, index == count - 1, icon);
+                index++;
             }
             // "Power Up", as the shop's title writes it (the scene's label said "Power UP").
             if (_buttons.Length > 1 && _buttons[1] != null)
@@ -121,46 +143,49 @@ namespace SoulHunter.UI
         {
             if (this == null || _buttons == null) return;
             var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
-            int count = 0;
-            foreach (var button in _buttons) if (button != null) count++;
-            float step = layout.ButtonHeight + layout.ButtonGap;
+            int count = Count(_buttons);
+            int columns = Columns;
+            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
+            float stepY = layout.ButtonHeight + layout.ButtonGap;
+            float stepX = layout.ButtonWidth + layout.ButtonGap;
+            float blockHeight = rows * layout.ButtonHeight + (rows - 1) * layout.ButtonGap;
+            float blockWidth = columns * layout.ButtonWidth + (columns - 1) * layout.ButtonGap;
             if (_logo != null)
             {
-                // One group: the logo, a gap, then the button column, centred on the group's middle.
+                // One group: the logo, a gap, then the button block, centred on the group's middle.
                 float logoHeight = LogoWidth * _logo.sprite.rect.height / _logo.sprite.rect.width;
                 float gap = layout.ButtonGap * LogoGapButtons;
-                float column = count * layout.ButtonHeight + (count - 1) * layout.ButtonGap;
-                float total = logoHeight + gap + column;
+                float total = logoHeight + gap + blockHeight;
                 float top = total * 0.5f;
                 var logoRect = _logo.rectTransform;
                 logoRect.anchorMin = logoRect.anchorMax = logoRect.pivot = new Vector2(0.5f, 0.5f);
                 logoRect.sizeDelta = new Vector2(LogoWidth, logoHeight);
                 logoRect.anchoredPosition = new Vector2(0f, top - logoHeight * 0.5f);
                 float firstCentre = top - logoHeight - gap - layout.ButtonHeight * 0.5f;
-                int i = 0;
-                foreach (var button in _buttons)
-                {
-                    if (button == null) continue;
-                    var rect = (RectTransform)button.transform;
-                    rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-                    rect.sizeDelta = new Vector2(layout.ButtonWidth, layout.ButtonHeight);
-                    rect.anchoredPosition = new Vector2(0f, firstCentre - i * step);
-                    i++;
-                }
-                _group.sizeDelta = new Vector2(Mathf.Max(LogoWidth, layout.ButtonWidth), total);
+                PlaceBlock(new Vector2(0.5f, 0.5f), firstCentre, columns, count, stepX, stepY, layout);
+                _group.sizeDelta = new Vector2(Mathf.Max(LogoWidth, blockWidth), total);
                 FitGroup();
                 return;
             }
-            int index = 0;
+            PlaceBlock(new Vector2(FrameCentreX, (ButtonsTop + ButtonsBottom) * 0.5f), (rows - 1) * 0.5f * stepY, columns, count, stepX, stepY, layout);
+        }
+
+        /// <summary>Lays the buttons in rows of <paramref name="columns"/>, the first row's centre at <paramref name="firstCentre"/>.</summary>
+        private void PlaceBlock(Vector2 anchor, float firstCentre, int columns, int count, float stepX, float stepY,
+            SoulHunter.Gameplay.UI.UiThemeAsset.Layout layout)
+        {
+            int i = 0;
             foreach (var button in _buttons)
             {
                 if (button == null) continue;
+                int row = i / columns, column = i % columns;
+                int inRow = Mathf.Min(columns, count - row * columns);
                 var rect = (RectTransform)button.transform;
-                rect.anchorMin = rect.anchorMax = new Vector2(FrameCentreX, (ButtonsTop + ButtonsBottom) * 0.5f);
+                rect.anchorMin = rect.anchorMax = anchor;
                 rect.pivot = new Vector2(0.5f, 0.5f);
                 rect.sizeDelta = new Vector2(layout.ButtonWidth, layout.ButtonHeight);
-                rect.anchoredPosition = new Vector2(0f, ((count - 1) * 0.5f - index) * step);
-                index++;
+                rect.anchoredPosition = new Vector2((column - (inRow - 1) * 0.5f) * stepX, firstCentre - row * stepY);
+                i++;
             }
         }
 
@@ -266,24 +291,27 @@ namespace SoulHunter.UI
             rect.localScale = Vector3.one;
         }
 
+        /// <summary>The icon a button shows when the caller names none: the four approved buttons in their order.</summary>
+        private static SoulHunter.Gameplay.UI.UITheme.IconSlot DefaultIcon(int index, int count) =>
+            index == 0 ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Start
+            : index == count - 1 ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Quit
+            : index == 1 ? SoulHunter.Gameplay.UI.UITheme.IconSlot.PowerUp
+            : SoulHunter.Gameplay.UI.UITheme.IconSlot.Options;
+
         /// <summary>
-        /// The four menu buttons in the theme's look (Theme Studio): Start is the main action, Quit the leaving one, and
-        /// each shows its theme icon.
+        /// A menu button in the theme's look (Theme Studio): Start (the first) is the main action, Quit (the last) the
+        /// leaving one, and each shows its theme icon.
         /// </summary>
-        public static void Style(Button button, int index)
+        public static void Style(Button button, bool first, bool last, SoulHunter.Gameplay.UI.UITheme.IconSlot icon)
         {
             var image = button.targetGraphic as Image;
             if (image == null) return;
-            var kind = index == 0 ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Primary
-                : index == 3 ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal;
-            var icon = index switch
-            {
-                0 => SoulHunter.Gameplay.UI.UITheme.IconSlot.Start,
-                1 => SoulHunter.Gameplay.UI.UITheme.IconSlot.PowerUp,
-                2 => SoulHunter.Gameplay.UI.UITheme.IconSlot.Options,
-                _ => SoulHunter.Gameplay.UI.UITheme.IconSlot.Quit
-            };
+            var kind = first ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Primary
+                : last ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal;
             SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, kind, icon);
         }
+
+        /// <summary>The four-button menu's look by position (0 Start, 1 Power Up, 2 Options, 3 Quit).</summary>
+        public static void Style(Button button, int index) => Style(button, index == 0, index == 3, DefaultIcon(index, 4));
     }
 }

@@ -103,6 +103,20 @@ namespace SoulHunter.Core.Persistence
         public int BigCoinBagsReceived;
         public int FiveItemChestsOpened;
 
+        /// <summary>
+        /// VS Collection (wiki Collection): the entries "used by the player at least once in their save file", by
+        /// CollectionBook id. An older save has no list; SaveService's repair adds the entries found from the start.
+        /// </summary>
+        public List<string> CollectionFound = new List<string>();
+        /// <summary>VS Bestiary (wiki Ars_Gouda): how many of each enemy type this save has defeated (EnemyData asset name).</summary>
+        public List<EnemyKillRecord> BestiaryKills = new List<EnemyKillRecord>();
+        /// <summary>
+        /// Evolutions and unions obtained from a chest on this save (EvolutionDiscovery; VS Grim_Grimoire: "discovered on
+        /// their save file"). Level-up cards hint them and the pause screen's evolution list shows them. An older save has no
+        /// such field and loads it empty (SaveService repair).
+        /// </summary>
+        public List<string> DiscoveredEvolutions = new List<string>();
+
         // --- Run modes (VS "List of Modes"), picked on the character select screen and copied into RunModes when a
         // run starts. A save written before these existed has no such fields and loads them as off. ---
         public bool ModeHurry;

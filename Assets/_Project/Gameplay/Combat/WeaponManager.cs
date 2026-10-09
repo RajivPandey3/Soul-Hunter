@@ -59,6 +59,21 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>Icon of the last evolution (its base weapon's) or union (its own), for the chest screen.</summary>
         public Sprite LastEvolvedIcon { get; private set; }
 
+        /// <summary>The asset name of the last evolution or union made (for example "Evo_BloodyTear"); the save's discovery key.</summary>
+        public string LastEvolutionId { get; private set; }
+
+        // Evolutions and unions made in this run (by any path), by asset name.
+        private readonly HashSet<string> _madeThisRun = new HashSet<string>();
+
+        /// <summary>True when the evolution or union <paramref name="id"/> was made in this run (VS Grimoire: its row is fully highlighted).</summary>
+        public bool MadeThisRun(string id) => !string.IsNullOrEmpty(id) && _madeThisRun.Contains(id);
+
+        /// <summary>Every evolution recipe this run knows (the scene's list plus GameContent's), in that order.</summary>
+        public IReadOnlyList<WeaponEvolutionData> Evolutions => (IReadOnlyList<WeaponEvolutionData>)_availableEvolutions ?? System.Array.Empty<WeaponEvolutionData>();
+
+        /// <summary>Every union recipe this run knows (none are live since the invented ones were removed, 2026-09-30).</summary>
+        public IReadOnlyList<WeaponUnionData> Unions => (IReadOnlyList<WeaponUnionData>)_availableUnions ?? System.Array.Empty<WeaponUnionData>();
+
         /// <summary>One HUD inventory slot.</summary>
         public struct InventorySlot
         {
@@ -515,6 +530,8 @@ namespace SoulHunter.Gameplay.Combat
                     {
                         // Evolution criteria met!
                         _evolvedWeapons.Add(evo.BaseWeapon);
+                        LastEvolutionId = evo.name;
+                        _madeThisRun.Add(evo.name);
                         var baseDefinition = DefinitionOf(evo.BaseWeapon);
                         LastEvolvedIcon = baseDefinition != null ? baseDefinition.Icon : null;
                         
@@ -555,6 +572,8 @@ namespace SoulHunter.Gameplay.Combat
                     {
                         // Union criteria met!
                         _evolvedWeapons.Add(union.WeaponA); // Mark as evolved so we don't do it again
+                        LastEvolutionId = union.name;
+                        _madeThisRun.Add(union.name);
                         _unionConsumedWeapons.Add(union.WeaponA);
                         _unionConsumedWeapons.Add(union.WeaponB);
                         _activeUnionWeaponCount++;

@@ -89,6 +89,10 @@ MonoBehaviour:
     Resume: {fileID: 21300000, guid: 7ba11d96fe17111459f4d57b509a297c, type: 3}
     Buy: {fileID: 21300000, guid: 16181998387f6004f8a426d23a54aa18, type: 3}
     Emblem: {fileID: 21300000, guid: bb9ce760c22dfe34baca3f0b4832621c, type: 3}
+    Collection: {fileID: 21300000, guid: fa5ea6141dc351c41b6e32d852d8a866, type: 3}
+    Bestiary: {fileID: 21300000, guid: 7ba11d96fe17111459f4d57b509a297c, type: 3}
+    Unlocks: {fileID: 21300000, guid: 13ae41520fab5d14d9f2cbe4e770c1f8, type: 3}
+    Credits: {fileID: 21300000, guid: bb9ce760c22dfe34baca3f0b4832621c, type: 3}
   Font:
     Title: {fileID: 0}
     Body: {fileID: 0}

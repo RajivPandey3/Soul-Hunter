@@ -137,7 +137,7 @@ namespace SoulHunter.Gameplay.AI
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {
-                SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill();
+                SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill(_enemy != null ? _enemy.Data : null); // per type for the VS Bestiary
             }
 
             if (_erasedThisLife)

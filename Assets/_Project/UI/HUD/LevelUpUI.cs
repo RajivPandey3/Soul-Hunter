@@ -214,8 +214,76 @@ namespace SoulHunter.Gameplay.UI
             CardText(card.transform, TagName, font, new Vector2(0.8f, 0.5f), new Vector2(0.985f, 0.95f),
                 _banishMode ? "BANISH" : UpgradeText.Tag(upgrade, owned), 34f, _banishMode ? ThemedElement.TextRole.Danger : ThemedElement.TextRole.Tag,
                 TextAlignmentOptions.BottomRight, FontStyles.Bold);
-            CardText(card.transform, DescriptionName, font, new Vector2(0.09f, 0.06f), new Vector2(0.985f, 0.5f),
+            var hints = EvolutionHintsFor(upgrade);
+            float descriptionRight = hints.Count > 0 ? EvoHintLeft - 0.01f : 0.985f;
+            CardText(card.transform, DescriptionName, font, new Vector2(0.09f, 0.06f), new Vector2(descriptionRight, 0.5f),
                 UpgradeText.Describe(upgrade, owned), 30f, ThemedElement.TextRole.CardSoft, TextAlignmentOptions.TopLeft, FontStyles.Normal);
+            var description = (RectTransform)card.transform.Find(DescriptionName);
+            description.anchorMax = new Vector2(descriptionRight, 0.5f); // CardPart places a part once; the hint narrows it
+            StyleEvolutionHint(card.transform, font, upgrade.Type, hints);
+        }
+
+        // ---------------------------------------------------------------- VS evolution hint (release item P3-01)
+        // vampire.survivors.wiki/w/Level_up (raw, update history, fetched 2026-10-09): Patch 0.3.2 "Added info for discovered
+        // evolutions on Level Up panels"; 1.4.200 "Fix for level up evo indicators not showing on passives", so weapon and
+        // passive cards both carry it. The wiki does not show the hint's look; balance method (2026-10-09), no new art: the
+        // other item's icon(s) in item slots, then the result shown as its base weapon's icon in the gold evolved-slot frame
+        // the HUD uses (evolutions have no icons yet), and the recipe in plain words, so it is never told by colour alone.
+        // Discovery: EvolutionDiscovery (saved when a chest evolves the weapon). Rules for which recipes: EvolutionRecipes.HintsFor.
+
+        public const string EvoHintName = "Card_EvoHint", EvoHintTextName = "Card_EvoHintText", EvoHintIconName = "Card_EvoHintIcon";
+        /// <summary>Icon boxes in the hint: up to two other items and the result.</summary>
+        public const int EvoHintIconCount = 3;
+        private const float EvoHintLeft = 0.6f, EvoHintIconStep = 0.15f, EvoHintIconWidth = 0.135f;
+
+        /// <summary>
+        /// The discovered recipes this card hints. None in Banish mode (the card is being removed, not chosen) and none on the
+        /// maxed-out or Limit Break reward cards (wiki Level_up: those offer gold, chicken or a stat, not an item to build on).
+        /// </summary>
+        private List<EvolutionRecipe> EvolutionHintsFor(UpgradeData upgrade)
+        {
+            if (upgrade == null || _banishMode || (_levelUpManager != null && _levelUpManager.OfferingMaxedChoices))
+                return new List<EvolutionRecipe>();
+            return EvolutionRecipes.HintsFor(upgrade.Type, WeaponManager.Instance, EvolutionRecipes.CurrentSave());
+        }
+
+        private static void StyleEvolutionHint(Transform card, TMP_FontAsset font, UpgradeData.UpgradeType item, List<EvolutionRecipe> hints)
+        {
+            bool shown = hints != null && hints.Count > 0;
+            var existing = card.Find(EvoHintName);
+            if (!shown) { if (existing != null) existing.gameObject.SetActive(false); return; }
+            var block = CardPart<RectTransform>(card, EvoHintName, new Vector2(EvoHintLeft, 0.06f), new Vector2(0.985f, 0.5f));
+            block.gameObject.SetActive(true);
+
+            var first = hints[0];
+            var pictures = new List<(Sprite icon, bool result)>();
+            foreach (var other in EvolutionRecipes.Counterparts(first, item))
+                if (pictures.Count < EvoHintIconCount - 1) pictures.Add((EvolutionRecipes.IconOf(other), false));
+            pictures.Add((EvolutionRecipes.ResultIconOf(first), true));
+
+            for (int i = 0; i < EvoHintIconCount; i++)
+            {
+                float left = i * EvoHintIconStep;
+                var frame = CardPart<Image>(block, EvoHintIconName + i, new Vector2(left, 0.04f), new Vector2(left + EvoHintIconWidth, 0.96f));
+                bool used = i < pictures.Count;
+                frame.gameObject.SetActive(used);
+                if (!used) continue;
+                frame.raycastTarget = false;
+                UITheme.ApplySurface(frame, ThemedElement.SurfaceRole.SlotFilled);
+                // The result wears the HUD's evolved-slot frame; the other items a plain slot edge.
+                UITheme.Edge(frame.gameObject, pictures[i].result ? UITheme.Hud.SlotEvolved : UITheme.Hud.SlotBorder, pictures[i].result ? 3f : 1.5f);
+                var picture = CardPart<Image>(frame.transform, "Icon", new Vector2(0.1f, 0.1f), new Vector2(0.9f, 0.9f));
+                picture.sprite = pictures[i].icon;
+                picture.preserveAspect = true;
+                picture.enabled = pictures[i].icon != null;
+                picture.raycastTarget = false;
+            }
+
+            float textLeft = Mathf.Min(pictures.Count * EvoHintIconStep, 0.6f);
+            CardText(block, EvoHintTextName, font, new Vector2(textLeft, 0f), new Vector2(1f, 1f),
+                EvolutionRecipes.HintText(item, hints), 24f, ThemedElement.TextRole.Card, TextAlignmentOptions.MidlineLeft, FontStyles.Normal);
+            var text = (RectTransform)block.Find(EvoHintTextName);
+            text.anchorMin = new Vector2(textLeft, 0f); // the number of icons can change between cards
         }
 
         private static T CardPart<T>(Transform card, string name, Vector2 min, Vector2 max) where T : Component

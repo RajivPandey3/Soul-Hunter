@@ -89,7 +89,7 @@ namespace SoulHunter.Gameplay.UI
 
         /// <summary>Which of the theme's icons a button shows; the picture itself is read from the theme every time, so a
         /// designer's new icon shows at once.</summary>
-        public enum IconSlot { None, Start, PowerUp, Options, Quit, Back, Confirm, Resume, Buy, Emblem, Coin }
+        public enum IconSlot { None, Start, PowerUp, Options, Quit, Back, Confirm, Resume, Buy, Emblem, Coin, Collection, Bestiary, Unlocks, Credits }
 
         /// <summary>The active theme's picture for a slot (null when the slot is empty).</summary>
         public static Sprite IconFor(IconSlot slot) => slot switch
@@ -104,6 +104,10 @@ namespace SoulHunter.Gameplay.UI
             IconSlot.Buy => Icons.Buy,
             IconSlot.Emblem => Icons.Emblem,
             IconSlot.Coin => Icons.Coin != null ? Icons.Coin : Icons.Buy,
+            IconSlot.Collection => Icons.Collection,
+            IconSlot.Bestiary => Icons.Bestiary,
+            IconSlot.Unlocks => Icons.Unlocks,
+            IconSlot.Credits => Icons.Credits,
             _ => null
         };
 

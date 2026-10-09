@@ -293,6 +293,9 @@ namespace SoulHunter.Core.Persistence
             foreach (var r in data.PowerUpRanks)
                 r.Rank = Mathf.Clamp(r.Rank, 0, PowerUps.Info((PowerUpId)System.Enum.Parse(typeof(PowerUpId), r.Id)).MaxRank);
             data.PowerUpRanks.RemoveAll(r => r.Rank == 0);
+            // VS Collection and Bestiary (P3-02, 2026-10-09): an older save has neither list; it gets the entries found from
+            // the start and the Banish ranks its entry count has earned (before the locked-rank refund below reads them).
+            CollectionBook.Repair(data);
             // VS locked PowerUps (2026-10-01): ranks bought before a PowerUp was locked are refunded (VS Refund).
             int lockedRefund = PowerUpUnlocks.RefundIfLockedRanksOwned(data);
             if (lockedRefund > 0) Debug.Log($"[SaveService] PowerUps with locked ranks refunded: +{lockedRefund} gold.");
@@ -318,6 +321,8 @@ namespace SoulHunter.Core.Persistence
             data.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
             data.BigCoinBagsReceived = Mathf.Max(0, data.BigCoinBagsReceived);
             data.FiveItemChestsOpened = Mathf.Max(0, data.FiveItemChestsOpened);
+            // Discovered evolutions (P3-01/P3-06, 2026-10-09): an older save loads the list empty; no repeats or empty ids.
+            EvolutionDiscovery.Repair(data);
             // Run mode toggles (ModeHurry ... ModeLimitBreak) need no step: a save without them loads them as off, which
             // is the VS default, and a bool cannot hold an impossible value. The schema version stays at 1.
             if (data.WindowMode < 0 || data.WindowMode > 3) data.WindowMode = 0;

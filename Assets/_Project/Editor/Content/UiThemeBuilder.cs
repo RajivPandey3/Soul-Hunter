@@ -92,6 +92,11 @@ namespace SoulHunter.Editor.Content
             theme.Icon.Resume = Art("icon_soul_flame");
             theme.Icon.Buy = Art("icon_coin");
             theme.Icon.Emblem = Art("icon_moon");
+            // Main menu sections (P3-02): icons already drawn for the theme (owner: no new art).
+            theme.Icon.Collection = Art("icon_soul_gem");
+            theme.Icon.Bestiary = Art("icon_soul_flame");
+            theme.Icon.Unlocks = Art("icon_check");
+            theme.Icon.Credits = Art("icon_moon");
             theme.Shape.Button = Art("plate_button");
             theme.Shape.Card = Art("plate_card");
             theme.Shape.Panel = Art("plate_panel");

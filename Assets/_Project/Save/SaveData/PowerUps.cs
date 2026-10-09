@@ -194,9 +194,10 @@ namespace SoulHunter.Core.Persistence
     ///   Cavallo, Bianca Ramba, O'Sole Meeo and Sir Ambrojoe).
     /// - Skip: one rank per survival in Levels 6-10 (VS: 15 min in Il Molise, 30 in Green Acres, 30 in The Bone Zone,
     ///   15 in Moongolow, 15 in Boss Rash).
-    /// - Banish (VS: 60/70/80/90/100 Collection entries), Omni (VS: Torrona's Box at max level), Charm, Defang and
-    ///   Preserve (VS: the Apoplexy, Antidote and Wax Fetish relics): locked until Soul Hunter's Collection, relics and
-    ///   item come (Phases 2-3).
+    /// - Banish (VS: 60/70/80/90/100 Collection entries): one rank per threshold, granted by CollectionBook since the
+    ///   Collection exists (P3-02, 2026-10-09).
+    /// - Omni (VS: Torrona's Box at max level), Charm, Defang and Preserve (VS: the Apoplexy, Antidote and Wax Fetish
+    ///   relics): locked until Soul Hunter's relics and item come (Phases 2-3).
     /// Every other PowerUp is open from the start, as in VS. Unlocks are ids in <see cref="GameData.UnlockedAchievements"/>.
     /// </summary>
     public static class PowerUpUnlocks
@@ -259,7 +260,7 @@ namespace SoulHunter.Core.Persistence
                     foreach (var s in SkipSurvivals) if (!Has(data, SkipId(s.Level, s.Seconds))) return $"Survive {s.Seconds / 60} minutes in Level {s.Level}.";
                     break;
                 case PowerUpId.Banish:
-                    foreach (var e in BanishCollectionEntries) if (!Has(data, BanishId(e))) return $"Fill {e} entries in the Collection (coming soon).";
+                    foreach (var e in BanishCollectionEntries) if (!Has(data, BanishId(e))) return $"Fill {e} entries in the Collection.";
                     break;
                 case PowerUpId.Omni: return "Max a new passive item (coming soon).";
                 case PowerUpId.Charm:

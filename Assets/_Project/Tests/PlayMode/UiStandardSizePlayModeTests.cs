@@ -43,6 +43,18 @@ namespace SoulHunter.Tests.PlayMode
             navigation.ShowPowerUps();
             yield return Settle();
             CheckScreen(navigation.PowerUpPanel.transform, "Power Up", 3); // Back, Buy, Refund
+
+            // The VS main menu sections (P3-02, 2026-10-09): Back is each one's only standard button.
+            navigation.ShowCollection();
+            yield return Settle();
+            CheckScreen(navigation.Collection.transform, "Collection", 1);
+            navigation.ShowUnlocks();
+            yield return Settle();
+            CheckScreen(navigation.Unlocks.transform, "Unlocks", 1);
+            navigation.ShowCredits();
+            yield return Settle();
+            CheckScreen(navigation.Credits.transform, "Credits", 1);
+            navigation.ShowHome();
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

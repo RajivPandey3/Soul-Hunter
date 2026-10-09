@@ -9,8 +9,10 @@ using SoulHunter.UI;
 namespace SoulHunter.Tests.PlayMode
 {
     /// <summary>
-    /// Owner (2026-10-03, "main menu panel thik karo"): the title and the four buttons sit inside the background frame's
-    /// open area, centred on its ornament, all on screen, none overlapping, in the menu's own button look.
+    /// Owner (2026-10-03, "main menu panel thik karo"): the title and the buttons sit inside the background frame's
+    /// open area, centred on its ornament, all on screen, none overlapping, in the menu's own button look. Since P3-02
+    /// (2026-10-09) the menu has seven or eight buttons (Collection, Unlocks, Credits and, once unlocked, Bestiary joined
+    /// them) in two columns, read left to right, top to bottom; every button keeps the one size and the one gap.
     /// </summary>
     public class MainMenuLayoutPlayModeTests : GameplayPlayModeTestBase
     {
@@ -27,30 +29,39 @@ namespace SoulHunter.Tests.PlayMode
             var layout = nav.Layout;
             Assert.IsNotNull(layout, "The menu has its frame layout.");
             Assert.IsTrue(layout.Title != null || layout.Logo != null, "The logo was found.");
-            Assert.That(layout.Buttons.Length, Is.EqualTo(4));
+            int count = layout.Buttons.Length;
+            Assert.That(count, Is.EqualTo(nav.BestiaryButton != null ? 8 : 7), "Start, Power Up, Collection, (Bestiary), Unlocks, Credits, Options, Quit.");
+            Assert.That(layout.Columns, Is.EqualTo(2));
 
             Rect area = ScreenRect(layout.Area);
             var screen = new Rect(0f, 0f, Screen.width, Screen.height);
             float frameCentre = area.xMin + area.width * MainMenuLayout.FrameCentreX;
             float innerTop = area.yMin + area.height * 0.60f, innerBottom = area.yMin + area.height * 0.10f;
 
-            Rect previous = default;
-            for (int i = 0; i < layout.Buttons.Length; i++)
+            Rect block = ScreenRect((RectTransform)layout.Buttons[0].transform);
+            for (int i = 0; i < count; i++)
             {
                 var button = layout.Buttons[i];
                 Assert.IsNotNull(button, $"Button {i}.");
                 Rect r = ScreenRect((RectTransform)button.transform);
+                block = Rect.MinMaxRect(Mathf.Min(block.xMin, r.xMin), Mathf.Min(block.yMin, r.yMin), Mathf.Max(block.xMax, r.xMax), Mathf.Max(block.yMax, r.yMax));
                 Assert.That(Inside(r, screen), $"{button.name} {r} is on screen {screen}.");
                 Assert.That(r.yMin >= innerBottom - 1f && r.yMax <= innerTop + 1f, $"{button.name} {r} is inside the frame (y {innerBottom}-{innerTop}).");
-                Assert.That(r.center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f), $"{button.name} is centred on the frame's ornament.");
-                if (i > 0) Assert.That(r.yMax, Is.LessThanOrEqualTo(previous.yMin + 0.5f), $"{button.name} does not overlap the button above.");
-                previous = r;
-                // The look comes from the active theme (2026-10-04): Start is the main action, Quit the leaving one.
+                Assert.That(r.xMin >= area.xMin && r.xMax <= area.xMax, $"{button.name} {r} is inside the frame's width.");
+                for (int j = 0; j < i; j++)
+                    Assert.That(r.Overlaps(ScreenRect((RectTransform)layout.Buttons[j].transform)), Is.False, $"{button.name} does not overlap {layout.Buttons[j].name}.");
+                // The look comes from the active theme (2026-10-04): Start is the main action, Quit (last) the leaving one.
                 Assert.IsNotNull(button.GetComponent<SoulHunter.Gameplay.UI.ThemedElement>(), $"{button.name} is themed.");
-                var expected = i == 0 ? SoulHunter.Gameplay.UI.UITheme.Primary : i == 3 ? SoulHunter.Gameplay.UI.UITheme.DangerButton : SoulHunter.Gameplay.UI.UITheme.Button;
+                var expected = i == 0 ? SoulHunter.Gameplay.UI.UITheme.Primary : i == count - 1 ? SoulHunter.Gameplay.UI.UITheme.DangerButton : SoulHunter.Gameplay.UI.UITheme.Button;
                 Assert.AreEqual(expected, button.colors.normalColor, $"{button.name} has its theme colour.");
                 AssertIconAndLabelAligned(button);
             }
+            Assert.That(layout.Buttons[count - 1], Is.SameAs(nav.QuitButton), "Quit is the last button.");
+            // The button block is centred on the frame's ornament (a short last row is centred too).
+            Assert.That(block.center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f), "The buttons are centred on the frame's ornament.");
+            if (count % 2 == 1)
+                Assert.That(ScreenRect((RectTransform)layout.Buttons[count - 1].transform).center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f),
+                    "The lone last button is centred.");
             if (layout.Logo != null)
             {
                 // The HD logo (owner review 2026-10-08): on screen, inside the frame, centred on the ornament, a clear gap
@@ -65,18 +76,21 @@ namespace SoulHunter.Tests.PlayMode
                     "A clear gap between the logo and Start.");
                 Assert.That(layout.Logo.sprite.rect.width, Is.GreaterThanOrEqualTo(logo.width), "The logo is not stretched past its pixels.");
                 Assert.That(layout.Buttons[1].GetComponentInChildren<TMPro.TMP_Text>().text, Is.EqualTo("Power Up"), "Power Up, as the shop writes it.");
-                // Every button the same size, with the same gap between each (owner review 2026-10-08).
-                float gap0 = -1f;
-                for (int b = 0; b < layout.Buttons.Length; b++)
+                // Every button the same size, with the same gap between each, across a row and down a column (owner
+                // review 2026-10-08: one size and one gap).
+                Rect r0 = ScreenRect((RectTransform)layout.Buttons[0].transform);
+                float gap0 = SoulHunter.Gameplay.UI.UITheme.Layout.ButtonGap * scale;
+                for (int b = 0; b < count; b++)
                 {
                     Rect rb = ScreenRect((RectTransform)layout.Buttons[b].transform);
-                    Rect r0 = ScreenRect((RectTransform)layout.Buttons[0].transform);
                     Assert.That(rb.width, Is.EqualTo(r0.width).Within(0.5f), $"{layout.Buttons[b].name} is as wide as Start.");
                     Assert.That(rb.height, Is.EqualTo(r0.height).Within(0.5f), $"{layout.Buttons[b].name} is as tall as Start.");
-                    if (b == 0) continue;
-                    float g = ScreenRect((RectTransform)layout.Buttons[b - 1].transform).yMin - rb.yMax;
-                    if (gap0 < 0f) gap0 = g;
-                    Assert.That(g, Is.EqualTo(gap0).Within(0.5f), "The gaps between buttons are equal.");
+                    if (b % 2 == 1)
+                        Assert.That(rb.xMin - ScreenRect((RectTransform)layout.Buttons[b - 1].transform).xMax, Is.EqualTo(gap0).Within(0.6f),
+                            $"The gap beside {layout.Buttons[b].name} is the theme's gap.");
+                    if (b >= 2)
+                        Assert.That(ScreenRect((RectTransform)layout.Buttons[b - 2].transform).yMin - rb.yMax, Is.EqualTo(gap0).Within(0.6f),
+                            $"The gap above {layout.Buttons[b].name} is the theme's gap.");
                 }
                 Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
                 yield break;
