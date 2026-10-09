@@ -1591,6 +1591,15 @@ Tests:
 - Validation: EditMode 673/673, PlayMode 344/344, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-arcana-full/`).
 - Not seen by eye yet (`V`).
 
+**Build screenshots of the new UI** (`D:/SoulHunter-Validation/run-20261009-newui-screens2/`, script `newui-screens.ps1`; 0 errors, save untouched, partial `V`):
+- New bot options: `-sh-autoplay-menu-sections-shot`, `-sh-autoplay-evolutions-shot`, `-sh-autoplay-discover`, `-sh-autoplay-arcana`, `-sh-autoplay-powerup-off-shot` and `-sh-autoplay-sort-shot`.
+- **Defects found in the first capture, and fixed:**
+  - The Bestiary menu button had no icon. The theme asset pointed at the single-sprite id 21300000, but `mono_soul_flame` is a multiple-sprite picture whose sprite is `mono_soul_flame_0`.
+    - `CollectionBookTests` did not catch it: NUnit's `IsNotNull` lets Unity's "missing object" through. The test now uses Unity's own null check.
+  - The pause stats column showed through at the edge of the Evolutions list. The pause screen now steps back (`CanvasGroup`) while the list is open.
+- `EvolutionDiscoveryTests` now forbids discovery only from the bot's `-evolve` debug start; the explicit `-discover` tool is allowed.
+- Tests: EditMode 673/673, then the pause, Evolutions, menu, theme and bot fixtures 19/19 (`-uifix2/`).
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

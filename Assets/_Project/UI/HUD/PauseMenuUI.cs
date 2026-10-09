@@ -50,7 +50,17 @@ namespace SoulHunter.Gameplay.UI
         public void OpenEvolutions()
         {
             if (_recipes == null) _recipes = EvolutionRecipesScreen.Create();
-            _recipes.Open(() => Select(_evolutions));
+            // The pause screen (buttons and the stats column) steps back while the list is open, so its stats do not show
+            // through the list's veil at the screen edge (build screenshot, 2026-10-09); it comes back when the list closes.
+            var group = GetComponent<CanvasGroup>();
+            if (group == null) group = gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            _recipes.Open(() =>
+            {
+                if (group != null) { group.alpha = 1f; group.blocksRaycasts = true; }
+                Select(_evolutions);
+            });
         }
 
         private void Build()

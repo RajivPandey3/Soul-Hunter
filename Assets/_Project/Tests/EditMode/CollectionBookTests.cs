@@ -239,7 +239,9 @@ namespace SoulHunter.Tests.EditMode
             var theme = GameContentCatalog.Load().UiTheme;
             Assert.IsNotNull(theme);
             foreach (var icon in new[] { theme.Icon.Collection, theme.Icon.Bestiary, theme.Icon.Unlocks, theme.Icon.Credits })
-                Assert.IsNotNull(icon, "Every main menu button shows its icon.");
+                // Unity's own null check: a reference to a missing sprite is a "fake null" that NUnit's IsNotNull lets
+                // through (the Bestiary pointed at a sub-asset id the multi-sprite picture does not have, 2026-10-09).
+                Assert.That(icon != null, Is.True, "Every main menu button shows its icon.");
             Assert.That(theme.Icon.Collection, Is.Not.SameAs(theme.Icon.PowerUp), "Collection and Power Up look different.");
             Assert.That(theme.Icon.Bestiary, Is.Not.SameAs(theme.Icon.Quit), "Bestiary and Quit look different.");
         }

@@ -44,6 +44,26 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-heal-powerups             play with the VS Max Health and Recovery PowerUps bought (heal balance)
     ///   -sh-autoplay-revival                   play with the VS Revival PowerUp bought (one Revive, to see the Revive screen)
     ///   -sh-autoplay-inverse                   play in Inverse mode (e.g. the merchant's Inverse wares on stage 3)
+    ///   -sh-autoplay-arcana                    play in Arcana mode; every Arcana choice screen (start pick, Arcana chest,
+    ///                                          Draw a Fate) is screenshot ("arcana-choice") before the shown card is taken
+    ///   -sh-autoplay-discover "Evo_A,Evo_B"    mark those evolutions discovered on the throw-away save (level-up cards then
+    ///                                          show the evolution hint; add -sh-autoplay-levelup-shots to capture it)
+    ///   -sh-autoplay-evolve "Evo_A,Evo_B"      start the run with those evolutions already made
+    /// Screenshot options (owner review of the UI; all on the throw-away save):
+    ///   -sh-autoplay-shop-shot                 before the run: the PowerUp shop after buying a few ranks
+    ///   -sh-autoplay-powerup-off-shot          in the shop flow: one PowerUp maxed and switched off, its cell selected
+    ///   -sh-autoplay-select-shot               before the run: the main menu and the character select screen
+    ///   -sh-autoplay-sort-shot                 in the select flow: the character select sorted A-Z, descending
+    ///   -sh-autoplay-menu-sections-shot        before the run: the main menu, then Collection, Bestiary, Unlocks and Credits
+    ///                                          (a few entries found and kills recorded, Bestiary unlocked, menu reloaded)
+    ///   -sh-autoplay-style-sample              before the run: the UI style sample screen, also at 2x
+    ///   -sh-autoplay-early-shots               every 0.2 s for the first 3 s of the run
+    ///   -sh-autoplay-pause-shot                20 s in: the pause menu with its stats panel
+    ///   -sh-autoplay-options-shot              with -pause-shot: every Options section over the pause menu
+    ///   -sh-autoplay-evolutions-shot           ~22 s in: pause, press Evolutions, screenshot (and the next page), resume
+    ///   -sh-autoplay-levelup-shots             every level-up screen (otherwise every fifth level)
+    ///   -sh-autoplay-unlock-shot               every unlock notice while it is shown
+    ///   -sh-autoplay-results-shot              at the time limit: quit through the pause menu and screenshot the Results
     /// Tools/Autoplay/run-autoplay.ps1 builds and runs it.
     /// </summary>
     public sealed class AutoplayBot : MonoBehaviour
@@ -208,9 +228,26 @@ namespace SoulHunter.Gameplay.Core
             }
             if (Config.Revival) SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.Revival, 1);
             if (Config.Inverse) save.CurrentData.ModeInverse = true;
-            if (HasArg("-sh-autoplay-shop-shot")) yield return ShopShots(save.CurrentData);
-            // -sh-autoplay-select-shot: screenshot the main menu, then the character select screen (what Start opens).
-            if (HasArg("-sh-autoplay-select-shot")) yield return SelectShots();
+            // -sh-autoplay-arcana: Arcana mode on (the start pick, Arcana chests and the choice screen; Housekeeping shoots it).
+            if (HasArg("-sh-autoplay-arcana")) save.CurrentData.ModeArcana = true;
+            // -sh-autoplay-discover "Evo_A,Evo_B": those evolutions count as found on this save (level-up evolution hints,
+            // the Evolutions screen and the Collection show them).
+            string discover = ArgValue("-sh-autoplay-discover");
+            if (!string.IsNullOrEmpty(discover))
+            {
+                var marked = new List<string>();
+                foreach (var id in discover.Split(','))
+                    if (!string.IsNullOrWhiteSpace(id) && SoulHunter.Core.Persistence.EvolutionDiscovery.MarkDiscovered(save.CurrentData, id.Trim()))
+                        marked.Add($"\"{Escape(id.Trim())}\"");
+                Event("discover", $"\"evolutions\": [{string.Join(", ", marked)}]");
+            }
+            // -sh-autoplay-menu-sections-shot: the main menu, then Collection, Bestiary, Unlocks and Credits in turn.
+            if (HasArg("-sh-autoplay-menu-sections-shot")) yield return MenuSectionShots(save.CurrentData);
+            // -sh-autoplay-powerup-off-shot runs inside the shop flow.
+            if (HasArg("-sh-autoplay-shop-shot") || HasArg("-sh-autoplay-powerup-off-shot")) yield return ShopShots(save.CurrentData);
+            // -sh-autoplay-select-shot: screenshot the main menu, then the character select screen (what Start opens);
+            // -sh-autoplay-sort-shot runs inside it.
+            if (HasArg("-sh-autoplay-select-shot") || HasArg("-sh-autoplay-sort-shot")) yield return SelectShots();
             // -sh-autoplay-style-sample: the UI style sample screen (the look waiting for approval), captured at 2x.
             if (HasArg("-sh-autoplay-style-sample")) yield return StyleSampleShot();
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
@@ -220,6 +257,8 @@ namespace SoulHunter.Gameplay.Core
             if (HasArg("-sh-autoplay-early-shots")) StartCoroutine(EarlyShots());
             // -sh-autoplay-pause-shot: 20 s in, pause, screenshot the pause menu (stats panel), resume.
             if (HasArg("-sh-autoplay-pause-shot")) StartCoroutine(PauseShot());
+            // -sh-autoplay-evolutions-shot: ~22 s in, pause, press Evolutions, screenshot (and the next page), resume.
+            if (HasArg("-sh-autoplay-evolutions-shot")) StartCoroutine(EvolutionsShot());
             // -sh-autoplay-unlock-shot: screenshot every unlock notice while it is on screen (not hidden behind a menu).
             if (HasArg("-sh-autoplay-unlock-shot")) StartCoroutine(UnlockNoticeShots());
             yield return new WaitForSecondsRealtime(1f);
@@ -574,10 +613,13 @@ namespace SoulHunter.Gameplay.Core
                 var arcanaChoice = ArcanaChoiceScreen.Current;
                 if (arcanaChoice != null && arcanaChoice.IsOpen)
                 {
-                    // VS Arcana choice (P2-01): a player takes the card shown first.
+                    // VS Arcana choice (P2-01): a player takes the card shown first. Screenshot it first, once it has settled.
+                    yield return new WaitForSecondsRealtime(0.4f);
+                    if (!arcanaChoice.IsOpen) continue;
                     yield return Shot("arcana-choice");
-                    Event("arcana-choice", string.Format(CultureInfo.InvariantCulture, "\"cards\": {0}, \"taken\": \"{1}\"",
-                        arcanaChoice.Cards.Count, arcanaChoice.Selected != null ? arcanaChoice.Selected.CardName : ""));
+                    Event("arcana-choice", string.Format(CultureInfo.InvariantCulture, "\"title\": \"{0}\", \"cards\": {1}, \"taken\": \"{2}\"",
+                        Escape(arcanaChoice.TitleText != null ? arcanaChoice.TitleText.text : ""), arcanaChoice.Cards.Count,
+                        arcanaChoice.Selected != null ? Escape(arcanaChoice.Selected.CardName) : ""));
                     arcanaChoice.PressTake();
                 }
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
@@ -778,8 +820,155 @@ namespace SoulHunter.Gameplay.Core
                 Screen.width, Screen.height, canvas != null ? canvas.scaleFactor : 0f,
                 Escape(string.Join("; ", texts.Select(t => $"{t.name}='{t.text}' size {t.fontSize:0.0} auto {t.enableAutoSizing} max {t.fontSizeMax:0}"))),
                 Escape(string.Join("; ", buttons))));
+            // -sh-autoplay-sort-shot: the VS sort, A-Z descending (CharacterSelectionUI.SetSort / SetSortDescending; the
+            // screen lives in the UI assembly, so it is reached by name). The sort is not saved; it goes back to default.
+            if (HasArg("-sh-autoplay-sort-shot"))
+            {
+                var select = Find("CharacterSelectionUI");
+                var type = select != null ? select.GetType() : null;
+                var sortType = type?.GetNestedType("CharacterSort");
+                var setSort = type?.GetMethod("SetSort");
+                var setDescending = type?.GetMethod("SetSortDescending");
+                if (sortType == null || setSort == null || setDescending == null)
+                    Event("sort-shot", "\"error\": \"CharacterSelectionUI sort API not found\"");
+                else
+                {
+                    setSort.Invoke(select, new[] { System.Enum.Parse(sortType, "Alphabetical") });
+                    setDescending.Invoke(select, new object[] { true });
+                    yield return new WaitForSecondsRealtime(0.5f);
+                    yield return Shot("character-select-sort-za-desc");
+                    var visible = type.GetMethod("VisibleNames")?.Invoke(select, null) as List<string>;
+                    Event("sort-shot", string.Format(CultureInfo.InvariantCulture, "\"sort\": \"{0}\", \"order\": \"{1}\", \"visible\": \"{2}\"",
+                        Escape(type.GetProperty("SortText")?.GetValue(select) as string ?? ""),
+                        Escape(type.GetProperty("OrderText")?.GetValue(select) as string ?? ""),
+                        Escape(visible != null ? string.Join(", ", visible) : "")));
+                    setSort.Invoke(select, new[] { System.Enum.Parse(sortType, "Default") });
+                    setDescending.Invoke(select, new object[] { false });
+                    yield return new WaitForSecondsRealtime(0.2f);
+                }
+            }
             navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
             yield return new WaitForSecondsRealtime(0.3f);
+        }
+
+        /// <summary>
+        /// -sh-autoplay-menu-sections-shot: the VS main menu sections (Collection, Bestiary, Unlocks, Credits). The throw-away
+        /// save gets a few Collection entries found, a few Bestiary kills and the Bestiary unlocked, and the main menu is
+        /// loaded again so its Bestiary button is built (MainMenuNavigation builds the sections in Start). Each section is
+        /// opened with its own button like a player, screenshot, and closed with its Back button.
+        /// </summary>
+        private IEnumerator MenuSectionShots(SoulHunter.Core.Persistence.GameData data)
+        {
+            MonoBehaviour Find(string type) => FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.GetType().Name == type);
+            // A few Collection entries of each kind (evolutions come from EvolutionDiscovery, -sh-autoplay-discover).
+            int found = 0;
+            foreach (var group in SoulHunter.Gameplay.Data.CollectionCatalog.All()
+                         .Where(e => e != null && !string.IsNullOrEmpty(e.Id) && !e.Id.StartsWith(SoulHunter.Core.Persistence.CollectionBook.EvolutionPrefix))
+                         .GroupBy(e => e.Kind))
+                foreach (var entry in group.Take(3))
+                {
+                    SoulHunter.Core.Persistence.CollectionBook.MarkFound(data, entry.Id, out bool isNew);
+                    if (isNew) found++;
+                }
+            // A few Bestiary entries known, with different kill counts.
+            var killCounts = new[] { 250, 40, 7, 1 };
+            var enemies = SoulHunter.Gameplay.Data.BestiaryCatalog.All();
+            int known = 0;
+            for (int i = 0; i < enemies.Count && i < killCounts.Length; i++)
+            {
+                string id = SoulHunter.Gameplay.Data.BestiaryCatalog.IdOf(enemies[i]);
+                for (int k = 0; k < killCounts[i]; k++) SoulHunter.Core.Persistence.Bestiary.RecordKill(data, id);
+                known++;
+            }
+            SoulHunter.Core.Persistence.Bestiary.Unlock(data);
+            Event("menu-sections-data", $"\"collectionFound\": {found}, \"bestiaryKnown\": {known}, \"bestiaryUnlocked\": {(SoulHunter.Core.Persistence.Bestiary.IsUnlocked(data) ? "true" : "false")}");
+
+            // Load the main menu again so the Bestiary button exists (the save is in memory; nothing is written).
+            var old = Find("MainMenuNavigation");
+            GameServices.Instance.Get<SceneService>().LoadSceneAsync("MainMenu");
+            float until = Time.realtimeSinceStartup + 20f;
+            MonoBehaviour navigation = null;
+            while (Time.realtimeSinceStartup < until)
+            {
+                navigation = Find("MainMenuNavigation");
+                if (navigation != null && navigation != old && SceneManager.GetActiveScene().name == "MainMenu") break;
+                yield return null;
+            }
+            yield return new WaitForSecondsRealtime(0.8f);
+            if (navigation == null) { Event("menu-sections", "\"error\": \"MainMenuNavigation not found\""); yield break; }
+            yield return Shot("mainmenu-sections");
+
+            var navType = navigation.GetType();
+            var results = new List<string>();
+            foreach (var (label, buttonName, screenName) in new[]
+                     {
+                         ("collection", "CollectionButton", "Collection"),
+                         ("bestiary", "BestiaryButton", "BestiaryScreen"),
+                         ("unlocks", "UnlocksButton", "Unlocks"),
+                         ("credits", "CreditsButton", "Credits"),
+                     })
+            {
+                var button = navType.GetProperty(buttonName)?.GetValue(navigation) as UnityEngine.UI.Button;
+                var screen = navType.GetProperty(screenName)?.GetValue(navigation) as MonoBehaviour;
+                if (button == null || screen == null)
+                {
+                    results.Add($"\"{label}\": \"{(button == null ? "no button" : "no screen")}\"");
+                    continue;
+                }
+                button.onClick.Invoke();
+                yield return new WaitForSecondsRealtime(0.6f);
+                yield return Shot("menu-" + label);
+                var count = screen.GetType().GetProperty("CountText")?.GetValue(screen) as TMPro.TMP_Text;
+                results.Add($"\"{label}\": \"{(screen.gameObject.activeInHierarchy ? "shown" : "hidden")}; {Escape(count != null ? count.text : "")}\"");
+                var back = screen.GetType().GetProperty("BackButton")?.GetValue(screen) as UnityEngine.UI.Button;
+                if (back != null) back.onClick.Invoke();
+                else navType.GetMethod("ShowHome")?.Invoke(navigation, null);
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            Event("menu-sections", string.Join(", ", results));
+        }
+
+        /// <summary>
+        /// -sh-autoplay-evolutions-shot: about 22 s into the run (after -sh-autoplay-pause-shot, not over a level-up or chest),
+        /// pause, press the pause menu's Evolutions button (EvolutionRecipesScreen), screenshot, page Next once when there is
+        /// a second page and screenshot again, then Back and resume.
+        /// </summary>
+        private IEnumerator EvolutionsShot()
+        {
+            yield return new WaitForSecondsRealtime(22f);
+            var system = GameSystemManager.Instance;
+            if (system == null) yield break;
+            while (SoulHunter.Core.Services.GameTime.IsPaused) yield return null;
+            system.TogglePause();
+            yield return new WaitForSecondsRealtime(0.5f);
+            var pause = FindFirstObjectByType<PauseMenuUI>(FindObjectsInactive.Include);
+            if (pause == null || pause.EvolutionsButton == null)
+            {
+                Event("evolutions", "\"error\": \"pause menu or its Evolutions button not found\"");
+                if (system.IsPaused) system.Resume();
+                yield break;
+            }
+            pause.EvolutionsButton.onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.5f);
+            var screen = pause.RecipesScreen;
+            yield return Shot("evolutions");
+            if (screen != null)
+            {
+                int pages = screen.PageCount;
+                if (pages > 1 && screen.NextButton != null)
+                {
+                    screen.NextButton.onClick.Invoke();
+                    yield return new WaitForSecondsRealtime(0.4f);
+                    yield return Shot("evolutions-page2");
+                }
+                Event("evolutions", string.Format(CultureInfo.InvariantCulture, "\"open\": {0}, \"recipes\": {1}, \"pages\": {2}, \"page\": {3}",
+                    screen.IsOpen ? "true" : "false", screen.Recipes.Count, pages, screen.Page));
+                if (screen.BackButton != null) screen.BackButton.onClick.Invoke();
+                else screen.Close();
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            else Event("evolutions", "\"error\": \"EvolutionRecipesScreen not created\"");
+            if (system.IsPaused) system.Resume();
         }
 
         private IEnumerator ShopShots(SoulHunter.Core.Persistence.GameData data)
@@ -804,6 +993,33 @@ namespace SoulHunter.Gameplay.Core
             yield return new WaitForSecondsRealtime(0.3f);
             yield return Shot("powerups");
             Event("powerups", string.Format(CultureInfo.InvariantCulture, "\"bought\": {0}, \"gold\": {1}", SoulHunter.Core.Persistence.PowerUps.TotalBought(data), data.Currency));
+            // -sh-autoplay-powerup-off-shot: VS PowerUp on/off. Area is maxed on the throw-away save, selected, and switched
+            // off with the shop's own Turn Off (ToggleSelected); the shot shows its OFF cell selected. Switched back on after.
+            if (HasArg("-sh-autoplay-powerup-off-shot") && shop != null)
+            {
+                var area = SoulHunter.Core.Persistence.PowerUpId.Area;
+                SoulHunter.Core.Persistence.PowerUps.SetRank(data, area, SoulHunter.Core.Persistence.PowerUps.Info(area).MaxRank);
+                var select = shop.GetType().GetMethod("Select");
+                var toggle = shop.GetType().GetMethod("ToggleSelected");
+                select?.Invoke(shop, new object[] { area });
+                if (SoulHunter.Core.Persistence.PowerUps.IsEnabled(data, area))
+                {
+                    if (toggle != null) toggle.Invoke(shop, null);
+                    else { SoulHunter.Core.Persistence.PowerUps.SetEnabled(data, area, false); select?.Invoke(shop, new object[] { area }); }
+                }
+                yield return new WaitForSecondsRealtime(0.4f);
+                yield return Shot("powerups-off");
+                Event("powerup-off", string.Format(CultureInfo.InvariantCulture, "\"powerup\": \"{0}\", \"maxed\": {1}, \"enabled\": {2}, \"info\": \"{3}\"",
+                    area, SoulHunter.Core.Persistence.PowerUps.IsMaxed(data, area) ? "true" : "false",
+                    SoulHunter.Core.Persistence.PowerUps.IsEnabled(data, area) ? "true" : "false",
+                    Escape(shop.GetType().GetProperty("InfoText")?.GetValue(shop) as string ?? "")));
+                if (!SoulHunter.Core.Persistence.PowerUps.IsEnabled(data, area))
+                {
+                    if (toggle != null) toggle.Invoke(shop, null);
+                    else SoulHunter.Core.Persistence.PowerUps.SetEnabled(data, area, true);
+                }
+                yield return new WaitForSecondsRealtime(0.2f);
+            }
             navigation?.GetType().GetMethod("ShowHome")?.Invoke(navigation, null);
             yield return new WaitForSecondsRealtime(0.3f);
         }

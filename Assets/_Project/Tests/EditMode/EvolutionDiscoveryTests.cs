@@ -144,7 +144,18 @@ namespace SoulHunter.Tests.EditMode
             string bot = File.ReadAllText("Assets/_Project/Core/Game/AutoplayBot.cs");
             Assert.That(chest, Does.Contain("EvolutionDiscovery.MarkDiscovered"));
             Assert.That(manager, Does.Not.Contain("EvolutionDiscovery"), "TryEvolveWeapon itself never writes the save.");
-            Assert.That(bot, Does.Not.Contain("EvolutionDiscovery"));
+            // The bot writes discoveries only through its explicit -sh-autoplay-discover tool (a screenshot aid on its
+            // throw-away save), never from the -sh-autoplay-evolve debug start.
+            int call = bot.IndexOf("EvolutionDiscovery.MarkDiscovered", System.StringComparison.Ordinal);
+            Assert.That(bot.IndexOf("EvolutionDiscovery.MarkDiscovered", call + 1, System.StringComparison.Ordinal), Is.EqualTo(-1),
+                "One discovery call in the bot.");
+            if (call >= 0)
+            {
+                int option = bot.LastIndexOf("ArgValue(\"-sh-autoplay-discover\")", call, System.StringComparison.Ordinal);
+                Assert.That(option, Is.GreaterThanOrEqualTo(0), "The bot's only discovery call belongs to -sh-autoplay-discover.");
+                Assert.That(bot.Substring(option, call - option), Does.Not.Contain("-sh-autoplay-evolve"),
+                    "Nothing between the discover option and its call belongs to the -evolve start.");
+            }
         }
     }
 }
