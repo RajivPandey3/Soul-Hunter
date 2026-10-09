@@ -25,8 +25,11 @@ namespace SoulHunter.Gameplay.Core
     ///   (the same for Banish and Reroll). Stages page, Patch 1.0 notes: "The merchant also sells: Skip, Banish, and
     ///   Reroll (can carry up to 20) and 1 extra Arcana", so the cap counts the charges held now.
     /// - Pick a Card, 20,000 gold: "Gives an extra Arcana for this run. ... Inverse mode only." Once per visit ("1 extra
-    ///   Arcana"). Soul Hunter has no Arcana choice screen, so a random Arcana the player does not hold is given, as
-    ///   ArcanaManager does for chests. It is not held back by the three-Arcana chest limit (that is a chest rule).
+    ///   Arcana"). Since release item P2-01 (2026-10-09) it opens the Arcana choice of every unlocked Arcana not held
+    ///   (wiki Arcanas: "All unlocked Arcanas are available as choices"), with Random. It is not held back by the
+    ///   three-Arcana chest limit (that is a chest rule). Endless: the merchant comes back on Level 3 of every cycle with
+    ///   the ware again (wiki Arcanas: "the Merchant will respawn with another for sale at the start of each normal game
+    ///   length cycle ... until all unlocked Arcanas are collected").
     /// Soul Hunter's own ware names: Reroll / Skip / Banish Sigil and Draw a Fate.
     /// Not built: the Endless mode Revival ware (the wiki gives it no price; owner question).
     /// </summary>
@@ -295,10 +298,22 @@ namespace SoulHunter.Gameplay.Core
         public bool BuyArcana()
         {
             if (!TryGetEconomy(out var economy)) return false;
-            bool bought = TryBuyArcana(ArcanaManager.Instance, economy.SpendGold, UnityEngine.Random.value);
-            if (bought) ShowCost(_arcanaPrice);
+            var arcanas = ArcanaManager.Instance;
+            if (!SellsInverseWares || _arcanaBought || arcanas == null || arcanas.AvailableCount == 0 || !economy.SpendGold(_arcanaPrice))
+            {
+                RefreshShopUI();
+                return false;
+            }
+            _arcanaBought = true;
+            ShowCost(_arcanaPrice);
+            // The choice screen opens over the shop; the card is given when the player picks it.
+            arcanas.OpenMerchantDraft(card =>
+            {
+                LastMessage = card != null ? $"Draw a Fate: {card.CardName}" : "";
+                RefreshShopUI();
+            });
             RefreshShopUI();
-            return bought;
+            return true;
         }
 
         private static bool TryGetEconomy(out EconomyService economy)
@@ -432,7 +447,7 @@ namespace SoulHunter.Gameplay.Core
             {
                 Icon = SoulHunter.Gameplay.UI.UITheme.IconFor(SoulHunter.Gameplay.UI.UITheme.IconSlot.Emblem),
                 Name = "Draw a Fate",
-                Description = "One more Arcana for this run, drawn at random.",
+                Description = "Choose one more Arcana for this run.",
                 State = arcanaState == WareState.SoldOut ? (_arcanaBought ? "BOUGHT" : "NONE LEFT") : $"{_arcanaPrice} G",
                 Available = arcanaState == WareState.Available,
                 OnClick = () => BuyArcana()

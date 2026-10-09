@@ -58,13 +58,15 @@ namespace SoulHunter.Tests.PlayMode
             var arcanas = ArcanaManager.Instance;
             Assert.IsNotNull(arcanas, "No ArcanaManager in Main_Gameplay.");
             Assert.That(RunModes.Arcana, Is.True);
+            // VS (wiki Arcanas, P2-01): the run opens the start choice; the player picks a card.
+            var screen = ArcanaChoiceScreen.Current;
+            Assert.IsNotNull(screen, "Arcana mode opens the start choice. " + Errors());
+            if (screen.IsOpen) Click(screen.TakeButton, "Take this card");
+            yield return null;
             Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(1), "VS Arcana mode: the run starts with one Arcana. " + Errors());
             Assert.That(arcanas.StartingArcana, Is.SameAs(arcanas.ActiveArcanas[0]));
 
-            var chestUI = Object.FindObjectsByType<ChestUI>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                .First(ui => ui.isActiveAndEnabled && GetPrivateField<GameObject>(ui, "_chestPanel") != null);
-
-            // An Arcana chest, as the 11:00 / 21:00 chest elites drop it, right on the player.
+            // An Arcana chest, as the 11:00 / 21:00 chest elites drop it, right on the player: it opens the Arcana choice.
             var chestObject = PickupPoolManager.Instance.SpawnChest(PlayerController.Instance.transform.position);
             Assert.IsNotNull(chestObject, "SpawnChest produced nothing.");
             var chest = chestObject.GetComponent<ChestPickup>();
@@ -73,16 +75,16 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => !chestObject.activeInHierarchy, "the player to collect the Arcana chest");
             yield return null;
 
-            Assert.IsTrue(chestUI.IsOpen, "The chest screen opens. " + Errors());
-            Assert.That(chestUI.Screen.Preview, Is.Not.Null);
-            var rewardText = GetPrivateField<TextMeshProUGUI>(chestUI, "_rewardText");
-            Assert.That(rewardText.text, Does.StartWith("ARCANA CHEST!"), $"Reward text: '{rewardText.text}'. " + Errors());
+            Assert.IsTrue(screen.IsOpen, "The Arcana chest opens the Arcana choice. " + Errors());
+            Assert.That(screen.Cards.Count, Is.EqualTo(ArcanaDraft.ChestChoices), "VS: four choices.");
+            var picked = screen.Cards[1].Arcana;
+            Click(screen.Cards[1].Button, "the second card");
+            Click(screen.TakeButton, "Take this card");
+            yield return null;
             Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(2), "The Arcana chest gave a second Arcana.");
+            Assert.That(arcanas.ActiveArcanas[1], Is.SameAs(picked), "The card the player chose.");
             Assert.That(arcanas.ActiveArcanas[1], Is.Not.SameAs(arcanas.ActiveArcanas[0]), "Never one already held.");
-            Assert.That(rewardText.text, Does.Contain(arcanas.ActiveArcanas[1].CardName));
-
-            yield return chestUI.OpenAndClose();
-            Assert.IsFalse(chestUI.IsOpen, "Open, then Done, closes the chest screen. " + Errors());
+            Assert.That(SoulHunter.Core.Services.GameTime.IsPaused, Is.False, "Taking the card resumes the game. " + Errors());
         }
     }
 }

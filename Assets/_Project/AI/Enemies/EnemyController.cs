@@ -294,6 +294,8 @@ namespace SoulHunter.Gameplay.AI
         /// </summary>
         public void Freeze(float duration)
         {
+            // VS Out of Bounds (XII): "Freezing enemies generates explosions."
+            SoulHunter.Gameplay.Core.ArcanaManager.OnEnemyFrozen(this);
             var resume = _currentState is EnemyFrozenState frozen ? frozen.ResumeState
                 : _currentState is EnemyFlyState ? _currentState : null;
             ChangeState(new EnemyFrozenState(this, duration, resume));

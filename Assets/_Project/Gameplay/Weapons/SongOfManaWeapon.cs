@@ -34,6 +34,7 @@ namespace SoulHunter.Gameplay.Combat
         private int OddSteps => (Level >= 3 ? 1 : 0) + (Level >= 5 ? 1 : 0) + (Level >= 7 ? 1 : 0);
         private int EvenSteps => (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (Level >= 8 ? 1 : 0);
         public float BaseDamage => VsBaseDamage + 10f * EvenSteps;
+        public override float ArcanaZoneBaseDamage => BaseDamage;
         public float LevelCooldown => VsCooldown + VsCooldownStep * OddSteps;
         public float ShotLifetime => BaseShotLifetime + VsDurationStep * OddSteps;
         /// <summary>Area from level-ups, on top of our shot size: 1.0, 2.0 (L2), 2.25, 2.5, 2.75 (L8).</summary>

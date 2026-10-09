@@ -111,6 +111,24 @@ namespace SoulHunter.Gameplay.Combat
         [Range(0f, 1f)]
         public float KnockbackResistance = 0f;
 
+        /// <summary>Called for every weapon hit an enemy takes (ArcanaManager listens while the player holds Arcanas).</summary>
+        public static Action<AutoAttackWeapon, SoulHunter.Gameplay.AI.EnemyController, Vector3> WeaponHitObserver;
+
+        /// <summary>Above 0 while retaliatory damage is dealt (VS "Retaliate": NO FUTURE, Crimson Shroud, Arcana blasts).</summary>
+        public static int RetaliationDepth;
+        /// <summary>An enemy slain by retaliatory damage (VS Divine Bloodline (IX): "+0.5 Max Health").</summary>
+        public static Action<SoulHunter.Gameplay.AI.EnemyController> RetaliationKillObserver;
+
+        /// <summary>Marks the damage dealt inside the scope as retaliation; dispose it right after the hit.</summary>
+        public static RetaliationScope Retaliation() => new RetaliationScope(true);
+
+        public readonly struct RetaliationScope : IDisposable
+        {
+            private readonly bool _open;
+            public RetaliationScope(bool open) { _open = open; if (open) RetaliationDepth++; }
+            public void Dispose() { if (_open) RetaliationDepth = Mathf.Max(0, RetaliationDepth - 1); }
+        }
+
         public void TakeDamage(DamagePacket packet)
         {
             if (_currentHealth <= 0 || IsInvincible) return; // Already dead or invincible
@@ -145,6 +163,8 @@ namespace SoulHunter.Gameplay.Combat
             // VS Results: each weapon's damage. The hit's full damage counts, overkill included (the wiki gives no rule).
             if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, incomingDamage);
+            // The player's Arcanas that act on a weapon's hit (Heart of Fire's impact explosion, Jail of Crystal's freeze).
+            if (enemy != null && DamageSource.Weapon != null) WeaponHitObserver?.Invoke(DamageSource.Weapon, enemy, packet.HitPoint);
             if (PostHitInvulnerability > 0f && !packet.IgnoresHitInvulnerability)
                 _hitInvulnerableUntil = Time.time + PostHitInvulnerability;
             
@@ -170,13 +190,41 @@ namespace SoulHunter.Gameplay.Combat
 
             if (_currentHealth == 0)
             {
+                if (enemy != null && RetaliationDepth > 0) RetaliationKillObserver?.Invoke(enemy);
                 Die();
             }
+        }
+
+        /// <summary>
+        /// Changes every heal before it lands (the player's Arcanas: Sarabande of Healing doubles it). Null = unchanged.
+        /// </summary>
+        public Func<int, int> HealModifier { get; set; }
+
+        /// <summary>
+        /// Every heal as attempted (after <see cref="HealModifier"/>), whether or not health was missing: VS Sarabande of
+        /// Healing (VI) "does not require missing health to deal damage either". The revival's heal is one too.
+        /// </summary>
+        public event Action<int> OnHealAttempted;
+
+        /// <summary>
+        /// Adds a fraction of Max Health without healing it (VS Divine Bloodline (IX): "+0.5 Max Health", and "current
+        /// health is not restored at the same time"). Fractions add up until they reach a whole point.
+        /// </summary>
+        public void AddMaxHealthWithoutHealing(float amount)
+        {
+            if (amount <= 0f) return;
+            if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;
+            _preciseMaxHealth += amount;
+            _maxHealth = Mathf.Max(1, Mathf.FloorToInt(_preciseMaxHealth + 0.0001f));
+            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
         }
 
         public void Heal(int amount)
         {
             if (_currentHealth <= 0 || amount <= 0) return; // Dead things don't heal
+            if (HealModifier != null) amount = Mathf.Max(0, HealModifier(amount));
+            if (amount <= 0) return;
+            OnHealAttempted?.Invoke(amount);
             int before = _currentHealth;
             _currentHealth = Mathf.Min(_currentHealth + amount, _maxHealth); // Cap to max
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
@@ -248,7 +296,11 @@ namespace SoulHunter.Gameplay.Combat
             if (!IsAwaitingRevive) _keepAliveAfterDeath = true;
             IsAwaitingRevive = false;
             int before = Mathf.Max(0, _currentHealth);
-            _currentHealth = restoredHealth > 0 ? Mathf.Min(restoredHealth, _maxHealth) : RevivalHealth(_maxHealth);
+            int restore = restoredHealth > 0 ? restoredHealth : RevivalHealth(_maxHealth);
+            // VS Sarabande of Healing (VI): "Healing from Reviving is also affected" ("doubled to become a full heal").
+            if (HealModifier != null) restore = Mathf.Max(1, HealModifier(restore));
+            OnHealAttempted?.Invoke(restore);
+            _currentHealth = Mathf.Min(restore, _maxHealth);
             _revivalInvulnerableUntil = Time.time + RevivalInvulnerabilitySeconds + VsInvulnerabilityTime;
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
             int healed = _currentHealth - before;

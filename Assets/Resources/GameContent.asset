@@ -428,10 +428,28 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 349bf79159082e64caabbfedd681a94e, type: 2}
   - {fileID: 11400000, guid: f0764425192298742841891b4ca18566, type: 2}
   Arcanas:
+  - {fileID: 11400000, guid: a775bd2fa0714007b644184faa72c18a, type: 2}
   - {fileID: 11400000, guid: c5688c4eb62570c41a9c2879e1893aad, type: 2}
+  - {fileID: 11400000, guid: 34a5d465069c4d398e2423de2610156c, type: 2}
+  - {fileID: 11400000, guid: e7267ff1edab49b2b2854491e3189384, type: 2}
   - {fileID: 11400000, guid: 7eb71d71cb6e0044eb46fee0ebf4cd1f, type: 2}
+  - {fileID: 11400000, guid: e231e79cd73f4b9eb268d129d6ca0992, type: 2}
+  - {fileID: 11400000, guid: e2755b757af84676a22dc4a20a5dfe7e, type: 2}
   - {fileID: 11400000, guid: 38b582a88a731bd4fb631dc43b37ad1a, type: 2}
+  - {fileID: 11400000, guid: 91af6b5e7e4746eb8cbd96b1e403d075, type: 2}
+  - {fileID: 11400000, guid: bb7f05f4e9fe4aa287e4dcd5f1b5869f, type: 2}
+  - {fileID: 11400000, guid: 603594eae5c2485fb64ab5d22480699e, type: 2}
   - {fileID: 11400000, guid: 9096be2b8d9f3e54da10e2c2581ba738, type: 2}
+  - {fileID: 11400000, guid: b1fa41f4178143149d7e7bdddc8e4004, type: 2}
+  - {fileID: 11400000, guid: 14c27a0f37344b1199451ae81381cbfa, type: 2}
+  - {fileID: 11400000, guid: 1727cd7a6b3b439fae42b43e7837fc75, type: 2}
+  - {fileID: 11400000, guid: 277fc94ff6c546f19eeac0c5331c05e3, type: 2}
+  - {fileID: 11400000, guid: 22dad24d3eb0412e82a89ab912201261, type: 2}
+  - {fileID: 11400000, guid: c030298048744f2d8b8698053e7bb490, type: 2}
+  - {fileID: 11400000, guid: 823abc6e903e45adb9735127734670f5, type: 2}
+  - {fileID: 11400000, guid: 4f191210a4974e8eace41d9bb9ace478, type: 2}
+  - {fileID: 11400000, guid: 3f6ee948e7a64e73825cdb36ac54d33f, type: 2}
+  - {fileID: 11400000, guid: a929bdbb0e5841bca5db9455b7c12bf2, type: 2}
   BestiaryEnemies:
   - {fileID: 11400000, guid: 775314d812975a24c8491bdb5a72cb2c, type: 2}
   - {fileID: 11400000, guid: 07463ba1376741e46ab2930e24329899, type: 2}

@@ -117,6 +117,7 @@ namespace SoulHunter.Tests.PlayMode
             private SoulHunter.Gameplay.Core.LevelUpManager _levelUp;
 
             private float _reviveOpenSince = -1f;
+            private float _arcanaOpenSince = -1f;
 
             private void Update()
             {
@@ -130,6 +131,17 @@ namespace SoulHunter.Tests.PlayMode
                     _reviveOpenSince = -1f;
                     Debug.Log("[LevelUpUnstick] A Revive screen stayed open " + Seconds + " s in a test: pressed Revive.");
                     revive.PressRevive();
+                }
+
+                // The same for the Arcana choice (P2-01): an Arcana-mode test that is not about the choice takes a card.
+                var arcana = SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current;
+                if (arcana == null || !arcana.IsOpen) _arcanaOpenSince = -1f;
+                else if (_arcanaOpenSince < 0f) _arcanaOpenSince = Time.realtimeSinceStartup;
+                else if (Time.realtimeSinceStartup - _arcanaOpenSince >= Seconds)
+                {
+                    _arcanaOpenSince = -1f;
+                    Debug.Log("[LevelUpUnstick] An Arcana choice stayed open " + Seconds + " s in a test: took the chosen card.");
+                    arcana.PressTake();
                 }
 
                 if (_levelUp == null) _levelUp = GetComponent<SoulHunter.Gameplay.Core.LevelUpManager>();

@@ -102,6 +102,8 @@ namespace SoulHunter.Gameplay.Combat
             foreach (var touch in TouchDamageBuffer) touch.SourceWeapon = this;
             spawned.GetComponentsInChildren(true, DamageCasterBuffer);
             foreach (var caster in DamageCasterBuffer) caster.SourceWeapon = this;
+            // VS Twilight Requiem (II): a listed weapon's shot explodes when it expires (ArcanaManager.ArmShot).
+            SoulHunter.Gameplay.Core.ArcanaManager.ArmShot(this, spawned);
         }
 
         private static readonly System.Collections.Generic.List<DamageCaster> DamageCasterBuffer = new();
@@ -128,7 +130,8 @@ namespace SoulHunter.Gameplay.Combat
         protected float SpeedMultiplier => (OwnerStats != null ? Mathf.Max(0.1f, OwnerStats.ProjectileSpeed) : 1f)
                                            * (OwnerStats != null ? SoulHunter.Gameplay.Data.RunModes.ProjectileSpeedMultiplier : 1f)
                                            * (1f + LimitBreak.SpeedBonus(LimitBreakKey));
-        protected int ExtraAmount => (OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0) + LimitBreak.AmountBonus(LimitBreakKey);
+        protected int ExtraAmount => (OwnerStats != null ? Mathf.Max(0, OwnerStats.Amount) : 0) + LimitBreak.AmountBonus(LimitBreakKey)
+                                     + SoulHunter.Gameplay.Core.ArcanaManager.AmountBonusFor(this); // VS Beginning (X)
         /// <summary>Limit Break pierce added to the weapon's own pierce (weapons with <see cref="UsesPierce"/>).</summary>
         protected int ExtraPierce => LimitBreak.PierceBonus(LimitBreakKey);
 
@@ -262,7 +265,22 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>Base damage scaled by Might.</summary>
-        protected float ScaledDamage(float baseDamage) => (baseDamage + LimitBreak.BaseDamageBonus(LimitBreakKey)) * MightMultiplier;
+        /// VS Divine Bloodline (IX) adds its flat damage to the base, before Might (ArcanaManager.FlatDamageFor).
+        protected float ScaledDamage(float baseDamage) =>
+            (baseDamage + LimitBreak.BaseDamageBonus(LimitBreakKey) + SoulHunter.Gameplay.Core.ArcanaManager.FlatDamageFor(this)) * MightMultiplier;
+
+        // ---- What the player's Arcanas read from a weapon (VS Blood Astronomia (XXI): "based on the individual weapons'
+        // base stats and the player stats"; Heart of Fire (XIX)). Never used for Shadow Kael's mirrored copies.
+        /// <summary>The base damage a hit of this weapon starts from (its own number for weapons with another field).</summary>
+        public virtual float ArcanaZoneBaseDamage => DamageAmount;
+        /// <summary>One hit's damage now: base, Limit Break and Arcana flat damage, times Might.</summary>
+        public float ZoneDamage => ScaledDamage(ArcanaZoneBaseDamage);
+        /// <summary>The weapon's calculated Area, Duration and Amount (1 + extra) now.</summary>
+        public float ZoneArea => AreaMultiplier;
+        public float ZoneDuration => DurationMultiplier;
+        public int ZoneAmount => 1 + ExtraAmount;
+        /// <summary>The weapon's cooldown now, in seconds.</summary>
+        public float ZoneCooldown => Mathf.Max(MinimumCooldown, AttackCooldown * CooldownMultiplier);
 
         /// <summary>
         /// VS (vampire.survivors.wiki/w/Critical_Hit, fetched 2026-10-01): "Not all weapons are capable of Critical Hits."
@@ -330,7 +348,8 @@ namespace SoulHunter.Gameplay.Combat
 
         protected virtual void Update()
         {
-            _timer -= Time.deltaTime;
+            // VS Tragic Princess (III): listed weapons recharge faster while the player moves (1 without it).
+            _timer -= Time.deltaTime * SoulHunter.Gameplay.Core.ArcanaManager.CooldownTickRate(this);
 
             if (_timer <= 0f)
             {
@@ -339,6 +358,7 @@ namespace SoulHunter.Gameplay.Combat
                 _timer = Mathf.Max(MinimumCooldown, AttackCooldown * CooldownMultiplier);
                 ShowAttackOnHolder(); // before Attack(): the shot may kill the enemy it aimed at
                 Attack();
+                SoulHunter.Gameplay.Core.ArcanaManager.OnWeaponFired(this); // VS Blood Astronomia (XXI)
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
                 if (audio != null && FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None) audio.PlayWeaponSound(FireSound);
             }

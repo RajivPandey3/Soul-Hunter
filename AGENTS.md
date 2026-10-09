@@ -617,7 +617,7 @@ Balance baseline from the first run: level 70 at 30:00, 18,350 kills, 17 chests,
   - One random Arcana at the start of the run.
   - Arcana chests at 11:00 and 21:00, carried by chest elites (`EnemyDrop.CarryArcanaThisLife`, `ChestPickup.IsArcana`, `ChestLogicController.ProcessArcanaChest`), up to 3 Arcanas.
   - **Changed:** `ArcanaManager` used to give an Arcana at 11:00 and 21:00 of every stage without any mode. VS gives none without the mode, so that is gone.
-  - Not built: the VS pick-from-four choice screen (here the Arcana is random) and showing the start-of-run Arcana on screen.
+  - Since 2026-10-09 the start-of-run Arcana is chosen and Arcana chests offer a pick of 4; see "all 22 Arcanas" under the release push.
   - The four Arcanas Soul Hunter has follow their wiki pages since 2026-10-09; see "Arcanas" under "Release push, wave 1".
 - **Limit Break:** once nothing is left to level, level-ups offer "LIMIT BREAK" cards: +10% damage to one held weapon per card (`LimitBreak`, hooked in `AutoAttackWeapon.ScaledDamage`; provisional). VS's random stat per card is not built.
 - The Results screen shows the active modes and the Endless cycle (`RunResults.ModeText`). The HUD does not: VS shows none there (the wiki is silent, balance method).
@@ -1534,6 +1534,61 @@ Validation:
   - The failure was the test's generic "more than 2 texts" check, which does not fit Credits: it has a title and one scrolling body.
   - The menu fixtures then passed 4/4 (`-p3b-menu/`).
 - The first run (`-p3b-full`) failed the Collection tests because `results-run.ps1` did not sync `Assets/Resources`, where the new `GameContent` lists are. It now mirrors that folder too.
+- Not seen by eye yet (`V`).
+
+### Release push: all 22 Arcanas and the choice screens (P2-01, 2026-10-09)
+
+Owner (2026-10-09, AskUserQuestion): the 18 missing Arcanas get Soul Hunter's own English names tied to each card's effect. The four built earlier keep theirs: Awake, Gemini, Iron Blue Will and Waltz of Pearls.
+
+Each card follows its own raw wiki page (fetched 2026-10-09, saved in `D:/SoulHunter-Validation/wiki-arcana/`). Every number sits next to its quote in `ArcanaEffects.cs`; the names are in `ArcanaCatalog`.
+
+| Card | Name | Effect |
+|---|---|---|
+| 0 | Soul Barrage | Gems give no XP; each collected gem flies at an enemy and explodes for 10 × Growth × Might. Chests hold at least 3 items, and an Arcana chest adds 2. |
+| II | Final Echo | Listed weapons' shots explode when they expire: 10 + 13.5 per +100% Curse. |
+| III | Restless Pilgrim | Listed weapons recharge faster while the hero moves. |
+| V | Wavering Winds | Projectile Speed sways ×0.5 to ×1.5; +1% per level. |
+| VI | Mending Wrath | Healing ×2; each heal hits nearby enemies for the amount healed. |
+| VIII | Gathering Call | At pick-up and every even minute, gems, pickups, chests, stage items and lanterns are drawn to the hero. |
+| IX | Ironblood Oath | Armor adds damage to listed weapons; missing HP adds damage to all weapons; Armor hurts touching enemies; retaliation kills raise Max Health. |
+| X | First Blade | The starting weapon and its evolution +3 Amount; listed weapons +1. |
+| XII | Shattering Frost | Every freeze explodes; Time Freeze drops twice as often. |
+| XIII | Changing Fortunes | Growth, Luck, Greed and Curse are doubled in turn, 10 s each; +1% to all four every 2 levels. |
+| XIV | Icebound Snare | Listed weapons freeze on hit, 25% × Luck. |
+| XV | Midas Pulse | A coin bag starts Gold Fever; gold gained heals that much. |
+| XVI | Keen Edge | Turns on the per-weapon Slash crits and doubles crit damage. |
+| XVII | Ebbing Hours | Duration sways ×0.5 to ×1.5; +1% per level. |
+| XVIII | Swelling Shadows | Area sways ×0.75 to ×1.25; +1% per level. |
+| XIX | Burning Core | Listed weapons' hits explode; lanterns explode; the hero explodes when hurt; Hellfire Breath drops 4× as often. |
+| XX | Empty Hands | +3 Reroll, Skip and Banish; +20% Might and −8% Cooldown per empty weapon slot. |
+| XXI | Crimson Orbit | The Magnet range and listed weapons make damaging zones. |
+
+Choice screens (`ArcanaChoiceScreen`, `ArcanaDraft`; wiki Arcanas):
+- **Start pick (Arcana mode):** choose any unlocked Arcana or a random one, on a paused game.
+- **Arcana chest:** pick 1 of 4 unheld cards (6 with a free Reroll at 23+ unlocked). Rerolls never repeat a card until every card has been shown. The draft can be skipped.
+- **Draw a Fate (Inverse merchant):** "All unlocked Arcanas are available as choices". It cannot be skipped, because the gold is already paid, but it offers Random.
+- The 3-Arcana chest limit and the bronze/silver fallback stay. The screen uses the theme, with an "Unlocked n / m" count and a "Works with" line that marks held weapons.
+
+Balance method (the wiki is silent, impossible in Soul Hunter, or self-contradicting):
+- **Unlocks:** every card is unlocked. Every VS unlock route (Randomazzo, level 50 with VS characters, 31:00) is impossible here, and locking them would leave Arcana mode empty.
+- **Final Echo:** the page's rule and its own examples disagree; the written rule is used.
+- **Numbers the pages leave open:** blast sizes, sway periods, the Restless Pilgrim recharge rate, the Icebound Snare freeze length (2 s × Duration, against freeze resistance) and the Crimson Orbit zone shapes. Each choice has its reason in code.
+- Special damage is Magic, so it reaches the Level 7 ghosts; Mending Wrath is Holy.
+- Shadow Kael's copy never gets Arcana bonuses (`PlayerStats` keeps them apart).
+
+**Not built:**
+- weapons and pickups Soul Hunter does not have;
+- Clock Lancet's blood zone (its section on the page is empty);
+- Darkanas and the VS unlock conditions (owner: later);
+- card art and zone visuals (owner);
+- held Arcanas on the HUD or pause screen.
+
+Performance of Soul Barrage and Burning Core is not profiled.
+
+Tests:
+- EditMode (T): `ArcanaCatalogTests` 9 and `ArcanaChoiceTests` 7. `CollectionBookTests` now counts 22 Arcanas.
+- PlayMode (R): `ArcanaChoicePlayModeTests` 5 (start pick, chest choice with a Reroll through the UI, the limit, Skip, Draw a Fate, fit and contrast at three window sizes) and `ArcanaCardEffectsPlayModeTests` 8 (sample cards in a real run).
+- Validation: EditMode 673/673, PlayMode 344/344, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-arcana-full/`).
 - Not seen by eye yet (`V`).
 
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)

@@ -102,6 +102,17 @@ namespace SoulHunter.Gameplay.Core
                        Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Banish, SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, SoulHunter.Core.Persistence.PowerUpId.Banish))));
         }
 
+        /// <summary>
+        /// Spends one Reroll charge outside a level-up (the Arcana choice: wiki Arcanas, "The player may spend Rerolls to
+        /// get new choices"); Preserve may keep it. False with none left.
+        /// </summary>
+        public bool SpendRerollCharge()
+        {
+            if (RerollsLeft <= 0) return false;
+            if (!Preserved()) RerollsLeft--;
+            return true;
+        }
+
         /// <summary>VS Preserve: the chance that a Reroll, Skip or Banish is kept after use.</summary>
         private bool Preserved() => _playerController != null && _playerController.Stats != null && Random.value < _playerController.Stats.Preserve;
 

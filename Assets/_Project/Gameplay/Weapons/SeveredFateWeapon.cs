@@ -111,7 +111,8 @@ namespace SoulHunter.Gameplay.Combat
                 if (_hits[i] == null || !_hits[i].CompareTag("Enemy")) continue;
                 var health = _hits[i].GetComponentInParent<HealthController>();
                 if (health == null) continue;
-                Hit(health, new DamagePacket(amount, health.transform.position, (health.transform.position - at).normalized, DamageType.Magic).WithKnockback(Knockback));
+                using (HealthController.Retaliation()) // VS Divine Bloodline (IX) lists NO FUTURE's retaliation
+                    Hit(health, new DamagePacket(amount, health.transform.position, (health.transform.position - at).normalized, DamageType.Magic).WithKnockback(Knockback));
             }
         }
     }

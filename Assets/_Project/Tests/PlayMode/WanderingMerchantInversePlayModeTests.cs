@@ -139,6 +139,12 @@ namespace SoulHunter.Tests.PlayMode
             gold = economy.CurrentGold;
             Click(Card(merchant, "Draw a Fate"), "Draw a Fate");
             yield return null;
+            // P2-01 (wiki Arcanas / Merchant: "All unlocked Arcanas are available as choices"): the choice opens over the shop.
+            var choice = SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current;
+            Assert.That(choice != null && choice.IsOpen, Is.True, "Draw a Fate opens the Arcana choice. " + Errors());
+            Assert.That(choice.Cards.Count, Is.EqualTo(arcanas.AvailableCount), "Every unlocked Arcana not held is offered.");
+            Click(choice.TakeButton, "Take this card");
+            yield return null;
             Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(held + 1), "Draw a Fate gives an Arcana. " + Errors());
             Assert.That(economy.CurrentGold, Is.EqualTo(gold - 20000));
             Assert.That(merchant.BuyArcana(), Is.False, "VS: 1 extra Arcana.");

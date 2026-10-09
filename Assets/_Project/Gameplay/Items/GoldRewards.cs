@@ -87,6 +87,8 @@ namespace SoulHunter.Gameplay.Pickups
                 economy.AddGold(amount);
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddGold(amount);
+            // VS Disco of Gold (XV): "Obtaining gold restores as many HP."
+            SoulHunter.Gameplay.Core.ArcanaManager.OnGoldObtained(amount);
         }
     }
 }

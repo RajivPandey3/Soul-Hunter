@@ -44,17 +44,37 @@ namespace SoulHunter.Gameplay.UI
 
         public void OpenChest(string message) => OpenChest(message, null);
 
-        public void OpenChest(string message, ChestResult result)
+        /// <summary>
+        /// Counts a chest opened on the save (VS skip rules and the first-six sequence) without a chest screen: an Arcana
+        /// chest opens the Arcana choice instead (release item P2-01). Returns the counts before this chest.
+        /// </summary>
+        public (int before, int fiveBefore) RecordOpened(int items)
         {
-            if (_rewardText != null) _rewardText.text = message;
             var data = SaveData();
             int before = data != null ? data.ChestsOpened : 0;
             int fiveBefore = data != null ? data.FiveItemChestsOpened : 0;
-            int items = result != null ? result.ItemCount : 1;
             if (data != null)
             {
                 data.ChestsOpened++;
                 if (items >= 5) data.FiveItemChestsOpened++;
+            }
+            return (before, fiveBefore);
+        }
+
+        public void OpenChest(string message, ChestResult result) => OpenChest(message, result, countAsChest: true);
+
+        /// <param name="countAsChest">False for a chest already counted (Game Killer's extra items after an Arcana chest).</param>
+        public void OpenChest(string message, ChestResult result, bool countAsChest)
+        {
+            if (_rewardText != null) _rewardText.text = message;
+            int items = result != null ? result.ItemCount : 1;
+            int before, fiveBefore;
+            if (countAsChest) (before, fiveBefore) = RecordOpened(items);
+            else
+            {
+                var data = SaveData();
+                before = data != null ? data.ChestsOpened : 0;
+                fiveBefore = data != null ? data.FiveItemChestsOpened : 0;
             }
 
             // VS: once 5-item chests can be skipped, coin-only chests just play a quick in-game animation.

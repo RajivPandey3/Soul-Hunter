@@ -54,6 +54,8 @@ namespace SoulHunter.Gameplay.Pickups
             if (audio != null) audio.PlaySFXThrottled(audio.EnemyDeathSound, SoulHunter.Gameplay.Audio.AudioManager.EnemyDeathInterval, 0.7f);
             Broken?.Invoke(this, drop);
             AnyBroken?.Invoke(this, drop);
+            // VS Heart of Fire (XIX): "Light sources explode."
+            SoulHunter.Gameplay.Core.ArcanaManager.OnLightSourceBroken(at);
             // HealthController deactivates the lantern after OnDied; the spawner's pool takes it back.
         }
     }
@@ -95,7 +97,8 @@ namespace SoulHunter.Gameplay.Pickups
                 if (e.drop != drop) continue;
                 if (playerLevel < e.minLevel) return 0f;
                 bool plainGold = drop == Drop.GoldCoin || drop == Drop.CoinBag;
-                return e.weight * (plainGold ? 1f : Mathf.Max(0f, luck));
+                // The player's Arcanas: Out of Bounds (XII) doubles Orologion, Heart of Fire (XIX) quadruples Nduja.
+                return e.weight * (plainGold ? 1f : Mathf.Max(0f, luck)) * SoulHunter.Gameplay.Core.ArcanaManager.DropWeightFactor(drop);
             }
             return 0f;
         }

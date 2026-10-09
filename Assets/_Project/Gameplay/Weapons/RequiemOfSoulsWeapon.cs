@@ -37,6 +37,7 @@ namespace SoulHunter.Gameplay.Combat
 
         public bool WaveActive => Time.time < _activeUntil;
         public float Radius => WaveRadius * AreaMultiplier;
+        public override float ArcanaZoneBaseDamage => VsDamage;
 
         protected override void Awake()
         {

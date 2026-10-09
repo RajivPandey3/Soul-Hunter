@@ -145,6 +145,7 @@ namespace SoulHunter.Gameplay.Combat
 
             // Character selection is authoritative. If no character data is
             // saved, the Soul Hunter default remains Magic Wand.
+            StartingWeapon = startWeapon;
             GiveWeapon(startWeapon, 1);
         }
 
@@ -411,6 +412,11 @@ namespace SoulHunter.Gameplay.Combat
                 ? GetActiveWeaponsCount() < _maxWeaponSlots
                 : GetPassiveCount() < _maxPassiveSlots;
         }
+
+        /// <summary>The character's starting weapon (VS Beginning (X): "The character's main weapon and its evolution").</summary>
+        public UpgradeData.UpgradeType StartingWeapon { get; private set; } = UpgradeData.UpgradeType.MagicWand;
+        /// <summary>How many weapon slots the player has (VS: 6).</summary>
+        public int MaxWeaponSlots => _maxWeaponSlots;
 
         /// <summary>True when every weapon slot and every passive slot is taken (VS: "the player's inventory is full").</summary>
         public bool IsInventoryFull => GetActiveWeaponsCount() >= _maxWeaponSlots && GetPassiveCount() >= _maxPassiveSlots;

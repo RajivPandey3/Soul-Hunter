@@ -14,11 +14,13 @@ namespace SoulHunter.Gameplay.Core
     /// Ye player stats aur weapons dono par gehra asar daalta hai.
     /// VS Arcana mode (vampire.survivors.wiki/w/Arcanas, 2026-09-27): Arcanas exist only with the mode on. The run
     /// starts with one Arcana, and Arcana chests (dropped by the 11:00 and 21:00 chest elites, EnemySpawner) give one
-    /// more each, until the player holds three; after that those elites drop regular chests. VS lets the player choose
-    /// from four; Soul Hunter has no Arcana choice screen yet, so a random unowned Arcana is given.
+    /// more each, until the player holds three; after that those elites drop regular chests.
     /// Before 2026-09-27 this manager gave the next Arcana on every stage's 11:00 and 21:00 whatever the mode.
+    /// Release item P2-01 (2026-10-09): all 22 base cards (GameContent.Arcanas, ArcanaCatalog), the start-of-run pick, the
+    /// chest draft of four with Rerolls and the merchant's Draw a Fate open the Arcana choice screen (ArcanaChoiceScreen);
+    /// the card effects are in ArcanaEffects.cs. Arcanas are the player's: Shadow Kael's mirrored weapons never get them.
     /// </summary>
-    public class ArcanaManager : MonoBehaviour
+    public partial class ArcanaManager : MonoBehaviour
     {
         public static ArcanaManager Instance { get; private set; }
         // Player ke paas maujood active cards
@@ -37,6 +39,20 @@ namespace SoulHunter.Gameplay.Core
         {
             if (Instance == null) Instance = this;
             else if (Instance != this) Destroy(gameObject);
+            // Every card lives in GameContent (Assets/Resources/GameContent.asset), so Main_Gameplay is not edited: the
+            // catalog's cards in numeral order, then any card the scene lists that the catalog does not.
+            var catalog = GameContentCatalog.Load();
+            if (catalog != null && catalog.Arcanas != null)
+            {
+                var ordered = new List<ArcanaData>();
+                foreach (var arcana in catalog.Arcanas)
+                    if (arcana != null && !ordered.Contains(arcana)) ordered.Add(arcana);
+                foreach (var arcana in _availableArcanas)
+                    if (arcana != null && !ordered.Contains(arcana)) ordered.Add(arcana);
+                _availableArcanas = ordered;
+            }
+            // Slash (XVI) is a static switch on the weapons: a new run starts without it.
+            AutoAttackWeapon.SlashArcanaActive = false;
         }
 
         private void Start()
@@ -46,16 +62,26 @@ namespace SoulHunter.Gameplay.Core
             {
                 ApplyArcana(_startingArcanaTest);
             }
-            // VS Arcana mode: the run starts with one Arcana (RunModes is set in LevelProgressionManager.Awake).
+            // VS Arcana mode: the run starts with one Arcana (RunModes is set in LevelProgressionManager.Awake), chosen
+            // by the player (wiki Arcanas: "choose one of any unlocked Arcanas ... or a random one").
             else if (RunModes.Arcana)
             {
-                StartingArcana = GrantRandomAvailableArcana(UnityEngine.Random.value);
+                StartCoroutine(StartChoiceNextFrame());
             }
+        }
+
+        // One frame late: GameSessionManager.Start resets every pause (GameTime.ResetAll) in the same frame, in an order
+        // Unity does not fix, and would take the choice screen's pause away.
+        private System.Collections.IEnumerator StartChoiceNextFrame()
+        {
+            yield return null;
+            BeginStartChoice();
         }
 
         private void OnDestroy()
         {
-            if (Instance == this) Instance = null;
+            if (Instance == this) { Instance = null; AutoAttackWeapon.SlashArcanaActive = false; }
+            UnhookEffects();
             if (_revivalPlayer != null) _revivalPlayer.OnRevived -= OnPlayerRevived;
             if (_geminiWeapons != null) _geminiWeapons.OnInventoryChanged -= RefreshGemini;
         }
@@ -86,6 +112,9 @@ namespace SoulHunter.Gameplay.Core
             return pick;
         }
 
+        /// <summary>Every Arcana this run knows (the scene's and GameContent's), in that order.</summary>
+        public IReadOnlyList<ArcanaData> AllArcanas => _availableArcanas;
+
         /// <summary>Tests and tools: the Arcanas this manager can give.</summary>
         public void SetAvailableArcanas(IEnumerable<ArcanaData> arcanas)
         {
@@ -112,6 +141,7 @@ namespace SoulHunter.Gameplay.Core
 
             // Card ka jadu (Effect) yahan se shuru hota hai
             ExecuteArcanaEffect(arcana.Type);
+            ApplyCardEffect(arcana.Type);
             OnArcanaAwarded?.Invoke(arcana);
         }
 
@@ -275,6 +305,7 @@ namespace SoulHunter.Gameplay.Core
 
         private void Update()
         {
+            TickEffects(Time.deltaTime);
             // Gemini granted before the WeaponManager was ready: hook it once it is.
             if (_geminiWeapons == null && WeaponManager.Instance != null && HasArcana(ArcanaData.ArcanaType.Gemini))
             {
@@ -323,6 +354,87 @@ namespace SoulHunter.Gameplay.Core
                 var tracker = RunStatsTracker.Instance;
                 if (tracker != null) tracker.TrackWeapon(twin, UpgradeText.NameOf(type) + " Twin", definition != null ? definition.Icon : null, twin.MaxLevel, false);
             }
+        }
+
+        // ------------------------------------------------------------------ choices (start, chest, merchant)
+
+        /// <summary>The draft on screen now, or null.</summary>
+        public ArcanaDraft CurrentDraft { get; private set; }
+        /// <summary>How many Arcana choices opened in this run (tests, bot).</summary>
+        public int DraftsOpened { get; private set; }
+
+        private ArcanaDraft NewDraft(ArcanaDraft.Kind kind) => kind == ArcanaDraft.Kind.Chest
+            ? ArcanaDraft.ForChest(_availableArcanas, ActiveArcanas, () => UnityEngine.Random.value)
+            : ArcanaDraft.ForEveryUnlocked(kind, _availableArcanas, ActiveArcanas, () => UnityEngine.Random.value);
+
+        /// <summary>An Arcana chest's draft: four unheld Arcanas (six and a free Reroll at 23+ unlocked).</summary>
+        public ArcanaDraft NewChestDraft() => NewDraft(ArcanaDraft.Kind.Chest);
+
+        /// <summary>
+        /// The start-of-run pick in Arcana mode. Hotfix 1.14.105 (wiki Arcanas): the selection "doesn't open at the start of
+        /// the game if there are no available arcana to choose". Outside play (EditMode) a random card is given.
+        /// </summary>
+        public void BeginStartChoice()
+        {
+            var draft = NewDraft(ArcanaDraft.Kind.Start);
+            if (draft.Options.Count == 0) return;
+            if (!OpenDraft(draft, card => StartingArcana = card))
+                StartingArcana = Take(draft, draft.RandomOption());
+        }
+
+        /// <summary>Opens the chest draft; <paramref name="afterwards"/> runs once the player has chosen or skipped.</summary>
+        public void OpenChestDraft(ArcanaDraft draft, ChestLogicController logic, Action afterwards)
+        {
+            if (draft == null || draft.Options.Count == 0) { afterwards?.Invoke(); return; }
+            if (!OpenDraft(draft, card => afterwards?.Invoke()))
+            {
+                Take(draft, draft.RandomOption());
+                afterwards?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// The Inverse merchant's Draw a Fate: "All unlocked Arcanas are available as choices" (wiki Arcanas and Merchant).
+        /// The gold is already paid, so this draft has no Skip; it offers Random as the start pick does.
+        /// </summary>
+        public bool OpenMerchantDraft(Action<ArcanaData> chosen)
+        {
+            var draft = NewDraft(ArcanaDraft.Kind.Merchant);
+            if (draft.Options.Count == 0) return false;
+            if (!OpenDraft(draft, chosen)) chosen?.Invoke(Take(draft, draft.RandomOption()));
+            return true;
+        }
+
+        private bool OpenDraft(ArcanaDraft draft, Action<ArcanaData> chosen)
+        {
+            if (!Application.isPlaying) return false;
+            CurrentDraft = draft;
+            DraftsOpened++;
+            bool shown = SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Show(draft, card =>
+            {
+                CurrentDraft = null;
+                chosen?.Invoke(Take(draft, card));
+            });
+            if (!shown) CurrentDraft = null;
+            return shown;
+        }
+
+        /// <summary>Gives the card picked from <paramref name="draft"/> (null = skipped); returns it.</summary>
+        public ArcanaData Take(ArcanaDraft draft, ArcanaData card)
+        {
+            if (card == null || draft == null || !draft.CanChoose(card) || ActiveArcanas.Contains(card)) return null;
+            ApplyArcana(card);
+            return card;
+        }
+
+        /// <summary>
+        /// A Reroll paid for with a Reroll charge (VS Arcanas: "The player may spend Rerolls"); Preserve may keep the
+        /// charge, as for level-ups (LevelUpManager.SpendRerollCharge).
+        /// </summary>
+        public static bool SpendRerollCharge()
+        {
+            var levelUp = FindFirstObjectByType<LevelUpManager>();
+            return levelUp != null && levelUp.SpendRerollCharge();
         }
 
         public bool HasArcana(ArcanaData.ArcanaType type)

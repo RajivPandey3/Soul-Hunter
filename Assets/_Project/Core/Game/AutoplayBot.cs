@@ -571,6 +571,15 @@ namespace SoulHunter.Gameplay.Core
                     Event("revive", string.Format(CultureInfo.InvariantCulture, "\"revivalsBefore\": {0}, \"revivalsLeft\": {1}, \"hp\": {2}, \"max\": {3}",
                         left, reviveStats != null ? reviveStats.Revivals : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0));
                 }
+                var arcanaChoice = ArcanaChoiceScreen.Current;
+                if (arcanaChoice != null && arcanaChoice.IsOpen)
+                {
+                    // VS Arcana choice (P2-01): a player takes the card shown first.
+                    yield return Shot("arcana-choice");
+                    Event("arcana-choice", string.Format(CultureInfo.InvariantCulture, "\"cards\": {0}, \"taken\": \"{1}\"",
+                        arcanaChoice.Cards.Count, arcanaChoice.Selected != null ? arcanaChoice.Selected.CardName : ""));
+                    arcanaChoice.PressTake();
+                }
                 foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
                     if (chest != null && chest.IsOpen)
                     {

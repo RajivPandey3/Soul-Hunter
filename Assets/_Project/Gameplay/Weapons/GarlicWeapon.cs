@@ -134,9 +134,14 @@ namespace SoulHunter.Gameplay.Weapons
             ApplyDamageToEnemies();
         }
 
+        /// <summary>The aura's radius now (VS Blood Astronomia (XXI): its zones are at least the weapon's calculated Area).</summary>
+        public float HitRadius => _damageRadius * AreaMultiplier * LevelAreaMultiplier;
+        /// <summary>The base damage a hit starts from (Soul Eater's healing bonus included).</summary>
+        public override float ArcanaZoneBaseDamage => DamageAmount + HealDamageBonus;
+
         private void ApplyDamageToEnemies()
         {
-            float actualRadius = _damageRadius * AreaMultiplier * LevelAreaMultiplier;
+            float actualRadius = HitRadius;
             int actualDamage = Mathf.RoundToInt(ScaledDamage(DamageAmount + HealDamageBonus)); // Soul Eater's healing bonus is base damage
 
             // Player ke center se ek bada gola (Sphere) phek kar usme aaye dushmano ko dhoondho (NonAlloc for max performance)

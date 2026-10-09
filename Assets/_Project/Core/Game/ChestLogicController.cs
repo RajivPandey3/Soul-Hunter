@@ -39,6 +39,11 @@ namespace SoulHunter.Gameplay.Core
         public readonly List<ChestReward> Rewards = new List<ChestReward>();
         /// <summary>Every item became a coin bag (VS: such chests skip their animation once skipping is unlocked).</summary>
         public bool OnlyCoins => Rewards.Count > 0 && Rewards.TrueForAll(r => r.IsCoinBag);
+        /// <summary>
+        /// An Arcana chest that offers a choice (release item P2-01): the draft the Arcana choice screen shows. The Arcana
+        /// is given when the player picks it (ArcanaManager.OpenChestDraft), not here.
+        /// </summary>
+        public ArcanaDraft ArcanaDraft;
     }
 
     public class ChestLogicController : MonoBehaviour
@@ -121,7 +126,8 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
             // Without a save (no services) the sequence is skipped and the chest rolls as usual.
             int opened = save != null && save.CurrentData != null ? save.CurrentData.ChestsOpened : FirstChestSequence.Length;
-            return ProcessChest(weaponManager, levelUpManager, ItemCountFor(opened, tiers, luck, () => Random.value), tiers, Random.value);
+            int items = ArcanaManager.ChestItemCount(ItemCountFor(opened, tiers, luck, () => Random.value));
+            return ProcessChest(weaponManager, levelUpManager, items, tiers, Random.value);
         }
 
         /// <summary>An Arcana chest with the Mad Forest 11:00 / 21:00 config.</summary>
@@ -138,9 +144,26 @@ namespace SoulHunter.Gameplay.Core
         /// bronze chest that cannot evolve, and every Arcana already in use gives a silver chest that can. Before 2026-10-09
         /// the fallback took its evolution flag from the stage clock (11:00 and 21:00 are after 10:00, so it could evolve).
         /// </summary>
-        public string ProcessArcanaChest(ChestTiers tiers)
+        public string ProcessArcanaChest(ChestTiers tiers) => ProcessArcanaChest(tiers, offerChoice: false);
+
+        /// <summary>
+        /// With <paramref name="offerChoice"/> (a chest picked up in play, ChestPickup), the chest opens the VS Arcana
+        /// choice (wiki Arcanas: "Upon being picked up, the chest will allow the player to choose an additional Arcana. The
+        /// menu offers four or more randomly chosen Arcanas from the uncollected Arcanas"): the result carries the draft
+        /// and no Arcana is given yet. Without it (tools, EditMode tests) a random unheld Arcana is given at once.
+        /// </summary>
+        public string ProcessArcanaChest(ChestTiers tiers, bool offerChoice)
         {
             var arcanas = ArcanaManager.Instance;
+            if (offerChoice && arcanas != null && arcanas.CanGrantFromChest)
+            {
+                var draft = arcanas.NewChestDraft();
+                if (draft.Options.Count > 0)
+                {
+                    LastResult = new ChestResult { ItemCount = 1, IsArcana = true, Kind = SoulHunter.Gameplay.Pickups.ChestKind.Arcana, ArcanaDraft = draft };
+                    return "ARCANA CHEST!";
+                }
+            }
             var arcana = arcanas != null && arcanas.CanGrantFromChest ? arcanas.GrantRandomAvailableArcana(Random.value) : null;
             if (arcana == null)
             {

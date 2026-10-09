@@ -87,6 +87,8 @@ namespace SoulHunter.Gameplay.Combat
             do {
                 _currentCharges++;
                 _rechargeRemaining += BaseRechargeCooldown;
+                // VS Blood Astronomia (XXI): "When it regenerates a shield, it places a zone on the ground".
+                SoulHunter.Gameplay.Core.ArcanaManager.OnWeaponFired(this);
             } while (_currentCharges < MaxCharges && _rechargeRemaining <= 0f);
             UpdateVisual();
         }

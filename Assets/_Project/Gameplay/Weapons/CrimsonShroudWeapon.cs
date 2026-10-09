@@ -111,7 +111,8 @@ namespace SoulHunter.Gameplay.Combat
                 if (offset.sqrMagnitude > radiusSquared) continue;
                 var health = enemy.GetComponent<HealthController>();
                 if (health == null) continue;
-                Hit(health, new DamagePacket(damage, enemy.transform.position, Vector3.zero));
+                using (HealthController.Retaliation()) // VS Divine Bloodline (IX) lists Crimson Shroud's retaliation
+                    Hit(health, new DamagePacket(damage, enemy.transform.position, Vector3.zero));
             }
             OnRetaliation?.Invoke(damage);
         }

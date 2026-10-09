@@ -55,6 +55,8 @@ namespace SoulHunter.Gameplay.Pickups
                 ? GoldRewards.GrantFraction(GoldFever.FeverCoinBaseGold, stats)
                 : GoldRewards.Grant(_value, stats);
             GoldFever.OnCoinCollected(_value, IsFeverCoin);
+            // VS Disco of Gold (XV): "Picking up coin bags from the floor triggers Gold Fever."
+            if (!IsFeverCoin) SoulHunter.Gameplay.Core.ArcanaManager.OnCoinPickedUp(_value, player != null ? player.gameObject : null);
 
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFX(audio.GemPickupSound);

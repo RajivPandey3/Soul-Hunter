@@ -158,7 +158,7 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(CollectionCatalog.EvolutionOf(evolution.BaseWeapon), Is.SameAs(evolution), "One evolution per base weapon.");
             }
             foreach (var evolution in catalog.Evolutions) Assert.That(catalog.CollectionEvolutions, Does.Contain(evolution));
-            Assert.That(catalog.Arcanas, Has.Length.EqualTo(4));
+            Assert.That(catalog.Arcanas, Has.Length.EqualTo(22)); // all 22 base cards since P2-01 (2026-10-09)
             foreach (var arcana in catalog.Arcanas) Assert.That(entries.Any(e => e.Id == CollectionCatalog.ArcanaId(arcana.Type)), Is.True);
             foreach (var id in CollectionBook.FoundFromTheStart.Append(CollectionBook.SoulEggId))
                 Assert.That(entries.Any(e => e.Id == id), Is.True, id);
