@@ -66,6 +66,8 @@ namespace SoulHunter.Gameplay.UI
             public Color Selected = new Color(0.60f, 0.96f, 1f, 1f);
             [Tooltip("A Power Up that is fully bought.")]
             public Color Maxed = new Color(1f, 0.85f, 0.40f, 1f);
+            [Tooltip("A fully bought Power Up the player switched off (VS: dark gray). Its text is the light window text.")]
+            public Color Off = new Color(0.20f, 0.19f, 0.22f, 1f);
             [Tooltip("Something still locked.")]
             public Color Locked = new Color(0.22f, 0.17f, 0.32f, 1f);
             [Tooltip("The frame around the chosen card (so the choice never depends on colour alone).")]

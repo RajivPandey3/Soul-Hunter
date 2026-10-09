@@ -17,8 +17,9 @@ namespace SoulHunter.Tests.PlayMode
         [UnityTest]
         public IEnumerator Bot_PlaysARun_AndWritesItsReport()
         {
-            string output = Path.Combine(Application.temporaryCachePath, "autoplay-test");
-            if (Directory.Exists(output)) Directory.Delete(output, true);
+            // A fresh folder each run: Directory.Delete on Windows can still be finishing when the bot creates the folder,
+            // which removed it under the first screenshot once (2026-10-06).
+            string output = Path.Combine(Application.temporaryCachePath, "autoplay-test-" + System.Guid.NewGuid().ToString("N"));
             string realSave = Path.Combine(Application.persistentDataPath, "soulhunter_save.json");
             byte[] before = File.Exists(realSave) ? File.ReadAllBytes(realSave) : null;
             yield return SceneManager.LoadSceneAsync("Bootstrap");

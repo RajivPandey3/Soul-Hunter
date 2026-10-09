@@ -362,7 +362,7 @@ namespace SoulHunter.Gameplay.Player
             var data = saveSvc != null ? saveSvc.CurrentData : null;
             if (data == null) return;
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            float multiplier = SoulHunter.Core.Persistence.PowerUps.MaxHealthMultiplier(SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.MaxHealth));
+            float multiplier = SoulHunter.Core.Persistence.PowerUps.MaxHealthMultiplier(SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, SoulHunter.Core.Persistence.PowerUpId.MaxHealth)); // 0 while switched off
             if (health != null && multiplier > 1f) health.MultiplyMaxHealth(multiplier, healByIncrease: true);
         }
 

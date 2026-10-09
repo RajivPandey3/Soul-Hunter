@@ -5,7 +5,7 @@ namespace SoulHunter.Core.Persistence
 {
     /// <summary>
     /// The player's options (VS-style options screen): volumes, flashing VFX, damage numbers, screen shake,
-    /// window mode, resolution, V-Sync, blood, stage progression, touch joystick and pause-on-focus-loss.
+    /// window mode, resolution, refresh rate, V-Sync, blood, stage progression, touch joystick (and its type) and pause-on-focus-loss.
     /// Stored in GameData; defaults apply when there is no save (e.g. isolated tests). Systems read these
     /// each time they need them, so a change applies at once; listeners that cache values subscribe to Changed.
     /// </summary>
@@ -35,6 +35,13 @@ namespace SoulHunter.Core.Persistence
         public static bool VisibleJoystick => Data != null && Data.VisibleJoystick;
         public static bool PauseOnFocusLoss => Data == null || Data.PauseOnFocusLoss;
         public static bool ShowDefangedEnemies => Data == null || Data.ShowDefangedEnemies;
+        /// <summary>VS Screen Refresh Rate in whole hertz; 0 = Default (the display picks).</summary>
+        public static int RefreshRateHz => Data != null && Data.RefreshRateHz > 0 ? Data.RefreshRateHz : 0;
+        /// <summary>VS Joystick Type values, in the wiki's order.</summary>
+        public const int JoystickLegacy = 0, JoystickDefault = 1;
+        public static readonly string[] JoystickTypeNames = { "Legacy", "Default" };
+        /// <summary>VS Joystick Type of the touch stick (JoystickLegacy or JoystickDefault).</summary>
+        public static int JoystickType => Data != null && Data.JoystickType == JoystickLegacy ? JoystickLegacy : JoystickDefault;
 
         /// <summary>Tells listeners (audio, screen mode) that an option changed.</summary>
         public static void NotifyChanged() => Changed?.Invoke();

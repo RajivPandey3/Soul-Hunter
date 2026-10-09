@@ -1463,6 +1463,45 @@ Build play (`D:/SoulHunter-Validation/run-20261009-wave1-screens/`, script `wave
 - Tests: `ArcanaEffectTests` (T) and `ArcanaEffectsPlayModeTests` (R).
 - Still to build in P2-01: the other 18 Arcanas, the start-of-run pick and the pick-from-four chest screen, and Soul Hunter's own card names and art (owner).
 
+### Release push, wave 2a: PowerUp switch, character sort, Options, flaky tests (2026-10-09)
+
+**P3-03 PowerUp on/off** (wiki PowerUps: "After maxing out a PowerUp (except Rerolls, Skips, Banishes and Seals), the player can then disable the PowerUp"; maxed and active is "yellowish", maxed and not active "dark gray"):
+- A maxed PowerUp's Buy button becomes Turn Off / Turn On: free, saved at once (`GameData.DisabledPowerUps`; older saves load with every PowerUp on). Reroll, Skip and Banish cannot be switched off.
+- A switched-off PowerUp gives nothing in a run. Every reader uses `PowerUps.ActiveRank`: stats, Max Health, the select-screen sheet and Results.
+- The cell shows the theme's new `Cards.Off` colour and the word OFF; the info box says MAX - ON / MAX - OFF.
+- Wiki silent, balance method: a switched-off PowerUp still counts for fees and is refunded (switching exists to avoid a refund), and Results lists only active PowerUps ("All the powerups that were active during the run").
+
+**P3-03 character select** (wiki Characters: "the player can only keep at least one group of characters visible ... sort ... default ..., alphabetically, or through the number of complete stages per character ... ascending or descending ... favorited characters will show up first"):
+- SORT: DEFAULT / A-Z / LEVELS and ASCENDING / DESCENDING tabs, at the theme's tab size.
+- The level filter refuses an untick that would leave no character visible.
+- `GameData.CharacterStages` records the levels each character cleared, at 30:00 or by killing Shadow Kael (`CharacterUnlockTracker`). The stats panel shows "Levels Completed n/10".
+- Favourites come first under every sort. They stay locked until Soul Hunter's Mindbender exists ("Unlocked through Mindbender", which comes from 50 Collection entries), the same as Banish, Omni, Charm, Defang and Preserve.
+- Wiki silent, balance method: neither the sort nor the filter is saved between sessions.
+
+**P3-04 Options** (wiki Options: "There are six sections of options: Favorites, Display, Sound, Gameplay, Co-op, and Account"; "The Favorites section contains a copy of some commonly changed options"; Screen Refresh Rate "Only visible when using Exclusive Fullscreen Window Mode"; Gameplay "Joystick Type: Legacy / Default"):
+- The tabs are Favorites, Display, Sound, Gameplay and Controls. Favorites holds Sounds, Music, Damage Numbers and Flashing VFX, bound to the same settings as their home rows.
+- Screen Refresh Rate shows only in Exclusive Fullscreen on PC (`DisplaySettingsApplier.ShowsRefreshRate`) and is saved in whole hertz (`GameData.RefreshRateHz`, 0 = Default).
+- Joystick Type (`GameData.JoystickType`): the wiki gives only the names. Balance method: Legacy is the old fixed stick, and Default is a floating stick that jumps to the thumb in the left part of the screen and returns home on release (`FloatingStickZone`). Default is the default.
+- Not built: FPS Cap (only in a v1.6.0 history line, not in the current option list); Language and Classic Sound Effects (Soul Hunter has neither); Co-op and Account.
+
+**T-04 flaky tests** (causes found by reading code and logs):
+- Pentagram: a 0 keep threshold still kept items 0.5% of the time, because `GroundItemEraser` rounds a roll under 0.005 to 0. The test now uses -1.
+- Soul Meteor: the test waited for the destroyed marker and could read the health after the strike, measuring 0. It now stops on `HasStruck`.
+- Duplicator: fast shots in a long frame were counted again; only a shot that jumps back toward its holder counts as reused.
+- AutoplayBot: a fresh output folder each run (Windows deletes can still be finishing).
+- Crowd timing: best of 5 batches.
+- Chest canvas test: weapons and horde off, as in the other chest tests (cause not proven; the timeout now reports the phase).
+- StageEvent and Bible stalls were fixed earlier.
+
+Tests: `PowerUpToggleTests` (T), `PowerUpTogglePlayModeTests`, `CharacterSortPlayModeTests` (R), and `AccessibilityTests` / `AccessibilityPlayModeTests` (Favorites sync, refresh rate visibility and save, joystick types). Updated: shop, standard-size and theme tests.
+
+Validation:
+- Full run: EditMode 638/638, PlayMode 324/325, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261009-p3-full2/`).
+- The one failure was a real defect. The locked "FAVOURITE: LOCKED" label read at 1.6:1, because the button never got the theme's locked text colour (`ThemedElement.ShowUsable(false)`). That is fixed.
+- `UiStandardSizePlayModeTests` now measures a locked button against its disabled colour, the plate the player sees.
+- The standard-size, character select and sort fixtures then passed 11/11 (`-p3-fav2/`).
+- Not seen by eye yet (`V`).
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

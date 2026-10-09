@@ -48,6 +48,7 @@ namespace SoulHunter.UI
         private static Color SelectedCell => SoulHunter.Gameplay.UI.UITheme.CellSelected;
         private static Color MaxedCell => SoulHunter.Gameplay.UI.UITheme.CellMaxed;
         private static Color LockedCell => SoulHunter.Gameplay.UI.UITheme.CellLocked;
+        private static Color OffCell => SoulHunter.Gameplay.UI.UITheme.CellOff;
 
         private EconomyService _economy;
         private SaveService _saveService;
@@ -60,6 +61,8 @@ namespace SoulHunter.UI
         /// <summary>The grid cell of a PowerUp (tests).</summary>
         public Button CellFor(PowerUpId id) => _cells.TryGetValue(id, out var cell) ? cell : null;
         public Button BuyButton => _buyButton;
+        /// <summary>What the Buy button says now: "Buy", or "Turn Off" / "Turn On" for a maxed PowerUp (tests).</summary>
+        public string BuyButtonText => _buyLabel != null ? _buyLabel.text : null;
         public Button RefundButton => _refundButton;
         public PowerUpId Selected => _selected;
         /// <summary>Everything the info box says: name and rank, description, price (tests).</summary>
@@ -203,14 +206,16 @@ namespace SoulHunter.UI
             var actionRow = new GameObject("VS_ActionRow", typeof(RectTransform)).GetComponent<RectTransform>();
             actionRow.SetParent(actionArea, false);
             Anchor(actionRow, 0.5f, 0f, 0.5f, 1f);
-            _buyButton = MakeButton(template, actionRow, "VS_Buy", "Buy", 0.5f, 0.5f, 0.5f, 0.5f, BuySelected);
+            _buyButton = MakeButton(template, actionRow, "VS_Buy", "Buy", 0.5f, 0.5f, 0.5f, 0.5f, BuyOrSwitchSelected);
+            _buyLabel = _buyButton.GetComponentInChildren<TextMeshProUGUI>();
             _refundButton = MakeButton(template, actionRow, "VS_Refund", "Refund All", 0.5f, 0.5f, 0.5f, 0.5f, Refund);
             actionRow.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
         }
 
         private TMP_FontAsset _font;
         private Image _bigIcon, _priceIcon, _goldCoin;
-        private TextMeshProUGUI _infoName, _price;
+        private TextMeshProUGUI _infoName, _price, _buyLabel;
+        private bool? _buyShowsSwitch; // which job the Buy button was last themed for (buy, or switch on/off)
 
         private TextMeshProUGUI MakeText(string name, RectTransform parent, float xMin, float yMin, float xMax, float yMax, string text,
             float maxSize, TextAlignmentOptions alignment, SoulHunter.Gameplay.UI.ThemedElement.TextRole role)
@@ -329,6 +334,33 @@ namespace SoulHunter.UI
             UpdateUI();
         }
 
+        /// <summary>
+        /// The Buy button's job. VS (wiki PowerUps): "If it is fully upgraded, then there will be an option for the player to
+        /// activate a PowerUp in most cases, except for Reroll, Skip, Banish, and Seal." So a maxed PowerUp's Buy becomes
+        /// Turn Off / Turn On; anything else buys.
+        /// </summary>
+        public void BuyOrSwitchSelected()
+        {
+            var data = _saveService != null ? _saveService.CurrentData : null;
+            if (data != null && PowerUps.CanToggle(data, _selected)) ToggleSelected();
+            else BuySelected();
+        }
+
+        /// <summary>
+        /// VS: switches the selected maxed PowerUp off or on, free and without a refund ("preventing the need to refund all
+        /// PowerUps to test out PowerUp setups or to get rid of Curse"). Saved at once; the next run reads it.
+        /// </summary>
+        public void ToggleSelected()
+        {
+            var data = _saveService != null ? _saveService.CurrentData : null;
+            if (data == null || !PowerUps.CanToggle(data, _selected)) return;
+            PowerUps.SetEnabled(data, _selected, !PowerUps.IsEnabled(data, _selected));
+            _saveService.SaveGame();
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null) audio.PlaySFX(audio.UIClickSound);
+            UpdateUI();
+        }
+
         /// <summary>VS "Refund PowerUps": every rank comes off and its gold comes back.</summary>
         public void Refund()
         {
@@ -336,6 +368,7 @@ namespace SoulHunter.UI
             if (_economy == null || data == null || PowerUps.TotalBought(data) == 0) return;
             int value = PowerUps.RefundValue(data);
             data.PowerUpRanks.Clear();
+            data.DisabledPowerUps?.Clear(); // a switched-off PowerUp is refunded too (its ranks were bought)
             _economy.AddGold(value);
             _saveService.SaveGame();
             UpdateUI();
@@ -360,22 +393,27 @@ namespace SoulHunter.UI
                 int rank = PowerUps.Rank(data, pair.Key);
                 bool locked = PowerUpUnlocks.UnlockedRanks(data, pair.Key) == 0;
                 bool maxed = rank >= info.MaxRank;
+                bool off = maxed && !PowerUps.IsEnabled(data, pair.Key);
                 bool chosen = pair.Key == _selected;
                 var text = pair.Value.GetComponentInChildren<TextMeshProUGUI>();
                 if (text != null)
                 {
-                    // Words carry every state, not colour alone: the rank, MAX, or LOCKED and what unlocks it.
+                    // Words carry every state, not colour alone: the rank, MAX, OFF, or LOCKED and what unlocks it.
                     string status = locked ? $"LOCKED\n<size=70%>{PowerUpUnlocks.NextConditionText(data, pair.Key)}</size>"
+                        : off ? SoulHunter.Gameplay.UI.UITheme.Bold("OFF")
                         : maxed ? SoulHunter.Gameplay.UI.UITheme.Bold("MAX") : $"<color={cardSoft}>{rank}/{info.MaxRank}</color>";
                     text.text = $"{SoulHunter.Gameplay.UI.UITheme.Bold(info.Name)}\n{status}";
                     text.alignment = TextAlignmentOptions.MidlineLeft;
+                    // The off cell is dark gray (VS), so it takes the light window text.
                     SoulHunter.Gameplay.UI.UITheme.ApplyText(text, locked ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Soft
+                        : off ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body
                         : SoulHunter.Gameplay.UI.ThemedElement.TextRole.Card);
                 }
                 var icon = pair.Value.transform.Find("Icon")?.GetComponent<Image>();
-                if (icon != null) icon.color = locked ? new Color(1f, 1f, 1f, 0.35f) : Color.white; // a locked PowerUp's icon is faded
+                if (icon != null) icon.color = locked || off ? new Color(1f, 1f, 1f, 0.35f) : Color.white; // a locked or switched-off PowerUp's icon is faded
                 // The cell keeps its state's colour; the chosen one also wears the theme's frame, as the chosen character card.
-                pair.Value.image.color = locked ? LockedCell : maxed ? MaxedCell : chosen ? SelectedCell : PlainCell;
+                // VS (wiki PowerUps): "fully upgraded and active ... yellowish ... fully upgraded and not active ... dark gray".
+                pair.Value.image.color = locked ? LockedCell : off ? OffCell : maxed ? MaxedCell : chosen ? SelectedCell : PlainCell;
                 SoulHunter.Gameplay.UI.UITheme.Edge(pair.Value.gameObject, chosen ? theme.Cards.SelectedEdge : SoulHunter.Gameplay.UI.UITheme.PanelEdge,
                     chosen ? theme.Cards.SelectedEdgeWidth : 1.5f);
             }
@@ -401,7 +439,9 @@ namespace SoulHunter.UI
                 {
                     int cost = PowerUps.Price(data, _selected);
                     bool afford = gold >= cost;
-                    _price.text = maxed ? "MAX" : lockedRank ? "LOCKED" : afford ? $"Price: {cost}" : $"Price: {cost}  (need {cost - gold} more gold)";
+                    bool switchable = PowerUps.CanToggle(data, _selected);
+                    string maxText = !switchable ? "MAX" : PowerUps.IsEnabled(data, _selected) ? "MAX - ON" : "MAX - OFF";
+                    _price.text = maxed ? maxText : lockedRank ? "LOCKED" : afford ? $"Price: {cost}" : $"Price: {cost}  (need {cost - gold} more gold)";
                     SoulHunter.Gameplay.UI.UITheme.ApplyText(_price, maxed ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Accent
                         : lockedRank ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Soft
                         : afford ? SoulHunter.Gameplay.UI.ThemedElement.TextRole.Gold : SoulHunter.Gameplay.UI.ThemedElement.TextRole.Danger);
@@ -409,7 +449,20 @@ namespace SoulHunter.UI
                 }
             }
             if (_buyButton != null)
-                _buyButton.interactable = data != null && PowerUps.CanBuyNext(data, _selected) && _economy != null && gold >= PowerUps.Price(data, _selected);
+            {
+                // A maxed PowerUp (not Reroll/Skip/Banish) turns Buy into its switch: always usable, free, no coin icon.
+                bool showsSwitch = data != null && PowerUps.CanToggle(data, _selected);
+                if (_buyShowsSwitch != showsSwitch)
+                {
+                    _buyShowsSwitch = showsSwitch;
+                    SoulHunter.Gameplay.UI.UITheme.ApplyButton(_buyButton, _buyButton.image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Primary,
+                        showsSwitch ? SoulHunter.Gameplay.UI.UITheme.IconSlot.None : SoulHunter.Gameplay.UI.UITheme.IconSlot.Buy);
+                }
+                if (_buyLabel != null)
+                    _buyLabel.text = !showsSwitch ? "Buy" : PowerUps.IsEnabled(data, _selected) ? "Turn Off" : "Turn On";
+                _buyButton.interactable = showsSwitch
+                    || (data != null && PowerUps.CanBuyNext(data, _selected) && _economy != null && gold >= PowerUps.Price(data, _selected));
+            }
             if (_refundButton != null) _refundButton.interactable = data != null && PowerUps.TotalBought(data) > 0;
         }
     }

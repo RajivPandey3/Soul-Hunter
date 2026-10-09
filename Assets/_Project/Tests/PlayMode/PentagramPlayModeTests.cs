@@ -40,7 +40,9 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             _pentagram = player.GetComponentsInChildren<PentagramWeapon>(true).First();
             _pentagram.enabled = false; // fired by the test, not by its cooldown
-            typeof(PentagramWeapon).GetField("_chanceToKeepGems", Private).SetValue(_pentagram, 0f);
+            // Below any roll: GroundItemEraser rounds the roll to 0.01, and a roll under 0.005 is 0, which is not > 0, so a
+            // 0 threshold still kept everything 0.5% of the time (2 failures in 108 runs, 2026-10-08 and 2026-10-09).
+            typeof(PentagramWeapon).GetField("_chanceToKeepGems", Private).SetValue(_pentagram, -1f);
         }
 
         private void Fire() => typeof(PentagramWeapon).GetMethod("Attack", Private).Invoke(_pentagram, null);

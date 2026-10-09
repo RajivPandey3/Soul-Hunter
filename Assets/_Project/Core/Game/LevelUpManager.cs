@@ -95,9 +95,11 @@ namespace SoulHunter.Gameplay.Core
                 !SoulHunter.Core.Services.GameServices.Instance.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) ||
                 save.CurrentData == null) return;
             var data = save.CurrentData;
-            AddCharges(Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Reroll, SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.Reroll))),
-                       Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Skip, SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.Skip))),
-                       Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Banish, SoulHunter.Core.Persistence.PowerUps.Rank(data, SoulHunter.Core.Persistence.PowerUpId.Banish))));
+            // ActiveRank like every other PowerUp reader; Reroll, Skip and Banish can never be switched off (wiki PowerUps),
+            // so for them it is always the bought rank.
+            AddCharges(Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Reroll, SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, SoulHunter.Core.Persistence.PowerUpId.Reroll))),
+                       Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Skip, SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, SoulHunter.Core.Persistence.PowerUpId.Skip))),
+                       Mathf.RoundToInt(SoulHunter.Core.Persistence.PowerUps.Bonus(SoulHunter.Core.Persistence.PowerUpId.Banish, SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, SoulHunter.Core.Persistence.PowerUpId.Banish))));
         }
 
         /// <summary>VS Preserve: the chance that a Reroll, Skip or Banish is kept after use.</summary>

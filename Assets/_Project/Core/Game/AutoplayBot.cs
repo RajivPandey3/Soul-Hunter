@@ -814,9 +814,9 @@ namespace SoulHunter.Gameplay.Core
                 var options = SoulHunter.Gameplay.UI.OptionsMenuUI.Open();
                 yield return new WaitForSecondsRealtime(0.5f);
                 yield return Shot("options");
-                // Every other section too (Display and Gameplay hold the ON/OFF switches, Controls the key bindings).
+                // Every other section too (Favorites opens first; Display and Gameplay hold the ON/OFF switches, Controls the key bindings).
                 if (options != null)
-                    foreach (var section in new[] { "Display", "Gameplay", "Controls" })
+                    foreach (var section in new[] { "Display", "Sound", "Gameplay", "Controls" })
                     {
                         var tab = options.GetComponentsInChildren<UnityEngine.UI.Button>(true)
                             .FirstOrDefault(b => b.GetComponentInChildren<TMPro.TMP_Text>(true) is TMPro.TMP_Text t && t.text.Trim() == section);

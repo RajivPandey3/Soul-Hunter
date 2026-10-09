@@ -12,10 +12,13 @@ using SoulHunter.Core.Services;
 namespace SoulHunter.Gameplay.UI
 {
     /// <summary>
-    /// VS-style Options screen (sections as on the VS wiki options page), opened from the main menu and the
-    /// pause menu. Sound: Sounds, Music. Display: Window Mode, Resolution, V-Sync, Flashing VFX, Disable Blood,
-    /// Screen Shake. Gameplay: Damage Numbers, Show Stage Progression, Visible Joystick, Pause When Unfocused.
-    /// Controls: keyboard and controller remapping. Fully usable with keyboard or controller; Esc / B closes it.
+    /// VS-style Options screen (sections in the order of the VS wiki options page: Favorites, Display, Sound, Gameplay),
+    /// opened from the main menu and the pause menu. Favorites: copies of Sounds, Music, Damage Numbers and Flashing VFX
+    /// (VS: "a copy of some commonly changed options from other sections"; they change the same settings). Display: Window
+    /// Mode, Resolution, Screen Refresh Rate (PC, Exclusive Fullscreen only), V-Sync, Flashing VFX, Disable Blood, Screen
+    /// Shake, Show Defanged Enemies. Sound: Sounds, Music. Gameplay: Damage Numbers, Show Stage Progression, Visible
+    /// Joystick, Joystick Type, Pause When Unfocused. Controls (Soul Hunter's own): keyboard and controller remapping.
+    /// Fully usable with keyboard or controller; Esc / B closes it.
     /// Changes apply at once and are saved when the screen closes. Built at runtime on its own overlay canvas.
     /// </summary>
     public sealed class OptionsMenuUI : MonoBehaviour
@@ -104,22 +107,29 @@ namespace SoulHunter.Gameplay.UI
             UITheme.ApplyText(Text("Title", panel, new Vector2(0f, 0.92f), new Vector2(1f, 0.99f), "Options", 44f, TextAlignmentOptions.Center), ThemedElement.TextRole.Title);
 
             var data = GameSettings.Data;
-            // VS groups its options in sections; one tab per section.
-            string[] sections = { "Sound", "Display", "Gameplay", "Controls" };
+            // VS groups its options in sections; one tab per section, in the wiki's heading order (Favorites, Display, Sound,
+            // Gameplay), then Soul Hunter's Controls. VS Co-op and Account have nothing behind them in Soul Hunter.
+            // The tabs share the theme's one tab size and sit centred in a row with the theme's gap (ThemedRow).
+            string[] sections = { "Favorites", "Display", "Sound", "Gameplay", "Controls" };
+            var tabRow = Rect("Tabs", panel, new Vector2(0.5f, 0.83f), new Vector2(0.5f, 0.9f));
             for (int i = 0; i < sections.Length; i++)
             {
                 int index = i;
-                var tab = AddButton(panel, new Vector2(0.05f + i * 0.2275f, 0.83f), new Vector2(0.255f + i * 0.2275f, 0.9f), sections[i], () => ShowTab(index), ThemedElement.SizeRole.Tab);
+                var tab = AddButton(tabRow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), sections[i], () => ShowTab(index), ThemedElement.SizeRole.Tab);
                 tab.name = "Tab_" + sections[i];
                 _tabButtons.Add(tab);
             }
+            tabRow.gameObject.AddComponent<ThemedRow>();
             const float row = 0.1f;
 
-            // Sound
-            var sound = BeginTab("Sound", panel);
+            // Favorites (VS): copies of options from other sections, bound to the same settings, so a change in one place
+            // shows in the other. Language and Classic Sound Effects have nothing behind them in Soul Hunter and are left out.
+            var favorites = BeginTab("Favorites", panel);
             float y = 1f;
-            AddSlider(sound, ref y, row, "Sounds", () => GameSettings.SfxVolume, v => { if (data != null) data.SfxVolume = v; });
-            AddSlider(sound, ref y, row, "Music", () => GameSettings.MusicVolume, v => { if (data != null) data.MusicVolume = v; });
+            AddSlider(favorites, ref y, row, "Sounds", () => GameSettings.SfxVolume, v => { if (data != null) data.SfxVolume = v; });
+            AddSlider(favorites, ref y, row, "Music", () => GameSettings.MusicVolume, v => { if (data != null) data.MusicVolume = v; });
+            AddToggle(favorites, ref y, row, "Damage Numbers", () => GameSettings.DamageNumbers, v => { if (data != null) data.DamageNumbers = v; });
+            AddToggle(favorites, ref y, row, "Flashing VFX", () => GameSettings.FlashingVfx, v => { if (data != null) data.FlashingVfx = v; });
 
             // Display
             var display = BeginTab("Display", panel);
@@ -129,6 +139,14 @@ namespace SoulHunter.Gameplay.UI
             // Resolution cycles Native, then every resolution the display supports.
             AddCycle(display, ref y, row, "Resolution", () => GameSettings.ResolutionIndex + 1, () => SoulHunter.Gameplay.Core.DisplaySettingsApplier.Resolutions().Count + 1,
                 i => SoulHunter.Gameplay.Core.DisplaySettingsApplier.ResolutionLabel(i - 1), i => { if (data != null) data.ResolutionIndex = i - 1; });
+            // VS Screen Refresh Rate (PC-exclusive): "Only visible when using Exclusive Fullscreen Window Mode". The wiki puts
+            // it between Resolution and Window Mode; Soul Hunter keeps Window Mode on top, so the row appears under the
+            // control that reveals it and nothing above the focused Window Mode button moves (ui-ux-pro-max: no layout shift
+            // under focus). Choices: Default, then the rates the display offers for the chosen resolution.
+            var refresh = AddCycle(display, ref y, row, "Screen Refresh Rate", RefreshRateChoice, () => RefreshRateChoices().Count + 1,
+                i => SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRateLabel(RefreshRateAt(i)),
+                i => { if (data != null) data.RefreshRateHz = RefreshRateAt(i); });
+            ShowOnlyWhen(refresh, () => SoulHunter.Gameplay.Core.DisplaySettingsApplier.ShowsRefreshRate(GameSettings.WindowMode, Application.isMobilePlatform));
             AddToggle(display, ref y, row, "V-Sync", () => GameSettings.VSync, v => { if (data != null) data.VSync = v; });
             AddToggle(display, ref y, row, "Flashing VFX", () => GameSettings.FlashingVfx, v => { if (data != null) data.FlashingVfx = v; });
             AddToggle(display, ref y, row, "Disable Blood", () => GameSettings.DisableBlood, v => { if (data != null) data.DisableBlood = v; });
@@ -136,12 +154,21 @@ namespace SoulHunter.Gameplay.UI
             // VS Options, Display: the green look of Defanged enemies (Defang PowerUp).
             AddToggle(display, ref y, row, "Show Defanged Enemies", () => GameSettings.ShowDefangedEnemies, v => { if (data != null) data.ShowDefangedEnemies = v; });
 
+            // Sound
+            var sound = BeginTab("Sound", panel);
+            y = 1f;
+            AddSlider(sound, ref y, row, "Sounds", () => GameSettings.SfxVolume, v => { if (data != null) data.SfxVolume = v; });
+            AddSlider(sound, ref y, row, "Music", () => GameSettings.MusicVolume, v => { if (data != null) data.MusicVolume = v; });
+
             // Gameplay
             var gameplay = BeginTab("Gameplay", panel);
             y = 1f;
             AddToggle(gameplay, ref y, row, "Damage Numbers", () => GameSettings.DamageNumbers, v => { if (data != null) data.DamageNumbers = v; });
             AddToggle(gameplay, ref y, row, "Show Stage Progression", () => GameSettings.ShowStageProgression, v => { if (data != null) data.ShowStageProgression = v; });
             AddToggle(gameplay, ref y, row, "Visible Joystick", () => GameSettings.VisibleJoystick, v => { if (data != null) data.VisibleJoystick = v; });
+            // VS Gameplay: "Joystick Type" (Legacy, Default), right after the touch screen control stick (TouchControlsUI).
+            AddCycle(gameplay, ref y, row, "Joystick Type", () => GameSettings.JoystickType, () => GameSettings.JoystickTypeNames.Length,
+                i => GameSettings.JoystickTypeNames[i], i => { if (data != null) data.JoystickType = i; });
             AddToggle(gameplay, ref y, row, "Pause When Unfocused", () => GameSettings.PauseOnFocusLoss, v => { if (data != null) data.PauseOnFocusLoss = v; });
 
             // Controls: headers over the binding columns (0.3-0.6 and 0.63-0.93 of a 0.02-0.98 line).
@@ -203,6 +230,7 @@ namespace SoulHunter.Gameplay.UI
         /// <summary>Shows one section and focuses its first control (keyboard/controller friendly).</summary>
         public void ShowTab(int index)
         {
+            RefreshAll(); // the Favorites copies and their home rows show the same values
             _currentTab = Mathf.Clamp(index, 0, _tabs.Count - 1);
             for (int i = 0; i < _tabs.Count; i++) _tabs[i].gameObject.SetActive(i == _currentTab);
             for (int i = 0; i < _tabButtons.Count; i++)
@@ -214,6 +242,66 @@ namespace SoulHunter.Gameplay.UI
         private void RefreshAll()
         {
             foreach (var refresh in _refreshers) refresh();
+            RestackConditionalRows();
+        }
+
+        // ---------- rows shown only in some settings (VS Screen Refresh Rate) ----------
+
+        private readonly List<(RectTransform line, Func<bool> visible)> _conditional = new List<(RectTransform, Func<bool>)>();
+        private readonly Dictionary<RectTransform, List<(RectTransform line, float row)>> _tabLines = new Dictionary<RectTransform, List<(RectTransform, float)>>();
+
+        /// <summary>
+        /// Shows the row of <paramref name="control"/> only while <paramref name="visible"/> holds. A hidden row is inactive,
+        /// so keyboard and controller focus skip it, and the rows under it close up.
+        /// </summary>
+        private void ShowOnlyWhen(Selectable control, Func<bool> visible)
+        {
+            _conditional.Add(((RectTransform)control.transform.parent, visible));
+            RestackConditionalRows();
+        }
+
+        private void RestackConditionalRows()
+        {
+            if (_conditional.Count == 0) return;
+            var tabs = new HashSet<RectTransform>();
+            foreach (var (line, visible) in _conditional)
+            {
+                line.gameObject.SetActive(visible());
+                tabs.Add((RectTransform)line.parent);
+            }
+            foreach (var tab in tabs)
+            {
+                if (!_tabLines.TryGetValue(tab, out var lines)) continue;
+                float y = 1f;
+                foreach (var (line, row) in lines)
+                {
+                    if (!line.gameObject.activeSelf) continue;
+                    line.anchorMin = new Vector2(0.02f, y - row);
+                    line.anchorMax = new Vector2(0.98f, y);
+                    y -= row * 1.08f;
+                }
+            }
+            var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            if (selected != null && selected.transform.IsChildOf(transform) && !selected.activeInHierarchy)
+                EventSystem.current.SetSelectedGameObject(null); // Update() puts focus back on the open section
+        }
+
+        /// <summary>The refresh rates (whole hertz) offered for the chosen resolution, lowest first.</summary>
+        private static List<int> RefreshRateChoices() =>
+            SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRates(SoulHunter.Gameplay.Core.DisplaySettingsApplier.ChosenSize());
+
+        /// <summary>The Screen Refresh Rate choice now set: 0 is Default (also when the stored rate is not offered here).</summary>
+        private static int RefreshRateChoice()
+        {
+            int index = RefreshRateChoices().IndexOf(GameSettings.RefreshRateHz);
+            return GameSettings.RefreshRateHz > 0 && index >= 0 ? index + 1 : 0;
+        }
+
+        /// <summary>The refresh rate (whole hertz) at a Screen Refresh Rate choice: 0 is Default.</summary>
+        private static int RefreshRateAt(int choice)
+        {
+            var rates = RefreshRateChoices();
+            return choice >= 1 && choice <= rates.Count ? rates[choice - 1] : 0;
         }
 
         private void AddSlider(RectTransform panel, ref float y, float row, string label, Func<float> get, Action<float> set)
@@ -275,7 +363,7 @@ namespace SoulHunter.Gameplay.UI
         }
 
         /// <summary>A button that steps through a list of choices (VS Window Mode, Resolution).</summary>
-        private void AddCycle(RectTransform panel, ref float y, float row, string label, Func<int> get, Func<int> count,
+        private Button AddCycle(RectTransform panel, ref float y, float row, string label, Func<int> get, Func<int> count,
             Func<int, string> labelFor, Action<int> set)
         {
             var line = Line(panel, ref y, row, label);
@@ -291,6 +379,7 @@ namespace SoulHunter.Gameplay.UI
             button.name = label;
             _selectables.Add(button);
             _building.Add(button);
+            return button;
         }
 
         private void AddBindingRow(RectTransform panel, ref float y, float row, string label, InputAction action, int keyboardIndex, int gamepadIndex)
@@ -385,6 +474,8 @@ namespace SoulHunter.Gameplay.UI
         private RectTransform Line(RectTransform panel, ref float y, float row, string label)
         {
             var line = Rect(label, panel, new Vector2(0.02f, y - row), new Vector2(0.98f, y));
+            if (!_tabLines.TryGetValue(panel, out var lines)) _tabLines[panel] = lines = new List<(RectTransform, float)>();
+            lines.Add((line, row)); // so rows can close up around a hidden one
             UITheme.ApplySurface(line.gameObject.AddComponent<Image>(), ThemedElement.SurfaceRole.Row);
             Text("Label", line, new Vector2(0.02f, 0f), new Vector2(0.44f, 1f), label, 24f, TextAlignmentOptions.Left);
             y -= row * 1.08f;

@@ -296,6 +296,25 @@ namespace SoulHunter.Core.Persistence
             // VS locked PowerUps (2026-10-01): ranks bought before a PowerUp was locked are refunded (VS Refund).
             int lockedRefund = PowerUpUnlocks.RefundIfLockedRanksOwned(data);
             if (lockedRefund > 0) Debug.Log($"[SaveService] PowerUps with locked ranks refunded: +{lockedRefund} gold.");
+            // VS PowerUp On/Off (2026-10-09): an older save has no list and loads with every PowerUp on. Only ids of
+            // PowerUps that can be switched (maxed, not Reroll/Skip/Banish) stay, each once.
+            data.DisabledPowerUps ??= new System.Collections.Generic.List<string>();
+            var off = new System.Collections.Generic.HashSet<string>();
+            data.DisabledPowerUps.RemoveAll(id => id == null || !System.Enum.TryParse(id, out PowerUpId p) || p.ToString() != id
+                                                  || !PowerUps.CanToggle(data, p) || !off.Add(id));
+            // VS character select (2026-10-09): favourites by name, once each; levels completed per character, 1-10, once each.
+            data.FavoriteCharacters ??= new System.Collections.Generic.List<string>();
+            var favourites = new System.Collections.Generic.HashSet<string>();
+            data.FavoriteCharacters.RemoveAll(name => string.IsNullOrEmpty(name) || !favourites.Add(name));
+            data.CharacterStages ??= new System.Collections.Generic.List<CharacterStageRecord>();
+            var stageOwners = new System.Collections.Generic.HashSet<string>();
+            data.CharacterStages.RemoveAll(r => r == null || string.IsNullOrEmpty(r.Character) || !stageOwners.Add(r.Character));
+            foreach (var record in data.CharacterStages)
+            {
+                record.Levels ??= new System.Collections.Generic.List<int>();
+                var levels = new System.Collections.Generic.HashSet<int>();
+                record.Levels.RemoveAll(level => level < 1 || level > CharacterStages.LevelCount || !levels.Add(level));
+            }
             data.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
             data.BigCoinBagsReceived = Mathf.Max(0, data.BigCoinBagsReceived);
             data.FiveItemChestsOpened = Mathf.Max(0, data.FiveItemChestsOpened);
@@ -303,6 +322,9 @@ namespace SoulHunter.Core.Persistence
             // is the VS default, and a bool cannot hold an impossible value. The schema version stays at 1.
             if (data.WindowMode < 0 || data.WindowMode > 3) data.WindowMode = 0;
             if (data.ResolutionIndex < -1) data.ResolutionIndex = -1;
+            // VS Options: Screen Refresh Rate (0 = Default, else whole hertz) and Joystick Type (0 Legacy, 1 Default).
+            if (data.RefreshRateHz < 0 || data.RefreshRateHz > 1000) data.RefreshRateHz = 0;
+            if (data.JoystickType < 0 || data.JoystickType > 1) data.JoystickType = 1;
         }
 
         private static float Volume(float value) => float.IsFinite(value) ? Mathf.Clamp01(value) : 1f;

@@ -103,9 +103,10 @@ namespace SoulHunter.Gameplay.Player
         public void ApplyPowerUps(SoulHunter.Core.Persistence.GameData data)
         {
             if (data == null) return;
-            int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Rank(data, id);
+            // A maxed PowerUp switched off gives nothing (wiki PowerUps: the player "can then disable the PowerUp").
+            int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, id);
             float Bonus(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Bonus(id, Rank(id));
-            RawMight += Bonus(SoulHunter.Core.Persistence.PowerUpId.Might);
+            RawMight +=Bonus(SoulHunter.Core.Persistence.PowerUpId.Might);
             RawArmor += Rank(SoulHunter.Core.Persistence.PowerUpId.Armor);
             Regen += Bonus(SoulHunter.Core.Persistence.PowerUpId.Recovery);
             Cooldown = Mathf.Max(0.1f, Cooldown - Bonus(SoulHunter.Core.Persistence.PowerUpId.Cooldown));

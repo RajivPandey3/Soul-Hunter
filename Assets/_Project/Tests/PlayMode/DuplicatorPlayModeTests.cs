@@ -172,7 +172,11 @@ namespace SoulHunter.Tests.PlayMode
             {
                 foreach (var go in LiveShots())
                 {
-                    bool jumped = lastSeen.TryGetValue(go, out var was) && (go.transform.position - was).sqrMagnitude > 1.5f * 1.5f;
+                    // A reused pooled shot jumps back toward the holder. A fast shot in a long frame also moves over 1.5
+                    // units, but away from the holder, and was counted again (Thousand Edge 6 counted as 18, 2026-10-06).
+                    Vector3 origin = weapon.transform.position;
+                    bool jumped = lastSeen.TryGetValue(go, out var was) && (go.transform.position - was).sqrMagnitude > 1.5f * 1.5f
+                        && (go.transform.position - origin).sqrMagnitude < (was - origin).sqrMagnitude;
                     lastSeen[go] = go.transform.position;
                     if (active.Add(go) || jumped)
                     {

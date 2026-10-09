@@ -31,6 +31,7 @@ namespace SoulHunter.Tests.PlayMode
             save.UseFile(System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save.json"));
             save.CurrentData.Currency = 50000;
             save.CurrentData.PowerUpRanks.Clear();
+            save.CurrentData.DisabledPowerUps.Clear();
             save.CurrentData.UnlockedAchievements.Clear(); // Reroll, Skip, Banish, Omni, Charm, Defang, Preserve locked
             PowerUps.SetRank(save.CurrentData, PowerUpId.Recovery, 5);
             var navigation = Object.FindFirstObjectByType<MainMenuNavigation>();

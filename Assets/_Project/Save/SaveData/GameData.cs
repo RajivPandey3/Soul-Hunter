@@ -44,6 +44,17 @@ namespace SoulHunter.Core.Persistence
         public bool PauseOnFocusLoss = true;
         /// <summary>VS Options, Display: "Show Defanged Enemies" (the green look of Defanged enemies).</summary>
         public bool ShowDefangedEnemies = true;
+        /// <summary>
+        /// VS Options, Display (PC-exclusive): "Screen Refresh Rate", "Only visible when using Exclusive Fullscreen Window Mode".
+        /// Stored in whole hertz, not as a list index, so it survives a resolution change (each resolution has its own list);
+        /// 0 = Default (the display picks). A save written before this field loads it as 0.
+        /// </summary>
+        public int RefreshRateHz = 0;
+        /// <summary>
+        /// VS Options, Gameplay: "Joystick Type" (Legacy, Default) for the touch stick: 0 Legacy, 1 Default. The wiki names no
+        /// default value; Default is the default because that is the option's own name (GameSettings.JoystickDefault).
+        /// </summary>
+        public int JoystickType = 1;
         /// <summary>Input System binding overrides (remapped controls) as JSON; empty = defaults.</summary>
         public string InputBindingOverrides = "";
         public float HighScoreTime;
@@ -59,6 +70,11 @@ namespace SoulHunter.Core.Persistence
         public int MetaRecoveryLevel;
         /// <summary>VS PowerUp ranks bought (PowerUps; since save version 2, 2026-09-30).</summary>
         public System.Collections.Generic.List<PowerUpRank> PowerUpRanks = new System.Collections.Generic.List<PowerUpRank>();
+        /// <summary>
+        /// Maxed PowerUps the player switched off (VS PowerUps page; PowerUpId names). An older save has no such field and
+        /// loads with every PowerUp on; SaveService's repair keeps only ids that can be switched.
+        /// </summary>
+        public List<string> DisabledPowerUps = new List<string>();
 
         // --- Current Run Data ---
         public string SelectedCharacterName;
@@ -67,6 +83,13 @@ namespace SoulHunter.Core.Persistence
         // --- Characters (VS rule: meet a character's unlock condition, then buy it with gold) ---
         public List<string> UnlockedCharacters = new List<string>();
         public List<string> OwnedCharacters = new List<string>();
+        /// <summary>VS character select (wiki Characters, Favorite): characters shown first on the grid, by name.</summary>
+        public List<string> FavoriteCharacters = new List<string>();
+        /// <summary>
+        /// VS stage completion panel (wiki Characters): the levels each character completed. Soul Hunter: a level cleared
+        /// at 30:00 (or Level 10 by destroying Shadow Kael) with that character, in any run.
+        /// </summary>
+        public List<CharacterStageRecord> CharacterStages = new List<CharacterStageRecord>();
 
         // --- Soul Eggs (VS Golden Egg rule: each egg permanently raises one random stat of one character) ---
         public List<SoulEggRecord> SoulEggs = new List<SoulEggRecord>();
@@ -104,6 +127,87 @@ namespace SoulHunter.Core.Persistence
             MetaRecoveryLevel = 0;
 
             SelectedCharacterName = "Kael"; // Default Hero
+        }
+    }
+
+    /// <summary>The levels (1-10) one character has completed, each once.</summary>
+    [Serializable]
+    public class CharacterStageRecord
+    {
+        public string Character;
+        public List<int> Levels = new List<int>();
+    }
+
+    /// <summary>
+    /// VS stage completion per character (vampire.survivors.wiki/w/Characters, Stage completion panel, fetched 2026-10-09:
+    /// "A stage with a checkmark displayed before the stage name indicates that the player completed that stage with a
+    /// specific character"; the grid can be sorted "through the number of complete stages per character"). VS completes a
+    /// stage per run; Soul Hunter's one run plays ten levels (owner, Run structure), so a level counts as completed when
+    /// it is cleared at 30:00, or Level 10 when Shadow Kael is destroyed (release item P3-03, 2026-10-09).
+    /// </summary>
+    public static class CharacterStages
+    {
+        public const int LevelCount = 10;
+
+        /// <summary>Records that <paramref name="character"/> completed <paramref name="level"/>; true when it is new.</summary>
+        public static bool Record(GameData data, string character, int level)
+        {
+            if (data == null || string.IsNullOrEmpty(character) || level < 1 || level > LevelCount) return false;
+            data.CharacterStages ??= new List<CharacterStageRecord>();
+            var record = data.CharacterStages.Find(r => r != null && r.Character == character);
+            if (record == null) data.CharacterStages.Add(record = new CharacterStageRecord { Character = character });
+            record.Levels ??= new List<int>();
+            if (record.Levels.Contains(level)) return false;
+            record.Levels.Add(level);
+            return true;
+        }
+
+        /// <summary>How many different levels <paramref name="character"/> has completed.</summary>
+        public static int Count(GameData data, string character)
+        {
+            var record = data?.CharacterStages?.Find(r => r != null && r.Character == character);
+            return record?.Levels?.Count ?? 0;
+        }
+
+        public static bool Has(GameData data, string character, int level)
+        {
+            var record = data?.CharacterStages?.Find(r => r != null && r.Character == character);
+            return record?.Levels != null && record.Levels.Contains(level);
+        }
+    }
+
+    /// <summary>
+    /// VS favourite characters (vampire.survivors.wiki/w/Characters, fetched 2026-10-09): "Displays favorited characters at
+    /// the top of the character grid, regardless of how it is sorted, but not if it is filtered ... Unlocked through
+    /// Mindbender"; "Whether a character is favorited or not would remain unaffected" by CLEAR. Mindbender (wiki Mindbender)
+    /// "is automatically obtained by filling out 50 entries in the Collection". Soul Hunter has no Collection yet, so, as
+    /// with Banish, Omni, Charm, Defang and Preserve (2026-10-01), favourites stay locked until the Mindbender unlock id is
+    /// on the save (Phases 2-3). <see cref="UnlockId"/> can be granted by a debug tool or a test.
+    /// </summary>
+    public static class CharacterFavourites
+    {
+        public const string UnlockId = "Relic.Mindbender";
+
+        public static bool IsUnlocked(GameData data) => data?.UnlockedAchievements != null && data.UnlockedAchievements.Contains(UnlockId);
+
+        public static bool IsFavourite(GameData data, string character) =>
+            IsUnlocked(data) && data.FavoriteCharacters != null && data.FavoriteCharacters.Contains(character);
+
+        /// <summary>Marks or clears a favourite (ignored while favourites are locked).</summary>
+        public static void Set(GameData data, string character, bool favourite)
+        {
+            if (data == null || string.IsNullOrEmpty(character) || !IsUnlocked(data)) return;
+            data.FavoriteCharacters ??= new List<string>();
+            data.FavoriteCharacters.Remove(character);
+            if (favourite) data.FavoriteCharacters.Add(character);
+        }
+
+        /// <summary>Grants the Mindbender unlock (tests and debug tools; Soul Hunter has no Collection yet).</summary>
+        public static void Unlock(GameData data)
+        {
+            if (data == null) return;
+            data.UnlockedAchievements ??= new List<string>();
+            if (!data.UnlockedAchievements.Contains(UnlockId)) data.UnlockedAchievements.Add(UnlockId);
         }
     }
 

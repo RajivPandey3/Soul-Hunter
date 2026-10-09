@@ -87,6 +87,8 @@ namespace SoulHunter.Tests.PlayMode
             // modes turns them on in configureSave, and the run copies them into RunModes when it starts.
             foreach (var mode in SoulHunter.Gameplay.Data.RunModeOptions.All)
                 SoulHunter.Gameplay.Data.RunModeOptions.Set(save.CurrentData, mode, false);
+            // Every maxed PowerUp on (VS On/Off, 2026-10-09), whatever the owner switched off; a test switches them itself.
+            save.CurrentData.DisabledPowerUps?.Clear();
             configureSave?.Invoke(save.CurrentData);
 
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");

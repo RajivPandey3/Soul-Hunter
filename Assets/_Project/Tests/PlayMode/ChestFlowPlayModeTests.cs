@@ -131,6 +131,9 @@ namespace SoulHunter.Tests.PlayMode
             // notice. When that canvas went away, the screen went with it and the game stayed paused for good.
             yield return BootIntoGameplay(save => { save.ChestsOpened = 20; save.FiveItemChestsOpened = 0; });
             Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            // As the other chest tests: no kills, gems or level-up screens around the chest (timed out once, 2026-10-01).
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true)) weapon.enabled = false;
+            foreach (var enemy in new System.Collections.Generic.List<EnemyController>(EnemyController.ActiveEnemies)) if (enemy != null) enemy.gameObject.SetActive(false);
             var chestUI = GetPrivateField<ChestUI>(PickupPoolManager.Instance, "_chestUI");
             Assert.That(chestUI, Is.Not.Null, "The pickup pool hands chests to a ChestUI.");
 

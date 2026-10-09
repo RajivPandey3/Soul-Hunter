@@ -36,7 +36,8 @@ namespace SoulHunter.Tests.PlayMode
             navigation.ShowCharacters();
             yield return Settle();
             var select = navigation.CharacterPanel.transform;
-            CheckScreen(select, "Character select", 2, tabs: 6 + 1); // Back, Confirm; tabs: six run modes and FILTER
+            // Back, Confirm, Favourite; tabs: six run modes, FILTER, and the VS sort and order (2026-10-09).
+            CheckScreen(select, "Character select", 3, tabs: 6 + 1 + 2);
             CheckCharacterSelect(select);
 
             navigation.ShowPowerUps();
@@ -60,7 +61,7 @@ namespace SoulHunter.Tests.PlayMode
 
             var options = OptionsMenuUI.Open();
             yield return Settle();
-            CheckScreen(options.transform, "Options", 1, tabs: 4); // Back (Reset Controls sits on the hidden Controls tab)
+            CheckScreen(options.transform, "Options", 1, tabs: 5); // Back (Reset Controls sits on the hidden Controls tab); Favorites, Display, Sound, Gameplay, Controls
             options.Close();
             system.Resume();
             yield return null;
@@ -105,8 +106,10 @@ namespace SoulHunter.Tests.PlayMode
                 var selectable = e.GetComponent<Selectable>();
                 foreach (var label in e.GetComponentsInChildren<TextMeshProUGUI>(false).Where(t => !string.IsNullOrWhiteSpace(t.text)))
                 {
-                    float contrast = UITheme.Contrast(label.color, selectable.colors.normalColor);
-                    Assert.That(contrast, Is.GreaterThanOrEqualTo(4.5f), $"{screen} {e.name}: '{label.text}' contrast {contrast:0.0}:1 on its button.");
+                    // Against the plate the player sees: a locked button is drawn in its disabled colour.
+                    var plate = selectable.IsInteractable() ? selectable.colors.normalColor : selectable.colors.disabledColor;
+                    float contrast = UITheme.Contrast(label.color, plate);
+                    Assert.That(contrast, Is.GreaterThanOrEqualTo(4.5f), $"{screen} {e.name}: '{label.text}' contrast {contrast:0.0}:1 on its button ({(selectable.IsInteractable() ? "usable" : "locked")}).");
                     Rect box = ScreenRect((RectTransform)e.transform), text = TextRect(label);
                     Assert.That(text.xMin >= box.xMin - 1f && text.xMax <= box.xMax + 1f, Is.True,
                         $"{screen} {e.name}: '{label.text}' {text} stays inside its button {box}.");

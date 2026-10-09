@@ -36,6 +36,7 @@ MonoBehaviour:
     Selected: {r: 0.55, g: 0.16, b: 0.07, a: 1}
     Maxed: {r: 0.36, g: 0.26, b: 0.05, a: 1}
     Locked: {r: 0.06, g: 0.05, b: 0.06, a: 1}
+    Off: {r: 0.17, g: 0.16, b: 0.16, a: 1}
   Text:
     OnDark: {r: 0.96, g: 0.92, b: 0.86, a: 1}
     SoftOnDark: {r: 0.86, g: 0.8, b: 0.74, a: 1}

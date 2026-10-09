@@ -37,6 +37,8 @@ namespace SoulHunter.Gameplay.UI
         public static Color CellSelected => T.Cards.Selected;
         public static Color CellMaxed => T.Cards.Maxed;
         public static Color CellLocked => T.Cards.Locked;
+        /// <summary>A maxed Power Up switched off (VS PowerUps: "dark gray").</summary>
+        public static Color CellOff => T.Cards.Off;
 
         // Text
         public static Color Text => T.Text.OnDark;

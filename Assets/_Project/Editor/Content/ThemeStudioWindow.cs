@@ -385,6 +385,7 @@ namespace SoulHunter.Editor.Content
             Check("Main button labels", Best(t, t.Buttons.Primary), t.Buttons.Primary, 4.5f);
             Check("Leaving button labels", Best(t, t.Buttons.Danger), t.Buttons.Danger, 4.5f);
             Check("Locked cards", t.Text.Locked, t.Cards.Locked, 3f);
+            Check("Power Ups switched off", t.Text.OnDark, t.Cards.Off, 4.5f);
             float focusGap = Mathf.Abs(Luminance(t.Buttons.Focus) - Luminance(t.Buttons.Normal)) + ColourDistance(t.Buttons.Focus, t.Buttons.Normal);
             Row("Chosen button stands out", focusGap > 0.25f, focusGap > 0.25f ? "yes" : "make Focus differ more from Normal");
         }

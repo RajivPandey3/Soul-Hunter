@@ -81,6 +81,9 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(Contrast(t.Text.Accent, t.Surfaces.Panel), Is.GreaterThanOrEqualTo(3f), $"{t.DisplayName}: highlights on windows.");
                 Assert.That(Contrast(t.Text.Locked, t.Buttons.Disabled), Is.GreaterThanOrEqualTo(3f), $"{t.DisplayName}: text on unusable buttons.");
                 Assert.That(Contrast(t.Text.Locked, t.Cards.Locked), Is.GreaterThanOrEqualTo(3f), $"{t.DisplayName}: locked cards.");
+                // VS PowerUps: a maxed PowerUp switched off is dark gray, apart from the yellowish maxed-and-on cell.
+                Assert.That(Contrast(t.Text.OnDark, t.Cards.Off), Is.GreaterThanOrEqualTo(4.5f), $"{t.DisplayName}: Power Ups switched off.");
+                Assert.That(t.Cards.Off, Is.Not.EqualTo(t.Cards.Maxed), $"{t.DisplayName}: off differs from maxed and on.");
                 foreach (var (what, back) in new[] { ("ordinary", t.Buttons.Normal), ("main", t.Buttons.Primary), ("leaving", t.Buttons.Danger) })
                     Assert.That(Mathf.Max(Contrast(t.Text.OnDark, back), Contrast(t.Text.OnLight, back)), Is.GreaterThanOrEqualTo(4.5f),
                         $"{t.DisplayName}: {what} button labels (light or dark text, whichever reads best).");

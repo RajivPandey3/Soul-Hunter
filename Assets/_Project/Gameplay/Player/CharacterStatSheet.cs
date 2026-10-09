@@ -121,7 +121,7 @@ namespace SoulHunter.Gameplay.Player
             if (data != null)
             {
                 // The same VS PowerUp effects a run gets (PlayerStats.ApplyPowerUps, PlayerController for Max Health).
-                int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Rank(data, id);
+                int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, id); // off = 0
                 float Bonus(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.Bonus(id, Rank(id));
                 float omni = Bonus(SoulHunter.Core.Persistence.PowerUpId.Omni);
                 sheet.MaxHealth = UnityEngine.Mathf.RoundToInt(sheet.MaxHealth * SoulHunter.Core.Persistence.PowerUps.MaxHealthMultiplier(Rank(SoulHunter.Core.Persistence.PowerUpId.MaxHealth)));

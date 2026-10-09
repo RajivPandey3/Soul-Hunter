@@ -110,6 +110,36 @@ namespace SoulHunter.Core.Persistence
 
         public static bool IsMaxed(GameData data, PowerUpId id) => Rank(data, id) >= Info(id).MaxRank;
 
+        // ---- On / Off (vampire.survivors.wiki/w/PowerUps, fetched 2026-10-09): "After maxing out a PowerUp (except
+        // Rerolls, Skips, Banishes and Seals), the player can then disable the PowerUp, preventing the need to refund all
+        // PowerUps to test out PowerUp setups or to get rid of Curse." Soul Hunter has no Seals.
+        // Where the wiki is silent (owner's balance method, 2026-10-09: choose and record the reason):
+        // - A switched-off PowerUp keeps its ranks: they still count in TotalBought for the fees and the next price, and
+        //   Refund still returns their gold. Reason: switching off is free and is "preventing the need to refund", so it
+        //   changes nothing that was paid; only what a run gets changes.
+        // - Refund clears the off list too, since no rank is left to switch.
+
+        /// <summary>A PowerUp can be switched off or on: maxed, and not Reroll, Skip or Banish (wiki PowerUps).</summary>
+        public static bool CanToggle(GameData data, PowerUpId id) =>
+            id != PowerUpId.Reroll && id != PowerUpId.Skip && id != PowerUpId.Banish && IsMaxed(data, id);
+
+        /// <summary>False only for a maxed PowerUp the player switched off.</summary>
+        public static bool IsEnabled(GameData data, PowerUpId id) =>
+            data?.DisabledPowerUps == null || !CanToggle(data, id) || !data.DisabledPowerUps.Contains(id.ToString());
+
+        /// <summary>Switches a maxed PowerUp on or off (ignored for anything that cannot be switched).</summary>
+        public static void SetEnabled(GameData data, PowerUpId id, bool enabled)
+        {
+            if (data == null || !CanToggle(data, id)) return;
+            data.DisabledPowerUps ??= new List<string>();
+            string key = id.ToString();
+            data.DisabledPowerUps.Remove(key);
+            if (!enabled) data.DisabledPowerUps.Add(key);
+        }
+
+        /// <summary>The ranks a run gets: the bought rank, or 0 while the PowerUp is switched off.</summary>
+        public static int ActiveRank(GameData data, PowerUpId id) => IsEnabled(data, id) ? Rank(data, id) : 0;
+
         /// <summary>A next rank exists and is unlocked (VS: locked ranks cannot be bought).</summary>
         public static bool CanBuyNext(GameData data, PowerUpId id) => Rank(data, id) < PowerUpUnlocks.UnlockedRanks(data, id);
 
@@ -134,6 +164,7 @@ namespace SoulHunter.Core.Persistence
             int value = RefundValue(data);
             data.Currency += value;
             data.PowerUpRanks?.Clear();
+            data.DisabledPowerUps?.Clear();
             return value;
         }
 

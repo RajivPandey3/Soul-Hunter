@@ -36,6 +36,7 @@ MonoBehaviour:
     Selected: {r: 1, g: 0.94509804, b: 0.8862745, a: 1}
     Maxed: {r: 1, g: 0.8235294, b: 0.24705882, a: 1}
     Locked: {r: 0.22745098, g: 0.14901961, b: 0.1254902, a: 1}
+    Off: {r: 0.2, g: 0.1882353, b: 0.18039216, a: 1}
     SelectedEdge: {r: 1, g: 0.82, b: 0.25, a: 1}
     SelectedEdgeWidth: 5
   Text:

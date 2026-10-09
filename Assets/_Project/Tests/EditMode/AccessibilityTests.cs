@@ -48,6 +48,54 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void RefreshRateAndJoystickType_Default_AndAnOldSaveLoadsTheDefaults()
+        {
+            // VS Options: Screen Refresh Rate (Display) starts at Default; Joystick Type (Gameplay) starts at Default.
+            var fresh = new GameData();
+            Assert.That(fresh.RefreshRateHz, Is.EqualTo(0), "Default refresh rate (the display picks).");
+            Assert.That(fresh.JoystickType, Is.EqualTo(GameSettings.JoystickDefault), "Joystick Type Default.");
+            var old = new GameData();
+            JsonUtility.FromJsonOverwrite("{\"Currency\":5,\"WindowMode\":1}", old);
+            Assert.That(old.RefreshRateHz, Is.EqualTo(0));
+            Assert.That(old.JoystickType, Is.EqualTo(GameSettings.JoystickDefault));
+            Assert.That(GameSettings.JoystickTypeNames, Is.EqualTo(new[] { "Legacy", "Default" }), "The wiki's two values, in its order.");
+        }
+
+        [Test]
+        public void RefreshRateAndJoystickType_AreSaved_AndRepaired()
+        {
+            var data = new GameData { SaveVersion = GameData.CurrentVersion, RefreshRateHz = 144, JoystickType = GameSettings.JoystickLegacy };
+            var loaded = new GameData();
+            JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(data), loaded);
+            SaveService.Migrate(loaded);
+            Assert.That(loaded.RefreshRateHz, Is.EqualTo(144), "A chosen rate survives a save and the repair.");
+            Assert.That(loaded.JoystickType, Is.EqualTo(GameSettings.JoystickLegacy));
+
+            var broken = new GameData { SaveVersion = GameData.CurrentVersion, RefreshRateHz = -5, JoystickType = 7 };
+            SaveService.Migrate(broken);
+            Assert.That(broken.RefreshRateHz, Is.EqualTo(0), "An impossible rate goes back to Default.");
+            Assert.That(broken.JoystickType, Is.EqualTo(GameSettings.JoystickDefault), "An unknown type goes back to Default.");
+        }
+
+        [Test]
+        public void RefreshRates_AreTheDisplaysRatesForTheSize_InWholeHertz_LowestFirst()
+        {
+            var size = new Vector2Int(1920, 1080);
+            var modes = new[]
+            {
+                (size, 144.0), (size, 59.94), (size, 60.0), (new Vector2Int(1280, 720), 75.0), (size, 120.0), (size, 0.0)
+            };
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRates(modes, size), Is.EqualTo(new[] { 60, 120, 144 }),
+                "59.94 reads as 60; other sizes and empty rates are left out.");
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRateLabel(0), Is.EqualTo("Default"));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRateLabel(144), Is.EqualTo("144 Hz"));
+            // VS: "Only visible when using Exclusive Fullscreen Window Mode" (Window Mode 1), and PC-exclusive.
+            for (int mode = 0; mode < 4; mode++)
+                Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.ShowsRefreshRate(mode, false), Is.EqualTo(mode == 1), $"Window Mode {mode}");
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.ShowsRefreshRate(1, true), Is.False, "Not on mobile.");
+        }
+
+        [Test]
         public void EveryAction_HasKeyboardAndControllerBindings()
         {
             // Learning Comment: VS ki tarah poora game controller se khelne layak ho (pehle Dash/Ultimate/Pause ka koi button nahi tha).

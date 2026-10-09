@@ -145,12 +145,15 @@ namespace SoulHunter.Gameplay.Core
             TopDpsRow = RunResultsFormat.Highest(dps);
         }
 
-        /// <summary>"All the powerups that were active during the run, and their level": every PowerUp with a rank.</summary>
+        /// <summary>
+        /// "All the powerups that were active during the run, and their level": every PowerUp with a rank, except a maxed
+        /// one switched off (wiki PowerUps, On/Off), which was not active.
+        /// </summary>
         public void AddPowerUps(GameData data)
         {
             foreach (var info in SoulHunter.Core.Persistence.PowerUps.All)
             {
-                int rank = SoulHunter.Core.Persistence.PowerUps.Rank(data, info.Id);
+                int rank = SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, info.Id);
                 if (rank > 0) PowerUps.Add(new KeyValuePair<string, int>(info.Name, rank));
             }
         }

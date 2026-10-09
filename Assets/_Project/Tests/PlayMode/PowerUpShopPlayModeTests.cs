@@ -31,6 +31,7 @@ namespace SoulHunter.Tests.PlayMode
             save.UseFile(System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save.json"));
             save.CurrentData.Currency = 50000;
             save.CurrentData.PowerUpRanks.Clear();
+            save.CurrentData.DisabledPowerUps.Clear();
             Object.FindFirstObjectByType<MainMenuNavigation>().ShowPowerUps();
             yield return null;
 
@@ -43,12 +44,17 @@ namespace SoulHunter.Tests.PlayMode
             StringAssert.Contains("Recovers 0.1 HP per rank", shop.InfoText);
             StringAssert.Contains("Price: 200", shop.InfoText, "Nothing bought: the initial price.");
             int gold = save.CurrentData.Currency;
-            for (int i = 0; i < 7; i++) shop.BuyButton.onClick.Invoke();
+            for (int i = 0; i < 5; i++) shop.BuyButton.onClick.Invoke();
             Assert.That(PowerUps.Rank(save.CurrentData, PowerUpId.Recovery), Is.EqualTo(5), "Stops at the VS max rank.");
             int paid = 200 + (400 + 22) + (600 + 24) + (800 + 26) + (1000 + 29);
             Assert.That(save.CurrentData.Currency, Is.EqualTo(gold - paid), "Each rank at InitialPrice x (1 + Bought) + fee.");
             StringAssert.Contains("MAX", shop.InfoText);
-            Assert.That(shop.BuyButton.interactable, Is.False);
+            // VS (wiki PowerUps, 2026-10-09): at max the Buy button becomes the PowerUp's free On/Off switch.
+            Assert.That(shop.BuyButtonText, Is.EqualTo("Turn Off"));
+            for (int i = 0; i < 2; i++) shop.BuyButton.onClick.Invoke(); // off, then on again
+            Assert.That(PowerUps.Rank(save.CurrentData, PowerUpId.Recovery), Is.EqualTo(5), "Switching buys nothing more.");
+            Assert.That(save.CurrentData.Currency, Is.EqualTo(gold - paid), "Switching is free.");
+            Assert.That(PowerUps.IsEnabled(save.CurrentData, PowerUpId.Recovery), Is.True);
 
             shop.Select(PowerUpId.Might);
             int fee = (int)System.Math.Floor(20 * System.Math.Pow(1.1, 5));

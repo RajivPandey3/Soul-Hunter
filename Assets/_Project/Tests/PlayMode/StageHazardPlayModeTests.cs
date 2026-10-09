@@ -287,13 +287,19 @@ namespace SoulHunter.Tests.PlayMode
             // something unrelated (VS: invulnerability blocks every hit). The test measures the meteor alone, so it clears
             // the hit invulnerability until the strike.
             var hitUntil = typeof(HealthController).GetField("_hitInvulnerableUntil", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            while (meteor != null && Time.realtimeSinceStartup < deadline)
+            // Stops on HasStruck, not on the marker going: Destroy is deferred, so a loop that waited for null could read
+            // the health once more after the strike and measure 0 (three failures in full runs, 2026-10-01 to -07).
+            var struck = meteor; // the C# object keeps HasStruck after the GameObject is destroyed
+            while (!struck.HasStruck && Time.realtimeSinceStartup < deadline)
             {
                 hitUntil.SetValue(health, -1f);
                 beforeStrike = health.CurrentHealth;
                 yield return null;
             }
-            Assert.That(meteor == null, Is.True, "The marker struck and went.");
+            Assert.That(struck.HasStruck, Is.True, "The marker struck.");
+            Assert.That(struck.HitPlayer, Is.True, "The strike reached the player.");
+            yield return null;
+            Assert.That(meteor == null, Is.True, "The marker went after its strike.");
             int expected = Mathf.Max(1, StageHazardTable.MeteorPlayerDamage - health.Armor);
             Assert.That(beforeStrike - health.CurrentHealth, Is.InRange(expected - 2, expected), $"The strike deals 30 (minus Armor {health.Armor}); invincible {health.IsInvincible}; the player stood {Vector3.Distance(new Vector3(player.transform.position.x, 0f, player.transform.position.z), new Vector3(dropAt.x, 0f, dropAt.z)):0.00} from the marker (radius {StageHazardTable.MeteorRadius}). " + Errors());
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));

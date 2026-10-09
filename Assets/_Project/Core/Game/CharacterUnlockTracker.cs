@@ -96,6 +96,11 @@ namespace SoulHunter.Gameplay.Core
         private void HandleStageCleared(int stage)
         {
             _highestClearedStage = Mathf.Max(_highestClearedStage, stage);
+            // VS stage completion per character (wiki Characters): OnStageCleared fires only for a level cleared at 30:00
+            // or for Level 10 when Shadow Kael dies, so this is the level completed with the character played.
+            var data = _save != null ? _save.CurrentData : null;
+            if (data != null && CharacterStages.Record(data, GameContentCatalog.CurrentName(data.SelectedCharacterName), stage))
+                _save.SaveGame();
             // A stage clears at 30:00: that is the full stage survived, even though the clock moves on to the next one.
             RecordPowerUpUnlocks(stage, 30f * 60f);
             Evaluate();

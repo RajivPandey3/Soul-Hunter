@@ -66,6 +66,21 @@ namespace SoulHunter.UI
         private bool _filterOn;
         private readonly bool[] _stageShown = { true, true, true, true, true, true, true, true, true, true };
 
+        /// <summary>
+        /// VS sort (vampire.survivors.wiki/w/Characters, Filtering/sorting, fetched 2026-10-09): "through the default
+        /// character order, alphabetically, or through the number of complete stages per character, and the sorting can
+        /// either be in ascending or descending order. In any case, favorited characters will show up first".
+        /// </summary>
+        public enum CharacterSort { Default, Alphabetical, StagesCompleted }
+
+        // The wiki does not say whether the sort is kept between sessions; like the level filter (not saved either), it
+        // lasts while the menu is open, so the two FILTER-panel choices behave the same (balance method, 2026-10-09).
+        private CharacterSort _sort = CharacterSort.Default;
+        private bool _sortDescending;
+        private TextMeshProUGUI _sortLabel, _orderLabel, _favouriteLabel;
+        private Button _favouriteButton;
+        private readonly List<int> _displayOrder = new List<int>();
+
         public int SelectedIndex => _currentIndex;
         public CharacterData SelectedCharacter =>
             _availableCharacters != null && _currentIndex >= 0 && _currentIndex < _availableCharacters.Count ? _availableCharacters[_currentIndex] : null;
@@ -81,6 +96,103 @@ namespace SoulHunter.UI
         /// <summary>The VS run mode toggles, in RunModeOptions.All order (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break).</summary>
         public IReadOnlyList<Toggle> ModeToggles => _modeToggles;
         public string ModeHintText => _modeHintText != null ? _modeHintText.text : null;
+        public CharacterSort Sort => _sort;
+        public bool SortDescending => _sortDescending;
+        public string SortText => _sortLabel != null ? _sortLabel.text : null;
+        public string OrderText => _orderLabel != null ? _orderLabel.text : null;
+        public string FavouriteText => _favouriteLabel != null ? _favouriteLabel.text : null;
+        public Button FavouriteButton => _favouriteButton;
+        /// <summary>Character indices in grid order (favourites, then the sort); hidden ones included (tests).</summary>
+        public IReadOnlyList<int> DisplayOrder => _displayOrder;
+        /// <summary>The characters the grid shows, in grid order (tests).</summary>
+        public List<string> VisibleNames()
+        {
+            var names = new List<string>();
+            foreach (int i in _displayOrder) if (IsCardShown(i)) names.Add(_availableCharacters[i].CharacterName);
+            return names;
+        }
+
+        /// <summary>Picks the VS sort (default order, A-Z, or levels completed).</summary>
+        public void SetSort(CharacterSort sort)
+        {
+            if (_sort != sort) PlayUISound(false);
+            _sort = sort;
+            UpdateUI();
+        }
+
+        /// <summary>Ascending or descending, for any sort (VS).</summary>
+        public void SetSortDescending(bool descending)
+        {
+            if (_sortDescending != descending) PlayUISound(false);
+            _sortDescending = descending;
+            UpdateUI();
+        }
+
+        /// <summary>
+        /// Marks or clears the selected character as a favourite (VS: from the character information panel). Locked until
+        /// Mindbender, as in VS (<see cref="SoulHunter.Core.Persistence.CharacterFavourites"/>); saved at once.
+        /// </summary>
+        public void SetFavourite(bool favourite)
+        {
+            var data = SaveData();
+            var character = SelectedCharacter;
+            if (data == null || character == null || !SoulHunter.Core.Persistence.CharacterFavourites.IsUnlocked(data)) return;
+            if (SoulHunter.Core.Persistence.CharacterFavourites.IsFavourite(data, character.CharacterName) == favourite) return;
+            SoulHunter.Core.Persistence.CharacterFavourites.Set(data, character.CharacterName, favourite);
+            GameServices.Instance?.Get<SoulHunter.Core.Persistence.SaveService>()?.SaveGame();
+            PlayUISound(false);
+            UpdateUI();
+        }
+
+        private void ToggleFavourite()
+        {
+            var character = SelectedCharacter;
+            if (character != null) SetFavourite(!SoulHunter.Core.Persistence.CharacterFavourites.IsFavourite(SaveData(), character.CharacterName));
+        }
+
+        /// <summary>
+        /// Grid order: favourites first, then the sort, ties in the default order. Descending reverses the sort key, not the
+        /// tie order (the wiki does not say; a stable default order keeps equal characters where the player expects them).
+        /// </summary>
+        public static List<int> Order(IReadOnlyList<CharacterData> characters, SoulHunter.Core.Persistence.GameData data, CharacterSort sort, bool descending)
+        {
+            var order = new List<int>();
+            for (int i = 0; i < characters.Count; i++) order.Add(i);
+            int Key(int a, int b)
+            {
+                switch (sort)
+                {
+                    case CharacterSort.Alphabetical:
+                        return string.Compare(characters[a].CharacterName, characters[b].CharacterName, System.StringComparison.OrdinalIgnoreCase);
+                    case CharacterSort.StagesCompleted:
+                        return SoulHunter.Core.Persistence.CharacterStages.Count(data, characters[a].CharacterName)
+                            .CompareTo(SoulHunter.Core.Persistence.CharacterStages.Count(data, characters[b].CharacterName));
+                    default:
+                        return a.CompareTo(b);
+                }
+            }
+            order.Sort((a, b) =>
+            {
+                bool fa = SoulHunter.Core.Persistence.CharacterFavourites.IsFavourite(data, characters[a].CharacterName);
+                bool fb = SoulHunter.Core.Persistence.CharacterFavourites.IsFavourite(data, characters[b].CharacterName);
+                if (fa != fb) return fa ? -1 : 1;
+                int key = Key(a, b);
+                if (descending) key = -key;
+                return key != 0 ? key : a.CompareTo(b);
+            });
+            return order;
+        }
+
+        private void ApplyOrder()
+        {
+            _displayOrder.Clear();
+            _displayOrder.AddRange(Order(_availableCharacters, SaveData(), _sort, _sortDescending));
+            for (int position = 0; position < _displayOrder.Count; position++)
+            {
+                int index = _displayOrder[position];
+                if (index < _cards.Count && _cards[index] != null) _cards[index].transform.SetSiblingIndex(position);
+            }
+        }
 
         /// <summary>
         /// Turns a VS run mode on or off for the next runs. The choice is saved at once (GameData.Mode*), and the next run
@@ -117,14 +229,27 @@ namespace SoulHunter.UI
         public void SetStageShown(int stage, bool shown)
         {
             if (stage < 1 || stage > _stageShown.Length) return;
+            // VS (wiki Characters): "the player can only keep at least one group of characters visible". Soul Hunter's
+            // groups are origin levels, and some levels have no character, so an untick that would leave the filtered
+            // grid without a character is refused and the box stays ticked.
+            if (!shown && _stageShown[stage - 1])
+            {
+                _stageShown[stage - 1] = false;
+                bool anyLeft = false;
+                for (int i = 0; i < _availableCharacters.Count && !anyLeft; i++) anyLeft = ShownByLevels(i);
+                if (!anyLeft) shown = true;
+            }
             _stageShown[stage - 1] = shown;
             if (stage - 1 < _stageToggles.Count && _stageToggles[stage - 1].isOn != shown) _stageToggles[stage - 1].SetIsOnWithoutNotify(shown);
             UpdateUI();
         }
 
+        private bool ShownByLevels(int index) =>
+            _stageShown[Mathf.Clamp(_availableCharacters[index].OriginStage, 1, _stageShown.Length) - 1];
+
         public bool IsCardShown(int index) =>
             index >= 0 && index < _availableCharacters.Count &&
-            (!_filterOn || _stageShown[Mathf.Clamp(_availableCharacters[index].OriginStage, 1, _stageShown.Length) - 1]);
+            (!_filterOn || ShownByLevels(index)); // a favourite hidden by the filter stays hidden (VS: "but not if it is filtered")
 
         /// <summary>Redraws everything from the current save data (after an unlock or purchase).</summary>
         public void Refresh() => UpdateUI();
@@ -217,17 +342,32 @@ namespace SoulHunter.UI
                 _characterIconDisplay.color = unlocked ? Color.white : LockedPortraitColor;
             }
 
-            // Cards: silhouette + LOCKED, price when buyable, filter by origin stage.
+            // Cards: silhouette + LOCKED, price when buyable, FAVOURITE in words, filter by origin stage, VS order.
             for (int i = 0; i < _cards.Count; i++)
             {
                 var card = _availableCharacters[i];
                 bool cardUnlocked = CharacterUnlocks.IsUnlocked(card, data);
                 bool cardOwned = CharacterUnlocks.IsOwned(card, data);
+                bool favourite = SoulHunter.Core.Persistence.CharacterFavourites.IsFavourite(data, card.CharacterName);
                 if (i < _cardPortraits.Count && _cardPortraits[i] != null) _cardPortraits[i].color = cardUnlocked ? Color.white : LockedPortraitColor;
                 if (i < _cardBadges.Count && _cardBadges[i] != null)
-                    _cardBadges[i].text = !cardUnlocked ? "LOCKED" : cardOwned ? "" : $"{CharacterUnlocks.PriceFor(card, data)} G";
+                    _cardBadges[i].text = !cardUnlocked ? "LOCKED" : !cardOwned ? $"{CharacterUnlocks.PriceFor(card, data)} G" : favourite ? "FAVOURITE" : "";
                 _cards[i].gameObject.SetActive(IsCardShown(i));
             }
+            ApplyOrder();
+
+            if (_sortLabel) _sortLabel.text = _sort == CharacterSort.Alphabetical ? "SORT: A-Z" : _sort == CharacterSort.StagesCompleted ? "SORT: LEVELS" : "SORT: DEFAULT";
+            if (_orderLabel) _orderLabel.text = _sortDescending ? "DESCENDING" : "ASCENDING";
+            bool favouritesOpen = SoulHunter.Core.Persistence.CharacterFavourites.IsUnlocked(data);
+            if (_favouriteButton)
+            {
+                _favouriteButton.interactable = favouritesOpen;
+                // A locked button shows its label in the theme's locked text colour, readable on the disabled plate.
+                SoulHunter.Gameplay.UI.ThemedElement.For(_favouriteButton.gameObject).ShowUsable(favouritesOpen);
+            }
+            if (_favouriteLabel)
+                _favouriteLabel.text = !favouritesOpen ? "FAVOURITE: LOCKED"
+                    : SoulHunter.Core.Persistence.CharacterFavourites.IsFavourite(data, charData.CharacterName) ? "FAVOURITE: ON" : "FAVOURITE: OFF";
 
             // Confirm plays an owned character, buys an unlocked one, and is disabled for a locked one.
             int gold = _economy != null ? _economy.CurrentGold : 0;
@@ -278,6 +418,10 @@ namespace SoulHunter.UI
                 text.Append(row.Changed ? $"<color=#{bonus}>{row.Value}</color>" : row.Value).Append('\n');
             }
             text.Append("\nStarting Weapon\n").Append(WeaponName(charData.StartingWeapon));
+            // VS stage completion panel (wiki Characters): what the "levels" sort counts for this character.
+            text.Append("\nLevels Completed<pos=68%>")
+                .Append(SoulHunter.Core.Persistence.CharacterStages.Count(data, charData.CharacterName))
+                .Append('/').Append(SoulHunter.Core.Persistence.CharacterStages.LevelCount);
             _statsText.richText = true;
             SoulHunter.Gameplay.UI.UITheme.ApplyText(_statsText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body);
             _statsText.text = text.ToString();
@@ -288,7 +432,14 @@ namespace SoulHunter.UI
             if (_gridScroll == null || _cards.Count == 0) return;
             int rows = Mathf.CeilToInt(_cards.Count / (float)_gridColumns);
             if (rows <= 1) return;
-            int row = _currentIndex / _gridColumns;
+            // The selected card's place among the shown cards, in grid order (sort and filter move it).
+            int position = 0;
+            foreach (int i in _displayOrder)
+            {
+                if (i == _currentIndex) break;
+                if (IsCardShown(i)) position++;
+            }
+            int row = position / _gridColumns;
             _gridScroll.verticalNormalizedPosition = 1f - row / (float)(rows - 1);
         }
 
@@ -559,7 +710,8 @@ namespace SoulHunter.UI
             SoulHunter.Gameplay.UI.UITheme.ApplyButton(filterButton, toggleButton.GetComponent<Image>(), SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
                 SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Tab);
 
-            var list = CreatePanel("StageFilter", root, new Vector2(0.76f, 0.22f), new Vector2(0.95f, 0.8f));
+            // The level list ends above the sort row and the favourite switch (2026-10-09; it reached down to 0.22).
+            var list = CreatePanel("StageFilter", root, new Vector2(0.76f, 0.37f), new Vector2(0.95f, 0.8f));
             _filterCountText = CreateText("Count", list, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.99f), "", TextAlignmentOptions.Center, 14f, 24f);
             int stages = _stageShown.Length;
             float rowHeight = 0.88f / stages;
@@ -588,6 +740,54 @@ namespace SoulHunter.UI
                 label.overflowMode = TextOverflowModes.Ellipsis;
                 _stageToggles.Add(toggle);
             }
+
+            BuildSortRow(root);
+            BuildFavouriteButton(root);
+        }
+
+        /// <summary>
+        /// VS sort under the level filter: one tab picks the sort (default, A-Z, levels completed), the other ascending or
+        /// descending. Both are the theme's tab size in one themed row, labelled in words like FILTER.
+        /// </summary>
+        private void BuildSortRow(RectTransform root)
+        {
+            // The row sits in the filter column, so a narrow window shrinks it to the column, not past it.
+            var area = CreateRect("SortArea", root, new Vector2(0.76f, 0.295f), new Vector2(0.95f, 0.355f));
+            var row = CreateRect("SortRow", area, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f));
+            _sortLabel = CreateTab("Sort", row, () => SetSort((CharacterSort)(((int)_sort + 1) % 3)));
+            _orderLabel = CreateTab("Order", row, () => SetSortDescending(!_sortDescending));
+            row.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
+        }
+
+        private TextMeshProUGUI CreateTab(string name, RectTransform row, UnityEngine.Events.UnityAction action)
+        {
+            var cell = CreateRect(name + "Button", row, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            var image = cell.gameObject.AddComponent<Image>();
+            var button = cell.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(action);
+            var label = CreateText("Label", cell, Vector2.zero, Vector2.one, "", TextAlignmentOptions.Center, 12f, 20f);
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Tab);
+            return label;
+        }
+
+        /// <summary>
+        /// VS favourite (wiki Characters: from the character information panel; locked until Mindbender). A standard
+        /// button that says its state in words; unusable, and saying LOCKED, until favourites are unlocked.
+        /// </summary>
+        private void BuildFavouriteButton(RectTransform root)
+        {
+            var rect = CreateRect("FavouriteButton", root, new Vector2(0.76f, 0.215f), new Vector2(0.95f, 0.275f));
+            var image = rect.gameObject.AddComponent<Image>();
+            _favouriteButton = rect.gameObject.AddComponent<Button>();
+            _favouriteButton.targetGraphic = image;
+            _favouriteButton.onClick.AddListener(ToggleFavourite);
+            _favouriteLabel = CreateText("Label", rect, Vector2.zero, Vector2.one, "", TextAlignmentOptions.Center, 12f, 24f);
+            _favouriteLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(_favouriteButton, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Standard);
         }
 
         private void BuildCard(int index, RectTransform content)
