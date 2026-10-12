@@ -25,6 +25,8 @@ namespace SoulHunter.Gameplay.Combat
         public override int MaxLevel => 7;
         private int Level => Mathf.Clamp(CurrentLevel, 1, 7);
         public float FreezeDuration => VsFreezeDuration + (Level >= 2 ? 1f : 0f) + (Level >= 4 ? 1f : 0f) + (Level >= 5 ? 1f : 0f) + (Level >= 7 ? 1f : 0f);
+        /// <summary>VS wiki (Clock_Lancet, Limit Break): only Duration +0.1 s, up to 10 seconds.</summary>
+        public override float LimitBreakBaseDuration => FreezeDuration;
         public float CooldownForLevel => VsCooldown - (Level >= 3 ? 0.5f : 0f) - (Level >= 6 ? 0.5f : 0f);
 
         protected override void Awake()

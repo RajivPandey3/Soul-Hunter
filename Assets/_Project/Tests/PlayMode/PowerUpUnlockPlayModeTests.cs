@@ -78,8 +78,9 @@ namespace SoulHunter.Tests.PlayMode
             progression.SkipTo(15f * 60f);
             var tracker = Object.FindFirstObjectByType<CharacterUnlockTracker>();
             yield return WaitUntilRealtime(() => PowerUpUnlocks.UnlockedRanks(save.CurrentData, PowerUpId.Skip) == 1, "the Skip unlock");
-            yield return WaitUntilRealtime(() => tracker.Notice != null && tracker.Notice.activeInHierarchy, "the unlock notice");
-            StringAssert.Contains("Skip rank 1", tracker.Notice.GetComponentInChildren<TextMeshProUGUI>().text);
+            // 15:00 also unlocks items (Peachone at 10:00): the notices follow one another, none is lost.
+            yield return WaitUntilRealtime(() => tracker.Notice != null && tracker.Notice.activeInHierarchy &&
+                tracker.NoticeText != null && tracker.NoticeText.text.Contains("Skip rank 1"), "the Skip unlock notice");
             Assert.That(save.CurrentData.UnlockedAchievements, Does.Contain(PowerUpUnlocks.SkipId(6, 900)));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }

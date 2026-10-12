@@ -16,7 +16,10 @@ namespace SoulHunter.Gameplay.Combat
     {
         /// <summary>VS: Metaglio Left and Right are found only as stage items, never offered by a level-up.</summary>
         public static bool IsStageItemOnly(UpgradeData.UpgradeType type) =>
-            type == UpgradeData.UpgradeType.MetaglioLeft || type == UpgradeData.UpgradeType.MetaglioRight;
+            type == UpgradeData.UpgradeType.MetaglioLeft || type == UpgradeData.UpgradeType.MetaglioRight ||
+            // VS wiki (Silver_Ring / Gold_Ring, fetched 2026-10-12): "cannot be obtained from level ups, but can be found
+            // as a stage item in every stage".
+            type == UpgradeData.UpgradeType.RingOfLongHours || type == UpgradeData.UpgradeType.RingOfDarkHours;
 
         /// <summary>Weight of an item with no known rarity (100 = VS's most common rarity value).</summary>
         public const int DefaultWeight = 100;
@@ -65,6 +68,15 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.Tiragisu, (40, "Tirajisú") },
             { UpgradeData.UpgradeType.MetaglioLeft, (10, "Metaglio_Left") },
             { UpgradeData.UpgradeType.MetaglioRight, (10, "Metaglio_Right") },
+            // Added 2026-10-12 (each page's infobox "rarity", raw pages fetched 2026-10-12).
+            { UpgradeData.UpgradeType.MisersIdol, (100, "Stone_Mask") },
+            { UpgradeData.UpgradeType.RingOfLongHours, (10, "Silver_Ring") },
+            { UpgradeData.UpgradeType.RingOfDarkHours, (10, "Gold_Ring") },
+            { UpgradeData.UpgradeType.DuskRaven, (50, "Ebony_Wings") },
+            { UpgradeData.UpgradeType.AzureRepeater, (50, "Eight_The_Sparrow") },
+            // The Vandalier infobox has no rarity (a union is not in the pool until it is held). Balance method: once
+            // held it weighs 50, the rarity of both birds it is made of, so it is offered as often as they were.
+            { UpgradeData.UpgradeType.TwilightFlock, (50, "Vandalier") },
         };
 
         /// <summary>The VS rarity of <paramref name="type"/> from the table, or <see cref="DefaultWeight"/>.</summary>
@@ -84,7 +96,10 @@ namespace SoulHunter.Gameplay.Combat
                 case UpgradeData.UpgradeType.Duplicator:
                 case UpgradeData.UpgradeType.Tiragisu: return 2;
                 case UpgradeData.UpgradeType.MetaglioLeft:
-                case UpgradeData.UpgradeType.MetaglioRight: return 9;
+                case UpgradeData.UpgradeType.MetaglioRight:
+                case UpgradeData.UpgradeType.RingOfLongHours:  // VS Silver Ring: max-level 9
+                case UpgradeData.UpgradeType.RingOfDarkHours:  // VS Gold Ring: max-level 9
+                    return 9;
                 default: return WeaponManager.IsWeaponType(type) ? 0 : 5;
             }
         }

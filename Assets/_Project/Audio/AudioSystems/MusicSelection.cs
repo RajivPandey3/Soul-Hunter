@@ -17,9 +17,10 @@ namespace SoulHunter.Gameplay.Audio
     /// Soul Hunter: every one of its 11 CC0 tracks can be picked from the start (owner, 2026-10-09; VS unlocks a track with
     /// its stage, "Every Side B track unlocks together with the stage it belongs to"). The modifiers get Soul Hunter's own
     /// plain names: Normal, Faster (VS Hyper) and Slower (VS Forsaken). Character themes are NOT_APPLICABLE (Soul Hunter's
-    /// characters have none). Not built: Inverse alternate tracks ("the stage theme will change to the alternate track if
-    /// available"): Soul Hunter has no alternate recordings yet (audio sourcing is the owner's); and any music change from the
-    /// Hyper run mode (the wiki's "Stage modifiers now get applied correctly for normal music" does not say what they do).
+    /// characters have none). Inverse alternate tracks ("the stage theme will change to the alternate track if available"):
+    /// Soul Hunter has no alternate recordings (audio sourcing is the owner's), so Inverse plays the mirror level's track
+    /// (<see cref="StageTrackLevel"/>, 2026-10-13). Not built: any music change from the Hyper run mode (the wiki's "Stage
+    /// modifiers now get applied correctly for normal music" does not say what they do).
     /// </summary>
     public static class MusicSelection
     {
@@ -75,6 +76,26 @@ namespace SoulHunter.Gameplay.Audio
             int level = choice >= FirstLevelTrack ? choice - FirstLevelTrack + 1 : stage;
             if (audio.StageMusic == null || audio.StageMusic.Length == 0) return null;
             return audio.StageMusic[Mathf.Clamp(level, 1, audio.StageMusic.Length) - 1];
+        }
+
+        /// <summary>How many levels have a track of their own (choices 2-11).</summary>
+        public const int LevelTrackCount = ChoiceCount - FirstLevelTrack;
+
+        /// <summary>
+        /// The level whose track a stage plays. VS Inverse (vampire.survivors.wiki/w/Stages, "Inverse Mode", raw, fetched
+        /// 2026-10-13): "When playing in Inverse Mode on some stages, the stage theme will change to the alternate track if
+        /// available. However, playing as a character with a unique theme ... will override this effect." The Music page
+        /// lists a second track per stage for "(inverse mode)".
+        /// Soul Hunter has 11 CC0 tracks and no alternate recordings. Balance method (owner rule 2026-10-09, wiki rule kept,
+        /// content chosen from what exists): in Inverse with "Each Level's Own", Level n plays the track of its mirror
+        /// level, 11 - n (1 and 10, 2 and 9 ... 5 and 6), so every stage sounds different from its normal run and no level
+        /// keeps its own track (ten levels have no middle one). A track chosen on the Soundtrack card wins, as a VS
+        /// override does. Not yet heard by the owner (listen check).
+        /// </summary>
+        public static int StageTrackLevel(int choice, int stage, bool inverse)
+        {
+            stage = Mathf.Clamp(stage, 1, LevelTrackCount);
+            return inverse && choice == LevelsOwn ? LevelTrackCount + 1 - stage : stage;
         }
 
         /// <summary>The name a choice shows: Soul Hunter's own level names.</summary>

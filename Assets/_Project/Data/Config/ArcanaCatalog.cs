@@ -13,7 +13,13 @@ namespace SoulHunter.Gameplay.Data
         None, Whip, BloodyTear, MagicWand, HolyWand, Knife, ThousandEdge, Axe, DeathSpiral, Cross, HeavenSword, Bible,
         UnholyVespers, FireWand, HellmawComet, Garlic, SoulEater, SantaWater, DrowningChalice, Runetracer, SeveredFate,
         LightningRing, StormboundHalo, Pentagram, EclipseSigil, Peachone, Bone, CherryBomb, Gun, SongOfMana,
-        RequiemOfSouls, ClockLancet, Laurel, CrimsonShroud, HellfireBreath
+        RequiemOfSouls, ClockLancet, Laurel, CrimsonShroud, HellfireBreath,
+        /// <summary>
+        /// VS Eight The Sparrow (added 2026-10-12). Its page lists Gemini and Iron Blue Will like the Gun, and Jail of
+        /// Crystal where the Gun has Heart of Fire, so it is its own entry. Dusk Raven (VS Ebony Wings) needs none: its
+        /// page lists exactly Peachone's cards, and it is identified as Peachone.
+        /// </summary>
+        AzureRepeater
     }
 
     /// <summary>
@@ -108,8 +114,11 @@ namespace SoulHunter.Gameplay.Data
                 W(), ""),
             new Card(ArcanaData.ArcanaType.JailOfCrystal, "XIV", "Icebound Snare", "Jail of Crystal",
                 "Magic Wand, Holy Wand, Runetracer and Severed Fate hits have a 25% chance to freeze, raised by Luck.",
-                W(ArcanaWeapon.MagicWand, ArcanaWeapon.HolyWand, ArcanaWeapon.Runetracer, ArcanaWeapon.SeveredFate),
-                "Eight The Sparrow, Cygnus, the Bracelets, Penshin Fatcha and the DLC weapons"),
+                // Azure Repeater (VS Eight The Sparrow, added 2026-10-12; wiki Eight_The_Sparrow: "Jail of Crystal (XIV) -
+                // Gives Eight The Sparrow a 25% chance to freeze enemies"). The card's text above is kept as it is: the
+                // GameContent Arcana assets hold the same text and are checked against it (ArcanaCatalogTests).
+                W(ArcanaWeapon.MagicWand, ArcanaWeapon.HolyWand, ArcanaWeapon.Runetracer, ArcanaWeapon.SeveredFate, ArcanaWeapon.AzureRepeater),
+                "Cygnus, the Bracelets, Penshin Fatcha and the DLC weapons"),
             new Card(ArcanaData.ArcanaType.DiscoOfGold, "XV", "Midas Pulse", "Disco of Gold",
                 "Picking up a coin bag starts a Gold Fever. Every gold you gain heals as much health.",
                 W(), "Vicious Hunger"),
@@ -183,6 +192,7 @@ namespace SoulHunter.Gameplay.Data
             ArcanaWeapon.RequiemOfSouls => "Requiem of Souls",
             ArcanaWeapon.ClockLancet => "Clock Lancet",
             ArcanaWeapon.CrimsonShroud => "Crimson Shroud",
+            ArcanaWeapon.AzureRepeater => "Azure Repeater",
             ArcanaWeapon.HellfireBreath => "Hellfire Breath",
             _ => weapon.ToString()
         };

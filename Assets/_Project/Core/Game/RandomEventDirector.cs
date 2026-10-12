@@ -13,6 +13,7 @@ namespace SoulHunter.Gameplay.Core
     /// The Omens events (Soul Hunter's own names; release item P3-05). Each maps one VS Random Event (vampire.survivors.wiki/w/
     /// Random_Events, raw page re-fetched 2026-10-09) onto a system Soul Hunter already has. VS events with no Soul Hunter
     /// counterpart are left out (see <see cref="OmenTable"/>). New values go at the end.
+    /// Stampede, Dread Circles, Trampling Ranks and Crossfire Rows were added from the raw page re-fetched 2026-10-13.
     /// </summary>
     public enum OmenEvent
     {
@@ -48,6 +49,14 @@ namespace SoulHunter.Gameplay.Core
         SwarmRush,
         /// <summary>VS Skeleton Swarm: "Summons a swarm of Skeletons that move toward the player in a fixed direction."</summary>
         MarchingLine,
+        /// <summary>VS Mino Rush: "The player gets rushed by several groups of Mignotaurs, just like in Dairy Plant, for ~30 seconds."</summary>
+        Stampede,
+        /// <summary>VS Panic Time: "Summons several rings of Poltergeists ... and Red Shades around the player that close in on them."</summary>
+        DreadCircles,
+        /// <summary>VS Crab Fest: "Summons hordes of Non-Giant Enemy Crabs that run towards the player in a fixed direction."</summary>
+        TramplingRanks,
+        /// <summary>VS Scorpion Lair: "Summons rows of big Twin Skulls to the left and right of the player. They disappear after 1 minute."</summary>
+        CrossfireRows,
     }
 
     /// <summary>
@@ -57,16 +66,27 @@ namespace SoulHunter.Gameplay.Core
     /// event, which will then trigger at the next XX:00 mark." Hurry (wiki Stages, Hurry Mode): "All time-based events ...
     /// occur at their usual timestamps on the in-game timer", so the marks are on the stage clock.
     ///
-    /// Left out, with the reason (each needs an enemy, item or hazard Soul Hunter does not have):
-    /// - Candybox (a Candybox item and its pick-any-weapon screen);
-    /// - Mino Rush (Mignotaurs), Scorpion Lair (big Twin Skulls), Crab Fest (Non-Giant Enemy Crabs), Shrimp Swarm (weaving
-    ///   Serpentine Dragon Shrimps): VS-only enemies and flights;
-    /// - Panic Time and Roulette (Poltergeists and Red Shades; self-destructing Poltergeists);
-    /// - Summon II Molise and Summon Night (every enemy replaced by Il Molise plants or by bats);
-    /// - The Drowner (rising damaging water);
-    /// - Flower Wall (a still wall of plants that slowly closes for ~50 s; Soul Hunter's closing ring flies through and
-    ///   out, which is Jelly Wall, built as Closing Ring);
+    /// Built on 2026-10-13 with the level's own enemies in place of the VS-only ones (as the six VS swarms already are):
+    /// Mino Rush (Stampede), Panic Time (Dread Circles), Crab Fest (Trampling Ranks) and Scorpion Lair (Crossfire Rows).
+    ///
+    /// Still left out, with the reason:
+    /// - Candybox: a Candybox item and its pick-any-weapon screen do not exist;
+    /// - Shrimp Swarm ("fly in wave-like patterns through the room"): an event flier keeps a straight line; the weaving
+    ///   flight is a per-type movement that only Level 2's moths have (EnemyMovement.FloatyFixedDirection);
+    /// - Roulette ("poltergeists that self-destruct when the player approaches them"): no still, self-destructing enemy
+    ///   type exists (it needs a new EnemyData asset);
+    /// - Summon II Molise and Summon Night (every enemy replaced by Il Molise plants or by bats, for 1-2 minutes): the
+    ///   spawner cannot swap a wave's types, Soul Hunter has no still plant types, and only Levels 1, 2, 4 and 6 have bats;
+    /// - The Drowner (rising damaging water): no such hazard;
+    /// - Flower Wall ("a circular Flower Wall ... that slowly closes in"; Flower_Wall_(event): the walls "trap both the
+    ///   player and enemies inside"): the event is a trap, and Soul Hunter's enemy bodies never block the hero (owner crowd
+    ///   rule 2026-09-26: "the horde never walls the player in"), so a slow ring would trap nobody;
     /// - The Stalker outside Stages 5 and 9: the owner placed Death's Shadow on those stages only (2026-10-09).
+    ///
+    /// Weights: the raw page (2026-10-13) still lists no chance or weight for any event ("The exact number of possible
+    /// events is not yet certain"), so every event of the pool stays equally likely.
+    /// The 29:30 pick: the page says "This happens at every XX:30 mark" with no exception, so 29:30 picks too and the event
+    /// fires at 30:00 (see <see cref="OmenTable.Pool"/> for what can come at a stage's last mark).
     /// </summary>
     public static class OmenTable
     {
@@ -83,20 +103,33 @@ namespace SoulHunter.Gameplay.Core
 
         /// <summary>Events that send a formation through EnemySpawner (refused by the spawner while a stage boss lives).</summary>
         public static bool IsFormation(OmenEvent e) =>
-            e == OmenEvent.ClosingRing || e == OmenEvent.HordeSwarm || e == OmenEvent.SwarmRush || e == OmenEvent.MarchingLine;
+            e == OmenEvent.ClosingRing || e == OmenEvent.HordeSwarm || e == OmenEvent.SwarmRush || e == OmenEvent.MarchingLine
+            || e == OmenEvent.Stampede || e == OmenEvent.DreadCircles || e == OmenEvent.TramplingRanks;
+
+        /// <summary>
+        /// Events that act on the hero and so outlast a stage clear. A timed stage clears at 30:00 and wipes the arena in the
+        /// same frame the 29:30 pick fires (LevelProgressionManager.AdvanceClock), so anything laid on the ground or sent as
+        /// enemies would be gone at once or left behind on the old floor. Balance method (the wiki has no stage clear: VS
+        /// sends the Reaper at 30:00): the last mark of a timed stage picks among these only.
+        /// </summary>
+        public static bool OutlastsStageClear(OmenEvent e) =>
+            e == OmenEvent.HellfireBreath || e == OmenEvent.GildedFever || e == OmenEvent.FortunesFavour;
 
         /// <summary>
         /// The events the wheel can pick on a stage. Death's Shadow only on Stages 5 and 9 (owner). While a stage boss is
         /// expected or alive, formations are left out: the spawner sends no formation during a boss fight, so a picked one
         /// would never come (balance method; the wiki does not say whether Random Events fire during a boss).
+        /// With <paramref name="stageClearsAtFire"/> (the 29:30 pick of a timed stage) only the events that
+        /// <see cref="OutlastsStageClear"/> are left.
         /// </summary>
-        public static List<OmenEvent> Pool(int stage, bool formationsAllowed)
+        public static List<OmenEvent> Pool(int stage, bool formationsAllowed, bool stageClearsAtFire = false)
         {
             var pool = new List<OmenEvent>();
             foreach (OmenEvent e in System.Enum.GetValues(typeof(OmenEvent)))
             {
                 if (e == OmenEvent.DeathsShadow && !ShadowStage(stage)) continue;
                 if (!formationsAllowed && IsFormation(e)) continue;
+                if (stageClearsAtFire && !OutlastsStageClear(e)) continue;
                 pool.Add(e);
             }
             return pool;
@@ -153,6 +186,10 @@ namespace SoulHunter.Gameplay.Core
                 case OmenEvent.HordeSwarm: return "Horde Swarm";
                 case OmenEvent.SwarmRush: return "Swarm Rush";
                 case OmenEvent.MarchingLine: return "Marching Line";
+                case OmenEvent.Stampede: return "Stampede";
+                case OmenEvent.DreadCircles: return "Dread Circles";
+                case OmenEvent.TramplingRanks: return "Trampling Ranks";
+                case OmenEvent.CrossfireRows: return "Crossfire Rows";
             }
             return e.ToString();
         }
@@ -194,13 +231,43 @@ namespace SoulHunter.Gameplay.Core
         public const float RushGapSeconds = 10f;
         /// <summary>Wandering Relic lies this far from the player, on open ground ("near the player").</summary>
         public const float RelicDistance = 4f;
+
+        // --- Added 2026-10-13 (raw Random_Events, Minotaur_Rush, Skull_Pile_Pile and Mignotaur pages).
+
+        /// <summary>VS Mino Rush: "several groups ... for ~30 seconds": three groups, 10 s apart, as Swarm Rush.</summary>
+        public const int StampedeWaves = 3;
+        public const float StampedeGapSeconds = 10f;
+        /// <summary>Minotaur_Rush: "a large group of mignotaurs": no count. 24, the largest of Soul Hunter's own swarms.</summary>
+        public const int StampedeMembers = 24;
+        /// <summary>
+        /// Minotaur_Rush: the group "travels across the screen at high speed". The Mignotaur statboxes: "Mignotaur ...
+        /// movespeed = 280", "Mignotaur (rush) ... movespeed = 600": the rush runs at 600 / 280 of its own kind's pace. The
+        /// Stampede is made of the level's own enemies, so they fly at that ratio of the usual event pace (balance method:
+        /// a ratio keeps each level's own enemy pace, an owner decision, instead of one absolute speed).
+        /// </summary>
+        public const float StampedeSpeed = 600f / 280f;
+        /// <summary>VS Panic Time: "several rings ... that close in": no count or timing. Three rings (as the other
+        /// "several" events), 3 s apart so they close in one inside the other, of 16 each (48 enemies, two Closing Rings).</summary>
+        public const int DreadRings = 3;
+        public const float DreadGapSeconds = 3f;
+        public const int DreadMembers = 16;
+        /// <summary>VS Crab Fest: "hordes ... in a fixed direction": no count or timing. Three ranks, 5 s apart (a rank
+        /// crosses the screen in about that time), of 20 each, the Marching Line's size.</summary>
+        public const int TramplingRanksCount = 3;
+        public const float TramplingGapSeconds = 5f;
+        public const int TramplingMembers = LineMembers;
+        /// <summary>VS Scorpion Lair: "They disappear after 1 minute."</summary>
+        public const float CrossfireSeconds = 60f;
+        /// <summary>Skull_Pile_Pile: "a pair of columns of 12 Skull Piles on both sides of the player".</summary>
+        public const int CrossfirePerRow = StageHazardTable.PileColumnLength;
     }
 
     /// <summary>
     /// Runs Omens (VS Random Events) when the mode is on: at each XX:30 of the stage clock it picks an event (shown by
     /// OmenRouletteUI), and at the next XX:00 it fires it with Soul Hunter's existing systems. GameSessionManager adds it.
-    /// Events fire on game time, never during a stage transition, and not at the 30:00 mark of a timed stage (the stage
-    /// clears there; a pick at 29:30 of such a stage is not made).
+    /// Events fire on game time, never during a stage transition. The 29:30 pick of a timed stage is made as the wiki
+    /// says ("every XX:30 mark") and fires at 30:00, just before the stage clears; its pool is the events that outlast the
+    /// clear (OmenTable.OutlastsStageClear).
     /// </summary>
     public sealed class RandomEventDirector : MonoBehaviour
     {
@@ -276,21 +343,23 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
-        /// <summary>True when a XX:00 mark at <paramref name="seconds"/> can fire on the current stage.</summary>
-        private bool CanFireAt(float seconds)
-        {
-            if (_progression == null || _progression.IsStageTransitioning) return false;
-            // A timed stage clears at 30:00 (the screen is wiped there); Level 10 has no time limit (owner, the ending).
-            return _progression.CurrentStage >= LevelProgressionManager.MaxStages
-                   || seconds < _progression.CurrentLevel.RunDurationSeconds;
-        }
+        /// <summary>True when a mark can pick or fire on the current stage (never while the next stage is being started).</summary>
+        private bool CanFire() => _progression != null && !_progression.IsStageTransitioning;
+
+        /// <summary>
+        /// True when the stage clears at <paramref name="seconds"/>: a timed stage's 30:00. Level 10 has no time limit
+        /// (owner, the ending). The clock raises its change before it clears the stage, so a 30:00 event still fires.
+        /// </summary>
+        public bool StageClearsAt(float seconds) =>
+            _progression != null && _progression.CurrentStage < LevelProgressionManager.MaxStages
+            && seconds >= _progression.CurrentLevel.RunDurationSeconds;
 
         private void PickAt(float mark)
         {
             float firesAt = mark + OmenTable.MarkSeconds;
-            if (!CanFireAt(firesAt)) { Pending = null; return; }
+            if (!CanFire()) { Pending = null; return; }
             var forced = ForcedPick != null ? ForcedPick() : null;
-            var pool = OmenTable.Pool(_progression.CurrentStage, FormationsAllowed());
+            var pool = OmenTable.Pool(_progression.CurrentStage, FormationsAllowed(), StageClearsAt(firesAt));
             Pending = forced ?? OmenTable.Pick(pool, Random.value);
             PendingFiresAt = firesAt;
             Debug.Log($"[Omens] {OmenTable.Name(Pending.Value)} picked at {mark:0}s; fires at {firesAt:0}s.");
@@ -303,7 +372,7 @@ namespace SoulHunter.Gameplay.Core
         {
             var e = Pending.Value;
             Pending = null;
-            if (!CanFireAt(PendingFiresAt)) return;
+            if (!CanFire()) return;
             Fire(e);
         }
 
@@ -365,12 +434,43 @@ namespace SoulHunter.Gameplay.Core
                     if (!Formation(spawner, StageEventType.Swarm, OmenTable.RushMembers)) return false;
                     StartCoroutine(MoreSwarms(spawner));
                     return true;
+                case OmenEvent.Stampede:
+                    return Formations(spawner, StageEventType.Swarm, OmenTable.StampedeMembers, OmenTable.StampedeWaves,
+                        OmenTable.StampedeGapSeconds, OmenTable.StampedeSpeed);
+                case OmenEvent.DreadCircles:
+                    return Formations(spawner, StageEventType.ClosingRing, OmenTable.DreadMembers, OmenTable.DreadRings,
+                        OmenTable.DreadGapSeconds, 1f);
+                case OmenEvent.TramplingRanks:
+                    return Formations(spawner, StageEventType.Wall, OmenTable.TramplingMembers, OmenTable.TramplingRanksCount,
+                        OmenTable.TramplingGapSeconds, 1f);
+                case OmenEvent.CrossfireRows:
+                    return StageHazards.Instance != null
+                           && StageHazards.Instance.StartPileColumns(OmenTable.CrossfirePerRow, OmenTable.CrossfireSeconds).Count > 0;
             }
             return false;
         }
 
-        private static bool Formation(EnemySpawner spawner, StageEventType type, int count) =>
-            spawner != null && spawner.TriggerStageEvent(type, count).Count > 0;
+        private static bool Formation(EnemySpawner spawner, StageEventType type, int count, float speed = 1f) =>
+            spawner != null && spawner.TriggerStageEvent(type, count, speed).Count > 0;
+
+        /// <summary>The first formation now and the rest one after another (game time: a pause holds them).</summary>
+        private bool Formations(EnemySpawner spawner, StageEventType type, int count, int times, float gapSeconds, float speed)
+        {
+            if (!Formation(spawner, type, count, speed)) return false;
+            if (times > 1) StartCoroutine(MoreFormations(spawner, type, count, times, gapSeconds, speed));
+            return true;
+        }
+
+        private System.Collections.IEnumerator MoreFormations(EnemySpawner spawner, StageEventType type, int count, int times,
+            float gapSeconds, float speed)
+        {
+            for (int i = 1; i < times; i++)
+            {
+                yield return new WaitForSeconds(gapSeconds);
+                if (spawner == null || _progression == null || _progression.IsStageTransitioning) yield break;
+                Formation(spawner, type, count, speed);
+            }
+        }
 
         private System.Collections.IEnumerator MoreSwarms(EnemySpawner spawner)
         {

@@ -30,8 +30,13 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNotNull(layout, "The menu has its frame layout.");
             Assert.IsTrue(layout.Title != null || layout.Logo != null, "The logo was found.");
             int count = layout.Buttons.Length;
-            Assert.That(count, Is.EqualTo(nav.BestiaryButton != null ? 8 : 7), "Start, Power Up, Collection, (Bestiary), Unlocks, Credits, Options, Quit.");
-            Assert.That(layout.Columns, Is.EqualTo(2));
+            Assert.That(count, Is.EqualTo(nav.BestiaryButton != null ? 9 : 8), "Start, Quick Start, Power Up, Collection, (Bestiary), Unlocks, Credits, Options, Quit.");
+            // Up to eight buttons: two columns of four. Nine (with the Bestiary): three columns where the frame is wide
+            // enough for them, else two (MainMenuLayout.MaxTwoColumns).
+            int columns = layout.Columns;
+            if (count <= MainMenuLayout.MaxTwoColumns) Assert.That(columns, Is.EqualTo(2));
+            else Assert.That(columns, Is.EqualTo(2).Or.EqualTo(3));
+            Assert.That(layout.Buttons[1], Is.SameAs(nav.QuickStartButton), "Quick Start follows Start (wiki Main_menu's order).");
 
             Rect area = ScreenRect(layout.Area);
             var screen = new Rect(0f, 0f, Screen.width, Screen.height);
@@ -59,7 +64,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(layout.Buttons[count - 1], Is.SameAs(nav.QuitButton), "Quit is the last button.");
             // The button block is centred on the frame's ornament (a short last row is centred too).
             Assert.That(block.center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f), "The buttons are centred on the frame's ornament.");
-            if (count % 2 == 1)
+            if (count % columns == 1)
                 Assert.That(ScreenRect((RectTransform)layout.Buttons[count - 1].transform).center.x, Is.EqualTo(frameCentre).Within(screen.width * 0.01f),
                     "The lone last button is centred.");
             if (layout.Logo != null)
@@ -75,7 +80,7 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(logo.yMin - start.yMax, Is.GreaterThanOrEqualTo(SoulHunter.Gameplay.UI.UITheme.Layout.ButtonGap * scale - 1f),
                     "A clear gap between the logo and Start.");
                 Assert.That(layout.Logo.sprite.rect.width, Is.GreaterThanOrEqualTo(logo.width), "The logo is not stretched past its pixels.");
-                Assert.That(layout.Buttons[1].GetComponentInChildren<TMPro.TMP_Text>().text, Is.EqualTo("Power Up"), "Power Up, as the shop writes it.");
+                Assert.That(nav.PowerUpButton.GetComponentInChildren<TMPro.TMP_Text>().text, Is.EqualTo("Power Up"), "Power Up, as the shop writes it.");
                 // Every button the same size, with the same gap between each, across a row and down a column (owner
                 // review 2026-10-08: one size and one gap).
                 Rect r0 = ScreenRect((RectTransform)layout.Buttons[0].transform);
@@ -85,11 +90,11 @@ namespace SoulHunter.Tests.PlayMode
                     Rect rb = ScreenRect((RectTransform)layout.Buttons[b].transform);
                     Assert.That(rb.width, Is.EqualTo(r0.width).Within(0.5f), $"{layout.Buttons[b].name} is as wide as Start.");
                     Assert.That(rb.height, Is.EqualTo(r0.height).Within(0.5f), $"{layout.Buttons[b].name} is as tall as Start.");
-                    if (b % 2 == 1)
+                    if (b % columns != 0)
                         Assert.That(rb.xMin - ScreenRect((RectTransform)layout.Buttons[b - 1].transform).xMax, Is.EqualTo(gap0).Within(0.6f),
                             $"The gap beside {layout.Buttons[b].name} is the theme's gap.");
-                    if (b >= 2)
-                        Assert.That(ScreenRect((RectTransform)layout.Buttons[b - 2].transform).yMin - rb.yMax, Is.EqualTo(gap0).Within(0.6f),
+                    if (b >= columns)
+                        Assert.That(ScreenRect((RectTransform)layout.Buttons[b - columns].transform).yMin - rb.yMax, Is.EqualTo(gap0).Within(0.6f),
                             $"The gap above {layout.Buttons[b].name} is the theme's gap.");
                 }
                 Assert.That(Errors(), Is.EqualTo("(no errors logged)"));

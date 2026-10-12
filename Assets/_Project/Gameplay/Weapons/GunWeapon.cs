@@ -52,6 +52,8 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         public const float VsInterval = 0.2f;
+        /// <summary>The weapon's name on its damage (Results screen fallback); Azure Repeater has its own.</summary>
+        protected virtual string ResultsName => "Gun";
 
         protected override void Attack()
         {
@@ -89,7 +91,7 @@ namespace SoulHunter.Gameplay.Combat
                     
                     var damageDealer = bullet.GetComponent<ProjectileDamage>();
                     if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();
-                    damageDealer.SourceWeaponName = "Gun";
+                    damageDealer.SourceWeaponName = ResultsName;
                     AimAtHostiles(bullet);
                 }
             });

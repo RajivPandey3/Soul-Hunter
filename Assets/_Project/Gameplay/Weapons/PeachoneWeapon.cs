@@ -54,6 +54,17 @@ namespace SoulHunter.Gameplay.Combat
 
         public const float BirdHeight = 1.6f;
 
+        /// <summary>
+        /// How fast, and which way, the zone circles the hero. VS wiki (Peachone, raw, re-read 2026-10-12): infobox "Area
+        /// orbits clockwise around the player" and Effects "The zone revolves clockwise"; Ebony_Wings: "counterclockwise".
+        /// (One tip on the Peachone page says the reverse; the two infoboxes and both Effects texts agree, so they are
+        /// followed.) Seen from the game camera a falling angle is clockwise, so Peachone is negative; it circled
+        /// counterclockwise before 2026-10-12. 50 degrees a second is Soul Hunter's own pace; both birds have Speed 80%.
+        /// </summary>
+        protected virtual float OrbitDegreesPerSecond => -50f;
+        /// <summary>The weapon's name on its damage (Results screen fallback).</summary>
+        protected virtual string ResultsName => "Peachone";
+
         protected override void Awake()
         {
             base.Awake();
@@ -71,11 +82,12 @@ namespace SoulHunter.Gameplay.Combat
             if (BirdVisual != null)
             {
                 // Circle around the player on the ground plane (it used to circle vertically, in X-Y).
-                _angle += Time.deltaTime * 50f;
+                _angle += Time.deltaTime * OrbitDegreesPerSecond;
                 float rad = _angle * Mathf.Deg2Rad;
                 Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * CircleRadius;
                 BirdVisual.transform.position = transform.position + offset + Vector3.up * BirdHeight;
-                BirdVisual.transform.rotation = Quaternion.LookRotation(new Vector3(-Mathf.Sin(rad), 0f, Mathf.Cos(rad)));
+                // The bird faces the way it flies (the tangent, turned round for a clockwise orbit).
+                BirdVisual.transform.rotation = Quaternion.LookRotation(new Vector3(-Mathf.Sin(rad), 0f, Mathf.Cos(rad)) * Mathf.Sign(OrbitDegreesPerSecond));
             }
         }
 
@@ -124,7 +136,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
                 damageDealer.DamageAmount = ScaledDamage(BaseDamage);
                 damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
-                damageDealer.SourceWeaponName = "Peachone";
+                damageDealer.SourceWeaponName = ResultsName;
                 AimAtHostiles(bomb);
                 
                 var lifetime = bomb.GetComponent<PooledLifetime>();

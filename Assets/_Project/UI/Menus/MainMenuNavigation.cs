@@ -47,6 +47,71 @@ namespace SoulHunter.UI
                 if (back != null) SoulHunter.Gameplay.UI.UITheme.ApplyButton(back, back.targetGraphic as Image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
                     SoulHunter.Gameplay.UI.UITheme.IconSlot.Back);
             ShowHome();
+            // VS (wiki Main_menu, raw, fetched 2026-10-12): "Once the player loads the game, a flashing "PRESS TO START" prompt
+            // will appear. When clicked, the player will gain access to the main menu." Once per launch; the prompt hides
+            // the buttons until it is answered, then the menu focuses Start (StartPrompt has the details).
+            Prompt = SoulHunter.Gameplay.UI.StartPrompt.Show(menu, ShowHome);
+        }
+
+        /// <summary>The start prompt while it is up (null once answered, and on every later visit to the menu).</summary>
+        public SoulHunter.Gameplay.UI.StartPrompt Prompt { get; private set; }
+
+        // ---------------------------------------------------------------- Quick Start (QuickStart has the rule and its reasons)
+
+        /// <summary>Starts a run at once with <see cref="QuickStartPick"/>; shown unusable, with its condition, until unlocked.</summary>
+        public Button QuickStartButton { get; private set; }
+        /// <summary>The owned character Quick Start will start with next (null while locked).</summary>
+        public SoulHunter.Gameplay.Data.CharacterData QuickStartPick { get; private set; }
+        public string QuickStartText
+        {
+            get
+            {
+                var label = QuickStartButton != null ? QuickStartButton.GetComponentInChildren<TMPro.TMP_Text>(true) : null;
+                return label != null ? label.text : null;
+            }
+        }
+
+        private bool _quickStarting;
+
+        /// <summary>
+        /// Reads the save again: locked (unusable, saying what opens it) or unlocked with a new pick named on the button.
+        /// Runs every time the home screen is shown, so the pick changes each time the menu opens.
+        /// </summary>
+        public void RefreshQuickStart()
+        {
+            if (QuickStartButton == null) return;
+            var data = SaveData();
+            bool unlocked = QuickStart.IsUnlocked(data);
+            QuickStartPick = unlocked ? QuickStart.Pick(data, Random.value, QuickStartPick) : null;
+            bool usable = unlocked && QuickStartPick != null;
+            foreach (var label in QuickStartButton.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                label.text = QuickStart.LabelFor(data, QuickStartPick);
+            QuickStartButton.interactable = usable;
+            var look = QuickStartButton.GetComponent<SoulHunter.Gameplay.UI.ThemedElement>();
+            if (look != null) look.ShowUsable(usable); // the theme's unusable look, never colour alone: the label says why
+        }
+
+        /// <summary>Quick Start: the picked character is selected and the run starts, as Confirm does on the select screen.</summary>
+        public void StartQuickRun()
+        {
+            if (_quickStarting) return;
+            var data = SaveData();
+            if (!QuickStart.IsUnlocked(data)) return;
+            if (QuickStartPick == null || !SoulHunter.Gameplay.Player.CharacterUnlocks.IsOwned(QuickStartPick, data)) RefreshQuickStart();
+            if (QuickStartPick == null) return;
+            SoulHunter.Core.Persistence.SaveService save = null;
+            SoulHunter.Core.Scenes.SceneService scenes = null;
+            SoulHunter.Core.Services.GameServices.Instance?.TryGet(out save);
+            SoulHunter.Core.Services.GameServices.Instance?.TryGet(out scenes);
+            if (save == null || scenes == null)
+            {
+                Debug.LogError("[MainMenu] Quick Start needs the Bootstrap scene's services.");
+                return;
+            }
+            _quickStarting = true;
+            save.CurrentData.SelectedCharacterName = QuickStartPick.CharacterName;
+            save.SaveGame();
+            scenes.LoadSceneAsync("Main_Gameplay");
         }
 
         public MainMenuLayout Layout { get; private set; }
@@ -54,11 +119,7 @@ namespace SoulHunter.UI
         // ---------------------------------------------------------------- VS main menu sections (P3-02, 2026-10-09)
         // wiki Main_menu (raw, fetched 2026-10-09): Collection, Unlocks and Credits are "Available by default"; the Bestiary
         // "will only become visible by doing certain tasks" (Bestiary.UnlockLevel here). Labels are plain English (owner,
-        // 2026-10-09). Not built, with why:
-        // - PRESS TO START (wiki: "Once the player loads the game, a flashing PRESS TO START prompt will appear"): Soul
-        //   Hunter boots straight to the menu; a title prompt changes the boot flow and waits for an owner decision.
-        // - Quick Start ("a random stage with a randomly selected character", unlocked by the five main stages): Soul Hunter
-        //   has one 10-level run and no stage select (owner, Run structure); needs an owner decision.
+        // 2026-10-09). Built on 2026-10-12: the start prompt (StartPrompt) and Quick Start (QuickStart). Not built, with why:
         // - Secrets (Forbidden Scrolls of Morbane), Adventures (Atlas Gate), Online, DLC Store, Poncle Account: no Soul
         //   Hunter counterpart (no relics, adventures, online play, DLC or accounts); the owner decides whether to leave them out.
 
@@ -78,7 +139,11 @@ namespace SoulHunter.UI
         /// <summary>The home buttons in order: read left to right, top to bottom (Start first, Quit last).</summary>
         private Button[] MenuButtons()
         {
-            var list = new System.Collections.Generic.List<Button> { StartButton, PowerUpButton, CollectionButton };
+            // Quick Start right after Start, as the wiki's Main_menu table lists them.
+            var list = new System.Collections.Generic.List<Button> { StartButton };
+            if (QuickStartButton != null) list.Add(QuickStartButton);
+            list.Add(PowerUpButton);
+            list.Add(CollectionButton);
             if (BestiaryButton != null) list.Add(BestiaryButton);
             list.Add(UnlocksButton);
             list.Add(CreditsButton);
@@ -95,6 +160,9 @@ namespace SoulHunter.UI
                 var b = buttons[i];
                 icons[i] = b == null ? SoulHunter.Gameplay.UI.UITheme.IconSlot.None
                     : b == StartButton ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Start
+                    // Quick Start shows the theme's Resume picture (the same "play" as Start in the approved look); it has
+                    // no icon of its own, and a new one waits for the owner.
+                    : b == QuickStartButton ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Resume
                     : b == PowerUpButton ? SoulHunter.Gameplay.UI.UITheme.IconSlot.PowerUp
                     : b == CollectionButton ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Collection
                     : b == BestiaryButton ? SoulHunter.Gameplay.UI.UITheme.IconSlot.Bestiary
@@ -119,6 +187,7 @@ namespace SoulHunter.UI
             Collection = MenuSectionScreen.Create<CollectionMenuUI>(sibling, "Collection_Panel", "Collection", back, ShowHome);
             foreach (var screen in new MenuSectionScreen[] { Collection, BestiaryScreen, Unlocks, Credits }) _panels.Add(screen.gameObject);
 
+            QuickStartButton = CreateMenuButton("QuickStart_Button", QuickStart.Label, StartQuickRun);
             CollectionButton = CreateMenuButton("Collection_Button", "Collection", ShowCollection);
             if (SoulHunter.Core.Persistence.Bestiary.IsUnlocked(data)) BestiaryButton = CreateMenuButton("Bestiary_Button", "Bestiary", ShowBestiary);
             UnlocksButton = CreateMenuButton("Unlocks_Button", "Unlocks", ShowUnlocks);
@@ -181,7 +250,8 @@ namespace SoulHunter.UI
             var button = copy.GetComponent<Button>();
             button.onClick = new Button.ButtonClickedEvent(); // drop the copied Power Up listeners
             button.onClick.AddListener(PlayClick);
-            button.onClick.AddListener(() => SoulHunter.Gameplay.UI.OptionsMenuUI.Open(() => Focus(OptionsButton)));
+            // The main menu's Options carry the Save Data section (Data Recovery, Delete Save); a run's do not.
+            button.onClick.AddListener(() => SoulHunter.Gameplay.UI.OptionsMenuUI.Open(OptionsClosed, withSaveData: true));
             foreach (var tmp in copy.GetComponentsInChildren<TMPro.TMP_Text>(true)) tmp.text = "Options";
             foreach (var legacy in copy.GetComponentsInChildren<Text>(true)) legacy.text = "Options";
 
@@ -196,6 +266,22 @@ namespace SoulHunter.UI
             }
             copy.transform.SetSiblingIndex(PowerUpButton.transform.GetSiblingIndex() + 1);
             return button;
+        }
+
+        /// <summary>
+        /// Options closed. When it restored or deleted the save, every menu screen was built from the old one (gold, owned
+        /// characters, the Bestiary button, Quick Start): the menu is loaded again, so nothing shows the save that is gone.
+        /// </summary>
+        private void OptionsClosed()
+        {
+            if (SoulHunter.Gameplay.UI.OptionsMenuUI.LastClosedReplacedSave)
+            {
+                SoulHunter.Core.Scenes.SceneService scenes = null;
+                SoulHunter.Core.Services.GameServices.Instance?.TryGet(out scenes);
+                if (scenes != null) { scenes.LoadSceneAsync(gameObject.scene.name); return; }
+            }
+            RefreshQuickStart();
+            Focus(OptionsButton);
         }
 
         private static void Focus(Selectable target)
@@ -214,6 +300,7 @@ namespace SoulHunter.UI
         {
             var focus = _returnFocus != null ? _returnFocus : StartButton;
             _returnFocus = null;
+            RefreshQuickStart(); // a new pick each time the menu opens
             Show(HomePanel, focus);
         }
         public void ShowCharacters() => Show(CharacterPanel, null, StartButton); // the select screen focuses its own card

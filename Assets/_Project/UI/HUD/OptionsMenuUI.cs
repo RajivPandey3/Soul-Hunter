@@ -29,6 +29,11 @@ namespace SoulHunter.Gameplay.UI
     ///   controller focus scroll the chosen row into view;
     /// - when a row is too narrow for label and control side by side (a portrait phone) the control goes under its label;
     /// - Back stays pinned to the bottom of the panel, always on screen.
+    ///
+    /// Save Data (main menu only; VS Account section, wiki Options, raw, fetched 2026-10-12): "DATA RECOVERY ... Restore" and
+    /// "Delete Save ... This option only appears after clicking on the Account section button 6 times after initially
+    /// selecting it"; 1.4.200: "click Delete Save and confirm through all the pop-ups". Soul Hunter has no accounts, Twitch
+    /// or languages, so the section is named for what is left in it. See the "Save Data" region below.
     /// </summary>
     public sealed class OptionsMenuUI : MonoBehaviour
     {
@@ -54,7 +59,9 @@ namespace SoulHunter.Gameplay.UI
         public bool IsStacked { get; private set; }
 
         /// <summary>Opens the Options screen on top of everything; onClosed runs after it closes.</summary>
-        public static OptionsMenuUI Open(Action onClosed = null)
+        /// <param name="withSaveData">True from the main menu: adds the Save Data section (Data Recovery, Delete Save). A run in
+        /// progress never shows it: its save is being played on.</param>
+        public static OptionsMenuUI Open(Action onClosed = null, bool withSaveData = false)
         {
             if (Current != null) return Current;
             var root = new GameObject("OptionsMenu", typeof(RectTransform));
@@ -65,6 +72,8 @@ namespace SoulHunter.Gameplay.UI
             root.AddComponent<GraphicRaycaster>();
             var options = root.AddComponent<OptionsMenuUI>();
             options._onClosed = onClosed;
+            options._withSaveData = withSaveData;
+            LastClosedReplacedSave = false;
             options.Build();
             return options;
         }
@@ -95,6 +104,7 @@ namespace SoulHunter.Gameplay.UI
         private void Update()
         {
             if (_rebinding != null) return;
+            if (DialogOpen) { UpdateDialog(); return; } // a question is open: Esc answers it, and focus stays on its buttons
             bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
                         (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
             if (back) Close();
@@ -115,6 +125,7 @@ namespace SoulHunter.Gameplay.UI
             // A new canvas gets its real size a frame late, and the safe area can change: lay out when the room changes.
             if (_content != null && _content.rect.size != _laidOutFor) _dirty = true;
             if (_dirty) LayoutNow();
+            if (DialogOpen && _dialogPanel != null && _content.rect.size != _dialogFor) LayoutDialog();
             ApplyTextFloor(); // a theme restyle puts button labels back to the theme's floor; the phone's floor is higher
         }
 
@@ -124,6 +135,7 @@ namespace SoulHunter.Gameplay.UI
             var data = GameSettings.Data;
             if (data != null && _input != null) data.InputBindingOverrides = _input.SaveBindingOverrides();
             GameSettings.Save();
+            LastClosedReplacedSave = SaveReplaced;
             var onClosed = _onClosed;
             Destroy(gameObject);
             onClosed?.Invoke();
@@ -156,17 +168,21 @@ namespace SoulHunter.Gameplay.UI
             UITheme.ApplyText(_title, ThemedElement.TextRole.Title);
 
             var data = GameSettings.Data;
+            // Data Recovery and Delete Save replace the save in memory: every option's setter below then writes to the new one.
+            _rebindData = () => data = GameSettings.Data;
             // VS groups its options in sections; one tab per section, in the wiki's heading order (Favorites, Display, Sound,
             // Gameplay), then Soul Hunter's Controls. VS Co-op and Account have nothing behind them in Soul Hunter.
             // The tabs share the theme's one tab size and sit centred in a row with the theme's gap (ThemedRow), which
             // wraps onto more lines on a narrow screen.
-            string[] sections = { "Favorites", "Display", "Sound", "Gameplay", "Controls" };
+            var sectionNames = new List<string> { "Favorites", "Display", "Sound", "Gameplay", "Controls" };
+            if (_withSaveData) { _saveTab = sectionNames.Count; sectionNames.Add(SaveDataTabName); }
+            string[] sections = sectionNames.ToArray();
             _tabRow = Rect("Tabs", _panel, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             _tabRow.pivot = new Vector2(0.5f, 1f);
             for (int i = 0; i < sections.Length; i++)
             {
                 int index = i;
-                var tab = AddButton(_tabRow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), sections[i], () => ShowTab(index), ThemedElement.SizeRole.Tab);
+                var tab = AddButton(_tabRow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), sections[i], () => PressTab(index), ThemedElement.SizeRole.Tab);
                 tab.name = "Tab_" + sections[i];
                 _tabButtons.Add(tab);
             }
@@ -245,6 +261,8 @@ namespace SoulHunter.Gameplay.UI
             _building.Add(reset);
             _selectables.Add(reset);
 
+            if (_withSaveData) BuildSaveData(BeginTab(SaveDataTabName, _panel));
+
             // Back: the button that ends the screen, pinned to the bottom of the panel (always on screen).
             _back = AddButton(_panel, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), "Back", Close);
             _back.name = "Back";
@@ -298,6 +316,7 @@ namespace SoulHunter.Gameplay.UI
             var first = _tabItems[_currentTab].Count > 0 ? _tabItems[_currentTab][0] : null;
             if (first != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(first.gameObject);
             _lastFocus = first != null ? first.gameObject : null;
+            if (_currentTab == _saveTab) RefreshSaveData(); // both saves as they are on disk now
         }
 
         private void RefreshAll()
@@ -558,7 +577,7 @@ namespace SoulHunter.Gameplay.UI
 
         // ---------- responsive layout ----------
 
-        private enum RowKind { Slider, Switch, Cycle, Binding, Header, Action }
+        private enum RowKind { Slider, Switch, Cycle, Binding, Header, Action, Note }
 
         /// <summary>One row of a section: its line, its label and its control(s), placed by <see cref="LayoutNow"/>.</summary>
         private sealed class OptionRow
@@ -569,6 +588,7 @@ namespace SoulHunter.Gameplay.UI
             public RectTransform First, Second; // the control (switch holder, slider, cycle, key) and a binding's second column
             public RectTransform Groove, FillArea, HandleArea, Handle; // a slider's parts
             public TextMeshProUGUI Value; // a slider's percentage
+            public TextMeshProUGUI Note; // a Note row's wrapped text (the row is as tall as the text)
         }
 
         private readonly Dictionary<RectTransform, List<OptionRow>> _rows = new Dictionary<RectTransform, List<OptionRow>>();
@@ -654,7 +674,17 @@ namespace SoulHunter.Gameplay.UI
             float width = panelW - 2f * pad;
             IsStacked = width < StackBelowWidth;
             foreach (var pair in _rows) LayoutRows(pair.Key, pair.Value, width, IsStacked, theme, backSize);
+            if (DialogOpen) LayoutDialog();
             ApplyTextFloor();
+        }
+
+        /// <summary>A Note row's text at one readable size, wrapped: its height for <paramref name="width"/>.</summary>
+        private static float NoteHeight(TextMeshProUGUI note, float width, float floor)
+        {
+            if (note == null) return 0f;
+            note.enableAutoSizing = false;
+            note.fontSize = Mathf.Max(NoteTextUnits, floor);
+            return Mathf.Ceil(note.GetPreferredValues(note.text, Mathf.Max(1f, width), 0f).y) + 2f;
         }
 
         private void LayoutRows(RectTransform content, List<OptionRow> rows, float width, bool stacked, UiThemeAsset theme, Vector2 buttonSize)
@@ -689,10 +719,11 @@ namespace SoulHunter.Gameplay.UI
                     RowKind.Switch => switchSize.y,
                     RowKind.Header => labelH,
                     RowKind.Action => buttonSize.y,
+                    RowKind.Note => NoteHeight(r.Note, width - 2f * Inset, floor),
                     _ => controlH
                 };
                 float rowH, labelTop, ctrlTop;
-                if (r.Kind == RowKind.Action) { rowH = ctrl + 2f * rowPad; labelTop = ctrlTop = rowPad; }
+                if (r.Kind == RowKind.Action || r.Kind == RowKind.Note) { rowH = ctrl + 2f * rowPad; labelTop = ctrlTop = rowPad; }
                 else if (stacked)
                 {
                     labelTop = rowPad;
@@ -742,6 +773,9 @@ namespace SoulHunter.Gameplay.UI
                         float h = r.Kind == RowKind.Header ? labelH : controlH;
                         if (r.First != null) Place(r.First, colX, ctrlTop, half, h);
                         if (r.Second != null) Place(r.Second, colX + half + gap, ctrlTop, half, h);
+                        break;
+                    case RowKind.Note:
+                        Place(r.First, Inset, ctrlTop, Mathf.Max(1f, width - 2f * Inset), ctrl);
                         break;
                     case RowKind.Action:
                         r.First.anchorMin = r.First.anchorMax = new Vector2(0.5f, 1f);
@@ -820,6 +854,305 @@ namespace SoulHunter.Gameplay.UI
             var canvas = rect.GetComponentInParent<Canvas>();
             var camera = canvas != null && canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.rootCanvas.worldCamera : null;
             return RectTransformUtility.RectangleContainsScreenPoint(rect, point.Value, camera);
+        }
+
+        // ---------- Save Data (main menu only) ----------
+        // vampire.survivors.wiki/w/Options (raw, fetched 2026-10-12), Account section:
+        // - "DATA RECOVERY ... Restore" (update history: "0.5.209 Savedata Recovery Menu");
+        // - "Delete Save ... This option only appears after clicking on the Account section button 6 times after initially
+        //   selecting it"; 1.4.200: "tap the Account icon seven times, then click Delete Save and confirm through all the
+        //   pop-ups" (the first of the seven selects the section; six more reveal the option).
+        // Balance method where the wiki is silent (owner rule, 2026-10-09):
+        // - The section's name. VS calls it Account (Twitch, language, recovery). Soul Hunter has only the save in it, so it
+        //   is "Save Data", the last tab, and only on the main menu: a run in progress is playing on the save.
+        // - What Recovery restores and what Delete keeps: SaveService.RestorePrevious and DeleteSave say (the previous good
+        //   save; progress goes, this device's options stay, a backup file is kept either way).
+        // - Before a restore both saves are put side by side in words, so it is not a blind swap; afterwards the section says
+        //   what was restored (ui-ux-pro-max: confirm before an irreversible action, then a brief success message).
+        // - "All the pop-ups" are two questions for Delete Save; Recovery, which loses nothing, asks once. Each question
+        //   opens with the safe answer chosen, and the buttons say what they do (Restore / Cancel, Delete Save / Keep Save).
+        // - The count of six starts again each time the section is selected from another one, and after a delete.
+
+        public const string SaveDataTabName = "Save Data";
+        public const int DeletePressesNeeded = 6;
+        public const float NoteTextUnits = 22f;
+        public const string RestoreLabel = "Restore", DeleteLabel = "Delete Save", KeepLabel = "Keep Save", CancelLabel = "Cancel";
+        public const string SaveIntroLine = "The game keeps the save from before its last change. Data Recovery brings that one back.";
+        public const string NoPreviousLine = "Previous save: none yet. It appears after the game has saved twice.";
+
+        /// <summary>True when the Options screen closed last had restored or deleted the save: the menu behind it shows old numbers.</summary>
+        public static bool LastClosedReplacedSave { get; private set; }
+        /// <summary>True once this screen has restored or deleted the save.</summary>
+        public bool SaveReplaced { get; private set; }
+        /// <summary>The Save Data section's index, or -1 when this screen has none (opened in a run).</summary>
+        public int SaveDataTab => _saveTab;
+        public Button RestoreButton { get; private set; }
+        /// <summary>Hidden until the Save Data tab has been pressed <see cref="DeletePressesNeeded"/> more times after selecting it.</summary>
+        public Button DeleteSaveButton { get; private set; }
+        public bool DeleteSaveShown => DeleteSaveButton != null && DeleteSaveButton.gameObject.activeInHierarchy;
+        /// <summary>The current and the previous save, side by side in words.</summary>
+        public string SaveComparisonText => _saveCompare != null ? _saveCompare.text : null;
+        /// <summary>What the last restore or delete did ("" before any).</summary>
+        public string SaveStatusText => _saveStatus != null ? _saveStatus.text : null;
+        public bool DialogOpen => _dialog != null && _dialog.gameObject.activeSelf;
+        public string DialogText => _dialogText != null ? _dialogText.text : null;
+        public Button DialogConfirmButton => _dialogYes;
+        public Button DialogCancelButton => _dialogNo;
+
+        private bool _withSaveData;
+        private int _saveTab = -1;
+        private int _saveTabPresses;
+        private Action _rebindData;
+        private TextMeshProUGUI _saveCompare, _saveStatus;
+
+        /// <summary>A tab was pressed: shows its section. Pressing the open Save Data tab again counts toward Delete Save.</summary>
+        public void PressTab(int index)
+        {
+            if (index == _saveTab) _saveTabPresses = _currentTab == index ? _saveTabPresses + 1 : 0; // selecting it starts the count
+            ShowTab(index);
+        }
+
+        private static SaveService Saves() =>
+            GameServices.Instance != null && GameServices.Instance.TryGet(out SaveService save) ? save : null;
+
+        private void BuildSaveData(RectTransform content)
+        {
+            UITheme.ApplyText(AddNote(content, "SaveIntro", SaveIntroLine), ThemedElement.TextRole.Soft);
+
+            var restoreRow = Line(content, "Data Recovery", RowKind.Cycle);
+            RestoreButton = AddButton(restoreRow.Line, Vector2.zero, Vector2.zero, RestoreLabel, AskRestore, ThemedElement.SizeRole.Free);
+            RestoreButton.name = "Data Recovery";
+            restoreRow.First = (RectTransform)RestoreButton.transform;
+            _selectables.Add(RestoreButton);
+            _building.Add(RestoreButton);
+
+            _saveCompare = AddNote(content, "SaveCompare", "");
+
+            var deleteRow = Line(content, DeleteLabel, RowKind.Cycle);
+            DeleteSaveButton = AddButton(deleteRow.Line, Vector2.zero, Vector2.zero, DeleteLabel, AskDelete, ThemedElement.SizeRole.Free);
+            DeleteSaveButton.name = DeleteLabel;
+            // The leaving colour: this is the one button here that takes something away.
+            UITheme.ApplyButton(DeleteSaveButton, DeleteSaveButton.targetGraphic as Image, UITheme.ButtonKind.Danger, UITheme.IconSlot.None, true, ThemedElement.SizeRole.Free);
+            deleteRow.First = (RectTransform)DeleteSaveButton.transform;
+            _selectables.Add(DeleteSaveButton);
+            _building.Add(DeleteSaveButton);
+            Func<bool> deleteShown = () => _saveTabPresses >= DeletePressesNeeded;
+            _conditional.Add((deleteRow.Line, deleteShown));
+
+            _saveStatus = AddNote(content, "SaveStatus", "");
+            UITheme.ApplyText(_saveStatus, ThemedElement.TextRole.Accent);
+            Func<bool> statusShown = () => !string.IsNullOrEmpty(_saveStatus.text);
+            _conditional.Add(((RectTransform)_saveStatus.transform.parent, statusShown));
+            RestackConditionalRows();
+        }
+
+        /// <summary>A row of wrapped text across the section (no control); the row is as tall as its text.</summary>
+        private TextMeshProUGUI AddNote(RectTransform content, string name, string text)
+        {
+            var line = Rect(name, content, new Vector2(0f, 1f), new Vector2(1f, 1f));
+            var note = Text("Note", line, Vector2.zero, Vector2.zero, text, NoteTextUnits, TextAlignmentOptions.TopLeft);
+            note.enableAutoSizing = false; // one readable size, wrapped (LayoutRows gives the row the text's height)
+            note.textWrappingMode = TextWrappingModes.Normal;
+            AddRow(content, new OptionRow { Line = line, Kind = RowKind.Note, First = note.rectTransform, Note = note });
+            return note;
+        }
+
+        /// <summary>A save in the words a player knows it by.</summary>
+        public static string Describe(SaveService.SaveSummary save)
+        {
+            if (save == null) return "nothing";
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            string text = save.Gold.ToString("N0", culture) + " gold, "
+                          + Counted(save.CharactersBought, "character", "characters") + " bought, "
+                          + Counted(save.PowerUpRanks, "Power Up rank", "Power Up ranks") + " bought, "
+                          + Counted(save.ChestsOpened, "chest", "chests") + " opened";
+            if (save.Written > DateTime.MinValue) text += " (saved " + save.Written.ToString("d MMM yyyy, HH:mm", culture) + ")";
+            return text;
+        }
+
+        private static string Counted(int count, string one, string many) => count + " " + (count == 1 ? one : many);
+
+        /// <summary>Reads both saves again: the comparison, and whether there is anything to restore.</summary>
+        private void RefreshSaveData()
+        {
+            if (!_withSaveData || _saveCompare == null) return;
+            var save = Saves();
+            SaveService.SaveSummary previous = null;
+            bool can = save != null && save.TryDescribePrevious(out previous);
+            _saveCompare.text = "Current save: " + Describe(save != null ? save.DescribeCurrent() : null) + "\n"
+                                + (can ? "Previous save: " + Describe(previous) : NoPreviousLine);
+            RestoreButton.interactable = can;
+            var look = RestoreButton.GetComponent<ThemedElement>();
+            if (look != null) look.ShowUsable(can); // nothing to restore: the unusable look, and the line above says why
+            RestackConditionalRows();
+            LayoutNow();
+        }
+
+        /// <summary>Data Recovery: one question, with both saves side by side.</summary>
+        public void AskRestore()
+        {
+            var save = Saves();
+            if (save == null || !save.TryDescribePrevious(out var previous)) { RefreshSaveData(); return; }
+            _dialogReturn = RestoreButton;
+            string now = Describe(save.DescribeCurrent()), then = Describe(previous);
+            Ask("Restore the previous save?\n\nCurrent save: " + now + "\nPrevious save: " + then
+                + "\n\nThe current save is kept on this device as a backup file.",
+                RestoreLabel, UITheme.ButtonKind.Normal, CancelLabel, () =>
+                {
+                    bool done = save.RestorePrevious();
+                    AfterSaveReplaced(done, done ? "Restored the previous save: " + then + "."
+                        : "The previous save could not be restored. Nothing was changed.");
+                });
+        }
+
+        /// <summary>Delete Save: two questions (wiki: "confirm through all the pop-ups").</summary>
+        public void AskDelete()
+        {
+            var save = Saves();
+            if (save == null) return;
+            _dialogReturn = DeleteSaveButton;
+            string now = Describe(save.DescribeCurrent());
+            Ask("Delete your save?\n\nYou lose: " + now + ", and everything you unlocked.\nYour options and controls stay as they are.",
+                DeleteLabel, UITheme.ButtonKind.Danger, KeepLabel, () =>
+                    Ask("Delete the save now?\n\nThis cannot be undone in the game.", DeleteLabel, UITheme.ButtonKind.Danger, KeepLabel, () =>
+                    {
+                        bool done = save.DeleteSave();
+                        string file = done && !string.IsNullOrEmpty(save.LastDeletedBackupPath) ? System.IO.Path.GetFileName(save.LastDeletedBackupPath) : null;
+                        AfterSaveReplaced(done, done
+                            ? "Save deleted. Your options were kept." + (file != null ? " A copy of the old save stays on this device: " + file + "." : "")
+                            : "The save could not be deleted. Nothing was changed.");
+                    }));
+        }
+
+        private void AfterSaveReplaced(bool done, string status)
+        {
+            if (done)
+            {
+                SaveReplaced = true;
+                _saveTabPresses = 0; // Delete Save hides again
+                _rebindData?.Invoke(); // the options now read and write the save that is in memory
+                GameSettings.NotifyChanged(); // sound and display follow the save's options
+            }
+            _saveStatus.text = status;
+            RefreshAll();
+            RefreshSaveData();
+            if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(RestoreButton.gameObject);
+        }
+
+        // ---------- the question box (Save Data) ----------
+
+        private RectTransform _dialog, _dialogPanel, _dialogButtons;
+        private TextMeshProUGUI _dialogText;
+        private Button _dialogYes, _dialogNo;
+        private Action _dialogYesAction;
+        private Selectable _dialogReturn;
+        private Vector2 _dialogFor = new Vector2(-1f, -1f);
+        private const float DialogMaxWidth = 820f, DialogPad = 24f, DialogTextUnits = 26f;
+
+        /// <summary>Asks a yes/no question over the screen. The "no" answer is chosen when it opens; Esc / B answers no.</summary>
+        private void Ask(string message, string yesLabel, UITheme.ButtonKind yesKind, string noLabel, Action onYes)
+        {
+            EnsureDialog();
+            _dialogText.text = message;
+            SetLabel(_dialogYes, yesLabel);
+            SetLabel(_dialogNo, noLabel);
+            UITheme.ApplyButton(_dialogYes, _dialogYes.targetGraphic as Image, yesKind, UITheme.IconSlot.None, true);
+            _dialogYesAction = onYes;
+            _dialog.gameObject.SetActive(true);
+            _dialog.SetAsLastSibling();
+            LayoutDialog();
+            if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_dialogNo.gameObject);
+        }
+
+        private static void SetLabel(Button button, string label)
+        {
+            var text = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (text != null) text.text = label;
+        }
+
+        private void EnsureDialog()
+        {
+            if (_dialog != null) return;
+            _dialog = Rect("Dialog", transform, Vector2.zero, Vector2.one);
+            // Its own veil, over the Options panel: nothing behind the question takes a click.
+            var veil = Rect("DialogVeil", _dialog, new Vector2(-1f, -1f), new Vector2(2f, 2f)).gameObject.AddComponent<Image>();
+            veil.raycastTarget = true;
+            UITheme.ApplySurface(veil, ThemedElement.SurfaceRole.Veil);
+            var safe = Rect("DialogContent", _dialog, Vector2.zero, Vector2.one);
+            SafeAreaFitter.Fit(safe);
+            var centre = new Vector2(0.5f, 0.5f);
+            _dialogPanel = Rect("DialogPanel", safe, centre, centre);
+            UITheme.ApplyPanel(_dialogPanel.gameObject.AddComponent<Image>(), 1f);
+            _dialogText = Text("Message", _dialogPanel, Vector2.zero, Vector2.zero, "", DialogTextUnits, TextAlignmentOptions.TopLeft);
+            _dialogText.enableAutoSizing = false;
+            _dialogText.textWrappingMode = TextWrappingModes.Normal;
+            _dialogButtons = Rect("DialogButtons", _dialogPanel, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f));
+            _dialogButtons.pivot = new Vector2(0.5f, 0f);
+            // The safe answer first (and chosen); the answer that changes the save second.
+            _dialogNo = AddButton(_dialogButtons, centre, centre, CancelLabel, CloseDialog);
+            _dialogNo.name = "Dialog_No";
+            UITheme.ApplyButton(_dialogNo, _dialogNo.targetGraphic as Image, UITheme.ButtonKind.Primary, UITheme.IconSlot.None, true);
+            _dialogYes = AddButton(_dialogButtons, centre, centre, RestoreLabel, ConfirmDialog);
+            _dialogYes.name = "Dialog_Yes";
+            _dialogButtons.gameObject.AddComponent<ThemedRow>();
+            // Keyboard and controller stay on the two answers (the options behind the question are out of reach).
+            _dialogNo.navigation = Between(_dialogYes);
+            _dialogYes.navigation = Between(_dialogNo);
+        }
+
+        private static Navigation Between(Selectable other) => new Navigation
+        {
+            mode = Navigation.Mode.Explicit, selectOnLeft = other, selectOnRight = other, selectOnUp = other, selectOnDown = other
+        };
+
+        private void LayoutDialog()
+        {
+            if (_dialogPanel == null || _content == null) return;
+            Vector2 room = _content.rect.size;
+            _dialogFor = room;
+            float gap = UiThemeAsset.Active.Layouts.ButtonGap;
+            float width = Mathf.Max(1f, Mathf.Min(room.x - 2f * gap, DialogMaxWidth));
+            _dialogPanel.anchorMin = _dialogPanel.anchorMax = _dialogPanel.pivot = new Vector2(0.5f, 0.5f);
+            _dialogPanel.anchoredPosition = Vector2.zero;
+            _dialogPanel.sizeDelta = new Vector2(width, _dialogPanel.sizeDelta.y); // the width first: the answers wrap to it
+            var row = _dialogButtons.GetComponent<ThemedRow>();
+            if (row != null) row.Layout();
+            float rowHeight = _dialogButtons.sizeDelta.y * _dialogButtons.localScale.y;
+            _dialogText.fontSize = Mathf.Max(DialogTextUnits, TextFloor);
+            float textWidth = Mathf.Max(1f, width - 2f * DialogPad);
+            float textHeight = Mathf.Ceil(_dialogText.GetPreferredValues(_dialogText.text, textWidth, 0f).y) + 2f;
+            float height = Mathf.Min(Mathf.Max(1f, room.y - 2f * gap), DialogPad + textHeight + gap * 1.5f + rowHeight + DialogPad);
+            _dialogPanel.sizeDelta = new Vector2(width, height);
+            Place(_dialogText.rectTransform, DialogPad, DialogPad, textWidth, Mathf.Max(1f, height - 2f * DialogPad - rowHeight - gap * 1.5f));
+            _dialogButtons.anchoredPosition = new Vector2(0f, DialogPad);
+        }
+
+        private void UpdateDialog()
+        {
+            bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ||
+                        (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame);
+            if (back) { CloseDialog(); return; }
+            var system = EventSystem.current;
+            if (system == null) return;
+            var selected = system.currentSelectedGameObject;
+            if (selected == null || !selected.transform.IsChildOf(_dialog)) system.SetSelectedGameObject(_dialogNo.gameObject);
+        }
+
+        private void ConfirmDialog()
+        {
+            var action = _dialogYesAction;
+            CloseDialog();
+            action?.Invoke();
+        }
+
+        /// <summary>Closes the question without doing anything and gives focus back to the button that asked.</summary>
+        public void CloseDialog()
+        {
+            if (_dialog == null || !_dialog.gameObject.activeSelf) return;
+            _dialog.gameObject.SetActive(false);
+            _dialogYesAction = null;
+            if (EventSystem.current != null && _dialogReturn != null && _dialogReturn.gameObject.activeInHierarchy)
+                EventSystem.current.SetSelectedGameObject(_dialogReturn.gameObject);
         }
 
         // ---------- building helpers ----------

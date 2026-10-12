@@ -95,6 +95,13 @@ namespace SoulHunter.Gameplay.Combat
             }
             // VS evolutions built since 2026-10-01 live in GameContent (EvolutionBuilder), so the scene is not edited.
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
+            // VS unions (built 2026-10-12, NewVsItemsBuilder) live in GameContent the same way.
+            if (catalog != null && catalog.Unions != null)
+            {
+                _availableUnions ??= new List<WeaponUnionData>();
+                foreach (var union in catalog.Unions)
+                    if (union != null && !_availableUnions.Contains(union)) _availableUnions.Add(union);
+            }
             if (catalog != null && catalog.Evolutions != null)
             {
                 _availableEvolutions ??= new List<WeaponEvolutionData>();
@@ -240,13 +247,13 @@ namespace SoulHunter.Gameplay.Combat
             Debug.Log($"[WeaponManager] Applying Upgrade: {upgrade.UpgradeName}");
 
             bool newWeapon = IsWeaponType(upgrade.Type) && GetWeaponLevel(upgrade.Type) == 0;
-            if (newWeapon && GetActiveWeaponsCount() >= _maxWeaponSlots)
+            if (newWeapon && !_pastTheSlots && GetActiveWeaponsCount() >= _maxWeaponSlots)
             {
                 Debug.Log($"[WeaponManager] Weapon slots full; rejected {upgrade.UpgradeName}.");
                 return;
             }
             bool newPassive = IsPassiveType(upgrade.Type) && GetWeaponLevel(upgrade.Type) == 0;
-            if (newPassive && GetPassiveCount() >= _maxPassiveSlots)
+            if (newPassive && !_pastTheSlots && GetPassiveCount() >= _maxPassiveSlots)
             {
                 Debug.Log($"[WeaponManager] Passive slots full; rejected {upgrade.UpgradeName}.");
                 return;
@@ -308,6 +315,16 @@ namespace SoulHunter.Gameplay.Combat
                     if (health != null) health.MultiplyMaxHealth(1.05f);
                     break;
                 case UpgradeData.UpgradeType.MetaglioRight: if (upgrade.Level > 1) stats.AddCurse(0.05f); break;
+                // VS wiki (Stone_Mask, raw, fetched 2026-10-12): "Stone Mask increases Greed by 10% per level", 5 levels, additive.
+                case UpgradeData.UpgradeType.MisersIdol: stats.AddGreed(0.1f); break;
+                // VS wiki (Silver_Ring / Gold_Ring, raw, fetched 2026-10-12): 9 levels; each "does not provide any stats at
+                // level 1"; levels 2-9 add +5% Duration and +5% Area (Silver, +40% at max) or +5% Curse (Gold, +40%).
+                case UpgradeData.UpgradeType.RingOfLongHours:
+                    if (upgrade.Level <= 1) break;
+                    stats.AddDuration(0.05f);
+                    stats.AddArea(0.05f);
+                    break;
+                case UpgradeData.UpgradeType.RingOfDarkHours: if (upgrade.Level > 1) stats.AddCurse(0.05f); break;
             }
 
             Debug.Log($"[WeaponManager] Passive Applied: {upgrade.Type} is now Level {upgrade.Level}");
@@ -430,7 +447,29 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         public static bool IsStagePassive(UpgradeData.UpgradeType type) =>
-            type == UpgradeData.UpgradeType.MetaglioLeft || type == UpgradeData.UpgradeType.MetaglioRight;
+            type == UpgradeData.UpgradeType.MetaglioLeft || type == UpgradeData.UpgradeType.MetaglioRight ||
+            // VS wiki (Silver_Ring / Gold_Ring): "It cannot be found via level ups, and must be found as a stage item."
+            type == UpgradeData.UpgradeType.RingOfLongHours || type == UpgradeData.UpgradeType.RingOfDarkHours;
+
+        private bool _pastTheSlots;
+
+        /// <summary>
+        /// A stage item walked over on the map (VS wiki Passive_items, "Stage items": "If the player already has the item,
+        /// it grants a free level if not at max level. If they already have 6 or more passive items, it becomes an
+        /// additional passive item and can be thereafter upgraded from level ups"; Weapons: "it is possible to carry more by
+        /// picking up weapons that generate with the stage"). Unlike a level-up it is not held back by full slots.
+        /// Returns true when the item's level went up.
+        /// </summary>
+        public bool AcquireStageItem(UpgradeData upgrade)
+        {
+            if (upgrade == null) return false;
+            int before = GetWeaponLevel(upgrade.Type);
+            if (before == 0 && IsStagePassive(upgrade.Type)) return AcquireStagePassive(upgrade);
+            _pastTheSlots = true;
+            try { ApplyUpgrade(upgrade); }
+            finally { _pastTheSlots = false; }
+            return GetWeaponLevel(upgrade.Type) == before + 1;
+        }
 
         public bool AcquireStagePassive(UpgradeData upgrade)
         {
@@ -457,7 +496,8 @@ namespace SoulHunter.Gameplay.Combat
                 type != UpgradeData.UpgradeType.EmptyTome && type != UpgradeData.UpgradeType.Spinach && type != UpgradeData.UpgradeType.Bracer &&
                 type != UpgradeData.UpgradeType.Candelabrador && type != UpgradeData.UpgradeType.Spellbinder && type != UpgradeData.UpgradeType.Duplicator &&
                 type != UpgradeData.UpgradeType.Armor && type != UpgradeData.UpgradeType.Pummarola && type != UpgradeData.UpgradeType.Attractorb &&
-                type != UpgradeData.UpgradeType.Clover && type != UpgradeData.UpgradeType.Crown && type != UpgradeData.UpgradeType.SkullOManiac && type != UpgradeData.UpgradeType.Tiragisu;
+                type != UpgradeData.UpgradeType.Clover && type != UpgradeData.UpgradeType.Crown && type != UpgradeData.UpgradeType.SkullOManiac && type != UpgradeData.UpgradeType.Tiragisu &&
+                type != UpgradeData.UpgradeType.MisersIdol; // the two rings are stage passives (first test above)
         }
 
         private static bool IsPassiveType(UpgradeData.UpgradeType type) => !IsWeaponType(type);
@@ -574,7 +614,8 @@ namespace SoulHunter.Gameplay.Combat
                     int lvlA = GetWeaponLevel(union.WeaponA);
                     int lvlB = GetWeaponLevel(union.WeaponB);
 
-                    if (lvlA >= union.WeaponAMaxLevel && lvlB >= union.WeaponBMaxLevel)
+                    // VS (wiki Evolution): a union may also need a passive item (Phieraggi needs Tirajisu).
+                    if (lvlA >= union.WeaponAMaxLevel && lvlB >= union.WeaponBMaxLevel && union.PassiveMet(this))
                     {
                         // Union criteria met!
                         _evolvedWeapons.Add(union.WeaponA); // Mark as evolved so we don't do it again
@@ -582,12 +623,30 @@ namespace SoulHunter.Gameplay.Combat
                         _madeThisRun.Add(union.name);
                         _unionConsumedWeapons.Add(union.WeaponA);
                         _unionConsumedWeapons.Add(union.WeaponB);
-                        _activeUnionWeaponCount++;
-                        _unionIconBySlot[union.WeaponA] = union.UnionIcon;
                         LastEvolvedIcon = union.UnionIcon;
                         
                         DisableOldWeapon(union.WeaponA);
                         DisableOldWeapon(union.WeaponB);
+
+                        if (union.HasResultType)
+                        {
+                            // VS (wiki Vandalier): a union with a level table of its own arrives at level 1 and is then
+                            // levelled like any weapon. It is an item of its own type, so it fills one weapon slot by
+                            // itself (the two base weapons no longer count: "Acquisition will free a weapon slot").
+                            var resultPrefab = GetWeaponObject(union.ResultType);
+                            if (resultPrefab == null) resultPrefab = union.UnionWeaponPrefab;
+                            TrackAcquired(union.ResultType, 1);
+                            _weaponLevels[union.ResultType] = 1;
+                            _evolvedWeapons.Add(union.ResultType); // the HUD frames it like an evolution
+                            ActivateOrUpgradeWeapon(resultPrefab, 1, union.ResultType);
+                            evolvedWeaponName = union.UnionName;
+                            Debug.Log($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName} (level 1).");
+                            OnInventoryChanged?.Invoke();
+                            return true;
+                        }
+
+                        _activeUnionWeaponCount++;
+                        _unionIconBySlot[union.WeaponA] = union.UnionIcon;
                         
                         if (union.UnionWeaponPrefab != null)
                         {

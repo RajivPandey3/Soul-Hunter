@@ -54,6 +54,13 @@ namespace SoulHunter.Editor.Content
             { UpgradeData.UpgradeType.Crown, 97 },
             { UpgradeData.UpgradeType.SkullOManiac, 102 },
             { UpgradeData.UpgradeType.Tiragisu, 35 },
+            // Added 2026-10-12: placeholders, each a related item's icon (not owner-approved art).
+            { UpgradeData.UpgradeType.MisersIdol, 97 },       // Crown's
+            { UpgradeData.UpgradeType.RingOfLongHours, 109 }, // Clock Lancet's
+            { UpgradeData.UpgradeType.RingOfDarkHours, 102 }, // Skull O'Maniac's
+            { UpgradeData.UpgradeType.DuskRaven, 36 },        // Peachone's
+            { UpgradeData.UpgradeType.AzureRepeater, 93 },    // Gun's
+            { UpgradeData.UpgradeType.TwilightFlock, 36 },    // Peachone's
         };
 
         [MenuItem("Soul Hunter/Content/Assign Missing Upgrade Icons")]

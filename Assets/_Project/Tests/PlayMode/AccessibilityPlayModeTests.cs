@@ -45,7 +45,7 @@ namespace SoulHunter.Tests.PlayMode
             var options = OptionsMenuUI.Current;
             Assert.IsNotNull(options, "Options screen opened. " + Errors());
             // VS sections in the wiki's order (Favorites, Display, Sound, Gameplay), then Soul Hunter's Controls.
-            Assert.That(options.TabButtons.Select(t => t.name), Is.EqualTo(new[] { "Tab_Favorites", "Tab_Display", "Tab_Sound", "Tab_Gameplay", "Tab_Controls" }));
+            Assert.That(options.TabButtons.Select(t => t.name), Is.EqualTo(new[] { "Tab_Favorites", "Tab_Display", "Tab_Sound", "Tab_Gameplay", "Tab_Controls", "Tab_Save Data" }));
             Assert.That(options.CurrentTab, Is.EqualTo(0), "Favorites opens first.");
             var names = options.GetComponentsInChildren<Selectable>(true).Select(s => s.name).ToList();
             foreach (var option in new[] { "Window Mode", "Resolution", "Screen Refresh Rate", "V-Sync", "Flashing VFX", "Disable Blood", "Screen Shake",

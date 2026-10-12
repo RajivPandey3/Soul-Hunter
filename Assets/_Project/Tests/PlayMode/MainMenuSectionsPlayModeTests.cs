@@ -118,7 +118,7 @@ namespace SoulHunter.Tests.PlayMode
             yield return BootMenu(data => data.UnlockedAchievements.Remove(Bestiary.UnlockId));
             var nav = Object.FindFirstObjectByType<MainMenuNavigation>();
             Assert.IsNull(nav.BestiaryButton, "VS: the Bestiary appears only after its unlock.");
-            Assert.That(nav.Layout.Buttons.Length, Is.EqualTo(7), "Start, Power Up, Collection, Unlocks, Credits, Options, Quit.");
+            Assert.That(nav.Layout.Buttons.Length, Is.EqualTo(8), "Start, Quick Start, Power Up, Collection, Unlocks, Credits, Options, Quit.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

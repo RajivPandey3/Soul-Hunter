@@ -19,13 +19,20 @@ namespace SoulHunter.Tests.EditMode
             for (int stage = 1; stage <= 10; stage++)
             {
                 var full = StageItems.Plan(stage);
-                Assert.That(full.Count, Is.EqualTo(6), $"Stage {stage}: four diagonal items and the two Metaglios.");
+                // 2026-10-12: plus the two rings on every stage, and Miser's Idol on Level 2 (StageItems.MisersIdolStage).
+                int expected = stage == StageItems.MisersIdolStage ? 9 : 8;
+                Assert.That(full.Count, Is.EqualTo(expected), $"Stage {stage}: four diagonal items, the two Metaglios and the two rings.");
+                var silver = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.RingOfLongHours);
+                var gold = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.RingOfDarkHours);
+                Assert.That(silver.Offset, Is.EqualTo(Vector3.forward * StageItems.RingDistance), "VS Silver Ring: north of the start.");
+                Assert.That(gold.Offset, Is.EqualTo(Vector3.back * StageItems.RingDistance), "VS Gold Ring: south of the start.");
+                Assert.That(full.Count(e => e.Upgrade == UpgradeData.UpgradeType.MisersIdol), Is.EqualTo(stage == StageItems.MisersIdolStage ? 1 : 0));
                 // VS Metaglios (2026-10-01): Left west of the start, Right east.
                 var left = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.MetaglioLeft);
                 var right = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.MetaglioRight);
                 Assert.That(left.Offset.x, Is.LessThan(0f).And.EqualTo(-StageItems.MetaglioDistance).Within(0.01f), "Metaglio Left lies west.");
                 Assert.That(right.Offset.x, Is.EqualTo(StageItems.MetaglioDistance).Within(0.01f), "Metaglio Right lies east.");
-                var plan = full.Where(e => !UpgradeRarity.IsStageItemOnly(e.Upgrade) || e.Kind != Kind.Passive).ToList();
+                var plan = full.Where(e => (!UpgradeRarity.IsStageItemOnly(e.Upgrade) && e.Upgrade != UpgradeData.UpgradeType.MisersIdol) || e.Kind != Kind.Passive).ToList();
                 Assert.That(plan.Count, Is.EqualTo(4), $"Stage {stage}");
                 Assert.That(plan.Count(e => e.Kind == Kind.Passive), Is.EqualTo(1));
                 Assert.That(plan.Count(e => e.Kind == Kind.Weapon), Is.EqualTo(1));

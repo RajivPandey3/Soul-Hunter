@@ -7,6 +7,7 @@ using SoulHunter.Gameplay.Combat;
 using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Data;
 using SoulHunter.Gameplay.Player;
+using SoulHunter.Gameplay.Weapons;
 using UnityEngine;
 
 namespace SoulHunter.Tests.EditMode
@@ -258,7 +259,7 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(LimitBreak.IsCard(card), Is.True);
                 Assert.That(UpgradeText.Tag(card, 1), Is.EqualTo("LIMIT BREAK"));
                 Assert.That(card.UpgradeName, Does.StartWith("Limit Break: "));
-                Assert.That(card.Description, Is.EqualTo(LimitBreak.Describe(LimitBreak.StatOf(card)) + " beyond max level."), "Each card names its stat (VS Limit Break table).");
+                Assert.That(card.Description, Is.EqualTo(LimitBreak.Describe(LimitBreak.WeaponOf(card), LimitBreak.StatOf(card)) + " beyond max level."), "Each card names its stat (VS Limit Break table).");
                 targets.Add(LimitBreak.WeaponOf(card));
             }
             Assert.That(targets.Count, Is.EqualTo(2));
@@ -277,7 +278,7 @@ namespace SoulHunter.Tests.EditMode
             var stat = LimitBreak.StatOf(first);
             manager.SelectUpgrade(first);
             Assert.That(LimitBreak.CardsFor(wand), Is.EqualTo(1));
-            Assert.That(LimitBreak.Total(wand, stat), Is.EqualTo(LimitBreak.RowFor(stat).Step).Within(1e-4f), $"{stat} rose by its step.");
+            Assert.That(LimitBreak.Total(wand, stat), Is.EqualTo(LimitBreak.StepFor(wand, stat)).Within(1e-4f), $"{stat} rose by its step.");
 
             manager.SelectUpgrade(manager.GetLevelUpChoices(3)[0]);
             Assert.That(LimitBreak.CardsFor(wand), Is.EqualTo(2), "Cards stack.");
@@ -310,13 +311,63 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(LimitBreak.DrawStat(wand, 20.5f / 31f, out var s2) && s2 == LimitBreak.Stat.Speed, Is.True);
             Assert.That(LimitBreak.DrawStat(wand, 30.5f / 31f, out var s3) && s3 == LimitBreak.Stat.Amount, Is.True);
 
-            for (int i = 0; i < 20; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Amount);
-            Assert.That(LimitBreak.AmountBonus(wand), Is.EqualTo(10), "Amount stops at +10.");
+            for (int i = 0; i < 30; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Amount);
+            Assert.That(LimitBreak.AmountBonus(wand), Is.EqualTo(20), "Amount stops at 20.");
             Assert.That(LimitBreak.CanRaise(wand, LimitBreak.Stat.Amount), Is.False);
-            for (int i = 0; i < 300; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Area);
-            Assert.That(LimitBreak.AreaBonus(wand), Is.EqualTo(5f).Within(1e-4f), "Area stops at +500%.");
+            for (int i = 0; i < 400; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Area);
+            Assert.That(LimitBreak.AreaBonus(wand), Is.EqualTo(9f).Within(1e-3f), "Area stops at 1000% (its 100% plus 900%).");
             for (int i = 0; i < 50; i++) LimitBreak.Apply(wand, LimitBreak.Stat.BaseDamage);
-            Assert.That(LimitBreak.BaseDamageBonus(wand), Is.EqualTo(50f), "Base Damage has no cap.");
+            Assert.That(LimitBreak.BaseDamageBonus(wand), Is.EqualTo(25f), "Base Damage +0.5 per card, no cap.");
+        }
+
+        /// <summary>
+        /// Each weapon's own wiki "Limit Break" table (raw pages, 2026-10-12): which stats it is offered, the Base Damage
+        /// step and the Duration cap. "Unlike most weapons, Laurel does not benefit from Limit Break" (wiki Laurel).
+        /// </summary>
+        [Test]
+        public void LimitBreak_OffersEachWeaponItsOwnWikiRows()
+        {
+            T Weapon<T>() where T : AutoAttackWeapon => Track(new GameObject(typeof(T).Name)).AddComponent<T>();
+            bool Any(AutoAttackWeapon w)
+            {
+                foreach (LimitBreak.Stat s in System.Enum.GetValues(typeof(LimitBreak.Stat))) if (LimitBreak.CanRaise(w, s)) return true;
+                return false;
+            }
+
+            var laurel = Weapon<LaurelWeapon>();
+            Assert.That(Any(laurel), Is.False, "Laurel takes no Limit Break card.");
+            Assert.That(LimitBreak.DrawStat(laurel, 0.5f, out _), Is.False);
+
+            var garlic = Weapon<GarlicWeapon>();
+            Assert.That(LimitBreak.CanRaise(garlic, LimitBreak.Stat.BaseDamage) && LimitBreak.CanRaise(garlic, LimitBreak.Stat.Area), Is.True);
+            Assert.That(LimitBreak.CanRaise(garlic, LimitBreak.Stat.Amount) || LimitBreak.CanRaise(garlic, LimitBreak.Stat.Speed), Is.False,
+                "Garlic's table has only Base Damage and Area.");
+
+            var whip = Weapon<WhipWeapon>();
+            Assert.That(LimitBreak.CanRaise(whip, LimitBreak.Stat.Amount), Is.True);
+            Assert.That(LimitBreak.CanRaise(whip, LimitBreak.Stat.Speed), Is.False, "The Whip's table has no Speed.");
+
+            var song = Weapon<SongOfManaWeapon>();
+            Assert.That(LimitBreak.CanRaise(song, LimitBreak.Stat.Duration), Is.True);
+            Assert.That(LimitBreak.CanRaise(song, LimitBreak.Stat.Amount) || LimitBreak.CanRaise(song, LimitBreak.Stat.Speed), Is.False,
+                "Song of Mana ignores Amount and Speed.");
+
+            var pentagram = Weapon<PentagramWeapon>();
+            Assert.That(LimitBreak.CanRaise(pentagram, LimitBreak.Stat.Chance), Is.True);
+            Assert.That(LimitBreak.CanRaise(pentagram, LimitBreak.Stat.BaseDamage), Is.False, "Pentagram's table has only Chance.");
+
+            var lancet = Weapon<ClockLancetWeapon>();
+            Assert.That(LimitBreak.CanRaise(lancet, LimitBreak.Stat.Duration), Is.True);
+            Assert.That(LimitBreak.CanRaise(lancet, LimitBreak.Stat.BaseDamage) || LimitBreak.CanRaise(lancet, LimitBreak.Stat.Area), Is.False,
+                "Clock Lancet's table has only Duration.");
+            for (int i = 0; i < 200; i++) LimitBreak.Apply(lancet, LimitBreak.Stat.Duration);
+            Assert.That(lancet.LimitBreakBaseDuration + LimitBreak.DurationSeconds(lancet), Is.EqualTo(10f).Within(1e-3f), "Clock Lancet's Duration stops at 10 seconds in total.");
+            Assert.That(LimitBreak.CanRaise(lancet, LimitBreak.Stat.Duration), Is.False);
+
+            Assert.That(LimitBreak.StepFor(Weapon<FireWandWeapon>(), LimitBreak.Stat.BaseDamage), Is.EqualTo(1f), "Fire Wand: +1.");
+            Assert.That(LimitBreak.StepFor(Weapon<KnifeWeapon>(), LimitBreak.Stat.BaseDamage), Is.EqualTo(0.5f), "Knife: +0.5.");
+            Assert.That(LimitBreak.RowFor(LimitBreak.Stat.Area).Step, Is.EqualTo(0.025f));
+            Assert.That(LimitBreak.RowFor(LimitBreak.Stat.Speed).MaxTotal, Is.EqualTo(2f), "Speed up to 300% in total.");
         }
 
         [Test]

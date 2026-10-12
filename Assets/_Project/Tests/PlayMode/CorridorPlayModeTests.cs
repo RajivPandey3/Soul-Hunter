@@ -110,7 +110,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(checkedEnemies, Is.GreaterThan(20), "The castle horde spawned.");
 
             var items = Object.FindFirstObjectByType<StageItemSpawner>();
-            yield return WaitUntilRealtime(() => items.Placed.Count == 6 && items.Plates.Count == 4, "the castle's items and plates");
+            yield return WaitUntilRealtime(() => items.Placed.Count == 8 && items.Plates.Count == 4, "the castle's items and plates");
             foreach (var item in items.Placed) Assert.That(StageCorridor.Contains(item.transform.position, 0.5f), Is.True, $"{item.name} is in the corridor.");
             foreach (var plate in items.Plates) Assert.That(StageCorridor.Contains(plate.transform.position, 0.5f), Is.True, "Plates are in the corridor.");
 

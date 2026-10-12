@@ -51,6 +51,8 @@ namespace SoulHunter.Gameplay.Hazards
         CrimsonShroud,
         SoulToll,
         RailCart,
+        /// <summary>Sundered Hour (VS Infinite Corridor), added 2026-10-12: its health-halving pulse.</summary>
+        SunderedHour,
     }
 
     /// <summary>
@@ -83,12 +85,13 @@ namespace SoulHunter.Gameplay.Hazards
         public static readonly int[] ShadowStages = { 5, 9 };
         /// <summary>
         /// The VS Dairy Plant rows of The Stalker XL, minute / % chance / seconds: "8:00 Event Spawn 1, lasts 2 minutes,
-        /// 30% chance" and "12:00 Event Spawn 1, lasts 1 minute, 30% chance". The 0:00 row (1%) is left out: the owner kept
-        /// Soul Hunter's 8:00 and 12:00 placement. Each chance is divided by Luck (wiki Luck, "Skipping events": "Most map
+        /// 30% chance" and "12:00 Event Spawn 1, lasts 1 minute, 30% chance", and the 0:00 row (raw Dairy_Plant, fetched
+        /// 2026-10-12: "{{map event|The Stalker|enemy=The Stalker|amount=1|duration=120|chance=1}}", "a low chance to spawn
+        /// at the very start of the round"). Each chance is divided by Luck (wiki Luck, "Skipping events": "Most map
         /// events feature a chance for it to happen ... chanceWithLuck = eventChance / totalLuck").
         /// </summary>
         public static readonly (float minute, float chancePercent, float seconds)[] ShadowEvents =
-            { (8f, 30f, 120f), (12f, 30f, 60f) };
+            { (0f, 1f, 120f), (8f, 30f, 120f), (12f, 30f, 60f) };
 
         // The chase rhythm. The wiki: it "will follow the player around but will not actively make contact. Occasionally,
         // it will speed up or slow down, appearing to chase the player" (The_Stalker) and "greatly speeds up at fixed
@@ -181,6 +184,26 @@ namespace SoulHunter.Gameplay.Hazards
         }
 
         /// <summary>
+        /// VS Skull Pile Pile (vampire.survivors.wiki/w/Skull_Pile_Pile, raw, fetched 2026-10-13): "It spawns a pair of
+        /// columns of 12 Skull Piles on both sides of the player."
+        /// </summary>
+        public const int PileColumnLength = 12;
+
+        /// <summary>
+        /// A column shooter's spot: the first <paramref name="perColumn"/> stand in a column left of the player, the rest in
+        /// one to the right. The wiki gives no distances; the columns use the Pile Assault ellipse's own reach (as far out as
+        /// its sides, as tall as its top and bottom), which is already known to sit inside the screen.
+        /// </summary>
+        public static Vector3 PileColumnOffset(int index, int perColumn)
+        {
+            perColumn = Mathf.Max(1, perColumn);
+            bool right = index >= perColumn;
+            int slot = right ? index - perColumn : index;
+            float along = perColumn > 1 ? Mathf.Lerp(-PileRadiusZ, PileRadiusZ, slot / (float)(perColumn - 1)) : 0f;
+            return new Vector3(right ? PileRadiusX : -PileRadiusX, 0f, along);
+        }
+
+        /// <summary>
         /// Speed multiplier that gives an enemy the Death's Shadow speed whatever its data speed. <paramref name="curseAndModes"/>
         /// is the player's Curse (as the spawner uses it for speed) x the run modes' enemy speed (Hyper, Inverse). The
         /// stage's own enemy pace is not applied: the XL has its own speed.
@@ -208,6 +231,7 @@ namespace SoulHunter.Gameplay.Hazards
                 case ShadowKiller.EclipseSigil:
                 case ShadowKiller.CrimsonShroud:
                 case ShadowKiller.SoulToll:
+                case ShadowKiller.SunderedHour: // The_Stalker (re-read 2026-10-12): "Gorgeous Moon, Infinite Corridor, Crimson Shroud, Victory Sword, and Rosary cause a high-quality chest to drop"
                     return ChestTiers.StalkerHighQuality;
                 case ShadowKiller.RailCart:
                     return ChestTiers.StalkerLowQuality;
@@ -228,6 +252,7 @@ namespace SoulHunter.Gameplay.Hazards
                 if (weapon is EclipseSigilWeapon) return ShadowKiller.EclipseSigil;
                 if (weapon is PentagramWeapon) return ShadowKiller.Pentagram;
                 if (weapon is CrimsonShroudWeapon) return ShadowKiller.CrimsonShroud;
+                if (weapon is SunderedHourWeapon) return ShadowKiller.SunderedHour;
                 return ShadowKiller.None;
             }
             if (sourceName == SoulHunter.Gameplay.Pickups.ScreenWipePickup.DisplayName) return ShadowKiller.SoulToll;

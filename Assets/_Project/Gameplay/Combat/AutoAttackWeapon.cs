@@ -142,6 +142,8 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>The weapon has a chance-based effect that Limit Break can raise (Cherry Bomb, Pentagram).</summary>
         public virtual bool HasChance => false;
         /// <summary>The weapon can land critical hits now (its own chance, or Slash's).</summary>
+        /// <summary>The weapon crits on its own, without the Slash Arcana (Bloody Tear, Heaven Sword).</summary>
+        public bool HasOwnCrit => BaseCritChance > 0f;
         public bool CanCrit => BaseCritChance > 0f || (SlashArcanaActive && SlashCritChance > 0f);
 
         private float LimitBreakDurationFactor

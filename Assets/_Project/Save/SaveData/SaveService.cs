@@ -267,6 +267,178 @@ namespace SoulHunter.Core.Persistence
             Migrate(CurrentData);
         }
 
+        // ---------------------------------------------------------------- Data Recovery and Delete Save
+        // vampire.survivors.wiki/w/Options (raw, fetched 2026-10-12), Account section: "DATA RECOVERY ... Restore" and
+        // "Delete Save"; update history: "0.5.209 Savedata Recovery Menu" and "Option to easily reset Save Data ... click
+        // Delete Save and confirm through all the pop-ups". The wiki does not say what Recovery restores from or what Delete
+        // keeps, so (balance method, owner rule 2026-10-09):
+        // - Recovery restores the previous good save this service already keeps (".prev", the file before the last write),
+        //   and the save it replaces is kept beside it as ".replaced.bak", so a restore loses nothing.
+        // - Delete Save removes the progress but keeps this device's options (sound, display, the accessibility switches and
+        //   the remapped controls): a player who turned Flashing VFX off must not get the flashes back by resetting progress.
+        //   A copy of the deleted save stays on disk as ".deleted.bak" (numbered when one exists); the game never reads it.
+
+        /// <summary>What a save file holds, in the few numbers a player recognises it by.</summary>
+        public sealed class SaveSummary
+        {
+            public int Gold;
+            /// <summary>Characters bought with gold (the starting character is not in this list).</summary>
+            public int CharactersBought;
+            public int CharactersUnlocked;
+            public int PowerUpRanks;
+            public int ChestsOpened;
+            /// <summary>When the file was last written (local time); <see cref="System.DateTime.MinValue"/> when unknown.</summary>
+            public System.DateTime Written;
+        }
+
+        /// <summary>The copy of the save a restore replaced.</summary>
+        public string ReplacedBackupPath => _filePath + ".replaced.bak";
+        /// <summary>Where the last Delete Save kept its copy (null before any delete in this session).</summary>
+        public string LastDeletedBackupPath { get; private set; }
+
+        /// <summary>The save in memory, summarised.</summary>
+        public SaveSummary DescribeCurrent()
+        {
+            var summary = Summarise(CurrentData);
+            try { if (File.Exists(_filePath)) summary.Written = File.GetLastWriteTime(_filePath); } catch (System.Exception) { }
+            return summary;
+        }
+
+        /// <summary>
+        /// Reads the previous good save without changing anything. False when there is none or it cannot be read (then
+        /// Data Recovery has nothing to offer).
+        /// </summary>
+        public bool TryDescribePrevious(out SaveSummary summary)
+        {
+            summary = null;
+            WaitForBackgroundWrite(); // a queued write is about to rotate the previous save
+            if (string.IsNullOrEmpty(_filePath) || !File.Exists(PreviousPath)) return false;
+            if (!TryRead(PreviousPath, out var previous, out _)) return false;
+            Migrate(previous); // counted as the game would load it (old shop refunds, repaired lists)
+            summary = Summarise(previous);
+            try { summary.Written = File.GetLastWriteTime(PreviousPath); } catch (System.Exception) { }
+            return true;
+        }
+
+        private static SaveSummary Summarise(GameData data)
+        {
+            var summary = new SaveSummary();
+            if (data == null) return summary;
+            summary.Gold = Mathf.Max(0, data.Currency);
+            summary.CharactersBought = data.OwnedCharacters != null ? data.OwnedCharacters.Count : 0;
+            summary.CharactersUnlocked = data.UnlockedCharacters != null ? data.UnlockedCharacters.Count : 0;
+            if (data.PowerUpRanks != null)
+                foreach (var rank in data.PowerUpRanks)
+                    if (rank != null) summary.PowerUpRanks += Mathf.Max(0, rank.Rank);
+            summary.ChestsOpened = Mathf.Max(0, data.ChestsOpened);
+            return summary;
+        }
+
+        /// <summary>
+        /// Data Recovery: the previous good save becomes the save again. The save it replaces is kept as
+        /// <see cref="ReplacedBackupPath"/>. Returns false, changing nothing, when there is no readable previous save or a
+        /// file step fails.
+        /// </summary>
+        public bool RestorePrevious()
+        {
+            if (string.IsNullOrEmpty(_filePath)) return false;
+            WaitForBackgroundWrite();
+            _dirty = false; // a pending timed save belongs to the data being replaced
+            if (!File.Exists(PreviousPath) || !TryRead(PreviousPath, out var previous, out _))
+            {
+                Debug.LogWarning("[SaveService] Data Recovery: no readable previous save.");
+                return false;
+            }
+            lock (_writeLock)
+            {
+                try
+                {
+                    string restoredJson = File.ReadAllText(PreviousPath);
+                    if (File.Exists(_filePath)) File.Copy(_filePath, ReplacedBackupPath, true);
+                    File.WriteAllText(TempPath, restoredJson);
+                    // The previous save stays as ".prev" until the next write rotates it: the file is replaced without one.
+                    if (File.Exists(_filePath)) File.Delete(_filePath);
+                    File.Move(TempPath, _filePath);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[SaveService] Data Recovery failed; the save is unchanged where possible. Exception: {e.Message}");
+                    try { if (File.Exists(TempPath)) File.Delete(TempPath); } catch (System.Exception) { }
+                    // The delete may have run before the move failed: put the replaced save back.
+                    try { if (!File.Exists(_filePath) && File.Exists(ReplacedBackupPath)) File.Copy(ReplacedBackupPath, _filePath, false); } catch (System.Exception) { }
+                    return false;
+                }
+            }
+            CurrentData = previous;
+            Migrate(CurrentData);
+            LastSaveTime = Time.unscaledTime;
+            Debug.Log("[SaveService] Data Recovery: the previous save was restored.");
+            return true;
+        }
+
+        /// <summary>
+        /// Delete Save: the progress is gone and a fresh save is written; this device's options are kept. The deleted save
+        /// is first copied to ".deleted.bak" (numbered when that exists). Returns false, deleting nothing, when that copy
+        /// cannot be made.
+        /// </summary>
+        public bool DeleteSave()
+        {
+            if (string.IsNullOrEmpty(_filePath)) return false;
+            WaitForBackgroundWrite();
+            _dirty = false;
+            var old = CurrentData;
+            lock (_writeLock)
+            {
+                try
+                {
+                    string backup = _filePath + ".deleted.bak";
+                    int suffix = 1;
+                    while (File.Exists(backup)) backup = _filePath + ".deleted." + suffix++ + ".bak";
+                    if (File.Exists(_filePath)) File.Copy(_filePath, backup, false);
+                    else if (old != null) File.WriteAllText(backup, JsonUtility.ToJson(old, true)); // never saved yet: keep what is in memory
+                    else backup = null;
+                    LastDeletedBackupPath = backup;
+                    foreach (string file in new[] { _filePath, PreviousPath, TempPath })
+                        if (File.Exists(file)) File.Delete(file);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[SaveService] Delete Save failed; nothing was deleted where possible. Exception: {e.Message}");
+                    return false;
+                }
+            }
+            CurrentData = NewData();
+            KeepDeviceOptions(old, CurrentData);
+            Migrate(CurrentData);
+            Debug.Log("[SaveService] Delete Save: progress deleted, options kept.");
+            return SaveGame();
+        }
+
+        /// <summary>The options that belong to the device and the player's comfort, not to progress.</summary>
+        private static void KeepDeviceOptions(GameData from, GameData to)
+        {
+            to.SettingsMigrated = true; // the legacy PlayerPrefs are not read a second time
+            if (from == null) return;
+            to.MasterVolume = from.MasterVolume;
+            to.MusicVolume = from.MusicVolume;
+            to.SfxVolume = from.SfxVolume;
+            to.FlashingVfx = from.FlashingVfx;
+            to.DamageNumbers = from.DamageNumbers;
+            to.ScreenShake = from.ScreenShake;
+            to.WindowMode = from.WindowMode;
+            to.ResolutionIndex = from.ResolutionIndex;
+            to.RefreshRateHz = from.RefreshRateHz;
+            to.VSync = from.VSync;
+            to.DisableBlood = from.DisableBlood;
+            to.ShowStageProgression = from.ShowStageProgression;
+            to.ShowDefangedEnemies = from.ShowDefangedEnemies;
+            to.VisuallyInvertStages = from.VisuallyInvertStages;
+            to.VisibleJoystick = from.VisibleJoystick;
+            to.JoystickType = from.JoystickType;
+            to.PauseOnFocusLoss = from.PauseOnFocusLoss;
+            to.InputBindingOverrides = from.InputBindingOverrides ?? "";
+        }
+
         private static GameData NewData() => new GameData { SaveVersion = GameData.CurrentVersion };
 
         private static bool TryRead(string path, out GameData data, out string error)
@@ -353,6 +525,9 @@ namespace SoulHunter.Core.Persistence
             // VS Collection and Bestiary (P3-02, 2026-10-09): an older save has neither list; it gets the entries found from
             // the start and the Banish ranks its entry count has earned (before the locked-rank refund below reads them).
             CollectionBook.Repair(data);
+            // VS item unlocks (2026-10-12): a save from before the unlock system that shows any play keeps every item it
+            // could already have (ItemUnlocks.Repair, once); a save with no play starts with the VS locks.
+            ItemUnlocks.Repair(data);
             // VS locked PowerUps (2026-10-01): ranks bought before a PowerUp was locked are refunded (VS Refund).
             int lockedRefund = PowerUpUnlocks.RefundIfLockedRanksOwned(data);
             if (lockedRefund > 0) Debug.Log($"[SaveService] PowerUps with locked ranks refunded: +{lockedRefund} gold.");

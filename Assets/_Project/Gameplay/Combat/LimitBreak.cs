@@ -29,19 +29,102 @@ namespace SoulHunter.Gameplay.Combat
             public Row(Stat stat, float step, int rarity, float maxTotal) { Stat = stat; Step = step; Rarity = rarity; MaxTotal = maxTotal; }
         }
 
+        // Re-read 2026-10-12 (raw Limit_Break page and every weapon's own "Limit Break" table). The plain values are:
+        // Base Damage +0.5 (written "Might +0.5%" with the note "Base Damage +0.5"; +1 where a weapon's table says
+        // "+1%"), Area +2.5% up to 1000%, Speed +5% up to 300%, Duration +0.1 s up to the weapon's own total, Amount +1
+        // up to 20, Pierce +1 up to 10, Crit Chance +2.5% and Chance +5% up to 100%. The wiki's caps are totals: Area
+        // and Speed start at 100%, so their bonus stops at +900% and +200%. Amount and Pierce caps are applied to the
+        // bonus (balance method: base amounts change per level; the difference is a card or two).
         public static readonly Row[] Table =
         {
-            new Row(Stat.BaseDamage, 1f, 10, 0f),
-            new Row(Stat.Area, 0.02f, 10, 5f),
+            new Row(Stat.BaseDamage, 0.5f, 10, 0f),
+            new Row(Stat.Area, 0.025f, 10, 9f),
             new Row(Stat.Speed, 0.05f, 10, 2f),
-            new Row(Stat.Duration, 0.1f, 1, 2f),
-            new Row(Stat.Amount, 1f, 1, 10f),
+            new Row(Stat.Duration, 0.1f, 1, 0f), // capped per weapon (Profile.DurationCap)
+            new Row(Stat.Amount, 1f, 1, 20f),
             new Row(Stat.Pierce, 1f, 5, 10f),
             new Row(Stat.CritChance, 0.025f, 5, 1f),
             new Row(Stat.Chance, 0.05f, 10, 1f),
         };
 
         public static Row RowFor(Stat stat) { foreach (var row in Table) if (row.Stat == stat) return row; return Table[0]; }
+
+        /// <summary>What one weapon's wiki table offers: its stats, its Base Damage step and its Duration cap (total seconds).</summary>
+        public readonly struct Profile
+        {
+            public readonly Stat[] Offers;
+            public readonly float DamageStep;
+            public readonly float DurationCap;
+            public Profile(float damageStep, float durationCap, params Stat[] offers) { DamageStep = damageStep; DurationCap = durationCap; Offers = offers; }
+            public bool Has(Stat stat) => System.Array.IndexOf(Offers, stat) >= 0;
+        }
+
+        private const Stat D = Stat.BaseDamage, A = Stat.Area, S = Stat.Speed, T = Stat.Duration, N = Stat.Amount,
+                           P = Stat.Pierce, C = Stat.CritChance, X = Stat.Chance;
+
+        // Each weapon's own wiki table, keyed by the weapon's class. An evolution that shares its base weapon's class
+        // (Bloody Tear, Heaven Sword, Unholy Vespers, Soul Eater) has the base's rows, plus Crit Chance where it crits
+        // on its own. "Unlike most weapons, Laurel does not benefit from Limit Break" (wiki Laurel). Eclipse Sigil's
+        // table has only Amount, which Soul Hunter's Eclipse Sigil does not use, so it gets no card.
+        private static readonly Dictionary<string, Profile> Profiles = new Dictionary<string, Profile>
+        {
+            { "WhipWeapon", new Profile(0.5f, 0f, D, A, N, C) },
+            { "MagicWandWeapon", new Profile(0.5f, 0f, D, A, S, N, P) },
+            { "HolyWandWeapon", new Profile(1f, 0f, D, A, S, N, P) },
+            { "KnifeWeapon", new Profile(0.5f, 0f, D, A, S, N, P) },
+            { "ThousandEdgeWeapon", new Profile(0.5f, 0f, D, A, S, N, P) },
+            { "AxeWeapon", new Profile(0.5f, 0f, D, A, S, N, P) },
+            { "DeathSpiralWeapon", new Profile(1f, 0f, D, A, S, N) },
+            { "GunWeapon", new Profile(0.5f, 0f, D, A, S, N, P) },
+            { "CrossWeapon", new Profile(0.5f, 0f, D, A, S, N, C) },
+            { "BibleWeapon", new Profile(0.5f, 9f, D, A, S, T, N) },
+            { "FireWandWeapon", new Profile(1f, 0f, D, A, S, N) },
+            { "HellmawCometWeapon", new Profile(1f, 0f, D, A, S, N) },
+            { "GarlicWeapon", new Profile(0.5f, 0f, D, A) },
+            { "SantaWaterWeapon", new Profile(0.5f, 9f, D, A, T, N) },
+            { "DrowningChaliceWeapon", new Profile(1f, 9f, D, A, T, N) },
+            { "LightningRingWeapon", new Profile(0.5f, 0f, D, A, N) },
+            { "StormboundHaloWeapon", new Profile(0.5f, 0f, D, A, N) },
+            { "CrimsonShroudWeapon", new Profile(0.5f, 0f, D, A, N) },
+            { "PentagramWeapon", new Profile(0.5f, 0f, X) },
+            { "EclipseSigilWeapon", new Profile(0.5f, 0f) },
+            { "PeachoneWeapon", new Profile(0.5f, 9f, D, A, S, T, N) },
+            { "ClockLancetWeapon", new Profile(0.5f, 10f, T) },
+            { "BoneWeapon", new Profile(0.5f, 6f, D, A, S, T, N) },
+            { "CherryBombWeapon", new Profile(0.5f, 3f, D, A, S, T, N, X) },
+            { "RunetracerWeapon", new Profile(0.5f, 6f, D, A, S, T, N) },
+            { "SeveredFateWeapon", new Profile(1f, 6f, D, A, S, T, N) },
+            { "SongOfManaWeapon", new Profile(0.5f, 6f, D, A, T) },
+            { "RequiemOfSoulsWeapon", new Profile(1f, 6f, D, A, T) },
+            { "LaurelWeapon", new Profile(0.5f, 0f) },
+            // Added 2026-10-12, each from its own page's "Limit Break" table (raw pages fetched 2026-10-12):
+            // Ebony_Wings: Might +0.5% (Base Damage +0.5), Area, Speed, Duration up to 9.0 s, Amount.
+            { "DuskRavenWeapon", new Profile(0.5f, 9f, D, A, S, T, N) },
+            // Vandalier: "Might +1%", Area, Speed, Duration up to 9.0 s, Amount.
+            { "TwilightFlockWeapon", new Profile(1f, 9f, D, A, S, T, N) },
+            // Eight_The_Sparrow: Might +0.5%, Area, Speed, Amount, Pierce.
+            { "AzureRepeaterWeapon", new Profile(0.5f, 0f, D, A, S, N, P) },
+            // Phieraggi: "Might +1%", Area, Speed, Amount, Pierce.
+            { "RevenantWheelWeapon", new Profile(1f, 0f, D, A, S, N, P) },
+            // Infinite_Corridor: only "Duration +100ms", up to 10 seconds.
+            { "SunderedHourWeapon", new Profile(0.5f, 10f, T) },
+        };
+
+        // A weapon without a wiki table of its own (test weapons): the general rows, gated by what the weapon uses.
+        private static readonly Profile DefaultProfile = new Profile(0.5f, 2f, D, A, S, T, N, P, C, X);
+
+        /// <summary>The wiki Limit Break rows of <paramref name="weapon"/>.</summary>
+        public static Profile ProfileFor(AutoAttackWeapon weapon) =>
+            weapon != null && Profiles.TryGetValue(weapon.GetType().Name, out var profile) ? profile : DefaultProfile;
+
+        /// <summary>What one card adds to <paramref name="stat"/> of <paramref name="weapon"/>.</summary>
+        public static float StepFor(AutoAttackWeapon weapon, Stat stat)
+        {
+            if (stat != Stat.BaseDamage) return RowFor(stat).Step;
+            // Heaven Sword shares the Cross's class; its own wiki table says "+1%".
+            if (weapon != null && weapon.HasOwnCrit && weapon.GetType().Name == "CrossWeapon") return 1f;
+            return ProfileFor(weapon).DamageStep;
+        }
 
         private sealed class Bonus
         {
@@ -72,16 +155,22 @@ namespace SoulHunter.Gameplay.Combat
         public static bool CanRaise(AutoAttackWeapon weapon, Stat stat)
         {
             if (weapon == null) return false;
+            var profile = ProfileFor(weapon);
+            if (!profile.Has(stat)) return false;
             bool uses = stat switch
             {
                 Stat.Duration => weapon.LimitBreakBaseDuration > 0f,
                 Stat.Pierce => weapon.UsesPierce,
-                Stat.CritChance => weapon.CanCrit,
+                Stat.CritChance => weapon.HasOwnCrit, // the wiki lists Crit Chance only for weapons that crit on their own
                 Stat.Chance => weapon.HasChance,
                 _ => true,
             };
+            if (!uses) return false;
             var row = RowFor(stat);
-            return uses && (row.MaxTotal <= 0f || Total(weapon, stat) + row.Step <= row.MaxTotal + 1e-4f);
+            float step = StepFor(weapon, stat);
+            if (stat == Stat.Duration) // the wiki's Duration cap is the weapon's total seconds
+                return weapon.LimitBreakBaseDuration + Total(weapon, stat) + step <= profile.DurationCap + 1e-4f;
+            return row.MaxTotal <= 0f || Total(weapon, stat) + step <= row.MaxTotal + 1e-4f;
         }
 
         /// <summary>Takes one card: <paramref name="stat"/> of <paramref name="weapon"/> rises by its step.</summary>
@@ -90,11 +179,14 @@ namespace SoulHunter.Gameplay.Combat
             if (weapon == null) return;
             if (!Bonuses.TryGetValue(weapon, out var bonus)) Bonuses[weapon] = bonus = new Bonus();
             var row = RowFor(stat);
-            float total = bonus.Totals[(int)stat] + row.Step;
+            float step = StepFor(weapon, stat);
+            float total = bonus.Totals[(int)stat] + step;
             if (row.MaxTotal > 0f) total = Mathf.Min(total, row.MaxTotal);
+            if (stat == Stat.Duration && weapon.LimitBreakBaseDuration > 0f)
+                total = Mathf.Min(total, Mathf.Max(0f, ProfileFor(weapon).DurationCap - weapon.LimitBreakBaseDuration));
             bonus.Totals[(int)stat] = total;
             bonus.Cards++;
-            Debug.Log($"[LimitBreak] {weapon.name}: {stat} +{row.Step} (total {total}).");
+            Debug.Log($"[LimitBreak] {weapon.name}: {stat} +{step} (total {total}).");
         }
 
         /// <summary>Draws a stat for <paramref name="weapon"/> by the wiki rarities; false when none can rise.</summary>
@@ -167,7 +259,7 @@ namespace SoulHunter.Gameplay.Combat
                 card.Type = type;
                 card.Level = weapons.GetWeaponLevel(type) + 1;
                 card.Icon = known && iconFor != null ? iconFor(type) : null;
-                card.Description = Describe(stat) + " beyond max level.";
+                card.Description = Describe(weapon, stat) + " beyond max level.";
                 Offers[card] = (weapon, stat);
                 result.Add(card);
             }
@@ -175,10 +267,14 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>The card text for a stat (Soul Hunter's wording).</summary>
+        public static string Describe(AutoAttackWeapon weapon, Stat stat) =>
+            stat == Stat.BaseDamage && StepFor(weapon, stat) >= 1f ? "Base damage +1" : Describe(stat);
+
+        /// <summary>The card text for a stat (Soul Hunter's wording).</summary>
         public static string Describe(Stat stat) => stat switch
         {
-            Stat.BaseDamage => "Base damage +1",
-            Stat.Area => "Area +2%",
+            Stat.BaseDamage => "Base damage +0.5",
+            Stat.Area => "Area +2.5%",
             Stat.Speed => "Speed +5%",
             Stat.Duration => "Duration +0.1 s",
             Stat.Amount => "Fires 1 more",

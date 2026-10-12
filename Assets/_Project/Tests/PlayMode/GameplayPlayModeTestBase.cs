@@ -31,6 +31,9 @@ namespace SoulHunter.Tests.PlayMode
             SoulHunter.Core.Persistence.SaveService.TestSavePath =
                 System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save_copy.json");
             _errors.Clear();
+            // The start prompt (VS "PRESS TO START", 2026-10-12) shows once per launch and hides the menu's buttons until it
+            // is answered. Tests reach the menu as on a later visit; the prompt's own test sets this back to false.
+            SoulHunter.Gameplay.UI.StartPrompt.ShownThisLaunch = true;
             Application.logMessageReceived += CaptureErrors;
             // Report unrelated runtime errors in the failure message instead of
             // failing on the first one, so the flow under test stays visible.
@@ -94,6 +97,9 @@ namespace SoulHunter.Tests.PlayMode
             save.CurrentData.MusicTempo = 0;
             save.CurrentData.MusicLocked = false;
             save.CurrentData.VisuallyInvertStages = true;
+            // Every item unlocked (VS item unlocks, 2026-10-12), so tests written for the whole level-up pool keep it; a
+            // test of the locks calls ItemUnlocks.LockEverything in configureSave.
+            SoulHunter.Core.Persistence.ItemUnlocks.UnlockEverything(save.CurrentData);
             configureSave?.Invoke(save.CurrentData);
 
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");

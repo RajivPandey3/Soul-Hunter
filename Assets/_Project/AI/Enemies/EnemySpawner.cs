@@ -40,6 +40,7 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
         private int _chestElitesSpawned;
         private int _arcanaChestsSpawned;
+        private int _chestlessBossesSpawned;
         public static readonly float[] ArcanaChestMinutes = { 11f, 21f };
         private System.Collections.Generic.IReadOnlyList<StageEventEntry> _stageEvents;
         private int _nextStageEvent;
@@ -120,6 +121,7 @@ namespace SoulHunter.Gameplay.AI
             _timer = 0f;
             _chestElitesSpawned = 0;
             _arcanaChestsSpawned = 0;
+            _chestlessBossesSpawned = 0;
             _stageEvents = _currentWave.GetEvents();
             _nextStageEvent = 0;
             _eventFirings.Clear();
@@ -170,6 +172,18 @@ namespace SoulHunter.Gameplay.AI
             {
                 _arcanaChestsSpawned++;
                 SpawnChestEliteAt(ArcanaChestMinutes[_arcanaChestsSpawned - 1])?.GetComponent<EnemyDrop>()?.CarryArcanaThisLife();
+            }
+
+            // VS wave bosses that carry no chest, on every level (ChestlessWaveBosses: Level 1 Mad Forest 8:00, 21:00,
+            // 24:00; Levels 2-10 from their source stages' "Bosses & Treasure" cells without a {{treasure}}).
+            {
+                var chestless = ChestlessWaveBosses.For(progression.CurrentStage);
+                while (_chestlessBossesSpawned < chestless.Length && chestless[_chestlessBossesSpawned].minute * 60f <= _stageTimePassed)
+                {
+                    var due = chestless[_chestlessBossesSpawned++];
+                    // A boss the Debug clock skipped more than a minute past is not sent late.
+                    if (_stageTimePassed - due.minute * 60f < 60f) SpawnChestlessBoss(due.id);
+                }
             }
 
             var level = progression.CurrentLevel;
@@ -646,13 +660,15 @@ namespace SoulHunter.Gameplay.AI
         /// VS pressure plates start a map event on demand: this stage's formation of the given type, with this
         /// stage's enemies, around the player. Returns the spawned enemies (empty during the boss or a transition).
         /// </summary>
-        public List<EnemyController> TriggerStageEvent(StageEventType type, int count)
+        /// <param name="speed">Flight speed relative to the default event speed (StageEventEntry.Speed; Omens' Stampede).</param>
+        public List<EnemyController> TriggerStageEvent(StageEventType type, int count, float speed = 1f)
         {
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
             if (progression == null || progression.IsStageTransitioning || _isBossAlive || _currentWave == null)
                 return new List<EnemyController>();
             var phase = _currentWave.GetPhase(progression.StageElapsedTime);
-            return RunStageEvent(new StageEventEntry { Type = type, Count = Mathf.Max(1, count) }, progression.CurrentLevel, phase);
+            return RunStageEvent(new StageEventEntry { Type = type, Count = Mathf.Max(1, count), Speed = Mathf.Max(0.2f, speed) },
+                progression.CurrentLevel, phase);
         }
 
         /// <summary>
@@ -669,7 +685,7 @@ namespace SoulHunter.Gameplay.AI
             // sweep in from the left or right).
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
             var direction = -WaveTables.SpawnDirection(side, 1f, 0f, Random.value, Random.value);
-            BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, _spawnRadius, _formation);
+            BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, EventRadius(stageEvent.Type, direction), _formation);
             foreach (var (position, flyDirection) in _formation)
             {
                 if (EnemyController.ActiveEnemies.Count >= HardCap) break; // VS: at most 500 on screen
@@ -682,6 +698,63 @@ namespace SoulHunter.Gameplay.AI
             }
             Debug.Log($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
             return spawned;
+        }
+
+        /// <summary>Chest-less wave bosses sent on this stage so far (tests).</summary>
+        public int ChestlessBossesSpawned => _chestlessBossesSpawned;
+
+        /// <summary>
+        /// One enemy of this level's type as a wave boss without a chest (ChestlessWaveBosses; Level 1's are
+        /// MadForestEnemies.ChestlessBosses). The prefab is found among the stage wave's own enemy types by name, so no
+        /// scene or asset names it twice.
+        /// </summary>
+        public GameObject SpawnChestlessBoss(string typeId)
+        {
+            if (_currentWave == null || _currentWave.Minutes == null) return null;
+            string wanted = ChestlessWaveBosses.PrefabName(SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage, typeId);
+            if (string.IsNullOrEmpty(wanted)) return null;
+            GameObject prefab = null;
+            foreach (var minute in _currentWave.Minutes)
+            {
+                if (minute == null || minute.EnemyTypes == null) continue;
+                foreach (var type in minute.EnemyTypes)
+                    if (type != null && type.name == wanted) { prefab = type; break; }
+                if (prefab != null) break;
+            }
+            if (prefab == null) return null;
+            var boss = SpawnEnemy(prefab);
+            if (boss != null) Debug.Log($"[EnemySpawner] Chest-less wave boss {typeId} at {_stageTimePassed:0}s.");
+            return boss;
+        }
+
+        /// <summary>
+        /// How far from the player a map event's formation starts. VS wiki (Enemies): "Enemies generally spawn just outside
+        /// the screen"; the old fixed 20 units was inside a 16:9 view at its sides. A swarm or wall starts past the screen
+        /// edge it comes from; a closing ring starts past the farthest edge (the corners), so no member appears in view.
+        /// Never nearer than the old radius.
+        /// </summary>
+        public float EventRadius(StageEventType type, Vector3 travelDirection)
+        {
+            if (_playerTransform == null) return _spawnRadius;
+            var camera = Camera.main;
+            Vector3 origin = _playerTransform.position;
+            float edge;
+            if (type == StageEventType.ClosingRing)
+            {
+                edge = 0f;
+                for (int i = 0; i < 16; i++)
+                {
+                    float angle = i * Mathf.PI / 8f;
+                    edge = Mathf.Max(edge, DistanceToScreenEdge(camera, origin, new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)), _spawnRadius));
+                }
+            }
+            else
+            {
+                travelDirection.y = 0f;
+                Vector3 from = travelDirection.sqrMagnitude > 0.0001f ? -travelDirection.normalized : Vector3.back;
+                edge = DistanceToScreenEdge(camera, origin, from, _spawnRadius);
+            }
+            return Mathf.Max(_spawnRadius, edge + OffScreenMargin);
         }
 
         /// <summary>

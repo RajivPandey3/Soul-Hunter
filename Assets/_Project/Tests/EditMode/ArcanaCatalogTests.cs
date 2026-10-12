@@ -126,7 +126,10 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(ArcanaCatalog.Of(ArcanaData.ArcanaType.DivineBloodline).Weapons, Is.EquivalentTo(new[] {
                 ArcanaWeapon.Cross, ArcanaWeapon.Bible, ArcanaWeapon.Garlic, ArcanaWeapon.SantaWater, ArcanaWeapon.LightningRing, ArcanaWeapon.SongOfMana }));
             Assert.That(ArcanaCatalog.Of(ArcanaData.ArcanaType.JailOfCrystal).Weapons, Is.EquivalentTo(new[] {
-                ArcanaWeapon.MagicWand, ArcanaWeapon.HolyWand, ArcanaWeapon.Runetracer, ArcanaWeapon.SeveredFate }));
+                ArcanaWeapon.MagicWand, ArcanaWeapon.HolyWand, ArcanaWeapon.Runetracer, ArcanaWeapon.SeveredFate,
+                ArcanaWeapon.AzureRepeater })); // VS Eight The Sparrow (2026-10-12)
+            Assert.That(ArcanaManager.Identify(Weapon<AzureRepeaterWeapon>()), Is.EqualTo(ArcanaWeapon.AzureRepeater), "Not the Gun: no Heart of Fire.");
+            Assert.That(ArcanaManager.Identify(Weapon<DuskRavenWeapon>()), Is.EqualTo(ArcanaWeapon.Peachone), "VS Ebony Wings has Peachone's cards.");
             Assert.That(ArcanaCatalog.Of(ArcanaData.ArcanaType.HeartOfFire).Weapons, Is.EquivalentTo(new[] {
                 ArcanaWeapon.FireWand, ArcanaWeapon.HellmawComet, ArcanaWeapon.Gun }));
             Assert.That(ArcanaCatalog.Of(ArcanaData.ArcanaType.Beginning).Weapons, Is.EquivalentTo(new[] { ArcanaWeapon.Bone, ArcanaWeapon.CherryBomb }));

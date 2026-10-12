@@ -11,7 +11,7 @@ namespace SoulHunter.UI
     /// The VS Unlocks screen (release item P3-02, 2026-10-09; wiki Main_menu: "A menu that lists various tasks that players
     /// can accomplish to unlock new items, characters, and more", "Available by default"). One row per task (UnlockTasks),
     /// grouped as Characters, PowerUps and Features, each saying in words whether it is done, what to do and what it
-    /// unlocks. Done states come only from the save (GameData), never from AchievementManager's in-run set. The rows are not
+    /// unlocks. Done states come only from the save (GameData). The rows are not
     /// buttons (nothing to choose); keyboard and controller players scroll with the focusable scrollbar.
     /// </summary>
     public sealed class UnlocksMenuUI : MenuSectionScreen

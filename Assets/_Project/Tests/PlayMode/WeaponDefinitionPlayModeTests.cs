@@ -30,8 +30,13 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var definition in catalog.WeaponDefinitions)
             {
                 if (definition.IsPassive) continue;
-                Assert.That(definition.WeaponPrefab, Is.SameAs(weapons.LegacyWeaponObject(definition.Type)),
-                    $"{definition.Type}: the definition's prefab differs from the scene's WeaponManager wiring.");
+                // Weapons added by NewVsItemsBuilder (2026-10-12) have no scene binding: the definition is their wiring.
+                var legacy = weapons.LegacyWeaponObject(definition.Type);
+                if (legacy != null)
+                    Assert.That(definition.WeaponPrefab, Is.SameAs(legacy),
+                        $"{definition.Type}: the definition's prefab differs from the scene's WeaponManager wiring.");
+                else
+                    Assert.That(definition.WeaponPrefab, Is.Not.Null, $"{definition.Type} has neither a scene binding nor a prefab in its definition.");
                 Assert.That(weapons.GetWeaponObject(definition.Type), Is.SameAs(definition.WeaponPrefab));
             }
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));

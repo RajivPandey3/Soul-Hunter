@@ -150,7 +150,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(entries.Select(e => e.Id).Distinct().Count(), Is.EqualTo(entries.Count), "Unique ids.");
             foreach (var definition in catalog.WeaponDefinitions.Where(d => d != null))
                 Assert.That(entries.Any(e => e.Id == CollectionCatalog.ItemId(definition.Type)), Is.True, definition.DisplayName);
-            Assert.That(catalog.CollectionEvolutions, Has.Length.EqualTo(14), "The 13 Evo_ assets and Crimson Shroud.");
+            Assert.That(catalog.CollectionEvolutions, Has.Length.EqualTo(15), "The 14 Evo_ assets (Sundered Hour since 2026-10-12) and Crimson Shroud.");
             foreach (var evolution in catalog.CollectionEvolutions)
             {
                 Assert.IsNotNull(evolution);
@@ -214,7 +214,10 @@ namespace SoulHunter.Tests.EditMode
             int characters = catalog.Characters.Count(c => c != null && !CharacterUnlocks.StartsUnlocked(c));
             var tasks = UnlockTasks.All(data);
             int powerUps = PowerUpUnlocks.RerollCharacters.Length + PowerUpUnlocks.SkipSurvivals.Length + PowerUpUnlocks.BanishCollectionEntries.Length + 4;
-            Assert.That(tasks.Count, Is.EqualTo(characters + powerUps + 2));
+            // Since 2026-10-12 the list also holds every locked weapon and passive this build has, the relics and the caskets.
+            int items = ItemUnlocks.All.Count(i => i.Kind != ItemUnlockKind.FromStart && System.Enum.TryParse(i.Item, out UpgradeData.UpgradeType t) &&
+                                                   System.Enum.IsDefined(typeof(UpgradeData.UpgradeType), t));
+            Assert.That(tasks.Count, Is.EqualTo(characters + powerUps + 2 + items + RelicBook.All.Length + CasketBook.All.Length));
             Assert.That(tasks.All(t => !t.Done), Is.True, "A fresh save has done none.");
             Assert.That(tasks.Count(t => t.Group == UnlockTasks.GroupCharacters), Is.EqualTo(characters));
 

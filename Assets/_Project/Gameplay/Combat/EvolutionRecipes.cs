@@ -57,6 +57,7 @@ namespace SoulHunter.Gameplay.Combat
             };
             recipe.Items.Add(union.WeaponA);
             if (!recipe.Items.Contains(union.WeaponB)) recipe.Items.Add(union.WeaponB);
+            if (union.NeedsPassive && !recipe.Items.Contains(union.RequiredPassive)) recipe.Items.Add(union.RequiredPassive);
             return recipe;
         }
     }

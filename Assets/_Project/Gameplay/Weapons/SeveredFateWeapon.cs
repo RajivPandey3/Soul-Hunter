@@ -85,6 +85,12 @@ namespace SoulHunter.Gameplay.Combat
                 damage.DamageAmount = ScaledDamage(VsDamage);
                 damage.DamageType = DamageType.Magic;
                 damage.SourceWeaponName = "Severed Fate";
+                // VS wiki (NO_FUTURE): "a 0.5 second Hitbox Delay ... the same enemy cannot be hit more often than every
+                // half a second by the same laser".
+                var delay = laser.GetComponent<HitboxDelay>();
+                if (delay == null) delay = laser.AddComponent<HitboxDelay>();
+                delay.Delay = 0.5f;
+                delay.enabled = true;
                 AimAtHostiles(laser);
 
                 float seconds = VsDuration * DurationMultiplier;

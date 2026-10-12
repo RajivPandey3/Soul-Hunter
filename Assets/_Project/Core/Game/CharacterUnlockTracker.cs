@@ -86,8 +86,20 @@ namespace SoulHunter.Gameplay.Core
                 }
             }
             LayoutNotice();
-            if (Time.unscaledTime >= _noticeUntil) Destroy(_notice);
+            if (Time.unscaledTime < _noticeUntil) return;
+            Destroy(_notice);
+            _notice = null;
+            // A notice that a newer one replaced before it could be read comes back now.
+            if (_replaced.Count > 0) ShowNotice(_replaced.Pop());
         }
+
+        /// <summary>
+        /// Notices replaced within their first ReadSeconds (two unlocks in the same second: at 15:00 a Skip rank and an
+        /// item). The newest shows at once, as before; the ones it covered follow it, so no unlock goes unseen.
+        /// </summary>
+        private readonly System.Collections.Generic.Stack<string> _replaced = new System.Collections.Generic.Stack<string>();
+        private const float ReadSeconds = 1.5f;
+        private const int MaxReplaced = 8;
 
         /// <summary>Notice size and place, in canvas units (from the safe area's top centre).</summary>
         public const float NoticeWidth = 1000f, NoticeHeight = 97f, NoticeTop = 135f, NoticeMargin = 24f;
@@ -231,7 +243,13 @@ namespace SoulHunter.Gameplay.Core
 
         private void ShowNotice(string message)
         {
-            if (_notice != null) Destroy(_notice);
+            if (_notice != null)
+            {
+                bool unread = !_noticeSounded || _noticeUntil - Time.unscaledTime > NoticeSeconds - ReadSeconds;
+                if (unread && _noticeText != null && _noticeText.text != message && _replaced.Count < MaxReplaced)
+                    _replaced.Push(_noticeText.text);
+                Destroy(_notice);
+            }
             _notice = new GameObject("CharacterUnlockedNotice");
             var canvas = _notice.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;

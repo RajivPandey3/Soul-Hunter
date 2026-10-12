@@ -125,7 +125,7 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(OmenTable.Pool(stage, false).Any(OmenTable.IsFormation), Is.False);
                 Assert.That(pool.Distinct().Count(), Is.EqualTo(pool.Count));
             }
-            Assert.That(OmenTable.Pool(1, true).Count, Is.EqualTo(15), "Fifteen events off the Shadow's stages.");
+            Assert.That(OmenTable.Pool(1, true).Count, Is.EqualTo(19), "Nineteen events off the Shadow's stages (four added 2026-10-13).");
         }
 
         [Test]

@@ -24,9 +24,9 @@ namespace SoulHunter.Tests.EditMode
             {
                 var shadows = StageHazardTable.For(stage).Where(e => e.Kind == StageHazardKind.DeathsShadow).ToArray();
                 if (stage != 5 && stage != 9) { Assert.That(shadows, Is.Empty, $"Stage {stage}"); continue; }
-                Assert.That(shadows.Select(e => e.TimeSeconds), Is.EqualTo(new[] { 480f, 720f }), $"Stage {stage}");
-                Assert.That(shadows.Select(e => e.ChancePercent), Is.EqualTo(new[] { 30f, 30f }), $"Stage {stage}");
-                Assert.That(shadows.Select(e => e.DurationSeconds), Is.EqualTo(new[] { 120f, 60f }), $"Stage {stage}");
+                Assert.That(shadows.Select(e => e.TimeSeconds), Is.EqualTo(new[] { 0f, 480f, 720f }), $"Stage {stage}");
+                Assert.That(shadows.Select(e => e.ChancePercent), Is.EqualTo(new[] { 1f, 30f, 30f }), $"Stage {stage} (Dairy_Plant: chance=1 at 0:00)");
+                Assert.That(shadows.Select(e => e.DurationSeconds), Is.EqualTo(new[] { 120f, 120f, 60f }), $"Stage {stage}");
             }
             Assert.That(StageHazardTable.ShadowLifetimeSeconds, Is.EqualTo(120f), "VS Stalker: follows the player for 1 or 2 minutes.");
             Assert.That(StageHazardTable.ShadowScale, Is.EqualTo(1.5f));
@@ -71,13 +71,18 @@ namespace SoulHunter.Tests.EditMode
         {
             // The_Stalker: Pentagram "no chest"; Gorgeous Moon, Crimson Shroud, Rosary
             // {{treasure|evo=1|tier3=6|tier2=66|tier1=100}}; Dairy Cart {{treasure|evo=1|tier3=3|tier2=10|tier1=100}}.
-            var high = new ChestTiers(1, true, 6f, 66f, 100f);
-            var low = new ChestTiers(1, true, 3f, 10f, 100f);
+            // Both add reward4=evo|reward5=evo: "Both chests can exceptionally evolve up to 3 weapons if higher tier".
+            int extra = ChestTiers.Slot(4) | ChestTiers.Slot(5);
+            var high = new ChestTiers(1, true, 6f, 66f, 100f).WithEvolutionSlots(extra);
+            var low = new ChestTiers(1, true, 3f, 10f, 100f).WithEvolutionSlots(extra);
+            Assert.That(high.IsEvolutionSlot(0) && high.IsEvolutionSlot(3) && high.IsEvolutionSlot(4), Is.True, "Items 1, 4 and 5 can evolve.");
+            Assert.That(high.IsEvolutionSlot(1) || high.IsEvolutionSlot(2), Is.False);
+            Assert.That(ChestTiers.Late.IsEvolutionSlot(0) && !ChestTiers.Late.IsEvolutionSlot(3), Is.True, "An ordinary chest: only its first item.");
             Assert.That(ChestTiers.StalkerHighQuality, Is.EqualTo(high));
             Assert.That(ChestTiers.StalkerLowQuality, Is.EqualTo(low));
             Assert.That(StageHazardTable.ShadowChest(ShadowKiller.Pentagram).HasValue, Is.False, "Pentagram: no chest.");
             Assert.That(StageHazardTable.ShadowChest(ShadowKiller.None).HasValue, Is.False);
-            foreach (var killer in new[] { ShadowKiller.EclipseSigil, ShadowKiller.CrimsonShroud, ShadowKiller.SoulToll })
+            foreach (var killer in new[] { ShadowKiller.EclipseSigil, ShadowKiller.CrimsonShroud, ShadowKiller.SoulToll, ShadowKiller.SunderedHour })
                 Assert.That(StageHazardTable.ShadowChest(killer), Is.EqualTo((ChestTiers?)high), killer.ToString());
             Assert.That(StageHazardTable.ShadowChest(ShadowKiller.RailCart), Is.EqualTo((ChestTiers?)low));
             Assert.That(high.CanEvolve && low.CanEvolve, Is.True, "Both can evolve (evo=1).");

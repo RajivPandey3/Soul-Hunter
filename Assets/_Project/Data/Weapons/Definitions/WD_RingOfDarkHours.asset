@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_RingOfDarkHours
+  m_EditorClassIdentifier: 
+  Type: 38
+  IsPassive: 1
+  DisplayName: Ring of Dark Hours
+  Description: +5% curse.
+  Icon: {fileID: 6968413500004054039, guid: 3c28eea5e26f940439c059d9888861a4, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 9
+  Rarity: 10
+  Levels:
+  - {fileID: 11400000, guid: 67990a198c915da4181b198ec71f01ee, type: 2}
+  - {fileID: 11400000, guid: 3f8d1cf01f85a884bbfe071c2ae1a77a, type: 2}
+  - {fileID: 11400000, guid: 7cca5a8ece92fb6498f6175bdffee01e, type: 2}
+  - {fileID: 11400000, guid: 6fa02a40d63686f4b9b824730ad3b559, type: 2}
+  - {fileID: 11400000, guid: ad0b003a6bf58d348bfef82e054b626e, type: 2}
+  - {fileID: 11400000, guid: 963faa8c954f88d4ca4fb8d1b90f6bd1, type: 2}
+  - {fileID: 11400000, guid: a807bfd1bc8306041aeb0804cff72e80, type: 2}
+  - {fileID: 11400000, guid: 4326e79e1d9487c489dbe5e7367a7c30, type: 2}
+  - {fileID: 11400000, guid: 108d5095972553f40920261773773da6, type: 2}

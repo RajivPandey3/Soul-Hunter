@@ -11,6 +11,8 @@ namespace SoulHunter.Gameplay.Data
         public WeaponDefinition[] WeaponDefinitions;
         [UnityEngine.Tooltip("VS evolutions added since 2026-10-01 (EvolutionBuilder); WeaponManager adds them to the scene's list.")]
         public SoulHunter.Gameplay.Combat.WeaponEvolutionData[] Evolutions;
+        /// <summary>VS unions (built by NewVsItemsBuilder, 2026-10-12); WeaponManager adds them to the scene's list in Awake.</summary>
+        public SoulHunter.Gameplay.Combat.WeaponUnionData[] Unions;
         [UnityEngine.Tooltip("Floor tile per stage (index 0 = Level 1), used by InfiniteMap.")]
         public GameObject[] StageFloors;
         /// <summary>VS light source: the Soul Lantern, a breakable prop that drops an item (LightSourceSpawner).</summary>

@@ -423,15 +423,15 @@ namespace SoulHunter.UI
         {
             if (_statsText == null) return;
             var data = SaveData();
-            var sheet = CharacterStatSheet.Build(charData, data);
 
             // One text with values in a column (<pos>), so labels and values always share a font size.
             var text = new System.Text.StringBuilder(SoulHunter.Gameplay.UI.UITheme.Bold("Stats") + "\n");
             string bonus = ColorUtility.ToHtmlStringRGB(BonusColor);
-            foreach (var row in sheet.DisplayRows())
+            // VS (wiki Characters): character and egg values in the plain text colour, PowerUp values in the highlight.
+            foreach (var row in CharacterStatSheet.SelectRows(charData, data))
             {
                 text.Append(row.Label).Append("<pos=68%>");
-                text.Append(row.Changed ? $"<color=#{bonus}>{row.Value}</color>" : row.Value).Append('\n');
+                text.Append(row.FromPowerUps ? $"<color=#{bonus}>{row.Value}</color>" : row.Value).Append('\n');
             }
             text.Append("\nStarting Weapon\n").Append(WeaponName(charData.StartingWeapon));
             // VS stage completion panel (wiki Characters): what the "levels" sort counts for this character.

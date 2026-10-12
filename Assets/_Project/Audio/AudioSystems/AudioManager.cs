@@ -166,11 +166,12 @@ namespace SoulHunter.Gameplay.Audio
         /// <summary>
         /// A stage's music: its own track by default, or the run's Soundtrack choice with its tempo (VS Music Selection,
         /// MusicSelection: "if the player has ... manually selected a different track, that track will be played upon
-        /// entering a stage instead").
+        /// entering a stage instead"). In Inverse mode a level's own track is its mirror level's (MusicSelection.StageTrackLevel).
         /// </summary>
         public void PlayStageMusic(int stage)
         {
-            PlayMusic(MusicSelection.ClipFor(this, MusicSelection.RunChoice, stage), MusicSelection.PitchFor(MusicSelection.RunTempo));
+            int trackLevel = MusicSelection.StageTrackLevel(MusicSelection.RunChoice, stage, SoulHunter.Gameplay.Data.RunModes.Inverse);
+            PlayMusic(MusicSelection.ClipFor(this, MusicSelection.RunChoice, trackLevel), MusicSelection.PitchFor(MusicSelection.RunTempo));
         }
 
         /// <summary>The pitch the music plays at now (1 = normal).</summary>

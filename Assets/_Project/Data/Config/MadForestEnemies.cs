@@ -99,6 +99,17 @@ namespace SoulHunter.Gameplay.Data
         public const string DataFolder = "Assets/_Project/Data/Config/Enemies/MadForest";
         public const string PrefabFolder = "Assets/Prefabs/Enemies/Gameplay/MadForest";
 
+        /// <summary>
+        /// Bosses that drop no chest (raw Mad_Forest "Waves" table, fetched 2026-10-12): the "Bosses & Treasure" column
+        /// names a Giant Bat at 8:00 and a Venus at 21:00 and 24:00 with no {{treasure}}. One of that type comes when its
+        /// minute starts; like every boss it is brought back to the screen instead of being left behind.
+        /// </summary>
+        public static readonly (int minute, string id)[] ChestlessBosses =
+            { (8, "GreatGraveBat"), (21, "GraveLily"), (24, "GraveLily") };
+
+        /// <summary>The gameplay prefab's name for a type id (the file name of <see cref="PrefabPath"/>).</summary>
+        public static string PrefabName(string id) => $"SH10_L01_{id}_Gameplay";
+
         public static string DataPath(string id) => $"{DataFolder}/L01_{id}_Data.asset";
         public static string PrefabPath(string id) => $"{PrefabFolder}/SH10_L01_{id}_Gameplay.prefab";
 

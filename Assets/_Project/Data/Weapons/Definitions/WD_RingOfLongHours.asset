@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_RingOfLongHours
+  m_EditorClassIdentifier: 
+  Type: 37
+  IsPassive: 1
+  DisplayName: Ring of Long Hours
+  Description: +5% duration and +5% area.
+  Icon: {fileID: -7440709273541419159, guid: da1d3b3b1b12bc84cacefd73df9aa0bb, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 9
+  Rarity: 10
+  Levels:
+  - {fileID: 11400000, guid: f0d392750fb4d6d468341b4ec854e5d4, type: 2}
+  - {fileID: 11400000, guid: fe2cd2674d02c824aa80812b2c5148e2, type: 2}
+  - {fileID: 11400000, guid: 7b75051efba977b47b851895459f0d73, type: 2}
+  - {fileID: 11400000, guid: cc52c2251049c514684ffa9d7e88347a, type: 2}
+  - {fileID: 11400000, guid: 913c0bed64ad32140ae03b5559af83ad, type: 2}
+  - {fileID: 11400000, guid: 9c790c129a727ac4ca88570a9be2c7d7, type: 2}
+  - {fileID: 11400000, guid: 802ac37ceb10bd045a86d1eee5c8bc6c, type: 2}
+  - {fileID: 11400000, guid: c6b65a4c68a882a4c8d18cd6da9a31cc, type: 2}
+  - {fileID: 11400000, guid: d87d5ab8505604041944fe57501d7837, type: 2}

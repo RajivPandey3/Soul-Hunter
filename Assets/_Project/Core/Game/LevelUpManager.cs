@@ -482,6 +482,9 @@ namespace SoulHunter.Gameplay.Core
             List<UpgradeData> validUpgrades = new List<UpgradeData>();
             if (_weaponManager == null || _allUpgrades == null) return validUpgrades;
             var seen = new HashSet<UpgradeData.UpgradeType>();
+            // VS item unlocks (wiki Weapons / Passive_items, fetched 2026-10-12: "Most weapons must be unlocked before they
+            // can be offered to the player"): a locked item is never offered as a new item. No save (EditMode tests) = open.
+            var unlockSave = UnlockSave();
 
             foreach (var up in _allUpgrades)
             {
@@ -491,7 +494,9 @@ namespace SoulHunter.Gameplay.Core
                 // New items are only offered while a slot is free; otherwise picking
                 // one would be rejected by WeaponManager and waste the level-up.
                 if (currentLvl == up.Level - 1 && up.Level <= _weaponManager.GetMaxWeaponLevel(up.Type) &&
-                    !(currentLvl == 0 && WeaponManager.IsStagePassive(up.Type)) &&
+                    // A union's result is never offered new: it only comes from a chest (VS wiki Evolution).
+                    !(currentLvl == 0 && (WeaponManager.IsStagePassive(up.Type) || WeaponUnionData.IsUnionResult(up.Type))) &&
+                    !(currentLvl == 0 && unlockSave != null && !SoulHunter.Core.Persistence.ItemUnlocks.IsUnlocked(unlockSave, up.Type.ToString())) &&
                     _weaponManager.HasSlotFor(up.Type) && !_banishedTypes.Contains(up.Type) && seen.Add(up.Type))
                 {
                     validUpgrades.Add(up);
@@ -499,6 +504,11 @@ namespace SoulHunter.Gameplay.Core
             }
             return validUpgrades;
         }
+
+        /// <summary>The save the item locks are read from, or null when there is none.</summary>
+        private static SoulHunter.Core.Persistence.GameData UnlockSave() =>
+            SoulHunter.Core.Services.GameServices.Instance != null &&
+            SoulHunter.Core.Services.GameServices.Instance.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) ? save.CurrentData : null;
 
         private float CurrentLuck()
         {

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2db476a7ca15a964d895ccbe07b63816, type: 3}
+  m_Name: Union_RevenantWheel
+  m_EditorClassIdentifier: 
+  WeaponA: 23
+  WeaponAMaxLevel: 8
+  WeaponB: 40
+  WeaponBMaxLevel: 8
+  UnionWeaponPrefab: {fileID: 9150986175113442136, guid: 83421720c7f79614ba726a4cfbf401e8, type: 3}
+  UnionName: Union_RevenantWheel
+  UnionIcon: {fileID: 477055348758461996, guid: 7d4359b8ddc1cf94db8b593f66e4d0ae, type: 3}
+  NeedsPassive: 1
+  RequiredPassive: 33
+  RequiredPassiveMinLevel: 1
+  HasResultType: 0
+  ResultType: 0

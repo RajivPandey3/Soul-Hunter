@@ -224,6 +224,10 @@ namespace SoulHunter.Gameplay.Core
             // redirects saving to a temp file first: gold pickups save immediately and would change real progress.
             if (!HasArg(Argument)) save.UseFile(Path.Combine(Application.temporaryCachePath, "autoplay_save.json"));
             save.CurrentData.SelectedCharacterName = Config.Character;
+            // VS item unlocks (2026-10-12): bot runs measure the whole item pool, so the throw-away save has every item
+            // unlocked; -sh-autoplay-locked-items plays a new save's locked pool instead.
+            if (HasArg("-sh-autoplay-locked-items")) SoulHunter.Core.Persistence.ItemUnlocks.LockEverything(save.CurrentData);
+            else SoulHunter.Core.Persistence.ItemUnlocks.UnlockEverything(save.CurrentData);
             if (Config.Gold >= 0) save.CurrentData.Currency = Config.Gold; // the save is a throw-away one by now
             save.CurrentData.DisableBlood = Config.NoBlood;
             // VS PowerUps on the throw-away save: none, or Max Health and Recovery at their VS max with -sh-autoplay-heal-powerups.
@@ -545,8 +549,11 @@ namespace SoulHunter.Gameplay.Core
             {
                 var evolution = System.Array.Find(catalog.Evolutions, e => e != null && e.EvolvedName == name.Trim());
                 if (evolution == null) { Event("evolve-missing", $"\"name\": \"{Escape(name)}\""); continue; }
-                weapons.GiveWeapon(evolution.BaseWeapon, 8);
-                weapons.GiveWeapon(evolution.RequiredPassive, 1);
+                // Each recipe's own levels (Sundered Hour: Clock Lancet 7 and both rings at 9).
+                weapons.GiveWeapon(evolution.BaseWeapon, Mathf.Max(1, evolution.BaseWeaponMaxLevel));
+                weapons.GiveWeapon(evolution.RequiredPassive, Mathf.Max(1, evolution.RequiredPassiveMaxLevel));
+                if (evolution.AdditionalPassives != null)
+                    foreach (var extra in evolution.AdditionalPassives) weapons.GiveWeapon(extra.Type, Mathf.Max(1, extra.MinimumLevel));
                 yield return null;
                 bool ok = weapons.TryEvolveWeapon(out string evolved);
                 Event("evolve", $"\"name\": \"{Escape(name)}\", \"ok\": {(ok ? "true" : "false")}, \"got\": \"{Escape(evolved)}\"");

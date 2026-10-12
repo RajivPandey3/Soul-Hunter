@@ -43,6 +43,7 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         public const float VsInterval = 0.2f;
+        public const float VsHitboxDelay = 0.5f;
 
         protected override void Attack()
         {
@@ -64,14 +65,23 @@ namespace SoulHunter.Gameplay.Combat
                 rb.useGravity = false;
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.FreezePositionY;
-                // Bouncing logic usually handled by 3D physics material on the prefab
                 rb.linearVelocity = aim * (Speed * LevelSpeedMultiplier * SpeedMultiplier);
+                // VS wiki (Runetracer): "The runes have infinite pierce and bounce off the edges of the screen".
+                var bounce = rune.GetComponent<ScreenBounce>();
+                if (bounce == null) bounce = rune.AddComponent<ScreenBounce>();
+                bounce.enabled = true;
 
                 var damageDealer = rune.GetComponent<ProjectileDamage>();
                 if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
                 damageDealer.DamageAmount = ScaledDamage(BaseDamage);
                 damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
                 damageDealer.SourceWeaponName = "Runetracer";
+                // VS wiki (Runetracer): "a 0.5 seconds Hitbox Delay ... the same enemy cannot be hit more often than every
+                // half a second by the same rune".
+                var delay = rune.GetComponent<HitboxDelay>();
+                if (delay == null) delay = rune.AddComponent<HitboxDelay>();
+                delay.Delay = VsHitboxDelay;
+                delay.enabled = true;
                 AimAtHostiles(rune);
 
                 var lifetime = rune.GetComponent<PooledLifetime>();

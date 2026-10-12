@@ -212,7 +212,12 @@ namespace SoulHunter.Gameplay.UI
             var text = new StringBuilder();
             if (results.End == RunResults.EndKind.Victory)
                 // The owner's story, word for word (Docs/Game_Design_Document.md).
+            {
                 text.Append("<i>").Append(SoulHunter.Gameplay.Data.CampaignStory.FinalLine).Append("</i>\n");
+                // Owner-approved story layer (2026-10-13): one more line once every keepsake has been found.
+                if (SoulHunter.Gameplay.Data.StoryTwist.AllKeepsakesFound)
+                    text.Append("<i>").Append(SoulHunter.Gameplay.Data.StoryTwist.TrueEnding).Append("</i>\n");
+            }
             text.Append(UITheme.Bold(results.StageLine)).Append("\n");
             text.Append("Mode: ").Append(results.Mode).Append("     Gold bonus: ")
                 .Append(results.GoldBonusPercent >= 0 ? "+" : "").Append(results.GoldBonusPercent).Append("%\n");

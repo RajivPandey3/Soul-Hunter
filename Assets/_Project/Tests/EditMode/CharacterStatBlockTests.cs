@@ -107,6 +107,37 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(lumina["Recovery"].Value, Is.EqualTo("1.0"));
         }
 
+        /// <summary>
+        /// vampire.survivors.wiki/w/Characters, "Character stats" (raw, 2026-10-12): character and Golden Egg values are
+        /// white, PowerUp values yellow; the list ends with Reroll, Skip and Banish.
+        /// </summary>
+        [Test]
+        public void SelectRows_MarkPowerUpValues_IncludeEggs_AndShowChargesOnceOwned()
+        {
+            var isolde = Catalog("Isolde"); // her own Cooldown -15%
+            var data = new SoulHunter.Core.Persistence.GameData();
+            var plain = CharacterStatSheet.SelectRows(isolde, data).ToDictionary(r => r.Label);
+            Assert.That(plain.ContainsKey("Reroll") || plain.ContainsKey("Skip") || plain.ContainsKey("Banish"), Is.False, "No charges: no rows.");
+            Assert.That(plain["Cooldown"].Value, Is.EqualTo("-15%"));
+            Assert.That(plain["Cooldown"].FromPowerUps, Is.False, "A character's own value is not a PowerUp value.");
+
+            SoulHunter.Core.Persistence.PowerUps.SetRank(data, SoulHunter.Core.Persistence.PowerUpId.Might, 2);
+            SoulHunter.Core.Persistence.PowerUps.SetRank(data, SoulHunter.Core.Persistence.PowerUpId.Reroll, 1);
+            SoulEggs.Add(data, isolde.CharacterName, SoulEggs.Stat.Area);
+            SoulEggs.Add(data, isolde.CharacterName, SoulEggs.Stat.Area);
+            var rows = CharacterStatSheet.SelectRows(isolde, data).ToDictionary(r => r.Label);
+            Assert.That(rows["Might"].Value, Is.EqualTo("+10%"));
+            Assert.That(rows["Might"].FromPowerUps, Is.True, "Bought in the shop: the highlight colour.");
+            Assert.That(rows["Area"].Value, Is.EqualTo("+2%"), "Two Soul Eggs: +1% Area each, now shown.");
+            Assert.That(rows["Area"].FromPowerUps, Is.False, "Egg values are white like the character's own.");
+            Assert.That(rows["Cooldown"].FromPowerUps, Is.False);
+            Assert.That(rows["Reroll"].Value, Is.EqualTo("+2"), "Reroll rank 1 gives 2.");
+            Assert.That(rows["Reroll"].FromPowerUps, Is.True);
+            Assert.That(rows.ContainsKey("Skip") || rows.ContainsKey("Banish"), Is.False);
+            Assert.That(rows.Keys.Last(), Is.EqualTo("Reroll"), "The charges come last.");
+            Assert.That(rows.Keys.Contains("Magnet"), Is.True, "Magnet is in the wiki's list.");
+        }
+
         [Test]
         public void StatSheet_MatchesWhatPlayerStatsApplies()
         {

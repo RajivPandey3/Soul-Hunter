@@ -349,7 +349,10 @@ namespace SoulHunter.Gameplay.Core
 
                 // Results: in VS the counterpart is a weapon of its own (own name and damage). Soul Hunter names it after
                 // its original ("<weapon> Twin") instead of using a VS counterpart name.
-                var type = original is PeachoneWeapon ? UpgradeData.UpgradeType.Peachone : UpgradeData.UpgradeType.Gun;
+                var type = original is DuskRavenWeapon ? UpgradeData.UpgradeType.DuskRaven
+                    : original is PeachoneWeapon ? UpgradeData.UpgradeType.Peachone
+                    : original is AzureRepeaterWeapon ? UpgradeData.UpgradeType.AzureRepeater
+                    : UpgradeData.UpgradeType.Gun;
                 var definition = WeaponDefinitionLookup.Find(type);
                 var tracker = RunStatsTracker.Instance;
                 if (tracker != null) tracker.TrackWeapon(twin, UpgradeText.NameOf(type) + " Twin", definition != null ? definition.Icon : null, twin.MaxLevel, false);

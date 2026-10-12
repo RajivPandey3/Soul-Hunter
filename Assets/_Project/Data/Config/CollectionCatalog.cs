@@ -99,6 +99,12 @@ namespace SoulHunter.Gameplay.Data
             }
             foreach (var evolution in evolutions) // an evolution whose base weapon has no definition still has its entry
                 if (evolution != null) Add(Evolution(evolution, null, definitions));
+            // VS unions (added 2026-10-12). A union that is a weapon type of its own (Twilight Flock) already has its
+            // weapon entry above; one without levels (Revenant Wheel) is listed here, found once it is discovered
+            // (EvolutionDiscovery keys on the union asset's name, as for evolutions).
+            if (catalog.Unions != null)
+                foreach (var union in catalog.Unions)
+                    if (union != null && !union.HasResultType) Add(Union(union, definitions));
             foreach (var definition in definitions)
                 if (definition != null && definition.IsPassive)
                     Add(new CollectionEntry { Id = ItemId(definition.Type), Name = NameOf(definition), Description = definition.Description,
@@ -108,6 +114,14 @@ namespace SoulHunter.Gameplay.Data
                     Icon = PickupIcon(catalog, pickup.Name), Kind = CollectionKind.Pickup });
             Add(new CollectionEntry { Id = CollectionBook.SoulEggId, Name = "Soul Egg", Kind = CollectionKind.Relic, Icon = catalog.SoulEggIcon,
                 Description = "Bought from the Wandering Merchant: raises one random stat of a character for good." });
+            // Relics (RelicBook, 2026-10-12; wiki Relics: "Once collected, they are permanently added to the collection
+            // menu") and the Soul Casket (CasketBook). Their ids are the ones the Results pickup names produce, so the save
+            // has one record of each. No pictures exist yet: the cell shows the name.
+            foreach (var relic in RelicBook.All)
+                Add(new CollectionEntry { Id = RelicBook.CollectionId(relic), Name = relic.Name, Kind = CollectionKind.Relic,
+                    Description = $"Lies on Level {relic.Level}. {RelicBook.GiftText(relic)}" });
+            Add(new CollectionEntry { Id = CasketBook.CollectionId, Name = CasketBook.PickupName, Kind = CollectionKind.Relic,
+                Description = "Guarded by a ring of elites on Levels 1 to 7. Opening it unlocks a character." });
             if (catalog.Arcanas != null)
                 foreach (var arcana in catalog.Arcanas)
                     if (arcana != null)
@@ -138,6 +152,25 @@ namespace SoulHunter.Gameplay.Data
                 Name = WeaponEvolutionData.DisplayName(!string.IsNullOrEmpty(evolution.EvolvedName) ? evolution.EvolvedName : evolution.name),
                 // An evolution shows its base weapon's icon, as the HUD and the chest screen do (evolutions have no icons yet).
                 Icon = baseDefinition != null ? baseDefinition.Icon : null,
+                Description = recipe + "."
+            };
+        }
+
+        private static CollectionEntry Union(WeaponUnionData union, WeaponDefinition[] definitions)
+        {
+            string NameOfType(UpgradeData.UpgradeType type)
+            {
+                var definition = System.Array.Find(definitions, d => d != null && d.Type == type);
+                return definition != null ? definition.DisplayName : type.ToString();
+            }
+            var first = System.Array.Find(definitions, d => d != null && d.Type == union.WeaponA);
+            string recipe = $"Unites {NameOfType(union.WeaponA)} and {NameOfType(union.WeaponB)}";
+            if (union.NeedsPassive) recipe += $" with {NameOfType(union.RequiredPassive)}";
+            return new CollectionEntry
+            {
+                Id = CollectionBook.EvolutionPrefix + union.name, Kind = CollectionKind.Evolution,
+                Name = WeaponEvolutionData.DisplayName(!string.IsNullOrEmpty(union.UnionName) ? union.UnionName : union.name),
+                Icon = union.UnionIcon != null ? union.UnionIcon : first != null ? first.Icon : null,
                 Description = recipe + "."
             };
         }

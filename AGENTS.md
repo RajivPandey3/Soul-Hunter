@@ -1731,6 +1731,76 @@ Open: the phone's FPS under a full horde is not measured (the earlier 30-capped 
 
 Passed by the owner (2026-10-12: "pass, poora test chalao aur commit karo"). Full run on the final code, after the stick, round pads and 60 FPS: EditMode 891/891, PlayMode 384/384, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261012-pass-full/`).
 
+### VS table closed: open rows, new items, unlocks, caskets, relics, map (owner, 2026-10-12 and 2026-10-13)
+
+Owner: "sare pending pura karo rule wiko se lo nahi mile balance method apnao", then "bache 15 rows bhi naya system banao saath mein kuch addition ke sath" (the additions were left to the agent: "tum apna best do"). `Docs/VS_DOT_Table.md` now counts MATCH 147, PARTIAL 4, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2 (176 rows). Raw wiki pages are in the session scratchpad (`wiki/`).
+
+The owner offered their installed copy of VS as a source. Not used: the no-copy rule in section 2 forbids extracted game data, and only the owner can change that rule. Watching the running game on screen stays allowed.
+
+**Open-row pass (2026-10-12):**
+- **Limit Break per weapon** (`LimitBreak.Profile` / `ProfileFor`, from each weapon's own wiki Limit Break table): Base Damage +0.5 (+1 for Fire Wand, Holy Wand, Heaven Sword, Death Spiral, Hellmaw Comet, Drowning Chalice, Severed Fate and Requiem of Souls), Area +2.5%, Speed +5%, Amount to 20, Pierce to 10, Duration to the weapon's own total (3, 6, 9 or 10 s). Laurel and Eclipse Sigil get no cards.
+- **Stage items past the six slots** (wiki Passive_items, "Stage items"): a stage item found with no free slot becomes an extra item; a maxed one pays gold (`WeaponManager.AcquireStageItem`).
+- **Hitbox delay** (`HitboxDelay`, `ProjectileDamage.HitGate`): Runetracer 0.5 s per enemy, and it now bounces off the screen edges; Severed Fate uses the same gate.
+- **Frozen enemies can be pushed** by walking into them (`EnemyFrozenState.PushFromPlayer`, radius 0.4, Soul Hunter's number).
+- **Map-event formations start off screen** (`EnemySpawner.EventRadius`).
+- **Stalker XL:** the 1% event at 0:00, and its chests evolve items 1, 4 and 5 (`ChestTiers.EvolutionSlots`).
+- **Level 1 chest-less wave bosses** (wiki Mad_Forest): Great Grave Bat at 8:00, Grave Lily at 21:00 and 24:00, no chest (`MadForestEnemies.ChestlessBosses`).
+- **Character select:** the stat block shows Soul Egg bonuses, marks values that come from PowerUps (`Row.FromPowerUps`), and lists Reroll, Skip and Banish once owned (`CharacterStatSheet.SelectRows`).
+- Death's Shadow appears past the screen edge.
+- Validation of this pass alone: EditMode 892/892, PlayMode 387/387, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261012-vsrows-full2/`).
+
+**New items (2026-10-13; names approved by the owner, "naam theek hain").** Each follows its own wiki page; built by `NewVsItemsBuilder` (run in the isolated copy with `vsitems-build.ps1`).
+
+| Soul Hunter | VS | What it is |
+|---|---|---|
+| Miser's Idol | Stone Mask | Greed passive, found as a stage item |
+| Ring of Long Hours, Ring of Dark Hours | Silver Ring, Gold Ring | Stage items; with Clock Lancet they make Sundered Hour |
+| Sundered Hour | Infinite Corridor | Clock Lancet's evolution |
+| Dusk Raven | Ebony Wings | Weapon; Peachone's counterpart |
+| Twilight Flock | Vandalier | Union of Peachone and Dusk Raven |
+| Azure Repeater | Eight The Sparrow | The second gun |
+| Revenant Wheel | Phieraggi | Union of Gun and Azure Repeater, with Tirajisú |
+
+- Peachone now circles clockwise (wiki Peachone).
+- Sundered Hour's beams aim at the nearest enemy (owner aiming rule).
+- Revenant Wheel numbers the wiki leaves open are balance values, marked in code.
+- Not built: guards around the Rings and the Idol; the Idol on Levels 5-6. Art is placeholder, **not owner-approved**.
+
+**Item unlocks, Soul Caskets and relics.**
+- `ItemUnlocks` / `ItemUnlockTracker`: weapons and passives unlock by their VS conditions in Soul Hunter terms (Fire Wand 20 Soul Lanterns, Garlic 5 Roast Chickens, Lightning Ring 5,000 kills, Peachone 10 minutes survived ...). Nine items are open from the start. A save from before this change keeps every item (`ItemUnlock.Initialized`). `ItemUnlocks.UnlockEverything` is for tests and the bot.
+- PowerUps: Omni unlocks by holding six evolved weapons at once (Soul Hunter's condition; VS uses Torrona's Box); Charm, Defang and Preserve by relics.
+- `SoulCasket` (VS coffins): one on each of Levels 1-7, guarded by 8 elites, freeing Corvan, Draven, Gideon, Kaelen, Isolde, Seraphina and Lumina. The other characters keep their conditions.
+- `RelicPickup`: 11 relics with lasting boons and Soul Hunter names (Hordecaller's Bell, Reaper's Ledger, Beast Codex, Candle Idol, Hourglass Tear, Fate Deck, Oathbound Psalm, Fangless Vial, Bard's Echo, Mirror Shard, Last Horn).
+- The unused `AchievementManager` and `AchievementData` are deleted.
+- Two unlocks in the same second (at 15:00, a Skip rank and an item) used to leave only the last notice. The newest still shows at once, and a notice it replaced within its first 1.5 s follows it (`CharacterUnlockTracker`).
+
+**Menus and save** (both UI skills used).
+- Pause **Map** (`PauseMapScreen`, `MapMarkers`): stage items, caskets, relics and the merchant; optional guide arrows (`MapGuides`, off by default).
+- **Quick Start** (locked until Level 5 is cleared) and a start prompt (`StartPrompt`). The main menu now has nine buttons in three columns. **Layout not owner-approved.**
+- Options, **Save Data** tab (main menu only): Data Recovery, and Delete Save after six tab presses and two confirmations (`SaveService` keeps `.deleted.bak` / `.replaced.bak`).
+
+**Spawner.**
+- Chest-less wave bosses on Levels 3-6 from their source stages (`ChestlessWaveBosses`).
+  - **Known gap:** Level 5's 24:00 boss is a stand-in type with 100 x Level health and no resistances (VS 200 x Level). That is outside the 5% rule until its own enemy type is built.
+- Four more Omens (Stampede, Dread Circles, Trampling Ranks, Crossfire Rows; 19 in the pool), and the wheel also picks at 29:30.
+- Inverse music: Level n plays Level 11-n's track (`MusicSelection.StageTrackLevel`); Soul Hunter has no alternate recordings.
+
+**Story layer "He was not alone" (owner decision, 2026-10-13: "haan ye twist theek hai", "haan lines theek hai, game mein jod do").** `Docs/Game_Design_Document.md` is not edited; the layer adds to the story without changing a sentence of it.
+- The other twelve heroes are earlier hunters who made the same pact; the Death God who sealed them in Soul Caskets was Kael. The relics are his daughter's keepsakes.
+- Every line is in `StoryTwist` (Data/Config): the first and last casket lines, one line per hunter, one keepsake line per relic (11, approved in two batches), and one ending line shown under `CampaignStory.FinalLine` once every relic is found.
+- `StoryCardUI` shows a card when a casket opens or a relic is found; `RunResultsScreen` adds the ending line.
+- Tests: `StoryTwistTests` (T).
+
+**Tests added:** `NewVsItemsTests`, `ItemUnlockTests`, `SaveDataRecoveryTests`, `ChestlessBossAndOmenTests`, `StoryTwistTests` (T); `NewVsItemsPlayModeTests`, `ItemUnlockPlayModeTests`, `PauseMapPlayModeTests`, `SaveDataOptionsPlayModeTests`, `StartPromptAndQuickStartPlayModeTests`, `ChestlessBossAndOmenPlayModeTests`, `VsParityWave4PlayModeTests` (R).
+
+**Validation:**
+- First full run: EditMode 911/912, PlayMode 410/411, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-vs15-full1/`). The two failures: the catalog names Elaria "Elaria (Mage)", so she had no hunter line; and the notice defect above.
+- Second full run, after both fixes: EditMode 912/912, PlayMode 410/411, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-vs15-full2/`). The one failure was `DuplicatorPlayModeTests` Peachone, a test-side margin: its "fired together" window was 0.02 s, and two bombs (0.025 s apart, 0.065 units along the orbit) landed in frames 0.019 s apart. The window is now 0.01 s (the same frame); the first full run had passed it.
+- The Duplicator fixtures then passed 33/33 with EditMode 912/912 (`-vs15-dup/`). No single full run passed every test.
+- Not seen by eye: no build screenshots of the new screens were taken (`V` unverified).
+
+Not yet played by the owner.
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

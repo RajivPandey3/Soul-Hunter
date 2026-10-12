@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_AzureRepeater
+  m_EditorClassIdentifier: 
+  Type: 40
+  IsPassive: 0
+  DisplayName: Azure Repeater
+  Description: Shoots blue bullets in four directions at once.
+  Icon: {fileID: 477055348758461996, guid: 7d4359b8ddc1cf94db8b593f66e4d0ae, type: 3}
+  WeaponPrefab: {fileID: 3168894546186397997, guid: a338bbd0393fd7643816c385e247a331, type: 3}
+  MaxLevel: 8
+  Rarity: 50
+  Levels:
+  - {fileID: 11400000, guid: b395dafeb96e0d443abae09a7fc5a428, type: 2}
+  - {fileID: 11400000, guid: 566cbafb80200f14e9bcb62aa4ad2753, type: 2}
+  - {fileID: 11400000, guid: 43edcc809317e584cbd6af4bd1414f43, type: 2}
+  - {fileID: 11400000, guid: f23a5e74225dd1246a51c89662f90544, type: 2}
+  - {fileID: 11400000, guid: f3450a3acc2166d4bb1d4c6b357bb2eb, type: 2}
+  - {fileID: 11400000, guid: 09594a13848e2ee4d81e56ed3b84653e, type: 2}
+  - {fileID: 11400000, guid: 988eaeffefa250f4f99c951a3df34401, type: 2}
+  - {fileID: 11400000, guid: a975e1977b3139346a466cdfa5f38c51, type: 2}

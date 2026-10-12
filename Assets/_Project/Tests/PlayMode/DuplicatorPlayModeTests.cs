@@ -140,7 +140,9 @@ namespace SoulHunter.Tests.PlayMode
             int pairs = 0;
             for (int i = 0; i < shots.Count; i++)
                 for (int j = i + 1; j < shots.Count; j++)
-                    if (Mathf.Abs(shots[i].Time - shots[j].Time) < 0.02f && (shots[i].Position - shots[j].Position).sqrMagnitude < 0.01f &&
+                    // "Together" is the same frame. The window was 0.02 s, and Peachone's bombs (0.025 s apart, 0.065 units
+                    // along the orbit) landed in two frames 0.019 s apart once and counted as stacked (2026-10-13).
+                    if (Mathf.Abs(shots[i].Time - shots[j].Time) < 0.01f &&(shots[i].Position - shots[j].Position).sqrMagnitude < 0.01f &&
                         Vector3.Angle(shots[i].Forward, shots[j].Forward) < 2f && shots[i].Name == shots[j].Name)
                         pairs++;
             return pairs;

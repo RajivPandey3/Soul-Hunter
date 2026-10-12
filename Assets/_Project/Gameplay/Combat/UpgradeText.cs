@@ -37,6 +37,10 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.SongOfMana, "Piercing magic shots toward the nearest enemy." },
             { UpgradeData.UpgradeType.CherryBomb, "Bombs that bounce away and explode." },
             { UpgradeData.UpgradeType.Gun, "Shoots bullets in four directions at once." },
+            // Added 2026-10-12 (Soul Hunter's own wording, from each weapon's code).
+            { UpgradeData.UpgradeType.DuskRaven, "A dusk bird circles you the other way and drops blasts." },
+            { UpgradeData.UpgradeType.AzureRepeater, "Shoots blue bullets in four directions at once." },
+            { UpgradeData.UpgradeType.TwilightFlock, "Two spirit birds circle you both ways and rain blasts." },
         };
 
         private static readonly Dictionary<UpgradeData.UpgradeType, string> Passives = new Dictionary<UpgradeData.UpgradeType, string>
@@ -58,6 +62,9 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.Tiragisu, "+1 revival." },
             { UpgradeData.UpgradeType.MetaglioLeft, "+0.1 health per second and +5% max health." },
             { UpgradeData.UpgradeType.MetaglioRight, "+5% curse." },
+            { UpgradeData.UpgradeType.MisersIdol, "+10% greed: coins are worth more." },
+            { UpgradeData.UpgradeType.RingOfLongHours, "+5% duration and +5% area." },
+            { UpgradeData.UpgradeType.RingOfDarkHours, "+5% curse." },
         };
 
         /// <summary>
@@ -86,6 +93,10 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.Bone, new Dictionary<int, string> { { 2, "+20% area, +0.2 s duration" }, { 3, "+1 projectile, +20 damage" }, { 4, "+20% area, +50% speed" }, { 5, "+1 projectile, +20 damage" }, { 6, "+0.2 s duration" }, { 7, "+20 damage" }, { 8, "+0.2 s duration, +50% speed" } } },
             { UpgradeData.UpgradeType.CherryBomb, new Dictionary<int, string> { { 2, "+25% area, +30% speed" }, { 3, "50% chance to explode" }, { 4, "+1 projectile" }, { 5, "+5 damage, +25% area" }, { 6, "60% chance to explode" }, { 7, "+25% area, +30% speed" }, { 8, "+5 damage, +25% area" } } },
             { UpgradeData.UpgradeType.Gun, new Dictionary<int, string> { { 2, "+1 projectile" }, { 3, "+2 pierce" }, { 4, "+1 projectile" }, { 5, "+5 damage" }, { 6, "+2 pierce" }, { 7, "+5 damage, +50% speed" }, { 8, "+2 pierce" } } },
+            // The facts of the "Levels" tables of Ebony_Wings, Eight_The_Sparrow and Vandalier (raw pages, fetched 2026-10-12).
+            { UpgradeData.UpgradeType.DuskRaven, new Dictionary<int, string> { { 2, "+1 projectile, +40% area" }, { 3, "+1 projectile, +10 damage" }, { 4, "+1 projectile, -0.3 s cooldown" }, { 5, "+1 projectile, +40% area" }, { 6, "+1 projectile, +10 damage" }, { 7, "+1 projectile, -0.3 s cooldown" }, { 8, "+1 projectile, +40% area" } } },
+            { UpgradeData.UpgradeType.AzureRepeater, new Dictionary<int, string> { { 2, "+1 projectile" }, { 3, "+2 pierce" }, { 4, "+1 projectile" }, { 5, "+5 damage" }, { 6, "+2 pierce" }, { 7, "+5 damage, +50% speed" }, { 8, "+2 pierce" } } },
+            { UpgradeData.UpgradeType.TwilightFlock, new Dictionary<int, string> { { 2, "+20% area" }, { 3, "-0.3 s cooldown" }, { 4, "+20% area" }, { 5, "-0.3 s cooldown" }, { 6, "+20% area" }, { 7, "-0.3 s cooldown" }, { 8, "+20% area" } } },
         };
 
         /// <summary>What level <paramref name="level"/> of a weapon adds ("+5 damage, +10% area"), or null.</summary>

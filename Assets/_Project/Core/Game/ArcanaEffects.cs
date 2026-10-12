@@ -448,6 +448,7 @@ namespace SoulHunter.Gameplay.Core
                 case PeachoneWeapon _: return ArcanaWeapon.Peachone;
                 case BoneWeapon _: return ArcanaWeapon.Bone;
                 case CherryBombWeapon _: return ArcanaWeapon.CherryBomb;
+                case AzureRepeaterWeapon _: return ArcanaWeapon.AzureRepeater; // before the Gun: it is a GunWeapon
                 case GunWeapon _: return ArcanaWeapon.Gun;
                 case RequiemOfSoulsWeapon _: return ArcanaWeapon.RequiemOfSouls;
                 case SongOfManaWeapon _: return ArcanaWeapon.SongOfMana;
@@ -480,6 +481,7 @@ namespace SoulHunter.Gameplay.Core
             ArcanaWeapon.Bone => UpgradeData.UpgradeType.Bone,
             ArcanaWeapon.CherryBomb => UpgradeData.UpgradeType.CherryBomb,
             ArcanaWeapon.Gun => UpgradeData.UpgradeType.Gun,
+            ArcanaWeapon.AzureRepeater => UpgradeData.UpgradeType.AzureRepeater,
             ArcanaWeapon.ClockLancet => UpgradeData.UpgradeType.ClockLancet,
             _ => null
         };

@@ -92,7 +92,41 @@ namespace SoulHunter.Gameplay.Player
 
         /// <summary>Character stats plus meta power-up levels (0 when nothing was bought).</summary>
         /// <summary>Character stats plus the VS PowerUps bought in <paramref name="data"/> (none when null).</summary>
-        public static CharacterStatSheet Build(CharacterData character, SoulHunter.Core.Persistence.GameData data = null)
+        public static CharacterStatSheet Build(CharacterData character, SoulHunter.Core.Persistence.GameData data = null) =>
+            Build(character, data, true);
+
+        /// <summary>
+        /// The character select rows (vampire.survivors.wiki/w/Characters, "Character stats", raw page fetched 2026-10-12):
+        /// "Stats whose values are displayed in white are either default character stats or stats affected by Golden Eggs,
+        /// while values displayed in yellow are values added from the PowerUps shop." A row's FromPowerUps is true when the
+        /// PowerUps changed its value. The list ends with Reroll, Skip and Banish, shown once the character starts with any
+        /// (the wiki's own note: "The last 3 stats will only be displayed if they were bought ... at least once").
+        /// </summary>
+        public static Row[] SelectRows(CharacterData character, SoulHunter.Core.Persistence.GameData data)
+        {
+            var full = Build(character, data, true);
+            var withoutPowerUps = Build(character, data, false);
+            var rows = new System.Collections.Generic.List<Row>(full.DisplayRows());
+            var plain = new System.Collections.Generic.List<Row>(withoutPowerUps.DisplayRows());
+            void Charges(string label, int value, int plainValue)
+            {
+                if (value <= 0) return;
+                rows.Add(Flat(label, value));
+                plain.Add(Flat(label, plainValue));
+            }
+            Charges("Reroll", full.Reroll, withoutPowerUps.Reroll);
+            Charges("Skip", full.Skip, withoutPowerUps.Skip);
+            Charges("Banish", full.Banish, withoutPowerUps.Banish);
+            var result = rows.ToArray();
+            for (int i = 0; i < result.Length; i++) result[i].FromPowerUps = result[i].Value != plain[i].Value;
+            return result;
+        }
+
+        /// <summary>
+        /// Character stats, then the character's Soul Eggs (as SoulEggs.Apply gives them to a run), then the PowerUps when
+        /// <paramref name="withPowerUps"/> is true.
+        /// </summary>
+        public static CharacterStatSheet Build(CharacterData character, SoulHunter.Core.Persistence.GameData data, bool withPowerUps)
         {
             var sheet = new CharacterStatSheet
             {
@@ -118,7 +152,31 @@ namespace SoulHunter.Gameplay.Player
                 sheet.Greed = character.StartingGreed;
                 sheet.Curse = character.StartingCurse;
             }
-            if (data != null)
+            var eggs = data != null && character != null ? SoulEggs.For(data, character.CharacterName) : null;
+            if (eggs != null)
+            {
+                // The same amounts and caps SoulEggs.Apply and LevelUpManager give a run.
+                sheet.MaxHealth += SoulEggs.Whole(eggs.MaxHealth);
+                sheet.Recovery += eggs.Recovery;
+                sheet.Armor += UnityEngine.Mathf.Min(SoulEggs.Whole(eggs.Armor), (int)SoulEggs.ArmorCap);
+                sheet.Amount += UnityEngine.Mathf.Min(SoulEggs.Whole(eggs.Amount), (int)SoulEggs.AmountCap);
+                sheet.Revivals += SoulEggs.Whole(eggs.Revival);
+                sheet.MoveSpeed += eggs.MoveSpeed;
+                sheet.Might += UnityEngine.Mathf.Min(eggs.Might, SoulEggs.MightCap);
+                sheet.Speed += UnityEngine.Mathf.Min(eggs.Speed, SoulEggs.SpeedCap);
+                sheet.Duration += UnityEngine.Mathf.Min(eggs.Duration, SoulEggs.DurationCap);
+                sheet.Area += UnityEngine.Mathf.Min(eggs.Area, SoulEggs.AreaCap);
+                sheet.Luck += eggs.Luck;
+                sheet.Growth += eggs.Growth;
+                sheet.Greed += eggs.Greed;
+                sheet.Curse += eggs.Curse;
+                sheet.Magnet *= 1f + eggs.Magnet; // an egg's Magnet goes on the base, before the multipliers
+                sheet.Cooldown -= UnityEngine.Mathf.Min(eggs.Cooldown, SoulEggs.CooldownCap);
+                sheet.Reroll += SoulEggs.Whole(eggs.Reroll);
+                sheet.Skip += SoulEggs.Whole(eggs.Skip);
+                sheet.Banish += SoulEggs.Whole(eggs.Banish);
+            }
+            if (data != null && withPowerUps)
             {
                 // The same VS PowerUp effects a run gets (PlayerStats.ApplyPowerUps, PlayerController for Max Health).
                 int Rank(SoulHunter.Core.Persistence.PowerUpId id) => SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, id); // off = 0
@@ -140,6 +198,9 @@ namespace SoulHunter.Gameplay.Player
                 sheet.Greed += Bonus(SoulHunter.Core.Persistence.PowerUpId.Greed);
                 sheet.Curse += Bonus(SoulHunter.Core.Persistence.PowerUpId.Curse);
                 sheet.Revivals += Rank(SoulHunter.Core.Persistence.PowerUpId.Revival);
+                sheet.Reroll += UnityEngine.Mathf.RoundToInt(Bonus(SoulHunter.Core.Persistence.PowerUpId.Reroll));
+                sheet.Skip += UnityEngine.Mathf.RoundToInt(Bonus(SoulHunter.Core.Persistence.PowerUpId.Skip));
+                sheet.Banish += UnityEngine.Mathf.RoundToInt(Bonus(SoulHunter.Core.Persistence.PowerUpId.Banish));
             }
             return sheet;
         }
@@ -150,7 +211,9 @@ namespace SoulHunter.Gameplay.Player
             public string Label;
             public string Value;
             public bool Changed;
-            public Row(string label, string value, bool changed) { Label = label; Value = value; Changed = changed; }
+            /// <summary>The PowerUps shop changed this value (VS shows it in yellow on the character select screen).</summary>
+            public bool FromPowerUps;
+            public Row(string label, string value, bool changed) { Label = label; Value = value; Changed = changed; FromPowerUps = false; }
         }
 
         /// <summary>VS-style stat list: absolute health, flat bonuses as +N, multipliers as +/-%, "-" when unchanged.</summary>

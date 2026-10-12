@@ -228,7 +228,7 @@ namespace SoulHunter.Gameplay.Core
             {
                 // 1. Evolution / Union: slot 1 of a chest that can evolve (Template:Treasure), so at most one per chest
                 // (Treasure_Chest: "Generally, only one weapon can be evolved per chest").
-                if (i == 0 && tiers.CanEvolve && weaponManager != null && weaponManager.TryEvolveWeapon(out string evolvedName))
+                if (tiers.IsEvolutionSlot(i) && tiers.CanEvolve && weaponManager != null && weaponManager.TryEvolveWeapon(out string evolvedName))
                 {
                     Debug.Log($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
                     string shownName = WeaponEvolutionData.DisplayName(evolvedName);

@@ -177,6 +177,8 @@ namespace SoulHunter.Gameplay.Core
                 save.CurrentData.DisableBlood = NoBlood;
                 // A benchmark keeps measuring when its window loses focus (found 2026-09-29: two windows sat paused).
                 save.CurrentData.PauseOnFocusLoss = false;
+                // The whole item pool, as before the VS item unlocks (2026-10-12), so benchmarks stay comparable.
+                SoulHunter.Core.Persistence.ItemUnlocks.UnlockEverything(save.CurrentData);
             }
             GameServices.Instance.Get<SceneService>().LoadSceneAsync("Main_Gameplay");
             while (SceneManager.GetActiveScene().name != "Main_Gameplay" || PlayerController.Instance == null ||

@@ -54,14 +54,15 @@ namespace SoulHunter.Tests.PlayMode
                 }
                 int errorsBefore = Errors() == "(no errors logged)" ? 0 : Errors().Split('\n').Length;
                 bool hurt = false;
-                float deadline = Time.realtimeSinceStartup + 10f;
+                // Sundered Hour (VS Infinite Corridor) deals its only damage after a full rotation of twelve beams, one a second.
+                float deadline = Time.realtimeSinceStartup + (prefab.GetComponent<SunderedHourWeapon>() != null ? 20f : 10f);
                 while (!hurt && Time.realtimeSinceStartup < deadline)
                 {
                     yield return null;
                     hurt = enemies.Any(h => h == null || !h.gameObject.activeInHierarchy || h.CurrentHealth < h.MaxHealth);
                 }
                 int errorsAfter = Errors() == "(no errors logged)" ? 0 : Errors().Split('\n').Length;
-                if (!hurt) failures.Add($"{name} never hurt an enemy 3 units away within 10 s.");
+                if (!hurt) failures.Add($"{name} never hurt an enemy 3 units away in time.");
                 if (errorsAfter > errorsBefore) failures.Add($"{name} logged errors.");
                 Object.Destroy(weapon);
                 foreach (var h in enemies) if (h != null) Object.Destroy(h.gameObject);

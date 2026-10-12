@@ -159,7 +159,12 @@ namespace SoulHunter.Gameplay.Hazards
             if (prefab == null) return null;
             Vector2 dir = Random.insideUnitCircle.normalized;
             if (dir.sqrMagnitude < 0.01f) dir = Vector2.up;
-            Vector3 at = player.transform.position + new Vector3(dir.x, 0f, dir.y) * StageHazardTable.ShadowSpawnDistance;
+            // VS wiki (Enemies): "Enemies generally spawn just outside the screen". The old fixed 18 units was inside a 16:9
+            // view at its sides, so it is only the least distance now.
+            Vector3 direction = new Vector3(dir.x, 0f, dir.y);
+            float distance = Mathf.Max(StageHazardTable.ShadowSpawnDistance,
+                EnemySpawner.DistanceToScreenEdge(Camera.main, player.transform.position, direction, StageHazardTable.ShadowSpawnDistance) + EnemySpawner.OffScreenMargin);
+            Vector3 at = player.transform.position + direction * distance;
             var enemy = spawner.SpawnHazardEnemy(prefab, at);
             // VS "HP x Level", and Curse ("allows it to move very fast") with the run modes' enemy speed.
             float minutes = _progression != null ? _progression.StageElapsedTime / 60f : 0f;
@@ -239,6 +244,32 @@ namespace SoulHunter.Gameplay.Hazards
                 _pile.Add(shooter);
             }
             Debug.Log($"[StageHazards] Pile Assault: {spawned.Count} shooters on Stage {_stage}.");
+            return spawned;
+        }
+
+        /// <summary>
+        /// Two still columns of this stage's enemies, left and right of the player, that shoot at it (VS Skull Pile Pile /
+        /// the Random Event "Scorpion Lair"; Soul Hunter's Omen "Crossfire Rows"). Returns the shooters.
+        /// </summary>
+        public List<PileShooter> StartPileColumns(int perColumn = StageHazardTable.PileColumnLength,
+            float durationSeconds = StageHazardTable.PileDurationSeconds)
+        {
+            var spawned = new List<PileShooter>();
+            var spawner = Spawner();
+            var player = PlayerController.Instance;
+            if (spawner == null || player == null || InTransition() || spawner.StageEnemyPrefab == null) return spawned;
+            Vector3 centre = player.transform.position;
+            int count = Mathf.Max(1, perColumn) * 2;
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 at = StageCorridor.Clamp(centre + StageHazardTable.PileColumnOffset(i, perColumn));
+                var enemy = spawner.SpawnHazardEnemy(spawner.StageEnemyPrefab, at);
+                var shooter = PileShooter.Begin(enemy, durationSeconds, 1f + StageHazardTable.PileFireIntervalSeconds * i / count);
+                if (shooter == null) continue;
+                spawned.Add(shooter);
+                _pile.Add(shooter);
+            }
+            Debug.Log($"[StageHazards] Pile columns: {spawned.Count} shooters on Stage {_stage}.");
             return spawned;
         }
 

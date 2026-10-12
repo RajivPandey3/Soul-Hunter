@@ -104,6 +104,14 @@ namespace SoulHunter.Core.Persistence
         public int FiveItemChestsOpened;
 
         /// <summary>
+        /// VS item unlocks (ItemUnlocks, 2026-10-12): Soul Lanterns broken on this save (wiki Light_source: "Destroying 20
+        /// light sources unlocks the Fire Wand") and Roast Chickens picked up (wiki Achievements: Garlic, "Find 5 Floor
+        /// Chickens"). An older save has no such fields and loads them as 0; SaveService's repair keeps them from going negative.
+        /// </summary>
+        public int LightSourcesBroken;
+        public int FloorChickensFound;
+
+        /// <summary>
         /// VS Collection (wiki Collection): the entries "used by the player at least once in their save file", by
         /// CollectionBook id. An older save has no list; SaveService's repair adds the entries found from the start.
         /// </summary>

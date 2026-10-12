@@ -31,7 +31,7 @@ namespace SoulHunter.Editor.Content
         /// Bug MIS v2 C15/C16 (2026-10-02): names made from the enum read as stats or had odd casing ("Max Health", "Player
         /// Speed", "Song Of Mana"). Placeholder item names until Soul Hunter's own names land (owner: after the game is final).
         /// </summary>
-        private static readonly System.Collections.Generic.Dictionary<UpgradeData.UpgradeType, string> NameOverrides =
+        public static readonly System.Collections.Generic.Dictionary<UpgradeData.UpgradeType, string> NameOverrides =
             new System.Collections.Generic.Dictionary<UpgradeData.UpgradeType, string>
             {
                 { UpgradeData.UpgradeType.SongOfMana, "Song of Mana" },
@@ -39,6 +39,13 @@ namespace SoulHunter.Editor.Content
                 { UpgradeData.UpgradeType.PlayerSpeed, "Wings" },
                 { UpgradeData.UpgradeType.SkullOManiac, "Skull O'Maniac" },
                 { UpgradeData.UpgradeType.Tiragisu, "Tirajisu" },
+                // Soul Hunter's own names (2026-10-12; not yet owner-approved). NewVsItemsBuilder builds these items.
+                { UpgradeData.UpgradeType.MisersIdol, "Miser's Idol" },
+                { UpgradeData.UpgradeType.RingOfLongHours, "Ring of Long Hours" },
+                { UpgradeData.UpgradeType.RingOfDarkHours, "Ring of Dark Hours" },
+                { UpgradeData.UpgradeType.DuskRaven, "Dusk Raven" },
+                { UpgradeData.UpgradeType.AzureRepeater, "Azure Repeater" },
+                { UpgradeData.UpgradeType.TwilightFlock, "Twilight Flock" },
             };
 
         public const string Folder = "Assets/_Project/Data/Weapons/Definitions";
@@ -109,7 +116,9 @@ namespace SoulHunter.Editor.Content
                 }
                 else
                 {
-                    prefabs.TryGetValue(type, out var prefab);
+                    // Weapons added without a scene binding (NewVsItemsBuilder, 2026-10-12) keep the prefab their
+                    // definition already names.
+                    if (!prefabs.TryGetValue(type, out var prefab)) prefab = definition.WeaponPrefab;
                     definition.WeaponPrefab = prefab;
                     var weapon = prefab != null ? prefab.GetComponent<AutoAttackWeapon>() : null;
                     definition.MaxLevel = weapon != null ? weapon.MaxLevel : 0;

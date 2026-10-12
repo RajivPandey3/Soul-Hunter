@@ -50,6 +50,12 @@ namespace SoulHunter.UI
         /// right"). A short last row is centred. The two-column layout waits for the owner's approval.
         /// </summary>
         public const int MaxSingleColumn = 4;
+        /// <summary>
+        /// Beyond eight buttons (Quick Start joined on 2026-10-12, so a save with the Bestiary has nine) the block may take
+        /// three columns: three rows of three are shorter than the approved four rows, where five rows of two would squeeze
+        /// the logo to under half its size. Eight buttons keep the two columns of four. Waits for the owner's approval.
+        /// </summary>
+        public const int MaxTwoColumns = 8;
         /// <summary>The columns the buttons use now: two beyond four buttons when they fit side by side, else one.</summary>
         public int Columns { get; private set; } = 1;
 
@@ -64,7 +70,64 @@ namespace SoulHunter.UI
         {
             if (count <= MaxSingleColumn) return 1;
             var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
-            return SoulHunter.Gameplay.UI.UiScreen.ColumnsFor(roomWidth, layout.ButtonWidth, layout.ButtonGap, 2);
+            return SoulHunter.Gameplay.UI.UiScreen.ColumnsFor(roomWidth, _buttonWidth > 0f ? _buttonWidth : layout.ButtonWidth, layout.ButtonGap,
+                count > MaxTwoColumns ? 3 : 2);
+        }
+
+        // The one width every menu button has now: the theme's, or on a touch screen the widest label's (see SharedButtonWidth).
+        private float _buttonWidth;
+
+        /// <summary>
+        /// Every menu button shares one width (owner, 2026-10-08: one size and one gap). On a PC that is the theme's width.
+        /// On a touch screen a button grows to hold its label (text cannot shrink under 12 sp), so the widest label's width
+        /// is given to all of them, as a ThemedRow does for its tabs: "Quick Start: Seraphina" must not make one button
+        /// wider than its neighbours.
+        /// </summary>
+        private float SharedButtonWidth(SoulHunter.Gameplay.UI.UiThemeAsset.Layout layout)
+        {
+            float width = layout.ButtonWidth;
+            var theme = SoulHunter.Gameplay.UI.UiThemeAsset.Active;
+            foreach (var button in _buttons)
+            {
+                var element = button != null ? button.GetComponent<SoulHunter.Gameplay.UI.ThemedElement>() : null;
+                if (element == null) continue;
+                element.RowWidth = 0f;
+                if (element.StandardSize(theme) is Vector2 own) width = Mathf.Max(width, own.x);
+            }
+            foreach (var button in _buttons)
+            {
+                var element = button != null ? button.GetComponent<SoulHunter.Gameplay.UI.ThemedElement>() : null;
+                if (element != null) element.RowWidth = width;
+            }
+            return width;
+        }
+
+        private int _lastLabels;
+
+        /// <summary>
+        /// True on a touch screen when a button has grown past the shared width on its own: a label can only be measured a
+        /// frame after it is made, and its button then fits itself (ThemedElement). The block is placed again so all share it.
+        /// </summary>
+        private bool WidthsDrifted()
+        {
+            if (!SoulHunter.Gameplay.UI.UiScreen.IsTouch || _buttons == null || _buttonWidth <= 0f) return false;
+            foreach (var button in _buttons)
+                if (button != null && Mathf.Abs(((RectTransform)button.transform).rect.width - _buttonWidth) > 0.5f) return true;
+            return false;
+        }
+
+        /// <summary>Changes when a button's label does (touch only: there a label's length sets the shared width).</summary>
+        private int LabelStamp()
+        {
+            if (!SoulHunter.Gameplay.UI.UiScreen.IsTouch || _buttons == null) return 0;
+            int stamp = 17;
+            foreach (var button in _buttons)
+            {
+                var element = button != null ? button.GetComponent<SoulHunter.Gameplay.UI.ThemedElement>() : null;
+                string text = element != null ? element.LabelText : null;
+                stamp = stamp * 31 + (text != null ? text.GetHashCode() : 0);
+            }
+            return stamp;
         }
 
         public static MainMenuLayout Attach(GameObject homePanel, Button[] buttons, SoulHunter.Gameplay.UI.UITheme.IconSlot[] icons = null)
@@ -139,10 +202,11 @@ namespace SoulHunter.UI
                 Style(button, index == 0, index == count - 1, icon);
                 index++;
             }
-            // "Power Up", as the shop's title writes it (the scene's label said "Power UP").
-            if (_buttons.Length > 1 && _buttons[1] != null)
-                foreach (var label in _buttons[1].GetComponentsInChildren<TMP_Text>(true))
-                    if (label.text.Trim().Equals("Power UP", System.StringComparison.Ordinal)) label.text = "Power Up";
+            // "Power Up", as the shop's title writes it (the scene's label said "Power UP"). Whichever place it has.
+            foreach (var menuButton in _buttons)
+                if (menuButton != null)
+                    foreach (var label in menuButton.GetComponentsInChildren<TMP_Text>(true))
+                        if (label.text.Trim().Equals("Power UP", System.StringComparison.Ordinal)) label.text = "Power Up";
             PlaceButtons();
             SoulHunter.Gameplay.UI.UiThemeAsset.Changed += PlaceButtons;
             SoulHunter.Gameplay.UI.UiScreen.Changed += Fit;
@@ -164,6 +228,8 @@ namespace SoulHunter.UI
             if (this == null || _buttons == null) return;
             var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
             int count = Count(_buttons);
+            _buttonWidth = SharedButtonWidth(layout);
+            _lastLabels = LabelStamp();
             Vector2 room = Room(out bool free);
             int columns = WantedColumns(room.x, count);
             if (!free && !FitsAtFullSize(room, columns, count, layout))
@@ -178,9 +244,9 @@ namespace SoulHunter.UI
             int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
             float buttonHeight = ButtonHeight(layout);
             float stepY = buttonHeight + layout.ButtonGap;
-            float stepX = layout.ButtonWidth + layout.ButtonGap;
+            float stepX = _buttonWidth + layout.ButtonGap;
             float blockHeight = rows * buttonHeight + (rows - 1) * layout.ButtonGap;
-            float blockWidth = columns * layout.ButtonWidth + (columns - 1) * layout.ButtonGap;
+            float blockWidth = columns * _buttonWidth + (columns - 1) * layout.ButtonGap;
             if (_logo != null)
             {
                 // One group: the logo, a gap, then the button block, centred on the group's middle.
@@ -218,7 +284,7 @@ namespace SoulHunter.UI
                 var rect = (RectTransform)button.transform;
                 rect.anchorMin = rect.anchorMax = anchor;
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(layout.ButtonWidth, ButtonHeight(layout));
+                rect.sizeDelta = new Vector2(_buttonWidth > 0f ? _buttonWidth : layout.ButtonWidth, ButtonHeight(layout));
                 rect.anchoredPosition = new Vector2((column - (inRow - 1) * 0.5f) * stepX, firstCentre - row * stepY);
                 i++;
             }
@@ -262,10 +328,10 @@ namespace SoulHunter.UI
             return new Vector2(panel.rect.width * safe.width * 0.94f, panel.rect.height * safe.height * 0.94f);
         }
 
-        private static bool FitsAtFullSize(Vector2 room, int columns, int count, SoulHunter.Gameplay.UI.UiThemeAsset.Layout layout)
+        private bool FitsAtFullSize(Vector2 room, int columns, int count, SoulHunter.Gameplay.UI.UiThemeAsset.Layout layout)
         {
             int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
-            float w = columns * layout.ButtonWidth + (columns - 1) * layout.ButtonGap;
+            float w = columns * (_buttonWidth > 0f ? _buttonWidth : layout.ButtonWidth) + (columns - 1) * layout.ButtonGap;
             // Room for the buttons plus at least a small logo above them.
             float h = rows * ButtonHeight(layout) + (rows - 1) * layout.ButtonGap + layout.ButtonGap * LogoGapButtons + 80f;
             if (w <= 0f || h <= 0f) return true;
@@ -313,6 +379,7 @@ namespace SoulHunter.UI
             var screen = new Vector2(Screen.width, Screen.height);
             // Free of the frame the art covers the screen, so its drawn rect is not the frame's: only a size change refits.
             if (screen != _lastScreen || (!FreeOfFrame && _background != null && PictureRect() != _lastPicture)) Fit();
+            else if (LabelStamp() != _lastLabels || WidthsDrifted()) Fit(); // a touch screen: a new label ("Quick Start: Aria") can change the shared width
             CentreTitle();
         }
 

@@ -30,7 +30,8 @@ namespace SoulHunter.Tests.PlayMode
             PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
             _items = Object.FindFirstObjectByType<StageItemSpawner>();
             Assert.IsNotNull(_items, "Every run has a stage-item spawner. " + Errors());
-            yield return WaitUntilRealtime(() => _items.Placed.Count == 6, "the stage's six items");
+            // Four diagonal items, the two Metaglios and (2026-10-12) the two rings.
+            yield return WaitUntilRealtime(() => _items.Placed.Count == 8, "the stage's eight items");
             _start = PlayerController.Instance.transform.position;
         }
 
@@ -55,7 +56,7 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(plan.Min(e => Vector3.Distance(offset, e.Offset)), Is.LessThan(10f), $"{item.name} sits at its planned spot.");
                 Assert.That(GroundCheck.IsOpen(item.transform.position, 0.5f), Is.True, $"{item.name} lies on open ground.");
             }
-            Assert.That(_items.Placed.Count(i => i.GetComponent<StageItemPickup>() != null), Is.EqualTo(4), "A passive, a weapon and the two Metaglios.");
+            Assert.That(_items.Placed.Count(i => i.GetComponent<StageItemPickup>() != null), Is.EqualTo(6), "A passive, a weapon, the two Metaglios and the two rings.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
@@ -88,26 +89,51 @@ namespace SoulHunter.Tests.PlayMode
             // Pooled chickens and Vacuums go back to their pools and may be handed straight out again as stage 2 items.
             Assert.That(old.All(i => i == null || !i.activeInHierarchy || _items.Placed.Contains(i)), Is.True, "Stage 1 leftovers are gone.");
             Assert.That(old.Where(i => i != null && i.GetComponent<StageItemPickup>() != null), Is.Empty, "Stage 1's passive and weapon are removed.");
-            Assert.That(_items.Placed.Count, Is.EqualTo(6), "Stage 2 has its own six items.");
+            Assert.That(_items.Placed.Count, Is.EqualTo(9), "Stage 2 has its own items: the usual eight and Miser's Idol (VS Stone Mask on Inlaid Library).");
             var stage2Passive = StageItems.Plan(2).First(e => e.Kind == Kind.Passive && !UpgradeRarity.IsStageItemOnly(e.Upgrade)).Upgrade;
             Assert.That(_items.Placed.Any(i => i.GetComponent<StageItemPickup>()?.Upgrade == stage2Passive), Is.True);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
         [UnityTest]
-        public IEnumerator WithNoFreeSlot_AWeaponItemBecomesGold()
+        public IEnumerator WithNoFreeSlot_AStageItemBecomesAnExtraItem_AndAMaxedOnePaysGold()
         {
+            // VS wiki (Passive_items, "Stage items"): "If they already have 6 or more passive items, it becomes an additional
+            // passive item and can be thereafter upgraded from level ups"; Weapons: "it is possible to carry more by picking
+            // up weapons that generate with the stage".
             yield return Boot();
             var weapons = WeaponManager.Instance;
             var weaponItem = _items.Placed.Select(i => i.GetComponent<StageItemPickup>()).First(p => p != null && StageItems.Plan(1).Any(e => e.Kind == Kind.Weapon && e.Upgrade == p.Upgrade));
+            var passiveItem = _items.Placed.Select(i => i.GetComponent<StageItemPickup>()).First(p => p != null && StageItems.Plan(1).Any(e => e.Kind == Kind.Passive && e.Upgrade == p.Upgrade && !WeaponManager.IsStagePassive(e.Upgrade)));
             // Fill the six weapon slots with other weapons.
             foreach (var type in new[] { UpgradeData.UpgradeType.MagicWand, UpgradeData.UpgradeType.Garlic, UpgradeData.UpgradeType.Bible,
                                          UpgradeData.UpgradeType.Pentagram, UpgradeData.UpgradeType.Laurel, UpgradeData.UpgradeType.Gun })
                 if (weapons.GetActiveWeaponsCount() < 6 && type != weaponItem.Upgrade) weapons.GiveWeapon(type, 1);
             Assert.That(weapons.GetActiveWeaponsCount(), Is.EqualTo(6));
+            // And the six passive slots with other passives.
+            foreach (var type in new[] { UpgradeData.UpgradeType.Armor, UpgradeData.UpgradeType.EmptyTome, UpgradeData.UpgradeType.Bracer,
+                                         UpgradeData.UpgradeType.Clover, UpgradeData.UpgradeType.Crown, UpgradeData.UpgradeType.Pummarola,
+                                         UpgradeData.UpgradeType.Candelabrador })
+                if (weapons.GetPassiveCount() < 6 && type != passiveItem.Upgrade) weapons.GiveWeapon(type, 1);
+            Assert.That(weapons.GetPassiveCount(), Is.EqualTo(6));
+            Assert.That(weapons.HasSlotFor(weaponItem.Upgrade), Is.False, "A level-up could not give it.");
+
+            var weaponType = weaponItem.Upgrade;
+            Assert.That(weaponItem.Take(), Is.True, "A stage weapon goes past the six slots.");
+            Assert.That(weapons.GetWeaponLevel(weaponType), Is.EqualTo(1));
+            Assert.That(weapons.GetActiveWeaponsCount(), Is.EqualTo(7));
+            Assert.That(weapons.GetEquippedWeapons().Count, Is.EqualTo(7), "The seventh weapon is really held.");
+            var passiveType = passiveItem.Upgrade;
+            Assert.That(passiveItem.Take(), Is.True, "A stage passive goes past the six slots.");
+            Assert.That(weapons.GetWeaponLevel(passiveType), Is.EqualTo(1));
+            Assert.That(weapons.GetPassiveCount(), Is.EqualTo(7));
+            Assert.That(weapons.HasSlotFor(passiveType), Is.True, "Once held it can be levelled from level-ups.");
+
+            // A stage item of something already at its max level has no level to give: a coin bag (wiki silent; balance method).
+            weapons.GiveWeapon(passiveType, weapons.GetMaxWeaponLevel(passiveType));
+            var maxed = StageItemPickup.Create(passiveType, weapons.transform.position + Vector3.right * 30f);
             int coinsBefore = Object.FindObjectsByType<GoldPickup>(FindObjectsSortMode.None).Count(g => g.gameObject.activeInHierarchy);
-            Assert.That(weaponItem.Take(), Is.False, "No slot: not an upgrade.");
-            Assert.That(weapons.GetWeaponLevel(weaponItem.Upgrade), Is.EqualTo(0));
+            Assert.That(maxed.Take(), Is.False, "Nothing left to level.");
             Assert.That(Object.FindObjectsByType<GoldPickup>(FindObjectsSortMode.None).Count(g => g.gameObject.activeInHierarchy), Is.GreaterThan(coinsBefore),
                 "It pays out a coin bag instead.");
             yield return null;

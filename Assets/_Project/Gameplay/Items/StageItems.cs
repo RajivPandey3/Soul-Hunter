@@ -43,6 +43,19 @@ namespace SoulHunter.Gameplay.Pickups
         public const float PlateDistance = 30f;
         /// <summary>How far west / east of the start the Metaglios lie (Soul Hunter's distance; the wiki gives none).</summary>
         public const float MetaglioDistance = 45f;
+        /// <summary>
+        /// How far north / south of the start the two rings lie (VS Silver Ring / Gold Ring). The wiki gives no distance
+        /// ("Generally, it will spawn north (south) of the starting area"). Balance method: 60, further out than the
+        /// Metaglios (45) so that in the Castle corridor, where every item lies along the hallway, a ring never lands on
+        /// a Metaglio, and clear of the Rune Plates (30) and the diagonal items (55-85 on the diagonals).
+        /// </summary>
+        public const float RingDistance = 60f;
+        /// <summary>
+        /// VS wiki (Inlaid_Library, raw, fetched 2026-10-12, "Stage items"): "Stone Mask: 5 tilesets, east of the
+        /// starting area." Soul Hunter's Level 2 is Inlaid Library's counterpart; five of its 20-unit floor tiles.
+        /// </summary>
+        public const float MisersIdolDistance = 100f;
+        public const int MisersIdolStage = 2;
 
         public static List<Vector3> PlateOffsets()
         {
@@ -73,6 +86,16 @@ namespace SoulHunter.Gameplay.Pickups
             // Hunter's. The VS guards (City and Volcano Atlanteans) are not built (they need their own enemies).
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MetaglioLeft, Offset = Vector3.left * MetaglioDistance });
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MetaglioRight, Offset = Vector3.right * MetaglioDistance });
+            // VS (wiki Silver_Ring / Gold_Ring, fetched 2026-10-12): stage items "in every stage" (with a few VS-only
+            // exceptions); Silver "will spawn north of the starting area", Gold "south". The VS guards (Moon and Sun
+            // Atlanteans) are not built, as for the Metaglios.
+            plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfLongHours, Offset = Vector3.forward * RingDistance });
+            plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfDarkHours, Offset = Vector3.back * RingDistance });
+            // VS Stone Mask lies east of the start on Inlaid Library (Level 2). Its other VS stages (Moongolow, Boss Rash,
+            // Mt.Moonspell, Abyss Foscari) are not mapped: the wiki pages of Soul Hunter's Level 5 and 6 sources were not
+            // read for its place there.
+            if (s + 1 == MisersIdolStage)
+                plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MisersIdol, Offset = Vector3.right * MisersIdolDistance });
             return plan;
         }
     }
@@ -217,7 +240,10 @@ namespace SoulHunter.Gameplay.Pickups
 
     /// <summary>
     /// A passive or weapon lying on the ground (VS stage item). Walking over it gives it like a level-up would: new at
-    /// level 1, owned +1 level. With no free slot or at max level it becomes a coin bag (10 gold; provisional).
+    /// level 1, owned +1 level, and past the six slots when they are full (VS wiki Passive_items "Stage items": "If they
+    /// already have 6 or more passive items, it becomes an additional passive item"; Weapons: "it is possible to carry more
+    /// by picking up weapons that generate with the stage"). At max level it becomes a coin bag (10 gold; wiki silent,
+    /// balance method). The VS pick-up-or-discard prompt is not built: walking over the item takes it.
     /// </summary>
     public class StageItemPickup : MonoBehaviour
     {
@@ -305,10 +331,10 @@ namespace SoulHunter.Gameplay.Pickups
                     // Metaglio Left/Right: their own way in, beyond the six passive slots (WeaponManager.AcquireStagePassive).
                     upgraded = weapons.AcquireStagePassive(next);
                 }
-                else if (next != null && weapons.HasSlotFor(Upgrade) && current + 1 <= weapons.GetMaxWeaponLevel(Upgrade))
+                else if (next != null && current + 1 <= weapons.GetMaxWeaponLevel(Upgrade))
                 {
-                    weapons.ApplyUpgrade(next);
-                    upgraded = weapons.GetWeaponLevel(Upgrade) == current + 1;
+                    // VS wiki (Passive_items, "Stage items"; Weapons): a stage item goes past the six slots.
+                    upgraded = weapons.AcquireStageItem(next);
                 }
             }
             if (!upgraded && PickupPoolManager.Instance != null) PickupPoolManager.Instance.SpawnGold(transform.position, FallbackGold);

@@ -32,8 +32,11 @@ namespace SoulHunter.Tests.PlayMode
                 var manager = WeaponManager.Instance;
                 var known = GetPrivateField<System.Collections.Generic.List<WeaponEvolutionData>>(manager, "_availableEvolutions");
                 Assert.That(known, Does.Contain(evolution), $"{evolution.EvolvedName} is known to the WeaponManager.");
-                manager.GiveWeapon(evolution.BaseWeapon, 8);
-                manager.GiveWeapon(evolution.RequiredPassive, 1);
+                // Each recipe's own levels (Sundered Hour, 2026-10-12: Clock Lancet at 7 and both rings at 9).
+                manager.GiveWeapon(evolution.BaseWeapon, Mathf.Max(1, evolution.BaseWeaponMaxLevel));
+                manager.GiveWeapon(evolution.RequiredPassive, Mathf.Max(1, evolution.RequiredPassiveMaxLevel));
+                if (evolution.AdditionalPassives != null)
+                    foreach (var extra in evolution.AdditionalPassives) manager.GiveWeapon(extra.Type, Mathf.Max(1, extra.MinimumLevel));
                 yield return null;
                 var baseObject = manager.GetWeaponObject(evolution.BaseWeapon);
                 Assert.That(manager.TryEvolveWeapon(out string evolvedName), Is.True, $"{evolution.EvolvedName} evolves.");

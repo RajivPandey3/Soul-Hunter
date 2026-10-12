@@ -21,6 +21,10 @@ namespace SoulHunter.Gameplay.UI
         private Button _blindFate;
         private TextMeshProUGUI _blindFateLabel;
         private EvolutionRecipesScreen _recipes;
+        private Button _map;
+        private PauseMapScreen _mapScreen;
+        private RectTransform _subScreens;
+        private LayoutElement _subScreensLayout;
 
         public Button ResumeButton => _resume;
         /// <summary>Opens the evolution recipes (release item P3-06; EvolutionRecipesScreen).</summary>
@@ -28,6 +32,12 @@ namespace SoulHunter.Gameplay.UI
         /// <summary>The evolution recipes screen, once it has been opened (null before).</summary>
         public EvolutionRecipesScreen RecipesScreen => _recipes;
         public Button OptionsButton => _options;
+        /// <summary>Opens the pause map (VS Milky Way Map; PauseMapScreen).</summary>
+        public Button MapButton => _map;
+        /// <summary>The map screen, once it has been opened (null before).</summary>
+        public PauseMapScreen MapScreen => _mapScreen;
+        /// <summary>True when Evolutions and Map sit side by side (a short screen), false when one is above the other.</summary>
+        public bool SubScreensSideBySide { get; private set; }
         /// <summary>Switches Blind Fate (VS Random LevelUp) on or off during the run (release item P3-05).</summary>
         public Button BlindFateButton => _blindFate;
         public string BlindFateText => _blindFateLabel != null ? _blindFateLabel.text : null;
@@ -42,6 +52,7 @@ namespace SoulHunter.Gameplay.UI
             ui._system = system;
             ui.Build();
             system.OnPauseChanged += ui.HandlePauseChanged;
+            MapGuides.Ensure(); // the map's in-play guide arrows live for the run; they show only when switched on
             return ui;
         }
 
@@ -49,6 +60,23 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_system != null) _system.OnPauseChanged -= HandlePauseChanged;
             if (_recipes != null) Destroy(_recipes.gameObject);
+            if (_mapScreen != null) Destroy(_mapScreen.gameObject);
+        }
+
+        /// <summary>Opens the map over the pause menu; Back returns focus to the Map button.</summary>
+        public void OpenMap()
+        {
+            if (_mapScreen == null) _mapScreen = PauseMapScreen.Create();
+            // The pause screen steps back while the map is open, as it does for the Evolutions list and Options.
+            var group = GetComponent<CanvasGroup>();
+            if (group == null) group = gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            _mapScreen.Open(() =>
+            {
+                if (group != null) { group.alpha = 1f; group.blocksRaycasts = true; }
+                Select(_map);
+            });
         }
 
         /// <summary>Opens the evolution recipes over the pause menu; Back returns focus to the Evolutions button.</summary>
@@ -113,7 +141,18 @@ namespace SoulHunter.Gameplay.UI
                 OpenOptions);
             // VS Grimoire (wiki Grim_Grimoire): with the Grimoire and the map, an "Open Grimoire" button "just to the left of
             // the "RESUME" button". Soul Hunter has no relics yet, so it is open from the start (EvolutionRecipesScreen).
-            _evolutions = CreateButton("Evolutions_Button", Vector2.zero, Vector2.zero, "Evolutions", OpenEvolutions);
+            // Evolutions and Map share one place in the column (LayoutSubScreens): one above the other while the column
+            // has the height for six buttons (a PC, a phone held upright), side by side when it does not (a phone held
+            // sideways, where six touch-size buttons do not fit).
+            _subScreens = NewArea("SubScreens", _buttonColumn);
+            _subScreensLayout = _subScreens.gameObject.AddComponent<LayoutElement>();
+            var centre = new Vector2(0.5f, 0.5f);
+            _evolutions = CreateButton("Evolutions_Button", centre, centre, "Evolutions", OpenEvolutions, _subScreens);
+            // VS Milky Way Map (wiki Milky_Way_Map, raw, fetched 2026-10-12): the relic "permanently unlocks a viewable map
+            // in the pause menu". Soul Hunter's map is open from the start, like the Evolutions list (balance method: earlier
+            // owner decisions opened such things from the start; PauseMapScreen has the reasons).
+            _map = CreateButton("Map_Button", centre, centre, "Map", OpenMap, _subScreens);
+            LayoutSubScreens();
             // VS Random LevelUp (wiki Level_up, 1 April 2026 patch note): "'Random LevelUp' can now be toggled during a run if it
             // is already unlocked on the Stage menu". The wiki does not say where; Soul Hunter puts it in the pause menu, under
             // Evolutions, as a button that says its state in words (like FILTER: ON), so the state never rests on colour alone.
@@ -173,7 +212,46 @@ namespace SoulHunter.Gameplay.UI
             // Over every HUD label on the same canvas (the stage label was drawn over the title on a phone, 2026-10-10).
             if (paused) transform.SetAsLastSibling();
             if (paused) Select(_resume);
-            else if (_recipes != null) _recipes.Close(); // resumed with the pause key while the recipes were open
+            else
+            {
+                // Resumed with the pause key while a sub-screen was open.
+                if (_recipes != null) _recipes.Close();
+                if (_mapScreen != null) _mapScreen.Close();
+            }
+        }
+
+        private void LateUpdate() => LayoutSubScreens();
+
+        /// <summary>
+        /// Places Evolutions and Map in their shared place and tells the column how much room that takes. Both keep the
+        /// theme's standard size (the touch size on a phone); only where they sit changes.
+        /// </summary>
+        private void LayoutSubScreens()
+        {
+            if (_subScreens == null || _evolutions == null || _map == null || _buttonColumn == null) return;
+            var theme = UiThemeAsset.Active;
+            float gap = theme.Layouts.ButtonGap;
+            Vector2 a = StandardSizeOf(_evolutions, theme), b = StandardSizeOf(_map, theme);
+            // Six buttons one above the other: Resume, Options, Evolutions, Map, Blind Fate and Quit.
+            float sixRows = 4f * a.y + a.y + b.y + 5f * gap;
+            Vector2 room = _buttonColumn.rect.size;
+            bool fitsBeside = room.x >= a.x + gap + b.x;
+            bool beside = fitsBeside && room.y > 1f && room.y < sixRows - 0.5f;
+            SubScreensSideBySide = beside;
+            Vector2 size = beside ? new Vector2(a.x + gap + b.x, Mathf.Max(a.y, b.y)) : new Vector2(Mathf.Max(a.x, b.x), a.y + gap + b.y);
+            _subScreensLayout.minWidth = _subScreensLayout.preferredWidth = size.x;
+            _subScreensLayout.minHeight = _subScreensLayout.preferredHeight = size.y;
+            _subScreensLayout.flexibleWidth = _subScreensLayout.flexibleHeight = 0f;
+            var first = (RectTransform)_evolutions.transform;
+            var second = (RectTransform)_map.transform;
+            first.anchoredPosition = beside ? new Vector2(-(b.x + gap) * 0.5f, 0f) : new Vector2(0f, (b.y + gap) * 0.5f);
+            second.anchoredPosition = beside ? new Vector2((a.x + gap) * 0.5f, 0f) : new Vector2(0f, -(a.y + gap) * 0.5f);
+        }
+
+        private static Vector2 StandardSizeOf(Button button, UiThemeAsset theme)
+        {
+            var element = button.GetComponent<ThemedElement>();
+            return element != null && element.StandardSize(theme) is Vector2 size ? size : ((RectTransform)button.transform).rect.size;
         }
 
         private static void Select(Selectable target)
@@ -193,11 +271,11 @@ namespace SoulHunter.Gameplay.UI
             return rect;
         }
 
-        private Button CreateButton(string name, Vector2 min, Vector2 max, string label, System.Action onClick)
+        private Button CreateButton(string name, Vector2 min, Vector2 max, string label, System.Action onClick, RectTransform parent = null)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
-            rect.SetParent(_buttonColumn != null ? _buttonColumn : transform, false);
+            rect.SetParent(parent != null ? parent : _buttonColumn != null ? _buttonColumn : transform, false);
             rect.anchorMin = min;
             rect.anchorMax = max;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
@@ -208,7 +286,7 @@ namespace SoulHunter.Gameplay.UI
             var kind = name == "Resume_Button" ? UITheme.ButtonKind.Primary : name == "Quit_Button" ? UITheme.ButtonKind.Danger : UITheme.ButtonKind.Normal;
             // Evolutions has no icon of its own (no new art); the Options gear would say the wrong thing.
             var icon = name == "Resume_Button" ? UITheme.IconSlot.Resume : name == "Quit_Button" ? UITheme.IconSlot.Quit
-                : name == "Evolutions_Button" || name == "BlindFate_Button" ? UITheme.IconSlot.None : UITheme.IconSlot.Options;
+                : name == "Evolutions_Button" || name == "BlindFate_Button" || name == "Map_Button" ? UITheme.IconSlot.None : UITheme.IconSlot.Options;
             button.onClick.AddListener(() =>
             {
                 var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;

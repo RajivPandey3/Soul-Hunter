@@ -58,6 +58,11 @@ namespace SoulHunter.Gameplay.Core
                 if (GetComponent<CharacterUnlockTracker>() == null) gameObject.AddComponent<CharacterUnlockTracker>();
                 // VS Collection and Bestiary: what this save has used and defeated, filled during real runs (P3-02).
                 if (GetComponent<CollectionTracker>() == null) gameObject.AddComponent<CollectionTracker>();
+                // VS item unlocks (2026-10-12): lanterns, chickens and every item condition, checked during real runs.
+                if (GetComponent<ItemUnlockTracker>() == null) gameObject.AddComponent<ItemUnlockTracker>();
+                // Soul Caskets (VS coffins) and relics: placed far from each level's start.
+                if (GetComponent<SoulHunter.Gameplay.Pickups.UnlockSiteSpawner>() == null)
+                    gameObject.AddComponent<SoulHunter.Gameplay.Pickups.UnlockSiteSpawner>();
                 if (GetComponent<StageAudio>() == null) gameObject.AddComponent<StageAudio>();
                 // VS light sources: breakable Soul Lanterns appear just off-screen and drop items.
                 if (GetComponent<SoulHunter.Gameplay.Pickups.LightSourceSpawner>() == null)

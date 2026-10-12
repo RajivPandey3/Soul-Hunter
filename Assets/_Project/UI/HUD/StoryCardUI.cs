@@ -55,6 +55,10 @@ namespace SoulHunter.Gameplay.UI
             if (_group != null) return;
             Build();
             UiScreen.Changed += Layout;
+            // Owner-approved story layer (2026-10-13, StoryTwist): a line when a Soul Casket opens or a relic is found.
+            SoulHunter.Gameplay.Pickups.SoulCasket.CasketOpened += ShowCasketLine;
+            SoulHunter.Gameplay.Pickups.RelicPickup.RelicFound += ShowKeepsakeLine;
+            RefreshKeepsakes();
             _progression = LevelProgressionManager.Instance;
             if (_progression != null)
             {
@@ -67,15 +71,67 @@ namespace SoulHunter.Gameplay.UI
         private void OnDestroy()
         {
             UiScreen.Changed -= Layout;
+            SoulHunter.Gameplay.Pickups.SoulCasket.CasketOpened -= ShowCasketLine;
+            SoulHunter.Gameplay.Pickups.RelicPickup.RelicFound -= ShowKeepsakeLine;
             if (_progression != null) _progression.OnStageStarted -= Show;
+        }
+
+        private static SoulHunter.Core.Persistence.GameData SaveData() =>
+            GameServices.Instance != null ? GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>()?.CurrentData : null;
+
+        /// <summary>How many of the save's heroes other than Kael are unlocked (the sealed hunters now free).</summary>
+        public static int FreedHunters(SoulHunter.Core.Persistence.GameData data)
+        {
+            if (data == null || data.UnlockedCharacters == null) return 0;
+            var names = new HashSet<string>();
+            foreach (var name in data.UnlockedCharacters)
+            {
+                string current = GameContentCatalog.CurrentName(name);
+                if (!string.IsNullOrEmpty(current) && StoryTwist.HunterLine(current) != null) names.Add(current);
+            }
+            return names.Count;
+        }
+
+        private void ShowCasketLine(string character)
+        {
+            var data = SaveData();
+            int opened = 0;
+            if (data != null)
+                foreach (var casket in SoulHunter.Core.Persistence.CasketBook.All)
+                    if (SoulHunter.Core.Persistence.CasketBook.IsOpened(data, casket.Level)) opened++;
+            // The event comes after the casket is recorded: the save's first casket is the only one opened so far.
+            ShowText(StoryTwist.CasketTitle, StoryTwist.CasketText(GameContentCatalog.CurrentName(character), opened <= 1, FreedHunters(data) >= 12));
+        }
+
+        private void ShowKeepsakeLine(string relicId)
+        {
+            var data = SaveData();
+            RefreshKeepsakes();
+            // The event comes after the relic is recorded, so this one is the (count - 1)-th keepsake.
+            int foundBefore = data != null ? SoulHunter.Core.Persistence.RelicBook.FoundCount(data) - 1 : 0;
+            ShowText(StoryTwist.KeepsakeTitle, StoryTwist.KeepsakeLine(foundBefore));
+        }
+
+        /// <summary>The ending's extra line needs every relic found (StoryTwist.AllKeepsakesFound).</summary>
+        private static void RefreshKeepsakes()
+        {
+            var data = SaveData();
+            StoryTwist.AllKeepsakesFound = data != null &&
+                SoulHunter.Core.Persistence.RelicBook.FoundCount(data) >= SoulHunter.Core.Persistence.RelicBook.All.Length;
         }
 
         public void Show(int stage)
         {
-            if (_group == null) return;
             var level = CampaignLevelCatalog.Get(stage);
-            _title.text = $"Level {level.Number}: {level.Name}";
-            _body.text = CampaignStory.CardText(level.Number);
+            ShowText($"Level {level.Number}: {level.Name}", CampaignStory.CardText(level.Number));
+        }
+
+        /// <summary>Shows any story text on the card (StoryTwist's casket and keepsake lines), like a stage's story.</summary>
+        public void ShowText(string title, string body)
+        {
+            if (_group == null || string.IsNullOrEmpty(body)) return;
+            _title.text = title ?? "";
+            _body.text = body;
             _duration = DurationFor(_body.text);
             _shownFor = 0f;
             _group.alpha = 0f;

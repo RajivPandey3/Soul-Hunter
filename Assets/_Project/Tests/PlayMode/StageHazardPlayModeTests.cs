@@ -32,12 +32,15 @@ namespace SoulHunter.Tests.PlayMode
             var player = PlayerController.Instance;
             player.GetComponent<HealthController>().IsInvincible = invinciblePlayer;
             foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            // The 0:00 Death's Shadow roll (1%, VS Dairy Plant) must not bring a shadow into these tests.
+            if (StageHazards.Instance != null) StageHazards.Instance.ShadowRoll = () => 0.999f;
             LevelProgressionManager.Instance.StartStage(stage);
             yield return null;
             yield return null;
             yield return null;
             ClearStrays();
             _hazards = StageHazards.Instance;
+            _hazards.ShadowRoll = null;
             Assert.That(_hazards, Is.Not.Null, "GameSessionManager adds StageHazards.");
             Assert.That(_hazards.Stage, Is.EqualTo(stage));
         }
@@ -147,9 +150,11 @@ namespace SoulHunter.Tests.PlayMode
         public IEnumerator DeathsShadow_ComesOnlyWhenIts30PercentRollSucceeds_AndTheNoonOneLastsAMinute()
         {
             yield return Boot(5, invinciblePlayer: true);
+            int atStart = _hazards.ShadowEventsSkipped; // the 0:00 roll (1%) already failed in Boot
+            Assert.That(atStart, Is.EqualTo(1), "Stage 5 rolls for Death's Shadow at 0:00 too.");
             _hazards.ShadowRoll = () => 0.99f; // fails 30% / Luck
             LevelProgressionManager.Instance.SkipTo(8f * 60f);
-            yield return WaitUntilRealtime(() => _hazards.ShadowEventsSkipped == 1, "the 8:00 roll");
+            yield return WaitUntilRealtime(() => _hazards.ShadowEventsSkipped == atStart + 1, "the 8:00 roll");
             yield return null;
             Assert.That(_hazards.Shadows, Is.Empty, "A failed roll sends nothing.");
 
@@ -157,7 +162,7 @@ namespace SoulHunter.Tests.PlayMode
             LevelProgressionManager.Instance.SkipTo(12f * 60f);
             yield return WaitUntilRealtime(() => _hazards.Shadows.Count == 1, "Death's Shadow at 12:00");
             Assert.That(_hazards.Shadows[0].RemainingSeconds, Is.InRange(55f, 60f), "The 12:00 event lasts 1 minute.");
-            Assert.That(_hazards.ShadowEventsSkipped, Is.EqualTo(1));
+            Assert.That(_hazards.ShadowEventsSkipped, Is.EqualTo(atStart + 1));
             _hazards.Shadows[0].Leave();
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }

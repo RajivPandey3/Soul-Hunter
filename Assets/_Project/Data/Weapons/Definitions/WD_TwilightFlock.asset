@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_TwilightFlock
+  m_EditorClassIdentifier: 
+  Type: 41
+  IsPassive: 0
+  DisplayName: Twilight Flock
+  Description: Two spirit birds circle you both ways and rain blasts.
+  Icon: {fileID: -5696232168332645895, guid: 44b7f02a1062bc94f932c20773e61330, type: 3}
+  WeaponPrefab: {fileID: 593367082850966742, guid: dd7abb68204f1b34fb197ac5115fca07, type: 3}
+  MaxLevel: 8
+  Rarity: 50
+  Levels:
+  - {fileID: 11400000, guid: abd22fe02467e9441bf71bb6977f25c5, type: 2}
+  - {fileID: 11400000, guid: d6b3139c2377493438862ae06ac9b842, type: 2}
+  - {fileID: 11400000, guid: 779a0968ccea4264abd83ae4d37808fb, type: 2}
+  - {fileID: 11400000, guid: 89753e1aa1c0ac245b7f8a86efd44512, type: 2}
+  - {fileID: 11400000, guid: fecbd29b4f461164687cba255bbd7a3a, type: 2}
+  - {fileID: 11400000, guid: 47a16092e2a824b4e8e77999035c210f, type: 2}
+  - {fileID: 11400000, guid: 22d3b8ebb7e1f0543b9be140ddb57b2a, type: 2}
+  - {fileID: 11400000, guid: ca2549364bbce8c4fbdbd5c583eff606, type: 2}

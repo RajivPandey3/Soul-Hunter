@@ -196,8 +196,12 @@ namespace SoulHunter.Core.Persistence
     ///   15 in Moongolow, 15 in Boss Rash).
     /// - Banish (VS: 60/70/80/90/100 Collection entries): one rank per threshold, granted by CollectionBook since the
     ///   Collection exists (P3-02, 2026-10-09).
-    /// - Omni (VS: Torrona's Box at max level), Charm, Defang and Preserve (VS: the Apoplexy, Antidote and Wax Fetish
-    ///   relics): locked until Soul Hunter's relics and item come (Phases 2-3).
+    /// - Omni (wiki Omni, fetched 2026-10-12: "unlocked by leveling up Torrona's Box to the maximum level"; wiki
+    ///   Achievements: Torrona's Box, "Hold 6 different weapon evolutions at once"). Soul Hunter has no Torrona's Box, so
+    ///   the condition is the first link of that chain, which Soul Hunter can do: hold <see cref="OmniEvolutionsHeld"/>
+    ///   evolved weapons at once (balance method, 2026-10-12; recorded by ItemUnlockTracker).
+    /// - Charm, Defang and Preserve (wiki Charm / Defang / Preserve, fetched 2026-10-12: unlocked by collecting the
+    ///   Apoplexy, Antidote and Wax Fetish relics): unlocked by Soul Hunter's relics in their place (<see cref="RelicBook"/>).
     /// Every other PowerUp is open from the start, as in VS. Unlocks are ids in <see cref="GameData.UnlockedAchievements"/>.
     /// </summary>
     public static class PowerUpUnlocks
@@ -209,6 +213,26 @@ namespace SoulHunter.Core.Persistence
         public static readonly (int Level, int Seconds)[] SkipSurvivals = { (6, 900), (7, 1800), (8, 1800), (9, 900), (10, 900) };
 
         public static readonly int[] BanishCollectionEntries = { 60, 70, 80, 90, 100 };
+        /// <summary>Evolved weapons held at once that unlock Omni (wiki Achievements, Torrona's Box: 6).</summary>
+        public const int OmniEvolutionsHeld = 6;
+
+        /// <summary>Unlocks every rank of Omni, Charm, Defang or Preserve; true when it was new.</summary>
+        public static bool UnlockWhole(GameData data, PowerUpId id)
+        {
+            if (data == null) return false;
+            data.UnlockedAchievements ??= new List<string>();
+            return Add(data, WholeId(id));
+        }
+
+        /// <summary>The relic that unlocks <paramref name="id"/>, as "the X on Level n", or null.</summary>
+        private static string RelicFor(PowerUpId id)
+        {
+            foreach (var relic in RelicBook.All)
+                if (relic.UnlocksPowerUp.HasValue && relic.UnlocksPowerUp.Value == id)
+                    return $"Find the {relic.Name} on Level {relic.Level}" +
+                           (relic.AppearsAtSeconds > 0 ? $" (it appears at {relic.AppearsAtSeconds / 60}:{relic.AppearsAtSeconds % 60:00})." : ".");
+            return null;
+        }
 
         public static string RerollId(string character) => "PowerUp.Reroll.Level80." + character;
         public static string SkipId(int level, int seconds) => $"PowerUp.Skip.L{level}.{seconds / 60}m";
@@ -262,10 +286,10 @@ namespace SoulHunter.Core.Persistence
                 case PowerUpId.Banish:
                     foreach (var e in BanishCollectionEntries) if (!Has(data, BanishId(e))) return $"Fill {e} entries in the Collection.";
                     break;
-                case PowerUpId.Omni: return "Max a new passive item (coming soon).";
+                case PowerUpId.Omni: return $"Hold {OmniEvolutionsHeld} evolved weapons at once.";
                 case PowerUpId.Charm:
                 case PowerUpId.Defang:
-                case PowerUpId.Preserve: return "Find its relic on a stage (coming soon).";
+                case PowerUpId.Preserve: return RelicFor(id) ?? "Find its relic on a level.";
             }
             return null;
         }

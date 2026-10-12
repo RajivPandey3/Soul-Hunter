@@ -41,6 +41,7 @@ namespace SoulHunter.Gameplay.Core
             OnePercent = one;
             WeaponSlots = weaponSlots;
             IsArcana = arcana;
+            EvolutionSlots = 0;
         }
 
         /// <summary>Bit for item slot <paramref name="slot"/> (1 to 5) in <see cref="WeaponSlots"/>.</summary>
@@ -90,18 +91,18 @@ namespace SoulHunter.Gameplay.Core
 
         // vampire.survivors.wiki/w/The_Stalker (raw, fetched 2026-10-09), "Behavior": what an instantly killed Stalker
         // drops (Soul Hunter's Death's Shadow). Neither config gives "level"; the only fallback the wiki defines is level 1.
-        // Both also say reward4=evo|reward5=evo ("Both chests can exceptionally evolve up to 3 weapons if higher tier"),
-        // which ChestTiers cannot express (Soul Hunter evolves at most one weapon per chest): not built.
+        // Both also say reward4=evo|reward5=evo ("Both chests can exceptionally evolve up to 3 weapons if higher tier"):
+        // their fourth and fifth items can be evolutions too (EvolutionSlots), so a 5-item chest can evolve 3 weapons.
         /// <summary>
         /// Stalker killed by "Gorgeous Moon, Infinite Corridor, Crimson Shroud, Victory Sword, and Rosary" (Soul Hunter:
         /// Eclipse Sigil, Crimson Shroud, Soul Toll): {{treasure|evo=1|tier3=6|tier2=66|tier1=100|reward4=evo|reward5=evo}}.
         /// </summary>
-        public static readonly ChestTiers StalkerHighQuality = new ChestTiers(1, true, 6f, 66f, 100f);
+        public static readonly ChestTiers StalkerHighQuality = new ChestTiers(1, true, 6f, 66f, 100f).WithEvolutionSlots(Slot(4) | Slot(5));
         /// <summary>
         /// Stalker killed by "Dairy Cart and Stained Glass windows" (Soul Hunter: the rail cart):
         /// {{treasure|evo=1|tier3=3|tier2=10|tier1=100|reward4=evo|reward5=evo}}.
         /// </summary>
-        public static readonly ChestTiers StalkerLowQuality = new ChestTiers(1, true, 3f, 10f, 100f);
+        public static readonly ChestTiers StalkerLowQuality = new ChestTiers(1, true, 3f, 10f, 100f).WithEvolutionSlots(Slot(4) | Slot(5));
 
         /// <summary>
         /// The Mad Forest config of the boss scheduled at <paramref name="minute"/> (1, 3, 5, 7, 9, 10, 11, 12, 14, 15, 16,
@@ -139,15 +140,33 @@ namespace SoulHunter.Gameplay.Core
         public static ChestTiers Unscheduled(float stageSeconds) =>
             new ChestTiers(1, ChestLogicController.CanEvolveAt(stageSeconds), 3f, 10f, 100f);
 
+        /// <summary>
+        /// Items after the first that can also be an evolution (a bit per item, <see cref="Slot"/>). The wiki's
+        /// {{treasure|...|reward4=evo|reward5=evo}} on The_Stalker: "Both chests can exceptionally evolve up to 3 weapons if
+        /// higher tier". 0 for every other chest ("Generally, only one weapon can be evolved per chest").
+        /// </summary>
+        public int EvolutionSlots;
+
+        /// <summary>True when the item at <paramref name="index"/> (0-based) may be an evolution: the first always, others by <see cref="EvolutionSlots"/>.</summary>
+        public bool IsEvolutionSlot(int index) => index == 0 || (index > 0 && index < 31 && (EvolutionSlots & (1 << index)) != 0);
+
+        public ChestTiers WithEvolutionSlots(int slots)
+        {
+            var copy = this;
+            copy.EvolutionSlots = slots;
+            return copy;
+        }
+
         public bool Equals(ChestTiers other) =>
             Level == other.Level && CanEvolve == other.CanEvolve && IsArcana == other.IsArcana && WeaponSlots == other.WeaponSlots &&
+            EvolutionSlots == other.EvolutionSlots &&
             Mathf.Approximately(FivePercent, other.FivePercent) && Mathf.Approximately(ThreePercent, other.ThreePercent) &&
             Mathf.Approximately(OnePercent, other.OnePercent);
 
         public override bool Equals(object obj) => obj is ChestTiers other && Equals(other);
 
         public override int GetHashCode() =>
-            (Level, CanEvolve, IsArcana, WeaponSlots, FivePercent, ThreePercent, OnePercent).GetHashCode();
+            (Level, CanEvolve, IsArcana, WeaponSlots, EvolutionSlots, FivePercent, ThreePercent, OnePercent).GetHashCode();
 
         public override string ToString() =>
             $"level={Level} evo={(CanEvolve ? 1 : 0)} tier3={FivePercent} tier2={ThreePercent} tier1={OnePercent} weaponSlots={WeaponSlots}{(IsArcana ? " Arcana" : "")}";
