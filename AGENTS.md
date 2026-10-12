@@ -1727,6 +1727,8 @@ VS looked at on the owner's laptop (2026-10-12, screen only, about 80 s; no file
 
 Open: the phone's FPS under a full horde is not measured (the earlier 30-capped bot passes fell to 21-22 once); touch control art; an Orientation option in Options.
 
+**App icon** (owner, 2026-10-12: the installed app showed Unity's icon; "start ke baad unity logo ke saath jo hudi bala picture hai wahi bana do", then "icon full bright, full contrast bala banao"; passed the same day): the hooded hunter of the splash logo (`Assets/sprite_126.png`, upscaled 4x with Real-ESRGAN, `ArtSource/SH10_AppIcon/`) on a dark plate at full brightness and contrast, 512 px, built by `ArtSource/Generators/build_app_icon.py` to `Assets/_Project/Art/AppIcon/SH10_AppIcon.png`. `SoulHunterBuildRunner.ApplyAppIcon` sets it as the default icon in the Android and Windows builds. Mistake on the way: a hand-written two-line `.meta` made Unity import the picture as a Cubemap, so two builds kept Unity's icon; the meta now has full texture settings. Seen on the phone's app drawer and App info page (`run-20261012-android13`, the APK is there). The Windows build's icon was not checked.
+
 Passed by the owner (2026-10-12: "pass, poora test chalao aur commit karo"). Full run on the final code, after the stick, round pads and 60 FPS: EditMode 891/891, PlayMode 384/384, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261012-pass-full/`).
 
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
