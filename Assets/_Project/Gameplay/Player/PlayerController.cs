@@ -54,6 +54,9 @@ namespace SoulHunter.Gameplay.Player
         public PlayerStats Stats => _stats != null ? _stats : (_stats = GetComponent<PlayerStats>());
 
         public Rigidbody Rigidbody { get; private set; }
+        /// <summary>The hero's body radius and the layers that block it (ObstacleSlide).</summary>
+        public float BodyRadius { get; private set; } = 0.4f;
+        public int ObstacleMask { get; private set; }
         private Vector2 _eventBusInput;
 
         /// <summary>
@@ -144,6 +147,14 @@ namespace SoulHunter.Gameplay.Player
             Rigidbody = GetComponent<Rigidbody>();
             // Physics movement ko render frames ke beech smooth rakho.
             Rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+            // Slippery obstacles (ObstacleSlide): no friction on the hero's body, and its radius for the slide's probes.
+            ObstacleMask = LayerMask.GetMask("Obstacle");
+            foreach (var body in GetComponents<Collider>())
+            {
+                if (body.isTrigger) continue;
+                body.sharedMaterial = ObstacleSlide.Slippery;
+                if (body is CapsuleCollider capsule) BodyRadius = capsule.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z);
+            }
             if (Camera.main != null) _movementCamera = Camera.main.transform;
             _scanner = GetComponent<SoulHunter.Gameplay.Physics.EnvironmentScanner>();
             Animator = GetComponentInChildren<SoulHunter.Gameplay.Animation.EntityAnimator>();

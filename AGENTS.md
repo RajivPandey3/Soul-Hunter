@@ -1676,6 +1676,59 @@ Validation:
   - the first volley's last pool was reused in the same frame at the same distance from the hero, so the counter did not see a new shot.
   - The test now waits, with the weapon's timer held, until the earlier shots are gone. The Duplicator fixtures then passed 33/33 (`-wave3-dup/`).
 
+### Mobile: both orientations from the same screens (owner, 2026-10-10 to 2026-10-12)
+
+Owner decision (2026-10-10): the game plays in landscape and in portrait, from the exact same screens, which adjust themselves; no second "portrait" copy of any screen. VS wiki (Options, raw 2026-10-10) has a mobile Orientation option with Portrait as default; auto-adjusting to both is an owner exception.
+
+Why: a phone run (realme RMX5004, 1080x2400 at 480 dpi) showed the 16:9-only UI broken in portrait and every control at 10-25 dp.
+
+**Rules** (UI/HUD/Theme):
+- One scaling rule for every canvas (`ResponsiveCanvas`, `UiScreen`), with the safe area (`SafeAreaFitter`).
+- On touch screens every control is at least 48 dp (`UiScreen.MinTouchUnits`; 0 on PC) and text at least 16 sp (`MinTextUnits`, `UiTextFloor`). A tab grows to its label.
+- Layouts reflow by the units available and the orientation (`AdaptiveSplit`, `GridFit`, `ResponsiveAnchors`, `ResponsiveScroll`).
+- **The PC look at 1920x1080 does not change.** Every phone rule is behind the touch check.
+- Tests set the screen through `UiScreen.TestPixels/TestDpi/TestTouch` (`ScreenSimulation`).
+
+**Phone HUD** (owner, 2026-10-12; PC HUD unchanged):
+- One thin strip under the XP bar: item slots left, clock in the middle (number only), "Kills: n", Gold and Pause on the right (`GameHUDController.LayoutPhoneStrip`).
+- Pause is a two-bar symbol, 48 dp, under "LV" (`TouchControlsUI.MakePauseASymbol`).
+- The stage name shows for 5 s under the strip, then hides (`HudReadability.PhoneStageSeconds`). The unlock notice sits under it, and the story card under that.
+- Item slots hide under pause, chest and merchant, and show on level-up (`InventoryHud.HideUnderMenus`).
+- Small-screen fits: a LOCKED Power Up cell shows name + "LOCKED" and keeps its condition in the info box; character card names get a taller band; the level-up heading moves up when the stat rows do not fit.
+- Found on the way: the scene has two `XPBarUI`, one without a bar. `FindFirstObjectByType` returned that one, so Pause was placed over "LV" (`BarWithLevelLabel`).
+
+**Joystick** (owner, 2026-10-12): in portrait the floating stick comes to the thumb anywhere in the lower 82% of the screen; landscape keeps the left 45% (`TouchControlsUI.PlaceZone`).
+
+The stick's look (owner, 2026-10-12: "square ko round kar do ... joystick ka aakar ekdam chhota kar do", "transparent ka colour white kar dena"): the square pad is not drawn. In its place is a round, white, see-through plate the size the knob used to be (`TouchControlsUI.Plate`, `PlateShare` 0.4), and the knob is a small dot on it (`Dot`, `DotShare` 0.14) that travels to the plate's rim. A handle-bar version was built first and rejected. Dash and Pause are round too (owner: "dash aur pause ko bhi gol kar do"), in the touch pad's dark see-through colour so their label and symbol read (`RoundPads`). Checked in `PhoneHudStripPlayModeTests`; EditMode 891/891 and the touch fixtures 13/13 (`run-20261012-round`); seen on the phone with real swipes in portrait and landscape (`run-20261012-android8`, the APK is there). Mistake in these touch runs: `-sh-autoplay-shots 0` makes the bot take a screenshot every frame, which dropped the phone to 6 FPS and the owner saw it as lag; with `-sh-autoplay-shots 999` the same build held 30 FPS (the phone's cap).
+
+**Slippery obstacles** (owner, 2026-10-12: the hero stopped dead on any obstacle). `ObstacleSlide.Resolve`, used by `PlayerRunState`:
+- A glancing walk slides along the face at no less than 70% of the hero's speed.
+- Walking straight at a small obstacle, the hero steps round the nearer open side (a face up to about 3 units to its end).
+- A long wall with no open side (the Castle corridor) still stops a hero walking straight at it.
+- The hero's colliders use a zero-friction material.
+- The wiki does not describe how the VS player meets obstacles; the numbers are Soul Hunter's own.
+
+Validation:
+- Tests: `ResponsiveUiTests` (T); `ResponsiveScreensPlayModeTests`, `CharacterSelectResponsivePlayModeTests`, `PowerUpShopResponsivePlayModeTests`, `OptionsResponsivePlayModeTests`, `RunResultsResponsivePlayModeTests`, `HudOverlaysResponsivePlayModeTests`, `PhoneHudStripPlayModeTests` and `ObstacleSlidePlayModeTests` (R). `StageFloorPlayModeTests` now allows the hero to slide round an obstacle but never through it.
+- Full run on the final code: EditMode 891/891, PlayMode 384/384, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261012-final-full3/`).
+- Phone, both orientations (`run-20261012-android5`, the APK is there): four bot runs, 0 errors, no text out of its box, nothing off screen, nothing under 48 dp, no overlaps. Min FPS 30 in one pass and 21-22 in the other.
+- Every HUD state was screenshotted on the phone and checked: strip, pause symbol, stage name, notice, slots hidden and shown (partial `V`).
+- Joystick, real touches on the phone in portrait: at 10 spots the stick came under the finger.
+- PC screenshots (`run-20261012-pc-screens`): HUD, pause and level-up look the same as before.
+- **Only tests, not seen on the phone:** the hero following the stick's direction, and sliding on obstacles (the bot was playing).
+- Not captured on the phone: Revive, Music, and the chest screen in portrait.
+- Android scripts are in `D:\SoulHunter-Validation` (`android-build.ps1`, `phone-run.ps1`). Never run the Android build while tests run (Gradle runs out of memory).
+
+VS looked at on the owner's laptop (2026-10-12, screen only, about 80 s; no file read): Kills and Gold are an icon and a number without words; Pause is a symbol; the pause screen has no title and shows weapons with level pips. Soul Hunter differs there; whether to follow is open for the owner.
+
+`Docs/VS_DOT_Table.md` was re-checked against the code on 2026-10-12 (commit `06c04f9e`): of 176 rows, 129 match, 26 are partial, 7 missing, 10 differ by owner decision.
+
+**60 FPS on phones** (owner, 2026-10-12: "60 fps kar do"): Unity holds a phone at 30 frames a second by default, so `DisplaySettingsApplier` asks for `MobileFrameRate` 60 on mobile. Measured on the phone (`run-20261012-android9`, bot, first 95 s of Level 1, 15-43 enemies, battery saver on): 58-60 FPS in portrait and in landscape; the build before it held 30. Not measured: late-game hordes (300 enemies), heat over a long session, battery use (`P` partial).
+
+Open: the phone's FPS under a full horde is not measured (the earlier 30-capped bot passes fell to 21-22 once); touch control art; an Orientation option in Options.
+
+Passed by the owner (2026-10-12: "pass, poora test chalao aur commit karo"). Full run on the final code, after the stick, round pads and 60 FPS: EditMode 891/891, PlayMode 384/384, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261012-pass-full/`).
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

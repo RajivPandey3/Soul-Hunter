@@ -67,10 +67,7 @@ namespace SoulHunter.UI
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = ScreenSortingOrder; // over the character screen
-            var scaler = go.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+            SoulHunter.Gameplay.UI.ResponsiveCanvas.Apply(canvas); // the game's one UI scale (UiScreen), landscape and portrait
             go.AddComponent<GraphicRaycaster>();
             var screen = go.AddComponent<MusicSelectionScreen>();
             screen._font = font;
@@ -83,6 +80,7 @@ namespace SoulHunter.UI
             _onClose = onClose;
             transform.SetAsLastSibling();
             gameObject.SetActive(true);
+            Relayout(); // the buttons restyled themselves on enable: place the rows by their sizes now
             Refresh();
             Preview();
             var data = Data;
@@ -174,82 +172,174 @@ namespace SoulHunter.UI
         private void Build()
         {
             var root = (RectTransform)transform;
-            UITheme.AddVeil(root); // the character screen behind stays dark
+            UITheme.AddVeil(root); // the character screen behind stays dark (full screen)
+            // Responsive (owner, 2026-10-10: landscape and portrait from the same screen): the window sits in the safe area
+            // and is placed by Relayout; nothing here is rebuilt on a rotation.
+            _safe = new GameObject("SafeContent", typeof(RectTransform)).GetComponent<RectTransform>();
+            _safe.SetParent(root, false);
+            Anchor(_safe, 0f, 0f, 1f, 1f);
+            SafeAreaFitter.Fit(_safe);
             _window = new GameObject("Window", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
-            _window.SetParent(root, false);
-            Anchor(_window, 0.18f, 0.07f, 0.82f, 0.93f);
+            _window.SetParent(_safe, false);
             var windowImage = _window.GetComponent<Image>();
             UITheme.ApplyPanel(windowImage);
             windowImage.raycastTarget = true; // clicks never reach the screen behind
 
-            Text("Title", _window, 0.1f, 0.88f, 0.9f, 0.97f, "Music", 52f, TextAlignmentOptions.Center, ThemedElement.TextRole.Title, () => UITheme.Panel);
-            Text("TrackCaption", _window, 0.04f, 0.81f, 0.96f, 0.87f, "Track for your next run", 26f, TextAlignmentOptions.Left,
+            _title = Text("Title", _window, 0f, 1f, 1f, 1f, "Music", 52f, TextAlignmentOptions.Center, ThemedElement.TextRole.Title, () => UITheme.Panel);
+            _trackCaption = Text("TrackCaption", _window, 0f, 1f, 1f, 1f, "Track for your next run", 26f, TextAlignmentOptions.Left,
                 ThemedElement.TextRole.Soft, () => UITheme.Panel);
 
-            // The track grid: 12 cards, 3 columns, sized from the area (GridFit).
-            var area = new GameObject("Tracks", typeof(RectTransform)).GetComponent<RectTransform>();
-            area.SetParent(_window, false);
-            Anchor(area, 0.04f, 0f, 0.96f, 0.8f);
-            var layout = UITheme.Layout;
-            float gapU = layout.ButtonGap, captionU = 40f;
-            float actionsY = gapU + layout.ButtonHeight * 0.5f;                       // Keep and Done, on the bottom edge
-            float speedY = actionsY + layout.ButtonHeight * 0.5f + gapU + layout.TabHeight * 0.5f;
-            float captionY = speedY + layout.TabHeight * 0.5f + gapU * 0.5f + captionU * 0.5f;
-            area.offsetMin = new Vector2(0f, captionY + captionU * 0.5f + gapU);       // the grid fills what is left
-            var grid = area.gameObject.AddComponent<GridLayoutGroup>();
+            // The track grid: 12 cards, up to 3 columns (fewer on a narrow screen), sized from the area (GridFit). On a short
+            // screen the cards keep their touch size and the grid scrolls inside its area.
+            _trackArea = new GameObject("Tracks", typeof(RectTransform)).GetComponent<RectTransform>();
+            _trackArea.SetParent(_window, false);
+            // The area is its own masked viewport.
+            _trackScroll = ResponsiveScroll.Create(_trackArea, null, "TrackGrid", out var gridContent,
+                sensitivity: 30f, dragSurface: false, fitContentHeight: true);
+            _trackGrid = gridContent.gameObject.AddComponent<GridLayoutGroup>();
             float gap = UITheme.Layout.ButtonGap;
-            grid.spacing = new Vector2(gap, gap);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
-            grid.childAlignment = TextAnchor.UpperCenter;
-            var fit = area.gameObject.AddComponent<GridFit>();
-            fit.Grid = grid;
-            fit.Viewport = area;
+            _trackGrid.spacing = new Vector2(gap, gap);
+            _trackGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            _trackGrid.constraintCount = TrackColumns;
+            _trackGrid.childAlignment = TextAnchor.UpperCenter;
+            var fit = gridContent.gameObject.AddComponent<GridFit>();
+            fit.Grid = _trackGrid;
+            fit.Viewport = _trackArea;
             fit.Count = MusicSelection.ChoiceCount;
             fit.MinHeightRatio = 0f;
-            for (int i = 0; i < MusicSelection.ChoiceCount; i++) BuildTrack(area, i);
+            fit.MinCellWidth = TrackMinWidth;
+            fit.MaxColumns = TrackColumns;
+            for (int i = 0; i < MusicSelection.ChoiceCount; i++) BuildTrack(gridContent, i);
 
-            // Speed: three tabs in one themed row (the theme's tab size and gap).
-            // The rows below the grid stack up from the window's bottom edge in theme units, so the fixed-size buttons
-            // never overlap or stick out of a short window (2026-10-10).
-            _speedCaption = Text("SpeedCaption", _window, 0.04f, 0f, 0.96f, 0f, "", 26f, TextAlignmentOptions.Left,
+            // Speed: three tabs in one themed row (the theme's tab size and gap; it wraps on a narrow screen).
+            _speedCaption = Text("SpeedCaption", _window, 0f, 0f, 1f, 0f, "", 26f, TextAlignmentOptions.Left,
                 ThemedElement.TextRole.Soft, () => UITheme.Panel);
-            var captionRect = _speedCaption.rectTransform;
-            captionRect.offsetMin = new Vector2(0f, captionY - captionU * 0.5f);
-            captionRect.offsetMax = new Vector2(0f, captionY + captionU * 0.5f);
-            var speedRow = new GameObject("SpeedRow", typeof(RectTransform)).GetComponent<RectTransform>();
-            speedRow.SetParent(_window, false);
-            Anchor(speedRow, 0.5f, 0f, 0.5f, 0f);
-            speedRow.anchoredPosition = new Vector2(0f, speedY);
+            _speedRowRect = new GameObject("SpeedRow", typeof(RectTransform)).GetComponent<RectTransform>();
+            _speedRowRect.SetParent(_window, false);
             for (int i = 0; i < MusicSelection.TempoNames.Length; i++)
             {
                 int tempo = i;
-                _tempos.Add(MakeButton(speedRow, "Speed_" + MusicSelection.TempoNames[i], MusicSelection.TempoNames[i], () => SelectTempo(tempo),
+                _tempos.Add(MakeButton(_speedRowRect, "Speed_" + MusicSelection.TempoNames[i], MusicSelection.TempoNames[i], () => SelectTempo(tempo),
                     UITheme.ButtonKind.Normal, UITheme.IconSlot.None, ThemedElement.SizeRole.Tab));
             }
-            speedRow.gameObject.AddComponent<ThemedRow>();
+            _speedRow = _speedRowRect.gameObject.AddComponent<ThemedRow>();
 
-            // Keep (the VS lock) and Done.
-            var actions = new GameObject("Actions", typeof(RectTransform)).GetComponent<RectTransform>();
-            actions.SetParent(_window, false);
-            // Pinned to the window's bottom edge with the theme gap: the buttons have a fixed size, so a row placed at a
-            // fraction of the window's height stuck out of a short window (test runner, 2026-10-10).
-            Anchor(actions, 0.5f, 0f, 0.5f, 0f);
-            actions.anchoredPosition = new Vector2(0f, actionsY);
-            _lock = MakeButton(actions, "Keep_Button", "", ToggleLock, UITheme.ButtonKind.Normal, UITheme.IconSlot.None, ThemedElement.SizeRole.Standard);
+            // Keep (the VS lock) and Done, pinned to the window's bottom edge.
+            _actionsRect = new GameObject("Actions", typeof(RectTransform)).GetComponent<RectTransform>();
+            _actionsRect.SetParent(_window, false);
+            _lock = MakeButton(_actionsRect, "Keep_Button", "", ToggleLock, UITheme.ButtonKind.Normal, UITheme.IconSlot.None, ThemedElement.SizeRole.Standard);
             _lockLabel = _lock.GetComponentInChildren<TextMeshProUGUI>();
-            _done = MakeButton(actions, "Done_Button", "Done", Close, UITheme.ButtonKind.Primary, UITheme.IconSlot.Confirm, ThemedElement.SizeRole.Standard);
-            actions.gameObject.AddComponent<ThemedRow>();
-            LinkNavigation();
+            _done = MakeButton(_actionsRect, "Done_Button", "Done", Close, UITheme.ButtonKind.Primary, UITheme.IconSlot.Confirm, ThemedElement.SizeRole.Standard);
+            _actionsRow = _actionsRect.gameObject.AddComponent<ThemedRow>();
+            Relayout();
+        }
+
+        private const int TrackColumns = 3;      // the approved 3 x 4 grid on a PC
+        private const float TrackMinWidth = 200f; // a track name needs this much; a phone held upright gets 2 columns
+
+        private RectTransform _safe, _trackArea, _speedRowRect, _actionsRect;
+        private TextMeshProUGUI _title, _trackCaption;
+        private GridLayoutGroup _trackGrid;
+        private ScrollRect _trackScroll;
+        private ThemedRow _speedRow, _actionsRow;
+        private Vector2 _laidOutSize = new Vector2(-1f, -1f);
+        private int _linkedColumns = -1;
+
+        /// <summary>The scrolling area that holds the track cards (tests).</summary>
+        public RectTransform TrackArea => _trackArea;
+
+        private void OnEnable()
+        {
+            UiScreen.Changed += Relayout;
+            _laidOutSize = new Vector2(-1f, -1f); // buttons restyle themselves on enable: lay out again at the end of the frame
+        }
+
+        private void OnDisable() => UiScreen.Changed -= Relayout;
+
+        private void LateUpdate()
+        {
+            if (_safe != null && _safe.rect.size != _laidOutSize) Relayout();
+        }
+
+        /// <summary>
+        /// Places the window and its rows for the current safe area: a centred window on a PC, a full-screen sheet on a
+        /// phone held upright, the whole height on a short screen. The rows stack up from the window's bottom edge by their
+        /// real (wrapped) heights, so nothing overlaps on any screen; the track grid takes what is left and scrolls.
+        /// </summary>
+        public void Relayout()
+        {
+            if (this == null || _safe == null) return;
+            Vector2 size = _safe.rect.size;
+            if (size.x <= 1f || size.y <= 1f) return;
+            _laidOutSize = size;
+            var layout = UITheme.Layout;
+            float gap = layout.ButtonGap;
+            float W = size.x, H = size.y;
+            bool sheet = W < 700f; // a phone held upright: the window is the whole safe area
+            float w = sheet ? W : Mathf.Min(W - 2f * gap, Mathf.Max(W * 0.64f, 1100f));
+            float h = sheet ? H : H < 700f ? H - 2f * gap : Mathf.Min(H - 2f * gap, H * 0.86f);
+            _window.anchorMin = _window.anchorMax = new Vector2(0.5f, 0.5f);
+            _window.pivot = new Vector2(0.5f, 0.5f);
+            _window.anchoredPosition = Vector2.zero;
+            _window.sizeDelta = new Vector2(w, h);
+
+            float pad = gap;
+            float titleH = h >= 700f ? 70f : 48f, captionH = 36f;
+            // From the bottom: Keep and Done, then the speed tabs, then their caption.
+            float y = pad;
+            y += PlaceRowFromBottom(_actionsRect, _actionsRow, y) + gap;
+            y += PlaceRowFromBottom(_speedRowRect, _speedRow, y) + gap * 0.5f;
+            StretchBottom(_speedCaption.rectTransform, pad, y, captionH);
+            float bottomUsed = y + captionH + gap;
+            // From the top: the title and the track caption.
+            StretchTop(_title.rectTransform, pad, pad, titleH);
+            StretchTop(_trackCaption.rectTransform, pad, pad + titleH, captionH);
+            float topUsed = pad + titleH + captionH + gap * 0.5f;
+            _trackArea.anchorMin = Vector2.zero;
+            _trackArea.anchorMax = Vector2.one;
+            _trackArea.offsetMin = new Vector2(pad, bottomUsed);
+            _trackArea.offsetMax = new Vector2(-pad, -topUsed);
+
+            // The columns GridFit picks for this width: keyboard and controller focus follow them.
+            int columns = UiScreen.ColumnsFor(_trackArea.rect.width, Mathf.Max(TrackMinWidth, UiScreen.MinTouchUnits), _trackGrid.spacing.x, TrackColumns);
+            if (columns != _linkedColumns) LinkNavigation(columns);
+            UiTextFloor.RaiseAll(_window); // no text under the readable floor
+        }
+
+        /// <summary>Puts a themed row's bottom edge at <paramref name="bottom"/> in the window and returns its wrapped height.</summary>
+        private static float PlaceRowFromBottom(RectTransform rect, ThemedRow row, float bottom)
+        {
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, bottom);
+            row.Layout();
+            return rect.sizeDelta.y * rect.localScale.y;
+        }
+
+        private static void StretchBottom(RectTransform rect, float pad, float fromBottom, float height)
+        {
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.offsetMin = new Vector2(pad, fromBottom);
+            rect.offsetMax = new Vector2(-pad, fromBottom + height);
+        }
+
+        private static void StretchTop(RectTransform rect, float pad, float fromTop, float height)
+        {
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.offsetMin = new Vector2(pad, -(fromTop + height));
+            rect.offsetMax = new Vector2(-pad, -fromTop);
         }
 
         /// <summary>
         /// Keyboard and controller focus stays inside the screen (the character screen behind is still there): tracks in
         /// their 3-column grid, then the speed tabs, then Keep and Done.
         /// </summary>
-        private void LinkNavigation()
+        private void LinkNavigation(int columns)
         {
-            const int columns = 3;
+            _linkedColumns = columns;
+            columns = Mathf.Max(1, columns);
             Selectable At(List<Button> list, int i) => i >= 0 && i < list.Count ? list[i] : null;
             var bottomRow = new List<Button> { _lock, _done };
             for (int i = 0; i < _tracks.Count; i++)
@@ -271,7 +361,7 @@ namespace SoulHunter.UI
                     mode = Navigation.Mode.Explicit,
                     selectOnLeft = At(_tempos, i - 1),
                     selectOnRight = At(_tempos, i + 1),
-                    selectOnUp = At(_tracks, _tracks.Count - columns + Mathf.Min(i, columns - 1)),
+                    selectOnUp = At(_tracks, _tracks.Count - columns + Mathf.Min(i, columns - 1)) ?? At(_tracks, _tracks.Count - 1),
                     selectOnDown = i < _tempos.Count / 2 ? (Selectable)_lock : _done,
                 };
             for (int i = 0; i < bottomRow.Count; i++)

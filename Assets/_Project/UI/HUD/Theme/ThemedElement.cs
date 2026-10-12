@@ -97,7 +97,7 @@ namespace SoulHunter.Gameplay.UI
             if (this == null) return;
             switch (Kind)
             {
-                case Role.Button: ApplyButton(); break;
+                case Role.Button: ApplyButton(); if (_unusable) ShowLocked(); break;
                 case Role.Panel: ApplyPanel(); break;
                 case Role.Text: ApplyText(GetComponent<TMP_Text>(), Text); break;
                 case Role.Surface: ApplySurface(); break;
@@ -230,7 +230,7 @@ namespace SoulHunter.Gameplay.UI
                 lr.anchorMax = new Vector2(SwitchOn ? 0.62f : 0.94f, 1f);
                 lr.offsetMin = lr.offsetMax = Vector2.zero;
                 label.enableAutoSizing = true;
-                label.fontSizeMin = 12f;
+                label.fontSizeMin = Mathf.Max(12f, UiScreen.MinTextUnits); // never under 12 sp on a touch screen
                 label.fontSizeMax = Mathf.Min(theme.Layouts.TabTextMax, h * 0.48f);
             }
             var motion = GetComponent<ThemedMotion>();
@@ -263,11 +263,23 @@ namespace SoulHunter.Gameplay.UI
         private bool _fitting;
         private bool _refitPending;
 
+        private string _fitText;
+
         private void LateUpdate()
         {
+            // A changed label can need a wider control on a touch screen (a control in a ThemedRow is refitted by its row).
+            // Never a card: its texts are placed by its own screen (a refit here centred a level-up card's name, tag and
+            // description on top of each other).
+            if (Kind == Role.Button && Size != SizeRole.Free && ButtonKind != UITheme.ButtonKind.Card && UiScreen.IsTouch)
+            {
+                string text = LabelText;
+                if (!ReferenceEquals(text, _fitText) && text != _fitText) _refitPending = true;
+                _fitText = text;
+            }
             if (!_refitPending) return;
             _refitPending = false;
             var theme = UiThemeAsset.Active;
+            if (ButtonKind == UITheme.ButtonKind.Card) return;
             FitSize(theme);
             PlaceIcon(transform as RectTransform, theme);
             var selectable = GetComponent<Selectable>();
@@ -278,12 +290,79 @@ namespace SoulHunter.Gameplay.UI
         public Vector2? StandardSize(UiThemeAsset theme)
         {
             if (Kind != Role.Button || ButtonKind == UITheme.ButtonKind.Card) return null;
-            return Size switch
+            Vector2? size = Size switch
             {
                 SizeRole.Standard => new Vector2(theme.Layouts.ButtonWidth, theme.Layouts.ButtonHeight),
                 SizeRole.Tab => new Vector2(theme.Layouts.TabWidth, theme.Layouts.TabHeight),
                 _ => (Vector2?)null
             };
+            // On a touch screen no control is smaller than the 48 dp touch target (UiScreen; owner 2026-10-10): a tab grows
+            // to it, the same rule for every screen.
+            if (size is Vector2 v)
+            {
+                float min = UiScreen.MinTouchUnits;
+                float height = Mathf.Max(v.y, min);
+                // ...and grows wider to hold its label (owner, 2026-10-11: "tab se text bahar ja raha hai"): text on a
+                // phone cannot shrink under 12 sp, so a fixed-width tab let "SORT: DEFAULT" run to its edges. A row of
+                // tabs shares the widest one's width (ThemedRow sets RowWidth). The wiki gives no tab size (Options,
+                // Characters: silent), so this is the ui-ux-pro-max rule: a label stays inside its control.
+                float width = Mathf.Max(Mathf.Max(v.x, min), Mathf.Max(LabelFitWidth(theme, height), RowWidth));
+                return new Vector2(width, height);
+            }
+            return null;
+        }
+
+        /// <summary>Set by a <see cref="ThemedRow"/>: the width its tabs share (0 = this control's own width).</summary>
+        [System.NonSerialized] public float RowWidth;
+
+        /// <summary>The label's text, for a row to notice a changed label ("SORT: A-Z" to "SORT: DEFAULT").</summary>
+        public string LabelText { get { var label = MainLabel(); return label != null ? label.text : null; } }
+
+        /// <summary>
+        /// On a touch screen, the width this control needs for its label on one line with its padding: a tab at the theme's
+        /// tab text size, an action button at the readable floor (it shrinks to that before it grows). 0 on a PC, where text
+        /// can shrink further and the approved sizes stay.
+        /// </summary>
+        public float LabelFitWidth(UiThemeAsset theme, float height)
+        {
+            if (!UiScreen.IsTouch || Kind != Role.Button) return 0f;
+            var label = MainLabel();
+            if (label == null || string.IsNullOrEmpty(label.text)) return 0f;
+            // A label made this frame has no font yet (TextMeshPro sets it up when it wakes) and cannot be measured: the
+            // control is fitted again once it can (LateUpdate sees the label's text for the first time).
+            if (label.font == null || label.fontSharedMaterial == null || !label.gameObject.activeInHierarchy) return 0f;
+            float floor = Mathf.Max(12f, UiScreen.MinTextUnits);
+            float font = Size == SizeRole.Tab ? Mathf.Max(floor, theme.Layouts.TabTextMax) : Mathf.Min(floor, theme.Layouts.ButtonTextMax);
+            float measuredAt = label.enableAutoSizing ? label.fontSizeMax : label.fontSize; // what TMP measures a preferred width at
+            if (measuredAt <= 0f) return 0f;
+            float margins = label.margin.x + label.margin.z;
+            float text = Mathf.Max(0f, label.GetPreferredValues(label.text, Mathf.Infinity, Mathf.Infinity).x - margins) * font / measuredAt;
+            LabelInsets(theme, height, out float left, out float right, out float margin);
+            return Mathf.Ceil(text + left + right + margin + 2f);
+        }
+
+        /// <summary>The room a button of height <paramref name="h"/> keeps on each side of its label, and the icon's margin inside it.</summary>
+        private void LabelInsets(UiThemeAsset theme, float h, out float left, out float right, out float margin)
+        {
+            margin = 0f;
+            if (theme.Layouts.CentreIconWithLabel && Icon != null)
+            {
+                // Group mode: the label spans the button (with even padding); a left margin keeps room for the icon.
+                left = right = h * 0.15f;
+                margin = h * (theme.Layouts.IconSize + theme.Layouts.IconGap);
+            }
+            else if (LeadingGraphic != null)
+            {
+                // A tick box: the label starts just after it.
+                left = h * (theme.Layouts.IconInset + theme.Layouts.TickBoxSize + theme.Layouts.IconGap);
+                right = h * 0.15f;
+            }
+            else if (Icon != null)
+            {
+                left = theme.Layouts.CentreLabelBesideIcon ? h * (theme.Layouts.IconInset + theme.Layouts.IconSize) : 0f;
+                right = theme.Layouts.CentreLabelBesideIcon ? h * 0.15f : 0f;
+            }
+            else left = right = h * 0.3f; // bare: even padding, so a long label shrinks instead of touching the edges
         }
 
         private bool InLayoutGroup()
@@ -387,17 +466,29 @@ namespace SoulHunter.Gameplay.UI
         public void ShowUsable(bool usable)
         {
             if (Kind != Role.Button) return;
-            if (usable) { Apply(); return; }
+            _unusable = !usable;
+            Apply(); // a restyle (theme change, rotation) keeps the unusable look
+        }
+
+        private bool _unusable;
+
+        private void ShowLocked()
+        {
             var locked = UiThemeAsset.Active.Text.Locked;
             foreach (var text in GetComponentsInChildren<TMP_Text>(true)) text.color = locked;
             if (_iconImage != null) _iconImage.color = locked;
         }
 
+        private TMP_Text _mainLabel;
+
         private TMP_Text MainLabel()
         {
+            // Remembered once found: rows and the label-fit check ask every frame on a touch screen.
+            if (_mainLabel != null && _mainLabel.rectTransform.parent == transform) return _mainLabel;
+            _mainLabel = null;
             foreach (var t in GetComponentsInChildren<TMP_Text>(true))
-                if (t.rectTransform.parent == transform) return t;
-            return null;
+                if (t.rectTransform.parent == transform) { _mainLabel = t; break; }
+            return _mainLabel;
         }
 
         private void ButtonLabelLayout(TMP_Text label, UiThemeAsset theme)
@@ -407,26 +498,15 @@ namespace SoulHunter.Gameplay.UI
             float h = button != null && button.rect.height > 1f ? button.rect.height : 64f;
             // With an icon, the label is centred in the space beside it (or in the whole button, as the designer picks).
             // A tick box: the label starts just after it (left-aligned), so a long label ("Limit Break") keeps its size.
-            float left = LeadingGraphic != null ? h * (theme.Layouts.IconInset + theme.Layouts.TickBoxSize + theme.Layouts.IconGap)
-                : Icon != null && theme.Layouts.CentreLabelBesideIcon ? h * (theme.Layouts.IconInset + theme.Layouts.IconSize) : 0f;
             if (rect.parent == transform)
             {
+                LabelInsets(theme, h, out float left, out float right, out float margin);
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
-                // Without an icon or tick box the label keeps even padding on both sides, so a long one shrinks
-                // instead of touching the button's edges.
-                bool bare = Icon == null && LeadingGraphic == null;
-                rect.offsetMin = new Vector2(bare ? h * 0.3f : left, 0f);
-                rect.offsetMax = new Vector2(bare ? -h * 0.3f : Icon != null && !theme.Layouts.CentreLabelBesideIcon ? 0f : -h * 0.15f, 0f);
+                rect.offsetMin = new Vector2(left, 0f);
+                rect.offsetMax = new Vector2(-right, 0f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                bool group = theme.Layouts.CentreIconWithLabel && Icon != null;
-                if (group)
-                {
-                    // Group mode: the label spans the button (with even padding); a left margin keeps room for the icon.
-                    rect.offsetMin = new Vector2(h * 0.15f, 0f);
-                    rect.offsetMax = new Vector2(-h * 0.15f, 0f);
-                }
-                label.margin = group ? new Vector4(h * (theme.Layouts.IconSize + theme.Layouts.IconGap), 0f, 0f, 0f) : Vector4.zero;
+                label.margin = new Vector4(margin, 0f, 0f, 0f);
             }
             // Group mode centres on the text's optical middle line (caps and lower case alike).
             label.alignment = LeadingGraphic != null ? TextAlignmentOptions.MidlineLeft
@@ -440,7 +520,7 @@ namespace SoulHunter.Gameplay.UI
             label.fontSizeMax = max;
             // A long label shrinks to fit its standard-size button on one line (a copied template's large minimum
             // used to let "Refund PowerUps" run past its button).
-            label.fontSizeMin = Mathf.Min(12f, max);
+            label.fontSizeMin = Mathf.Min(Mathf.Max(12f, UiScreen.MinTextUnits), max); // 12 sp floor on touch
             if (Size != SizeRole.Free) label.textWrappingMode = TextWrappingModes.NoWrap;
         }
 

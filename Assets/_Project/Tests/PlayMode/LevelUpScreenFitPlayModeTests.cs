@@ -41,7 +41,7 @@ namespace SoulHunter.Tests.PlayMode
                 var canvas = panel.GetComponentInParent<Canvas>().rootCanvas;
                 Assert.That(canvas.name, Is.EqualTo(LevelUpUI.ScreenCanvasName), "The level-up screen has its own canvas.");
                 var scaler = canvas.GetComponent<CanvasScaler>();
-                Assert.That(scaler.screenMatchMode, Is.EqualTo(CanvasScaler.ScreenMatchMode.Expand), "It expands to fit any window, like the chest screen.");
+                Assert.That(scaler.GetComponent<SoulHunter.Gameplay.UI.ResponsiveCanvas>(), Is.Not.Null, "It takes the game's one UI scale (ResponsiveCanvas, landscape and portrait).");
                 Assert.That(canvas.sortingOrder, Is.EqualTo(LevelUpUI.ScreenSortingOrder));
                 Assert.That(canvas.sortingOrder, Is.LessThan(ChestUI.ScreenSortingOrder), "Below the chest screen.");
 
@@ -54,6 +54,36 @@ namespace SoulHunter.Tests.PlayMode
                             $"{button.name} corner {c} is on the {Screen.width}x{Screen.height} screen.");
                 }
                 Assert.That(panel.GetComponentsInChildren<Button>().Count(b => b.gameObject.activeInHierarchy), Is.GreaterThanOrEqualTo(4), "Cards and action buttons were checked.");
+                // Responsive (owner, 2026-10-10): the same screen laid out on a PC, a wide PC, a 5:4 PC and a phone held
+                // either way: every card and button on the canvas, none overlapping, none under 48 dp on the phone.
+                if (round == 0) yield return ScreenSimulation.AssertFitsEveryDevice(() => panel.GetComponentsInChildren<Selectable>(), canvas);
+                // Every stats row is drawn on the stats panel (owner's phone, 2026-10-12: upright, "Cooldown" was drawn
+                // under the panel, on the first card).
+                if (round == 0)
+                {
+                    var rowProblems = new System.Collections.Generic.List<string>();
+                    try
+                    {
+                        foreach (var d in ScreenSimulation.Devices)
+                        {
+                            yield return ScreenSimulation.At(d.Pixels, d.Dpi, d.Touch, canvas);
+                            for (int i = 0; i < 3; i++) { yield return null; Canvas.ForceUpdateCanvases(); }
+                            var stats = panel.GetComponentsInChildren<StatsPanel>().FirstOrDefault(s => s.gameObject.activeInHierarchy);
+                            if (stats == null) continue;
+                            stats.Refresh();
+                            yield return null;
+                            Rect box = ScreenSimulation.UnitsRect((RectTransform)stats.transform);
+                            foreach (var text in stats.GetComponentsInChildren<TMPro.TMP_Text>().Where(t => !string.IsNullOrWhiteSpace(t.text)))
+                            {
+                                text.ForceMeshUpdate();
+                                float low = ((RectTransform)canvas.transform).InverseTransformPoint(text.transform.TransformPoint(text.textBounds.min)).y - ((RectTransform)canvas.transform).rect.yMin;
+                                if (low < box.yMin - 2f) rowProblems.Add($"{d.Name}: stats text '{text.name}' is drawn {box.yMin - low:0.#} units under its panel {box}");
+                            }
+                        }
+                    }
+                    finally { ScreenSimulation.Restore(); }
+                    Assert.That(rowProblems, Is.Empty, string.Join("\n", rowProblems));
+                }
                 levelUp.SelectUpgrade(levelUp.GetRandomValidUpgrades(1)[0]);
                 yield return null;
                 yield return null;

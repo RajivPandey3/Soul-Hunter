@@ -64,6 +64,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 _levelUpManager.OnLevelUpUIRound += ShowLevelUpScreen;
             }
+            UiScreen.Changed += RelayoutForScreen;
             
             // CRITICAL FIX: Yahan se _levelUpPanel.SetActive(false) hata diya gaya hai!
             // Agar yeh script panel par hi lagi ho, to ShowLevelUpScreen ke SetActive(true) call
@@ -75,6 +76,24 @@ namespace SoulHunter.Gameplay.UI
             if (_levelUpManager != null)
             {
                 _levelUpManager.OnLevelUpUIRound -= ShowLevelUpScreen;
+            }
+            UiScreen.Changed -= RelayoutForScreen;
+        }
+
+        /// <summary>
+        /// A rotation or window change while the screen is open lays it out again for the new shape (owner, 2026-10-10:
+        /// the same screen in landscape and portrait), without rebuilding the cards.
+        /// </summary>
+        private void RelayoutForScreen()
+        {
+            if (this == null || _levelUpPanel == null || !_levelUpPanel.activeInHierarchy) return;
+            FitCardWidth();
+            Canvas.ForceUpdateCanvases();
+            var statsPanel = _levelUpPanel.transform.Find(StatsPanel.ObjectName)?.GetComponent<StatsPanel>();
+            if (statsPanel != null)
+            {
+                statsPanel.FitBetween(HeadingRect(), _upgradeButtons, 0.23f, 0.83f);
+                statsPanel.Refresh();
             }
         }
 
@@ -97,6 +116,11 @@ namespace SoulHunter.Gameplay.UI
     if (_levelUpPanel != null)
     {
         var stats = StatsPanel.Attach(_levelUpPanel.transform, new Vector2(0.23f, 0.56f), new Vector2(0.83f, 0.78f), 4, 22f);
+        if (stats != null && stats.Avoid == null)
+        {
+            var slots = FindFirstObjectByType<InventoryHud>();
+            if (slots != null) stats.Avoid = (RectTransform)slots.transform;
+        }
         // From 23% of the width: the HUD's item slots end at about 21% (Bug MIS B09: the panel covered the 6th column).
         if (stats != null) stats.FitBetween(HeadingRect(), _upgradeButtons, 0.23f, 0.83f);
     }
@@ -320,7 +344,7 @@ namespace SoulHunter.Gameplay.UI
             UITheme.ApplyText(text, role); // the theme's colour for this part of a card, kept live
             text.alignment = alignment;
             text.fontStyle = style;
-            text.textWrappingMode = TextWrappingModes.Normal;
+            text.textWrappingMode = name == TagName ? TextWrappingModes.NoWrap : TextWrappingModes.Normal; // "Level 2" stays on one line (phone, 2026-10-10)
             text.overflowMode = TextOverflowModes.Ellipsis;
             text.raycastTarget = false;
         }
@@ -466,13 +490,11 @@ namespace SoulHunter.Gameplay.UI
             // The theme's standard button size, centred with the standard gap (not stretched across the row).
             var barLayout = bar.GetComponent<LayoutElement>();
             if (barLayout != null) barLayout.preferredHeight = UITheme.Layout.ButtonHeight;
+            // Responsive (owner, 2026-10-10): the row wraps onto more lines when the screen is narrow (portrait) instead of
+            // running past its edges; the shared ThemedRow places the buttons, not a horizontal layout group.
             var barGroup = bar.GetComponent<HorizontalLayoutGroup>();
-            if (barGroup != null)
-            {
-                barGroup.childForceExpandWidth = barGroup.childForceExpandHeight = false;
-                barGroup.childAlignment = TextAnchor.MiddleCenter;
-                barGroup.spacing = UITheme.Layout.ButtonGap;
-            }
+            if (barGroup != null) DestroyImmediateOrLater(barGroup);
+            if (bar.GetComponent<ThemedRow>() == null) bar.gameObject.AddComponent<ThemedRow>();
             foreach (var action in bar.GetComponentsInChildren<Button>(true))
             {
                 var image = action.GetComponent<Image>();
@@ -567,6 +589,10 @@ namespace SoulHunter.Gameplay.UI
         /// </summary>
         public const float CardMaxWidth = 1100f;
 
+        /// <summary>Under this height (canvas units) the stats move beside the cards (a phone held sideways is about 510).</summary>
+        public const float ShortScreenHeight = 700f;
+        public const float SideStatsWidth = 400f;
+
         /// <summary>
         /// Bug MIS v2 C08 (2026-10-02): the panel's full-screen image was a tinted texture tile (sprite_1_0), so the HUD
         /// behind the level-up screen looked dimmed in uneven blocks (labels dark, numbers bright). The panel is now one
@@ -584,6 +610,7 @@ namespace SoulHunter.Gameplay.UI
             UITheme.ApplySurface(image, ThemedElement.SurfaceRole.Veil);
         }
         private RectOffset _basePadding;
+        private float _baseSpacing;
 
         private void FitCardWidth()
         {
@@ -593,12 +620,37 @@ namespace SoulHunter.Gameplay.UI
             var container = first.transform.parent as RectTransform;
             var group = container != null ? container.GetComponent<HorizontalOrVerticalLayoutGroup>() : null;
             if (group == null) return;
-            if (_basePadding == null) _basePadding = new RectOffset(group.padding.left, group.padding.right, group.padding.top, group.padding.bottom);
+            if (_basePadding == null) { _basePadding = new RectOffset(group.padding.left, group.padding.right, group.padding.top, group.padding.bottom); _baseSpacing = group.spacing; }
+            // Responsive (owner, 2026-10-10): the cards stay clear of the notch (safe area). On a short screen (a phone held
+            // sideways) the band over the cards is too low for the stats, so the cards move right and the stats take their
+            // left (StatsPanel.Fit).
+            SafeAreaFitter.Fit(container);
             Canvas.ForceUpdateCanvases();
             float width = container.rect.width;
-            int side = Mathf.Max(0, Mathf.RoundToInt((width - CardMaxWidth) * 0.5f));
-            group.padding.left = Mathf.Max(_basePadding.left, side);
+            bool shortScreen = container.rect.height < ShortScreenHeight;
+            int statsRoom = shortScreen ? Mathf.RoundToInt(Mathf.Min(SideStatsWidth, width * 0.36f)) : 0;
+            int side = Mathf.Max(0, Mathf.RoundToInt((width - statsRoom - CardMaxWidth) * 0.5f));
+            group.padding.left = Mathf.Max(_basePadding.left, statsRoom + side);
             group.padding.right = Mathf.Max(_basePadding.right, side);
+            // The cards never go under the touch target (x1.3 for the icon, name and text); on a short screen the heading
+            // and the gaps give way instead (the cards were 46 units, 33 dp, on a phone held sideways).
+            group.spacing = shortScreen ? UITheme.Layout.ButtonGap : _baseSpacing;
+            float cardMin = UiScreen.MinTouchUnits * 1.3f;
+            foreach (var card in _upgradeButtons)
+            {
+                if (card == null) continue;
+                var element = card.GetComponent<LayoutElement>() ?? card.gameObject.AddComponent<LayoutElement>();
+                element.minHeight = cardMin;
+            }
+            var heading = HeadingRect();
+            if (heading != null)
+            {
+                var text = heading.GetComponent<TMPro.TextMeshProUGUI>();
+                if (text != null) text.fontSize = shortScreen ? 44f : 64f;
+                var headingElement = heading.GetComponent<LayoutElement>() ?? heading.gameObject.AddComponent<LayoutElement>();
+                headingElement.preferredHeight = shortScreen ? 56f : -1f;
+                headingElement.flexibleHeight = shortScreen ? 0f : -1f;
+            }
             LayoutRebuilder.MarkLayoutForRebuild(container);
         }
 
@@ -634,10 +686,7 @@ namespace SoulHunter.Gameplay.UI
                 var canvas = go.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
                 canvas.sortingOrder = ScreenSortingOrder;
-                var scaler = go.AddComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920f, 1080f);
-                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+                SoulHunter.Gameplay.UI.ResponsiveCanvas.Apply(canvas); // the game's one UI scale (UiScreen), landscape and portrait
                 go.AddComponent<GraphicRaycaster>();
             }
             var rect = (RectTransform)_levelUpPanel.transform;
@@ -690,6 +739,11 @@ namespace SoulHunter.Gameplay.UI
                 if (!label.name.StartsWith("Card_")) UITheme.ApplyText(label, light ? ThemedElement.TextRole.Body : ThemedElement.TextRole.Card);
             foreach (var label in action.GetComponentsInChildren<Text>(true))
                 label.color = light ? UITheme.Text : UITheme.CardText; // legacy Text labels (no TMP): set from the theme
+        }
+
+        private static void DestroyImmediateOrLater(Object target)
+        {
+            if (Application.isPlaying) Destroy(target); else DestroyImmediate(target);
         }
 
         private static void CreateActionButton(Button template, Transform parent, string name)

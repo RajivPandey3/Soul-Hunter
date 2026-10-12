@@ -39,7 +39,7 @@ namespace SoulHunter.Gameplay.UI
     /// chest and Soul Coins (ChestPreviewStage) and the approved VFX v2 sprites. The game is paused, so everything runs
     /// on unscaled time. Timings are provisional.
     /// </summary>
-    public sealed class ChestOpeningScreen : MonoBehaviour
+    public sealed class ChestOpeningScreen : MonoBehaviour, UnityEngine.EventSystems.IPointerClickHandler
     {
         public enum Phase { Intro, WaitingToOpen, Revealing, Done, Closed }
 
@@ -77,11 +77,28 @@ namespace SoulHunter.Gameplay.UI
         public ChestPreviewStage Preview => _stage;
         public Button OpenButton => _openButton;
         public Button DoneButton => _doneButton;
+        /// <summary>The safe-area content root every part of the screen sits in (the backdrop stays full screen).</summary>
+        public RectTransform Content => _content;
+        /// <summary>The reward cards, in order (empty until the reveal builds them).</summary>
+        public IReadOnlyList<RectTransform> Cards => _cards;
+        /// <summary>Short screens (a phone held sideways): title, chest and gold on the left; cards and the button on the right.</summary>
+        public bool SideBySide { get; private set; }
+        /// <summary>The reward cards' size in canvas units (190 when there is room, never under <see cref="MinCardSize"/>).</summary>
+        public float CardSize { get; private set; } = RoomyCardSize;
         public event System.Action Closed;
+
+        // Layout, in canvas units (owner 2026-10-10: the same screen in landscape and portrait). The 1920x1080 layout's
+        // sizes are the roomy ones; a smaller screen steps the cards and the chest down, wraps the cards onto more rows,
+        // and on a short screen puts the chest beside the rewards.
+        public const float RoomyCardSize = 190f, MinCardSize = 140f, ChestSize = 440f, MinChestSize = 220f;
+        private static readonly float[] CardSizes = { 190f, 170f, 150f, 140f };
+        private const float TitleHeight = 110f, CoinHeight = 90f, HintHeight = 44f, HintWidth = 420f, EdgeMargin = 24f;
+        private static float Gap => UiThemeAsset.Active != null ? UiThemeAsset.Active.Layouts.ButtonGap : 16f;
 
         private ChestResult _result;
         private ChestPreviewStage _stage;
-        private RectTransform _root;
+        private RectTransform _root, _content;
+        private Vector2 _laidOutSize = new Vector2(-1f, -1f);
         private Image _backdrop;
         /// <summary>
         /// Bug MIS v2 C22 (2026-10-02): at 0.88 the paused world's brightest effects (a lightning bolt, damage numbers)
@@ -125,22 +142,26 @@ namespace SoulHunter.Gameplay.UI
             _backdrop.color = Veil(0f, false);
             _backdrop.raycastTarget = true; // the game underneath does not take clicks
 
-            // Centred a little above the middle; the title sits under the HUD's stage name.
-            _circle = Raw("Light", content != null ? content.ChestFxCircle : null, new Vector2(0f, 70f), 760f);
-            _chestImage = Raw("Chest", null, new Vector2(0f, 70f), 440f);
-            _flash = Raw("Flash", content != null ? content.ChestFxFlash : null, new Vector2(0f, 70f), 560f);
-            _ring = Raw("Ring", content != null ? content.ChestFxRing : null, new Vector2(0f, 70f), 460f);
+            // Everything but the backdrop sits inside the safe area (notch, gesture bar); Layout() places it.
+            _content = new GameObject("Content", typeof(RectTransform)).GetComponent<RectTransform>();
+            _content.SetParent(_root, false);
+            SafeAreaFitter.Fit(_content);
 
-            _title = Label("Title", new Vector2(0f, 330f), new Vector2(1200f, 110f), 78f);
+            _circle = Raw("Light", content != null ? content.ChestFxCircle : null, Vector2.zero, 760f);
+            _chestImage = Raw("Chest", null, Vector2.zero, ChestSize);
+            _flash = Raw("Flash", content != null ? content.ChestFxFlash : null, Vector2.zero, 560f);
+            _ring = Raw("Ring", content != null ? content.ChestFxRing : null, Vector2.zero, 460f);
+
+            _title = Label("Title", Vector2.zero, new Vector2(1200f, TitleHeight), 78f);
             UITheme.ApplyText(_title, ThemedElement.TextRole.Title); // the same title look as LEVEL UP!, RESULTS and OPTIONS
-            _coinText = Label("Coins", new Vector2(0f, -130f), new Vector2(700f, 90f), 64f);
+            _coinText = Label("Coins", Vector2.zero, new Vector2(700f, CoinHeight), 64f);
             UITheme.ApplyText(_coinText, ThemedElement.TextRole.Gold);
-            _skipHint = Label("SkipHint", new Vector2(700f, -500f), new Vector2(420f, 50f), 26f);
+            _skipHint = Label("SkipHint", Vector2.zero, new Vector2(HintWidth, HintHeight), 26f);
             _skipHint.text = "Esc / Right click / B: skip";
             UITheme.ApplyText(_skipHint, ThemedElement.TextRole.Dim);
 
-            _openButton = MakeButton("OPEN", new Vector2(0f, -430f), PressOpen);
-            _doneButton = MakeButton("DONE", new Vector2(0f, -430f), PressDone);
+            _openButton = MakeButton("OPEN", Vector2.zero, PressOpen);
+            _doneButton = MakeButton("DONE", Vector2.zero, PressDone);
 
             foreach (var definition in GameContentCatalog.Load() != null ? GameContentCatalog.Load().WeaponDefinitions : new WeaponDefinition[0])
                 if (definition != null && definition.Icon != null) _reelIcons.Add(definition.Icon);
@@ -150,7 +171,7 @@ namespace SoulHunter.Gameplay.UI
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(RawImage));
             var rect = (RectTransform)go.transform;
-            rect.SetParent(_root, false);
+            rect.SetParent(_content, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = new Vector2(size, size);
@@ -165,7 +186,7 @@ namespace SoulHunter.Gameplay.UI
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
-            rect.SetParent(parent != null ? parent : _root, false);
+            rect.SetParent(parent != null ? parent : _content, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
@@ -183,7 +204,7 @@ namespace SoulHunter.Gameplay.UI
         {
             var go = new GameObject(text + "Button", typeof(RectTransform), typeof(Image), typeof(Button));
             var rect = (RectTransform)go.transform;
-            rect.SetParent(_root, false);
+            rect.SetParent(_content, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = new Vector2(UITheme.Layout.ButtonWidth, UITheme.Layout.ButtonHeight);
@@ -219,9 +240,11 @@ namespace SoulHunter.Gameplay.UI
             _coinText.text = "";
             _coinText.transform.localScale = Vector3.zero;
             _skipHint.gameObject.SetActive(canSkip);
+            _skipHint.text = SkipHintText;
             _circle.color = new Color(1f, 1f, 1f, 0f);
             _openButton.gameObject.SetActive(false);
             _doneButton.gameObject.SetActive(false);
+            Layout();
             Current = Phase.Intro;
             _sequence = StartCoroutine(Intro());
         }
@@ -236,6 +259,10 @@ namespace SoulHunter.Gameplay.UI
                 _backdrop.color = Veil(BackdropAlpha * t, _result.IsArcana);
                 yield return null;
             }
+            // The loop stops before t reaches 1, and on a phone the first frame (the 3D preview being made) can be longer
+            // than the whole fade: the backdrop then stayed nearly clear and the game showed through (owner's phone,
+            // 2026-10-10). It always ends at its full strength.
+            _backdrop.color = Veil(BackdropAlpha, _result.IsArcana);
             Blast(0.9f);
             yield return Wait(0.35f);
             Current = Phase.WaitingToOpen;
@@ -274,6 +301,19 @@ namespace SoulHunter.Gameplay.UI
             yield return Wait(0.5f);
             Current = Phase.Done;
             yield return RotateIn(_doneButton);
+        }
+
+        /// <summary>
+        /// Skipping on a touch screen (2026-10-10). The wiki (Treasure_Chest, Patch 0.2.6b) names only "ESC, right mouse
+        /// button, or "B"/cancel on a gamepad" and is silent on phones; balance method: a tap on the screen outside the
+        /// buttons is the phone's cancel. The same skip rules apply (TrySkip). The hint says so.
+        /// </summary>
+        public static string SkipHintText => UiScreen.IsTouch ? "Tap to skip" : "Esc / Right click / B: skip";
+
+        public void OnPointerClick(UnityEngine.EventSystems.PointerEventData eventData)
+        {
+            // Only the backdrop or the content's empty space reaches here; OPEN and DONE take their own clicks.
+            if (UiScreen.IsTouch && CanSkip) TrySkip();
         }
 
         /// <summary>VS skip: jumps to the end (everything revealed, Done shown). Returns false when this chest cannot be skipped.</summary>
@@ -329,17 +369,14 @@ namespace SoulHunter.Gameplay.UI
         private void BuildCards()
         {
             ClearCards();
-            int n = Mathf.Max(1, _result.Rewards.Count);
-            float width = 190f, gap = 22f;
-            float start = -(n - 1) * (width + gap) * 0.5f;
+            float width = RoomyCardSize; // Layout() gives each card its place and size for this screen
             for (int i = 0; i < _result.Rewards.Count; i++)
             {
                 var reward = _result.Rewards[i];
                 var card = new GameObject("Reward" + i, typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
-                card.SetParent(_root, false);
+                card.SetParent(_content, false);
                 card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0.5f);
-                card.anchoredPosition = new Vector2(start + i * (width + gap), -270f);
-                card.sizeDelta = new Vector2(width, 190f);
+                card.sizeDelta = new Vector2(width, width);
                 var frame = card.GetComponent<Image>();
                 frame.raycastTarget = false;
                 UITheme.ApplySurface(frame, ThemedElement.SurfaceRole.Card);
@@ -363,11 +400,12 @@ namespace SoulHunter.Gameplay.UI
 
                 var name = Label("Name", new Vector2(0f, -52f), new Vector2(width - 8f, 40f), 22f, card);
                 name.text = reward.Name;
-                name.enableAutoSizing = true; name.fontSizeMin = 12f; name.fontSizeMax = 22f;
+                name.enableAutoSizing = true; // its limits follow the screen (SizeCard)
                 UITheme.ApplyText(name, ThemedElement.TextRole.Card); // on the theme's card
                 name.outlineWidth = 0f;
                 var level = Label("Level", new Vector2(0f, -80f), new Vector2(width - 8f, 28f), 20f, card);
                 level.text = reward.IsEvolution ? "EVOLUTION!" : reward.IsCoinBag ? "+25 gold" : reward.Level <= 1 ? "NEW!" : "Level " + reward.Level;
+                level.enableAutoSizing = true;
                 UITheme.ApplyText(level, reward.IsEvolution ? ThemedElement.TextRole.Evolution : ThemedElement.TextRole.Tag);
                 level.outlineWidth = 0f;
                 name.gameObject.SetActive(false);
@@ -377,6 +415,208 @@ namespace SoulHunter.Gameplay.UI
                 _cardIcons.Add(icon);
                 _cardStars.Add(star);
             }
+            Layout(); // places and sizes the new cards for this screen
+        }
+
+        // ---------- layout (one path for every screen: roomy, stacked tall, or side by side when short) ----------
+
+        private void OnEnable() => UiScreen.Changed += Relayout;
+
+        private void OnDisable() => UiScreen.Changed -= Relayout;
+
+        private void Relayout() => Layout();
+
+        private Vector2 ButtonSize()
+        {
+            var element = _openButton != null ? _openButton.GetComponent<ThemedElement>() : null;
+            if (element != null && UiThemeAsset.Active != null && element.StandardSize(UiThemeAsset.Active) is Vector2 size) return size;
+            return new Vector2(UITheme.Layout.ButtonWidth, UITheme.Layout.ButtonHeight);
+        }
+
+        private int PlannedCards => _cards.Count > 0 ? _cards.Count : Mathf.Max(1, _result != null ? _result.Rewards.Count : 1);
+
+        private static float CardsHeight(int count, int columns, float card, float gap)
+        {
+            int rows = Mathf.CeilToInt(count / (float)Mathf.Max(1, columns));
+            return rows * card + (rows - 1) * gap;
+        }
+
+        /// <summary>
+        /// Places the screen in its safe area. Roomy and tall screens stack it: title, chest, gold, the cards (wrapping
+        /// onto more rows on a narrow screen), and OPEN / DONE pinned to the bottom edge. The cards step down from 190 to
+        /// 140 and the chest from 440 to 220 before a short screen (a phone held sideways) puts the title, chest and gold
+        /// on the left and the cards, skip hint and button on the right. Runs again on every screen change.
+        /// </summary>
+        private void Layout()
+        {
+            if (_content == null) return;
+            Vector2 size = _content.rect.size;
+            if (size.x <= 1f || size.y <= 1f) return;
+            _laidOutSize = size;
+            float w = size.x, h = size.y, m = EdgeMargin, gap = Gap;
+            Vector2 button = ButtonSize();
+            int n = PlannedCards;
+            bool hint = _skipHint.gameObject.activeSelf;
+            float textMin = Mathf.Max(8f, UiScreen.MinTextUnits);
+
+            // Stacked: the size of cards that leaves the biggest chest (and, after that, the biggest cards).
+            float column = w - 2f * m;
+            bool hintBeside = w * 0.5f - button.x * 0.5f - gap - m >= HintWidth;
+            float hintRow = hint && !hintBeside ? HintHeight + gap : 0f;
+            float bottomBlock = button.y + hintRow;
+            float bestScore = -1f, chest = 0f, card = RoomyCardSize;
+            int columns = 1;
+            foreach (float s in CardSizes)
+            {
+                int cols = UiScreen.ColumnsFor(column, s, gap, n);
+                float rest = m + TitleHeight + gap + gap + CoinHeight + gap + CardsHeight(n, cols, s, gap) + gap + bottomBlock + m;
+                float c = Mathf.Min(ChestSize, column, h - rest);
+                if (c < MinChestSize) continue;
+                float score = c + s * 0.5f;
+                if (score > bestScore) { bestScore = score; chest = c; card = s; columns = cols; }
+            }
+            SideBySide = bestScore < 0f;
+
+            float top = h * 0.5f; // y of the content's top edge, around its centre
+            if (!SideBySide)
+            {
+                float by = -h * 0.5f + m + button.y * 0.5f;
+                Place(_openButton, 0f, by);
+                Place(_doneButton, 0f, by);
+                if (hint)
+                {
+                    if (hintBeside) PlaceText(_skipHint, w * 0.5f - m - HintWidth * 0.5f, by, HintWidth, HintHeight, 26f, Mathf.Max(textMin, 16f));
+                    else PlaceText(_skipHint, 0f, by + button.y * 0.5f + gap + HintHeight * 0.5f, Mathf.Min(HintWidth, column), HintHeight, 26f, Mathf.Max(textMin, 16f));
+                }
+                float cardsH = CardsHeight(n, columns, card, gap);
+                float block = TitleHeight + gap + chest + gap + CoinHeight + gap + cardsH;
+                float room = h - m - (m + bottomBlock + gap);
+                float y = top - m - Mathf.Max(0f, room - block) * 0.5f; // the stack is centred in the room above the button
+                PlaceText(_title, 0f, y - TitleHeight * 0.5f, Mathf.Min(1200f, column), TitleHeight, 78f, Mathf.Max(textMin, 30f));
+                y -= TitleHeight + gap;
+                PlaceChest(0f, y - chest * 0.5f, chest);
+                y -= chest + gap;
+                PlaceText(_coinText, 0f, y - CoinHeight * 0.5f, Mathf.Min(700f, column), CoinHeight, 64f, Mathf.Max(textMin, 28f));
+                y -= CoinHeight + gap;
+                PlaceCards(0f, y, card, columns, gap);
+                return;
+            }
+
+            // Side by side (short screens): title, chest and gold on the left; the cards and the button on the right, so
+            // the cards keep their full height. The title is a line shorter here (it autosizes to the narrower column).
+            float leftWidth = w * 0.42f, sideTitle = TitleHeight * 0.75f;
+            float leftColumn = leftWidth - 2f * m, leftX = -w * 0.5f + leftWidth * 0.5f;
+            chest = Mathf.Max(120f, Mathf.Min(ChestSize, leftColumn, h - 2f * m - sideTitle - gap - gap - CoinHeight));
+            float leftBlock = sideTitle + gap + chest + gap + CoinHeight;
+            float ly = top - m - Mathf.Max(0f, h - 2f * m - leftBlock) * 0.5f;
+            PlaceText(_title, leftX, ly - sideTitle * 0.5f, leftColumn, sideTitle, 78f, Mathf.Max(textMin, 30f));
+            ly -= sideTitle + gap;
+            PlaceChest(leftX, ly - chest * 0.5f, chest);
+            ly -= chest + gap;
+            PlaceText(_coinText, leftX, ly - CoinHeight * 0.5f, Mathf.Min(700f, leftColumn), CoinHeight, 64f, Mathf.Max(textMin, 28f));
+
+            float rightWidth = w - leftWidth - m;
+            float rightX = -w * 0.5f + leftWidth + rightWidth * 0.5f;
+            float rby = -h * 0.5f + m + button.y * 0.5f;
+            Place(_openButton, rightX, rby);
+            Place(_doneButton, rightX, rby);
+            float above = rby + button.y * 0.5f + gap; // the lowest y the cards may reach
+            if (hint)
+            {
+                PlaceText(_skipHint, rightX, above + HintHeight * 0.5f, Mathf.Min(HintWidth, rightWidth), HintHeight, 26f, Mathf.Max(textMin, 16f));
+                above += HintHeight + gap;
+            }
+            float ry = top - m;
+            float cardRoom = ry - above;
+            card = MinCardSize;
+            columns = UiScreen.ColumnsFor(rightWidth, MinCardSize, gap, n);
+            foreach (float s in CardSizes)
+            {
+                int cols = UiScreen.ColumnsFor(rightWidth, s, gap, n);
+                if (CardsHeight(n, cols, s, gap) <= cardRoom) { card = s; columns = cols; break; }
+            }
+            float sideCards = CardsHeight(n, columns, card, gap);
+            PlaceCards(rightX, ry - Mathf.Max(0f, cardRoom - sideCards) * 0.5f, card, columns, gap);
+        }
+
+        private static void Place(Button button, float x, float y)
+        {
+            var rect = (RectTransform)button.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, y);
+        }
+
+        private static void PlaceText(TextMeshProUGUI label, float x, float y, float width, float height, float max, float min)
+        {
+            var rect = label.rectTransform;
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(width, height);
+            label.enableAutoSizing = true;
+            label.fontSizeMax = Mathf.Max(max, min);
+            label.fontSizeMin = min;
+        }
+
+        private void PlaceChest(float x, float y, float size)
+        {
+            // The light, flash and ring keep their 1920x1080 proportions to the chest (760 / 560 / 460 around a 440 chest).
+            float k = size / ChestSize;
+            SetBox(_chestImage, x, y, size);
+            SetBox(_circle, x, y, 760f * k);
+            SetBox(_flash, x, y, 560f * k);
+            SetBox(_ring, x, y, 460f * k);
+        }
+
+        private static void SetBox(RawImage image, float x, float y, float size)
+        {
+            image.rectTransform.anchoredPosition = new Vector2(x, y);
+            image.rectTransform.sizeDelta = new Vector2(size, size);
+        }
+
+        /// <summary>The cards in centred rows of <paramref name="columns"/>, from <paramref name="topY"/> down.</summary>
+        private void PlaceCards(float centreX, float topY, float card, int columns, float gap)
+        {
+            CardSize = card;
+            int n = _cards.Count;
+            for (int i = 0; i < n; i++)
+            {
+                int row = i / columns, col = i % columns;
+                int inRow = Mathf.Min(columns, n - row * columns);
+                float x = centreX + (col - (inRow - 1) * 0.5f) * (card + gap);
+                float y = topY - row * (card + gap) - card * 0.5f;
+                if (_cards[i] == null) continue;
+                _cards[i].anchoredPosition = new Vector2(x, y);
+                SizeCard(_cards[i], card);
+            }
+        }
+
+        /// <summary>A card's pieces at the 190-unit card's proportions; its text never under the screen's floor.</summary>
+        private static void SizeCard(RectTransform card, float size)
+        {
+            float k = size / RoomyCardSize, textMin = Mathf.Max(12f, UiScreen.MinTextUnits);
+            card.sizeDelta = new Vector2(size, size);
+            foreach (Transform child in card)
+            {
+                if (!(child is RectTransform part)) continue;
+                switch (part.name)
+                {
+                    case "Stars": part.anchoredPosition = new Vector2(0f, 22f * k); part.sizeDelta = Vector2.one * 170f * k; break;
+                    case "Icon": part.anchoredPosition = new Vector2(0f, 22f * k); part.sizeDelta = Vector2.one * 100f * k; break;
+                    // A smaller card keeps the name a little higher, so the floor-sized text does not run into the level line.
+                    case "Name": SizeCardText(part, -52f * k + 12f * (1f - k), size - 8f, Mathf.Max(40f * k, textMin * 1.3f), 22f, textMin); break;
+                    case "Level": SizeCardText(part, -80f * k, size - 8f, Mathf.Max(28f * k, textMin * 1.2f), 20f, textMin); break;
+                }
+            }
+        }
+
+        private static void SizeCardText(RectTransform part, float y, float width, float height, float max, float min)
+        {
+            part.anchoredPosition = new Vector2(0f, y);
+            part.sizeDelta = new Vector2(width, height);
+            var label = part.GetComponent<TextMeshProUGUI>();
+            if (label == null) return;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = min;
+            label.fontSizeMax = Mathf.Max(max, min);
         }
 
         private void ClearCards()
@@ -407,7 +647,7 @@ namespace SoulHunter.Gameplay.UI
             RevealedCount = Mathf.Max(RevealedCount, index + 1);
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFX(audio.UIConfirmSound, 0.7f);
-            Burst(card.anchoredPosition + new Vector2(0f, 22f), 8, _result.Rewards[index].IsEvolution ? Evolution : Gold);
+            Burst(card.anchoredPosition + new Vector2(0f, 22f * CardSize / RoomyCardSize), 8, _result.Rewards[index].IsEvolution ? Evolution : Gold);
         }
 
         private void ShowCard(int index)
@@ -482,7 +722,11 @@ namespace SoulHunter.Gameplay.UI
             FireworksShown++;
             var colors = new[] { Gold, Soul, Evolution, UITheme.Rarity.Good, ArcanaTint };
             for (int i = 0; i < count; i++)
-                Burst(new Vector2(Random.Range(-820f, 820f), Random.Range(-120f, 460f)), 10, colors[Random.Range(0, colors.Length)]);
+            {
+                // Over the screen's upper part: the 1920x1080 layout's spread (+-820, -120..460) on any screen.
+                Vector2 size = _content.rect.size;
+                Burst(new Vector2(Random.Range(-0.43f, 0.43f) * size.x, Random.Range(-0.11f, 0.43f) * size.y), 10, colors[Random.Range(0, colors.Length)]);
+            }
         }
 
         private void Burst(Vector2 at, int sparks, Color color)
@@ -491,7 +735,7 @@ namespace SoulHunter.Gameplay.UI
             for (int i = 0; i < sparks; i++)
             {
                 var img = new GameObject("Spark", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
-                img.rectTransform.SetParent(_root, false);
+                img.rectTransform.SetParent(_content, false);
                 img.rectTransform.anchoredPosition = at;
                 img.rectTransform.sizeDelta = Vector2.one * Random.Range(26f, 48f);
                 img.texture = _sparkleTexture;
@@ -510,6 +754,7 @@ namespace SoulHunter.Gameplay.UI
         private void Update()
         {
             float dt = Time.unscaledDeltaTime;
+            if (_content != null && _content.rect.size != _laidOutSize) Layout(); // a rotation or window change, even unannounced
             if (_circle.color.a > 0f)
             {
                 _circle.rectTransform.Rotate(0f, 0f, -25f * dt);

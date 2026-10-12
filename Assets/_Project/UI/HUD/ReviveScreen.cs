@@ -26,7 +26,9 @@ namespace SoulHunter.Gameplay.UI
 
         private PlayerController _player;
         private Canvas _canvas;
-        private RectTransform _root;
+        private RectTransform _root, _safe, _panel;
+        private Vector2 _lastSafe = new Vector2(-1f, -1f);
+        private readonly System.Collections.Generic.Dictionary<TMP_Text, float> _sizes = new System.Collections.Generic.Dictionary<TMP_Text, float>();
         private bool _paused, _pauseActionWasEnabled;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
@@ -58,16 +60,12 @@ namespace SoulHunter.Gameplay.UI
 
         private void Build()
         {
-            // Its own overlay canvas, like the chest screen (ChestUI.ScreenCanvas): Expand keeps the whole 1920x1080 layout
-            // inside any window, so the button can never fall off a wide, short screen.
+            // Its own overlay canvas, like the chest screen (ChestUI.ScreenCanvas), on the game's one UI scale.
             _canvas = gameObject.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _canvas.overrideSorting = true;
             _canvas.sortingOrder = ScreenSortingOrder;
-            var scaler = gameObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+            SoulHunter.Gameplay.UI.ResponsiveCanvas.Apply(_canvas); // the game's one UI scale (UiScreen), landscape and portrait
             gameObject.AddComponent<GraphicRaycaster>();
 
             var rootGo = new GameObject("Root", typeof(RectTransform));
@@ -79,44 +77,53 @@ namespace SoulHunter.Gameplay.UI
             // The theme's veil over the paused game (it also takes every click meant for the world).
             UITheme.AddVeil(_root, "Veil");
 
+            // Responsive (owner, 2026-10-10): the panel sits in the middle of the safe area (notch, gesture bar) and is
+            // never wider than it; the veil stays full screen. The button keeps the theme's standard size, which on a
+            // touch screen is never under the 48 dp touch target (ThemedElement.StandardSize).
+            var safeGo = new GameObject("Safe", typeof(RectTransform));
+            _safe = (RectTransform)safeGo.transform;
+            _safe.SetParent(_root, false);
+            SafeAreaFitter.Fit(_safe);
+
             var panelGo = new GameObject("Panel", typeof(RectTransform), typeof(Image));
-            var panel = (RectTransform)panelGo.transform;
-            panel.SetParent(_root, false);
-            panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0.5f, 0.5f);
-            panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
+            _panel = (RectTransform)panelGo.transform;
+            _panel.SetParent(_safe, false);
+            _panel.anchorMin = _panel.anchorMax = _panel.pivot = new Vector2(0.5f, 0.5f);
+            _panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
             UITheme.ApplyPanel(panelGo.GetComponent<Image>());
 
             // One thing to do on this screen, so one strong element: the Revive button. The title and the count stay quiet.
-            TitleText = Label(panel, "Title", new Vector2(0f, 118f), new Vector2(PanelWidth - 80f, 96f), UITheme.Layout.TitleTextMax, ThemedElement.TextRole.Title);
+            TitleText = Label(_panel, "Title", UITheme.Layout.TitleTextMax, ThemedElement.TextRole.Title);
             TitleText.text = "You have fallen";
-            RevivalsText = Label(panel, "Revivals", new Vector2(0f, 36f), new Vector2(PanelWidth - 80f, 48f), 34f, ThemedElement.TextRole.Body);
-            HintText = Label(panel, "Hint", new Vector2(0f, -14f), new Vector2(PanelWidth - 80f, 40f), 26f, ThemedElement.TextRole.Soft);
+            RevivalsText = Label(_panel, "Revivals", 34f, ThemedElement.TextRole.Body);
+            HintText = Label(_panel, "Hint", 26f, ThemedElement.TextRole.Soft);
             HintText.text = "Rise again with half your health";
 
             var buttonGo = new GameObject("ReviveButton", typeof(RectTransform), typeof(Image), typeof(Button));
             var buttonRect = (RectTransform)buttonGo.transform;
-            buttonRect.SetParent(panel, false);
+            buttonRect.SetParent(_panel, false);
             buttonRect.anchorMin = buttonRect.anchorMax = buttonRect.pivot = new Vector2(0.5f, 0.5f);
-            buttonRect.anchoredPosition = new Vector2(0f, -110f);
             buttonRect.sizeDelta = new Vector2(UITheme.Layout.ButtonWidth, UITheme.Layout.ButtonHeight);
             ReviveButton = buttonGo.GetComponent<Button>();
             ReviveButton.onClick.AddListener(PressRevive);
-            var label = Label(buttonRect, "Label", Vector2.zero, buttonRect.sizeDelta, UITheme.Layout.ButtonTextMax, ThemedElement.TextRole.Body);
+            var label = Label(buttonRect, "Label", UITheme.Layout.ButtonTextMax, ThemedElement.TextRole.Body);
+            label.rectTransform.anchorMin = Vector2.zero;
+            label.rectTransform.anchorMax = Vector2.one;
+            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
             label.text = "Revive";
             // After the label exists, so the theme lays it out too; Primary kind, the theme's standard button size.
             UITheme.ApplyButton(ReviveButton, buttonGo.GetComponent<Image>(), UITheme.ButtonKind.Primary, UITheme.IconSlot.Resume);
+            Layout();
 
             _root.gameObject.SetActive(false);
         }
 
-        private static TextMeshProUGUI Label(RectTransform parent, string name, Vector2 position, Vector2 size, float fontSize, ThemedElement.TextRole role)
+        private TextMeshProUGUI Label(RectTransform parent, string name, float fontSize, ThemedElement.TextRole role)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
             rect.SetParent(parent, false);
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
             var label = go.AddComponent<TextMeshProUGUI>();
             // A size before auto-size, so TextMeshPro's own defaults never replace the limits (character select, 2026-09-30).
             label.fontSize = fontSize;
@@ -128,7 +135,66 @@ namespace SoulHunter.Gameplay.UI
             label.raycastTarget = false;
             UITheme.ApplyText(label, role);
             ThemedElement.Outline(label, UiThemeAsset.Active);
+            if (parent == _panel) _sizes[label] = fontSize; // the touch floor and the panel width are applied in Layout
             return label;
+        }
+
+        // ---------- layout (every screen change; nothing is rebuilt) ----------
+
+        private void OnEnable() => UiScreen.Changed += Layout;
+        private void OnDisable() => UiScreen.Changed -= Layout;
+
+        private void LateUpdate()
+        {
+            if (_safe != null && _safe.rect.size != _lastSafe) Layout();
+        }
+
+        /// <summary>
+        /// Centres the panel in the safe area, at most <see cref="PanelWidth"/> wide (narrower on a portrait phone), stacks
+        /// the title, the count, the hint and the Revive button in it, and keeps every text at or over the touch floor.
+        /// </summary>
+        public void Layout()
+        {
+            if (this == null || _panel == null || ReviveButton == null) return;
+            _lastSafe = _safe.rect.size;
+            float gap = UITheme.Layout.ButtonGap;
+            float floor = Mathf.Max(12f, UiScreen.MinTextUnits);
+            var button = (RectTransform)ReviveButton.transform;
+            var element = ReviveButton.GetComponent<ThemedElement>();
+            Vector2 buttonSize = element != null && element.StandardSize(UiThemeAsset.Active) is Vector2 standard ? standard : button.rect.size;
+
+            float margin = gap * 2f;
+            float width = Mathf.Min(PanelWidth, Mathf.Max(buttonSize.x + margin * 2f, _lastSafe.x - margin * 2f));
+            float inner = width - margin * 2f;
+            float title = Mathf.Max(96f, floor * 1.6f), revivals = Mathf.Max(48f, floor * 1.5f), hint = Mathf.Max(40f, floor * 1.5f);
+            const float pad = 28f;
+            float height = pad + title + revivals + hint + gap * 2f + buttonSize.y + pad;
+            _panel.sizeDelta = new Vector2(width, height);
+            _panel.anchoredPosition = Vector2.zero;
+
+            float y = height * 0.5f - pad;
+            Stack(TitleText, ref y, title, inner);
+            Stack(RevivalsText, ref y, revivals, inner);
+            Stack(HintText, ref y, hint, inner);
+            // The button keeps the centre placed here; the theme gives it its standard size.
+            button.anchorMin = button.anchorMax = button.pivot = new Vector2(0.5f, 0.5f);
+            button.anchoredPosition = new Vector2(0f, -height * 0.5f + pad + buttonSize.y * 0.5f);
+            button.sizeDelta = buttonSize;
+
+            foreach (var pair in _sizes)
+            {
+                if (pair.Key == null) continue;
+                pair.Key.fontSizeMax = Mathf.Max(pair.Value, floor);
+                pair.Key.fontSizeMin = floor;
+            }
+        }
+
+        private static void Stack(TMP_Text text, ref float y, float height, float width)
+        {
+            var rect = text.rectTransform;
+            rect.sizeDelta = new Vector2(width, height);
+            rect.anchoredPosition = new Vector2(0f, y - height * 0.5f);
+            y -= height;
         }
 
         // ---------- flow ----------

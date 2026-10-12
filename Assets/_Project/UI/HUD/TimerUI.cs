@@ -14,6 +14,14 @@ namespace SoulHunter.Gameplay.UI
         [SerializeField] private TextMeshProUGUI _timeText;
         public TextMeshProUGUI TimeText => _timeText;
         private int _shown = -1;
+        private bool _short;
+
+        /// <summary>The phone's HUD strip shows the clock alone ("00:35"); a PC keeps "Time: 00:35".</summary>
+        public bool Short
+        {
+            get => _short;
+            set { if (_short == value) return; _short = value; _shown = -1; Update(); }
+        }
 
         /// <summary>The seconds the label shows (tests).</summary>
         public int ShownSeconds => _shown;
@@ -23,7 +31,7 @@ namespace SoulHunter.Gameplay.UI
             int seconds = Mathf.FloorToInt(CurrentSeconds());
             if (seconds == _shown) return;
             _shown = seconds;
-            if (_timeText != null) _timeText.text = $"Time: {seconds / 60:00}:{seconds % 60:00}";
+            if (_timeText != null) _timeText.text = _short ? $"{seconds / 60:00}:{seconds % 60:00}" : $"Time: {seconds / 60:00}:{seconds % 60:00}";
         }
 
         private static float CurrentSeconds()

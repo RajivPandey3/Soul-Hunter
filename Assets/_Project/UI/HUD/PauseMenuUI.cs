@@ -52,6 +52,20 @@ namespace SoulHunter.Gameplay.UI
         }
 
         /// <summary>Opens the evolution recipes over the pause menu; Back returns focus to the Evolutions button.</summary>
+        /// <summary>Options over the pause screen, which steps back as it does for the Evolutions list (phone run, 2026-10-10: its title and buttons showed around the Options window).</summary>
+        public void OpenOptions()
+        {
+            var group = GetComponent<CanvasGroup>();
+            if (group == null) group = gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            OptionsMenuUI.Open(() =>
+            {
+                if (group != null) { group.alpha = 1f; group.blocksRaycasts = true; }
+                Select(_options);
+            });
+        }
+
         public void OpenEvolutions()
         {
             if (_recipes == null) _recipes = EvolutionRecipesScreen.Create();
@@ -78,31 +92,49 @@ namespace SoulHunter.Gameplay.UI
             foreach (var child in GetComponentsInChildren<Button>(true))
                 if (child.name.Contains("Restart")) child.gameObject.SetActive(false);
 
-            _resume = CreateButton("Resume_Button", new Vector2(0.38f, 0.52f), new Vector2(0.62f, 0.6f), "Resume", () => _system.Resume());
-            _options = CreateButton("Options_Button", new Vector2(0.38f, 0.42f), new Vector2(0.62f, 0.5f), "Options",
-                () => OptionsMenuUI.Open(() => Select(_options)));
-            _quit = CreateButton("Quit_Button", new Vector2(0.38f, 0.32f), new Vector2(0.62f, 0.4f), "Quit", () => _system.QuitToMainMenu());
+            // Responsive (owner, 2026-10-10: landscape and portrait from the same screen). The content sits in the safe area
+            // and splits into the menu and the stats: side by side on a wide screen, stacked on a tall one. The buttons
+            // are one column at the theme's size; the stats take the columns their area allows.
+            var content = NewArea("PauseContent", transform);
+            SafeAreaFitter.Fit(content);
+            var menuArea = NewArea("MenuArea", content);
+            var statsArea = NewArea("StatsArea", content);
+            AdaptiveSplit.Between(content, menuArea, statsArea, 0.64f, 0.56f);
+            _buttonColumn = NewArea("Buttons", menuArea);
+            _buttonColumn.anchorMax = new Vector2(1f, 0.84f);
+            var column = _buttonColumn.gameObject.AddComponent<VerticalLayoutGroup>();
+            column.childAlignment = TextAnchor.MiddleCenter;
+            column.spacing = UITheme.Layout.ButtonGap;
+            column.childControlWidth = column.childControlHeight = true;
+            column.childForceExpandWidth = column.childForceExpandHeight = false;
+
+            _resume = CreateButton("Resume_Button", Vector2.zero, Vector2.zero, "Resume", () => _system.Resume());
+            _options = CreateButton("Options_Button", Vector2.zero, Vector2.zero, "Options",
+                OpenOptions);
             // VS Grimoire (wiki Grim_Grimoire): with the Grimoire and the map, an "Open Grimoire" button "just to the left of
             // the "RESUME" button". Soul Hunter has no relics yet, so it is open from the start (EvolutionRecipesScreen).
-            _evolutions = CreateButton("Evolutions_Button", new Vector2(0.1f, 0.52f), new Vector2(0.34f, 0.6f), "Evolutions", OpenEvolutions);
+            _evolutions = CreateButton("Evolutions_Button", Vector2.zero, Vector2.zero, "Evolutions", OpenEvolutions);
             // VS Random LevelUp (wiki Level_up, 1 April 2026 patch note): "'Random LevelUp' can now be toggled during a run if it
             // is already unlocked on the Stage menu". The wiki does not say where; Soul Hunter puts it in the pause menu, under
             // Evolutions, as a button that says its state in words (like FILTER: ON), so the state never rests on colour alone.
             // Owner (2026-10-09): Blind Fate is unlocked from the start, so the button is always there.
-            _blindFate = CreateButton("BlindFate_Button", new Vector2(0.1f, 0.42f), new Vector2(0.34f, 0.5f), "", ToggleBlindFate);
+            _blindFate = CreateButton("BlindFate_Button", Vector2.zero, Vector2.zero, "", ToggleBlindFate);
             _blindFateLabel = _blindFate.GetComponentInChildren<TextMeshProUGUI>();
             RefreshBlindFate();
-            // VS: the player's stats are shown while paused (wiki Player_stats). A column on the right of the buttons, under
-            // the timer: the HUD's kills, gold and item rows sit top left and draw over anything placed there.
-            StatsPanel.Attach(transform, new Vector2(0.7f, 0.1f), new Vector2(0.96f, 0.84f), 1, 30f);
+            // Quit last, the leaving action at the bottom of the column.
+            _quit = CreateButton("Quit_Button", Vector2.zero, Vector2.zero, "Quit", () => _system.QuitToMainMenu());
+            // VS: the player's stats are shown while paused (wiki Player_stats): one column beside the menu on a wide
+            // screen, two under it on a tall one (StatsPanel picks).
+            StatsPanel.Attach(statsArea, new Vector2(0.04f, 0.04f), new Vector2(0.96f, 0.96f), 2, 30f);
 
             // The old "GAME PAUSED" title sat in the middle, behind the buttons: move it above them.
             foreach (var title in GetComponentsInChildren<TMP_Text>(true))
                 if (title.text.ToUpperInvariant().Contains("PAUSED"))
                 {
                     var rect = title.rectTransform;
-                    rect.anchorMin = new Vector2(0.3f, 0.64f);
-                    rect.anchorMax = new Vector2(0.7f, 0.74f);
+                    rect.SetParent(menuArea, false);
+                    rect.anchorMin = new Vector2(0.05f, 0.86f);
+                    rect.anchorMax = new Vector2(0.95f, 1f);
                     rect.offsetMin = rect.offsetMax = Vector2.zero;
                     title.alignment = TextAlignmentOptions.Center;
                     title.enableAutoSizing = true;
@@ -138,6 +170,8 @@ namespace SoulHunter.Gameplay.UI
         private void HandlePauseChanged(bool paused)
         {
             if (paused) RefreshBlindFate();
+            // Over every HUD label on the same canvas (the stage label was drawn over the title on a phone, 2026-10-10).
+            if (paused) transform.SetAsLastSibling();
             if (paused) Select(_resume);
             else if (_recipes != null) _recipes.Close(); // resumed with the pause key while the recipes were open
         }
@@ -147,11 +181,23 @@ namespace SoulHunter.Gameplay.UI
             if (target != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(target.gameObject);
         }
 
+        private RectTransform _buttonColumn;
+
+        private static RectTransform NewArea(string name, Transform parent)
+        {
+            var rect = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            return rect;
+        }
+
         private Button CreateButton(string name, Vector2 min, Vector2 max, string label, System.Action onClick)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = (RectTransform)go.transform;
-            rect.SetParent(transform, false);
+            rect.SetParent(_buttonColumn != null ? _buttonColumn : transform, false);
             rect.anchorMin = min;
             rect.anchorMax = max;
             rect.offsetMin = rect.offsetMax = Vector2.zero;

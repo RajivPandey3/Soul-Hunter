@@ -46,11 +46,58 @@ namespace SoulHunter.Tests.PlayMode
             merchant.ShopUI.GetComponentsInChildren<Button>()
                 .FirstOrDefault(b => b.transform.Find("Name") is Transform t && t.GetComponent<TMPro.TextMeshProUGUI>().text == name);
 
-        private static Rect ScreenRect(RectTransform rect)
+        /// <summary>Leave and the ware cards in the list's window (the others are scrolled away, under its mask).</summary>
+        private static IEnumerable<Selectable> VisibleShopControls(WanderingMerchant merchant) =>
+            merchant.ShopUI.GetComponentsInChildren<Button>().Where(b => b == merchant.ShopLeaveButton
+                || SoulHunter.Gameplay.UI.ResponsiveScroll.IsInView(merchant.ShopWaresScroll, (RectTransform)b.transform)).Cast<Selectable>().ToList();
+
+        [UnityTest]
+        public IEnumerator TheShop_FitsEveryScreen_LeaveStaysPinned_TheWaresScroll_AndTextReadsOnThePhone()
         {
-            var corners = new Vector3[4];
-            rect.GetWorldCorners(corners); // an overlay canvas: world corners are screen pixels
-            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+            yield return OpenStage3Shop(inverse: true, gold: 50000);
+            var merchant = Merchant;
+            Assert.That(merchant.IsShopOpen, Is.True, "The shop opened. " + Errors());
+            var canvas = merchant.ShopUI.GetComponent<Canvas>();
+            var scroll = merchant.ShopWaresScroll;
+            var wares = merchant.ShopUI.GetComponentsInChildren<Button>().Where(b => b != merchant.ShopLeaveButton).ToList();
+            Assert.That(wares.Count, Is.EqualTo(7));
+            var problems = new List<string>();
+            try
+            {
+                foreach (var d in ScreenSimulation.Devices)
+                {
+                    yield return ScreenSimulation.At(d.Pixels, d.Dpi, d.Touch, canvas);
+                    problems.AddRange(ScreenSimulation.Problems(d.Name, VisibleShopControls(merchant)));
+                    var view = ScreenSimulation.UnitsRect(scroll.viewport);
+                    var leave = ScreenSimulation.UnitsRect((RectTransform)merchant.ShopLeaveButton.transform);
+                    var panel = ScreenSimulation.UnitsRect((RectTransform)merchant.ShopUI.transform.Find("Safe/Panel"));
+                    Vector2 size = ((RectTransform)canvas.transform).rect.size;
+                    if (view.Overlaps(leave)) problems.Add($"{d.Name}: the ware list {view} runs under Leave {leave}");
+                    if (leave.yMin > panel.yMin + leave.height) problems.Add($"{d.Name}: Leave {leave} is not at the panel's bottom {panel}");
+                    if (panel.xMin < -1f || panel.yMin < -1f || panel.xMax > size.x + 1f || panel.yMax > size.y + 1f) problems.Add($"{d.Name}: the panel {panel} is off the {size} canvas");
+                    int inView = wares.Count(w => SoulHunter.Gameplay.UI.ResponsiveScroll.IsInView(scroll, (RectTransform)w.transform));
+                    if (inView == 0) problems.Add($"{d.Name}: no ware is in view");
+                    // The list scrolls to every ware.
+                    scroll.verticalNormalizedPosition = 0f;
+                    Canvas.ForceUpdateCanvases();
+                    yield return null;
+                    Canvas.ForceUpdateCanvases();
+                    if (!SoulHunter.Gameplay.UI.ResponsiveScroll.IsInView(scroll, (RectTransform)wares.Last().transform))
+                        problems.Add($"{d.Name}: the last ware cannot be scrolled into view");
+                    scroll.verticalNormalizedPosition = 1f;
+                    Canvas.ForceUpdateCanvases();
+                    // No text under the 12 sp floor on the phone.
+                    if (d.Touch)
+                        foreach (var t in merchant.ShopUI.GetComponentsInChildren<TMPro.TextMeshProUGUI>())
+                            if (!string.IsNullOrEmpty(t.text) && t.fontSize < SoulHunter.Gameplay.UI.UiScreen.MinTextUnits - 0.01f)
+                                problems.Add($"{d.Name}: {t.name} '{t.text}' at {t.fontSize:0.#} is under {SoulHunter.Gameplay.UI.UiScreen.MinTextUnits:0.#} units");
+                }
+            }
+            finally { ScreenSimulation.Restore(); }
+            Assert.That(problems, Is.Empty, string.Join("\n", problems));
+            merchant.Leave();
+            yield return null;
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
         [UnityTest]
@@ -67,22 +114,14 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.IsNotNull(Card(merchant, name), $"Inverse mode sells {name}.");
             Assert.That(merchant.ShopUI.GetComponentsInChildren<Button>().Length, Is.EqualTo(8), "7 wares and Leave.");
 
-            // Every card on screen, inside the panel, none overlapping another or Leave.
+            // Responsive (owner, 2026-10-10): on every PC and phone screen the cards in view and Leave are on the canvas,
+            // none overlapping, touch-sized on the phone; the rest scroll into view (TheShop_FitsEveryScreen_... above).
             Canvas.ForceUpdateCanvases();
             yield return null;
             var scaler = merchant.ShopUI.GetComponent<CanvasScaler>();
-            Assert.That(scaler.screenMatchMode, Is.EqualTo(CanvasScaler.ScreenMatchMode.Expand), "The shop fits any window, like the chest screen.");
-            var panel = ScreenRect((RectTransform)merchant.ShopUI.transform.Find("Panel"));
-            var screen = new Rect(0f, 0f, Screen.width, Screen.height);
+            Assert.That(scaler.GetComponent<SoulHunter.Gameplay.UI.ResponsiveCanvas>(), Is.Not.Null, "It takes the game's one UI scale (ResponsiveCanvas, landscape and portrait).");
+            yield return ScreenSimulation.AssertFitsEveryDevice(() => VisibleShopControls(merchant), merchant.ShopUI.GetComponent<Canvas>());
             var buttons = merchant.ShopUI.GetComponentsInChildren<Button>().ToList();
-            var rects = buttons.Select(b => ScreenRect((RectTransform)b.transform)).ToList();
-            for (int i = 0; i < rects.Count; i++)
-            {
-                Assert.That(screen.Contains(rects[i].min) && screen.Contains(rects[i].max - Vector2.one * 0.5f), Is.True, $"{buttons[i].name} {rects[i]} is off the {Screen.width}x{Screen.height} screen.");
-                Assert.That(panel.Contains(rects[i].min) && panel.Contains(rects[i].max - Vector2.one * 0.5f), Is.True, $"{buttons[i].name} {rects[i]} leaves the panel {panel}.");
-                for (int j = i + 1; j < rects.Count; j++)
-                    Assert.That(rects[i].Overlaps(rects[j]), Is.False, $"Buttons {i} and {j} overlap: {rects[i]} / {rects[j]}.");
-            }
 
             // Keyboard and controller: a shop button is focused and moves only to the shop's usable buttons.
             var selected = EventSystem.current.currentSelectedGameObject;
@@ -170,6 +209,8 @@ namespace SoulHunter.Tests.PlayMode
             var names = merchant.ShopUI.GetComponentsInChildren<TMPro.TextMeshProUGUI>().Select(t => t.text).ToList();
             Assert.That(names.Any(t => t.Contains("Sigil") || t.Contains("Draw a Fate")), Is.False, "Inverse mode wares only in Inverse mode.");
             Assert.That(merchant.ShopUI.GetComponentsInChildren<Button>().Length, Is.EqualTo(4), "Bone, Cherry Bomb, Soul Egg and Leave.");
+            // The approved one-column shop also fits every PC and phone screen.
+            yield return ScreenSimulation.AssertFitsEveryDevice(() => VisibleShopControls(merchant), merchant.ShopUI.GetComponent<Canvas>());
 
             var levelUp = Object.FindFirstObjectByType<LevelUpManager>();
             var economy = GameServices.Instance.Get<EconomyService>();

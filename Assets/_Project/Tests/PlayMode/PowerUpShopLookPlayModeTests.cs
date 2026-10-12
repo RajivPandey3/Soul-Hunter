@@ -53,15 +53,17 @@ namespace SoulHunter.Tests.PlayMode
 
             // Header: Back inside the backing, apart from the title and the grid; the title and the gold.
             var panel = navigation.PowerUpPanel.transform;
-            Rect backing = ScreenRect((RectTransform)panel.Find("VS_PowerUpBacking"));
+            // (Responsive since 2026-10-10: the parts sit inside the safe-area content, so they are found by name. The
+            // grid is measured by its visible window: its rows scroll inside it.)
+            Rect backing = ScreenRect((RectTransform)Deep(panel, "VS_PowerUpBacking"));
             Rect back = ScreenRect((RectTransform)navigation.PowerUpBackButton.transform);
-            Rect grid = ScreenRect((RectTransform)panel.Find("VS_PowerUpGrid"));
-            var title = panel.Find("VS_PowerUpTitle").GetComponent<TextMeshProUGUI>();
+            Rect grid = ScreenRect(shop.GridViewport);
+            var title = Deep(panel, "VS_PowerUpTitle").GetComponent<TextMeshProUGUI>();
             Assert.That(backing.Contains(back.min) && backing.Contains(back.max), Is.True, $"Back {back} is inside the backing {backing}.");
             Assert.That(back.Overlaps(grid), Is.False, "Back is clear of the grid.");
             Assert.That(back.Overlaps(TextRect(title)), Is.False, "Back is clear of the title.");
             Assert.That(title.text, Is.EqualTo("Power Up"));
-            Assert.That(panel.Find("VS_GoldRow/Coin").GetComponent<Image>().sprite, Is.Not.Null, "The gold has its coin.");
+            Assert.That(Deep(panel, "VS_GoldRow").Find("Coin").GetComponent<Image>().sprite, Is.Not.Null, "The gold has its coin.");
 
             // The chosen cell wears the theme's frame; no other cell does.
             var chosen = shop.CellFor(PowerUpId.Greed).GetComponents<Outline>().First(o => !(o is ThemeFocusRing));
@@ -90,6 +92,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(shop.BuyButton.interactable, Is.False);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        private static Transform Deep(Transform root, string name) =>
+            root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == name);
 
         private static TextMeshProUGUI Label(PowerUpMenuUI shop, PowerUpId id) => shop.CellFor(id).GetComponentInChildren<TextMeshProUGUI>();
 

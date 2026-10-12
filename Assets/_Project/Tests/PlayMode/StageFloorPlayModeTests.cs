@@ -138,10 +138,13 @@ namespace SoulHunter.Tests.PlayMode
             var field = typeof(PlayerController).GetField("_eventBusInput", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             field.SetValue(player, input);
             float maxY = start.y;
+            int framesInside = 0;
             for (float end = Time.realtimeSinceStartup + 2f; Time.realtimeSinceStartup < end;) // 5 units/s would carry the player far past the obstacle
             {
                 yield return null;
                 maxY = Mathf.Max(maxY, player.transform.position.y);
+                // Inside a blocker: its top is over the hero's centre (blockers are surfaces only, so look down on it).
+                if (Physics.Raycast(body.position + Vector3.up * 20f, Vector3.down, 20f, mask)) framesInside++;
             }
             field.SetValue(player, Vector2.zero);
 
@@ -151,7 +154,9 @@ namespace SoulHunter.Tests.PlayMode
                           $"state {state?.GetType().Name} kinematic {body.isKinematic} constraints {body.constraints} " +
                           $"overlaps [{string.Join(", ", Physics.OverlapSphere(start + Vector3.up * 0.5f, 0.6f).Select(c => c.name + "/" + LayerMask.LayerToName(c.gameObject.layer)))}] ";
             Assert.That(travelled.magnitude, Is.GreaterThan(0.5f), "The player walked. " + info + Errors());
-            Assert.That(Vector3.Dot(travelled, direction), Is.LessThan(distance), "The obstacle stopped the player. " + info + Errors());
+            // Slippery obstacles (owner, 2026-10-12): the hero may slide along the face and round its end, but never
+            // goes through it.
+            Assert.That(framesInside, Is.EqualTo(0), "The player never walked into the obstacle. " + info + Errors());
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

@@ -20,18 +20,66 @@ namespace SoulHunter.Tests.PlayMode
     /// The VS Arcana choice in the real game (release item P2-01; vampire.survivors.wiki/w/Arcanas, raw, fetched 2026-10-09):
     /// Arcana mode opens the start pick of every unlocked Arcana (or a random one); an Arcana chest opens a choice of four
     /// unheld cards with Rerolls that never show a card twice; with three Arcanas held the Arcana elite's chest is a
-    /// regular chest; the merchant's Draw a Fate offers every unlocked card. The screen is on screen and readable (4.5:1)
-    /// at 1920x1080 and in a short, wide window. Every test plays on a throw-away save (GameplayPlayModeTestBase).
+    /// regular chest; the merchant's Draw a Fate offers every unlocked card. The screen fits every PC and phone screen
+    /// (ScreenSimulation) and every text reads (4.5:1, and not under 12 sp on the phone). Every test plays on a throw-away save (GameplayPlayModeTestBase).
     /// </summary>
     public class ArcanaChoicePlayModeTests : GameplayPlayModeTestBase
     {
-        private static readonly Vector2[] Windows = { new Vector2(1920, 1080), new Vector2(1366, 575), new Vector2(2560, 1080) };
-
         private static ArcanaChoiceScreen OpenScreen()
         {
             var screen = ArcanaChoiceScreen.Current;
             Assert.That(screen != null && screen.IsOpen, Is.True, "The Arcana choice is open.");
             return screen;
+        }
+
+        /// <summary>The action buttons shown and the cards in the grid's window (the rest are scrolled away, under its mask).</summary>
+        private static IEnumerable<Selectable> VisibleControls(ArcanaChoiceScreen screen)
+        {
+            var list = new List<Selectable> { screen.TakeButton, screen.RerollButton, screen.RandomButton, screen.SkipButton };
+            list.AddRange(screen.Cards.Where(c => ResponsiveScroll.IsInView(screen.CardsScroll, (RectTransform)c.Button.transform)).Select(c => (Selectable)c.Button));
+            return list.Where(c => c.gameObject.activeInHierarchy).ToList();
+        }
+
+        /// <summary>
+        /// Responsive (owner, 2026-10-10): on PC 16:9, 21:9, 5:4 and the phone held either way, the controls in view are on
+        /// the canvas, apart and touch-sized; the actions stay at the panel's bottom under the cards and the card's panel;
+        /// the cards and the panel never overlap (side by side when wide, stacked when tall); at least one card is in view
+        /// and the last can be scrolled to; no text is under the 12 sp floor on the phone.
+        /// </summary>
+        private static IEnumerator AssertFitsEveryScreen(ArcanaChoiceScreen screen)
+        {
+            var problems = new List<string>();
+            try
+            {
+                foreach (var d in ScreenSimulation.Devices)
+                {
+                    yield return ScreenSimulation.At(d.Pixels, d.Dpi, d.Touch, screen.Canvas);
+                    problems.AddRange(ScreenSimulation.Problems(d.Name, VisibleControls(screen)));
+                    var view = ScreenSimulation.UnitsRect(screen.CardsViewport);
+                    var info = ScreenSimulation.UnitsRect(screen.InfoPanel);
+                    var actions = ScreenSimulation.UnitsRect(screen.TakeButton.transform as RectTransform);
+                    if (view.Overlaps(info)) problems.Add($"{d.Name}: the cards {view} overlap the card's panel {info}");
+                    if (view.Overlaps(actions) || info.Overlaps(actions)) problems.Add($"{d.Name}: the actions {actions} run into the cards or the panel");
+                    if (actions.yMax > Mathf.Min(view.yMin, info.yMin) + 0.5f) problems.Add($"{d.Name}: the actions {actions} are not under the cards and the panel");
+                    bool tall = UiScreen.IsPortrait;
+                    if (tall != screen.IsStacked) problems.Add($"{d.Name}: the cards and the panel are {(screen.IsStacked ? "stacked" : "side by side")} on a {(tall ? "tall" : "wide")} screen");
+                    if (!screen.Cards.Any(c => ResponsiveScroll.IsInView(screen.CardsScroll, (RectTransform)c.Button.transform))) problems.Add($"{d.Name}: no card is in view");
+                    screen.CardsScroll.verticalNormalizedPosition = 0f;
+                    Canvas.ForceUpdateCanvases();
+                    yield return null;
+                    Canvas.ForceUpdateCanvases();
+                    if (!ResponsiveScroll.IsInView(screen.CardsScroll, (RectTransform)screen.Cards.Last().Button.transform))
+                        problems.Add($"{d.Name}: the last card cannot be scrolled into view");
+                    screen.CardsScroll.verticalNormalizedPosition = 1f;
+                    Canvas.ForceUpdateCanvases();
+                    if (d.Touch)
+                        foreach (var t in screen.GetComponentsInChildren<TMP_Text>())
+                            if (!string.IsNullOrEmpty(t.text) && t.fontSize < UiScreen.MinTextUnits - 0.01f)
+                                problems.Add($"{d.Name}: {t.name} '{t.text}' at {t.fontSize:0.#} is under {UiScreen.MinTextUnits:0.#} units");
+                }
+            }
+            finally { ScreenSimulation.Restore(); }
+            Assert.That(problems, Is.Empty, string.Join("\n", problems));
         }
 
         [UnityTest]
@@ -62,34 +110,14 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TheChoiceScreen_FitsAnyWindow_AndEveryTextReads()
+        public IEnumerator TheChoiceScreen_FitsEveryScreen_AndEveryTextReads()
         {
             yield return BootIntoGameplay(save => save.ModeArcana = true);
             var screen = OpenScreen();
-            var canvas = (RectTransform)screen.Canvas.transform;
             var scaler = screen.Canvas.GetComponent<CanvasScaler>();
-            Assert.That(scaler.screenMatchMode, Is.EqualTo(CanvasScaler.ScreenMatchMode.Expand));
+            Assert.That(scaler.GetComponent<SoulHunter.Gameplay.UI.ResponsiveCanvas>(), Is.Not.Null, "It takes the game's one UI scale (ResponsiveCanvas, landscape and portrait).");
             Canvas.ForceUpdateCanvases();
-
-            var parts = new List<RectTransform> { (RectTransform)screen.TakeButton.transform, (RectTransform)screen.RandomButton.transform,
-                screen.TitleText.rectTransform, screen.CountText.rectTransform, screen.InfoText.rectTransform, screen.WorksWithText.rectTransform };
-            parts.AddRange(screen.Cards.Select(c => (RectTransform)c.Button.transform));
-            var corners = new Vector3[4];
-            foreach (var w in Windows)
-            {
-                float scale = Mathf.Min(w.x / scaler.referenceResolution.x, w.y / scaler.referenceResolution.y);
-                Vector2 half = w / scale * 0.5f;
-                foreach (var part in parts)
-                {
-                    part.GetWorldCorners(corners);
-                    foreach (var corner in corners)
-                    {
-                        Vector2 local = canvas.InverseTransformPoint(corner);
-                        Assert.That(Mathf.Abs(local.x) <= half.x + 0.5f && Mathf.Abs(local.y) <= half.y + 0.5f, Is.True,
-                            $"{part.name} reaches {local} off a {w.x}x{w.y} window (canvas half {half}).");
-                    }
-                }
-            }
+            yield return AssertFitsEveryScreen(screen);
 
             // ui-ux-pro-max: 4.5:1 for text. Cards against their own colour (and the focused card's); panel texts on the row.
             foreach (var card in screen.Cards)
@@ -109,11 +137,6 @@ namespace SoulHunter.Tests.PlayMode
                 var label = button.GetComponentInChildren<TMP_Text>();
                 Assert.That(UITheme.Contrast(label.color, button.colors.normalColor), Is.GreaterThanOrEqualTo(4.5f), button.name);
             }
-            // Nothing overlaps: the grid of cards keeps clear of the info panel.
-            float gridRight = screen.Cards.Max(c => { ((RectTransform)c.Button.transform).GetWorldCorners(corners); return canvas.InverseTransformPoint(corners[2]).x; });
-            screen.InfoText.rectTransform.GetWorldCorners(corners);
-            Assert.That(gridRight, Is.LessThan(canvas.InverseTransformPoint(corners[0]).x), "The cards stay left of the card's text.");
-
             screen.PressRandom();
             yield return null;
             Assert.That(ArcanaManager.Instance.ActiveArcanas.Count, Is.EqualTo(1), "Random gives one card.");
@@ -157,6 +180,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(screen.Cards.Select(c => c.Arcana), Has.No.Member(arcanas.ActiveArcanas[0]), "Never a card already held.");
             Assert.That(screen.SkipButton.gameObject.activeInHierarchy, Is.True);
             Assert.That(screen.RerollButton.gameObject.activeInHierarchy && screen.RerollButton.interactable, Is.True);
+            yield return AssertFitsEveryScreen(screen); // four cards with Take, Reroll and Skip
 
             var first = screen.Cards.Select(c => c.Arcana).ToList();
             int rerolls = levelUp.RerollsLeft;

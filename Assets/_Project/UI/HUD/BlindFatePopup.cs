@@ -10,7 +10,7 @@ namespace SoulHunter.Gameplay.UI
     /// Shows what Blind Fate (VS Random LevelUp; release item P3-05) picked: the item's icon and name over the hero's head
     /// for a moment. VS shows the picked item's sprite overhead (wiki Level_up, 1 April 2026: "Fixed DLC weapon sprites not
     /// appearing overhead for random level ups and limit breaks"). The look is the item's own icon on the HUD's plate with the
-    /// HUD's text (theme only). It never pauses and never takes input. The HUD adds it.
+    /// HUD's text (theme only). It never pauses and never takes input, and stays inside the safe area, clear of the touch pads (HudClearance). The HUD adds it.
     /// </summary>
     public sealed class BlindFatePopup : MonoBehaviour
     {
@@ -29,6 +29,8 @@ namespace SoulHunter.Gameplay.UI
         public bool IsShowing => _root != null && _root.gameObject.activeSelf;
         public string Text => _label != null ? _label.text : "";
         public Sprite Icon => _icon != null ? _icon.sprite : null;
+        /// <summary>The pick's plate (tests).</summary>
+        public RectTransform Root => _root;
 
         public void Setup()
         {
@@ -79,7 +81,25 @@ namespace SoulHunter.Gameplay.UI
             if (screen.z < 0f) return;
             var eventCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, screen, eventCamera, out var local))
-                _root.anchoredPosition = local;
+                PlaceAt(local - _canvasRect.rect.center);
+        }
+
+        /// <summary>
+        /// Puts the pick's plate with its bottom centre at <paramref name="anchored"/> (from the canvas centre), kept inside
+        /// the safe area and clear of the touch stick, Dash and Pause (owner, 2026-10-10: landscape and portrait). Over the
+        /// hero it never touches them; near an edge it slides to the nearest free spot.
+        /// </summary>
+        public void PlaceAt(Vector2 anchored)
+        {
+            if (_root == null || _canvasRect == null) return;
+            float floor = Mathf.Max(14f, UiScreen.MinTextUnits);
+            _label.fontSizeMin = floor;
+            if (_label.fontSizeMax < floor) _label.fontSizeMax = floor;
+            Vector2 centre = _canvasRect.rect.center;
+            Vector2 size = _root.sizeDelta;
+            var wanted = new Rect(centre.x + anchored.x - size.x * 0.5f, centre.y + anchored.y, size.x, size.y);
+            Rect box = HudClearance.Clear(wanted, HudClearance.SafeRect(_canvasRect, 8f), HudClearance.TouchPads(_canvasRect), HudClearance.Gap);
+            _root.anchoredPosition = new Vector2(box.center.x - centre.x, box.yMin - centre.y);
         }
 
         private void Build()

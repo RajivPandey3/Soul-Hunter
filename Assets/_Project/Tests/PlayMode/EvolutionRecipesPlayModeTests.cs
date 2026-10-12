@@ -27,7 +27,7 @@ namespace SoulHunter.Tests.PlayMode
     /// - level-up cards hint discovered recipes only, on weapon and passive cards (wiki Level_up, 0.3.2 and 1.4.200);
     /// - the pause screen's "Evolutions" list shows discovered recipes, unknown ones as unknown, held items marked in words
     ///   and with the chosen-item frame, the run's evolution fully highlighted, and pages (wiki Grim_Grimoire);
-    /// - its layout is on screen and readable (4.5:1) at 1920x1080 and in a short, wide 1366x575 window.
+    /// - its layout is on screen and readable (4.5:1) on a PC (16:9, 21:9, 5:4) and on a phone held either way.
     /// </summary>
     public class EvolutionRecipesPlayModeTests : GameplayPlayModeTestBase
     {
@@ -181,8 +181,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNotNull(pause.EvolutionsButton, "The pause menu has an Evolutions button.");
             Assert.That(pause.EvolutionsButton.GetComponentInChildren<TextMeshProUGUI>().text, Is.EqualTo("Evolutions"));
             Rect evo = ScreenRect((RectTransform)pause.EvolutionsButton.transform), resume = ScreenRect((RectTransform)pause.ResumeButton.transform);
-            Assert.That(evo.xMax, Is.LessThanOrEqualTo(resume.xMin), "Just to the left of Resume (wiki Grim_Grimoire).");
-            Assert.That(Mathf.Abs(evo.center.y - resume.center.y), Is.LessThan(2f), "On Resume's line.");
+            // Owner-approved responsive pause screen (2026-10-10): one column of buttons, so Evolutions sits in Resume's column, not beside it.
+            Assert.That(Mathf.Abs(evo.center.x - resume.center.x), Is.LessThan(2f), "In Resume's column.");
+            Assert.That(evo.yMax, Is.LessThanOrEqualTo(resume.yMin + 0.5f), "Below Resume.");
             Assert.That(OnScreen(evo), Is.True, "On screen.");
             foreach (var other in new[] { pause.ResumeButton, pause.OptionsButton, pause.QuitButton })
                 Assert.That(evo.Overlaps(ScreenRect((RectTransform)other.transform)), Is.False, $"Clear of {other.name}.");
@@ -224,8 +225,25 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(unknown.NameText.text, Does.Contain(EvolutionRecipesScreen.UnknownName), "Undiscovered recipes stay unknown.");
             Assert.That(unknown.Slots.All(s => s.transform.Find("Icon") == null), Is.True, "No item icons on an unknown recipe.");
 
-            CheckLayout(screen, "1920x1080", new Vector2(1920f, 1080f));
-            CheckLayout(screen, "1366x575", new Vector2(1366f, 575f));
+            // Responsive (owner, 2026-10-10): laid out on a PC (16:9, 21:9, 5:4) and on the owner's phone held either way.
+            var canvas = screen.GetComponent<Canvas>();
+            var columns = new Dictionary<string, int>();
+            try
+            {
+                foreach (var d in ScreenSimulation.Devices)
+                {
+                    yield return ScreenSimulation.At(d.Pixels, d.Dpi, d.Touch, canvas);
+                    for (int i = 0; i < 2; i++) { Canvas.ForceUpdateCanvases(); yield return null; }
+                    Canvas.ForceUpdateCanvases();
+                    CheckLayout(screen, d.Name);
+                    columns[d.Name] = screen.ShownColumns;
+                }
+            }
+            finally { ScreenSimulation.Restore(); }
+            Assert.That(columns["PC 1920x1080"], Is.EqualTo(EvolutionRecipesScreen.Columns), "Two columns of four on a PC.");
+            Assert.That(columns["Phone portrait"], Is.EqualTo(1), "One column on a phone held upright.");
+            yield return ScreenSimulation.AssertFitsEveryDevice(() => new Selectable[] { screen.PreviousButton, screen.BackButton, screen.NextButton }, canvas);
+            for (int i = 0; i < 2; i++) { Canvas.ForceUpdateCanvases(); yield return null; }
 
             // Pages.
             Assert.That(screen.PreviousButton.interactable, Is.False);
@@ -259,69 +277,62 @@ namespace SoulHunter.Tests.PlayMode
         // ---------------------------------------------------------------- layout checks
 
         /// <summary>
-        /// Lays the screen out as a window of <paramref name="window"/> pixels would (the Expand scaler gives a canvas of at
-        /// least 1920x1080 in both directions) and checks that everything is inside the window, apart, and readable.
+        /// Checks the screen as ScreenSimulation laid it out: the window inside the canvas, the header and the buttons inside
+        /// the window and readable, the buttons apart, the rows inside the scroll area's width and apart from each other, and
+        /// every row in view readable with its slots inside it and clear of its text.
         /// </summary>
-        private static void CheckLayout(EvolutionRecipesScreen screen, string what, Vector2 window)
+        private static void CheckLayout(EvolutionRecipesScreen screen, string what)
         {
-            var canvas = screen.GetComponent<Canvas>();
             var root = (RectTransform)screen.transform;
-            float scale = Mathf.Min(window.x / 1920f, window.y / 1080f);
-            Vector2 size = window / scale;
-            var mode = canvas.renderMode;
-            canvas.renderMode = RenderMode.WorldSpace;
-            root.sizeDelta = size;
-            Canvas.ForceUpdateCanvases();
-            foreach (var row in screen.GetComponentsInChildren<ThemedRow>()) row.Layout();
-            Canvas.ForceUpdateCanvases();
-            try
+            Rect canvasRect = Local(root, root);
+            Rect windowRect = Local(root, screen.Window);
+            Assert.That(Contains(canvasRect, windowRect), Is.True, $"{what}: the window {windowRect} is inside the screen {canvasRect}.");
+            var panel = screen.Window.GetComponent<Image>().color;
+            foreach (var text in new[] { screen.TitleText, screen.NoteText, screen.PageText })
+                Readable(text, panel, root, windowRect, $"{what} {text.name}");
+
+            var buttons = new[] { screen.PreviousButton, screen.BackButton, screen.NextButton };
+            var buttonRects = buttons.Select(b => Local(root, (RectTransform)b.transform)).ToList();
+            for (int i = 0; i < buttons.Length; i++)
             {
-                Rect canvasRect = Local(root, root);
-                Rect windowRect = Local(root, screen.Window);
-                Assert.That(Contains(canvasRect, windowRect), Is.True, $"{what}: the window {windowRect} is inside the screen {canvasRect}.");
-                var panel = screen.Window.GetComponent<Image>().color;
-                foreach (var text in new[] { screen.TitleText, screen.NoteText, screen.PageText })
-                    Readable(text, panel, root, windowRect, $"{what} {text.name}");
+                Assert.That(Contains(windowRect, buttonRects[i]), Is.True, $"{what}: {buttons[i].name} {buttonRects[i]} is inside the window.");
+                for (int j = i + 1; j < buttons.Length; j++)
+                    Assert.That(buttonRects[i].Overlaps(buttonRects[j]), Is.False, $"{what}: {buttons[i].name} and {buttons[j].name} overlap.");
+                var label = buttons[i].GetComponentsInChildren<TextMeshProUGUI>().First(t => !string.IsNullOrWhiteSpace(t.text));
+                var plate = buttons[i].IsInteractable() ? buttons[i].colors.normalColor : buttons[i].colors.disabledColor;
+                float need = buttons[i].IsInteractable() ? 4.5f : 3f; // a locked button reads "not now" (Power Up shop rule)
+                Assert.That(UITheme.Contrast(label.color, plate), Is.GreaterThanOrEqualTo(need), $"{what}: '{label.text}' reads on its button.");
+            }
 
-                var buttons = new[] { screen.PreviousButton, screen.BackButton, screen.NextButton };
-                var buttonRects = buttons.Select(b => Local(root, (RectTransform)b.transform)).ToList();
-                for (int i = 0; i < buttons.Length; i++)
-                {
-                    Assert.That(Contains(windowRect, buttonRects[i]), Is.True, $"{what}: {buttons[i].name} {buttonRects[i]} is inside the window.");
-                    for (int j = i + 1; j < buttons.Length; j++)
-                        Assert.That(buttonRects[i].Overlaps(buttonRects[j]), Is.False, $"{what}: {buttons[i].name} and {buttons[j].name} overlap.");
-                    var label = buttons[i].GetComponentsInChildren<TextMeshProUGUI>().First(t => !string.IsNullOrWhiteSpace(t.text));
-                    var plate = buttons[i].IsInteractable() ? buttons[i].colors.normalColor : buttons[i].colors.disabledColor;
-                    float need = buttons[i].IsInteractable() ? 4.5f : 3f; // a locked button reads "not now" (Power Up shop rule)
-                    Assert.That(UITheme.Contrast(label.color, plate), Is.GreaterThanOrEqualTo(need), $"{what}: '{label.text}' reads on its button.");
-                }
+            // The rows scroll inside their view, which sits inside the window and clear of the buttons.
+            Rect view = Local(root, screen.Scroll.viewport);
+            Assert.That(Contains(windowRect, view), Is.True, $"{what}: the rows' view {view} is inside the window.");
+            foreach (var b in buttonRects) Assert.That(view.Overlaps(b), Is.False, $"{what}: the rows' view is clear of the buttons.");
+            Assert.That(view.Overlaps(Local(root, screen.NoteText.rectTransform)), Is.False, $"{what}: the rows' view is under the note.");
 
-                var rows = screen.Rows.Where(r => r.Root.gameObject.activeSelf).ToList();
-                var rowRects = rows.Select(r => Local(root, r.Root)).ToList();
-                for (int i = 0; i < rows.Count; i++)
+            var rows = screen.Rows.Where(r => r.Root.gameObject.activeSelf).ToList();
+            var rowRects = rows.Select(r => Local(root, r.Root)).ToList();
+            int shown = 0;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                Assert.That(rowRects[i].xMin >= view.xMin - 0.5f && rowRects[i].xMax <= view.xMax + 0.5f, Is.True, $"{what}: row {i} {rowRects[i]} is inside the view's width {view}.");
+                for (int j = i + 1; j < rows.Count; j++)
+                    Assert.That(rowRects[i].Overlaps(rowRects[j]), Is.False, $"{what}: rows {i} and {j} overlap.");
+                if (!Contains(view, rowRects[i])) continue; // scrolled out of view: masked
+                shown++;
+                var back = rows[i].Background.color;
+                Readable(rows[i].NameText, back, root, rowRects[i], $"{what} row {i} name");
+                Readable(rows[i].StatusText, back, root, rowRects[i], $"{what} row {i} status");
+                foreach (var held in rows[i].HeldLabels) Readable(held, back, root, rowRects[i], $"{what} row {i} Held");
+                Rect name = Local(root, rows[i].NameText.rectTransform), status = Local(root, rows[i].StatusText.rectTransform);
+                foreach (var slot in rows[i].Slots)
                 {
-                    Assert.That(Contains(windowRect, rowRects[i]), Is.True, $"{what}: row {i} {rowRects[i]} is inside the window.");
-                    foreach (var b in buttonRects) Assert.That(rowRects[i].Overlaps(b), Is.False, $"{what}: row {i} is clear of the buttons.");
-                    for (int j = i + 1; j < rows.Count; j++)
-                        Assert.That(rowRects[i].Overlaps(rowRects[j]), Is.False, $"{what}: rows {i} and {j} overlap.");
-                    var back = rows[i].Background.color;
-                    Readable(rows[i].NameText, back, root, rowRects[i], $"{what} row {i} name");
-                    Readable(rows[i].StatusText, back, root, rowRects[i], $"{what} row {i} status");
-                    foreach (var held in rows[i].HeldLabels) Readable(held, back, root, rowRects[i], $"{what} row {i} Held");
-                    float textLeft = Local(root, rows[i].NameText.rectTransform).xMin;
-                    foreach (var slot in rows[i].Slots)
-                    {
-                        Rect s = Local(root, (RectTransform)slot.transform);
-                        Assert.That(Contains(rowRects[i], s), Is.True, $"{what}: row {i} slot {slot.name} is inside its row.");
-                        Assert.That(s.xMax, Is.LessThanOrEqualTo(textLeft + 0.5f), $"{what}: row {i} slot {slot.name} is clear of the text.");
-                    }
+                    Rect s = Local(root, (RectTransform)slot.transform);
+                    Assert.That(Contains(rowRects[i], s), Is.True, $"{what}: row {i} slot {slot.name} is inside its row.");
+                    Assert.That(s.Overlaps(name) || s.Overlaps(status), Is.False, $"{what}: row {i} slot {slot.name} is clear of the text.");
                 }
             }
-            finally
-            {
-                canvas.renderMode = mode;
-                Canvas.ForceUpdateCanvases();
-            }
+            Assert.That(shown, Is.GreaterThanOrEqualTo(1), $"{what}: at least one row is in view.");
         }
 
         private static void Readable(TextMeshProUGUI text, Color back, RectTransform root, Rect area, string what)
@@ -329,7 +340,7 @@ namespace SoulHunter.Tests.PlayMode
             text.ForceMeshUpdate();
             Assert.That(UITheme.Contrast(text.color, back), Is.GreaterThanOrEqualTo(4.5f), $"{what}: '{text.text}' contrast.");
             Assert.That(text.isTextTruncated, Is.False, $"{what}: '{text.text}' is not cut short.");
-            Assert.That(text.fontSize, Is.GreaterThanOrEqualTo(14f), $"{what}: '{text.text}' is at least 14.");
+            Assert.That(text.fontSize, Is.GreaterThanOrEqualTo(Mathf.Max(14f, UiScreen.MinTextUnits) - 0.01f), $"{what}: '{text.text}' is at least 14 (12 sp on a phone).");
             Assert.That(Contains(area, Local(root, text.rectTransform)), Is.True, $"{what}: '{text.text}' stays inside.");
         }
 

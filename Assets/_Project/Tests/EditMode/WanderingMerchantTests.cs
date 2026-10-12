@@ -371,26 +371,16 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void WareCells_StayInsideTheWaresArea_WithoutOverlap_ForEveryCount()
+        public void WareColumns_FollowTheWidth_AndNarrowCardsGrowTaller()
         {
-            for (int count = 1; count <= 8; count++)
-            {
-                var cells = new List<Rect>();
-                for (int i = 0; i < count; i++)
-                {
-                    WanderingMerchant.WareCell(i, count, out var min, out var max);
-                    Assert.That(min.x, Is.GreaterThanOrEqualTo(0f));
-                    Assert.That(max.x, Is.LessThanOrEqualTo(1f));
-                    Assert.That(min.y, Is.GreaterThanOrEqualTo(WanderingMerchant.WaresBottom - 1e-4f), $"{count} wares: card {i} runs into the message.");
-                    Assert.That(max.y, Is.LessThanOrEqualTo(WanderingMerchant.WaresTop + 1e-4f));
-                    var cell = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
-                    foreach (var other in cells) Assert.That(cell.Overlaps(other), Is.False, $"{count} wares: card {i} overlaps another.");
-                    cells.Add(cell);
-                }
-            }
-            WanderingMerchant.WareCell(0, 3, out var oneMin, out var oneMax);
-            Assert.That(oneMax.y - oneMin.y, Is.EqualTo(0.12f).Within(1e-4f), "Three wares keep the approved one-column cards.");
-            Assert.That(WanderingMerchant.WareColumns(7), Is.EqualTo(2), "Inverse mode's seven wares go in two columns.");
+            // Responsive (owner, 2026-10-10): the columns come from the list's width, not the screen's shape.
+            Assert.That(WanderingMerchant.WareColumns(3, 1330f, 12f), Is.EqualTo(1), "Three wares keep the approved one column.");
+            Assert.That(WanderingMerchant.WareColumns(7, 1330f, 12f), Is.EqualTo(2), "Inverse mode's seven wares take two columns on a wide panel.");
+            Assert.That(WanderingMerchant.WareColumns(7, 408f, 12f), Is.EqualTo(1), "A phone held upright shows one column.");
+            Assert.That(WanderingMerchant.WareColumns(7, 2f * WanderingMerchant.MinWareWidth + 12f, 12f), Is.EqualTo(2));
+            Assert.That(WanderingMerchant.WareColumns(7, 2f * WanderingMerchant.MinWareWidth + 11f, 12f), Is.EqualTo(1));
+            Assert.That(WanderingMerchant.WareCardHeight(400f), Is.GreaterThan(WanderingMerchant.WareCardHeight(800f)),
+                "A narrow card stacks its name and price over the description, so it is taller.");
         }
 
         [Test]

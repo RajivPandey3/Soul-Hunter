@@ -367,32 +367,6 @@ namespace SoulHunter.Gameplay.Core
             public Action OnClick;
         }
 
-        /// <summary>Where the ware cards may go, as a share of the panel (above the message line).</summary>
-        public const float WaresTop = 0.79f, WaresBottom = 0.36f;
-        /// <summary>Up to this many wares stay in one column (the approved look); more go in two columns.</summary>
-        public const int SingleColumnWares = 3;
-        private const float RowStep = 0.14f, RowGap = 0.02f, ColumnGap = 0.02f, WaresLeft = 0.05f, WaresRight = 0.95f;
-
-        public static int WareColumns(int count) => count > SingleColumnWares ? 2 : 1;
-
-        /// <summary>
-        /// The panel-relative cell of ware <paramref name="index"/> of <paramref name="count"/>: one column of rows 0.14 apart
-        /// (the approved look) while it fits, else two columns whose rows share the space between
-        /// <see cref="WaresTop"/> and <see cref="WaresBottom"/>, so every card stays inside the panel and above the message.
-        /// </summary>
-        public static void WareCell(int index, int count, out Vector2 min, out Vector2 max)
-        {
-            int columns = WareColumns(count);
-            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
-            float step = Mathf.Min(RowStep, (WaresTop - WaresBottom + RowGap) / rows);
-            float width = (WaresRight - WaresLeft - ColumnGap * (columns - 1)) / columns;
-            int row = index / columns, column = index % columns;
-            float top = WaresTop - row * step;
-            float left = WaresLeft + column * (width + ColumnGap);
-            min = new Vector2(left, top - (step - RowGap));
-            max = new Vector2(left + width, top);
-        }
-
         private List<Ware> Wares(int gold)
         {
             var wares = new List<Ware>();
@@ -472,6 +446,41 @@ namespace SoulHunter.Gameplay.Core
             return wares;
         }
 
+        /// <summary>Up to this many wares stay in one column (the approved look); more may take two, as the width allows.</summary>
+        public const int SingleColumnWares = 3;
+        /// <summary>The narrowest ware card, in canvas units: a narrower panel shows fewer columns.</summary>
+        public const float MinWareWidth = 540f;
+        /// <summary>Under this card width the price moves up beside the name and the description takes the card's width.</summary>
+        public const float NarrowWareBelow = 600f;
+        /// <summary>A safe area shorter than this is "short" (a landscape phone): one header line, Leave beside the message.</summary>
+        public const float ShortShopBelow = 700f;
+        private const float OneColumnPanelWidth = 900f, TwoColumnPanelWidth = 1400f;
+        private const float WareHeight = 120f, NarrowWareHeight = 150f;
+
+        /// <summary>The most columns <paramref name="count"/> wares may take (the width may allow fewer).</summary>
+        public static int MaxWareColumns(int count) => count > SingleColumnWares ? 2 : 1;
+
+        /// <summary>The ware columns for <paramref name="count"/> wares in a list <paramref name="width"/> units wide.</summary>
+        public static int WareColumns(int count, float width, float gap) =>
+            SoulHunter.Gameplay.UI.UiScreen.ColumnsFor(width, MinWareWidth, gap, MaxWareColumns(count));
+
+        /// <summary>A ware card's height at <paramref name="width"/>: taller when narrow, never under the touch target.</summary>
+        public static float WareCardHeight(float width) =>
+            Mathf.Max(width < NarrowWareBelow ? NarrowWareHeight : WareHeight, SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits * 1.3f);
+
+        // The open shop's parts, kept so a rotation or a window change lays them out again without a rebuild.
+        private RectTransform _shopPanel, _shopTitle, _shopGold, _shopWares, _shopMessage;
+        private UnityEngine.UI.ScrollRect _shopScroll;
+        private UnityEngine.UI.GridLayoutGroup _shopGrid;
+        private UnityEngine.UI.Button _shopLeave;
+        private readonly List<UnityEngine.UI.Button> _wareButtons = new List<UnityEngine.UI.Button>();
+        private Vector2 _shopLaidOutFor = new Vector2(-1f, -1f);
+
+        /// <summary>The wares' scrolling list (tests: a ware is on screen when it lies inside its viewport).</summary>
+        public UnityEngine.UI.ScrollRect ShopWaresScroll => _shopScroll;
+        /// <summary>The shop's Leave button, pinned to the bottom of the panel.</summary>
+        public UnityEngine.UI.Button ShopLeaveButton => _shopLeave;
+
         private void BuildShopUI()
         {
             if (_shopUI != null || !Application.isPlaying) return;
@@ -479,50 +488,165 @@ namespace SoulHunter.Gameplay.Core
             var canvas = _shopUI.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 900;
-            var scaler = _shopUI.AddComponent<UnityEngine.UI.CanvasScaler>();
-            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            // The whole 1920x1080 layout fits any window (a wide, short window cut the chest screen's OPEN off, 2026-10-01).
-            scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand;
+            SoulHunter.Gameplay.UI.ResponsiveCanvas.Apply(canvas); // the game's one UI scale (UiScreen), landscape and portrait
             _shopUI.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
             int gold = CurrentGold();
             var wares = Wares(gold);
-            bool grid = WareColumns(wares.Count) > 1;
 
-            // Owner (2026-10-04): dark, full contrast (UITheme), on a dark veil over the paused game. Two columns of wares
-            // (Inverse mode) get a wider, taller panel so the cards keep room for their name and price.
+            // Owner (2026-10-04): dark, full contrast (UITheme), on a dark veil over the paused game. Responsive (owner,
+            // 2026-10-10): the veil stays full screen, the panel keeps to the safe area (LayoutShop sizes it).
             SoulHunter.Gameplay.UI.UITheme.AddVeil(_shopUI.transform);
-            var panel = grid
-                ? ShopRect("Panel", _shopUI.transform, new Vector2(0.14f, 0.06f), new Vector2(0.86f, 0.94f))
-                : ShopRect("Panel", _shopUI.transform, new Vector2(0.27f, 0.14f), new Vector2(0.73f, 0.86f));
-            SoulHunter.Gameplay.UI.UITheme.ApplyPanel(panel.gameObject.AddComponent<UnityEngine.UI.Image>());
-            SoulHunter.Gameplay.UI.UITheme.ApplyText(ShopText("Title", panel, new Vector2(0f, 0.89f), new Vector2(1f, 0.98f), "WANDERING MERCHANT", 40f), SoulHunter.Gameplay.UI.ThemedElement.TextRole.Title);
-            GoldRow(panel, gold);
+            var safe = ShopRect("Safe", _shopUI.transform, Vector2.zero, Vector2.one);
+            SoulHunter.Gameplay.UI.SafeAreaFitter.Fit(safe);
+            _shopPanel = ShopRect("Panel", safe, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            SoulHunter.Gameplay.UI.UITheme.ApplyPanel(_shopPanel.gameObject.AddComponent<UnityEngine.UI.Image>());
+            var title = ShopText("Title", _shopPanel, Vector2.zero, Vector2.zero, "WANDERING MERCHANT", 40f);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(title, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Title);
+            _shopTitle = (RectTransform)title.transform;
+            _shopGold = GoldRow(_shopPanel, gold);
 
-            var navigable = new List<(UnityEngine.UI.Button button, Vector2 centre)>();
+            // The wares: a grid whose columns follow the width, scrolling when there are more than the room.
+            _shopWares = ShopRect("Wares", _shopPanel, Vector2.zero, Vector2.zero);
+            // Keyboard and controller: the focused ware scrolls into view (KeepSelectedInView).
+            _shopScroll = SoulHunter.Gameplay.UI.ResponsiveScroll.Create(_shopWares, "WareListViewport", "WareList", out var content,
+                SoulHunter.Gameplay.UI.ResponsiveScroll.Bar.Mark, fitContentHeight: true, keepSelectedInView: true);
+            _shopGrid = content.gameObject.AddComponent<UnityEngine.UI.GridLayoutGroup>();
+            _shopGrid.constraint = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
+            _shopGrid.childAlignment = TextAnchor.UpperCenter;
+
+            _wareButtons.Clear();
             UnityEngine.UI.Button focus = null;
-            for (int i = 0; i < wares.Count; i++)
+            foreach (var ware in wares)
             {
-                var ware = wares[i];
-                WareCell(i, wares.Count, out var min, out var max);
-                var button = WareCard(panel, min, max, ware.Icon, ware.Name, ware.Description, ware.State, ware.OnClick);
+                var button = WareCard(content, ware.Icon, ware.Name, ware.Description, ware.State, ware.OnClick);
                 SetAvailable(button, ware.Available);
-                navigable.Add((button, (min + max) * 0.5f));
+                _wareButtons.Add(button);
                 if (focus == null && button.interactable) focus = button;
             }
 
-            ShopText("Message", panel, new Vector2(0.05f, 0.24f), new Vector2(0.95f, 0.34f), LastMessage, 24f).color = SoulHunter.Gameplay.UI.UITheme.Rewards.Soul;
-            var leave = ShopButton(panel, 0.18f, "Leave (the merchant moves on)", Leave);
-            navigable.Add((leave, new Vector2(0.5f, 0.12f)));
-            WireNavigation(navigable);
-            if (focus == null) focus = leave;
+            var message = ShopText("Message", _shopPanel, Vector2.zero, Vector2.zero, LastMessage, 24f);
+            message.color = SoulHunter.Gameplay.UI.UITheme.Rewards.Soul;
+            _shopMessage = (RectTransform)message.transform;
+            _shopLeave = ShopButton(_shopPanel, "Leave (the merchant moves on)", Leave);
+
+            Canvas.ForceUpdateCanvases(); // a canvas made this frame has no scaled size yet
+            LayoutShop();
+            if (focus == null) focus = _shopLeave;
             if (UnityEngine.EventSystems.EventSystem.current != null)
                 UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(focus.gameObject);
         }
 
+        private void OnEnable() => SoulHunter.Gameplay.UI.UiScreen.Changed += LayoutShop;
+
+        private void LateUpdate()
+        {
+            if (_shopUI == null || _shopPanel == null) return;
+            if (((RectTransform)_shopPanel.parent).rect.size != _shopLaidOutFor) LayoutShop();
+        }
+
         /// <summary>
-        /// Keyboard and controller move only between the shop's usable buttons, by their place on the panel (automatic
+        /// Lays the open shop out for the current canvas, in one code path (owner, 2026-10-10: landscape and portrait from
+        /// the same screen). The panel hugs its wares inside the safe area; the wares take one or two columns as the width
+        /// allows and scroll when they are more than the room; Leave stays pinned to the panel's bottom edge. A short screen
+        /// puts the title and gold on one line and the message beside Leave, so the wares keep their room.
+        /// </summary>
+        private void LayoutShop()
+        {
+            if (_shopUI == null || _shopPanel == null) return;
+            var safe = (RectTransform)_shopPanel.parent;
+            Vector2 room = safe.rect.size;
+            if (room.x <= 0f || room.y <= 0f) return;
+            _shopLaidOutFor = room;
+            var theme = SoulHunter.Gameplay.UI.UiThemeAsset.Active;
+            bool roomy = room.y >= ShortShopBelow;
+            float margin = roomy ? 32f : 12f, pad = roomy ? 24f : 16f;
+            float gap = Mathf.Max(8f, SoulHunter.Gameplay.UI.UITheme.Layout.ButtonGap);
+            int count = _wareButtons.Count;
+
+            // Width: one or two columns of cards, as many as fit.
+            float panelWidth = Mathf.Min(room.x - 2f * margin, MaxWareColumns(count) > 1 ? TwoColumnPanelWidth : OneColumnPanelWidth);
+            float listWidth = panelWidth - 2f * pad - SoulHunter.Gameplay.UI.ResponsiveScroll.MarkRoom;
+            int columns = WareColumns(count, listWidth, gap);
+            float cardWidth = Mathf.Floor((listWidth - gap * (columns - 1)) / columns);
+            float cardHeight = Mathf.Floor(WareCardHeight(cardWidth));
+            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
+            float listHeight = rows * cardHeight + (rows - 1) * gap;
+
+            // Leave at the theme's standard (touch) size.
+            var leaveTheme = SoulHunter.Gameplay.UI.ThemedElement.For(_shopLeave.gameObject);
+            Vector2 leaveSize = leaveTheme.StandardSize(theme) ?? new Vector2(SoulHunter.Gameplay.UI.UITheme.Layout.ButtonWidth, SoulHunter.Gameplay.UI.UITheme.Layout.ButtonHeight);
+            const float titleHeight = 64f, goldHeight = 52f, messageHeight = 44f, shortHeader = 60f;
+            float header = roomy ? titleHeight + gap + goldHeight : shortHeader;
+            float footer = roomy ? messageHeight + gap + leaveSize.y : leaveSize.y;
+            float chrome = pad + header + gap + gap + footer + pad;
+            float panelHeight = Mathf.Min(room.y - 2f * margin, chrome + listHeight);
+            _shopPanel.anchorMin = _shopPanel.anchorMax = _shopPanel.pivot = new Vector2(0.5f, 0.5f);
+            _shopPanel.anchoredPosition = Vector2.zero;
+            _shopPanel.sizeDelta = new Vector2(panelWidth, panelHeight);
+            float inner = panelWidth - 2f * pad;
+
+            var titleText = _shopTitle.GetComponent<TMPro.TextMeshProUGUI>();
+            if (roomy)
+            {
+                PlaceTop(_shopTitle, pad, pad, inner, titleHeight);
+                titleText.alignment = TMPro.TextAlignmentOptions.Center;
+                PlaceTop(_shopGold, pad + (inner - 360f) * 0.5f, pad + titleHeight + gap, 360f, goldHeight);
+            }
+            else
+            {
+                PlaceTop(_shopTitle, pad, pad, inner - 300f - gap, shortHeader);
+                titleText.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
+                PlaceTop(_shopGold, pad + inner - 300f, pad + (shortHeader - goldHeight) * 0.5f, 300f, goldHeight);
+            }
+
+            // The list between the header and the footer.
+            float listTop = pad + header + gap;
+            PlaceTop(_shopWares, pad, listTop, inner, panelHeight - listTop - (gap + footer + pad));
+            _shopGrid.spacing = new Vector2(gap, gap);
+            _shopGrid.constraintCount = columns;
+            _shopGrid.cellSize = new Vector2(cardWidth, cardHeight);
+            foreach (var card in _wareButtons) LayoutWareCard((RectTransform)card.transform, cardWidth, cardHeight);
+
+            // Leave pinned to the bottom edge (centred; at the right on a short screen with the message beside it).
+            var leave = (RectTransform)_shopLeave.transform;
+            leave.anchorMin = leave.anchorMax = new Vector2(roomy ? 0.5f : 1f, 0f);
+            leave.pivot = new Vector2(0.5f, 0.5f);
+            leave.sizeDelta = leaveSize;
+            leave.anchoredPosition = new Vector2(roomy ? 0f : -(pad + leaveSize.x * 0.5f), pad + leaveSize.y * 0.5f);
+            if (roomy) PlaceBottom(_shopMessage, pad, pad + leaveSize.y + gap, inner, messageHeight);
+            else PlaceBottom(_shopMessage, pad, pad, inner - leaveSize.x - gap, leaveSize.y);
+
+            foreach (var text in _shopUI.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+                if (text.GetComponentInParent<UnityEngine.UI.Button>() != _shopLeave) SoulHunter.Gameplay.UI.UiTextFloor.Apply(text);
+
+            // Keyboard and controller: neighbours by the grid's own columns and rows, Leave under them.
+            var navigable = new List<(UnityEngine.UI.Button button, Vector2 centre)>();
+            for (int i = 0; i < _wareButtons.Count; i++) navigable.Add((_wareButtons[i], new Vector2(i % columns, -(i / columns))));
+            navigable.Add((_shopLeave, new Vector2(roomy ? (columns - 1) * 0.5f : columns - 1, -rows)));
+            WireNavigation(navigable);
+
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_shopGrid.GetComponent<RectTransform>());
+        }
+
+        /// <summary>A rect measured from its parent's top-left corner, in canvas units.</summary>
+        private static void PlaceTop(RectTransform rect, float x, float y, float width, float height)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(x, -y);
+            rect.sizeDelta = new Vector2(width, height);
+        }
+
+        /// <summary>A rect measured from its parent's bottom-left corner, in canvas units.</summary>
+        private static void PlaceBottom(RectTransform rect, float x, float y, float width, float height)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 0f);
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(width, height);
+        }
+
+        /// <summary>
+        /// Keyboard and controller move only between the shop's usable buttons, by their place in the shop (automatic
         /// navigation could reach buttons of the paused screens under the veil).
         /// </summary>
         private static void WireNavigation(List<(UnityEngine.UI.Button button, Vector2 centre)> items)
@@ -566,10 +690,10 @@ namespace SoulHunter.Gameplay.Core
             if (!available) SoulHunter.Gameplay.UI.ThemedElement.For(button.gameObject).ShowUsable(false);
         }
 
-        /// <summary>The player's gold with the theme's coin, like the Power Up screen.</summary>
-        private static void GoldRow(RectTransform panel, int gold)
+        /// <summary>The player's gold with the theme's coin, like the Power Up screen (LayoutShop places the row).</summary>
+        private static RectTransform GoldRow(RectTransform panel, int gold)
         {
-            var row = ShopRect("GoldRow", panel, new Vector2(0.3f, 0.81f), new Vector2(0.7f, 0.89f));
+            var row = ShopRect("GoldRow", panel, Vector2.zero, Vector2.zero);
             var coin = ShopRect("Coin", row, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             coin.sizeDelta = new Vector2(44f, 44f);
             coin.anchoredPosition = new Vector2(-70f, 0f);
@@ -581,17 +705,17 @@ namespace SoulHunter.Gameplay.Core
             text.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
             ((RectTransform)text.transform).offsetMin = new Vector2(-40f, 0f);
             SoulHunter.Gameplay.UI.UITheme.ApplyText(text, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Gold);
+            return row;
         }
 
         /// <summary>
         /// A ware as a card like the Power Up and level-up cards (owner, 2026-10-08: the Pro look everywhere): the item's
         /// icon, its name and what it does, and its price with a coin (or OWNED / NO FREE SLOT). The state text is the
-        /// card's first text.
+        /// card's first text. The grid sizes the card; <see cref="LayoutWareCard"/> places its parts.
         /// </summary>
-        private UnityEngine.UI.Button WareCard(RectTransform panel, Vector2 min, Vector2 max, Sprite icon, string name, string description,
-            string state, Action onClick)
+        private UnityEngine.UI.Button WareCard(RectTransform list, Sprite icon, string name, string description, string state, Action onClick)
         {
-            var rect = ShopRect("Ware", panel, min, max);
+            var rect = ShopRect("Ware", list, Vector2.zero, Vector2.zero);
             var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();
             var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();
             button.targetGraphic = image;
@@ -599,33 +723,27 @@ namespace SoulHunter.Gameplay.Core
             bool price = state.EndsWith(" G");
             // A price shows its coin instead of the "G" (like the Power Up screen); OWNED / NO FREE SLOT stay words.
             string shown = price && int.TryParse(state.Substring(0, state.Length - 2), out var amount) ? amount.ToString("N0") : state;
-            var stateText = ShopText("Price", rect, new Vector2(0.74f, 0.1f), new Vector2(0.97f, 0.9f), shown, 30f);
+            var stateText = ShopText("Price", rect, Vector2.zero, Vector2.zero, shown, 30f);
             stateText.alignment = TMPro.TextAlignmentOptions.MidlineRight;
             if (price)
             {
-                // The coin sits just left of the number.
-                stateText.ForceMeshUpdate();
-                float width = stateText.GetPreferredValues(shown).x;
                 var coin = ShopRect("Coin", stateText.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f));
                 coin.pivot = new Vector2(1f, 0.5f);
                 coin.sizeDelta = new Vector2(34f, 34f);
-                coin.anchoredPosition = new Vector2(-(width + 10f), 0f);
                 var coinImage = coin.gameObject.AddComponent<UnityEngine.UI.Image>();
                 coinImage.sprite = SoulHunter.Gameplay.UI.UITheme.IconFor(SoulHunter.Gameplay.UI.UITheme.IconSlot.Coin);
                 coinImage.preserveAspect = true;
                 coinImage.raycastTarget = false;
             }
-            var iconRect = ShopRect("Icon", rect, new Vector2(0.015f, 0.1f), new Vector2(0.015f, 0.9f));
-            iconRect.pivot = new Vector2(0f, 0.5f);
-            iconRect.sizeDelta = new Vector2(64f, 0f);
+            var iconRect = ShopRect("Icon", rect, Vector2.zero, Vector2.zero);
             var iconImage = iconRect.gameObject.AddComponent<UnityEngine.UI.Image>();
             iconImage.sprite = icon;
             iconImage.enabled = icon != null;
             iconImage.preserveAspect = true;
             iconImage.raycastTarget = false;
-            var nameText = ShopText("Name", rect, new Vector2(0.14f, 0.5f), new Vector2(0.72f, 0.95f), name, 32f);
+            var nameText = ShopText("Name", rect, Vector2.zero, Vector2.zero, name, 32f);
             nameText.alignment = TMPro.TextAlignmentOptions.BottomLeft;
-            var descText = ShopText("Description", rect, new Vector2(0.14f, 0.06f), new Vector2(0.72f, 0.5f), description, 22f);
+            var descText = ShopText("Description", rect, Vector2.zero, Vector2.zero, description, 22f);
             descText.alignment = TMPro.TextAlignmentOptions.TopLeft;
             SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Card, SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: false,
                 size: SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Free);
@@ -635,26 +753,72 @@ namespace SoulHunter.Gameplay.Core
             return button;
         }
 
+        /// <summary>
+        /// Places a ware card's parts for its size, in canvas units: icon at the left; wide, the price takes a column at
+        /// the right; narrow (a phone held upright), the price sits beside the name and the description takes the width.
+        /// </summary>
+        private static void LayoutWareCard(RectTransform card, float width, float height)
+        {
+            const float inset = 14f, priceWide = 190f, priceNarrow = 150f, coinGap = 10f;
+            bool narrow = width < NarrowWareBelow;
+            float iconSize = Mathf.Min(72f, height - 2f * inset);
+            var icon = (RectTransform)card.Find("Icon");
+            icon.anchorMin = icon.anchorMax = icon.pivot = new Vector2(0f, 0.5f);
+            icon.anchoredPosition = new Vector2(inset, 0f);
+            icon.sizeDelta = new Vector2(iconSize, iconSize);
+            float textLeft = inset + iconSize + inset;
+            var price = (RectTransform)card.Find("Price");
+            var name = (RectTransform)card.Find("Name");
+            var description = (RectTransform)card.Find("Description");
+            if (narrow)
+            {
+                const float nameHeight = 44f;
+                PlaceTop(price, width - inset - priceNarrow, inset * 0.6f, priceNarrow, nameHeight);
+                PlaceTop(name, textLeft, inset * 0.6f, width - textLeft - priceNarrow - inset * 2f, nameHeight);
+                float top = inset * 0.6f + nameHeight + 4f;
+                PlaceTop(description, textLeft, top, width - textLeft - inset, height - top - inset * 0.6f);
+            }
+            else
+            {
+                PlaceTop(price, width - inset - priceWide, inset, priceWide, height - 2f * inset);
+                float textWidth = width - textLeft - priceWide - inset * 2f;
+                PlaceTop(name, textLeft, inset * 0.6f, textWidth, height * 0.5f - inset * 0.6f);
+                PlaceTop(description, textLeft, height * 0.5f + 2f, textWidth, height * 0.5f - inset);
+            }
+            // The coin sits just left of the number.
+            var coin = price.Find("Coin") as RectTransform;
+            if (coin != null)
+            {
+                var priceText = price.GetComponent<TMPro.TextMeshProUGUI>();
+                priceText.ForceMeshUpdate();
+                float number = Mathf.Min(priceText.GetPreferredValues(priceText.text).x, price.rect.width - coin.sizeDelta.x - coinGap);
+                coin.anchoredPosition = new Vector2(-(number + coinGap), 0f);
+            }
+        }
+
         private void DestroyShopUI()
         {
             if (_shopUI == null) return;
+            _shopUI.SetActive(false); // Destroy waits for the end of the frame: the old screen must not show beside its rebuild
             if (Application.isPlaying) Destroy(_shopUI); else DestroyImmediate(_shopUI);
             _shopUI = null;
+            _shopPanel = null;
+            _shopScroll = null;
+            _shopLeave = null;
+            _wareButtons.Clear();
         }
 
-        private UnityEngine.UI.Button ShopButton(RectTransform panel, float top, string label, Action onClick)
+        /// <summary>Leave: a standard action button (the theme's size, touch-sized on a phone), placed by LayoutShop.</summary>
+        private UnityEngine.UI.Button ShopButton(RectTransform panel, string label, Action onClick)
         {
-            var rect = ShopRect("Ware", panel, new Vector2(0.05f, top - 0.12f), new Vector2(0.95f, top));
+            var rect = ShopRect("Leave", panel, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f));
             var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();
             var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(() => onClick());
             ShopText("Text", rect, new Vector2(0.03f, 0f), new Vector2(0.97f, 1f), label, 26f);
-            bool leave = label.StartsWith("Leave");
-            // Wares keep their two-line, left-aligned text and their row size; Leave is a standard action button.
-            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, leave ? SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger : SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
-                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: leave,
-                size: leave ? SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Standard : SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Free);
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(button, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Danger,
+                SoulHunter.Gameplay.UI.UITheme.IconSlot.None, labels: true, size: SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Standard);
             return button;
         }
 
@@ -685,11 +849,13 @@ namespace SoulHunter.Gameplay.Core
         // The shop must never leave the game paused (stage change, scene unload).
         private void OnDisable()
         {
+            SoulHunter.Gameplay.UI.UiScreen.Changed -= LayoutShop;
             if (_isShopOpen) CloseShop();
         }
 
         private void OnDestroy()
         {
+            SoulHunter.Gameplay.UI.UiScreen.Changed -= LayoutShop;
             DestroyShopUI();
             if (_isShopOpen) GameTime.Resume(this);
         }

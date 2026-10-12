@@ -62,9 +62,14 @@ namespace SoulHunter.Gameplay.Core
 
         public static string RefreshRateLabel(int hz) => hz <= 0 ? "Default" : hz + " Hz";
 
+        /// <summary>Frames a second asked for on a phone (the performance contract's target).</summary>
+        public const int MobileFrameRate = 60;
+
         public static void Apply()
         {
             QualitySettings.vSyncCount = GameSettings.VSync ? 1 : 0;
+            // Owner (2026-10-12: "60 fps kar do"): Unity holds a phone at 30 frames a second unless told otherwise.
+            if (Application.isMobilePlatform) Application.targetFrameRate = MobileFrameRate;
             // The editor's Game view cannot change window mode or resolution; builds follow the options.
             if (Application.isEditor || Application.isMobilePlatform) return;
             var mode = ModeFor(GameSettings.WindowMode);

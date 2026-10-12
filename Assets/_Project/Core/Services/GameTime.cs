@@ -32,6 +32,16 @@ namespace SoulHunter.Core.Services
             return names.Count > 0 ? string.Join(", ", names) : "(nobody)";
         }
 
+        /// <summary>True when the game is paused and every pause is held by an object of the type named (the level-up screen alone).</summary>
+        public static bool OnlyPausedBy(string typeName)
+        {
+            PruneDestroyedOwners();
+            if (_pausers.Count == 0) return false;
+            foreach (var owner in _pausers)
+                if (owner.GetType().Name != typeName) return false;
+            return true;
+        }
+
         /// <summary>Freezes gameplay until <paramref name="owner"/> calls Resume. Repeat calls are ignored.</summary>
         public static void Pause(object owner)
         {

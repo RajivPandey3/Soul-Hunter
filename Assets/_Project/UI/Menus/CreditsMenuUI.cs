@@ -20,16 +20,10 @@ namespace SoulHunter.UI
 
         protected override void Build()
         {
-            var content = MakeScroll("CreditsText", Panel, 0.08f, 0.08f, 0.92f, 0.82f, out _);
-            var layout = content.gameObject.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            layout.padding = new RectOffset(12, 12, 8, 24);
-            _body = EntryText(content, "Body", 28f, TextAlignmentOptions.TopLeft, ThemedElement.TextRole.Body, () => UITheme.Panel);
-            _body.enableAutoSizing = false; // a long text keeps one size and scrolls
-            _body.fontSize = 28f;
-            _body.textWrappingMode = TextWrappingModes.Normal;
+            // Responsive (owner, 2026-10-10): the credits fill Body at one size and scroll; a narrow screen wraps them.
+            var content = MakeScroll("CreditsText", Body, 0f, 0f, 1f, 1f, out _);
+            Column(content, 0f, new RectOffset(12, 12, 8, 24));
+            _body = FlowText(content, "Body", 28f, TextAlignmentOptions.TopLeft, ThemedElement.TextRole.Body, () => UITheme.Panel);
         }
 
         public override void Refresh()

@@ -27,12 +27,10 @@ namespace SoulHunter.UI
 
         protected override void Build()
         {
-            _content = MakeScroll("UnlocksList", Panel, 0.05f, 0.08f, 0.95f, 0.82f, out _);
-            var list = _content.gameObject.AddComponent<VerticalLayoutGroup>();
-            list.spacing = 8f;
-            list.childControlWidth = list.childControlHeight = true;
-            list.childForceExpandWidth = true;
-            list.childForceExpandHeight = false;
+            // Responsive (owner, 2026-10-10): one list across Body; each row is as tall as its wrapped text, so on a narrow
+            // screen rows grow taller instead of shrinking their words, and the list scrolls.
+            _content = MakeScroll("UnlocksList", Body, 0f, 0f, 1f, 1f, out _);
+            Column(_content, 8f);
         }
 
         public override void Refresh()
@@ -71,25 +69,30 @@ namespace SoulHunter.UI
                 _rowTexts.Add(Row(56f, true));
             }
             _builtRows = tasks.Count;
+            Relayout(); // the new rows take the touch floor too
         }
 
-        /// <summary>A group heading (accent text on the window) or a task row (body text on a row plate).</summary>
+        /// <summary>A group heading (accent text on the window) or a task row (body text on a row plate), as tall as its text.</summary>
         private TextMeshProUGUI Row(float height, bool plate)
         {
             var go = new GameObject(plate ? "Task" : "Group", typeof(RectTransform), typeof(LayoutElement));
             var rect = (RectTransform)go.transform;
             rect.SetParent(_content, false);
-            go.GetComponent<LayoutElement>().preferredHeight = height;
+            go.GetComponent<LayoutElement>().minHeight = height;
             if (plate)
             {
                 var image = go.AddComponent<Image>();
                 UITheme.ApplySurface(image, ThemedElement.SurfaceRole.Row);
                 image.raycastTarget = false;
             }
-            var text = EntryText(rect, "Text", plate ? 28f : 34f, TextAlignmentOptions.MidlineLeft,
+            var column = go.AddComponent<VerticalLayoutGroup>();
+            column.padding = new RectOffset(20, 20, 8, 8);
+            column.childControlWidth = column.childControlHeight = true;
+            column.childForceExpandWidth = true;
+            column.childForceExpandHeight = true;
+            column.childAlignment = TextAnchor.MiddleLeft;
+            var text = FlowText(rect, "Text", plate ? 28f : 34f, TextAlignmentOptions.MidlineLeft,
                 plate ? ThemedElement.TextRole.Body : ThemedElement.TextRole.Accent, plate ? (System.Func<Color>)(() => UITheme.Row) : () => UITheme.Panel);
-            text.rectTransform.offsetMin = new Vector2(20f, 2f);
-            text.rectTransform.offsetMax = new Vector2(-20f, -2f);
             return text;
         }
     }

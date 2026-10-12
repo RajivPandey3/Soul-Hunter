@@ -120,10 +120,63 @@ namespace SoulHunter.Gameplay.UI
             Refresh();
         }
 
-        private void LateUpdate() => FollowLabel();
+        private void LateUpdate()
+        {
+            FollowLabel();
+            HideUnderMenus();
+        }
+
+        private CanvasGroup _group;
+
+        /// <summary>True while the rows are hidden under a menu on a phone (tests).</summary>
+        public bool HiddenUnderMenu => _group != null && _group.alpha <= 0f;
+
+        /// <summary>
+        /// On a phone the rows sit in the strip at the top left, where the pause, chest and merchant screens put their
+        /// titles: the dimmed slots showed through the titles (owner's phone, 2026-10-12). They stay on the level-up screen,
+        /// which keeps that corner free (VS shows the weapons when levelling up; wiki Level_up, Patch 0.2.8), and hide
+        /// under every other menu. A PC keeps them under the veil, as approved.
+        /// </summary>
+        private void HideUnderMenus()
+        {
+            bool hide = _pinRoot != null && UiScreen.IsTouch && SoulHunter.Core.Services.GameTime.IsPaused
+                        && !SoulHunter.Core.Services.GameTime.OnlyPausedBy("LevelUpManager");
+            if (!hide && _group == null) return;
+            if (_group == null) _group = gameObject.AddComponent<CanvasGroup>();
+            float alpha = hide ? 0f : 1f;
+            if (_group.alpha != alpha) _group.alpha = alpha;
+        }
+
+        private RectTransform _pinRoot;
+        private Vector2 _pinOffset;
+
+        /// <summary>The rows' drawn size in canvas units (they are scaled down on a phone's HUD strip).</summary>
+        public Vector2 DrawnSize => _rect != null ? _rect.sizeDelta * _rect.localScale.x : Vector2.zero;
+
+        /// <summary>
+        /// The phone's HUD strip (owner, 2026-10-12): the rows hang from the top left of <paramref name="root"/> (the
+        /// safe area), <paramref name="offset"/> units in, drawn at <paramref name="scale"/>. Null puts them back under
+        /// their label at full size (a PC).
+        /// </summary>
+        public void PinTopLeft(RectTransform root, Vector2 offset, float scale)
+        {
+            _pinRoot = root;
+            _pinOffset = offset;
+            if (_rect != null) _rect.localScale = Vector3.one * (root != null ? scale : 1f);
+            FollowLabel();
+        }
 
         private void FollowLabel()
         {
+            if (_pinRoot != null && _rect != null && _canvasRect != null)
+            {
+                _pinRoot.GetWorldCorners(_corners);
+                Vector3 corner = _canvasRect.InverseTransformPoint(_corners[1]); // the safe area's top left
+                Vector2 size = _canvasRect.rect.size;
+                var at = new Vector2(corner.x + size.x * 0.5f + _pinOffset.x, corner.y - size.y * 0.5f + _pinOffset.y);
+                if ((_rect.anchoredPosition - at).sqrMagnitude > 0.01f) _rect.anchoredPosition = at;
+                return;
+            }
             if (_followLabel == null || _rect == null || _canvasRect == null || !_followLabel.gameObject.activeInHierarchy) return;
             _followLabel.GetWorldCorners(_corners);
             // Bottom-left of the label, in the canvas's local space; the row hangs from there.

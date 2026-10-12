@@ -16,11 +16,9 @@ namespace SoulHunter.UI
         /// </summary>
         public static void ScaleWithScreen(CanvasScaler scaler)
         {
+            // Since 2026-10-10 the menu takes the game's one UI scale (UiScreen), landscape and portrait.
             if (scaler == null) return;
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f;
+            SoulHunter.Gameplay.UI.ResponsiveCanvas.Apply(scaler.GetComponent<Canvas>());
         }
 
         private void Start()

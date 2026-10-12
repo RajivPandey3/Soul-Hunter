@@ -35,16 +35,34 @@ namespace SoulHunter.UI
         public string InfoName => _name != null ? _name.text : null;
         public string InfoDescription => _description != null ? _description.text : null;
 
+        /// <summary>The narrowest a grid cell may be (canvas units): the column count follows the width (GridFit).</summary>
+        public const float MinCellWidth = 96f;
+
+        /// <summary>The grid beside the info box on a wide screen, above it on a tall one.</summary>
+        public AdaptiveSplit Split { get; private set; }
+        public GridLayoutGroup Grid { get; private set; }
+
         protected override void Build()
         {
-            var content = MakeScroll("CollectionGrid", Panel, 0.05f, 0.08f, 0.62f, 0.82f, out _);
+            // Responsive (owner, 2026-10-10): the grid and the info box share Body through AdaptiveSplit, the grid takes as
+            // many columns as its width allows (GridFit, square cells, never under the touch target) and scrolls.
+            var gridArea = NewRect("CollectionGridArea", Body);
+            var infoArea = NewRect("CollectionInfoArea", Body);
+            Split = AdaptiveSplit.Between(Body, gridArea, infoArea, 0.64f, 0.6f);
+            var content = MakeScroll("CollectionGrid", gridArea, 0f, 0f, 1f, 1f, out var scroll);
             var grid = content.gameObject.AddComponent<GridLayoutGroup>();
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = Columns;
             grid.spacing = new Vector2(10f, 10f);
             grid.cellSize = new Vector2(112f, 112f);
             grid.childAlignment = TextAnchor.UpperLeft;
-            content.gameObject.AddComponent<SquareCells>().Grid = grid;
+            Grid = grid;
+            var fit = content.gameObject.AddComponent<GridFit>();
+            fit.Grid = grid;
+            fit.Viewport = scroll.viewport;
+            fit.MinCellWidth = MinCellWidth;
+            fit.MaxColumns = Columns;
+            fit.MinHeightRatio = 1f; // square cells
 
             foreach (var entry in CollectionCatalog.All())
             {
@@ -70,15 +88,22 @@ namespace SoulHunter.UI
                 go.AddComponent<FocusCallback>().Selected = () => Select(captured);
                 _cells.Add((entry, button, icon, label, strip));
             }
+            fit.Count = _cells.Count;
 
-            var box = MakeBox("CollectionInfo", Panel, 0.64f, 0.08f, 0.95f, 0.82f);
-            _bigIcon = MakeImage("BigIcon", box, null);
-            Anchor(_bigIcon.rectTransform, 0.3f, 0.66f, 0.7f, 0.95f);
-            _name = MakeText("Name", box, 0.06f, 0.55f, 0.94f, 0.65f, "", 40f, TextAlignmentOptions.Center, ThemedElement.TextRole.Accent, () => UITheme.Row);
-            _kind = MakeText("Kind", box, 0.06f, 0.48f, 0.94f, 0.55f, "", 28f, TextAlignmentOptions.Center, ThemedElement.TextRole.Body, () => UITheme.Row);
-            _description = MakeText("Description", box, 0.08f, 0.06f, 0.92f, 0.46f, "", 30f, TextAlignmentOptions.Top, ThemedElement.TextRole.Body, () => UITheme.Row);
-            _description.textWrappingMode = TextWrappingModes.Normal;
+            // The info box: the chosen entry's picture, name, kind and description, stacked; a long one scrolls.
+            var box = MakeBox("CollectionInfo", infoArea, 0f, 0f, 1f, 1f);
+            var info = MakeScroll("CollectionInfoText", box, 0f, 0f, 1f, 1f, out _);
+            Column(info, 10f, new RectOffset(20, 12, 16, 16));
+            _bigIcon = MakeImage("BigIcon", info, null);
+            var iconSize = _bigIcon.gameObject.AddComponent<LayoutElement>();
+            iconSize.minHeight = iconSize.preferredHeight = BigIconHeight;
+            _name = FlowText(info, "Name", 40f, TextAlignmentOptions.Center, ThemedElement.TextRole.Accent, () => UITheme.Row);
+            _kind = FlowText(info, "Kind", 28f, TextAlignmentOptions.Center, ThemedElement.TextRole.Body, () => UITheme.Row);
+            _description = FlowText(info, "Description", 30f, TextAlignmentOptions.Top, ThemedElement.TextRole.Body, () => UITheme.Row);
         }
+
+        /// <summary>The chosen entry's picture height in the info box (canvas units).</summary>
+        public const float BigIconHeight = 140f;
 
         /// <summary>The theme colour that marks an entry's kind (wiki: each type has its own slot background).</summary>
         public static Color KindColour(CollectionKind kind) => kind switch
@@ -126,28 +151,10 @@ namespace SoulHunter.UI
             bool known = CollectionBook.IsFound(data, _selected.Id);
             _bigIcon.sprite = known ? _selected.Icon : null;
             _bigIcon.enabled = known && _selected.Icon != null;
+            _bigIcon.gameObject.SetActive(_bigIcon.enabled); // no empty gap above an unknown entry's name
             _name.text = known ? UITheme.Bold(_selected.Name) : Unknown;
             _kind.text = CollectionCatalog.KindName(_selected.Kind);
             _description.text = known ? (_selected.Description ?? "") : UnknownText;
-        }
-    }
-
-    /// <summary>Keeps a grid's cells square and filling its width (Columns across), whatever the window size.</summary>
-    public sealed class SquareCells : MonoBehaviour
-    {
-        public GridLayoutGroup Grid;
-        private float _lastWidth;
-
-        private void LateUpdate()
-        {
-            if (Grid == null) return;
-            var rect = (RectTransform)transform;
-            float width = rect.rect.width;
-            if (width <= 0f || Mathf.Abs(width - _lastWidth) < 0.5f) return;
-            _lastWidth = width;
-            int columns = Mathf.Max(1, Grid.constraintCount);
-            float size = Mathf.Floor((width - Grid.spacing.x * (columns - 1)) / columns);
-            Grid.cellSize = new Vector2(size, size);
         }
     }
 }

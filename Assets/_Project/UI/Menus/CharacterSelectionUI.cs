@@ -83,6 +83,13 @@ namespace SoulHunter.UI
         private MusicSelectionScreen _musicScreen;
         /// <summary>The Music card beside the modes (VS Music Selection) and its screen once opened (tests).</summary>
         public Button MusicButton => _musicButton;
+        /// <summary>The Music card's two lines, "Music" and the chosen track (tests: they read on the card).</summary>
+        public IReadOnlyList<TextMeshProUGUI> MusicCardLabels =>
+            _musicButton != null ? _musicButton.GetComponentsInChildren<TextMeshProUGUI>(true) : new TextMeshProUGUI[0];
+        /// <summary>The chosen character's box, the mode box and the grid's box (tests: the arrangement).</summary>
+        public RectTransform InfoBox => _infoBox;
+        public RectTransform ModesBox => _modesBox;
+        public RectTransform GridBox => _gridBox;
         public string MusicCardText => _musicCardText != null ? _musicCardText.text : null;
         public MusicSelectionScreen MusicScreen => _musicScreen;
         private Button _favouriteButton;
@@ -409,6 +416,7 @@ namespace SoulHunter.UI
             for (int i = 0; i < _cardOutlines.Count; i++)
                 if (_cardOutlines[i] != null) { ApplySelectedEdge(_cardOutlines[i]); _cardOutlines[i].enabled = i == _currentIndex; }
             ScrollToSelected();
+            _layoutDirty = true; // the stats' height can change with the character (laid out again at the end of the frame)
         }
 
         private void UpdateStats(CharacterData charData)
@@ -437,8 +445,10 @@ namespace SoulHunter.UI
 
         private void ScrollToSelected()
         {
-            if (_gridScroll == null || _cards.Count == 0) return;
-            int rows = Mathf.CeilToInt(_cards.Count / (float)_gridColumns);
+            // Only when the grid scrolls inside its own box; in the scrolling body the body follows the focus (KeepSelectedInView).
+            if (_gridScroll == null || !_gridScroll.enabled || _cards.Count == 0 || _cardGrid == null) return;
+            int columns = Mathf.Max(1, _cardGrid.constraintCount);
+            int rows = Mathf.CeilToInt(_cards.Count / (float)columns);
             if (rows <= 1) return;
             // The selected card's place among the shown cards, in grid order (sort and filter move it).
             int position = 0;
@@ -447,7 +457,7 @@ namespace SoulHunter.UI
                 if (i == _currentIndex) break;
                 if (IsCardShown(i)) position++;
             }
-            int row = position / _gridColumns;
+            int row = position / columns;
             _gridScroll.verticalNormalizedPosition = 1f - row / (float)(rows - 1);
         }
 
@@ -545,6 +555,95 @@ namespace SoulHunter.UI
         }
 
         // ---------- Layout ----------
+        //
+        // Responsive (owner, 2026-10-10: "play in both landscape and portrait ... reuse the exact same screens ... UI elements
+        // auto adjust themselves ... 0 duplicacy or parallel implementation"). The screen is built once, as a header (title,
+        // gold), a body that scrolls (the sections below) and an action row pinned to the bottom of the safe area (Back,
+        // Confirm; ui-ux-pro-max: the action that ends a screen stays in reach). Relayout only places the same sections:
+        // - ThreeColumns (a roomy PC screen): stats | modes, grid, info | filter, levels, sort, favourite (as before);
+        // - Stacked (a short or narrow screen: a phone held either way): one scroll that starts with the chosen
+        //   character (compact) and the whole card grid, so characters are the first thing seen (owner's phone, 2026-10-10:
+        //   the modes and the Music card had pushed every card off the screen); then sort, favourite, modes and Music,
+        //   stats, filter and levels. Its only switch is "wide": stats sit beside the filter when there is room.
+        // Controls keep the theme's sizes (48 dp on touch); rows of tabs wrap (ThemedRow); the grid's columns follow its
+        // width (GridFit.MinCellWidth). Nothing is rebuilt on a rotation, so the selection, sort and filter stay.
+
+        /// <summary>How the sections are placed for the current screen (see the notes above).</summary>
+        public enum ScreenLayout { ThreeColumns, Stacked }
+        public ScreenLayout CurrentLayout { get; private set; }
+        /// <summary>The safe-area content root, the scrolling body and its content (tests).</summary>
+        public RectTransform ContentRoot => _content;
+        public RectTransform BodyViewport => _body;
+        public RectTransform ScrollContent => _sections;
+        public Button BackButton => _backButton;
+        public Button ConfirmButton => _selectAndPlayButton;
+        public ScrollRect BodyScroll => _bodyScroll;
+
+        private const float CardMinWidth = 140f; // a card narrower than this cannot show its name, portrait and weapon
+        private const int CardMaxColumns = 5;    // 13 characters in 3 rows on a PC: all visible without scrolling
+        private const float SectionPad = 8f;
+
+        private RectTransform _content, _header, _body, _sections, _actions, _titleRect;
+        private RectTransform _statsBox, _modesBox, _chipArea, _chipRowRect, _musicRect, _gridBox, _gridContent, _infoBox;
+        private RectTransform _filterArea, _filterRowRect, _sortArea, _sortRowRect, _levelsBox, _levelsGrid, _favouriteArea;
+        private SoulHunter.Gameplay.UI.ThemedRow _actionsRow, _chipRow, _filterRow, _sortRow;
+        private GridLayoutGroup _cardGrid, _levelGrid;
+        private ScrollRect _bodyScroll;
+        private Button _backButton;
+        private Vector2 _laidOutSize = new Vector2(-1f, -1f);
+        private bool _layoutDirty, _wasShown;
+        private int _revealFrames; // frames until the chosen card is scrolled into view (after the grid's cells are sized)
+
+        private void OnEnable() => SoulHunter.Gameplay.UI.UiScreen.Changed += HandleScreenChanged;
+
+        private void OnDisable() => SoulHunter.Gameplay.UI.UiScreen.Changed -= HandleScreenChanged;
+
+        private void HandleScreenChanged()
+        {
+            if (_content == null) return;
+            Relayout();
+            _revealFrames = 2; // a rotation keeps the chosen character on screen
+        }
+
+        private void LateUpdate()
+        {
+            if (_content == null) return;
+            if (!_content.gameObject.activeInHierarchy) { _wasShown = false; return; }
+            // Opening the screen (its buttons restyle themselves on enable), a window change, or new content (stats).
+            if (!_wasShown) _revealFrames = 2;
+            if (!_wasShown || _layoutDirty || _content.rect.size != _laidOutSize) Relayout();
+            _wasShown = true;
+            if (_revealFrames > 0 && --_revealFrames == 0) RevealSelected();
+            FitCardNames();
+        }
+
+        private float _namedCardHeight = -1f, _namedTextFloor = -1f;
+
+        /// <summary>
+        /// A card's name keeps a line of its smallest text. On a phone held upright the cards are about 48 units tall, and
+        /// the name's fifth of that was lower than 12 sp text: the name was cut away whole (owner's phone, 2026-10-12).
+        /// The name's band grows and the portrait and badge start under it. PC cards are tall enough, so they do not change.
+        /// </summary>
+        private void FitCardNames()
+        {
+            if (_cards.Count == 0 || _cards[0] == null) return;
+            float height = ((RectTransform)_cards[0].transform).rect.height, floor = SoulHunter.Gameplay.UI.UiScreen.MinTextUnits;
+            if (height <= 0f || (Mathf.Approximately(height, _namedCardHeight) && Mathf.Approximately(floor, _namedTextFloor))) return;
+            _namedCardHeight = height;
+            _namedTextFloor = floor;
+            float bottom = 0.95f - Mathf.Clamp(floor * 1.35f / height, 0.21f, 0.42f);
+            foreach (var card in _cards)
+            {
+                if (card == null) continue;
+                if (card.transform.Find("Name") is RectTransform name) name.anchorMin = new Vector2(name.anchorMin.x, bottom);
+                if (card.transform.Find("Portrait") is RectTransform portrait) portrait.anchorMax = new Vector2(portrait.anchorMax.x, bottom);
+                if (card.transform.Find("Badge") is RectTransform badge)
+                {
+                    badge.anchorMax = new Vector2(badge.anchorMax.x, bottom);
+                    badge.anchorMin = new Vector2(badge.anchorMin.x, Mathf.Min(0.5f, Mathf.Max(0.42f, bottom - 0.24f))); // clear of the weapon icon
+                }
+            }
+        }
 
         private void BuildLayout()
         {
@@ -553,126 +652,458 @@ namespace SoulHunter.UI
 
             MainMenuNavigation.ScaleWithScreen(root.GetComponentInParent<CanvasScaler>()); // also set by the menu at load
 
-            // Title and Back along the top.
+            // The content sits in the safe area (notch, gesture bar); the panel itself stays full screen.
+            _content = CreateRect("CharacterContent", root, Vector2.zero, Vector2.one);
+            SoulHunter.Gameplay.UI.SafeAreaFitter.Fit(_content);
+            _header = CreateRect("Header", _content, Vector2.zero, Vector2.one);
+            _body = CreateRect("Body", _content, Vector2.zero, Vector2.one);
+            // The body is its own viewport; a drag between two sections still scrolls it.
+            // Keyboard and controller focus scrolls into view (ui-ux-pro-max: focus not obscured).
+            _bodyScroll = SoulHunter.Gameplay.UI.ResponsiveScroll.Create(_body, null, "Sections", out _sections, sensitivity: 30f,
+                keepSelectedInView: true);
+            var follow = _body.GetComponent<SoulHunter.Gameplay.UI.KeepSelectedInView>();
+            if (follow != null) follow.Margin = SoulHunter.Gameplay.UI.UITheme.Layout.ButtonGap;
+            _actions = CreateRect("Actions", _content, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f));
+
+            // Title along the top.
             var title = root.Find("Text (TMP)") as RectTransform;
             if (title != null && title.TryGetComponent(out TextMeshProUGUI titleText))
             {
-                Place(title, root, new Vector2(0.27f, 0.895f), new Vector2(0.73f, 0.975f));
+                Place(title, _header, Vector2.zero, Vector2.one);
+                _titleRect = title;
                 titleText.text = "Character Selection";
                 titleText.alignment = TextAlignmentOptions.Center;
                 titleText.fontStyle = FontStyles.Bold;
                 SoulHunter.Gameplay.UI.UITheme.ApplyText(titleText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Title);
                 AutoSize(titleText, 24f, 56f);
             }
-            var back = root.Find("Back_Button") as RectTransform;
-            if (back != null) Place(back, root, new Vector2(0.78f, 0.9f), new Vector2(0.95f, 0.97f));
 
             // Prev/Next are replaced by the grid.
             if (_nextButton) _nextButton.gameObject.SetActive(false);
             if (_prevButton) _prevButton.gameObject.SetActive(false);
 
-            // Left: stat block (labels left, values right).
-            var statsBox = CreatePanel("StatsPanel", root, new Vector2(0.03f, 0.08f), new Vector2(0.25f, 0.88f));
+            // The stat block (labels left, values right).
+            _statsBox = CreatePanel("StatsPanel", _sections, Vector2.zero, Vector2.zero);
             if (_statsText != null)
             {
-                Place(_statsText.rectTransform, statsBox, new Vector2(0.07f, 0.03f), new Vector2(0.93f, 0.97f));
+                Place(_statsText.rectTransform, _statsBox, new Vector2(0.07f, 0.03f), new Vector2(0.93f, 0.97f));
                 _statsText.alignment = TextAlignmentOptions.TopLeft;
                 _statsText.richText = true;
                 AutoSize(_statsText, 12f, 28f);
             }
 
-            // Centre: scrollable grid of character cards.
-            var gridBox = CreatePanel("CharacterGrid", root, new Vector2(0.27f, 0.33f), new Vector2(0.73f, 0.725f));
-            var viewport = CreateRect("Viewport", gridBox, Vector2.zero, Vector2.one);
+            // The grid of character cards (scrolls inside its box on a roomy screen; the body scrolls otherwise).
+            _gridBox = CreatePanel("CharacterGrid", _sections, Vector2.zero, Vector2.zero);
+            _gridScroll = SoulHunter.Gameplay.UI.ResponsiveScroll.Create(_gridBox, "Viewport", "Content", out _gridContent,
+                sensitivity: 30f, dragSurface: false, fitContentHeight: true);
+            var viewport = _gridScroll.viewport;
             viewport.offsetMin = new Vector2(10f, 10f);
             viewport.offsetMax = new Vector2(-10f, -10f);
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var content = CreateRect("Content", viewport, new Vector2(0f, 1f), new Vector2(1f, 1f));
-            content.pivot = new Vector2(0.5f, 1f);
-            content.sizeDelta = Vector2.zero;
-            var grid = content.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = _cardSize;
-            grid.spacing = new Vector2(10f, 10f);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = _gridColumns;
-            grid.childAlignment = TextAnchor.UpperCenter;
-            content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            // The cards are sized from the box, so every card fits whatever the window (they were a fixed 190x132).
-            var fit = content.gameObject.AddComponent<GridFit>();
-            fit.Grid = grid;
+            _cardGrid = _gridContent.gameObject.AddComponent<GridLayoutGroup>();
+            _cardGrid.cellSize = _cardSize;
+            _cardGrid.spacing = new Vector2(10f, 10f);
+            _cardGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            _cardGrid.constraintCount = _gridColumns;
+            _cardGrid.childAlignment = TextAnchor.UpperCenter;
+            // The cards are sized from the box; the columns follow its width (fewer on a phone held upright).
+            var fit = _gridContent.gameObject.AddComponent<SoulHunter.Gameplay.UI.GridFit>();
+            fit.Grid = _cardGrid;
             fit.Viewport = viewport;
             fit.Count = _availableCharacters.Count;
-            _gridScroll = gridBox.gameObject.AddComponent<ScrollRect>();
-            _gridScroll.horizontal = false;
-            _gridScroll.movementType = ScrollRect.MovementType.Clamped;
-            _gridScroll.scrollSensitivity = 30f;
-            _gridScroll.viewport = viewport;
-            _gridScroll.content = content;
-            for (int i = 0; i < _availableCharacters.Count; i++) BuildCard(i, content);
+            fit.MinCellWidth = CardMinWidth;
+            fit.MaxColumns = Mathf.Min(CardMaxColumns, Mathf.Max(1, _gridColumns));
+            for (int i = 0; i < _availableCharacters.Count; i++) BuildCard(i, _gridContent);
 
-            // Bottom centre: the selected character.
-            var infoBox = CreatePanel("SelectedInfo", root, new Vector2(0.27f, 0.08f), new Vector2(0.73f, 0.31f));
-            if (_characterIconDisplay != null) Place(_characterIconDisplay.rectTransform, infoBox, new Vector2(0.02f, 0.08f), new Vector2(0.2f, 0.92f));
+            // The selected character.
+            _infoBox = CreatePanel("SelectedInfo", _sections, Vector2.zero, Vector2.zero);
+            if (_characterIconDisplay != null) Place(_characterIconDisplay.rectTransform, _infoBox, new Vector2(0.02f, 0.08f), new Vector2(0.2f, 0.92f));
             if (_characterNameText != null)
             {
-                Place(_characterNameText.rectTransform, infoBox, new Vector2(0.22f, 0.64f), new Vector2(0.78f, 0.95f));
+                Place(_characterNameText.rectTransform, _infoBox, new Vector2(0.22f, 0.64f), new Vector2(0.78f, 0.95f));
                 _characterNameText.alignment = TextAlignmentOptions.TopLeft;
                 AutoSize(_characterNameText, 16f, 40f);
                 SoulHunter.Gameplay.UI.UITheme.ApplyText(_characterNameText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Accent); // the scene's text takes the theme's font
             }
             if (_characterDescriptionText != null)
             {
-                Place(_characterDescriptionText.rectTransform, infoBox, new Vector2(0.22f, 0.06f), new Vector2(0.78f, 0.62f));
+                Place(_characterDescriptionText.rectTransform, _infoBox, new Vector2(0.22f, 0.06f), new Vector2(0.78f, 0.62f));
                 _characterDescriptionText.alignment = TextAlignmentOptions.TopLeft;
                 AutoSize(_characterDescriptionText, 12f, 28f);
                 SoulHunter.Gameplay.UI.UITheme.ApplyText(_characterDescriptionText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Body);
             }
-            _weaponIconDisplay = CreateImage("StartingWeapon_Icon", infoBox, new Vector2(0.81f, 0.3f), new Vector2(0.97f, 0.92f), null);
-            _weaponNameText = CreateText("StartingWeapon_Text", infoBox, new Vector2(0.79f, 0.04f), new Vector2(0.99f, 0.28f), "", TextAlignmentOptions.Center, 12f, 18f);
+            _weaponIconDisplay = CreateImage("StartingWeapon_Icon", _infoBox, new Vector2(0.81f, 0.3f), new Vector2(0.97f, 0.92f), null);
+            _weaponNameText = CreateText("StartingWeapon_Text", _infoBox, new Vector2(0.79f, 0.04f), new Vector2(0.99f, 0.28f), "", TextAlignmentOptions.Center, 12f, 18f);
 
-            // Bottom right: Confirm.
+            // The action row at the bottom: Back, then Confirm (it wraps to two lines on a narrow screen).
+            var back = root.Find("Back_Button") as RectTransform;
+            if (back != null)
+            {
+                _backButton = back.GetComponent<Button>();
+                back.SetParent(_actions, false);
+                back.anchorMin = back.anchorMax = new Vector2(0.5f, 0.5f);
+                back.localScale = Vector3.one;
+            }
             if (_selectAndPlayButton != null)
             {
-                Place((RectTransform)_selectAndPlayButton.transform, root, new Vector2(0.76f, 0.08f), new Vector2(0.95f, 0.19f));
+                var confirm = (RectTransform)_selectAndPlayButton.transform;
+                confirm.SetParent(_actions, false);
+                confirm.anchorMin = confirm.anchorMax = new Vector2(0.5f, 0.5f);
+                confirm.localScale = Vector3.one;
+                confirm.SetAsLastSibling();
                 _confirmLabel = _selectAndPlayButton.GetComponentInChildren<TextMeshProUGUI>();
                 if (_confirmLabel != null) _confirmLabel.text = "Confirm";
                 SoulHunter.Gameplay.UI.UITheme.ApplyButton(_selectAndPlayButton, _selectAndPlayButton.targetGraphic as Image,
                     SoulHunter.Gameplay.UI.UITheme.ButtonKind.Primary, SoulHunter.Gameplay.UI.UITheme.IconSlot.Confirm);
             }
+            _actionsRow = _actions.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
 
-            // Top left: gold, which buys unlocked characters.
-            _goldText = CreateText("Gold_Text", root, new Vector2(0.03f, 0.9f), new Vector2(0.25f, 0.97f), "", TextAlignmentOptions.Left, 18f, 32f);
+            // Gold, which buys unlocked characters.
+            _goldText = CreateText("Gold_Text", _header, Vector2.zero, Vector2.one, "", TextAlignmentOptions.MidlineLeft, 18f, 32f);
             SoulHunter.Gameplay.UI.UITheme.ApplyText(_goldText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Accent);
 
-            // Right: VS-style character filter by the stage each character comes from.
-            BuildFilterPanel(root);
+            // VS-style character filter by the stage each character comes from, the sort and the favourite.
+            BuildFilterPanel(_sections);
 
-            // Above the grid: VS run modes (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break).
-            BuildModesRow(root);
+            // VS run modes (Hurry, Hyper, Inverse, Endless, Arcana, Limit Break, Omens, Blind Fate) and the Music card.
+            BuildModesRow(_sections);
+
+            Relayout();
         }
 
         /// <summary>
-        /// VS "List of Modes" toggles in one row above the character grid, with a line under them that says what the
-        /// focused (or hovered) mode does. Keyboard/gamepad focus uses the options screen's orange focus colour.
+        /// Places every section for the current safe area (see the notes above <see cref="ScreenLayout"/>). Called when the
+        /// screen opens, on a rotation or window change (<see cref="SoulHunter.Gameplay.UI.UiScreen.Changed"/>) and when the
+        /// stats change; it never rebuilds anything.
         /// </summary>
-        private void BuildModesRow(RectTransform root)
+        public void Relayout()
         {
-            var box = CreatePanel("RunModes", root, new Vector2(0.265f, 0.735f), new Vector2(0.735f, 0.88f));
+            if (_content == null) return;
+            Vector2 size = _content.rect.size;
+            if (size.x <= 1f || size.y <= 1f) return;
+            _laidOutSize = size;
+            _layoutDirty = false;
+            var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
+            float gap = layout.ButtonGap;
+            float W = size.x, H = size.y;
+
+            // A roomy PC screen keeps the approved PC look: Back in its top-right corner and Confirm in the bottom-right
+            // corner, at the same spots as before (owner-approved character select look, 2026-10-10). Elsewhere (phones)
+            // both move into the action row pinned to the bottom of the safe area.
+            bool roomy = W >= 1300f && H - 184f >= 600f;
+            // A touch screen of that shape (a tablet): the right column's ten level rows are 48 dp each and no longer fit
+            // above Confirm with the filter, sort and favourite (they ran over Sort and Confirm, audit 2026-10-12), so it
+            // takes the one-scroll layout, like a phone.
+            float touchRow = SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits;
+            if (roomy && touchRow > 0f)
+            {
+                int levelRows = _stageToggles.Count;
+                float column = levelRows * touchRow + (levelRows - 1) * 6f + 3f * SectionPad + 32f // the levels box
+                    + 4f * Mathf.Max(touchRow, layout.TabHeight) + 5f * gap;                        // filter, sort (two lines), favourite
+                roomy = H * (1f - PcConfirmCentre.y) - layout.ButtonHeight * 0.5f - gap - 184f >= column;
+            }
+            Vector2 standard = new Vector2(layout.ButtonWidth, layout.ButtonHeight);
+            if (_backButton != null && SoulHunter.Gameplay.UI.ThemedElement.For(_backButton.gameObject).StandardSize(SoulHunter.Gameplay.UI.UiThemeAsset.Active) is Vector2 b) standard = b;
+            PlaceClosingButtons(roomy);
+
+            // Header: title centred with the gold beside it, or the gold under the title on a narrow screen.
+            bool oneLine = W >= 900f;
+            float titleH = H >= 900f ? 76f : 56f, goldH = 40f;
+            float headerH = oneLine ? titleH : titleH + goldH;
+            if (roomy) headerH = Mathf.Max(headerH, H * (1f - PcBackCentre.y) + standard.y * 0.5f); // Back sits in the header
+            TL(_header, 0f, 0f, W, headerH);
+            if (_titleRect != null) TL(_titleRect, oneLine ? W * 0.25f : gap, 0f, oneLine ? W * 0.5f : W - 2f * gap, titleH);
+            if (_goldText != null)
+            {
+                TL(_goldText.rectTransform, gap, oneLine ? 0f : titleH, oneLine ? W * 0.25f - gap : W - 2f * gap, oneLine ? titleH : goldH);
+                _goldText.alignment = oneLine ? TextAlignmentOptions.MidlineLeft : TextAlignmentOptions.Midline;
+            }
+
+            // Action row pinned to the bottom edge of the safe area.
+            _actions.anchorMin = _actions.anchorMax = new Vector2(0.5f, 0f);
+            _actions.pivot = new Vector2(0.5f, 0f);
+            _actions.anchoredPosition = new Vector2(0f, gap);
+            float footerH = gap;
+            if (!roomy)
+            {
+                _actionsRow.Layout();
+                footerH = _actions.sizeDelta.y * _actions.localScale.y + 2f * gap;
+            }
+
+            float bodyTop = headerH + gap * 0.5f;
+            float bodyH = Mathf.Max(1f, H - bodyTop - footerH);
+            TL(_body, 0f, bodyTop, W, bodyH);
+            float inner = W - 2f * gap;
+            CurrentLayout = roomy ? ScreenLayout.ThreeColumns : ScreenLayout.Stacked;
+
+            float contentH;
+            switch (CurrentLayout)
+            {
+                case ScreenLayout.ThreeColumns:
+                {
+                    // The right column reaches left to Confirm's approved spot and ends above it.
+                    float side = Mathf.Clamp(inner * 0.2f, 300f, 440f);
+                    float rightSide = Mathf.Max(side, (W - gap) - (W * PcConfirmCentre.x - standard.x * 0.5f));
+                    float centre = inner - side - rightSide - 2f * gap;
+                    float x0 = gap, x1 = gap + side + gap, x2 = x1 + centre + gap;
+                    float rightH = H * (1f - PcConfirmCentre.y) - standard.y * 0.5f - gap - bodyTop;
+                    PlaceStats(x0, 0f, side, bodyH, true);
+                    float y = PlaceRow(_filterArea, _filterRowRect, _filterRow, x2, 0f, rightSide) + gap;
+                    float sortH = PlaceRow(_sortArea, _sortRowRect, _sortRow, x2, 0f, rightSide);
+                    float favouriteH = FavouriteHeight();
+                    float levelsH = PlaceLevels(x2, y, rightSide, rightH - y - sortH - favouriteH - 2f * gap, true);
+                    y += levelsH + gap;
+                    PlaceRow(_sortArea, _sortRowRect, _sortRow, x2, y, rightSide);
+                    PlaceFavourite(x2, y + sortH + gap, rightSide);
+                    float modesH = PlaceModes(x1, 0f, centre);
+                    float infoH = Mathf.Clamp(bodyH * 0.24f, 200f, 280f);
+                    PlaceGrid(x1, modesH + gap, centre, bodyH - modesH - infoH - 2f * gap, true);
+                    PlaceInfo(x1, bodyH - infoH, centre, infoH);
+                    contentH = bodyH;
+                    break;
+                }
+                default:
+                {
+                    // One scroll. The chosen character (compact) and the whole grid come first, so the first view shows
+                    // cards: at least two rows on a phone held upright, one when held sideways. A narrow screen's sections
+                    // span its whole width (three cards and three chips a line on a 510-unit phone).
+                    bool wide = W >= 900f;
+                    float x = wide ? gap : 0f, w = W - 2f * x;
+                    float y = PlaceInfo(x, 0f, w, wide ? 132f : 168f) + gap;
+                    y += PlaceGrid(x, y, w, 0f, false) + gap;
+                    y += PlaceRow(_sortArea, _sortRowRect, _sortRow, x, y, w) + gap;
+                    y += PlaceFavourite(x, y, w) + gap;
+                    y += PlaceModes(x, y, w) + gap;
+                    // Stats, then the filter and its levels: side by side when wide, one under the other when narrow.
+                    float statsW = wide ? Mathf.Floor((w - gap) * 0.5f) : w;
+                    float statsH = PlaceStats(x, y, statsW, 0f, false);
+                    float fx = wide ? x + statsW + gap : x;
+                    float fy = wide ? y : y + statsH + gap;
+                    float fw = wide ? w - statsW - gap : w;
+                    float filterEnd = fy + PlaceRow(_filterArea, _filterRowRect, _filterRow, fx, fy, fw) + gap;
+                    filterEnd += PlaceLevels(fx, filterEnd, fw, 0f, false);
+                    contentH = Mathf.Max(y + statsH, filterEnd) + gap;
+                    break;
+                }
+            }
+
+            contentH = Mathf.Max(contentH, bodyH);
+            _sections.anchorMin = new Vector2(0f, 1f);
+            _sections.anchorMax = new Vector2(1f, 1f);
+            _sections.pivot = new Vector2(0.5f, 1f);
+            _sections.sizeDelta = new Vector2(0f, contentH);
+            float maxScroll = contentH - bodyH;
+            _bodyScroll.vertical = maxScroll > 1f;
+            _sections.anchoredPosition = new Vector2(0f, Mathf.Clamp(_sections.anchoredPosition.y, 0f, Mathf.Max(0f, maxScroll)));
+            SoulHunter.Gameplay.UI.UiTextFloor.RaiseAll(_content); // no text under the readable floor (the brief's rule 5)
+        }
+
+        // The approved PC spots (before 2026-10-10): Back centred at 86.5% across, 93.5% up; Confirm at 85.5% across, 13.5% up.
+        private static readonly Vector2 PcBackCentre = new Vector2(0.865f, 0.935f);
+        private static readonly Vector2 PcConfirmCentre = new Vector2(0.855f, 0.135f);
+
+        /// <summary>
+        /// On a roomy PC screen Back and Confirm keep their approved corners (the theme's size, centred on their old spots);
+        /// otherwise both sit in the action row pinned to the bottom (Back first, Confirm last).
+        /// </summary>
+        private void PlaceClosingButtons(bool corners)
+        {
+            var back = _backButton != null ? (RectTransform)_backButton.transform : null;
+            var confirm = _selectAndPlayButton != null ? (RectTransform)_selectAndPlayButton.transform : null;
+            foreach (var (rect, spot) in new[] { (back, PcBackCentre), (confirm, PcConfirmCentre) })
+            {
+                if (rect == null) continue;
+                rect.SetParent(corners ? _content : _actions, false);
+                rect.anchorMin = rect.anchorMax = corners ? spot : new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                if (corners) rect.anchoredPosition = Vector2.zero;
+                rect.localScale = Vector3.one;
+                rect.SetAsLastSibling(); // above the body (drawn and hit first); in the row, Back before Confirm
+            }
+            if (_backButton != null) SoulHunter.Gameplay.UI.ThemedElement.For(_backButton.gameObject).FitSize(SoulHunter.Gameplay.UI.UiThemeAsset.Active);
+            if (_selectAndPlayButton != null) SoulHunter.Gameplay.UI.ThemedElement.For(_selectAndPlayButton.gameObject).FitSize(SoulHunter.Gameplay.UI.UiThemeAsset.Active);
+        }
+
+        /// <summary>Places a themed row's area at the given spot and returns the row's wrapped height.</summary>
+        private static float PlaceRow(RectTransform area, RectTransform rowRect, SoulHunter.Gameplay.UI.ThemedRow row, float x, float y, float width)
+        {
+            TL(area, x, y, width, 10f);
+            rowRect.anchorMin = rowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rowRect.pivot = new Vector2(0.5f, 0.5f);
+            rowRect.anchoredPosition = Vector2.zero;
+            row.Layout();
+            float h = rowRect.sizeDelta.y * rowRect.localScale.y;
+            TL(area, x, y, width, h);
+            return h;
+        }
+
+        private float PlaceModes(float x, float y, float width)
+        {
+            var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
+            float gap = layout.ButtonGap, avail = width - 2f * SectionPad;
+            Vector2 chip = new Vector2(layout.TabWidth, layout.TabHeight);
+            if (_modeToggles.Count > 0 && SoulHunter.Gameplay.UI.ThemedElement.For(_modeToggles[0].gameObject).StandardSize(SoulHunter.Gameplay.UI.UiThemeAsset.Active) is Vector2 s) chip = s;
+            // At most four chips a line (two even lines of four on a PC, as approved); fewer when narrow. The chip area may
+            // use the box's whole width: the row keeps its own gap of air at both ends (three chips a line on a 510-unit phone).
+            int perLine = Mathf.Clamp(Mathf.FloorToInt(width / (chip.x + gap)), 1, 4);
+            float chipAreaW = Mathf.Min(width, perLine * chip.x + (perLine - 1) * gap + gap);
+            float musicW = Mathf.Min(360f, avail - chipAreaW - gap);
+            bool musicBeside = musicW >= 200f;
+            float chipsH = PlaceRow(_chipArea, _chipRowRect, _chipRow, 0f, 0f, chipAreaW);
+            float groupW = musicBeside ? chipAreaW + gap + musicW : chipAreaW;
+            float gx = (width - groupW) * 0.5f;
+            TL(_chipArea, gx, SectionPad, chipAreaW, chipsH);
+            float next = SectionPad + chipsH + gap;
+            if (musicBeside) TL(_musicRect, gx + chipAreaW + gap, SectionPad, musicW, chipsH);
+            else
+            {
+                float musicH = Mathf.Max(layout.ButtonHeight, SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits);
+                TL(_musicRect, gx, next, chipAreaW, musicH);
+                next += musicH + gap;
+            }
+            // The hint says what the focused mode does: three lines on a narrow screen at the phone's text floor.
+            float hintH = avail < 800f ? Mathf.Max(36f, SoulHunter.Gameplay.UI.UiScreen.MinTextUnits * 1.3f * 3f) : 36f;
+            TL(_modeHintText.rectTransform, SectionPad, next, avail, hintH);
+            float h = next + hintH + SectionPad;
+            TL(_modesBox, x, y, width, h);
+            return h;
+        }
+
+        private float PlaceGrid(float x, float y, float width, float height, bool scrollsInside)
+        {
+            _gridScroll.enabled = scrollsInside; // a grid inside the scrolling body shows every card and lets the body scroll
+            if (!scrollsInside)
+            {
+                _gridContent.anchoredPosition = Vector2.zero;
+                // The same cells GridFit makes for a viewport of this height (so the box fits every card exactly).
+                float innerW = width - 20f, spacing = _cardGrid.spacing.x;
+                float touch = SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits;
+                int columns = SoulHunter.Gameplay.UI.UiScreen.ColumnsFor(innerW, Mathf.Max(CardMinWidth, touch), spacing,
+                    Mathf.Min(CardMaxColumns, Mathf.Max(1, _gridColumns)));
+                float cellW = (innerW - spacing * (columns - 1)) / columns;
+                float cellH = Mathf.Floor(Mathf.Max(cellW * 0.72f, cellW * 0.45f, touch));
+                int rows = Mathf.CeilToInt(_availableCharacters.Count / (float)columns);
+                height = rows * cellH + (rows - 1) * _cardGrid.spacing.y + 20f + 1f;
+            }
+            TL(_gridBox, x, y, width, height);
+            return height;
+        }
+
+        private float PlaceInfo(float x, float y, float width, float height)
+        {
+            TL(_infoBox, x, y, width, height);
+            return height;
+        }
+
+        private float PlaceStats(float x, float y, float width, float height, bool fill)
+        {
+            if (_statsText != null)
+            {
+                if (fill) AutoSize(_statsText, 12f, 28f);
+                else
+                {
+                    // In the scrolling body the stats take their natural height at one readable size.
+                    _statsText.enableAutoSizing = false;
+                    _statsText.fontSize = Mathf.Max(20f, SoulHunter.Gameplay.UI.UiScreen.MinTextUnits);
+                    float textW = width * 0.86f;
+                    float preferred = _statsText.GetPreferredValues(_statsText.text, textW, 0f).y;
+                    height = preferred / 0.94f + 8f;
+                }
+            }
+            TL(_statsBox, x, y, width, height);
+            return height;
+        }
+
+        private float FavouriteHeight() =>
+            Mathf.Max(SoulHunter.Gameplay.UI.UITheme.Layout.ButtonHeight, SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits);
+
+        private float PlaceFavourite(float x, float y, float width)
+        {
+            float h = FavouriteHeight();
+            TL(_favouriteArea, x, y, width, h);
+            return h;
+        }
+
+        private float PlaceLevels(float x, float y, float width, float height, bool fill)
+        {
+            const float countH = 32f, spacing = 6f;
+            float touch = SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits;
+            float avail = width - 2f * SectionPad;
+            int columns = fill ? 1 : SoulHunter.Gameplay.UI.UiScreen.ColumnsFor(avail, 210f, spacing, 2);
+            int rows = Mathf.CeilToInt(_stageToggles.Count / (float)columns);
+            float cellH = fill
+                ? Mathf.Clamp((height - 3f * SectionPad - countH - spacing * (rows - 1)) / rows, Mathf.Max(touch, 24f), 60f)
+                : Mathf.Max(touch, 44f);
+            float cellW = (avail - spacing * (columns - 1)) / columns;
+            float gridH = rows * cellH + (rows - 1) * spacing;
+            if (!fill) height = SectionPad + countH + SectionPad + gridH + SectionPad;
+            TL(_levelsBox, x, y, width, height);
+            if (_filterCountText != null) TL(_filterCountText.rectTransform, SectionPad, SectionPad, avail, countH);
+            TL(_levelsGrid, SectionPad, SectionPad + countH + SectionPad, avail, gridH);
+            _levelGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            _levelGrid.constraintCount = columns;
+            _levelGrid.spacing = new Vector2(spacing, spacing);
+            _levelGrid.cellSize = new Vector2(Mathf.Floor(cellW), Mathf.Floor(cellH));
+            // Each whole row is the touch target; its tick box is square, beside the level's name.
+            float box = Mathf.Min(cellH * 0.62f, 34f);
+            foreach (var toggle in _stageToggles)
+            {
+                var tick = toggle.transform.Find("Box") as RectTransform;
+                if (tick != null)
+                {
+                    tick.anchorMin = tick.anchorMax = new Vector2(0f, 0.5f);
+                    tick.pivot = new Vector2(0.5f, 0.5f);
+                    tick.sizeDelta = new Vector2(box, box);
+                    tick.anchoredPosition = new Vector2(box * 0.5f + 4f, 0f);
+                }
+                var label = toggle.transform.Find("Label") as RectTransform;
+                if (label != null)
+                {
+                    label.anchorMin = Vector2.zero;
+                    label.anchorMax = Vector2.one;
+                    label.offsetMin = new Vector2(box + 12f, 0f);
+                    label.offsetMax = Vector2.zero;
+                }
+            }
+            return height;
+        }
+
+        /// <summary>Scrolls the body so the chosen character's card is on screen (the screen opened, or the phone turned).</summary>
+        private void RevealSelected()
+        {
+            if (_bodyScroll == null || !_bodyScroll.vertical || _cards.Count == 0) return;
+            var card = _cards[Mathf.Clamp(_currentIndex, 0, _cards.Count - 1)];
+            if (card == null || !card.gameObject.activeInHierarchy) return;
+            Canvas.ForceUpdateCanvases(); // the grid's cells as drawn
+            SoulHunter.Gameplay.UI.ResponsiveScroll.KeepInView(_bodyScroll, (RectTransform)card.transform, SoulHunter.Gameplay.UI.UITheme.Layout.ButtonGap);
+        }
+
+        /// <summary>Places <paramref name="rect"/> by its top-left corner inside its parent (units from the parent's top-left).</summary>
+        private static void TL(RectTransform rect, float x, float y, float width, float height)
+        {
+            if (rect == null) return;
+            rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(x, -y);
+            rect.sizeDelta = new Vector2(Mathf.Max(0f, width), Mathf.Max(0f, height));
+        }
+
+        /// <summary>
+        /// VS "List of Modes" toggles in one themed row (four a line at most, wrapping on a narrow screen), with a line under
+        /// them that says what the focused (or hovered) mode does, and the Music card beside or under them.
+        /// </summary>
+        private void BuildModesRow(RectTransform parent)
+        {
+            _modesBox = CreatePanel("RunModes", parent, Vector2.zero, Vector2.zero);
             var data = SaveData();
             int count = RunModeOptions.All.Length;
-            // The chips sit in one themed row: the theme's tab size and gap, centred, shrunk as one piece if a narrow
-            // window cannot fit all six.
-            // Two rows of three, so every chip keeps the theme's full tab size and "Limit Break" is not squeezed (2026-10-08).
-            // P3-05 (2026-10-09): eight modes (the two Randomizers joined), two rows of four on the left, and the Soundtrack
-            // card on the right. The chips sit in their own area, so a narrow window shrinks them to it, never under the card.
-            var chipArea = CreateRect("ChipArea", box, new Vector2(0f, 0.25f), new Vector2(0.75f, 0.97f));
-            var chips = CreateRect("Chips", chipArea, new Vector2(0.5f, 0.52f), new Vector2(0.5f, 1f));
-            var chips2 = CreateRect("Chips2", chipArea, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.48f));
-            int perRow = (count + 1) / 2;
+            // P3-05 (2026-10-09): eight modes (the two Randomizers joined). Responsive (2026-10-10): one themed row that keeps
+            // every chip at the theme's tab size (48 dp on touch) and wraps onto centred lines.
+            _chipArea = CreateRect("ChipArea", _modesBox, Vector2.zero, Vector2.zero);
+            _chipRowRect = CreateRect("Chips", _chipArea, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             for (int i = 0; i < count; i++)
             {
                 var mode = RunModeOptions.All[i];
-                var cell = CreateRect($"Mode_{mode}", i < perRow ? chips : chips2, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+                var cell = CreateRect($"Mode_{mode}", _chipRowRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
                 var background = cell.gameObject.AddComponent<Image>();
                 var toggle = cell.gameObject.AddComponent<Toggle>();
                 toggle.targetGraphic = background;
@@ -702,14 +1133,13 @@ namespace SoulHunter.UI
                 hint.Show = ShowModeHint;
                 _modeToggles.Add(toggle);
             }
-            chips.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
-            chips2.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
-            // One size for all six labels (auto-size gave "Limit Break" a much smaller size than "Hurry").
-            box.gameObject.AddComponent<SameFontSize>().Labels = _modeLabels.ToArray();
-            _modeHintText = CreateText("ModeHint", box, new Vector2(0.015f, 0.02f), new Vector2(0.985f, 0.24f),
+            _chipRow = _chipRowRect.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
+            // One size for all the labels (auto-size gave "Limit Break" a much smaller size than "Hurry").
+            _modesBox.gameObject.AddComponent<SameFontSize>().Labels = _modeLabels.ToArray();
+            _modeHintText = CreateText("ModeHint", _modesBox, Vector2.zero, Vector2.zero,
                 "Modes: select one to see what it does.", TextAlignmentOptions.Left, 10f, 18f);
             SoulHunter.Gameplay.UI.UITheme.ApplyText(_modeHintText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Soft);
-            BuildMusicCard(box);
+            BuildMusicCard(_modesBox);
         }
 
         /// <summary>
@@ -719,7 +1149,8 @@ namespace SoulHunter.UI
         /// </summary>
         private void BuildMusicCard(RectTransform box)
         {
-            var rect = CreateRect("MusicCard", box, new Vector2(0.77f, 0.27f), new Vector2(0.985f, 0.95f));
+            _musicRect = CreateRect("MusicCard", box, Vector2.zero, Vector2.zero);
+            var rect = _musicRect;
             var image = rect.gameObject.AddComponent<Image>();
             _musicButton = rect.gameObject.AddComponent<Button>();
             _musicButton.targetGraphic = image;
@@ -728,8 +1159,11 @@ namespace SoulHunter.UI
             title.textWrappingMode = TextWrappingModes.NoWrap;
             _musicCardText = CreateText("Track", rect, new Vector2(0.06f, 0.06f), new Vector2(0.94f, 0.5f), "", TextAlignmentOptions.Center, 10f, 18f);
             _musicCardText.overflowMode = TextOverflowModes.Ellipsis;
-            // A card, not an action button: the screen's own size (Free), the theme's card look; the labels take light or
-            // dark text by contrast with it.
+            // A card, not an action button: the screen's own size (Free), the theme's card look. Its labels take the
+            // theme's card text role (dark on the pale card, as the Music screen's cards do): a card does not restyle a
+            // label that already has a role, so the plain light text stayed and could not be read (owner's phone, 2026-10-10).
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(title, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Card);
+            SoulHunter.Gameplay.UI.UITheme.ApplyText(_musicCardText, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Card);
             SoulHunter.Gameplay.UI.UITheme.ApplyButton(_musicButton, image, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Card,
                 SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Free);
             var hint = rect.gameObject.AddComponent<FocusHint>();
@@ -764,28 +1198,37 @@ namespace SoulHunter.UI
             _musicCardText.text = text;
         }
 
-        private void BuildFilterPanel(RectTransform root)
+        private void BuildFilterPanel(RectTransform parent)
         {
-            var toggleButton = CreatePanel("FilterButton", root, new Vector2(0.76f, 0.81f), new Vector2(0.95f, 0.87f)); // clear of Back above, the stage list below
+            // FILTER: ON/OFF, a tab in its own themed row.
+            _filterArea = CreateRect("FilterArea", parent, Vector2.zero, Vector2.zero);
+            _filterRowRect = CreateRect("FilterRow", _filterArea, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            var toggleButton = CreateRect("FilterButton", _filterRowRect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            var filterImage = toggleButton.gameObject.AddComponent<Image>();
             var filterButton = toggleButton.gameObject.AddComponent<Button>();
-            filterButton.targetGraphic = toggleButton.GetComponent<Image>();
+            filterButton.targetGraphic = filterImage;
             filterButton.onClick.AddListener(() => SetFilter(!_filterOn));
             _filterButtonLabel = CreateText("Label", toggleButton, Vector2.zero, Vector2.one, "FILTER: OFF", TextAlignmentOptions.Center, 14f, 20f);
-            SoulHunter.Gameplay.UI.UITheme.ApplyButton(filterButton, toggleButton.GetComponent<Image>(), SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
+            SoulHunter.Gameplay.UI.UITheme.ApplyButton(filterButton, filterImage, SoulHunter.Gameplay.UI.UITheme.ButtonKind.Normal,
                 SoulHunter.Gameplay.UI.UITheme.IconSlot.None, true, SoulHunter.Gameplay.UI.ThemedElement.SizeRole.Tab);
+            _filterRow = _filterRowRect.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
 
-            // The level list ends above the sort row and the favourite switch (2026-10-09; it reached down to 0.22).
-            var list = CreatePanel("StageFilter", root, new Vector2(0.76f, 0.37f), new Vector2(0.95f, 0.8f));
-            _filterCountText = CreateText("Count", list, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.99f), "", TextAlignmentOptions.Center, 14f, 24f);
+            // The level list: a count and one tick row per level, in a grid whose rows are the touch targets.
+            _levelsBox = CreatePanel("StageFilter", parent, Vector2.zero, Vector2.zero);
+            _filterCountText = CreateText("Count", _levelsBox, Vector2.zero, Vector2.zero, "", TextAlignmentOptions.Center, 14f, 24f);
+            _levelsGrid = CreateRect("Levels", _levelsBox, Vector2.zero, Vector2.zero);
+            _levelGrid = _levelsGrid.gameObject.AddComponent<GridLayoutGroup>();
+            _levelGrid.childAlignment = TextAnchor.UpperLeft;
             int stages = _stageShown.Length;
-            float rowHeight = 0.88f / stages;
             for (int stage = 1; stage <= stages; stage++)
             {
-                float top = 0.89f - (stage - 1) * rowHeight;
-                var row = CreateRect($"Stage_{stage}", list, new Vector2(0.05f, top - rowHeight), new Vector2(0.97f, top));
+                var row = CreateRect($"Stage_{stage}", _levelsGrid, Vector2.zero, Vector2.one);
+                var hit = row.gameObject.AddComponent<Image>();
+                hit.color = Color.clear; // the whole row takes the tap, not only its tick box
                 var box = CreateRect("Box", row, new Vector2(0f, 0.18f), new Vector2(0.1f, 0.82f));
                 var boxImage = box.gameObject.AddComponent<Image>();
                 SoulHunter.Gameplay.UI.UITheme.ApplySurface(boxImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.TickBox);
+                boxImage.raycastTarget = false;
                 var check = CreateRect("Check", box, new Vector2(0.16f, 0.16f), new Vector2(0.84f, 0.84f));
                 var checkImage = check.gameObject.AddComponent<Image>();
                 SoulHunter.Gameplay.UI.UITheme.ApplySurface(checkImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.Tick); // tick = shown
@@ -798,29 +1241,28 @@ namespace SoulHunter.UI
                 toggle.onValueChanged.AddListener(on => SetStageShown(s, on));
                 // One fixed size for every row (auto-size would give each name its own size).
                 var label = CreateText("Label", row, new Vector2(0.14f, 0f), new Vector2(1f, 1f),
-                    CampaignLevelCatalog.Get(stage).Name, TextAlignmentOptions.Left, 17f, 17f);
+                    CampaignLevelCatalog.Get(stage).Name, TextAlignmentOptions.MidlineLeft, 17f, 17f);
                 label.enableAutoSizing = false;
                 label.fontSize = 17f;
                 label.overflowMode = TextOverflowModes.Ellipsis;
                 _stageToggles.Add(toggle);
             }
 
-            BuildSortRow(root);
-            BuildFavouriteButton(root);
+            BuildSortRow(parent);
+            BuildFavouriteButton(parent);
         }
 
         /// <summary>
-        /// VS sort under the level filter: one tab picks the sort (default, A-Z, levels completed), the other ascending or
-        /// descending. Both are the theme's tab size in one themed row, labelled in words like FILTER.
+        /// VS sort: one tab picks the sort (default, A-Z, levels completed), the other ascending or descending. Both are the
+        /// theme's tab size in one themed row, labelled in words like FILTER.
         /// </summary>
-        private void BuildSortRow(RectTransform root)
+        private void BuildSortRow(RectTransform parent)
         {
-            // The row sits in the filter column, so a narrow window shrinks it to the column, not past it.
-            var area = CreateRect("SortArea", root, new Vector2(0.76f, 0.295f), new Vector2(0.95f, 0.355f));
-            var row = CreateRect("SortRow", area, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f));
-            _sortLabel = CreateTab("Sort", row, () => SetSort((CharacterSort)(((int)_sort + 1) % 3)));
-            _orderLabel = CreateTab("Order", row, () => SetSortDescending(!_sortDescending));
-            row.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
+            _sortArea = CreateRect("SortArea", parent, Vector2.zero, Vector2.zero);
+            _sortRowRect = CreateRect("SortRow", _sortArea, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            _sortLabel = CreateTab("Sort", _sortRowRect, () => SetSort((CharacterSort)(((int)_sort + 1) % 3)));
+            _orderLabel = CreateTab("Order", _sortRowRect, () => SetSortDescending(!_sortDescending));
+            _sortRow = _sortRowRect.gameObject.AddComponent<SoulHunter.Gameplay.UI.ThemedRow>();
         }
 
         private TextMeshProUGUI CreateTab(string name, RectTransform row, UnityEngine.Events.UnityAction action)
@@ -841,9 +1283,10 @@ namespace SoulHunter.UI
         /// VS favourite (wiki Characters: from the character information panel; locked until Mindbender). A standard
         /// button that says its state in words; unusable, and saying LOCKED, until favourites are unlocked.
         /// </summary>
-        private void BuildFavouriteButton(RectTransform root)
+        private void BuildFavouriteButton(RectTransform parent)
         {
-            var rect = CreateRect("FavouriteButton", root, new Vector2(0.76f, 0.215f), new Vector2(0.95f, 0.275f));
+            _favouriteArea = CreateRect("FavouriteArea", parent, Vector2.zero, Vector2.zero);
+            var rect = CreateRect("FavouriteButton", _favouriteArea, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             var image = rect.gameObject.AddComponent<Image>();
             _favouriteButton = rect.gameObject.AddComponent<Button>();
             _favouriteButton.targetGraphic = image;
@@ -969,30 +1412,6 @@ namespace SoulHunter.UI
             text.enableAutoSizing = true;
             text.fontSizeMin = min;
             text.fontSizeMax = max;
-        }
-    }
-
-    /// <summary>Sizes a grid's cells from its viewport: all Count cards fit in the grid's columns, 0.72 as tall as wide at most.</summary>
-    public sealed class GridFit : MonoBehaviour
-    {
-        public GridLayoutGroup Grid;
-        public RectTransform Viewport;
-        public int Count;
-        [Tooltip("Cells are at least this share of their width tall (0 = whatever height fits the viewport).")]
-        public float MinHeightRatio = 0.45f;
-        private Vector2 _lastSize;
-
-        private void LateUpdate()
-        {
-            if (Grid == null || Viewport == null || Count <= 0) return;
-            Vector2 size = Viewport.rect.size;
-            if (size == _lastSize || size.x <= 0f || size.y <= 0f) return;
-            _lastSize = size;
-            int columns = Mathf.Max(1, Grid.constraintCount);
-            int rows = Mathf.CeilToInt(Count / (float)columns);
-            float width = (size.x - Grid.spacing.x * (columns - 1)) / columns;
-            float height = Mathf.Min(width * 0.72f, (size.y - Grid.spacing.y * (rows - 1)) / rows);
-            Grid.cellSize = new Vector2(Mathf.Floor(width), Mathf.Floor(Mathf.Max(height, width * MinHeightRatio)));
         }
     }
 

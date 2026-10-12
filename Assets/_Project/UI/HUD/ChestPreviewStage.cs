@@ -49,7 +49,13 @@ namespace SoulHunter.Gameplay.UI
 
         private void Build(GameObject chestPrefab, GameObject coinPrefab, bool arcana)
         {
-            Texture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32) { name = "ChestPreview", antiAliasing = 2 };
+            // MSAA only as far as the device gives it: on the owner's phone (Vulkan) a 2-sample texture came back with 1, and
+            // every chest preview frame logged "RenderPass: Attachment 0 was created with 1 samples but 2 samples were
+            // requested" (2026-10-10). The camera's MSAA follows the texture (below).
+            var desc = new RenderTextureDescriptor(512, 512, RenderTextureFormat.ARGB32, 16) { msaaSamples = 2 };
+            // The device's own answer was 2 there too, so phones get none; PCs keep the supported count.
+            int samples = Application.isMobilePlatform ? 1 : Mathf.Max(1, SystemInfo.GetRenderTextureSupportedMSAASampleCount(desc));
+            Texture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32) { name = "ChestPreview", antiAliasing = samples };
 
             var visual = chestPrefab != null ? chestPrefab.transform.Find("Visual") : null;
             if (visual != null)
@@ -63,6 +69,7 @@ namespace SoulHunter.Gameplay.UI
             var camGo = new GameObject("ChestPreviewCamera");
             camGo.transform.SetParent(transform, false);
             _camera = camGo.AddComponent<Camera>();
+            _camera.allowMSAA = Texture.antiAliasing > 1;
             _camera.clearFlags = CameraClearFlags.SolidColor;
             _camera.backgroundColor = new Color(0f, 0f, 0f, 0f);
             _camera.fieldOfView = 28f;

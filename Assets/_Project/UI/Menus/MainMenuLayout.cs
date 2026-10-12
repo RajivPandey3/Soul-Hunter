@@ -50,7 +50,22 @@ namespace SoulHunter.UI
         /// right"). A short last row is centred. The two-column layout waits for the owner's approval.
         /// </summary>
         public const int MaxSingleColumn = 4;
-        public int Columns => _buttons != null && Count(_buttons) > MaxSingleColumn ? 2 : 1;
+        /// <summary>The columns the buttons use now: two beyond four buttons when they fit side by side, else one.</summary>
+        public int Columns { get; private set; } = 1;
+
+        /// <summary>
+        /// Responsive (owner, 2026-10-10: landscape and portrait from the same screen): true when the frame art's open area
+        /// cannot hold the menu at full size (a portrait phone, a short landscape phone). The menu then centres in the safe
+        /// area at full size instead of shrinking into the frame, and the background art covers the screen.
+        /// </summary>
+        public bool FreeOfFrame { get; private set; }
+
+        private int WantedColumns(float roomWidth, int count)
+        {
+            if (count <= MaxSingleColumn) return 1;
+            var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
+            return SoulHunter.Gameplay.UI.UiScreen.ColumnsFor(roomWidth, layout.ButtonWidth, layout.ButtonGap, 2);
+        }
 
         public static MainMenuLayout Attach(GameObject homePanel, Button[] buttons, SoulHunter.Gameplay.UI.UITheme.IconSlot[] icons = null)
         {
@@ -130,10 +145,15 @@ namespace SoulHunter.UI
                     if (label.text.Trim().Equals("Power UP", System.StringComparison.Ordinal)) label.text = "Power Up";
             PlaceButtons();
             SoulHunter.Gameplay.UI.UiThemeAsset.Changed += PlaceButtons;
+            SoulHunter.Gameplay.UI.UiScreen.Changed += Fit;
             Fit();
         }
 
-        private void OnDestroy() => SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= PlaceButtons;
+        private void OnDestroy()
+        {
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= PlaceButtons;
+            SoulHunter.Gameplay.UI.UiScreen.Changed -= Fit;
+        }
 
         /// <summary>
         /// A column of the theme's standard buttons with the theme's gap, centred on the frame's ornament in the open area
@@ -144,26 +164,41 @@ namespace SoulHunter.UI
             if (this == null || _buttons == null) return;
             var layout = SoulHunter.Gameplay.UI.UITheme.Layout;
             int count = Count(_buttons);
-            int columns = Columns;
+            Vector2 room = Room(out bool free);
+            int columns = WantedColumns(room.x, count);
+            if (!free && !FitsAtFullSize(room, columns, count, layout))
+            {
+                // The frame's open area is too small for the menu at full size: leave the frame (responsive, 2026-10-10).
+                free = true;
+                room = FreeRoom();
+                columns = WantedColumns(room.x, count);
+            }
+            SetFree(free);
+            Columns = columns;
             int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
-            float stepY = layout.ButtonHeight + layout.ButtonGap;
+            float buttonHeight = ButtonHeight(layout);
+            float stepY = buttonHeight + layout.ButtonGap;
             float stepX = layout.ButtonWidth + layout.ButtonGap;
-            float blockHeight = rows * layout.ButtonHeight + (rows - 1) * layout.ButtonGap;
+            float blockHeight = rows * buttonHeight + (rows - 1) * layout.ButtonGap;
             float blockWidth = columns * layout.ButtonWidth + (columns - 1) * layout.ButtonGap;
             if (_logo != null)
             {
                 // One group: the logo, a gap, then the button block, centred on the group's middle.
-                float logoHeight = LogoWidth * _logo.sprite.rect.height / _logo.sprite.rect.width;
                 float gap = layout.ButtonGap * LogoGapButtons;
+                // The logo gives way first: it takes the width and height the buttons leave; the buttons keep their size.
+                float aspect = _logo.sprite.rect.height / _logo.sprite.rect.width;
+                float logoW = Mathf.Min(LogoWidth, room.x * 0.92f);
+                if (room.y > 0f) logoW = Mathf.Min(logoW, Mathf.Max(0f, room.y - blockHeight - gap) / aspect);
+                float logoHeight = logoW * aspect;
                 float total = logoHeight + gap + blockHeight;
                 float top = total * 0.5f;
                 var logoRect = _logo.rectTransform;
                 logoRect.anchorMin = logoRect.anchorMax = logoRect.pivot = new Vector2(0.5f, 0.5f);
-                logoRect.sizeDelta = new Vector2(LogoWidth, logoHeight);
+                logoRect.sizeDelta = new Vector2(logoW, logoHeight);
                 logoRect.anchoredPosition = new Vector2(0f, top - logoHeight * 0.5f);
-                float firstCentre = top - logoHeight - gap - layout.ButtonHeight * 0.5f;
+                float firstCentre = top - logoHeight - gap - buttonHeight * 0.5f;
                 PlaceBlock(new Vector2(0.5f, 0.5f), firstCentre, columns, count, stepX, stepY, layout);
-                _group.sizeDelta = new Vector2(Mathf.Max(LogoWidth, blockWidth), total);
+                _group.sizeDelta = new Vector2(Mathf.Max(logoW, blockWidth), total);
                 FitGroup();
                 return;
             }
@@ -183,7 +218,7 @@ namespace SoulHunter.UI
                 var rect = (RectTransform)button.transform;
                 rect.anchorMin = rect.anchorMax = anchor;
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(layout.ButtonWidth, layout.ButtonHeight);
+                rect.sizeDelta = new Vector2(layout.ButtonWidth, ButtonHeight(layout));
                 rect.anchoredPosition = new Vector2((column - (inRow - 1) * 0.5f) * stepX, firstCentre - row * stepY);
                 i++;
             }
@@ -193,19 +228,91 @@ namespace SoulHunter.UI
         private void FitGroup()
         {
             if (_group == null || _area == null) return;
-            float roomH = _area.rect.height * (OpenTop - OpenBottom) * 0.94f;
-            float roomW = _area.rect.width * 0.6f;
+            Vector2 room = Room(out _);
             var size = _group.sizeDelta;
             float scale = 1f;
-            if (size.y > 0f && roomH > 0f) scale = Mathf.Min(scale, roomH / size.y);
-            if (size.x > 0f && roomW > 0f) scale = Mathf.Min(scale, roomW / size.x);
+            if (size.y > 0f && room.y > 0f) scale = Mathf.Min(scale, room.y / size.y);
+            if (size.x > 0f && room.x > 0f) scale = Mathf.Min(scale, room.x / size.x);
+            // Never below the touch target: a button stays at least 48 dp on a touch screen (UiScreen).
+            float height = ButtonHeight(SoulHunter.Gameplay.UI.UITheme.Layout);
+            if (height > 0f) scale = Mathf.Max(scale, SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits / height);
             _group.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        /// <summary>
+        /// The theme's button height, grown to the touch target on a touch screen: the same rule as every other button
+        /// (ThemedElement.StandardSize), so the menu's text and icons keep the phone's text size and only the plate grows.
+        /// </summary>
+        private static float ButtonHeight(SoulHunter.Gameplay.UI.UiThemeAsset.Layout layout) =>
+            Mathf.Max(layout.ButtonHeight, SoulHunter.Gameplay.UI.UiScreen.MinTouchUnits);
+
+        /// <summary>The room the group has: the frame's open area, or (free of the frame) the safe area.</summary>
+        private Vector2 Room(out bool free)
+        {
+            free = FreeOfFrame;
+            if (free) return FreeRoom();
+            if (_area == null) return Vector2.zero;
+            return new Vector2(_area.rect.width * 0.6f, _area.rect.height * (OpenTop - OpenBottom) * 0.94f);
+        }
+
+        private Vector2 FreeRoom()
+        {
+            var panel = (RectTransform)transform;
+            Rect safe = SoulHunter.Gameplay.UI.UiScreen.SafeAreaNormalized;
+            return new Vector2(panel.rect.width * safe.width * 0.94f, panel.rect.height * safe.height * 0.94f);
+        }
+
+        private static bool FitsAtFullSize(Vector2 room, int columns, int count, SoulHunter.Gameplay.UI.UiThemeAsset.Layout layout)
+        {
+            int rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)columns));
+            float w = columns * layout.ButtonWidth + (columns - 1) * layout.ButtonGap;
+            // Room for the buttons plus at least a small logo above them.
+            float h = rows * ButtonHeight(layout) + (rows - 1) * layout.ButtonGap + layout.ButtonGap * LogoGapButtons + 80f;
+            if (w <= 0f || h <= 0f) return true;
+            float scale = Mathf.Min(1f, room.x / w, room.y / h);
+            // A PC window may shrink the menu inside the frame (owner-approved 2026-10-08), down to 60%. On a touch screen
+            // a button never shrinks under the touch target.
+            float floor = SoulHunter.Gameplay.UI.UiScreen.IsTouch ? 1f : 0.6f;
+            return scale >= floor - 0.001f;
+        }
+
+        /// <summary>
+        /// Free of the frame, the group centres in the safe area and the background art covers the screen (cropped at the
+        /// sides in portrait) instead of drawing as a thin band with bars.
+        /// </summary>
+        private void SetFree(bool free)
+        {
+            FreeOfFrame = free;
+            if (_group == null) return;
+            Rect safe = SoulHunter.Gameplay.UI.UiScreen.SafeAreaNormalized;
+            var parent = free ? (RectTransform)transform : _area;
+            if (_group.parent != parent) _group.SetParent(parent, false);
+            _group.anchorMin = _group.anchorMax = free ? safe.center : new Vector2(FrameCentreX, GroupCentreY);
+            _group.anchoredPosition = Vector2.zero;
+            if (_background == null) return;
+            var cover = _background.GetComponent<AspectRatioFitter>();
+            if (free && cover == null && _background.sprite != null)
+            {
+                cover = _background.gameObject.AddComponent<AspectRatioFitter>();
+                cover.aspectRatio = _background.sprite.rect.width / _background.sprite.rect.height;
+            }
+            if (cover == null) return;
+            cover.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            cover.enabled = free;
+            if (!free)
+            {
+                var bg = _background.rectTransform;
+                bg.anchorMin = Vector2.zero;
+                bg.anchorMax = Vector2.one;
+                bg.offsetMin = bg.offsetMax = Vector2.zero;
+            }
         }
 
         private void LateUpdate()
         {
             var screen = new Vector2(Screen.width, Screen.height);
-            if (screen != _lastScreen || (_background != null && PictureRect() != _lastPicture)) Fit();
+            // Free of the frame the art covers the screen, so its drawn rect is not the frame's: only a size change refits.
+            if (screen != _lastScreen || (!FreeOfFrame && _background != null && PictureRect() != _lastPicture)) Fit();
             CentreTitle();
         }
 
@@ -228,6 +335,7 @@ namespace SoulHunter.UI
             if (_area == null) return;
             _lastScreen = new Vector2(Screen.width, Screen.height);
             var panel = (RectTransform)transform;
+            SetFree(false); // measure the frame where the art is drawn fitted, not covering
             Canvas.ForceUpdateCanvases();
             Rect picture = _background != null ? PictureRect() : new Rect(0f, 0f, 1f, 1f);
             _lastPicture = picture;
@@ -236,7 +344,8 @@ namespace SoulHunter.UI
             _area.offsetMin = _area.offsetMax = Vector2.zero;
             _area.localScale = Vector3.one;
             Canvas.ForceUpdateCanvases();
-            FitGroup();
+            FreeOfFrame = false; // decide again for this size
+            PlaceButtons();
             if (panel.rect.width <= 0f || _title == null || _logo != null) return;
             Canvas.ForceUpdateCanvases();
             _title.ForceMeshUpdate();

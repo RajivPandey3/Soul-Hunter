@@ -87,6 +87,14 @@ namespace SoulHunter.Tests.PlayMode
             finally { Object.Destroy(dup); }
             Assert.That(player.GetComponent<PlayerStats>().Amount, Is.EqualTo(2), "Duplicator level 2 gives +2 Amount.");
             yield return new WaitForSeconds(1.5f);
+            // Let the first measurement's shots end (weapon timer held): a Santa Water pool lives on, and one reused by the
+            // next pool in the same frame was not seen as a new shot (2026-10-10, 2 counted of 3; as Drowning Chalice).
+            if (type != UpgradeType.Bible)
+            {
+                var timerField = typeof(AutoAttackWeapon).GetField("_timer", Private);
+                float clear = Time.time + 6f;
+                while (Time.time < clear && LiveShots().Any()) { timerField.SetValue(weapon, 999f); yield return null; }
+            }
 
             var with = new List<Shot>();
             yield return MeasureOneAttack(weapon, with);

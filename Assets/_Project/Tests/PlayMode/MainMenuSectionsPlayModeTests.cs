@@ -122,6 +122,88 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Owner (2026-10-10): the same section screens in landscape and portrait. Each is laid out on a PC (16:9, 21:9, 5:4)
+        /// and on the owner's phone held either way (1080x2400 at 480 dpi, touch): every shown control on the canvas, none
+        /// overlapping, none under 48 dp on the phone; Back inside the window and under the content; no text the screen
+        /// made under the touch floor (12 sp); the Collection grid takes fewer columns in portrait than on a PC.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EachSection_FitsEveryScreen_WithBackPinnedAtTheBottom()
+        {
+            yield return BootMenu(FreshRecords);
+            var nav = Object.FindFirstObjectByType<MainMenuNavigation>();
+            var sections = new (Button Opener, MenuSectionScreen Screen)[]
+            {
+                (nav.CollectionButton, nav.Collection), (nav.BestiaryButton, nav.BestiaryScreen),
+                (nav.UnlocksButton, nav.Unlocks), (nav.CreditsButton, nav.Credits)
+            };
+            foreach (var (opener, screen) in sections)
+            {
+                yield return Open(nav, opener, screen);
+                var canvas = screen.GetComponentInParent<Canvas>().rootCanvas;
+                var problems = new System.Collections.Generic.List<string>();
+                var columns = new System.Collections.Generic.Dictionary<string, int>();
+                try
+                {
+                    foreach (var d in ScreenSimulation.Devices)
+                    {
+                        yield return ScreenSimulation.At(d.Pixels, d.Dpi, d.Touch, canvas);
+                        for (int i = 0; i < 3; i++) { Canvas.ForceUpdateCanvases(); yield return null; } // GridFit and the split settle
+                        Canvas.ForceUpdateCanvases();
+                        string what = $"{screen.name} on {d.Name}";
+                        problems.AddRange(ScreenSimulation.Problems(what, ShownControls(screen)));
+                        Rect back = ScreenSimulation.UnitsRect((RectTransform)screen.BackButton.transform);
+                        Rect frame = ScreenSimulation.UnitsRect(screen.Frame), body = ScreenSimulation.UnitsRect(screen.Body);
+                        if (!Inside(back, frame)) problems.Add($"{what}: Back {back} is outside the window {frame}.");
+                        if (back.yMax > body.yMin + 0.5f) problems.Add($"{what}: Back {back} is not under the content {body}.");
+                        if (!Inside(body, frame)) problems.Add($"{what}: the content {body} is outside the window {frame}.");
+                        float floor = UiScreen.MinTextUnits - 0.01f;
+                        foreach (var text in screen.OwnTexts().Concat(screen.BackButton.GetComponentsInChildren<TMP_Text>()))
+                        {
+                            if (!text.isActiveAndEnabled || string.IsNullOrWhiteSpace(text.text)) continue;
+                            text.ForceMeshUpdate();
+                            if (text.fontSize < floor) problems.Add($"{what}: '{Short(text.text)}' is {text.fontSize:0.#} units, under the {UiScreen.MinTextUnits:0.#} floor.");
+                        }
+                        if (screen is CollectionMenuUI collection) columns[d.Name] = collection.Grid.constraintCount;
+                    }
+                }
+                finally { ScreenSimulation.Restore(); }
+                Assert.That(problems, Is.Empty, string.Join("\n", problems));
+                if (screen is CollectionMenuUI)
+                {
+                    Assert.That(columns["Phone portrait"], Is.LessThan(columns["PC 1920x1080"]), "Fewer grid columns on a phone held upright.");
+                    Assert.That(columns["Phone portrait"], Is.GreaterThanOrEqualTo(2), "Still a grid, not a list, in portrait.");
+                }
+                for (int i = 0; i < 2; i++) { Canvas.ForceUpdateCanvases(); yield return null; }
+                yield return Back(nav, screen, opener);
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>
+        /// The controls a player can see: Back, the scrollbars, and the list entries wholly inside their scroll area's view
+        /// (entries scrolled out of view are masked and cannot be touched).
+        /// </summary>
+        private static System.Collections.Generic.IEnumerable<Selectable> ShownControls(MenuSectionScreen screen)
+        {
+            foreach (var control in screen.GetComponentsInChildren<Selectable>())
+            {
+                var scroll = control.GetComponentInParent<ScrollRect>();
+                if (scroll != null && control.transform.IsChildOf(scroll.content))
+                {
+                    Rect view = ScreenSimulation.UnitsRect(scroll.viewport), box = ScreenSimulation.UnitsRect((RectTransform)control.transform);
+                    if (!Inside(box, view)) continue;
+                }
+                yield return control;
+            }
+        }
+
+        private static bool Inside(Rect inner, Rect outer) =>
+            inner.xMin >= outer.xMin - 0.5f && inner.yMin >= outer.yMin - 0.5f && inner.xMax <= outer.xMax + 0.5f && inner.yMax <= outer.yMax + 0.5f;
+
+        private static string Short(string text) => text.Length > 40 ? text.Substring(0, 40) + "..." : text;
+
         private static IEnumerator Open(MainMenuNavigation nav, Button opener, MenuSectionScreen screen)
         {
             Click(opener, opener.name);

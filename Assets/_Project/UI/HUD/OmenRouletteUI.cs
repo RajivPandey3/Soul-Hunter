@@ -15,7 +15,7 @@ namespace SoulHunter.Gameplay.UI
     /// new art): a HUD plate with three rings of round pips (light, gold, light), a gold hub and pointer, and three lines of
     /// HUD text (Omen / the event / when). The spin is the one moving moment (frontend-design: one place for motion); with
     /// the Flashing VFX option off it does not spin (reduced motion) and shows the pick at once. It runs on game time, so a
-    /// pause holds it. Bottom right, lifted above the touch Dash button when the touch controls show. The HUD adds it.
+    /// pause holds it. Bottom right, clear of the touch stick, Dash and Pause pads in landscape and portrait (HudClearance). The HUD adds it.
     /// </summary>
     public sealed class OmenRouletteUI : MonoBehaviour
     {
@@ -110,9 +110,7 @@ namespace SoulHunter.Gameplay.UI
             if (_root.gameObject.activeSelf != on) _root.gameObject.SetActive(on);
             if (!on) return;
 
-            // Above the touch Dash button when the touch controls show (it sits at 8-26% of the height, bottom right).
-            float lift = TouchControlsUI.ShouldShow ? 0.3f : 0f;
-            if (!Mathf.Approximately(_root.anchorMin.y, lift)) _root.anchorMin = _root.anchorMax = new Vector2(1f, lift);
+            Place();
 
             float dt = Time.deltaTime; // game time: a pause holds the wheel
             if (_spinLeft > 0f)
@@ -136,6 +134,27 @@ namespace SoulHunter.Gameplay.UI
                 if (_firedLeft <= 0f) { _shown = null; Refresh(); }
             }
             else if (!_shown.HasValue) Refresh(); // the idle line counts toward the next spin
+        }
+
+        /// <summary>
+        /// Bottom right of the safe area, clear of the touch pads (owner, 2026-10-10: landscape and portrait). Before, it was
+        /// lifted to 30% of the height, which on a phone held sideways (510 units) still covered the Dash button and in
+        /// portrait ran into the stick. Now it takes the nearest free spot: above the pads (portrait) or beside them
+        /// (landscape), in canvas units, so it keeps its size on every screen.
+        /// </summary>
+        public void Place()
+        {
+            if (_root == null) return;
+            var space = _root.parent as RectTransform;
+            if (space == null) return;
+            foreach (var text in Texts) UiTextFloor.Apply(text); // on a touch screen no line is under 12 sp
+            Rect safe = HudClearance.SafeRect(space, Margin);
+            Vector2 size = new Vector2(Mathf.Min(Size.x, safe.width), Size.y);
+            var wanted = new Rect(safe.xMax - size.x, safe.yMin, size.x, size.y);
+            Rect box = HudClearance.Clear(wanted, safe, HudClearance.TouchPads(space), HudClearance.Gap);
+            _root.anchorMin = _root.anchorMax = _root.pivot = new Vector2(1f, 0f);
+            _root.sizeDelta = box.size;
+            _root.anchoredPosition = new Vector2(box.xMax - space.rect.xMax, box.yMin - space.rect.yMin);
         }
 
         /// <summary>Writes the three lines for the wheel's state.</summary>

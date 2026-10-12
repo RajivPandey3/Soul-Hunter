@@ -28,6 +28,7 @@ namespace SoulHunter.Gameplay.UI
                 label.textWrappingMode = TextWrappingModes.NoWrap;
                 label.overflowMode = TextOverflowModes.Overflow;
                 HudBacking.Add(label);
+                HudMenuHide.Attach(label.gameObject);
             }
 
             var go = new GameObject("StageProgress_Text", typeof(RectTransform));
@@ -44,6 +45,7 @@ namespace SoulHunter.Gameplay.UI
             _stageLabel.raycastTarget = false;
             MakeReadable(_stageLabel);
             HudBacking.Add(_stageLabel);
+            HudMenuHide.Attach(go);
 
             _progression = LevelProgressionManager.Instance;
             if (_progression != null) _progression.OnStageStarted += HandleStageStarted;
@@ -57,12 +59,74 @@ namespace SoulHunter.Gameplay.UI
             GameSettings.Changed -= Refresh;
         }
 
-        private void HandleStageStarted(int _) => Refresh();
+        private void HandleStageStarted(int _)
+        {
+            _stageShownFor = 0f;
+            Refresh();
+        }
+
+        /// <summary>Seconds of play the stage name stays on a phone before it hides (owner, 2026-10-12).</summary>
+        public const float PhoneStageSeconds = 5f;
+        private float _stageShownFor;
+        private float _phoneTop = -1f;
+
+        /// <summary>
+        /// The phone's HUD strip: the stage name is one small line under the strip, <paramref name="fromTop"/> units below
+        /// the top of <paramref name="root"/>, shown for the first seconds of each stage. A negative value puts it back
+        /// in its PC place, always shown.
+        /// </summary>
+        public void PlaceForPhone(RectTransform root, float fromTop, float height, float textSize)
+        {
+            if (_stageLabel == null) return;
+            var rect = _stageLabel.rectTransform;
+            bool phone = root != null && fromTop >= 0f;
+            if (phone)
+            {
+                if (rect.parent != root) MoveWithBacking(rect, root);
+                rect.anchorMin = new Vector2(0.04f, 1f);
+                rect.anchorMax = new Vector2(0.96f, 1f);
+                rect.pivot = new Vector2(0.5f, 1f);
+                rect.sizeDelta = new Vector2(0f, height);
+                rect.anchoredPosition = new Vector2(0f, -fromTop);
+                _stageLabel.fontSizeMin = Mathf.Min(textSize, UiScreen.MinTextUnits);
+                _stageLabel.fontSizeMax = textSize;
+                _stageLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+            else if (_phoneTop >= 0f)
+            {
+                var canvasRoot = CanvasRoot(transform);
+                if (rect.parent != canvasRoot) MoveWithBacking(rect, canvasRoot);
+                rect.anchorMin = new Vector2(0.3f, 0.91f);
+                rect.anchorMax = new Vector2(0.7f, 0.97f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.offsetMin = rect.offsetMax = Vector2.zero;
+                _stageLabel.fontSizeMin = 16f;
+                _stageLabel.fontSizeMax = 34f;
+                _stageLabel.textWrappingMode = TextWrappingModes.Normal;
+            }
+            _phoneTop = phone ? fromTop : -1f;
+            Refresh();
+        }
+
+        /// <summary>The label's backing bar is its sibling, drawn just before it; both move together.</summary>
+        private static void MoveWithBacking(RectTransform label, Transform to)
+        {
+            var backing = label.parent != null ? label.parent.Find(label.name + "_Backing") : null;
+            if (backing != null) backing.SetParent(to, false);
+            label.SetParent(to, false);
+        }
+
+        private void Update()
+        {
+            if (_phoneTop < 0f || _stageLabel == null || _stageShownFor >= PhoneStageSeconds) return;
+            _stageShownFor += Time.deltaTime; // game time: a pause does not use the seconds up
+            if (_stageShownFor >= PhoneStageSeconds) Refresh();
+        }
 
         private void Refresh()
         {
             if (_stageLabel == null) return;
-            _stageLabel.gameObject.SetActive(GameSettings.ShowStageProgression);
+            _stageLabel.gameObject.SetActive(GameSettings.ShowStageProgression && (_phoneTop < 0f || _stageShownFor < PhoneStageSeconds));
             int stage = _progression != null ? _progression.CurrentStage : 1;
             _stageLabel.text = $"Stage {stage}/{LevelProgressionManager.MaxStages}: {CampaignLevelCatalog.Get(stage).Name}";
         }
@@ -118,7 +182,7 @@ namespace SoulHunter.Gameplay.UI
         private void LateUpdate()
         {
             if (_label == null) { Destroy(gameObject); return; }
-            bool show = _label.isActiveAndEnabled && !string.IsNullOrEmpty(_label.text);
+            bool show = _label.isActiveAndEnabled && !string.IsNullOrEmpty(_label.text) && !HudMenuHide.Hidden;
             var image = GetComponent<UnityEngine.UI.Image>();
             image.enabled = show;
             if (!show) return;

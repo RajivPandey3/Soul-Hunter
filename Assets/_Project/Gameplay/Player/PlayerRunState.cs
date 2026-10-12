@@ -42,6 +42,8 @@ namespace SoulHunter.Gameplay.Player
                 yVel = 0f; // Jitter prevention; keep X/Z input unchanged.
             }
             
+            // Slippery obstacles (owner, 2026-10-12): slide along what is in the way instead of stopping dead.
+            movement = ObstacleSlide.Resolve(_controller.Rigidbody.position, movement, _controller.BodyRadius, _controller.ObstacleMask, Time.fixedDeltaTime);
             _controller.Rigidbody.linearVelocity = new Vector3(movement.x, yVel, movement.z);
             
             if (_controller.Animator != null)

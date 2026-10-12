@@ -85,7 +85,49 @@ namespace SoulHunter.Gameplay.Core
                     if (audio != null) audio.PlaySFX(audio.UnlockSound);
                 }
             }
+            LayoutNotice();
             if (Time.unscaledTime >= _noticeUntil) Destroy(_notice);
+        }
+
+        /// <summary>Notice size and place, in canvas units (from the safe area's top centre).</summary>
+        public const float NoticeWidth = 1000f, NoticeHeight = 97f, NoticeTop = 135f, NoticeMargin = 24f;
+
+        private RectTransform _noticeBox;
+        private TMPro.TextMeshProUGUI _noticeText;
+        private Vector4 _noticeLaidOut;
+
+        /// <summary>The notice's box (its backing plate) and its text, while a notice exists (tests).</summary>
+        public RectTransform NoticeBox => _notice != null ? _noticeBox : null;
+        public TMPro.TextMeshProUGUI NoticeText => _notice != null ? _noticeText : null;
+
+        /// <summary>
+        /// Fits the notice to the screen it is on: hung from the safe area's top centre; as wide as NoticeWidth or the safe
+        /// area minus its margins, whichever is less; taller when a narrow screen wraps it onto more lines; its text never
+        /// under the touch floor (12 sp). Runs when it is shown and whenever the canvas or safe area changes (a rotation).
+        /// </summary>
+        private void LayoutNotice()
+        {
+            if (_notice == null || _noticeBox == null || _noticeText == null) return;
+            var canvasRect = _notice.transform as RectTransform;
+            Rect safe = SoulHunter.Gameplay.UI.UiScreen.SafeAreaNormalized;
+            float room = canvasRect != null ? canvasRect.rect.width * safe.width : NoticeWidth;
+            // On a phone the notice hangs under the HUD strip and the stage name (it was drawn over the stage name).
+            float top = Mathf.Max(NoticeTop, SoulHunter.Gameplay.UI.GameHUDController.PhoneClearTop);
+            var key = new Vector4(room, safe.xMin + safe.xMax * 7f, top, safe.yMax);
+            if (key == _noticeLaidOut) return;
+            _noticeLaidOut = key;
+            _noticeBox.anchorMin = _noticeBox.anchorMax = new Vector2(safe.center.x, safe.yMax);
+            _noticeBox.anchoredPosition = new Vector2(0f, -top);
+            float floor = Mathf.Max(18f, SoulHunter.Gameplay.UI.UiScreen.MinTextUnits);
+            _noticeText.fontSizeMin = floor;
+            if (_noticeText.fontSizeMax < floor) _noticeText.fontSizeMax = floor;
+            float width = Mathf.Max(1f, Mathf.Min(NoticeWidth, room - 2f * NoticeMargin));
+            // Height: the approved 97 units hold one line; a narrow screen wraps the line, so the box grows to hold it.
+            float size = _noticeText.fontSize;
+            _noticeText.fontSize = Mathf.Max(floor, 28f);
+            float wrapped = _noticeText.GetPreferredValues(_noticeText.text, Mathf.Max(1f, width - 48f), 0f).y + 12f;
+            _noticeText.fontSize = size;
+            _noticeBox.sizeDelta = new Vector2(width, Mathf.Max(NoticeHeight, Mathf.Ceil(wrapped)));
         }
 
         private bool _noticeSounded;
@@ -194,27 +236,27 @@ namespace SoulHunter.Gameplay.Core
             var canvas = _notice.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 500;
-            var scaler = _notice.AddComponent<UnityEngine.UI.CanvasScaler>();
-            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            SoulHunter.Gameplay.UI.ResponsiveCanvas.Apply(canvas); // the game's one UI scale (UiScreen), landscape and portrait
             // Bug MIS v2 C13 (2026-10-02): yellow text straight over the horde was hard to read; a dark plate sits behind it.
+            // Responsive (owner, 2026-10-10: landscape and portrait): the plate is the notice's box. It hangs from the top
+            // centre of the safe area, NoticeTop units under it, at most NoticeWidth wide and never wider than the screen
+            // minus its margins (LayoutNotice). Before, it was 52% of a 1920-wide layout, fixed by screen shares.
             var plateGo = new GameObject("Backing", typeof(RectTransform));
             plateGo.transform.SetParent(_notice.transform, false);
-            var plate = (RectTransform)plateGo.transform;
-            plate.anchorMin = new Vector2(.24f, .785f);
-            plate.anchorMax = new Vector2(.76f, .875f);
-            plate.offsetMin = plate.offsetMax = Vector2.zero;
+            _noticeBox = (RectTransform)plateGo.transform;
+            _noticeBox.pivot = new Vector2(0.5f, 1f);
             var plateImage = plateGo.AddComponent<UnityEngine.UI.Image>();
             SoulHunter.Gameplay.UI.UITheme.ApplySurface(plateImage, SoulHunter.Gameplay.UI.ThemedElement.SurfaceRole.HudBacking);
             plateImage.raycastTarget = false;
             var textGo = new GameObject("Text", typeof(RectTransform));
-            textGo.transform.SetParent(_notice.transform, false);
+            textGo.transform.SetParent(_noticeBox, false);
             var rect = (RectTransform)textGo.transform;
-            rect.anchorMin = new Vector2(.24f, .785f);
-            rect.anchorMax = new Vector2(.76f, .875f);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var text = textGo.AddComponent<TMPro.TextMeshProUGUI>();
             text.alignment = TMPro.TextAlignmentOptions.Center;
+            text.fontSize = 40f; // a size first, so TextMeshPro's later Awake keeps these limits
             text.enableAutoSizing = true;
             text.fontSizeMin = 18f;
             text.fontSizeMax = 40f;
@@ -222,6 +264,9 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.UI.UITheme.ApplyText(text, SoulHunter.Gameplay.UI.ThemedElement.TextRole.Accent);
             text.text = message;
             text.raycastTarget = false;
+            _noticeText = text;
+            _noticeLaidOut = new Vector4(-1f, -1f, -1f, -1f);
+            LayoutNotice();
             _noticeUntil = Time.unscaledTime + NoticeSeconds;
             _noticeSounded = false;
             UpdateNotice(); // shown (with its sound) now, or held hidden until a menu closes

@@ -105,7 +105,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(EventSystem.current != null && EventSystem.current.currentSelectedGameObject == screen.ReviveButton.gameObject, Is.True,
                 "Keyboard and controller focus is on Revive.");
 
-            // Themed Primary button at the theme's standard size, on screen, on its own Expand overlay canvas.
+            // Themed Primary button at the theme's standard size, on screen, on its own overlay canvas on the game's one UI scale.
             var element = screen.ReviveButton.GetComponent<ThemedElement>();
             Assert.That(element, Is.Not.Null);
             Assert.That(element.ButtonKind, Is.EqualTo(UITheme.ButtonKind.Primary));
@@ -118,7 +118,7 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var corner in corners)
                 Assert.That(corner.x >= 0f && corner.y >= 0f && corner.x <= Screen.width && corner.y <= Screen.height, Is.True, $"Revive at {corner} is off a {Screen.width}x{Screen.height} window.");
             var scaler = screen.Canvas.GetComponent<UnityEngine.UI.CanvasScaler>();
-            Assert.That(scaler.screenMatchMode, Is.EqualTo(UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand));
+            Assert.That(scaler.GetComponent<SoulHunter.Gameplay.UI.ResponsiveCanvas>(), Is.Not.Null, "It takes the game's one UI scale (ResponsiveCanvas, landscape and portrait).");
             Assert.That(screen.Canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceOverlay));
 
             // The screen waits: real time passes, the player stays down and nothing is spent.
@@ -138,6 +138,51 @@ namespace SoulHunter.Tests.PlayMode
             if (pauseWasOn) Assert.That(PauseAction().enabled, Is.True, "The pause key works again.");
             Assert.That(_player.gameObject.activeSelf, Is.True);
             Assert.That(GameSessionManager.Instance.IsRunFinished, Is.False);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator TheReviveScreen_FitsEveryScreen_WithRevive_AtTouchSize_InTheMiddle()
+        {
+            // Responsive (owner, 2026-10-10): the same screen on a PC (16:9, 21:9, 5:4) and a phone held either way. The veil
+            // covers the canvas, the panel fits inside it, Revive is on screen, centred, at least 48 dp on the phone, and no
+            // text is under the phone's floor.
+            yield return Boot(1);
+            LethalHit();
+            yield return null;
+            yield return null;
+            var screen = ReviveScreen.Current;
+            Assert.That(screen != null && screen.IsOpen, Is.True, "The Revive screen shows. " + Errors());
+            var canvas = screen.Canvas;
+            yield return ScreenSimulation.AssertFitsEveryDevice(() => screen.GetComponentsInChildren<UnityEngine.UI.Selectable>(), canvas);
+
+            var problems = new System.Collections.Generic.List<string>();
+            try
+            {
+                foreach (var d in ScreenSimulation.Devices)
+                {
+                    yield return ScreenSimulation.At(d.Pixels, d.Dpi, d.Touch, canvas);
+                    Vector2 size = ((RectTransform)canvas.transform).rect.size;
+                    Rect button = ScreenSimulation.UnitsRect((RectTransform)screen.ReviveButton.transform);
+                    Rect panel = ScreenSimulation.UnitsRect((RectTransform)screen.ReviveButton.transform.parent);
+                    Rect veil = ScreenSimulation.UnitsRect((RectTransform)screen.transform.Find("Root/Veil"));
+                    if (Mathf.Abs(button.center.x - size.x * 0.5f) > 1f) problems.Add($"{d.Name}: Revive at x {button.center.x:0} is not centred on {size.x:0}");
+                    if (panel.xMin < -1f || panel.yMin < -1f || panel.xMax > size.x + 1f || panel.yMax > size.y + 1f) problems.Add($"{d.Name}: the panel {panel} is off the {size} canvas");
+                    if (button.xMin < panel.xMin - 1f || button.xMax > panel.xMax + 1f || button.yMin < panel.yMin - 1f) problems.Add($"{d.Name}: Revive {button} is outside its panel {panel}");
+                    if (veil.xMin > 1f || veil.yMin > 1f || veil.xMax < size.x - 1f || veil.yMax < size.y - 1f) problems.Add($"{d.Name}: the veil {veil} does not cover the {size} canvas");
+                    if (d.Touch && Mathf.Min(button.width, button.height) < UiScreen.MinTouchUnits - 0.5f) problems.Add($"{d.Name}: Revive {button.size} is under the touch target");
+                    foreach (var text in new TMPro.TMP_Text[] { screen.TitleText, screen.RevivalsText, screen.HintText })
+                    {
+                        text.ForceMeshUpdate();
+                        if (text.fontSize < UiScreen.MinTextUnits - 0.01f) problems.Add($"{d.Name}: '{text.name}' text {text.fontSize:0.#} is under {UiScreen.MinTextUnits:0.#} units");
+                        Rect r = ScreenSimulation.UnitsRect(text.rectTransform);
+                        if (r.Overlaps(button)) problems.Add($"{d.Name}: '{text.name}' covers Revive");
+                    }
+                }
+            }
+            finally { ScreenSimulation.Restore(); }
+            Assert.That(problems, Is.Empty, string.Join("\n", problems));
+            screen.PressRevive();
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

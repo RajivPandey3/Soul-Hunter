@@ -58,6 +58,8 @@ namespace SoulHunter.Gameplay.Core
     ///                                          (a few entries found and kills recorded, Bestiary unlocked, menu reloaded)
     ///   -sh-autoplay-style-sample              before the run: the UI style sample screen, also at 2x
     ///   -sh-autoplay-early-shots               every 0.2 s for the first 3 s of the run
+    ///   -sh-autoplay-touch-sizes               with every screenshot, a "touch-sizes" event: each shown control's size on
+    ///                                          screen in pixels and dp (Android 48 dp touch target check, T-01)
     ///   -sh-autoplay-pause-shot                20 s in: the pause menu with its stats panel
     ///   -sh-autoplay-options-shot              with -pause-shot: every Options section over the pause menu
     ///   -sh-autoplay-evolutions-shot           ~22 s in: pause, press Evolutions, screenshot (and the next page), resume
@@ -209,6 +211,11 @@ namespace SoulHunter.Gameplay.Core
 
         private IEnumerator Start()
         {
+            // -sh-autoplay-orientation portrait|landscape: a phone run in that orientation, without touching the phone's
+            // own rotation setting (owner, 2026-10-10: the same screens in landscape and portrait).
+            string orientation = ArgValue("-sh-autoplay-orientation");
+            if (orientation == "portrait") Screen.orientation = ScreenOrientation.Portrait;
+            else if (orientation == "landscape") Screen.orientation = ScreenOrientation.LandscapeLeft;
             Directory.CreateDirectory(Path.Combine(Config.OutputFolder, "shots"));
             while (SceneManager.GetActiveScene().name != "MainMenu") yield return null;
             yield return new WaitForSecondsRealtime(0.5f);
@@ -1036,7 +1043,10 @@ namespace SoulHunter.Gameplay.Core
             // -sh-autoplay-options-shot: the Options screen over the pause menu too.
             if (HasArg("-sh-autoplay-options-shot"))
             {
-                var options = SoulHunter.Gameplay.UI.OptionsMenuUI.Open();
+                // Through the pause screen's own button, as a player does (the pause screen steps back).
+                var pauseUi = system.PauseMenuPanel != null ? system.PauseMenuPanel.GetComponent<SoulHunter.Gameplay.UI.PauseMenuUI>() : null;
+                if (pauseUi != null) pauseUi.OpenOptions();
+                var options = pauseUi != null ? FindFirstObjectByType<SoulHunter.Gameplay.UI.OptionsMenuUI>() : SoulHunter.Gameplay.UI.OptionsMenuUI.Open();
                 yield return new WaitForSecondsRealtime(0.5f);
                 yield return Shot("options");
                 // Every other section too (Favorites opens first; Display and Gameplay hold the ON/OFF switches, Controls the key bindings).
@@ -1160,6 +1170,7 @@ namespace SoulHunter.Gameplay.Core
 
         private IEnumerator Shot(string name)
         {
+            if (HasArg("-sh-autoplay-touch-sizes")) LogTouchSizes(name);
             _shotFrame = Time.frameCount;
             string file = Path.Combine(Config.OutputFolder, "shots", $"{_shots.Count:000}_{name}.png");
             _shots.Add(Path.GetFileName(file));
@@ -1167,7 +1178,11 @@ namespace SoulHunter.Gameplay.Core
             // CaptureScreenshot already captures at the end of the frame (a player, or the editor's Game view, with UI).
             if (!Application.isBatchMode)
             {
-                ScreenCapture.CaptureScreenshot(file);
+                // On a phone CaptureScreenshot takes a path relative to persistentDataPath (an absolute one saved nothing).
+                string capture = file;
+                string data = Application.persistentDataPath.Replace('\\', '/').TrimEnd('/') + "/";
+                if (Application.isMobilePlatform && file.Replace('\\', '/').StartsWith(data)) capture = file.Replace('\\', '/').Substring(data.Length);
+                ScreenCapture.CaptureScreenshot(capture);
                 yield break;
             }
             var cam = Camera.main;
@@ -1210,6 +1225,129 @@ namespace SoulHunter.Gameplay.Core
                 GameTime.IsPaused ? "true" : "false", string.Join(", ", weapons), XPGem.ActiveGems.Count,
                 System.GC.GetTotalMemory(false) / 1048576f, System.GC.CollectionCount(0), System.GC.CollectionCount(1), System.GC.CollectionCount(2)));
             File.WriteAllText(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
+        }
+
+        /// <summary>
+        /// T-01 (2026-10-10): every shown control's size on screen, in pixels and dp (dp = px x 160 / dpi), so a device
+        /// run can check the 48 dp touch-target guideline. Controls are buttons, toggles, sliders and the on-screen stick
+        /// and buttons (their pads). Overlay canvases draw in screen pixels, so world corners are pixels.
+        /// </summary>
+        private void LogTouchSizes(string screen)
+        {
+            float dpi = Screen.dpi > 0f ? Screen.dpi : 160f;
+            // The bot can also be told the density (desktop runs of the phone rule pass -sh-ui-dpi to the game).
+            float uiDpi = SoulHunter.Gameplay.UI.UiScreen.Dpi;
+            if (uiDpi > 0f) dpi = uiDpi;
+            bool touch = SoulHunter.Gameplay.UI.UiScreen.IsTouch;
+            Rect safe = Screen.safeArea;
+            var rows = new List<string>();
+            var boxes = new List<(string Name, Rect Box)>();
+            var corners = new Vector3[4];
+            void Add(RectTransform r, string label)
+            {
+                r.GetWorldCorners(corners);
+                float w = corners[2].x - corners[0].x, h = corners[2].y - corners[0].y;
+                if (w < 1f || h < 1f) return;
+                // A screen that stepped back (a CanvasGroup at alpha 0 or taking no taps) is not on screen.
+                foreach (var g in r.GetComponentsInParent<CanvasGroup>())
+                    if (g.alpha <= 0.01f || !g.blocksRaycasts) return;
+                // A row scrolled out of a list's view is hidden by the list's mask: not on screen, not judged.
+                // Every list it sits in counts (a grid inside a scrolling page has two masks).
+                var view = new Vector3[4];
+                for (var t = r.parent; t != null; t = t.parent)
+                {
+                    if (t.GetComponent<UnityEngine.UI.RectMask2D>() == null && t.GetComponent<UnityEngine.UI.Mask>() == null) continue;
+                    ((RectTransform)t).GetWorldCorners(view);
+                    if (corners[0].x < view[0].x - 1f || corners[0].y < view[0].y - 1f || corners[2].x > view[2].x + 1f || corners[2].y > view[2].y + 1f) return;
+                }
+                rows.Add(string.Format(CultureInfo.InvariantCulture, "{0} {1:0}x{2:0}px {3:0}x{4:0}dp", label, w, h, w * 160f / dpi, h * 160f / dpi));
+                boxes.Add((label, new Rect(corners[0].x, corners[0].y, w, h)));
+            }
+            foreach (var s in FindObjectsByType<UnityEngine.UI.Selectable>(FindObjectsSortMode.None))
+                if (s.isActiveAndEnabled && s.interactable && s.transform is RectTransform r && !(s is UnityEngine.UI.Scrollbar) && s.name != "XP_Bar_Slider" && s.name != "Player_HealthBar_Slider") Add(r, s.name); // the two bars are read, not touched
+            foreach (var b in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            {
+                if (!b.isActiveAndEnabled) continue;
+                string type = b.GetType().Name;
+                if (type == "OnScreenButton" && b.transform is RectTransform rb) Add(rb, b.name);
+                else if (type == "OnScreenStick" && b.transform.parent is RectTransform pad) Add(pad, pad.name);
+            }
+            // Layout checks (owner, 2026-10-10: the same screens in landscape and portrait): outside the safe area, two
+            // controls overlapping, and (touch) a control under 48 dp. Only the top-most screen's controls are compared:
+            // controls of a screen hidden under a veil are left in by FindObjectsByType, so overlaps are reported, not judged.
+            var off = boxes.Where(b => b.Box.xMin < safe.xMin - 1f || b.Box.yMin < safe.yMin - 1f || b.Box.xMax > safe.xMax + 1f || b.Box.yMax > safe.yMax + 1f).Select(b => b.Name);
+            var small = touch ? boxes.Where(b => Mathf.Min(b.Box.width, b.Box.height) * 160f / dpi < 47.5f).Select(b => b.Name) : Enumerable.Empty<string>();
+            var overlaps = new List<string>();
+            for (int i = 0; i < boxes.Count; i++)
+                for (int j = i + 1; j < boxes.Count; j++)
+                {
+                    Rect a = boxes[i].Box, c = boxes[j].Box;
+                    float ox = Mathf.Min(a.xMax, c.xMax) - Mathf.Max(a.xMin, c.xMin), oy = Mathf.Min(a.yMax, c.yMax) - Mathf.Max(a.yMin, c.yMin);
+                    if (ox > 2f && oy > 2f) overlaps.Add(boxes[i].Name + "/" + boxes[j].Name);
+                }
+            Event("touch-sizes", string.Format(CultureInfo.InvariantCulture,
+                "\"screen\": \"{0}\", \"px\": \"{1}x{2}\", \"dpi\": {3:0}, \"touch\": {4}, \"offScreen\": \"{5}\", \"under48dp\": \"{6}\", \"overlaps\": \"{7}\", \"textOut\": \"{8}\", \"controls\": \"{9}\"",
+                Escape(screen), Screen.width, Screen.height, dpi, touch ? "true" : "false", Escape(string.Join("; ", off)), Escape(string.Join("; ", small)),
+                Escape(string.Join("; ", overlaps)), Escape(string.Join("; ", TextOutsideItsBox())), Escape(string.Join("; ", rows))));
+        }
+
+        /// <summary>
+        /// Every shown text whose drawn letters leave their box (owner, 2026-10-11: "tab se text bahar ja raha hai ... sabhi
+        /// panel check karo"): a label wider or taller than the button, tab or card it sits on, a text cut short, and a
+        /// plain text drawn wider than its own rectangle. Each entry names the control, the text and by how many pixels.
+        /// </summary>
+        private static List<string> TextOutsideItsBox()
+        {
+            var found = new List<string>();
+            var box = new Vector3[4];
+            var view = new Vector3[4];
+            var drawnOnControls = new List<(UnityEngine.UI.Selectable holder, Vector3 lo, Vector3 hi, string words)>();
+            foreach (var text in FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None))
+            {
+                if (!text.isActiveAndEnabled || string.IsNullOrWhiteSpace(text.text) || text.color.a <= 0.01f || !(text.transform is RectTransform)) continue;
+                if (text.canvas == null || text.canvas.renderMode == RenderMode.WorldSpace) continue; // damage numbers
+                bool hidden = false;
+                foreach (var g in text.GetComponentsInParent<CanvasGroup>()) if (g.alpha <= 0.01f) hidden = true;
+                if (hidden) continue;
+                text.ForceMeshUpdate();
+                Bounds drawn = text.textBounds;
+                if (drawn.size.x <= 0f) continue;
+                Vector3 lo = text.transform.TransformPoint(drawn.min), hi = text.transform.TransformPoint(drawn.max);
+                // Scrolled out of a list's view: not on screen, not judged.
+                bool masked = false;
+                for (var t = text.transform.parent; t != null && !masked; t = t.parent)
+                {
+                    if (t.GetComponent<UnityEngine.UI.RectMask2D>() == null && t.GetComponent<UnityEngine.UI.Mask>() == null) continue;
+                    ((RectTransform)t).GetWorldCorners(view);
+                    masked = hi.x < view[0].x || lo.x > view[2].x || hi.y < view[0].y || lo.y > view[2].y;
+                }
+                if (masked) continue;
+                var holder = text.GetComponentInParent<UnityEngine.UI.Selectable>();
+                bool control = holder != null && !(holder is UnityEngine.UI.Slider) && !(holder is UnityEngine.UI.Scrollbar);
+                ((RectTransform)(control ? holder.transform : text.transform)).GetWorldCorners(box);
+                // A control's label must stay inside the control; a plain text is only judged across (it may hang low by design).
+                // Two texts of one control drawn over each other (a card's name on its description).
+                if (control)
+                {
+                    foreach (var other in drawnOnControls)
+                    {
+                        if (other.holder != holder) continue;
+                        float ox = Mathf.Min(hi.x, other.hi.x) - Mathf.Max(lo.x, other.lo.x), oy = Mathf.Min(hi.y, other.hi.y) - Mathf.Max(lo.y, other.lo.y);
+                        if (ox > 3f && oy > 3f)
+                            found.Add(string.Format(CultureInfo.InvariantCulture, "{0} '{1}' over '{2}'", holder.name,
+                                text.text.Length > 24 ? text.text.Substring(0, 24) : text.text, other.words));
+                    }
+                    drawnOnControls.Add((holder, lo, hi, text.text.Length > 24 ? text.text.Substring(0, 24) : text.text));
+                }
+                float over = Mathf.Max(box[0].x - lo.x, hi.x - box[2].x);
+                if (control) over = Mathf.Max(over, Mathf.Max(box[0].y - lo.y, hi.y - box[2].y));
+                bool cut = text.isTextTruncated;
+                if (over <= 1.5f && !cut) continue;
+                string words = text.text.Length > 24 ? text.text.Substring(0, 24) : text.text;
+                found.Add(string.Format(CultureInfo.InvariantCulture, "{0} '{1}' {2}{3:0}px", control ? holder.name : text.name,
+                    words.Replace('\n', ' '), cut ? "cut " : "", Mathf.Max(0f, over)));
+            }
+            return found;
         }
 
         private void Event(string kind, string fields)

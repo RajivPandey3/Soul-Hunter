@@ -28,21 +28,28 @@ namespace SoulHunter.UI
         public string InfoName => _name != null ? _name.text : null;
         public string InfoDetails => _details != null ? _details.text : null;
 
+        /// <summary>A list entry's design height (canvas units); never under the touch target on a touch screen.</summary>
+        public const float RowHeight = 60f;
+
+        /// <summary>The list beside the details on a wide screen, above them on a tall one.</summary>
+        public AdaptiveSplit Split { get; private set; }
+
         protected override void Build()
         {
-            var content = MakeScroll("BestiaryList", Panel, 0.05f, 0.08f, 0.45f, 0.82f, out _);
-            var list = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            list.spacing = 8f;
-            list.childControlWidth = list.childControlHeight = true;
-            list.childForceExpandWidth = true;
-            list.childForceExpandHeight = false;
+            // Responsive (owner, 2026-10-10): the numbered list and the chosen enemy's details share Body through
+            // AdaptiveSplit; both scroll.
+            var listArea = NewRect("BestiaryListArea", Body);
+            var infoArea = NewRect("BestiaryInfoArea", Body);
+            Split = AdaptiveSplit.Between(Body, listArea, infoArea, 0.45f, 0.5f);
+            var content = MakeScroll("BestiaryList", listArea, 0f, 0f, 1f, 1f, out _);
+            Column(content, 8f);
             int number = 0;
             foreach (var enemy in BestiaryCatalog.All())
             {
                 number++;
                 var go = new GameObject($"Enemy_{number:000}", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
                 go.transform.SetParent(content, false);
-                go.GetComponent<LayoutElement>().preferredHeight = 60f;
+                go.GetComponent<LayoutElement>().preferredHeight = TouchHeight(RowHeight);
                 var button = go.GetComponent<Button>();
                 UITheme.ApplyButton(button, go.GetComponent<Image>(), UITheme.ButtonKind.Card, UITheme.IconSlot.None, false, ThemedElement.SizeRole.Free);
                 var label = EntryText((RectTransform)go.transform, "Label", 28f, TextAlignmentOptions.MidlineLeft, ThemedElement.TextRole.Card, () => UITheme.Cell);
@@ -54,11 +61,22 @@ namespace SoulHunter.UI
                 _rows.Add((enemy, button, label));
             }
 
-            var box = MakeBox("BestiaryInfo", Panel, 0.47f, 0.08f, 0.95f, 0.82f);
-            _name = MakeText("Name", box, 0.05f, 0.84f, 0.95f, 0.96f, "", 42f, TextAlignmentOptions.MidlineLeft, ThemedElement.TextRole.Accent, () => UITheme.Row);
-            _details = MakeText("Details", box, 0.05f, 0.04f, 0.95f, 0.82f, "", 30f, TextAlignmentOptions.TopLeft, ThemedElement.TextRole.Body, () => UITheme.Row);
-            _details.textWrappingMode = TextWrappingModes.Normal;
+            var box = MakeBox("BestiaryInfo", infoArea, 0f, 0f, 1f, 1f);
+            var info = MakeScroll("BestiaryInfoText", box, 0f, 0f, 1f, 1f, out _);
+            Column(info, 12f, new RectOffset(22, 12, 16, 16));
+            _name = FlowText(info, "Name", 42f, TextAlignmentOptions.MidlineLeft, ThemedElement.TextRole.Accent, () => UITheme.Row);
+            _details = FlowText(info, "Details", 30f, TextAlignmentOptions.TopLeft, ThemedElement.TextRole.Body, () => UITheme.Row);
             _details.lineSpacing = 12f;
+        }
+
+        protected override void OnRelayout()
+        {
+            // A touch screen's entries are at least the 48 dp touch target.
+            foreach (var row in _rows)
+            {
+                var element = row.Row != null ? row.Row.GetComponent<LayoutElement>() : null;
+                if (element != null) element.preferredHeight = TouchHeight(RowHeight);
+            }
         }
 
         public override void Refresh()

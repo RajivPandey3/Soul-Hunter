@@ -71,8 +71,7 @@ namespace SoulHunter.Tests.PlayMode
 
             var ui = Object.FindFirstObjectByType<CharacterSelectionUI>();
             var scaler = ui.GetComponentInParent<UnityEngine.UI.CanvasScaler>() ?? Object.FindFirstObjectByType<UnityEngine.UI.CanvasScaler>();
-            Assert.That(scaler.uiScaleMode, Is.EqualTo(UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize), "The menu scales with the screen.");
-            Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
+            Assert.That(scaler.GetComponent<SoulHunter.Gameplay.UI.ResponsiveCanvas>(), Is.Not.Null, "It takes the game's one UI scale (ResponsiveCanvas, landscape and portrait).");
 
             var viewport = (RectTransform)ui.Cards[0].transform.parent.parent;
             Rect view = ScreenRect(viewport);
@@ -94,7 +93,7 @@ namespace SoulHunter.Tests.PlayMode
                 "All eight mode labels share one size: " + string.Join(", ", modeLabels.Select(l => $"{l.text} {l.fontSize:0.0}")));
 
             // TextMeshPro's defaults (auto-size up to 72) used to replace these limits, because the panel is built inactive.
-            var texts = root.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+            var texts = viewport.GetComponentInParent<Canvas>().rootCanvas.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true);
             foreach (var (name, max) in new[] { ("Gold_Text", 32f), ("StartingWeapon_Text", 18f) })
             {
                 var text = texts.First(t => t.name == name);
