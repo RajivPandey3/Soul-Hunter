@@ -1882,7 +1882,7 @@ Not yet played by the owner.
 
 ### CTO check, first pass: coin, screen wipes, memory, 30-minute runs (owner, 2026-10-13)
 
-Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start button to the end of a run: UI, sound, VFX, lag, memory), then "shuru karo" and "kaam jaari rakho". The list is `Docs/CTO_Check_MIS.md`: 232 checks, each with its status and evidence. After this pass: 128 OK, 16 with a problem, 88 not checked yet (sound by ear, real devices, release items and balance mostly need the owner or hardware).
+Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start button to the end of a run: UI, sound, VFX, lag, memory), then "shuru karo" and "kaam jaari rakho". The list is `Docs/CTO_Check_MIS.md`: 232 checks, each with its status and evidence. After both batches: 129 OK, 15 with a problem, 88 not checked yet (sound by ear, real devices, release items and balance mostly need the owner or hardware).
 
 **Coin** (owner: "coin kisi stiker ke jaisa lag raha hai use asli gold coin jaisa banao pahle tum khud check karo").
 - Found with a render of the coin as the game camera sees it (`CoinLookPreview`, menu Soul Hunter/Content/Render Coin Looks): the coin lay face up and turned like a record, so it was always the same flat disc, and a 0.38 glow of its own colour removed all shading.
@@ -1918,6 +1918,21 @@ Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start bu
 - The guardian rule is told five minutes early: at 20:00 the notice shows "The guardian of Level n comes at 25:00. Defeat it before 30:00 to open Level n+1." (`LevelProgressionManager.GuardianWarning`, `GuardianWarningLeadSeconds`; `LastOmensPlayModeTests.TheGuardianRule_IsTold_FiveMinutesBeforeItComes`, R).
 - Ten unused fields (old shop prices, old starting charges, two old magnet radii, a spawner flag) and three leftover logs were removed; the project's own code now compiles without warnings.
 - Mistake: `-sh-autoplay-give` at 12 s silently gave nothing once the bot's level-ups had filled the six weapon slots (one whole run measured no Pentagram). The measurement runs now give at 0.5 s.
+
+**Second batch by bot** (`D:/SoulHunter-Validation/run-20261013-mis3/`, script `mis3-run.ps1`; release build of `73470b6e`, god mode, 0 errors, save untouched):
+- The coin in play (Gilded Fever on Level 1): coins show at different turns, face and edge; they are small from the game camera. Still not owner-approved.
+- Level 7 late again (20:00, level-110 hero, up to 321 enemies, 6 min): FPS median 57, 5th percentile 51, min 36 (it was 43 / 27).
+- Boss fights from 24:50 with a strong hero:
+
+  | Level | Hero level | Boss health | Result | FPS median / min |
+  |---|---|---|---|---|
+  | 2 | 50 | 12,500 | killed in 58 s, Level 3 opened | 43 / 38 |
+  | 4 | 80 | 40,000 | killed in 114 s, Level 5 opened | 54 / 44 |
+  | 6 | 100 | 75,000 | **not killed by 30:00; the run ended**, "Level 7 stays closed" | 52.5 / 34 |
+  | 8 | 120 | 120,000 | killed in 219 s, Level 9 opened | 49 / 25 |
+
+  With the earlier Level 5 run, two of nine levels ended a god-mode run of a strong hero. The bot flees bosses, so a player may do better; whether five minutes stay is the owner's decision. Level 8's minimum of 25 FPS is under the 30 FPS hard minimum (one 5 s sample).
+- Memory in those 6.5-minute runs: process memory grew 30-90 MB each (for example 538 to 628), 567-792 pooled bodies at most, Unity's own memory 124 to 164-182 MB. A whole ten-level run is not measured.
 
 **Still open from the list** (all in `Docs/CTO_Check_MIS.md`): five minutes for the boss on every level; the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (every bot run above was on that default); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
 
