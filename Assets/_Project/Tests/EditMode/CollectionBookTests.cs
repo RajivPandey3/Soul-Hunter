@@ -180,8 +180,8 @@ namespace SoulHunter.Tests.EditMode
         {
             var enemies = BestiaryCatalog.All();
             int levelTypes = StageEnemyTables.All.Sum(t => t.Types.Length);
-            Assert.That(enemies.Count, Is.EqualTo(MadForestEnemies.Types.Length + levelTypes + 30),
-                "Level 1's VS types, Levels 2-10's VS types (P2-02), then 10 levels x enemy, elite, boss.");
+            Assert.That(enemies.Count, Is.EqualTo(MadForestEnemies.Types.Length + levelTypes + 30 + ItemGuardians.All.Length),
+                "Level 1's VS types, Levels 2-10's VS types (P2-02), 10 levels x enemy, elite, boss, then the four item guardians.");
             int index = MadForestEnemies.Types.Length;
             foreach (var table in StageEnemyTables.All)
                 foreach (var type in table.Types)

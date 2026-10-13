@@ -90,6 +90,8 @@ namespace SoulHunter.Gameplay.Data
         public ArcanaData[] Arcanas;
         [UnityEngine.Tooltip("Every enemy type, in Bestiary order: Level 1's VS enemy types, then each level's enemy, elite and boss.")]
         public EnemyData[] BestiaryEnemies;
+        [UnityEngine.Tooltip("The guardians of the hidden stage items, one prefab per level and guardian (ItemGuardians; built by ItemGuardianBuilder).")]
+        public UnityEngine.GameObject[] ItemGuards;
         [UnityEngine.Tooltip("The credit files the Credits screen shows (the CC0 audio and the OFL fonts CREDITS.md).")]
         public UnityEngine.TextAsset[] Credits;
 

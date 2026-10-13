@@ -241,6 +241,14 @@ namespace SoulHunter.Gameplay.Core
             if (RunStatsTracker.Instance != null) RunStatsTracker.Instance.RecordUnlock(line);
         }
 
+        /// <summary>Shows a line in the notice without listing it as an unlock (a Soul Egg picked up).</summary>
+        public void ShowMessage(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return;
+            Debug.Log($"[CharacterUnlockTracker] {line}");
+            ShowNotice(line);
+        }
+
         private void ShowNotice(string message)
         {
             if (_notice != null)

@@ -184,9 +184,11 @@ namespace SoulHunter.Tests.PlayMode
                 {
                     // A reused pooled shot jumps back toward the holder. A fast shot in a long frame also moves over 1.5
                     // units, but away from the holder, and was counted again (Thousand Edge 6 counted as 18, 2026-10-06).
+                    // Bloody Tear's fourth lash reuses the first one's object on the opposite side, exactly as far from the
+                    // holder: "no further out" counts too (2026-10-13, 3 counted of 4).
                     Vector3 origin = weapon.transform.position;
                     bool jumped = lastSeen.TryGetValue(go, out var was) && (go.transform.position - was).sqrMagnitude > 1.5f * 1.5f
-                        && (go.transform.position - origin).sqrMagnitude < (was - origin).sqrMagnitude;
+                        && (go.transform.position - origin).sqrMagnitude < (was - origin).sqrMagnitude + 0.05f;
                     lastSeen[go] = go.transform.position;
                     if (active.Add(go) || jumped)
                     {

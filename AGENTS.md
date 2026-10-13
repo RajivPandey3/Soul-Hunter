@@ -1733,7 +1733,7 @@ Passed by the owner (2026-10-12: "pass, poora test chalao aur commit karo"). Ful
 
 ### VS table closed: open rows, new items, unlocks, caskets, relics, map (owner, 2026-10-12 and 2026-10-13)
 
-Owner: "sare pending pura karo rule wiko se lo nahi mile balance method apnao", then "bache 15 rows bhi naya system banao saath mein kuch addition ke sath" (the additions were left to the agent: "tum apna best do"). `Docs/VS_DOT_Table.md` now counts MATCH 148, PARTIAL 3, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2 (176 rows). Raw wiki pages are in the session scratchpad (`wiki/`).
+Owner: "sare pending pura karo rule wiko se lo nahi mile balance method apnao", then "bache 15 rows bhi naya system banao saath mein kuch addition ke sath" (the additions were left to the agent: "tum apna best do"). `Docs/VS_DOT_Table.md` now counts MATCH 149, PARTIAL 2, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2 (176 rows). Raw wiki pages are in the session scratchpad (`wiki/`).
 
 The owner offered their installed copy of VS as a source. Not used: the no-copy rule in section 2 forbids extracted game data, and only the owner can change that rule. Watching the running game on screen stays allowed.
 
@@ -1764,7 +1764,22 @@ The owner offered their installed copy of VS as a source. Not used: the no-copy 
 - Peachone now circles clockwise (wiki Peachone).
 - Sundered Hour's beams aim at the nearest enemy (owner aiming rule).
 - Revenant Wheel numbers the wiki leaves open are balance values, marked in code.
-- Not built: guards around the Rings and the Idol; the Idol on Levels 5-6. Art is placeholder, **not owner-approved**.
+- Not built: the Idol on Levels 5-6. Art is placeholder, **not owner-approved**.
+
+**Guardians of the hidden stage items** (wiki City_Atlantean, Volcano_Atlantean, Moon_Atlantean, Sun_Atlantean and Passive_items "Stage items", raw, 2026-10-13).
+- Both Metaglios and both Rings are guarded: Warden of the Left Hand, Warden of the Right Hand, Warden of Long Hours, Warden of Dark Hours (`ItemGuardians`). The Stone Mask page names no guard, so Miser's Idol has none. **The names are not owner-approved.**
+- One statbox for all four, on every level: 30,000 health (no HP x Level), speed 200, damage 50, no knockback, no XP, res-freeze 2, res-kill, res-debuff.
+- The guardian appears where the item lies when the hero comes close (`ItemGuardPost`). The item can be taken without killing it, and it follows the hero until it is defeated. It is brought back to the screen like a boss.
+- An item drawn away from its place (Gathering Call, VS Mad Groove) wakes its guardian only when it is taken.
+- Its death leaves a Soul Egg and no gem (`ItemGuardian`, `SoulEggPickup`). Walking over the egg gives it to the character being played, as a merchant egg does, and Results lists it.
+- Balance values, the wiki says only "gets close": the wake distance is 12 units, and the model is the level's elite at 1.3x with a tint. **Placeholder look, not owner-approved.**
+- Built by `ItemGuardianBuilder` (menu Soul Hunter/Content/Build Item Guardians; `guardians-build.ps1` in the isolated copy): 4 EnemyData, 40 prefab variants, `GameContent.ItemGuards`, and 4 Bestiary entries.
+- Tests: `ItemGuardianTests` (T) and `ItemGuardianPlayModeTests` (R).
+- Full run: EditMode 915/916, PlayMode 415/416, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-guardians-full/`). The two failures were test-side:
+  - `CollectionBookTests` counted the Bestiary without the four guardians (282 expected, 286 listed). It now adds them.
+  - `DuplicatorEverywherePlayModeTests` Bloody Tear counted 3 lashes of 4. The fourth lash reuses the first one's pooled object on the opposite side, exactly as far from the holder, and the shot counter only saw a reused object that jumped closer. It now also counts one that is no further out.
+- After both fixes: EditMode 916/916 and the two Duplicator fixtures 33/33, 0 exceptions, save untouched (`-guardians-fix2/`). No single full run passed every test.
+- Not seen by eye: no build play or screenshots of a guardian (`V` unverified). Not yet played by the owner.
 
 **Item unlocks, Soul Caskets and relics.**
 - `ItemUnlocks` / `ItemUnlockTracker`: weapons and passives unlock by their VS conditions in Soul Hunter terms (Fire Wand 20 Soul Lanterns, Garlic 5 Roast Chickens, Lightning Ring 5,000 kills, Peachone 10 minutes survived ...). Nine items are open from the start. A save from before this change keeps every item (`ItemUnlock.Initialized`). `ItemUnlocks.UnlockEverything` is for tests and the bot.

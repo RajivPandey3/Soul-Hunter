@@ -4,7 +4,8 @@ Built 2026-09-30 from raw vampire.survivors.wiki pages (fetched that day) and th
 Re-checked 2026-10-12: every row's "Soul Hunter now" and Status were checked again in the code (working tree after c284f5fa). The "VS rule" column is still the 2026-09-30 wiki reading; the pages were not fetched again, except that the Stalker row now describes the Stalker XL the owner chose.
 Status: MATCH, PARTIAL, MISSING, DIFFERS-OWNER (an owner decision), BALANCE (the wiki is silent or contradicts itself, so the balance method decided: owner rule 2026-10-09), SH-ONLY (not in VS, no owner decision), N/A, UNKNOWN.
 
-Counts (13 Oct, after Level 5's 24:00 boss got its own type): MATCH 148, PARTIAL 3, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2
+Counts (13 Oct, after the guardians of the hidden stage items): MATCH 149, PARTIAL 2, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2
+Earlier on 13 Oct, after Level 5's 24:00 boss got its own type: MATCH 148, PARTIAL 3.
 Earlier on 13 Oct, after the new items, unlocks, caskets, relics, map and menu work: MATCH 147, PARTIAL 4.
 After the open-row pass of 12 Oct: MATCH 137, PARTIAL 10, MISSING 5, DIFFERS-OWNER 12, BALANCE 8, UNKNOWN 2, N/A 2.
 On 2026-10-12 before that pass: MATCH 129, PARTIAL 26, MISSING 7, DIFFERS-OWNER 10, UNKNOWN 2, N/A 2.
@@ -14,11 +15,10 @@ On 2026-09-30 the rows counted MATCH 76, PARTIAL 59, MISSING 26, DIFFERS-OWNER 8
 
 As of 13 Oct no row is MISSING. What is left:
 
-1. **Guards.** The Metaglios, the two Rings and the Idol lie unguarded (VS places guardian enemies around them).
-2. **Omens.** Seven VS events are left out because they need VS-only enemies or hazards.
-3. **Banish ranks.** Ranks above the Collection's size cannot be earned yet.
-4. **Art.** The eight new items, the relics, the Soul Caskets and the map markers use placeholders; none is owner-approved.
-6. **Owner approval pending.** The nine-button main menu, Quick Start, the start prompt, Peachone circling clockwise, and the story lines' place on screen.
+1. **Omens.** Seven VS events are left out because they need VS-only enemies or hazards.
+2. **Banish ranks.** Ranks above the Collection's size cannot be earned yet.
+3. **Art.** The eight new items, the relics, the Soul Caskets, the map markers and the four item guardians use placeholders; none is owner-approved.
+4. **Owner approval pending.** The four guardian names, the nine-button main menu, Quick Start, the start prompt, Peachone circling clockwise, and the story lines' place on screen.
 
 ## Owner decisions
 
@@ -197,7 +197,7 @@ As of 13 Oct no row is MISSING. What is left:
 | Stage | Clear: 500, then +100/+200/+300/+400 per unused revival, then +100 | The_Reaper, Revival | Data | StageClearGold stacks (owner chose these pages, 2026-09-30) | MATCH |  |
 | Stage | Confined stages (corridors) | Stages | Behavior | L4 corridor | MATCH |  |
 | Stage | Trap plates trigger events | Stages | Interaction | Rune Plates | MATCH |  |
-| Stage | Pre-placed items and relics | Stages | Data | A passive, a weapon, a chicken, a Magnet or Time Freeze, both Metaglios, the two Rings and the Idol where placed, and 11 relics with lasting boons (RelicPickup, 13 Oct) | PARTIAL | Metaglio, ring and idol guards are not built |
+| Stage | Pre-placed items and relics | Stages | Data | A passive, a weapon, a chicken, a Magnet or Time Freeze, both Metaglios, the two Rings and the Idol where placed, and 11 relics with lasting boons (RelicPickup, 13 Oct). Both Metaglios and both Rings have a guardian with the Atlantean statbox (ItemGuardians, ItemGuardPost, 13 Oct): it comes when the hero is close, the item can be taken without killing it, and it drops a Soul Egg and no XP | MATCH | The Stone Mask page names no guard, so the Idol has none. The wake distance (12 units) is a balance value; the wiki says only "close" |
 | Stage | Coffins unlock characters | Stages | Interaction | Soul Caskets on Levels 1-7, each with elite guards, unlock Corvan, Draven, Gideon, Kaelen, Isolde, Seraphina and Lumina (SoulCasket, 13 Oct); the other characters keep their conditions | MATCH | Casket look is a placeholder |
 | Unlocks | 20 light sources unlock Fire Wand | Light_source | Persistence | ItemUnlocks: every lockable weapon and passive has its VS condition in Soul Hunter terms (20 Soul Lanterns for the Fire Wand, 5 Roast Chickens for Garlic, 5,000 kills for the Lightning Ring ...); nine items open from the start; older saves keep everything (13 Oct) | MATCH | Conditions that name a VS character use the Soul Hunter character standing for it |
 | Mode | Hurry: clock x2, XP +25% | Stages | Timing | RunModes | MATCH |  |

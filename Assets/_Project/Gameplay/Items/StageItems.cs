@@ -83,12 +83,12 @@ namespace SoulHunter.Gameplay.Pickups
             }
             // VS (wiki Metaglio_Left / Metaglio_Right): they "cannot be obtained from level ups, but can be found as a stage
             // item in every stage"; "Generally, it will spawn west (east) of the starting area". The distance is Soul
-            // Hunter's. The VS guards (City and Volcano Atlanteans) are not built (they need their own enemies).
+            // Hunter's. Each "will always be guarded" (ItemGuardians, ItemGuardPost).
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MetaglioLeft, Offset = Vector3.left * MetaglioDistance });
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MetaglioRight, Offset = Vector3.right * MetaglioDistance });
             // VS (wiki Silver_Ring / Gold_Ring, fetched 2026-10-12): stage items "in every stage" (with a few VS-only
-            // exceptions); Silver "will spawn north of the starting area", Gold "south". The VS guards (Moon and Sun
-            // Atlanteans) are not built, as for the Metaglios.
+            // exceptions); Silver "will spawn north of the starting area", Gold "south". Each "will always be guarded",
+            // as the Metaglios are.
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfLongHours, Offset = Vector3.forward * RingDistance });
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfDarkHours, Offset = Vector3.back * RingDistance });
             // VS Stone Mask lies east of the start on Inlaid Library (Level 2). Its other VS stages (Moongolow, Boss Rash,
@@ -178,6 +178,9 @@ namespace SoulHunter.Gameplay.Pickups
                     case StageItems.Kind.Passive:
                     case StageItems.Kind.Weapon:
                         item = StageItemPickup.Create(entry.Upgrade, spot).gameObject;
+                        // VS: the four hidden stage items are guarded (ItemGuardians); the guardian comes when the hero is close.
+                        var guard = SoulHunter.Gameplay.Data.ItemGuardians.For(entry.Upgrade);
+                        if (guard.HasValue) ItemGuardPost.Attach(item, guard.Value, stage);
                         break;
                     case StageItems.Kind.Chicken: item = pool != null ? pool.SpawnChicken(spot) : null; break;
                     case StageItems.Kind.Magnet: item = pool != null ? pool.SpawnMagnet(spot) : null; break;
@@ -320,6 +323,9 @@ namespace SoulHunter.Gameplay.Pickups
         public bool Take()
         {
             _taken = true;
+            // VS: a guarded item drawn in from afar wakes its guardian only now ("until the item is interacted with").
+            var post = GetComponent<ItemGuardPost>();
+            if (post != null) post.OnItemTaken();
             var weapons = WeaponManager.Instance;
             bool upgraded = false;
             if (weapons != null)

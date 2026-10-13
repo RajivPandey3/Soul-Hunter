@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7ea9dafbc0c2c145b6022abe980dc8a, type: 3}
+  m_Name: Guardian_WardenLongHours_Data
+  m_EditorClassIdentifier: 
+  EnemyName: Warden of Long Hours
+  VisualTint: {r: 0.73149997, g: 0.7125, b: 0.95, a: 1}
+  MaxHealth: 30000
+  MoveSpeed: 6
+  DamageToPlayer: 50
+  Knockback: 0
+  MaxKnockback: 0
+  Movement: 0
+  FloatyWeave: 0.7
+  FloatyPeriodSeconds: 1.8
+  DropChanceGem: 95
+  DropChanceChicken: 5
+  DropChanceGold: 2
+  GoldValue: 1
+  ExperienceValue: 0
+  DropsChest: 0
+  HealthPerPlayerLevel: 0
+  HealthPerPlayerLevelFraction: 0
+  Lives: 1
+  FreezeResistance: 2
+  InstantKillResistance: 1
+  DebuffResistance: 1
+  DefangResistance: 1
+  Abilities: []
