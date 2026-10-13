@@ -47,6 +47,17 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EnemyBodies_MakeNoPhysicsPairsWithEachOther()
+        {
+            // 60 FPS pass (2026-10-13): a packed horde of trigger bodies made thousands of enemy-enemy pairs and 170 trigger
+            // callbacks a frame that nothing used (the crowd push is computed in EnemyCrowd, not by physics).
+            int enemy = LayerMask.NameToLayer("Enemy");
+            Assert.That(Physics.GetIgnoreLayerCollision(enemy, enemy), Is.True);
+            foreach (string other in new[] { "Player", "Projectile", "Default" })
+                Assert.That(Physics.GetIgnoreLayerCollision(enemy, LayerMask.NameToLayer(other)), Is.False, "Enemies still meet " + other);
+        }
+
+        [Test]
         public void EveryStage_HasObstacles_ThatBlockOnlyThePlayer_AndKeepSpawnAndPathsOpen()
         {
             // Learning Comment: VS jaisi rukawatein (ped, kabr, khambe) sirf player ko rokein; beech aur raaste khule rahein.

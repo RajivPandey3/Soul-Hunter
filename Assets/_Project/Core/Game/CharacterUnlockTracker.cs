@@ -52,10 +52,13 @@ namespace SoulHunter.Gameplay.Core
         {
             // Time and player level change continuously; checking once per stage second is enough.
             int second = _progression != null ? Mathf.FloorToInt(_progression.StageElapsedTime) : 0;
-            if (second != _lastCheckedSecond || _killsChanged)
+            // Kills come every frame in a heavy fight, and the whole check cost 1.3 ms a frame there (profile, 2026-10-13):
+            // a kill makes the check due, at most every KillCheckSeconds.
+            if (second != _lastCheckedSecond || (_killsChanged && Time.unscaledTime >= _nextKillCheck))
             {
                 _lastCheckedSecond = second;
                 _killsChanged = false;
+                _nextKillCheck = Time.unscaledTime + KillCheckSeconds;
                 Evaluate();
             }
             UpdateNotice();
@@ -165,6 +168,8 @@ namespace SoulHunter.Gameplay.Core
         // and PowerUp's condition 300 times was part of that frame's stall (2026-10-13). Update checks once.
         private void HandleKills(int _) => _killsChanged = true;
         private bool _killsChanged;
+        private float _nextKillCheck;
+        public const float KillCheckSeconds = 0.25f;
         private void HandleWeapon(UpgradeData _) => Evaluate();
 
         public RunProgress CurrentProgress()

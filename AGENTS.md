@@ -1948,13 +1948,33 @@ Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start bu
     | Level 2 from 24:50, level-50 hero, about 310 enemies | 72 / 62 / 60 | 72 / 62 / 58 |
     | Level 8 from 24:50, level-120 hero, 11,616 kills in 6 min, about 270 enemies | 56 / 48 / 42 | 58 / 50 / 47 |
 
-    These are 5 s averages; the Level 8 run's worst single reading was 29. **Quality level makes no real difference** (within noise), so the cost is in game code under heavy killing, not in rendering. Level 8 with a level-120 hero does not hold 60; finding out why needs a profiler capture, which the owner has paused.
+    These are 5 s averages; the Level 8 run's worst single reading was 29. **Quality level makes no real difference** (within noise), so the cost is in game code under heavy killing, not in rendering. Level 8 with a level-120 hero did not hold 60 (profiled and fixed below).
   - With the cap on (Level 1, 2 minutes): 60 / 60 / 60.
   - Not measured: V-Sync off with the cap, a display faster than 60 Hz, the phone.
 - **The stored quality level.** A player build keeps its quality level between launches (registry), and `PerformanceBenchmark` and the A/B switch set it. After the A/B it read Medium on this laptop; what it was before is not known, so the earlier line "every bot run above was on that default (Ultra)" is not proven. The bot now puts back the level it found. A fresh install still starts on Ultra (owner decision open).
-- Validation: full run before the 60 FPS change: EditMode 930/930, PlayMode 429/430 (the chest coin defect above), 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis5-full/`). After the fix and the 60 FPS change: EditMode 930/930 and the chest, accessibility and bot fixtures 17/17 (`run-20261013-mis6/tests`), then with the bot putting the quality level back 7/7 (`-mis6/tests2`). No full run covers the 60 FPS change.
+- **60 FPS under heavy killing: profiled and fixed** (owner: "profiler chalao aur 60 fps fix karo").
+  - Tool: `AutoplayBot -sh-autoplay-profile <file>` writes the Unity profiler for 6 s only (`-sh-autoplay-profile-at S`, `-sh-autoplay-profile-seconds N`), and with `-sh-autoplay-profile-below FPS` only once two seconds in a row were that slow. Captures are 240-250 MB and are deleted after `ProfileSummary` (script `D:\SoulHunter-Validation\fps-profile.ps1`, development build).
+  - Found (`run-20261013-fpsprof/l8slow.summary.txt`, Level 8 from 24:50, level-120 hero, 259-277 enemies packed on screen, 47-50 FPS): an average frame of 23.3 ms. Physics 4.4 ms: enemy bodies made trigger pairs with each other (171 `TouchDamage.OnTriggerEnter` calls a frame that did nothing). `CharacterUnlockTracker.Update` 1.3 ms: the whole unlock check ran in every frame that had a kill. The rest: rendering 3.5 ms, animation and skinning about 2 ms, `EnemyController.FixedUpdate` 2 ms, and the bot itself about 1.5-2 ms (measuring cost a player does not pay). A fast window (116 enemies on screen, 84 FPS) took 11.9 ms.
+  - Fix 1: the Enemy layer no longer collides with itself (`ProjectSettings/DynamicsManager.asset`). Nothing needed those pairs: the crowd push is computed in `EnemyCrowd`, and rail carts, Soul Lanterns and weapons meet enemies through other layers or queries. `StageFloorTests.EnemyBodies_MakeNoPhysicsPairsWithEachOther` (T).
+  - Fix 2: a kill runs the unlock check at most every 0.25 s (`CharacterUnlockTracker.KillCheckSeconds`); the check on each stage second stays.
+  - Measured after (`run-20261013-mis7`, script `mis7-run.ps1`, reference laptop, 1366x768, god mode, 0 errors, save untouched; 5 s averages after the first 20 s):
 
-**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): whether a weak loadout may fail a level's guardian; heavy-kill FPS on Level 8 (56-58, not 60); the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (measured: no FPS difference); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
+    | Run | Kills | FPS median / 5th percentile / min | Samples under 60 |
+    |---|---|---|---|
+    | Before: Level 8, release, no cap (`-mis6`) | 11,616 | 56-58 / 48-50 / 42-47 | most |
+    | Level 8, release, no cap, run a | 2,596 | 68 / 64 / 62 | 0 of 69 |
+    | Level 8, release, no cap, run b | 4,139 | 85 / 65 / 63 | 0 of 69 |
+    | Level 8, development build, no cap | 10,640 | 70 / 58 / 56 | 10 of 68 |
+    | Level 8, release, 60 cap | 9,660 | 60 / 59 / 56 | 7 of 45 (56-59) |
+    | Level 7 from 20:00, level-110 hero, release, no cap | 222 | 85 / 79 / 79 | 0 of 44 |
+
+    The two no-cap release runs drew weak loadouts (few kills), so the development-build run and the capped run are the ones that compare with "before". **60 is now held most of the time on Level 8's heaviest fight; some 5 s windows still read 56-59.** No two seconds in a row fell under 52, so the slow-window capture did not start and there is no "after" profile. The summaries' `minFps` (21-30) is the single worst reading of a run, loading included.
+  - Next costs if 60 must hold in every window: animation and skinning of on-screen enemies, `EnemyController.FixedUpdate`, per-enemy `TouchDamage.Update`. Not done.
+  - Not measured: without the bot, V-Sync off with the cap, a display faster than 60 Hz, the phone, the 8 GB reference.
+- Validation of the profile fixes: one full run passed every test: EditMode 931/931, PlayMode 430/430, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis7/full/`). It also covers the 60 FPS cap.
+- Validation before that: full run before the 60 FPS change: EditMode 930/930, PlayMode 429/430 (the chest coin defect above), 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis5-full/`). After the fix and the 60 FPS change: EditMode 930/930 and the chest, accessibility and bot fixtures 17/17 (`run-20261013-mis6/tests`), then with the bot putting the quality level back 7/7 (`-mis6/tests2`). No full run covers the 60 FPS change.
+
+**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): whether a weak loadout may fail a level's guardian; heavy-kill FPS on Level 8 (now 60 with dips to 56-59); the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (measured: no FPS difference); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
 
 **Validation:** one full run on the final code passed every test: EditMode 928/928, PlayMode 430/430, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis2-full/`). The build runs above are the play evidence (partial `P`, partial `V`).
 

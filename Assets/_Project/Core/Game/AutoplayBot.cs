@@ -1197,6 +1197,44 @@ namespace SoulHunter.Gameplay.Core
                 QualitySettings.SetQualityLevel(fixedQuality, true);
                 DisplaySettingsApplier.Apply(); // a quality level carries its own V-Sync count; the game's rule comes back
             }
+            // -sh-autoplay-profile <file> (development build; -sh-autoplay-profile-at S, default 60; -sh-autoplay-profile-seconds N,
+            // default 6): writes the Unity profiler to that file for a short window only, so the capture stays small.
+            string profileFile = ArgValue("-sh-autoplay-profile");
+            if (profileFile != null && _profileState < 2)
+            {
+                float at = float.TryParse(ArgValue("-sh-autoplay-profile-at"), out float a) ? a : 60f;
+                float seconds = float.TryParse(ArgValue("-sh-autoplay-profile-seconds"), out float n) ? n : 6f;
+                // -sh-autoplay-profile-below FPS: wait (after the start time) until two seconds in a row ran slower than that.
+                bool slowEnough = true;
+                if (float.TryParse(ArgValue("-sh-autoplay-profile-below"), out float below))
+                {
+                    _profileFrames++;
+                    if (Time.realtimeSinceStartup - _profileSecondStart >= 1f)
+                    {
+                        float fps = _profileFrames / (Time.realtimeSinceStartup - _profileSecondStart);
+                        _profileSlowSeconds = fps < below && Time.timeScale > 0f ? _profileSlowSeconds + 1 : 0;
+                        _profileFrames = 0;
+                        _profileSecondStart = Time.realtimeSinceStartup;
+                    }
+                    slowEnough = _profileSlowSeconds >= 2;
+                }
+                if (_profileState == 0 && Elapsed >= at && Time.timeScale > 0f && slowEnough)
+                {
+                    UnityEngine.Profiling.Profiler.logFile = profileFile;
+                    UnityEngine.Profiling.Profiler.enableBinaryLog = true;
+                    UnityEngine.Profiling.Profiler.enabled = true;
+                    _profileUntil = Time.realtimeSinceStartup + seconds;
+                    _profileState = 1;
+                    Event("profile", "\"state\": \"start\", \"enemies\": " + EnemyController.ActiveEnemies.Count);
+                }
+                else if (_profileState == 1 && Time.realtimeSinceStartup >= _profileUntil)
+                {
+                    UnityEngine.Profiling.Profiler.enabled = false;
+                    UnityEngine.Profiling.Profiler.enableBinaryLog = false;
+                    UnityEngine.Profiling.Profiler.logFile = "";
+                    _profileState = 2;
+                }
+            }
             string qualityAb = ArgValue("-sh-autoplay-quality-ab");
             if (qualityAb != null && Elapsed >= _nextQualitySwitch)
             {
@@ -1288,6 +1326,9 @@ namespace SoulHunter.Gameplay.Core
             return Mathf.RoundToInt(1f / Mathf.Max(avg, 0.0001f));
         }
 
+        private int _profileState, _profileFrames, _profileSlowSeconds;
+        private float _profileSecondStart;
+        private float _profileUntil;
         private bool _qualitySet;
         private int _qualityBefore = -1;
         private int _qualityAbIndex;
