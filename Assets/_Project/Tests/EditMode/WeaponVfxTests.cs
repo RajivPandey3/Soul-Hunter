@@ -35,6 +35,35 @@ namespace SoulHunter.Tests.EditMode
             }
         }
 
+        /// <summary>
+        /// Owner (2026-10-13): "kala dhuan bahut adhik dikh raha tha". Peachone and Dusk Raven drop up to 11 blasts a second
+        /// on one spot, so a weapon blast carries no smoke; a one-off explosion keeps 3 light puffs (it was 8 at 0.6-0.7).
+        /// </summary>
+        [Test]
+        public void WeaponBlasts_HaveNoSmoke_AndTheExplosionOnlyALittle()
+        {
+            foreach (string name in new[] { "SH10_Fx_PeachoneBlast", "SH10_Fx_DuskRavenBlast" })
+            {
+                var blast = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Weapons/Projectiles/{name}.prefab");
+                Assert.IsNotNull(blast, name);
+                var systems = blast.GetComponentsInChildren<ParticleSystem>(true);
+                Assert.That(systems.Any(p => p.gameObject.name == "Fire"), $"{name} still shows its fire.");
+                Assert.That(systems.Any(p => p.gameObject.name == "Smoke"), Is.False, $"{name} carries no smoke.");
+                foreach (var renderer in blast.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                    Assert.That(renderer.sharedMaterial != null && renderer.sharedMaterial.name == "SH10_Vfx_Smoke", Is.False, $"{name}/{renderer.name} draws smoke.");
+            }
+
+            var explosion = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/VFX/VFX_Explosion.prefab");
+            Assert.IsNotNull(explosion);
+            var smoke = explosion.GetComponentsInChildren<ParticleSystem>(true).FirstOrDefault(p => p.gameObject.name == "Smoke");
+            Assert.IsNotNull(smoke, "A one-off explosion keeps a little smoke.");
+            var bursts = new ParticleSystem.Burst[smoke.emission.burstCount];
+            smoke.emission.GetBursts(bursts);
+            Assert.That(bursts.Sum(b => b.maxCount), Is.LessThanOrEqualTo(3), "Smoke puffs.");
+            var colour = smoke.main.startColor;
+            Assert.That(Mathf.Max(colour.colorMin.a, colour.colorMax.a), Is.LessThanOrEqualTo(0.3f + 0.001f), "Smoke alpha.");
+        }
+
         [TestCase("SH10_Proj_MagicBolt", "Flying")]
         [TestCase("SH10_Proj_Fireball", "Flying")]
         [TestCase("SH10_Proj_HolyBolt", "Flying")]

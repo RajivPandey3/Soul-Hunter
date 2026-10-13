@@ -263,6 +263,50 @@ namespace SoulHunter.Editor.Content
             return ps;
         }
 
+        /// <summary>The weapon blasts that must carry no smoke (Peachone's, which Cherry Bomb shares, and Dusk Raven's copy).</summary>
+        public static readonly string[] SmokelessBlasts =
+        {
+            ProjectileFolder + "/SH10_Fx_PeachoneBlast.prefab",
+            ProjectileFolder + "/SH10_Fx_DuskRavenBlast.prefab",
+        };
+        public const string ExplosionPath = VfxFolder + "/VFX_Explosion.prefab";
+
+        /// <summary>
+        /// Applies the smoke rule to the prefabs that exist, without rebuilding every weapon effect.
+        /// Menu, or CLI: -executeMethod SoulHunter.Editor.Content.WeaponVfxBuilder.ThinSmoke -quit
+        /// </summary>
+        [MenuItem("Soul Hunter/Content/Thin Explosion Smoke")]
+        public static void ThinSmoke()
+        {
+            foreach (var path in SmokelessBlasts)
+            {
+                var contents = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    foreach (var particles in contents.GetComponentsInChildren<ParticleSystem>(true))
+                        if (particles != null && particles.gameObject.name == "Smoke") Object.DestroyImmediate(particles.gameObject);
+                    PrefabUtility.SaveAsPrefabAsset(contents, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(contents); }
+            }
+            var explosion = PrefabUtility.LoadPrefabContents(ExplosionPath);
+            try
+            {
+                foreach (var particles in explosion.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    if (particles.gameObject.name != "Smoke") continue;
+                    var main = particles.main;
+                    main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.2f, 0.18f, 0.2f, ExplosionSmokeAlpha), new Color(0.35f, 0.3f, 0.3f, ExplosionSmokeAlpha));
+                    var emission = particles.emission;
+                    emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)ExplosionSmokePuffs) });
+                }
+                PrefabUtility.SaveAsPrefabAsset(explosion, ExplosionPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(explosion); }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[WeaponVfxBuilder] Thinned the explosion smoke.");
+        }
+
         /// <summary>
         /// Menu: Soul Hunter/Content/Build Blood VFX. Builds only the neck blood spray and sets it in VfxLibrary, leaving
         /// every other effect and weapon prefab as it is.
@@ -399,13 +443,21 @@ namespace SoulHunter.Editor.Content
             return go;
         }
 
-        private static GameObject Explosion(string name, Color fire, float scale)
+        /// <summary>
+        /// Smoke of a one-off explosion (owner, 2026-10-13: "kala dhuan bahut adhik dikh raha tha"). It was 8 dark puffs at
+        /// 0.6-0.7 alpha; a weapon blast has none at all, because Peachone and Dusk Raven drop up to 11 blasts a second
+        /// on one spot and their smoke piled into a black cloud that hid the hero.
+        /// </summary>
+        public const int ExplosionSmokePuffs = 3;
+        public const float ExplosionSmokeAlpha = 0.3f;
+
+        private static GameObject Explosion(string name, Color fire, float scale, bool smoke = true)
         {
             var go = new GameObject(name);
             AddParticles(go.transform, new Ps { Name = "Shock", Material = _ring, Burst = 1, Lifetime = new Vector2(0.35f, 0.35f), Speed = Vector2.zero, Size = new Vector2(4.5f * scale, 4.5f * scale), ColorA = new Color(1f, 0.75f, 0.35f, 0.9f), SizeCurve = Grow(0.15f, 1f), HorizontalBillboard = true, MaxParticles = 2 }, new Vector3(0f, 0.1f, 0f));
             AddParticles(go.transform, new Ps { Name = "Flash", Material = _impact, Burst = 1, Lifetime = new Vector2(0.12f, 0.12f), Speed = Vector2.zero, Size = new Vector2(3f * scale, 3f * scale), ColorA = new Color(1f, 0.9f, 0.6f, 0.9f), MaxParticles = 2 }, new Vector3(0f, 0.5f, 0f));
             AddParticles(go.transform, new Ps { Name = "Fire", Material = _flame, RandomRotation = false, Burst = 18, Lifetime = new Vector2(0.3f, 0.5f), Speed = new Vector2(2f * scale, 5f * scale), Size = new Vector2(0.5f * scale, 1f * scale), ColorA = new Color(1f, 0.9f, 0.4f), ColorB = fire, EndColor = new Color(0.8f, 0.2f, 0.05f, 0f), SizeCurve = Grow(1f, 0.3f), Radius = 0.3f * scale, MaxParticles = 24 }, new Vector3(0f, 0.5f, 0f));
-            AddParticles(go.transform, new Ps { Name = "Smoke", Material = _smoke, Burst = 8, Lifetime = new Vector2(0.6f, 0.9f), Speed = new Vector2(0.5f, 1.5f), Size = new Vector2(1f * scale, 1.6f * scale), ColorA = new Color(0.2f, 0.18f, 0.2f, 0.7f), ColorB = new Color(0.35f, 0.3f, 0.3f, 0.6f), EndColor = new Color(0.3f, 0.3f, 0.3f, 0f), SizeCurve = Grow(0.6f, 1.3f), Velocity = new Vector3(0f, 1f, 0f), Radius = 0.4f * scale, MaxParticles = 10 }, new Vector3(0f, 0.5f, 0f));
+            if (smoke) AddParticles(go.transform, new Ps { Name = "Smoke", Material = _smoke, Burst = ExplosionSmokePuffs, Lifetime = new Vector2(0.6f, 0.9f), Speed = new Vector2(0.5f, 1.5f), Size = new Vector2(1f * scale, 1.6f * scale), ColorA = new Color(0.2f, 0.18f, 0.2f, ExplosionSmokeAlpha), ColorB = new Color(0.35f, 0.3f, 0.3f, ExplosionSmokeAlpha), EndColor = new Color(0.3f, 0.3f, 0.3f, 0f), SizeCurve = Grow(0.6f, 1.3f), Velocity = new Vector3(0f, 1f, 0f), Radius = 0.4f * scale, MaxParticles = 10 }, new Vector3(0f, 0.5f, 0f));
             AddParticles(go.transform, new Ps { Name = "Sparks", Material = _soft, Burst = 10, Lifetime = new Vector2(0.2f, 0.4f), Speed = new Vector2(6f * scale, 10f * scale), Size = new Vector2(0.08f, 0.14f), ColorA = Color.white, ColorB = new Color(1f, 0.8f, 0.3f), Stretch = true, MaxParticles = 12 }, new Vector3(0f, 0.5f, 0f));
             return go;
         }
@@ -615,7 +667,7 @@ namespace SoulHunter.Editor.Content
             Save(root);
 
             root = NewWeaponObject("SH10_Fx_PeachoneBlast", Body.Zone, 0.9f);
-            var blast = Explosion("Blast", new Color(1f, 0.55f, 0.75f), 0.7f);
+            var blast = Explosion("Blast", new Color(1f, 0.55f, 0.75f), 0.7f, smoke: false);
             blast.transform.SetParent(root.transform, false);
             Save(root);
 
