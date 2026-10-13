@@ -117,6 +117,23 @@ namespace SoulHunter.Gameplay.AI
             return bounds;
         }
 
+        /// <summary>
+        /// Deaths in one frame that still get their look (the soul puff, the neck spray and the sinking body). A screen wipe
+        /// (Pentagram, Soul Toll, Eclipse Sigil, the stage clear) ends up to 300 lives in one frame; a build run on
+        /// 2026-10-13 stalled 650-800 ms every time a level-8 Pentagram fired. Past this many the death is counted and
+        /// drops as usual but shows nothing more: 32 is the corpse cap, so no body that could be shown is lost.
+        /// </summary>
+        public const int ShownDeathsPerFrame = 32;
+        private static int _deathFrame = -1;
+        private static int _deathsThisFrame;
+
+        /// <summary>Counts a death in this frame; true while it is still one of the frame's shown deaths.</summary>
+        public static bool CountShownDeath()
+        {
+            if (Time.frameCount != _deathFrame) { _deathFrame = Time.frameCount; _deathsThisFrame = 0; }
+            return ++_deathsThisFrame <= ShownDeathsPerFrame;
+        }
+
         private void HandleDeath()
         {
             // Learning Comment:
@@ -124,16 +141,19 @@ namespace SoulHunter.Gameplay.AI
             // call karne se game lag/freeze ho jati thi. Ab hum O(1) PlayerController.Instance use karte hain.
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
 
-            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
-            // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
-            Bounds body = BodyBounds();
-            if (_enemy == null || !_enemy.IsSpectral)
+            if (CountShownDeath())
             {
-                Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
-                SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away);
+                SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
+                // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
+                Bounds body = BodyBounds();
+                if (_enemy == null || !_enemy.IsSpectral)
+                {
+                    Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
+                    SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away);
+                }
+                // VS-style death (owner, 2026-09-29): the body stays a moment and sinks while the blood sprays.
+                SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body);
             }
-            // VS-style death (owner, 2026-09-29): the body stays a moment and sinks while the blood sprays.
-            SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body);
 
             if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
             {

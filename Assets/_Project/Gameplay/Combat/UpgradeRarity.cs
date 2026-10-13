@@ -70,6 +70,7 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.MetaglioRight, (10, "Metaglio_Right") },
             // Added 2026-10-12 (each page's infobox "rarity", raw pages fetched 2026-10-12).
             { UpgradeData.UpgradeType.MisersIdol, (100, "Stone_Mask") },
+            { UpgradeData.UpgradeType.CursedCoffer, (40, "Torrona's_Box") },
             { UpgradeData.UpgradeType.RingOfLongHours, (10, "Silver_Ring") },
             { UpgradeData.UpgradeType.RingOfDarkHours, (10, "Gold_Ring") },
             { UpgradeData.UpgradeType.DuskRaven, (50, "Ebony_Wings") },
@@ -99,6 +100,7 @@ namespace SoulHunter.Gameplay.Combat
                 case UpgradeData.UpgradeType.MetaglioRight:
                 case UpgradeData.UpgradeType.RingOfLongHours:  // VS Silver Ring: max-level 9
                 case UpgradeData.UpgradeType.RingOfDarkHours:  // VS Gold Ring: max-level 9
+                case UpgradeData.UpgradeType.CursedCoffer:     // VS Torrona's Box: max-level 9
                     return 9;
                 default: return WeaponManager.IsWeaponType(type) ? 0 : 5;
             }

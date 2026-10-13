@@ -122,6 +122,42 @@ namespace SoulHunter.Gameplay.Hazards
         public const float MeteorLastMinute = 28f;
         public const float MeteorEveryMinutes = 4f;
 
+        // ---- Omens: Powder Ring (VS Roulette), Thorn Circle (VS Flower Wall), Rising Tide (VS The Drowner) ----
+        // Random_Events gives no numbers for these; each is taken from a rule the game already has (balance method).
+        /// <summary>A Powder Ring member arms at this distance, with this fuse, blast and damage: the self-destruct
+        /// defaults (EnemyAbilityDefaults, VS Sig.ra Rossi "exploding 2 seconds later for 50 damage").</summary>
+        public const float MineArmDistance = 2f;
+        public const float MineFuseSeconds = 2f;
+        public const float MineBlastRadius = 2.5f;
+        public const int MineDamage = 50;
+        /// <summary>The ring stands on the Pile Assault's ellipse, with its 12 members, for a minute (as VS's other still
+        /// rings: Pile Assault and Scorpion Lair "disappear after 1 minute").</summary>
+        public const int MineCount = PileCount;
+        public const float MineSeconds = 60f;
+
+        /// <summary>VS Flower Wall: "Disappears after ~50 seconds."</summary>
+        public const float ThornSeconds = 50f;
+        /// <summary>30 members 9 units out stand 1.9 apart, so their 1-unit posts leave no gap for the hero (0.4 wide
+        /// each side); the ring ends 3 units out, close enough to press on the hero, never onto it.</summary>
+        public const int ThornCount = 30;
+        public const float ThornStartRadius = 9f;
+        public const float ThornEndRadius = 3f;
+        public const float ThornPostRadius = 1f;
+
+        /// <summary>VS The Drowner: "for ~1 minute"; "20 damage per game-tick".</summary>
+        public const float TideSeconds = 60f;
+        public const int TideDamage = 20;
+        /// <summary>The game's contact-damage interval (TouchDamage): the only "tick" Soul Hunter has.</summary>
+        public const float TideTickSeconds = 0.5f;
+        /// <summary>The_Drowner statbox: "health = 800 - 1250" with "HP x Level": the lower value per level.</summary>
+        public const int TideCallerHealthPerLevel = 800;
+        public static int TideCallerHealth(int playerLevel) => TideCallerHealthPerLevel * Mathf.Max(1, playerLevel);
+        /// <summary>The water sheet: wider and deeper than any view (a 21:9 view is about 56 units wide).</summary>
+        public const float TideSheetWidth = 240f;
+        public const float TideSheetDepth = 160f;
+        /// <summary>The Tide Caller stands this far inside the screen's bottom-left corner.</summary>
+        public const float TideCallerInset = 3f;
+
         // ---- Pile Assault ----
         public const int PileCount = 12;
         public const float PileRadiusX = 10f;              // an ellipse, wider than tall like the screen

@@ -45,7 +45,12 @@ namespace SoulHunter.Gameplay.Core
     /// </summary>
     public sealed class ArcanaDraft
     {
-        public enum Kind { Start, Chest, Merchant }
+        /// <summary>
+        /// Weapons: the Armoury Cache's list (VS Candybox: "opens a list of all base weapons remaining to be obtained in the
+        /// run"). Its cards are stand-ins made for the screen (the weapon's name, icon and text), every one is shown, one
+        /// must be chosen, and there is no random pick, Reroll or Skip.
+        /// </summary>
+        public enum Kind { Start, Chest, Merchant, Weapons }
 
         /// <summary>VS chest draft: four choices.</summary>
         public const int ChestChoices = 4;
@@ -69,7 +74,7 @@ namespace SoulHunter.Gameplay.Core
         public int ChoiceCount { get; }
         public int FreeRerollsLeft { get; private set; }
         /// <summary>A start or merchant draft offers a random card too; a chest draft can be skipped.</summary>
-        public bool OffersRandom => DraftKind != Kind.Chest;
+        public bool OffersRandom => DraftKind == Kind.Start || DraftKind == Kind.Merchant;
         public bool CanSkip => DraftKind == Kind.Chest;
         /// <summary>Only a chest draft rerolls, and only while a card has not been shown yet.</summary>
         public bool HasUnshown => DraftKind == Kind.Chest && UnshownCount > 0;

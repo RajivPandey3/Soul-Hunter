@@ -39,6 +39,8 @@ namespace SoulHunter.Gameplay.Core
 
         public EndKind End;
         public string StageLine = "";
+        /// <summary>Why the run ended when it was not a death in battle: the level's guardian still stood at 30:00 (else empty).</summary>
+        public string EndReason = "";
         public string Mode = "Normal";
         public int GoldBonusPercent;
         public float SecondsSurvived;
@@ -71,6 +73,7 @@ namespace SoulHunter.Gameplay.Core
             {
                 var level = progression.CurrentLevel;
                 results.StageLine = $"Level {progression.CurrentStage}: {level.Name}";
+                if (end == EndKind.Death && progression.StageFailed) results.EndReason = LevelProgressionManager.GuardianFailed(progression.CurrentStage);
             }
             results.Mode = ModeText();
             results.GoldBonusPercent = Mathf.RoundToInt((CampaignLevelCatalog.CurrentGold - 1f) * 100f);

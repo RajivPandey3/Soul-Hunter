@@ -224,7 +224,15 @@ namespace SoulHunter.Tests.EditMode
                 var locked = Fresh();
                 Assert.That(PowerUpUnlocks.NextConditionText(locked, id), Does.StartWith("Find the "), id.ToString());
             }
-            Assert.That(PowerUpUnlocks.NextConditionText(Fresh(), PowerUpId.Omni), Is.EqualTo("Hold 6 evolved weapons at once."));
+            Assert.That(PowerUpUnlocks.NextConditionText(Fresh(), PowerUpId.Omni), Is.EqualTo("Get the Cursed Coffer to level 9."));
+            // wiki Torrona's_Box: "It is unlocked by holding 6 different weapon evolutions at once."
+            var coffer = ItemUnlocks.All.Single(i => i.Item == "CursedCoffer");
+            Assert.That(coffer.Kind, Is.EqualTo(ItemUnlockKind.HoldEvolutions));
+            Assert.That(coffer.Target, Is.EqualTo(6));
+            Assert.That(ItemUnlocks.IsMet(Fresh(), coffer, new ItemUnlockProgress { EvolutionsHeld = 5 }), Is.False);
+            Assert.That(ItemUnlocks.IsMet(Fresh(), coffer, new ItemUnlockProgress { EvolutionsHeld = 6 }), Is.True);
+            Assert.That(PowerUpUnlocks.OmniItem, Is.EqualTo("CursedCoffer"));
+            Assert.That(PowerUpUnlocks.OmniItemLevel, Is.EqualTo(9), "wiki Omni: Torrona's Box at its maximum level.");
             Assert.That(PowerUpUnlocks.UnlockWhole(data, PowerUpId.Omni), Is.True);
             Assert.That(PowerUpUnlocks.UnlockedRanks(data, PowerUpId.Omni), Is.EqualTo(5));
 

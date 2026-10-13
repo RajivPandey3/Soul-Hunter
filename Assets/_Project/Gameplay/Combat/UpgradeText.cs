@@ -65,6 +65,7 @@ namespace SoulHunter.Gameplay.Combat
             { UpgradeData.UpgradeType.MisersIdol, "+10% greed: coins are worth more." },
             { UpgradeData.UpgradeType.RingOfLongHours, "+5% duration and +5% area." },
             { UpgradeData.UpgradeType.RingOfDarkHours, "+5% curse." },
+            { UpgradeData.UpgradeType.CursedCoffer, "Cursed. +3% might, projectile speed, duration and area (4% at level 1). Its ninth level adds +100% curse instead." },
         };
 
         /// <summary>

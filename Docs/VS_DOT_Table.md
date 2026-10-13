@@ -4,7 +4,8 @@ Built 2026-09-30 from raw vampire.survivors.wiki pages (fetched that day) and th
 Re-checked 2026-10-12: every row's "Soul Hunter now" and Status were checked again in the code (working tree after c284f5fa). The "VS rule" column is still the 2026-09-30 wiki reading; the pages were not fetched again, except that the Stalker row now describes the Stalker XL the owner chose.
 Status: MATCH, PARTIAL, MISSING, DIFFERS-OWNER (an owner decision), BALANCE (the wiki is silent or contradicts itself, so the balance method decided: owner rule 2026-10-09), SH-ONLY (not in VS, no owner decision), N/A, UNKNOWN.
 
-Counts (13 Oct, after the guardians of the hidden stage items): MATCH 149, PARTIAL 2, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2
+Counts (13 Oct, after the last seven Omens, the Cursed Coffer and the owner's "nothing left" pass): MATCH 151, PARTIAL 0, MISSING 0, DIFFERS-OWNER 12, BALANCE 11, UNKNOWN 0, N/A 2
+Earlier on 13 Oct, after the guardians of the hidden stage items: MATCH 149, PARTIAL 2, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2.
 Earlier on 13 Oct, after Level 5's 24:00 boss got its own type: MATCH 148, PARTIAL 3.
 Earlier on 13 Oct, after the new items, unlocks, caskets, relics, map and menu work: MATCH 147, PARTIAL 4.
 After the open-row pass of 12 Oct: MATCH 137, PARTIAL 10, MISSING 5, DIFFERS-OWNER 12, BALANCE 8, UNKNOWN 2, N/A 2.
@@ -66,7 +67,7 @@ As of 13 Oct no row is MISSING. What is left:
 | Characters | Sort (default, A-Z, stages) and favourites | Characters | UI | Sort Default / A-Z / levels completed, ascending or descending; favourites first, unlocked at 50 Collection entries | MATCH |  |
 | PowerUps | 23 PowerUps, VS ranks, prices, fees, Refund | PowerUps | Data | PowerUps.cs, PowerUpShopTests | MATCH |  |
 | PowerUps | A maxed PowerUp can be switched off | PowerUps | UI | PowerUps.CanToggle / SetEnabled / ActiveRank; Buy becomes Turn Off / Turn On (not Reroll, Skip, Banish) | MATCH |  |
-| PowerUps | Reroll/Skip/Banish/Omni/Charm/Defang ranks unlock by achievements | Reroll, Skip, Banish | Behavior | PowerUpUnlocks: Reroll (level 80 with five characters), Skip (survival in Levels 6-10), Banish (60-100 Collection entries), Omni (hold six evolved weapons at once), Charm, Defang and Preserve (relics) (13 Oct) | PARTIAL | Banish ranks above the Collection's size cannot be earned yet; the Omni condition is Soul Hunter's (VS: max Torrona's Box, which SH does not have) |
+| PowerUps | Reroll/Skip/Banish/Omni/Charm/Defang ranks unlock by achievements | Reroll, Skip, Banish | Behavior | PowerUpUnlocks: Reroll (level 80 with five characters), Skip (survival in Levels 6-10), Banish (60-100 Collection entries), Omni (the Cursed Coffer, Soul Hunter's Torrona's Box, at its ninth level; the Coffer unlocks by holding six evolved weapons), Charm, Defang and Preserve (relics) (13 Oct) | MATCH | The Collection has 105 entries, so every Banish rank can be earned (LastOmensTests); the Coffer's name and icon are placeholders |
 
 ## Weapons & level-up
 
@@ -134,8 +135,8 @@ As of 13 Oct no row is MISSING. What is left:
 | Map events | Swarm pushes enemies; Flower Wall lasts 30/60 s | Mad_Forest | Behavior | Event fliers live 15 s and push nothing; Thorn Wall exists only as a slow wave type | DIFFERS-OWNER | Enemy bodies are triggers (owner-approved crowd plan, 2026-09-26: the horde never walls the player in), so a swarm cannot push and a Flower Wall cannot trap |
 | Traps | Global trap cooldown x Luck | Enemies | Behavior | PressurePlate.GlobalReadyAt: one cooldown for all plates, 20 s x Luck | MATCH |  |
 | Death | Kills give XP gems; >400 merge | Experience_Gem | Behavior | EnemyDrop, cap 400 | MATCH |  |
-| Contact | Contact damage 'multiple times per second' | Armor_(stat) | Timing | 0.5 s per enemy | UNKNOWN | Wiki silent |
-| Run clock | 30:00, then the Reaper | Stages, The_Reaper | Timing | Next stage at 30:00; L10 no limit | DIFFERS-OWNER |  |
+| Contact | Contact damage 'multiple times per second' | Armor_(stat) | Timing | 0.5 s per enemy | BALANCE | Wiki gives no number; 0.5 s is the value every bot run was balanced on |
+| Run clock | 30:00, then the Reaper | Stages, The_Reaper | Timing | At 30:00 the next level starts if this level's boss was defeated, else the run ends (owner, 13 Oct); L10 no limit | DIFFERS-OWNER | VS unlocks stages by hero level in the stage before (20, 40, 60, 80); the owner chose the boss |
 | Stalker | Stalker XL (the latest): 655,350 x Level, 50 damage, only instant kills defeat it; event chance | The_Stalker | Behavior | Death's Shadow follows the VS Stalker XL: 655,350 x level, 50 damage, 1% at 0:00 and 30% at 8:00 and 12:00 (each / Luck) on Stages 5 and 9; only instant kills defeat it; its chests can evolve up to 3 weapons (items 1, 4, 5) | MATCH | The red-ghost jingle is not built |
 | Shooting Star | Markers, 2 s, 30 damage | Shooting_Star | Timing | SoulMeteor | MATCH |  |
 | Clock Lancet | Freeze, no damage | Clock_Lancet | Behavior | ClockLancetWeapon; boss copy slows the player 50% (owner exception) | MATCH |  |
@@ -177,7 +178,7 @@ As of 13 Oct no row is MISSING. What is left:
 | Chest screen | Blast, OPEN, reels, count-up, lights, fireworks, jingles | Treasure_Chest | UI | ChestOpeningScreen | MATCH |  |
 | Chest skip | Skip rules | Treasure_Chest | Input | ChestSkipRules: first 6 unskippable, 5-item chests after 50 of them or 500 chests, coin-only chests skip themselves | BALANCE | The third unlock ("seen the final fireworks") is the VS ending, which Soul Hunter does not have |
 | Greed | Additive; stage bonus separate | Greed | Data | ApplyGreed | MATCH |  |
-| Greed | Stone Mask passive | Greed | Data | Miser's Idol: the VS Stone Mask levels and Greed, found as a stage item and then offered in level-ups (13 Oct) | MATCH | Placeholder art; not placed on Levels 5-6 |
+| Greed | Stone Mask passive | Greed | Data | Miser's Idol: the VS Stone Mask levels and Greed, found as a stage item on Levels 2, 5 (west, with three 20% rolls for more) and 6 (northeast), then offered in level-ups (13 Oct) | MATCH | Placeholder art; the distance on Levels 5-6 is a balance value (the pages give none) |
 | Stage gold | MF 1.0 ... CM 1.4; Hyper +50% | Stages | Data | GoldBonus | MATCH |  |
 | Merchant | Moongolow / every stage later | Merchant | Behavior | Level 3 only | DIFFERS-OWNER |  |
 | Merchant | Touch opens shop, one visit | Merchant | Interaction | WanderingMerchant | MATCH |  |
@@ -205,13 +206,13 @@ As of 13 Oct no row is MISSING. What is left:
 | Mode | Inverse: gold, Luck, enemy HP/speed | Stages | Data | Gold +200%, Luck +20%, enemy health x(3 + 0.05 per minute), enemy speed +0.5% of the stage pace per minute | MATCH |  |
 | Mode | Inverse: flipped darker map, alt music | Stages | UI | Stage items, Metaglios and Rune Plates turn 180 degrees; the floor darkens and shifts hue; "Visually Invert Stages" option; Level n plays Level 11-n's track (MusicSelection.StageTrackLevel, 13 Oct) | BALANCE | The floor tiles already lie in random quarter turns, so a flip would show nothing; SH has no alternate recordings, so another level's own track is used |
 | Mode | Endless cycles; +100% HP, +50% spawn, +25% dmg, damage cap -1 | Stages | Behavior | Multipliers match; no damage cap | BALANCE | Owner answer 2026-10-09: the wiki never defines the damage cap, and Soul Hunter has none |
-| Mode | Random Events | Random_Events | Behavior | Omens: RandomEventDirector picks at XX:30 (29:30 included) and fires at XX:00 from 19 events (13 Oct) | PARTIAL | Seven VS events are left out (they need VS-only enemies or hazards); equal weights |
+| Mode | Random Events | Random_Events | Behavior | Omens: RandomEventDirector picks at XX:30 (29:30 included) and fires at XX:00 from 27 events, one for every VS Random Event (13 Oct) | MATCH | Equal weights (the wiki gives none). Small differences: the Thorn Circle stops the hero but not other enemies; the Tide Caller dies to any instant kill (VS: not to Pentagram); the Armoury Cache has no gift |
 | Mode | Random LevelUp | Stages | Behavior | Blind Fate: each level-up picks a random card with no screen; toggled in the pause menu | MATCH |  |
 | Mode | Modes unlock via relics | Stages | Persistence | All modes open from the start (owner, 2026-10-09) | DIFFERS-OWNER |  |
 | Audio | Track per stage; Music Selection | Music | Audio | A track per stage, or the Music selection: 11 tracks, Normal/Faster/Slower, a Keep lock | MATCH |  |
 | HUD | XP bar at top | Level_up | UI | XPBarUI | MATCH |  |
 | HUD | 6 + 6 slots | Passive_items | UI | InventoryHud | MATCH |  |
-| HUD | Timer, kills, gold, health bar | - | UI | Built | UNKNOWN | Wiki silent |
+| HUD | Timer, kills, gold, health bar | - | UI | Built | BALANCE | Wiki silent on the layout; Soul Hunter's own, owner-reviewed |
 | Pause | Options; Grimoire; Map | Options, Grim_Grimoire | UI | Resume, Options, Evolutions (the Grimoire, open from the start), Map (PauseMapScreen: stage items, caskets, relics, the merchant; optional guide arrows), Blind Fate, Quit, and the stats panel (13 Oct) | MATCH | Marker shapes are placeholders; one map zoom for every level |
 | Pause | Quit still shows results | Results | Behavior | Quit ends the run into Results (`GameSessionManager.QuitRun`) | MATCH | Level 1 step 4 |
 | Results | Stage, mode, gold bonus, time, gold, level, kills | Results | UI | `RunResultsScreen` top left | MATCH | Level 1 step 4; run time over all stages |

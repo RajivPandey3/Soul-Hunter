@@ -20,13 +20,14 @@ namespace SoulHunter.Tests.EditMode
             {
                 var full = StageItems.Plan(stage);
                 // 2026-10-12: plus the two rings on every stage, and Miser's Idol on Level 2 (StageItems.MisersIdolStage).
-                int expected = stage == StageItems.MisersIdolStage ? 9 : 8;
+                bool idolStage = stage == StageItems.MisersIdolStage || stage == StageItems.MisersIdolWestStage || stage == StageItems.MisersIdolNorthEastStage;
+                int expected = idolStage ? 9 : 8;
                 Assert.That(full.Count, Is.EqualTo(expected), $"Stage {stage}: four diagonal items, the two Metaglios and the two rings.");
                 var silver = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.RingOfLongHours);
                 var gold = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.RingOfDarkHours);
                 Assert.That(silver.Offset, Is.EqualTo(Vector3.forward * StageItems.RingDistance), "VS Silver Ring: north of the start.");
                 Assert.That(gold.Offset, Is.EqualTo(Vector3.back * StageItems.RingDistance), "VS Gold Ring: south of the start.");
-                Assert.That(full.Count(e => e.Upgrade == UpgradeData.UpgradeType.MisersIdol), Is.EqualTo(stage == StageItems.MisersIdolStage ? 1 : 0));
+                Assert.That(full.Count(e => e.Upgrade == UpgradeData.UpgradeType.MisersIdol), Is.EqualTo(idolStage ? 1 : 0));
                 // VS Metaglios (2026-10-01): Left west of the start, Right east.
                 var left = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.MetaglioLeft);
                 var right = full.Single(e => e.Upgrade == UpgradeData.UpgradeType.MetaglioRight);

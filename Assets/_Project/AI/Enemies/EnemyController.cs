@@ -302,10 +302,11 @@ namespace SoulHunter.Gameplay.AI
         }
 
         /// <param name="speed">Relative to the default event speed (1 = 1.5x the enemy's own speed).</param>
-        public void StartFlyingMode(Vector3 direction, float speed = 1f)
+        /// <param name="weave">Above 0, the flier weaves along its line (EnemyFlyState).</param>
+        public void StartFlyingMode(Vector3 direction, float speed = 1f, float weave = 0f)
         {
             ChangeState(new EnemyFlyState(this, direction, EnemyFlyState.DefaultLifetimeSeconds,
-                EnemyFlyState.SpeedMultiplier * Mathf.Max(0.2f, speed)));
+                EnemyFlyState.SpeedMultiplier * Mathf.Max(0.2f, speed), weave));
         }
 
         // ---------------------------------------------------------------- VS knockback

@@ -224,6 +224,8 @@ Owner decision (2026-09-24): one run plays through all 10 levels in order. This 
   - The level-10 bot did not kill him in 3 minutes, so the victory screen was not seen in play; it is covered by tests only.
 - Not yet played by the owner.
 
+**Owner decision (2026-10-13): a level's guardian opens the next level.** On Levels 1 to 9 the next level starts at 30:00 only if this level's boss has been defeated; if it still stands, the run ends there. Nothing is saved: every run starts at Level 1. Details: section 7, "Nothing left".
+
 Do not split the campaign into separate per-level runs or add a Reaper-style run end without a new owner decision.
 
 ### Weapon aiming
@@ -1764,7 +1766,7 @@ The owner offered their installed copy of VS as a source. Not used: the no-copy 
 - Peachone now circles clockwise (wiki Peachone).
 - Sundered Hour's beams aim at the nearest enemy (owner aiming rule).
 - Revenant Wheel numbers the wiki leaves open are balance values, marked in code.
-- Not built: the Idol on Levels 5-6. Art is placeholder, **not owner-approved**.
+- The Idol also lies on Levels 5 and 6 since later that day (see "Nothing left"). Art is placeholder, **not owner-approved**.
 
 **Guardians of the hidden stage items** (wiki City_Atlantean, Volcano_Atlantean, Moon_Atlantean, Sun_Atlantean and Passive_items "Stage items", raw, 2026-10-13).
 - Both Metaglios and both Rings are guarded: Warden of the Left Hand, Warden of the Right Hand, Warden of Long Hours, Warden of Dark Hours (`ItemGuardians`). The Stone Mask page names no guard, so Miser's Idol has none. **The names are not owner-approved.**
@@ -1783,7 +1785,7 @@ The owner offered their installed copy of VS as a source. Not used: the no-copy 
 
 **Item unlocks, Soul Caskets and relics.**
 - `ItemUnlocks` / `ItemUnlockTracker`: weapons and passives unlock by their VS conditions in Soul Hunter terms (Fire Wand 20 Soul Lanterns, Garlic 5 Roast Chickens, Lightning Ring 5,000 kills, Peachone 10 minutes survived ...). Nine items are open from the start. A save from before this change keeps every item (`ItemUnlock.Initialized`). `ItemUnlocks.UnlockEverything` is for tests and the bot.
-- PowerUps: Omni unlocks by holding six evolved weapons at once (Soul Hunter's condition; VS uses Torrona's Box); Charm, Defang and Preserve by relics.
+- PowerUps: ~~Omni unlocks by holding six evolved weapons at once~~ (since later that day by the Cursed Coffer at level 9, as VS's Torrona's Box; see "Nothing left"); Charm, Defang and Preserve by relics.
 - `SoulCasket` (VS coffins): one on each of Levels 1-7, guarded by 8 elites, freeing Corvan, Draven, Gideon, Kaelen, Isolde, Seraphina and Lumina. The other characters keep their conditions.
 - `RelicPickup`: 11 relics with lasting boons and Soul Hunter names (Hordecaller's Bell, Reaper's Ledger, Beast Codex, Candle Idol, Hourglass Tear, Fate Deck, Oathbound Psalm, Fangless Vial, Bard's Echo, Mirror Shard, Last Horn).
 - The unused `AchievementManager` and `AchievementData` are deleted.
@@ -1797,7 +1799,7 @@ The owner offered their installed copy of VS as a source. Not used: the no-copy 
 **Spawner.**
 - Chest-less wave bosses on Levels 3-6 from their source stages (`ChestlessWaveBosses`).
   - Level 5's 24:00 boss first used a stand-in type (100 x Level, no resistances). It now has its own type, Great Bog Mother, from the wiki's Maronna_Meea "Maronna Meea Boss" statbox: 200 x Level health, speed 180, damage 20, no knockback, res-freeze 1.1, res-kill, res-debuff. No minute's wave lists it, so it is a boss-only type (`StageEnemyTable.BossOnly`, `WaveData.BossTypes`). Tests: `ChestlessBossAndOmenTests`, `StageEnemyTypeTests` (T) and `ChestlessBossAndOmenPlayModeTests.LevelFive_SendsItsOwnBossType_At24Minutes_WithItsStatbox` (R). EditMode 913/913, PlayMode 412/412, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-l5boss-full/`).
-- Four more Omens (Stampede, Dread Circles, Trampling Ranks, Crossfire Rows; 19 in the pool), and the wheel also picks at 29:30.
+- Four more Omens (Stampede, Dread Circles, Trampling Ranks, Crossfire Rows; 19 in the pool), and the wheel also picks at 29:30. The last seven followed the same day (see "Nothing left").
 - Inverse music: Level n plays Level 11-n's track (`MusicSelection.StageTrackLevel`); Soul Hunter has no alternate recordings.
 
 **Story layer "He was not alone" (owner decision, 2026-10-13: "haan ye twist theek hai", "haan lines theek hai, game mein jod do").** `Docs/Game_Design_Document.md` is not edited; the layer adds to the story without changing a sentence of it.
@@ -1813,6 +1815,68 @@ The owner offered their installed copy of VS as a source. Not used: the no-copy 
 - Second full run, after both fixes: EditMode 912/912, PlayMode 410/411, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-vs15-full2/`). The one failure was `DuplicatorPlayModeTests` Peachone, a test-side margin: its "fired together" window was 0.02 s, and two bombs (0.025 s apart, 0.065 units along the orbit) landed in frames 0.019 s apart. The window is now 0.01 s (the same frame); the first full run had passed it.
 - The Duplicator fixtures then passed 33/33 with EditMode 912/912 (`-vs15-dup/`). No single full run passed every test.
 - Not seen by eye: no build screenshots of the new screens were taken (`V` unverified).
+
+Not yet played by the owner.
+
+### Nothing left: the last Omens, the Cursed Coffer, the guardian rule, Level 9 (owner, 2026-10-13)
+
+The agent played every level for 3 minutes in a build first (`D:/SoulHunter-Validation/run-20261013-allstages/`, script `allstages-play.ps1`: no god mode, hero at a believable level per stage, 0 errors, save untouched). Eight levels were survived; the bot died on Level 4 at 1:23 (pinned against the corridor wall) and on Level 9 after 16 s (the arena defect below). Owner, after that: "kuch bhi nahi bachna chahiye agar kahani ko tora gumana parta hai to use bhi ghuma sakte ho per kahani storg hona chahiye". `Docs/VS_DOT_Table.md` now counts MATCH 151, PARTIAL 0, MISSING 0, DIFFERS-OWNER 12, BALANCE 11, UNKNOWN 0, N/A 2 (176 rows).
+
+**Owner decision: a level's guardian opens the next level** (2026-10-13: "lv 1 mein kuch achive kare tabhi lv 2 open ho sake athwa nahi"; chosen by AskUserQuestion: defeat the stage boss; otherwise the run ends; for this run only).
+- On Levels 1 to 9 the next level starts at 30:00 only if this level's boss (it comes at 25:00) has been defeated. If it still stands at 30:00 the run ends there: the Results screen shows GAME OVER and "The guardian of Level n still stood at 30:00. Level n+1 stays closed." No stage-clear gold is paid (`LevelProgressionManager.StageFailed`, `OnStageFailed`, `RunResults.EndReason`).
+- When the boss comes, the notice shows "Defeat the guardian before 30:00 to open Level n+1." (`EnemySpawner.SpawnBoss`).
+- Nothing is kept on the save: every run starts at Level 1 and earns each level again. Level 10 is unchanged.
+- This replaces "30:00 starts the next stage whatever happened to the boss" (2026-09-27). VS unlocks stages by hero level in the stage before (wiki Stages: 20, 40, 60, 80); the owner chose the boss.
+- **Five minutes are not always enough** (build play below, god mode, a strong hero): the boss fell in 21 s on Level 1, 50 s on Level 3, 105 s on Level 7 and 99 s on Level 9, but the Level 5 boss (90,000 health, doubled by a level-9 Cursed Coffer's Curse) still stood at 30:00 and the run ended. Whether that is wanted is open for the owner.
+
+**Smoke** (owner: "kala dhuan bahut adhik dikh raha tha"). Peachone and Dusk Raven drop up to 11 blasts a second on one spot, each with 8 dark smoke puffs, which piled into a black cloud over the hero. A weapon blast now has no smoke; a one-off explosion keeps 3 puffs at 0.3 alpha (`WeaponVfxBuilder.ThinSmoke`). Full run: EditMode 917/917, PlayMode 416/416 (`run-20261013-smoke-full`), commit `2e17745e`.
+
+**The last seven Omens** (raw Random_Events, Candybox, The_Drowner, Dragon_Swarm, Flower_Wall_(event), fetched 2026-10-13; own names, **not owner-approved**). Every VS Random Event now has its Omen (27 in the pool):
+
+| Omen | VS event | What it does |
+|---|---|---|
+| Armoury Cache | Candybox | A box near the hero; walking over it opens the list of base weapons this save has used and the hero does not hold; the chosen one joins at level 1, past the six slots like a stage item (`WeaponCachePickup`). The list is the Arcana choice screen in a weapon form (no random, Reroll or Skip). |
+| Serpent Streams | Shrimp Swarm | Three files of 12 cross sideways, 4 s apart, weaving (`EnemyFlyState`'s weave, `EnemySpawner.SpawnFliers`). |
+| Powder Ring | Roulette | 12 still enemies on the Pile Assault's ellipse; one arms when the hero is within 2 units and explodes 2 s later for 50 in 2.5 units (`MineSentry`; the numbers are the self-destruct rule the game already had). |
+| Rootbound | Summon II Molise | For 2 minutes every ordinary enemy is swapped for Level 1's Grave Lily or Thorn Wall, standing still and leaving the smallest gem (`EnemySpawner.BeginWaveTakeover`, `StillEnemy`). |
+| Nightfall | Summon Night | For 1 minute every ordinary enemy is swapped for Level 1's three bats. |
+| Rising Tide | The Drowner | The Tide Caller (the level's boss model, blue, 800 x Level health) stands at the screen's bottom-left; water rises from the screen's bottom edge for 1 minute and deals 20 per 0.5 s to a hero standing in it (`RisingTide`). A frozen caller holds the water; defeating it ends the flood. |
+| Thorn Circle | Flower Wall | 30 Thorn Walls in a ring that shrinks from 9 to 3 units over 50 s. Each living member carries a solid post that stops the hero; killing a member opens the ring there (`ThornCircle`). |
+
+- Bosses, chest carriers, map-event fliers, hazard members and guardians are never swapped by a takeover.
+- **Two things that touch earlier owner decisions** (done under "nothing left"; reported to the owner, not yet answered):
+  - the Thorn Circle is the one place where enemy bodies stop the hero (the crowd rule of 2026-09-26 stays everywhere else);
+  - as an Omen, Death's Shadow now comes on every level; its own timetable stays on Levels 5 and 9.
+- Balance values (the wiki gives none): every count, radius and gap above, the tide's speed (one screen height over the minute) and its 0.5 s tick.
+- Small differences: the ring does not hold other enemies in; the Tide Caller dies to any instant kill (VS: not to Pentagram); the Armoury Cache has no gift and exists only as an Omen. Looks are placeholders (the chest model for the cache, a flat blue sheet for the water).
+- `OmenContentBuilder` (menu Soul Hunter/Content/Build Omen Content) names Level 1's bat and plant prefabs in `GameContent.OmenBats`, `OmenPlants` and `OmenThornWall`. `AutoplayBot -sh-autoplay-omen <name>` (and `-sh-autoplay-omen-after S`) fires one Omen and takes screenshots.
+
+**Cursed Coffer** (wiki Torrona's_Box and Omni; own name, **not owner-approved**; icon is the Skull O'Maniac's): a passive of 9 levels, rarity 40, +4% Might, projectile Speed, Duration and Area at level 1, +3% at levels 2 to 8 (+25%), and +100% Curse at level 9. It unlocks by holding six evolved weapons at once, and the Omni PowerUp now unlocks by getting it to level 9, both as in VS. From 2026-10-12 until now Omni unlocked by the six evolutions directly; a save that earned it keeps it.
+
+**Banish ranks.** The Collection has 105 entries, so all five ranks (60 to 100 entries) can be earned; the table's note that they could not was out of date. `LastOmensTests.TheCollection_IsLargeEnough_ForEveryBanishRank` (T).
+
+**Miser's Idol on Levels 5 and 6** (wiki Abyss_Foscari: "20%, 20%, 20% chance for more Stone Mask to spawn. West of the starting area"; Mt.Moonspell: "northeast of the starting area"): 100 units west on Level 5, with three 20% rolls for one more each (10 units further each), and 100 units northeast on Level 6. The distance is a balance value (the Inlaid Library's five tiles).
+
+**Level 9, the Closing Arena** (GDD: "The safe zone continuously shrinks. The player must survive in extremely tight spaces."). Defects found by the bot run and fixed:
+- the zone was centred on the world's origin, not on the hero; it is now centred where the hero stands when the level starts;
+- nothing showed it; a red ring is drawn at its edge;
+- it was a wall that also hurt: the hero was put back on the edge every frame and took at least 1 damage per frame (60 a second at 60 FPS for a setting of 10), which killed the bot in 1.6 s. It is now a zone, as the story says: the hero may leave it (the level's stage items lie 45 to 100 units out) and loses 10 health a second outside, in ticks of 5 every 0.5 s (`CampaignSignatureSystem.EnforceContractingArena`).
+- Seen, not changed: Level 7's Soul Tide (3 damage every 15 s) and Level 10's pulse (5 every 20 s) hurt the hero with no warning on screen.
+
+**Screen wipes stalled the game** (found by the lag check the owner asked for, 2026-10-13). In build play a level-8 Pentagram erased about 300 enemies in one frame and the game stood still for 650-800 ms, every 60 s. Each death started its soul puff, neck spray, sinking body and damage number in that one frame.
+- Only the first 32 deaths of a frame get their look (`EnemyDrop.ShownDeathsPerFrame`, `CountShownDeath`; 32 is the corpse cap), and only the first 32 instant-kill numbers are shown (`HealthController.InstantKillNumbersPerFrame`). Every death still counts as a kill and drops as before.
+- `EnemyCorpsePlayModeTests.DeathsInOneFrame_ShowOnlyTheFirstThirtyTwo_AndTheNextFrameShowsAgain` (R).
+- **Not measured again in a build yet**, so whether the stall is gone is `UNKNOWN`. `AutoplayBot -sh-autoplay-give "Pentagram:8"` (and `-sh-autoplay-give-after S`) gives items at set levels for that measurement.
+- Other lag numbers from the same build runs: normal play held a median of 60 FPS over 23 runs (V-Sync on); Level 7 late fell to a median of 43 and a minimum of 27; a chest opening hitched 333 ms once. About 9-10 GCs a minute with no hitch tied to one; the heap grew about 1 MB a minute over 6 minutes (10 to 17 MB).
+
+**Tests:** `LastOmensTests` (T) and `LastOmensPlayModeTests` (R: each of the seven Omens in the real game, the Shadow as an Omen on Level 1, the guardian rule with its Results line and its notice, and the Closing Arena). Updated: `RandomizerModeTests`, `ItemUnlockTests`, `NewVsItemsTests` (the Coffer's levels, the Idol's places), `StageItemTests`, `BossStageAdvanceTests`, `WeaponVfxTests`, `ChestlessBossAndOmenPlayModeTests`, `RandomizersPlayModeTests`.
+
+**Validation:**
+- First full run: EditMode 927/927, PlayMode 419/425, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-lastrows-full1/`). The six failures were test-side (older tests that expected the old rules) and were fixed; the fixtures then passed 34/34 and 11/11 (`-lastrows-fix1/`, `-fix2/`).
+- Second full run: EditMode 927/927, PlayMode 426/427, 0 exceptions, save untouched (`-lastrows-full2/`). The one failure, `RunModesPlayModeTests.ArcanaMode_StartsWithAnArcana_AndAnArcanaChestGivesAnother`, was test-side: the run had drawn Soul Barrage, which adds two items to an Arcana chest, so the chest screen rightly followed the card choice and held the pause. The test now allows that.
+- After that fix, the screen-wipe change and the bot option: EditMode 927/927 and nine fixtures 29/29, 0 exceptions, save untouched (`-lastrows-fix3/`). No single full run passed every test, and no full run covers the screen-wipe change.
+- Build play (`D:/SoulHunter-Validation/run-20261013-lastrows-play/`, script `lastrows-play.ps1`, god mode): 0 errors, save untouched. Screenshots show the Level 9 ring, the Rising Tide's water, the Thorn Circle, Rootbound's plants and Nightfall's bats (partial `V`). The Armoury Cache's box was not caught in a screenshot; only its test confirms it is drawn.
+- `Docs/CTO_Check_MIS.md` (owner, 2026-10-13: a CTO list of everything to check from the Start button to the end of a run) has 232 checks in 26 sections; 98 are still to be done.
 
 Not yet played by the owner.
 

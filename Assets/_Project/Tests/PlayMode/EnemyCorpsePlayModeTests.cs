@@ -63,6 +63,29 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// A screen wipe ends hundreds of lives in one frame (a level-8 Pentagram stalled a build 650-800 ms, 2026-10-13):
+        /// only the first 32 deaths of a frame get their look; the next frame shows deaths again.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator DeathsInOneFrame_ShowOnlyTheFirstThirtyTwo_AndTheNextFrameShowsAgain()
+        {
+            yield return BootIntoGameplay();
+            QuietArenaWithOneEnemy(out var prefab).SetActive(false);
+            yield return null;
+            var origin = PlayerController.Instance.transform.position + Vector3.forward * 20f;
+            var doomed = new List<GameObject>();
+            for (int i = 0; i < 60; i++) doomed.Add(Object.Instantiate(prefab, origin + new Vector3(i % 10, 0f, i / 10) * 2f, Quaternion.identity));
+            yield return null;
+            foreach (var enemy in doomed) Kill(enemy);
+            Assert.That(doomed.All(e => e == null || !e.activeInHierarchy), Is.True, "Every one of the 60 died.");
+            Assert.That(EnemyCorpses.Active, Is.LessThanOrEqualTo(EnemyDrop.ShownDeathsPerFrame));
+            Assert.That(EnemyDrop.CountShownDeath(), Is.False, "Past 32 deaths in a frame, a death shows nothing more.");
+            yield return null;
+            Assert.That(EnemyDrop.CountShownDeath(), Is.True, "The next frame shows deaths again.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         private GameObject QuietArenaWithOneEnemy(out GameObject prefab)
         {
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();

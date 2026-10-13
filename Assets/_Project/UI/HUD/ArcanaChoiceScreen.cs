@@ -356,12 +356,14 @@ namespace SoulHunter.Gameplay.UI
         {
             _draft = draft;
             _chosen = chosen;
-            TitleText.text = draft.DraftKind == ArcanaDraft.Kind.Chest ? "Arcana chest: choose a card"
+            bool weapons = draft.DraftKind == ArcanaDraft.Kind.Weapons;
+            TitleText.text = weapons ? "Armoury Cache: choose a weapon"
+                : draft.DraftKind == ArcanaDraft.Kind.Chest ? "Arcana chest: choose a card"
                 : draft.DraftKind == ArcanaDraft.Kind.Merchant ? "Draw a Fate: choose a card" : "Choose your Arcana";
             var manager = ArcanaManager.Instance;
             int unlocked = manager != null ? ArcanaUnlocks.UnlockedCount(manager.AllArcanas) : draft.Options.Count;
             int total = manager != null ? manager.AllArcanas.Count : draft.Options.Count;
-            CountText.text = $"Unlocked {unlocked} / {total}";
+            CountText.text = weapons ? $"{draft.Options.Count} to choose from" : $"Unlocked {unlocked} / {total}";
             RerollButton.gameObject.SetActive(draft.DraftKind == ArcanaDraft.Kind.Chest);
             SkipButton.gameObject.SetActive(draft.CanSkip);
             RandomButton.gameObject.SetActive(draft.OffersRandom);
@@ -391,6 +393,17 @@ namespace SoulHunter.Gameplay.UI
                 numeral.rectTransform.anchorMin = new Vector2(0f, 0.42f); numeral.rectTransform.anchorMax = new Vector2(1f, 0.96f);
                 numeral.rectTransform.offsetMin = new Vector2(8f, 0f); numeral.rectTransform.offsetMax = new Vector2(-8f, 0f);
                 numeral.text = arcana != null ? arcana.CardNumber : "?";
+                // A weapon card (the Armoury Cache) has no numeral: its icon stands in the numeral's place.
+                if (arcana != null && string.IsNullOrEmpty(arcana.CardNumber) && arcana.CardIcon != null)
+                {
+                    var iconRect = NewRect("Icon", rect);
+                    iconRect.anchorMin = new Vector2(0.18f, 0.46f); iconRect.anchorMax = new Vector2(0.82f, 0.94f);
+                    iconRect.offsetMin = iconRect.offsetMax = Vector2.zero;
+                    var icon = iconRect.gameObject.AddComponent<Image>();
+                    icon.sprite = arcana.CardIcon;
+                    icon.preserveAspect = true;
+                    icon.raycastTarget = false;
+                }
                 var name = Label(rect, "Name", Vector2.zero, Vector2.zero, Mathf.Min(30f, startHeight * 0.16f), ThemedElement.TextRole.Card, TextAlignmentOptions.Center);
                 name.rectTransform.anchorMin = new Vector2(0f, 0.04f); name.rectTransform.anchorMax = new Vector2(1f, 0.42f);
                 name.rectTransform.offsetMin = new Vector2(10f, 0f); name.rectTransform.offsetMax = new Vector2(-10f, 0f);
@@ -428,9 +441,9 @@ namespace SoulHunter.Gameplay.UI
             }
             else
             {
-                InfoName.text = UITheme.Bold($"{arcana.CardNumber}  {arcana.CardName}");
+                InfoName.text = UITheme.Bold(string.IsNullOrEmpty(arcana.CardNumber) ? arcana.CardName : $"{arcana.CardNumber}  {arcana.CardName}");
                 InfoText.text = arcana.Description;
-                WorksWithText.text = WorksWith(arcana);
+                WorksWithText.text = _draft.DraftKind == ArcanaDraft.Kind.Weapons ? "" : WorksWith(arcana);
             }
             RefreshButtons();
         }

@@ -58,6 +58,7 @@ namespace SoulHunter.Editor.Content
             { UpgradeData.UpgradeType.MisersIdol, 97 },       // Crown's
             { UpgradeData.UpgradeType.RingOfLongHours, 109 }, // Clock Lancet's
             { UpgradeData.UpgradeType.RingOfDarkHours, 102 }, // Skull O'Maniac's
+            { UpgradeData.UpgradeType.CursedCoffer, 102 },    // Skull O'Maniac's
             { UpgradeData.UpgradeType.DuskRaven, 36 },        // Peachone's
             { UpgradeData.UpgradeType.AzureRepeater, 93 },    // Gun's
             { UpgradeData.UpgradeType.TwilightFlock, 36 },    // Peachone's

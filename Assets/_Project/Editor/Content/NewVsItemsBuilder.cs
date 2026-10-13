@@ -47,6 +47,7 @@ namespace SoulHunter.Editor.Content
         public static readonly Item[] Items =
         {
             new Item { Type = UpgradeData.UpgradeType.MisersIdol, Levels = 5, IconFrom = UpgradeData.UpgradeType.Crown, VsPage = "Stone_Mask" },
+            new Item { Type = UpgradeData.UpgradeType.CursedCoffer, Levels = 9, IconFrom = UpgradeData.UpgradeType.SkullOManiac, VsPage = "Torrona's_Box" },
             new Item { Type = UpgradeData.UpgradeType.RingOfLongHours, Levels = 9, IconFrom = UpgradeData.UpgradeType.ClockLancet, VsPage = "Silver_Ring" },
             new Item { Type = UpgradeData.UpgradeType.RingOfDarkHours, Levels = 9, IconFrom = UpgradeData.UpgradeType.SkullOManiac, VsPage = "Gold_Ring" },
             new Item { Type = UpgradeData.UpgradeType.DuskRaven, Levels = 8, IconFrom = UpgradeData.UpgradeType.Peachone, VsPage = "Ebony_Wings", Prefab = "DuskRaven" },

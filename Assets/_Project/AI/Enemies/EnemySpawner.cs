@@ -122,6 +122,8 @@ namespace SoulHunter.Gameplay.AI
             _chestElitesSpawned = 0;
             _arcanaChestsSpawned = 0;
             _chestlessBossesSpawned = 0;
+            EndWaveTakeover();
+            _special.Clear();
             _stageEvents = _currentWave.GetEvents();
             _nextStageEvent = 0;
             _eventFirings.Clear();
@@ -189,6 +191,8 @@ namespace SoulHunter.Gameplay.AI
             var level = progression.CurrentLevel;
             float bossStartTime = level.BossStartSeconds;
             var phase = _currentWave.GetPhase(_stageTimePassed);
+            if (_takeoverTypes != null && _stageTimePassed >= _takeoverUntil) EndWaveTakeover();
+            if (_takeoverTypes != null) phase = TakeoverPhase(phase);
 
             // VS wave events: on the stage clock, also during a boss fight. Each one can repeat, and each firing
             // happens with its chance divided by the player's Luck.
@@ -239,10 +243,10 @@ namespace SoulHunter.Gameplay.AI
                     {
                         // VS wiki (Enemies, Waves): above the minimum, each tick sends one of each of the wave's types.
                         foreach (var type in phase.EnemyTypes)
-                            if (EnemyController.ActiveEnemies.Count < _maxAliveEnemies) GivePendingChest(Defang(SpawnEnemy(type)));
+                            if (EnemyController.ActiveEnemies.Count < _maxAliveEnemies) GivePendingChest(Defang(SpawnWave(type)));
                     }
                     else
-                        for (int i = 0; i < spawnCount; i++) GivePendingChest(Defang(SpawnEnemy(PickSwarmPrefab(level, phase))));
+                        for (int i = 0; i < spawnCount; i++) GivePendingChest(Defang(SpawnWave(PickSwarmPrefab(level, phase))));
                     float pressure = level.SpawnIntervalMultiplier * phase.SpawnIntervalMultiplier;
                     // A VS minute table's interval is used as the wiki gives it (Mad Forest 0.1 s, Cappella Magna 0.02 s at
                     // 21:00 and 26:00). The old 0.25 floor on this factor turned every interval under a quarter of the
@@ -260,7 +264,7 @@ namespace SoulHunter.Gameplay.AI
                 int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.MinimumMultiplier * MinuteCurse()) + CurrentCharm();
                 int missing = Mathf.Min(wanted, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
-                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnEnemy(NextWavePrefab(level, phase))));
+                for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnWave(NextWavePrefab(level, phase))));
             }
         }
 
@@ -367,6 +371,13 @@ namespace SoulHunter.Gameplay.AI
             Debug.Log("[EnemySpawner] BOSS HAS APPEARED!");
             var bossAudio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (bossAudio != null) bossAudio.PlaySFX(bossAudio.BossWarningSound, 0.9f);
+            // Owner (2026-10-13): the next level opens only if this guardian falls by 30:00; the player is told when it comes.
+            {
+                var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+                var notices = FindFirstObjectByType<SoulHunter.Gameplay.Core.CharacterUnlockTracker>();
+                if (progression != null && notices != null && progression.CurrentStage < SoulHunter.Gameplay.Core.LevelProgressionManager.MaxStages)
+                    notices.ShowMessage(SoulHunter.Gameplay.Core.LevelProgressionManager.GuardianGoal(progression.CurrentStage));
+            }
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             // In a corridor the boss walks in from one end, like everything else.
             if (StageCorridor.Active) randomDir = new Vector2(randomDir.x >= 0f ? 1f : -1f, 0f);
@@ -700,6 +711,122 @@ namespace SoulHunter.Gameplay.AI
             return spawned;
         }
 
+        // ---------------------------------------------------------------- Omens: fliers on a given path, and a wave takeover
+
+        /// <summary>
+        /// Sends this stage's enemies along given paths (Omens' Serpent Streams). Like a map event: refused during a boss
+        /// fight or a transition, held by the 500 hard cap, and the fliers leave without drops after their lifetime.
+        /// </summary>
+        /// <param name="weave">Above 0, every flier weaves along its line (VS Shrimp Swarm: "fly in wave-like patterns").</param>
+        public List<EnemyController> SpawnFliers(IReadOnlyList<(Vector3 position, Vector3 direction)> paths, float speed, float weave)
+        {
+            var spawned = new List<EnemyController>();
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            if (paths == null || progression == null || progression.IsStageTransitioning || _isBossAlive || _currentWave == null || _playerTransform == null)
+                return spawned;
+            var phase = _currentWave.GetPhase(progression.StageElapsedTime);
+            foreach (var (position, direction) in paths)
+            {
+                if (EnemyController.ActiveEnemies.Count >= HardCap) break;
+                var enemyObject = SpawnEnemy(PickSwarmPrefab(progression.CurrentLevel, phase));
+                var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
+                if (enemy == null) continue;
+                Vector3 at = position;
+                at.y = _playerTransform.position.y;
+                enemyObject.transform.position = StageCorridor.Clamp(at);
+                enemy.StartFlyingMode(direction, Mathf.Max(0.2f, speed), weave);
+                spawned.Add(enemy);
+            }
+            return spawned;
+        }
+
+        /// <summary>Enemies that are not part of the ordinary wave: hazard members, guardians, chest-less wave bosses.</summary>
+        private readonly HashSet<GameObject> _special = new HashSet<GameObject>();
+        private List<GameObject> _takeoverTypes;
+        private float _takeoverUntil = -1f;
+        private System.Action<GameObject> _takeoverSetup;
+        private readonly WavePhase _takeoverPhase = new WavePhase();
+
+        /// <summary>True while an Omen has replaced the wave's enemy types (Nightfall, Rootbound).</summary>
+        public bool WaveTakeoverActive => _takeoverTypes != null;
+        /// <summary>The stage-clock second the takeover ends at.</summary>
+        public float WaveTakeoverUntil => _takeoverUntil;
+
+        /// <summary>
+        /// VS Random Events "Summon Night" and "Summon II Molise": "Replaces all enemies with ..." for a time. Every ordinary
+        /// enemy alive is swapped where it stands for one of <paramref name="types"/> (no drops and no kill: it is replaced,
+        /// not defeated), and until <paramref name="seconds"/> of stage time have passed the wave spawns only those types.
+        /// Stage bosses, chest carriers, map-event fliers, hazard members and chest-less wave bosses stay as they are.
+        /// <paramref name="setup"/> runs on every enemy of the takeover (the swapped ones and the new ones).
+        /// Returns how many enemies were swapped; -1 when it could not start.
+        /// </summary>
+        public int BeginWaveTakeover(IReadOnlyList<GameObject> types, float seconds, System.Action<GameObject> setup = null)
+        {
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            if (types == null || progression == null || progression.IsStageTransitioning || _currentWave == null || _playerTransform == null) return -1;
+            var list = new List<GameObject>();
+            foreach (var type in types) if (type != null && type.GetComponent<EnemyController>() != null) list.Add(type);
+            if (list.Count == 0) return -1;
+            _takeoverTypes = list;
+            _takeoverSetup = setup;
+            _stageTimePassed = progression.StageElapsedTime;
+            _takeoverUntil = _stageTimePassed + Mathf.Max(1f, seconds);
+
+            _special.RemoveWhere(o => o == null || !o.activeInHierarchy);
+            var swap = new List<EnemyController>();
+            foreach (var enemy in EnemyController.ActiveEnemies)
+            {
+                if (enemy == null || !enemy.isActiveAndEnabled || enemy.IsStageBoss || enemy.IsFlying) continue;
+                if (_bossControllers.Contains(enemy) || _special.Contains(enemy.gameObject)) continue;
+                var drop = enemy.GetComponent<EnemyDrop>();
+                if (drop != null && drop.WillDropChest) continue;
+                swap.Add(enemy);
+            }
+            int swapped = 0;
+            foreach (var enemy in swap)
+            {
+                Vector3 at = enemy.transform.position;
+                enemy.gameObject.SetActive(false); // back to the pool: replaced, not defeated
+                var replacement = SpawnEnemy(list[swapped % list.Count]);
+                if (replacement == null) continue;
+                replacement.transform.position = at;
+                _takeoverSetup?.Invoke(replacement);
+                swapped++;
+            }
+            Debug.Log($"[EnemySpawner] Wave takeover: {swapped} enemies replaced, {list.Count} types until {_takeoverUntil:0}s.");
+            return swapped;
+        }
+
+        /// <summary>Ends a takeover now: the wave spawns its own types again (the takeover's enemies stay until defeated).</summary>
+        public void EndWaveTakeover()
+        {
+            _takeoverTypes = null;
+            _takeoverSetup = null;
+            _takeoverUntil = -1f;
+        }
+
+        private WavePhase TakeoverPhase(WavePhase phase)
+        {
+            _takeoverPhase.PhaseName = phase.PhaseName;
+            _takeoverPhase.StartTimeInSeconds = phase.StartTimeInSeconds;
+            _takeoverPhase.SpawnIntervalMultiplier = phase.SpawnIntervalMultiplier;
+            _takeoverPhase.EnemiesPerSpawnBonus = phase.EnemiesPerSpawnBonus;
+            _takeoverPhase.EliteChanceBonus = phase.EliteChanceBonus;
+            _takeoverPhase.EnemyPrefab = phase.EnemyPrefab;
+            _takeoverPhase.IsBossPhase = phase.IsBossPhase;
+            _takeoverPhase.MinimumEnemies = phase.MinimumEnemies;
+            _takeoverPhase.EnemyTypes = _takeoverTypes;
+            return _takeoverPhase;
+        }
+
+        /// <summary>One ordinary wave spawn; during a takeover its setup runs on the new enemy.</summary>
+        private GameObject SpawnWave(GameObject prefab)
+        {
+            var enemy = SpawnEnemy(prefab);
+            if (enemy != null && _takeoverTypes != null) _takeoverSetup?.Invoke(enemy);
+            return enemy;
+        }
+
         /// <summary>Chest-less wave bosses sent on this stage so far (tests).</summary>
         public int ChestlessBossesSpawned => _chestlessBossesSpawned;
 
@@ -726,6 +853,7 @@ namespace SoulHunter.Gameplay.AI
                     if (type != null && type.name == wanted) { prefab = type; break; }
             if (prefab == null) return null;
             var boss = SpawnEnemy(prefab);
+            if (boss != null) _special.Add(boss);
             if (boss != null) Debug.Log($"[EnemySpawner] Chest-less wave boss {typeId} at {_stageTimePassed:0}s.");
             return boss;
         }
@@ -879,6 +1007,7 @@ namespace SoulHunter.Gameplay.AI
         {
             var enemy = SpawnEnemy(prefab);
             if (enemy == null) return null;
+            _special.Add(enemy);
             position.y = _playerTransform != null ? _playerTransform.position.y : position.y;
             enemy.transform.position = StageCorridor.Clamp(position);
             return enemy;

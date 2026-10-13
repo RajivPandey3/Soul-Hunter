@@ -198,7 +198,9 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(director.Fire(formation), Is.True, $"{OmenTable.Name(formation)} sends a formation.");
             Assert.That(director.Fire(OmenEvent.TollOfSouls), Is.True, "Toll of Souls.");
             Assert.That(EnemySpawnerVisibleNonBosses(), Is.Zero, "Toll of Souls clears the screen (VS Rosary).");
-            Assert.That(director.Fire(OmenEvent.DeathsShadow), Is.False, "Death's Shadow never comes on Level 1 (owner: Stages 5 and 9).");
+            // 2026-10-13: as an Omen the Shadow comes on every level (its own timetable stays on Levels 5 and 9).
+            Assert.That(director.Fire(OmenEvent.DeathsShadow), Is.True, "Death's Shadow comes as an Omen on Level 1 too.");
+            foreach (var shadow in SoulHunter.Gameplay.Hazards.StageHazards.Instance.Shadows.ToList()) if (shadow != null) shadow.Leave();
             Assert.That(health.CurrentHealth, Is.GreaterThan(0));
         }
 

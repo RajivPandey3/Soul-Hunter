@@ -363,6 +363,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 47a16092e2a824b4e8e77999035c210f, type: 2}
   - {fileID: 11400000, guid: 22d3b8ebb7e1f0543b9be140ddb57b2a, type: 2}
   - {fileID: 11400000, guid: ca2549364bbce8c4fbdbd5c583eff606, type: 2}
+  - {fileID: 11400000, guid: d202109495caf774cafc01a1cafec80a, type: 2}
+  - {fileID: 11400000, guid: 9b721c312e4258541bb88aef85742b77, type: 2}
+  - {fileID: 11400000, guid: 79563e45b0e1aee4baa7313294e4265d, type: 2}
+  - {fileID: 11400000, guid: 11375414c4065dc4f9ee2d053b89c423, type: 2}
+  - {fileID: 11400000, guid: e1b73f55f1eadac409283e88cd074613, type: 2}
+  - {fileID: 11400000, guid: 592bc5d4d8058cc4aa3e721301d821f8, type: 2}
+  - {fileID: 11400000, guid: 2030ca22c812f3a48b1cd9ed32aa3707, type: 2}
+  - {fileID: 11400000, guid: f2b156a1f2da28c4bbfdcfd508dfedd0, type: 2}
+  - {fileID: 11400000, guid: 42bdda7b443f5d845aebc50a61e8a98a, type: 2}
   WeaponDefinitions:
   - {fileID: 11400000, guid: b0041cd6b3fdf8244bf4592da345de7b, type: 2}
   - {fileID: 11400000, guid: 0b3f66c94138a614bb137699ef78b7d6, type: 2}
@@ -406,6 +415,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b8b24368825269a488d44aa112cc418a, type: 2}
   - {fileID: 11400000, guid: 2f551ab48eef2f14891d3ed03818f028, type: 2}
   - {fileID: 11400000, guid: bbae96bf5f611d8489d0949a0c1fe045, type: 2}
+  - {fileID: 11400000, guid: 3831c2f8a71c2c04b825c817894f17df, type: 2}
   Evolutions:
   - {fileID: 11400000, guid: 280ce8956c3976845854dfe3e49f55ee, type: 2}
   - {fileID: 11400000, guid: 09aed874811f9fa43850899aac590334, type: 2}
@@ -834,6 +844,14 @@ MonoBehaviour:
   - {fileID: 1630032688662906749, guid: 42fecd28cea75e1428482cce04eeee47, type: 3}
   - {fileID: 197054028098201130, guid: 940a9194b9f854345baf182f3020a3f6, type: 3}
   - {fileID: 7768971802154393057, guid: 50584e264a607ad41873b446514b205d, type: 3}
+  OmenBats:
+  - {fileID: 2962415258775868962, guid: 2fab5a382a324fe45b5082af0c3365aa, type: 3}
+  - {fileID: 7784802443394825190, guid: 8a9b0bd4410194843bb2ba7fd6e3957a, type: 3}
+  - {fileID: 8194901144372058727, guid: 5498881bef2b9c1408311d0b49ed5cb8, type: 3}
+  OmenPlants:
+  - {fileID: 2641843800722989178, guid: 381640e8434ede64f8655aec60bc35cc, type: 3}
+  - {fileID: 6381005458737463818, guid: 092db7760fe3211479511caf301361b2, type: 3}
+  OmenThornWall: {fileID: 6381005458737463818, guid: 092db7760fe3211479511caf301361b2, type: 3}
   Credits:
   - {fileID: 4900000, guid: 2d3e379ed0163324184e970e3cbc63bc, type: 3}
   - {fileID: 4900000, guid: 88ed05ba4ccfd8d49ad96617a90267ba, type: 3}

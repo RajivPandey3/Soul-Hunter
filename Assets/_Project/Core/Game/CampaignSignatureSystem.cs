@@ -30,6 +30,42 @@ namespace SoulHunter.Gameplay.Core
         private float _corePulseTimer;
         private bool _subscribed;
 
+        // ---- Level 9, the Closing Arena (GDD: "The safe zone continuously shrinks. The player must survive in extremely
+        // tight spaces."). Fixed on 2026-10-13 after a bot run died in 1.6 s at an edge nobody could see:
+        // - the zone was centred on the world's origin, wherever the hero stood when the level began; it is now centred on
+        //   the hero's place at the start of the level;
+        // - nothing showed it; a ring is drawn on the ground at its edge;
+        // - it was a wall that also hurt: the hero was put back on the edge every frame and took at least 1 damage per
+        //   frame (60 a second at 60 FPS, for a setting of 10). The story says "safe zone", so it is a zone, not a wall:
+        //   the hero may leave it (the level's stage items lie 45 to 100 units out) and loses the set 10 health a second
+        //   out there, in ticks of the game's contact interval.
+        /// <summary>Seconds between two ticks outside the zone (TouchDamage's contact interval).</summary>
+        public const float ArenaTickSeconds = 0.5f;
+        private Vector3 _arenaCentre;
+        private float _arenaTick;
+        private LineRenderer _arenaRing;
+        private const int ArenaRingPoints = 96;
+        private static readonly Color ArenaRingColour = new Color(0.95f, 0.2f, 0.25f, 0.85f);
+
+        /// <summary>True on Level 9 while its closing arena runs.</summary>
+        public bool ArenaActive => _level.Signature == CampaignSignature.ThroneOfDeath;
+        public Vector3 ArenaCentre => _arenaCentre;
+        /// <summary>The safe zone's radius now: from the start radius down to the end radius over the level's 30 minutes.</summary>
+        public float ArenaRadius => ArenaRadiusAt(_stageTime, _level.RunDurationSeconds, _arenaStartRadius, _arenaEndRadius);
+        public static float ArenaRadiusAt(float stageSeconds, float runSeconds, float startRadius, float endRadius) =>
+            Mathf.Lerp(startRadius, endRadius, Mathf.Clamp01(stageSeconds / Mathf.Max(1f, runSeconds)));
+        /// <summary>The damage of one tick outside the zone: the per-second setting over the tick (10 a second: 5 per tick).</summary>
+        public int ArenaTickDamage => Mathf.Max(1, Mathf.RoundToInt(_boundaryDamagePerSecond * ArenaTickSeconds));
+        /// <summary>True when a point on the ground is outside the safe zone.</summary>
+        public bool OutsideArena(Vector3 point)
+        {
+            Vector3 flat = point - _arenaCentre;
+            flat.y = 0f;
+            return ArenaActive && flat.magnitude > ArenaRadius;
+        }
+        /// <summary>The ring drawn at the zone's edge (null off Level 9).</summary>
+        public LineRenderer ArenaRing => _arenaRing;
+
         private void Awake()
         {
             _player = FindFirstObjectByType<PlayerController>();
@@ -88,6 +124,10 @@ private void TrySubscribeToProgression()
             // authored signature Update() mein 0.55 multiplier lagata hai.
             if (_player != null) _player.SetCampaignMovementMultiplier(1f);
             ClearHazards(); RestoreEnvironment();
+            if (_player == null) _player = FindFirstObjectByType<PlayerController>();
+            _arenaCentre = _player != null ? new Vector3(_player.transform.position.x, 0f, _player.transform.position.z) : Vector3.zero;
+            _arenaTick = 0f;
+            if (_level.Signature == CampaignSignature.ThroneOfDeath) BuildArenaRing();
             if (_level.Signature == CampaignSignature.DarkForest)
             {
                 RenderSettings.fog = true; RenderSettings.fogColor = Color.black;
@@ -200,18 +240,51 @@ private void TrySubscribeToProgression()
 
         private void EnforceContractingArena()
         {
-            float t = Mathf.Clamp01(_stageTime / Mathf.Max(1f, _level.RunDurationSeconds));
-            float radius = Mathf.Lerp(_arenaStartRadius, _arenaEndRadius, t);
-            Vector3 flat = _player.transform.position; flat.y = 0f;
-            if (flat.magnitude <= radius) return;
-            Vector3 safe = flat.normalized * radius;
-            _player.transform.position = new Vector3(safe.x, _player.transform.position.y, safe.z);
-            if (_playerHealth != null)
+            DrawArenaRing();
+            if (!OutsideArena(_player.transform.position)) { _arenaTick = 0f; return; }
+            _arenaTick -= Time.deltaTime; // game time: a pause holds it
+            if (_arenaTick > 0f || _playerHealth == null) return;
+            _arenaTick = ArenaTickSeconds;
+            // A zone, not a hit: an enemy's hit a moment earlier must not swallow it, and it starts no immunity itself.
+            // Armor takes 1 off every hit; the zone's 10 a second is the zone's own (a hero with 4 Armor lost 2 a second in
+            // the first build run), so the Armor is added back.
+            var tick = new DamagePacket(ArenaTickDamage + Mathf.Max(0, _playerHealth.Armor), _player.transform.position, Vector3.zero);
+            tick.IgnoresHitInvulnerability = true;
+            _playerHealth.TakeDamage(tick);
+        }
+
+        private void BuildArenaRing()
+        {
+            var go = new GameObject("ClosingArena_Ring");
+            _arenaRing = go.AddComponent<LineRenderer>();
+            _arenaRing.useWorldSpace = true;
+            _arenaRing.loop = true;
+            _arenaRing.positionCount = ArenaRingPoints;
+            _arenaRing.widthMultiplier = 0.35f;
+            _arenaRing.numCornerVertices = 2;
+            _arenaRing.alignment = LineAlignment.TransformZ; // flat on the ground (the object looks down)
+            go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            _arenaRing.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _arenaRing.receiveShadows = false;
+            var shader = Shader.Find("SoulHunter/VFX/Particle");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+            var material = new Material(shader);
+            if (material.HasProperty("_Color")) material.SetColor("_Color", ArenaRingColour);
+            _arenaRing.sharedMaterial = material;
+            _arenaRing.startColor = _arenaRing.endColor = ArenaRingColour;
+            _runtimeHazards.Add(go); // removed with the level's other things
+            DrawArenaRing();
+        }
+
+        private void DrawArenaRing()
+        {
+            if (_arenaRing == null) return;
+            float radius = ArenaRadius;
+            float y = _player != null ? _player.transform.position.y - 0.85f : 0.15f; // just above the floor
+            for (int i = 0; i < ArenaRingPoints; i++)
             {
-                // Applied every frame outside the arena, so it must not be swallowed by the post-hit window.
-                var boundaryHit = new DamagePacket(Mathf.Max(1, Mathf.CeilToInt(_boundaryDamagePerSecond * Time.deltaTime)), _player.transform.position, Vector3.zero);
-                boundaryHit.IgnoresHitInvulnerability = true;
-                _playerHealth.TakeDamage(boundaryHit);
+                float angle = Mathf.PI * 2f * i / ArenaRingPoints;
+                _arenaRing.SetPosition(i, new Vector3(_arenaCentre.x + Mathf.Cos(angle) * radius, y, _arenaCentre.z + Mathf.Sin(angle) * radius));
             }
         }
 

@@ -317,6 +317,16 @@ namespace SoulHunter.Gameplay.Combat
                 case UpgradeData.UpgradeType.MetaglioRight: if (upgrade.Level > 1) stats.AddCurse(0.05f); break;
                 // VS wiki (Stone_Mask, raw, fetched 2026-10-12): "Stone Mask increases Greed by 10% per level", 5 levels, additive.
                 case UpgradeData.UpgradeType.MisersIdol: stats.AddGreed(0.1f); break;
+                // VS wiki (Torrona's_Box, raw, 2026-10-13): "increases Omni (Might, Speed, Duration, and Area) by 4% at the
+                // first level, then 3% per level until the last level increases Curse by 100%" (9 levels: +25% Omni).
+                case UpgradeData.UpgradeType.CursedCoffer:
+                    if (upgrade.Level >= CursedCofferMaxLevel) { stats.AddCurse(1f); break; }
+                    float omni = upgrade.Level <= 1 ? 0.04f : 0.03f;
+                    stats.AddMight(omni);
+                    stats.AddProjectileSpeed(omni);
+                    stats.AddDuration(omni);
+                    stats.AddArea(omni);
+                    break;
                 // VS wiki (Silver_Ring / Gold_Ring, raw, fetched 2026-10-12): 9 levels; each "does not provide any stats at
                 // level 1"; levels 2-9 add +5% Duration and +5% Area (Silver, +40% at max) or +5% Curse (Gold, +40%).
                 case UpgradeData.UpgradeType.RingOfLongHours:
@@ -497,8 +507,12 @@ namespace SoulHunter.Gameplay.Combat
                 type != UpgradeData.UpgradeType.Candelabrador && type != UpgradeData.UpgradeType.Spellbinder && type != UpgradeData.UpgradeType.Duplicator &&
                 type != UpgradeData.UpgradeType.Armor && type != UpgradeData.UpgradeType.Pummarola && type != UpgradeData.UpgradeType.Attractorb &&
                 type != UpgradeData.UpgradeType.Clover && type != UpgradeData.UpgradeType.Crown && type != UpgradeData.UpgradeType.SkullOManiac && type != UpgradeData.UpgradeType.Tiragisu &&
-                type != UpgradeData.UpgradeType.MisersIdol; // the two rings are stage passives (first test above)
+                type != UpgradeData.UpgradeType.MisersIdol && // the two rings are stage passives (first test above)
+                type != UpgradeData.UpgradeType.CursedCoffer;
         }
+
+        /// <summary>The Cursed Coffer's last level (VS Torrona's Box: "max-level = 9"), the one that curses.</summary>
+        public const int CursedCofferMaxLevel = 9;
 
         private static bool IsPassiveType(UpgradeData.UpgradeType type) => !IsWeaponType(type);
 

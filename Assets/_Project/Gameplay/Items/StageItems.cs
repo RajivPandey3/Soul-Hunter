@@ -56,6 +56,31 @@ namespace SoulHunter.Gameplay.Pickups
         /// </summary>
         public const float MisersIdolDistance = 100f;
         public const int MisersIdolStage = 2;
+        /// <summary>
+        /// The Idol's other places (wiki Stone_Mask: "can be found as a stage item in Inlaid Library, Moongolow, Boss Rash,
+        /// Mt.Moonspell, and Abyss Foscari"). Level 5's source, Abyss_Foscari (raw, "Stage items"): "Stone Mask: 20%, 20%,
+        /// 20% chance for more Stone Mask to spawn. West of the starting area along the left wall". Level 6's source,
+        /// Mt.Moonspell: "Stone Mask: northeast of the starting area". Neither page gives a distance; balance method: the
+        /// Inlaid Library's five tiles, which is past the Metaglio (45, west) and the diagonal items (55-85).
+        /// Moongolow and Boss Rash have no Soul Hunter level.
+        /// </summary>
+        public const int MisersIdolWestStage = 5;
+        public const int MisersIdolNorthEastStage = 6;
+        /// <summary>Abyss Foscari: three more, each at 20%.</summary>
+        public const int MisersIdolExtraRolls = 3;
+        public const float MisersIdolExtraChance = 0.2f;
+        /// <summary>The extra Idols lie this much further along the same line each (Soul Hunter's spacing: half a tile).</summary>
+        public const float MisersIdolExtraStep = 10f;
+
+        /// <summary>How many extra Idols Level 5 gets for three rolls (each under 20% adds one).</summary>
+        public static int ExtraIdols(float roll1, float roll2, float roll3)
+        {
+            int n = 0;
+            if (roll1 < MisersIdolExtraChance) n++;
+            if (roll2 < MisersIdolExtraChance) n++;
+            if (roll3 < MisersIdolExtraChance) n++;
+            return n;
+        }
 
         public static List<Vector3> PlateOffsets()
         {
@@ -65,7 +90,10 @@ namespace SoulHunter.Gameplay.Pickups
         }
 
         /// <summary>The four items of a stage (1-10), one per diagonal, turned a quarter per stage.</summary>
-        public static List<Entry> Plan(int stage)
+        public static List<Entry> Plan(int stage) => Plan(stage, 0);
+
+        /// <param name="extraIdols">Level 5 only: the extra Miser's Idols its three 20% rolls gave (<see cref="ExtraIdols"/>).</param>
+        public static List<Entry> Plan(int stage, int extraIdols)
         {
             int s = Mathf.Clamp(stage, 1, 10) - 1;
             var kinds = new[] { Kind.Passive, Kind.Weapon, Kind.Chicken, s % 2 == 0 ? Kind.Magnet : Kind.TimeFreeze };
@@ -91,11 +119,17 @@ namespace SoulHunter.Gameplay.Pickups
             // as the Metaglios are.
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfLongHours, Offset = Vector3.forward * RingDistance });
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfDarkHours, Offset = Vector3.back * RingDistance });
-            // VS Stone Mask lies east of the start on Inlaid Library (Level 2). Its other VS stages (Moongolow, Boss Rash,
-            // Mt.Moonspell, Abyss Foscari) are not mapped: the wiki pages of Soul Hunter's Level 5 and 6 sources were not
-            // read for its place there.
+            // VS Stone Mask lies east of the start on Inlaid Library (Level 2), west on Abyss Foscari (Level 5) and northeast
+            // on Mt.Moonspell (Level 6).
             if (s + 1 == MisersIdolStage)
                 plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MisersIdol, Offset = Vector3.right * MisersIdolDistance });
+            if (s + 1 == MisersIdolWestStage)
+                for (int i = 0; i <= Mathf.Clamp(extraIdols, 0, MisersIdolExtraRolls); i++)
+                    plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MisersIdol,
+                        Offset = Vector3.left * (MisersIdolDistance + MisersIdolExtraStep * i) });
+            if (s + 1 == MisersIdolNorthEastStage)
+                plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.MisersIdol,
+                    Offset = (Vector3.forward + Vector3.right).normalized * MisersIdolDistance });
             return plan;
         }
     }
@@ -166,7 +200,8 @@ namespace SoulHunter.Gameplay.Pickups
             _placedFor = stage;
             Vector3 origin = player.transform.position;
             var pool = PickupPoolManager.Instance;
-            foreach (var entry in StageItems.Plan(stage))
+            int extraIdols = stage == StageItems.MisersIdolWestStage ? StageItems.ExtraIdols(Random.value, Random.value, Random.value) : 0;
+            foreach (var entry in StageItems.Plan(stage, extraIdols))
             {
                 // VS Inverse (wiki Stages): "On certain stages, stage items may be placed differently due to the inverted
                 // layout": with the inverted layout on, every planned spot is turned 180 degrees about the start (InverseMap).

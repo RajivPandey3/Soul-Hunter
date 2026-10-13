@@ -131,9 +131,75 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(silver.Offset.x, Is.EqualTo(0f).Within(0.01f));
                 Assert.That(gold.Offset.z, Is.EqualTo(-StageItems.RingDistance).Within(0.01f), "Gold Ring: south.");
                 var idol = plan.Where(e => e.Upgrade == UpgradeType.MisersIdol).ToList();
-                Assert.That(idol.Count, Is.EqualTo(stage == 2 ? 1 : 0), $"Stage {stage}");
+                Assert.That(idol.Count, Is.EqualTo(stage == 2 || stage == 5 || stage == 6 ? 1 : 0), $"Stage {stage}");
                 if (stage == 2) Assert.That(idol[0].Offset, Is.EqualTo(Vector3.right * 100f), "Inlaid Library: 5 tilesets east of the start.");
+                // Abyss_Foscari: "West of the starting area along the left wall"; Mt.Moonspell: "northeast of the starting area".
+                if (stage == 5) Assert.That(idol[0].Offset, Is.EqualTo(Vector3.left * 100f), "Level 5: west.");
+                if (stage == 6)
+                {
+                    Assert.That(idol[0].Offset.x, Is.GreaterThan(0f), "Level 6: east ...");
+                    Assert.That(idol[0].Offset.z, Is.EqualTo(idol[0].Offset.x).Within(0.01f), "... and as far north.");
+                    Assert.That(idol[0].Offset.magnitude, Is.EqualTo(100f).Within(0.01f));
+                }
             }
+        }
+
+        [Test]
+        public void LevelFive_CanHoldUpToThreeMoreIdols_EachAtTwentyPercent()
+        {
+            // Abyss_Foscari: "Stone Mask: 20%, 20%, 20% chance for more Stone Mask to spawn."
+            Assert.That(StageItems.ExtraIdols(0.5f, 0.9f, 0.2f), Is.EqualTo(0), "0.2 is not under 20%.");
+            Assert.That(StageItems.ExtraIdols(0.19f, 0.9f, 0.5f), Is.EqualTo(1));
+            Assert.That(StageItems.ExtraIdols(0f, 0.1f, 0.19f), Is.EqualTo(3));
+            for (int extra = 0; extra <= 3; extra++)
+            {
+                var idols = StageItems.Plan(5, extra).Where(e => e.Upgrade == UpgradeType.MisersIdol).ToList();
+                Assert.That(idols.Count, Is.EqualTo(1 + extra));
+                Assert.That(idols.Select(e => e.Offset).Distinct().Count(), Is.EqualTo(idols.Count), "No two on one spot.");
+                Assert.That(idols.All(e => e.Offset.x < 0f && Mathf.Abs(e.Offset.z) < 0.01f), Is.True, "All west of the start.");
+            }
+            Assert.That(StageItems.Plan(2, 3).Count(e => e.Upgrade == UpgradeType.MisersIdol), Is.EqualTo(1), "Only Level 5 rolls for more.");
+        }
+
+        // ---------------------------------------------------------------- the Cursed Coffer (VS Torrona's Box)
+
+        [Test]
+        public void TheCursedCoffer_GivesOmniForEightLevels_ThenCurses()
+        {
+            Assert.That(UpgradeRarity.VsWeight(UpgradeType.CursedCoffer), Is.EqualTo(40), "Torrona's Box: rarity 40.");
+            Assert.That(UpgradeRarity.VsPassiveMaxLevel(UpgradeType.CursedCoffer), Is.EqualTo(9), "max-level 9.");
+            Assert.That(WeaponManager.LegacyIsWeaponType(UpgradeType.CursedCoffer), Is.False, "A passive.");
+            Assert.That(UpgradeRarity.IsStageItemOnly(UpgradeType.CursedCoffer), Is.False, "It comes from level-ups.");
+
+            _player = new GameObject("Player");
+            var stats = _player.AddComponent<PlayerStats>();
+            _player.AddComponent<HealthController>();
+            var manager = _player.AddComponent<WeaponManager>();
+            manager.DefinitionLookup = _ => null;
+            float might = stats.RawMight, speed = stats.RawProjectileSpeed, duration = stats.RawDuration, area = stats.RawArea, curse = stats.Curse;
+            var made = new System.Collections.Generic.List<UpgradeData>();
+            try
+            {
+                for (int level = 1; level <= 8; level++)
+                {
+                    var upgrade = Level(UpgradeType.CursedCoffer, level);
+                    made.Add(upgrade);
+                    manager.ApplyUpgrade(upgrade);
+                }
+                // "+4% Omni at level 1, +3% per level from level 2 to 8, up to a maximum of +25% Omni at level 8."
+                Assert.That(stats.RawMight, Is.EqualTo(might + 0.25f).Within(1e-4f));
+                Assert.That(stats.RawProjectileSpeed, Is.EqualTo(speed + 0.25f).Within(1e-4f));
+                Assert.That(stats.RawDuration, Is.EqualTo(duration + 0.25f).Within(1e-4f));
+                Assert.That(stats.RawArea, Is.EqualTo(area + 0.25f).Within(1e-4f));
+                Assert.That(stats.Curse, Is.EqualTo(curse).Within(1e-4f), "No Curse before the last level.");
+                var last = Level(UpgradeType.CursedCoffer, 9);
+                made.Add(last);
+                manager.ApplyUpgrade(last);
+                // "Level 9: Increases enemy speed, health, quantity, and frequency by 100%."
+                Assert.That(stats.Curse, Is.EqualTo(curse + 1f).Within(1e-4f));
+                Assert.That(stats.RawMight, Is.EqualTo(might + 0.25f).Within(1e-4f), "The last level adds no Omni.");
+            }
+            finally { foreach (var u in made) Object.DestroyImmediate(u); }
         }
 
         // ---------------------------------------------------------------- the two birds and the two guns
@@ -345,6 +411,7 @@ namespace SoulHunter.Tests.EditMode
             var expected = new (UpgradeType Type, string Name, int Levels, bool Passive)[]
             {
                 (UpgradeType.MisersIdol, "Miser's Idol", 5, true),
+                (UpgradeType.CursedCoffer, "Cursed Coffer", 9, true),
                 (UpgradeType.RingOfLongHours, "Ring of Long Hours", 9, true),
                 (UpgradeType.RingOfDarkHours, "Ring of Dark Hours", 9, true),
                 (UpgradeType.DuskRaven, "Dusk Raven", 8, false),

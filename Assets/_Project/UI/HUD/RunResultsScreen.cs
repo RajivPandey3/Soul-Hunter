@@ -218,6 +218,7 @@ namespace SoulHunter.Gameplay.UI
                 if (SoulHunter.Gameplay.Data.StoryTwist.AllKeepsakesFound)
                     text.Append("<i>").Append(SoulHunter.Gameplay.Data.StoryTwist.TrueEnding).Append("</i>\n");
             }
+            if (!string.IsNullOrEmpty(results.EndReason)) text.Append(results.EndReason).Append("\n");
             text.Append(UITheme.Bold(results.StageLine)).Append("\n");
             text.Append("Mode: ").Append(results.Mode).Append("     Gold bonus: ")
                 .Append(results.GoldBonusPercent >= 0 ? "+" : "").Append(results.GoldBonusPercent).Append("%\n");

@@ -196,10 +196,11 @@ namespace SoulHunter.Core.Persistence
     ///   15 in Moongolow, 15 in Boss Rash).
     /// - Banish (VS: 60/70/80/90/100 Collection entries): one rank per threshold, granted by CollectionBook since the
     ///   Collection exists (P3-02, 2026-10-09).
-    /// - Omni (wiki Omni, fetched 2026-10-12: "unlocked by leveling up Torrona's Box to the maximum level"; wiki
-    ///   Achievements: Torrona's Box, "Hold 6 different weapon evolutions at once"). Soul Hunter has no Torrona's Box, so
-    ///   the condition is the first link of that chain, which Soul Hunter can do: hold <see cref="OmniEvolutionsHeld"/>
-    ///   evolved weapons at once (balance method, 2026-10-12; recorded by ItemUnlockTracker).
+    /// - Omni (wiki Omni, fetched 2026-10-12: "unlocked by leveling up Torrona's Box to the maximum level"): get the
+    ///   Cursed Coffer, Soul Hunter's Torrona's Box, to its ninth level in a run (recorded by ItemUnlockTracker). The
+    ///   Coffer itself unlocks by holding six evolved weapons at once (ItemUnlocks), as the Box does. From 2026-10-12 to
+    ///   2026-10-13, before the Coffer existed, Omni unlocked by those six evolutions directly; a save that earned it then
+    ///   keeps it.
     /// - Charm, Defang and Preserve (wiki Charm / Defang / Preserve, fetched 2026-10-12: unlocked by collecting the
     ///   Apoplexy, Antidote and Wax Fetish relics): unlocked by Soul Hunter's relics in their place (<see cref="RelicBook"/>).
     /// Every other PowerUp is open from the start, as in VS. Unlocks are ids in <see cref="GameData.UnlockedAchievements"/>.
@@ -213,8 +214,9 @@ namespace SoulHunter.Core.Persistence
         public static readonly (int Level, int Seconds)[] SkipSurvivals = { (6, 900), (7, 1800), (8, 1800), (9, 900), (10, 900) };
 
         public static readonly int[] BanishCollectionEntries = { 60, 70, 80, 90, 100 };
-        /// <summary>Evolved weapons held at once that unlock Omni (wiki Achievements, Torrona's Box: 6).</summary>
-        public const int OmniEvolutionsHeld = 6;
+        /// <summary>The item, by its type name, and the level that unlock Omni (wiki Omni: Torrona's Box at its maximum level, 9).</summary>
+        public const string OmniItem = "CursedCoffer";
+        public const int OmniItemLevel = 9;
 
         /// <summary>Unlocks every rank of Omni, Charm, Defang or Preserve; true when it was new.</summary>
         public static bool UnlockWhole(GameData data, PowerUpId id)
@@ -286,7 +288,7 @@ namespace SoulHunter.Core.Persistence
                 case PowerUpId.Banish:
                     foreach (var e in BanishCollectionEntries) if (!Has(data, BanishId(e))) return $"Fill {e} entries in the Collection.";
                     break;
-                case PowerUpId.Omni: return $"Hold {OmniEvolutionsHeld} evolved weapons at once.";
+                case PowerUpId.Omni: return $"Get the Cursed Coffer to level {OmniItemLevel}.";
                 case PowerUpId.Charm:
                 case PowerUpId.Defang:
                 case PowerUpId.Preserve: return RelicFor(id) ?? "Find its relic on a level.";

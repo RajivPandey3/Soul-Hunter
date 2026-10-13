@@ -18,6 +18,8 @@ namespace SoulHunter.Core.Persistence
         ItemLevel,
         /// <summary>Hold Target different weapons at once.</summary>
         HoldWeapons,
+        /// <summary>Hold Target evolved (or united) weapons at once.</summary>
+        HoldEvolutions,
         /// <summary>Break Target Soul Lanterns (VS light sources), counted on the save.</summary>
         LightSourcesBroken,
         /// <summary>Pick up Target Roast Chickens (VS Floor Chickens), counted on the save.</summary>
@@ -63,6 +65,8 @@ namespace SoulHunter.Core.Persistence
         public float StageSeconds;
         /// <summary>Different weapons held now.</summary>
         public int WeaponsHeld;
+        /// <summary>Evolved (or united) weapons held now.</summary>
+        public int EvolutionsHeld;
         /// <summary>The level an item is held at, by its type name (0 = not held).</summary>
         public Func<string, int> ItemLevel;
         /// <summary>Whether a character is unlocked on the save, by name.</summary>
@@ -180,6 +184,9 @@ namespace SoulHunter.Core.Persistence
             new ItemUnlockInfo("DuskRaven", ItemUnlockKind.ItemLevel, 7, "Peachone", "Ebony Wings: Get Peachone to Level 7.", false),
             // VS: "Survive 15 minutes with Pugnala"; Corvan stands for Pugnala (see Gun).
             new ItemUnlockInfo("AzureRepeater", ItemUnlockKind.SurviveSecondsWith, 900, "Corvan", "Eight The Sparrow: Survive 15 minutes with Pugnala.", false),
+            // Added 2026-10-13: Cursed Coffer = VS Torrona's Box (wiki Torrona's_Box: "It is unlocked by holding 6 different
+            // weapon evolutions at once").
+            new ItemUnlockInfo("CursedCoffer", ItemUnlockKind.HoldEvolutions, 6, null, "Torrona's Box: Hold 6 different weapon evolutions at once.", false),
         };
 
         public static string Id(string item) => IdPrefix + item;
@@ -298,6 +305,7 @@ namespace SoulHunter.Core.Persistence
                 case ItemUnlockKind.SurviveSecondsWith: return progress.Character == info.Subject && progress.StageSeconds >= info.Target;
                 case ItemUnlockKind.ItemLevel: return progress.ItemLevel != null && progress.ItemLevel(info.Subject) >= info.Target;
                 case ItemUnlockKind.HoldWeapons: return progress.WeaponsHeld >= info.Target;
+                case ItemUnlockKind.HoldEvolutions: return progress.EvolutionsHeld >= info.Target;
                 case ItemUnlockKind.LightSourcesBroken: return data.LightSourcesBroken >= info.Target;
                 case ItemUnlockKind.ChickensFound: return data.FloorChickensFound >= info.Target;
                 case ItemUnlockKind.FindPickup: return CollectionBook.IsFound(data, "Pickup." + info.Subject);
@@ -337,6 +345,7 @@ namespace SoulHunter.Core.Persistence
                 case ItemUnlockKind.SurviveSecondsWith: return $"Survive {Minutes(info.Target)} in a level with {info.Subject}.";
                 case ItemUnlockKind.ItemLevel: return $"Get {Name(info.Subject)} to level {info.Target}.";
                 case ItemUnlockKind.HoldWeapons: return $"Hold {info.Target} different weapons at once.";
+                case ItemUnlockKind.HoldEvolutions: return $"Hold {info.Target} evolved weapons at once.";
                 case ItemUnlockKind.LightSourcesBroken: return $"Break {info.Target} Soul Lanterns.";
                 case ItemUnlockKind.ChickensFound: return $"Find {info.Target} Roast Chickens.";
                 case ItemUnlockKind.FindPickup: return $"Find a {info.Subject}.";

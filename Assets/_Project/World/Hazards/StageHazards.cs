@@ -28,6 +28,9 @@ namespace SoulHunter.Gameplay.Hazards
         private readonly List<PileShooter> _pile = new List<PileShooter>();
         private readonly List<SoulMeteor> _meteors = new List<SoulMeteor>();
         private readonly List<RailCartTrack> _tracks = new List<RailCartTrack>();
+        private readonly List<MineSentry> _mines = new List<MineSentry>();
+        private readonly List<ThornCircle> _thornCircles = new List<ThornCircle>();
+        private readonly List<RisingTide> _tides = new List<RisingTide>();
         private readonly List<(float at, Vector3 offset)> _pendingMarkers = new List<(float, Vector3)>();
         private float _volleyClock;
 
@@ -35,6 +38,9 @@ namespace SoulHunter.Gameplay.Hazards
         public IReadOnlyList<PileShooter> PileShooters => _pile;
         public IReadOnlyList<SoulMeteor> Meteors => _meteors;
         public IReadOnlyList<RailCartTrack> Tracks => _tracks;
+        public IReadOnlyList<MineSentry> Mines => _mines;
+        public IReadOnlyList<ThornCircle> ThornCircles => _thornCircles;
+        public IReadOnlyList<RisingTide> Tides => _tides;
         public int Stage => _stage;
 
         private void Awake()
@@ -273,6 +279,77 @@ namespace SoulHunter.Gameplay.Hazards
             return spawned;
         }
 
+        // ------------------------------------------------------------------ Omens: Powder Ring, Thorn Circle, Rising Tide
+
+        /// <summary>
+        /// A still ring of this stage's enemies around the player that blow themselves up when it comes close (VS Random
+        /// Event "Roulette"; Soul Hunter's Omen "Powder Ring"). Returns the members.
+        /// </summary>
+        public List<MineSentry> StartMineRing(int count = StageHazardTable.MineCount, float durationSeconds = StageHazardTable.MineSeconds)
+        {
+            var spawned = new List<MineSentry>();
+            var spawner = Spawner();
+            var player = PlayerController.Instance;
+            if (spawner == null || player == null || InTransition() || spawner.StageEnemyPrefab == null) return spawned;
+            Vector3 centre = player.transform.position;
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 at = StageCorridor.Clamp(centre + StageHazardTable.PileOffset(i, count));
+                var mine = MineSentry.Begin(spawner.SpawnHazardEnemy(spawner.StageEnemyPrefab, at), durationSeconds);
+                if (mine == null) continue;
+                spawned.Add(mine);
+                _mines.Add(mine);
+            }
+            Debug.Log($"[StageHazards] Powder Ring: {spawned.Count} members on Stage {_stage}.");
+            return spawned;
+        }
+
+        /// <summary>
+        /// A ring of Thorn Walls around the player that closes in and stops the hero (VS Random Event "Flower Wall"; Soul
+        /// Hunter's Omen "Thorn Circle"). Returns it, or null.
+        /// </summary>
+        public ThornCircle StartThornCircle(float durationSeconds = StageHazardTable.ThornSeconds)
+        {
+            var spawner = Spawner();
+            var player = PlayerController.Instance;
+            if (spawner == null || player == null || InTransition()) return null;
+            var catalog = GameContentCatalog.Load();
+            var prefab = catalog != null && catalog.OmenThornWall != null ? catalog.OmenThornWall : spawner.StageElitePrefab;
+            var circle = ThornCircle.Begin(spawner, prefab, player.transform.position, durationSeconds);
+            if (circle != null)
+            {
+                _thornCircles.Add(circle);
+                Debug.Log($"[StageHazards] Thorn Circle: {circle.Standing} members on Stage {_stage}.");
+            }
+            return circle;
+        }
+
+        /// <summary>
+        /// The Tide Caller at the bottom-left of the screen and its water rising from the screen's bottom edge (VS Random
+        /// Event "The Drowner"; Soul Hunter's Omen "Rising Tide"). Returns it, or null.
+        /// </summary>
+        public RisingTide StartRisingTide(float seconds = StageHazardTable.TideSeconds)
+        {
+            var spawner = Spawner();
+            var player = PlayerController.Instance;
+            if (spawner == null || player == null || InTransition()) return null;
+            var camera = Camera.main;
+            Vector3 origin = player.transform.position;
+            float down = EnemySpawner.DistanceToScreenEdge(camera, origin, Vector3.back, 12f);
+            float up = EnemySpawner.DistanceToScreenEdge(camera, origin, Vector3.forward, 12f);
+            float left = EnemySpawner.DistanceToScreenEdge(camera, origin, Vector3.left, 20f);
+            float line = origin.z - down;
+            float rise = (down + up) / Mathf.Max(1f, seconds); // one screen height over the event
+            var prefab = spawner.StageBossPrefab != null ? spawner.StageBossPrefab : spawner.StageElitePrefab;
+            Vector3 corner = origin + Vector3.left * Mathf.Max(1f, left - StageHazardTable.TideCallerInset)
+                                    + Vector3.back * Mathf.Max(1f, down - StageHazardTable.TideCallerInset);
+            var body = prefab != null ? spawner.SpawnHazardEnemy(prefab, corner) : null;
+            var tide = RisingTide.Begin(body, line, rise, seconds, PlayerLevel());
+            _tides.Add(tide);
+            Debug.Log($"[StageHazards] Rising Tide on Stage {_stage} for {seconds:0} s.");
+            return tide;
+        }
+
         // ------------------------------------------------------------------ Rail carts
 
         private System.Collections.IEnumerator LayRailsWhenReady(int stage)
@@ -348,6 +425,9 @@ namespace SoulHunter.Gameplay.Hazards
             _shadows.RemoveAll(s => s == null || !s.isActiveAndEnabled);
             _pile.RemoveAll(p => p == null || !p.isActiveAndEnabled);
             _meteors.RemoveAll(m => m == null);
+            _mines.RemoveAll(m => m == null || !m.isActiveAndEnabled);
+            _thornCircles.RemoveAll(c => c == null);
+            _tides.RemoveAll(t => t == null);
         }
 
         /// <summary>Removes every hazard of the current stage (stage change, stage clear).</summary>
@@ -361,6 +441,12 @@ namespace SoulHunter.Gameplay.Hazards
             _pile.Clear();
             foreach (var meteor in _meteors) if (meteor != null) Destroy(meteor.gameObject);
             _meteors.Clear();
+            foreach (var mine in _mines) if (mine != null && mine.isActiveAndEnabled) mine.Leave();
+            _mines.Clear();
+            foreach (var circle in _thornCircles) if (circle != null) circle.Leave();
+            _thornCircles.Clear();
+            foreach (var tide in _tides) if (tide != null) tide.End();
+            _tides.Clear();
             ClearRails();
         }
 

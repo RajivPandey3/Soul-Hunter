@@ -71,7 +71,7 @@ namespace SoulHunter.Gameplay.Data
             new(6, "The Frozen Peaks", "The icy descent into the deep underworld. The cold reflects Kael's fading humanity.", "Blizzards and periodic movement slow; fast enemies from above and below", CampaignSignature.FrozenPeaks, "SH10_L06_Showcase", 1.45f, 1.00f),
             new(7, "The Sea of Lost Souls", "The resting place of souls who gave up. Kael starts losing his sanity.", "Spectral enemies and holy-damage checks", CampaignSignature.SeaOfLostSouls, "SH10_L07_Showcase", 1.30f, 1.00f),
             new(8, "The Blood Arenas", "The Death God's elite guards test Kael's worthiness.", "Elite waves replace ordinary swarms", CampaignSignature.BloodArenas, "SH10_L08_Showcase", 1.40f, 1.00f),
-            new(9, "The Throne of Death", "The 99,999th soul is collected. Kael approaches the final throne.", "Arena boundary contracts over time", CampaignSignature.ThroneOfDeath, "SH10_L09_Showcase", 1.50f, 1.00f),
+            new(9, "The Throne of Death", "The 99,999th soul is collected. Kael approaches the final throne.", "The safe zone shrinks; outside it you lose health", CampaignSignature.ThroneOfDeath, "SH10_L09_Showcase", 1.50f, 1.00f),
             new(10, "The Soul Core", "The truth is revealed. Kael is the monster. He must fight his own corrupted soul.", "Shadow Kael final skill-check encounter", CampaignSignature.SoulCore, "SH10_L10_Showcase", 1.60f, 1.00f)
         };
 

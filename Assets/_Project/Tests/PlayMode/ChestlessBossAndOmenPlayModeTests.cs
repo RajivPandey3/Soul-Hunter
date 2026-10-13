@@ -224,6 +224,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(director.PendingFiresAt, Is.EqualTo(limit));
 
             int fired = director.FiredCount;
+            // Owner (2026-10-13): the level clears at 30:00 only when its guardian has been defeated.
+            progression.ReportBossDefeated();
             progression.SkipTo(limit - 0.6f);
             yield return WaitUntilRealtime(() => director.FiredCount == fired + 1, "the 30:00 event");
             Assert.That(director.LastFired, Is.EqualTo(picked), "30:00 fires it.");

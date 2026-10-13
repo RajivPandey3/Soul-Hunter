@@ -121,11 +121,12 @@ namespace SoulHunter.Tests.EditMode
             for (int stage = 1; stage <= 10; stage++)
             {
                 var pool = OmenTable.Pool(stage, true);
-                Assert.That(pool.Contains(OmenEvent.DeathsShadow), Is.EqualTo(stage == 5 || stage == 9), $"Stage {stage}");
+                Assert.That(pool.Contains(OmenEvent.DeathsShadow), Is.True, $"Stage {stage}: as an Omen the Shadow comes on every level (2026-10-13).");
                 Assert.That(OmenTable.Pool(stage, false).Any(OmenTable.IsFormation), Is.False);
                 Assert.That(pool.Distinct().Count(), Is.EqualTo(pool.Count));
             }
-            Assert.That(OmenTable.Pool(1, true).Count, Is.EqualTo(19), "Nineteen events off the Shadow's stages (four added 2026-10-13).");
+            Assert.That(OmenTable.Pool(1, true).Count, Is.EqualTo(27), "Every VS Random Event has its Omen: 20, and the last seven of 2026-10-13.");
+            Assert.That(OmenTable.Pool(1, true).Count, Is.EqualTo(System.Enum.GetValues(typeof(OmenEvent)).Length), "No event is left out of the wheel.");
         }
 
         [Test]
@@ -137,7 +138,8 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(seen.Count, Is.EqualTo(pool.Count), "Every event has an equal slice of the roll.");
             Assert.That(OmenTable.Pick(pool, 1f), Is.EqualTo(pool[pool.Count - 1]));
             var vsNames = new[] { "Pet", "Candybox", "Firebreathing", "Rosary", "Light Sources", "Ultra Wave", "Chicken Bonanza",
-                "Shooting Stars", "Luck Boost", "Jelly Wall", "Bat Swarm", "Skeleton Swarm", "Free Passive", "The Stalker", "Pile Assault", "Gold Fever" };
+                "Shooting Stars", "Luck Boost", "Jelly Wall", "Bat Swarm", "Skeleton Swarm", "Free Passive", "The Stalker", "Pile Assault", "Gold Fever",
+                "Shrimp Swarm", "Roulette", "Summon II Molise", "Summon Night", "The Drowner", "Flower Wall" };
             var names = System.Enum.GetValues(typeof(OmenEvent)).Cast<OmenEvent>().Select(OmenTable.Name).ToList();
             Assert.That(names.Distinct().Count(), Is.EqualTo(names.Count));
             Assert.That(names.Intersect(vsNames), Is.Empty, "No VS event name is shown.");

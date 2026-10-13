@@ -18,7 +18,7 @@ namespace SoulHunter.Gameplay.Core
     ///   (RunStatsTracker.PickupRecorded). Counters are saved through SaveService.SaveSoon (no write per lantern).
     /// - Checks every item's condition once per level second, when the inventory changes and when a level is cleared;
     ///   a new unlock is saved at once and shown by the existing unlock notice with what the item does.
-    /// - Omni (PowerUpUnlocks.OmniEvolutionsHeld evolved weapons held at once).
+    /// - Omni (the Cursed Coffer at its ninth level, PowerUpUnlocks.OmniItem).
     /// - Gives the run the lasting boons of the relics the save has found (RelicBook), once, at the start.
     /// </summary>
     public sealed class ItemUnlockTracker : MonoBehaviour
@@ -131,6 +131,7 @@ namespace SoulHunter.Gameplay.Core
                 PlayerLevel = experience != null ? experience.CurrentLevel : 1,
                 StageSeconds = Mathf.Max(_clearedSeconds, _progression != null ? _progression.StageElapsedTime : 0f),
                 WeaponsHeld = weapons != null ? weapons.GetActiveWeaponsCount() : 0,
+                EvolutionsHeld = weapons != null ? EvolvedHeld(weapons) : 0,
                 ItemLevel = name => weapons != null && TryType(name, out var type) ? weapons.GetWeaponLevel(type) : 0,
                 CharacterUnlocked = name =>
                 {
@@ -165,10 +166,10 @@ namespace SoulHunter.Gameplay.Core
                 // An item this build does not have (a type name the table lists for later) is recorded but not announced.
                 if (TryType(info.Item, out _)) Announce(NoticeLine(info));
             }
-            // Omni (wiki Achievements, Torrona's Box: "Hold 6 different weapon evolutions at once"; see PowerUpUnlocks).
+            // Omni (wiki Omni: "unlocked by leveling up Torrona's Box to the maximum level"; see PowerUpUnlocks).
             var weapons = WeaponManager.Instance;
-            if (weapons != null && PowerUpUnlocks.UnlockedRanks(data, PowerUpId.Omni) == 0 && EvolvedHeld(weapons) >= PowerUpUnlocks.OmniEvolutionsHeld &&
-                PowerUpUnlocks.UnlockWhole(data, PowerUpId.Omni))
+            if (weapons != null && PowerUpUnlocks.UnlockedRanks(data, PowerUpId.Omni) == 0 && TryType(PowerUpUnlocks.OmniItem, out var coffer) &&
+                weapons.GetWeaponLevel(coffer) >= PowerUpUnlocks.OmniItemLevel && PowerUpUnlocks.UnlockWhole(data, PowerUpId.Omni))
             {
                 changed = true;
                 Announce($"PowerUp unlocked: Omni. {PowerUps.Info(PowerUpId.Omni).Description}");

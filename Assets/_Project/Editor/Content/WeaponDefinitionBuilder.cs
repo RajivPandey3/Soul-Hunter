@@ -46,6 +46,7 @@ namespace SoulHunter.Editor.Content
                 { UpgradeData.UpgradeType.DuskRaven, "Dusk Raven" },
                 { UpgradeData.UpgradeType.AzureRepeater, "Azure Repeater" },
                 { UpgradeData.UpgradeType.TwilightFlock, "Twilight Flock" },
+                { UpgradeData.UpgradeType.CursedCoffer, "Cursed Coffer" },
             };
 
         public const string Folder = "Assets/_Project/Data/Weapons/Definitions";

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7928d4b5fd63bc3439f092b5d47676b6, type: 3}
+  m_Name: WD_CursedCoffer
+  m_EditorClassIdentifier: 
+  Type: 42
+  IsPassive: 1
+  DisplayName: Cursed Coffer
+  Description: Cursed. +3% might, projectile speed, duration and area (4% at level
+    1). Its ninth level adds +100% curse instead.
+  Icon: {fileID: 6968413500004054039, guid: 3c28eea5e26f940439c059d9888861a4, type: 3}
+  WeaponPrefab: {fileID: 0}
+  MaxLevel: 9
+  Rarity: 40
+  Levels:
+  - {fileID: 11400000, guid: d202109495caf774cafc01a1cafec80a, type: 2}
+  - {fileID: 11400000, guid: 9b721c312e4258541bb88aef85742b77, type: 2}
+  - {fileID: 11400000, guid: 79563e45b0e1aee4baa7313294e4265d, type: 2}
+  - {fileID: 11400000, guid: 11375414c4065dc4f9ee2d053b89c423, type: 2}
+  - {fileID: 11400000, guid: e1b73f55f1eadac409283e88cd074613, type: 2}
+  - {fileID: 11400000, guid: 592bc5d4d8058cc4aa3e721301d821f8, type: 2}
+  - {fileID: 11400000, guid: 2030ca22c812f3a48b1cd9ed32aa3707, type: 2}
+  - {fileID: 11400000, guid: f2b156a1f2da28c4bbfdcfd508dfedd0, type: 2}
+  - {fileID: 11400000, guid: 42bdda7b443f5d845aebc50a61e8a98a, type: 2}

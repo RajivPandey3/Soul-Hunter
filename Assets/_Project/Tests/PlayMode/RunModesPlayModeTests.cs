@@ -84,7 +84,12 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(2), "The Arcana chest gave a second Arcana.");
             Assert.That(arcanas.ActiveArcanas[1], Is.SameAs(picked), "The card the player chose.");
             Assert.That(arcanas.ActiveArcanas[1], Is.Not.SameAs(arcanas.ActiveArcanas[0]), "Never one already held.");
-            Assert.That(SoulHunter.Core.Services.GameTime.IsPaused, Is.False, "Taking the card resumes the game. " + Errors());
+            Assert.That(screen.IsOpen, Is.False, "Taking the card closes the choice. " + Errors());
+            // Soul Barrage (card 0) adds two items to an Arcana chest, so with it the chest screen follows and holds the pause.
+            bool chestFollows = arcanas.ActiveArcanas[0].CardNumber == "0" || picked.CardNumber == "0";
+            if (!chestFollows)
+                Assert.That(SoulHunter.Core.Services.GameTime.IsPaused, Is.False,
+                    "Taking the card resumes the game. Held by: " + SoulHunter.Core.Services.GameTime.PauserNames() + " " + Errors());
         }
     }
 }

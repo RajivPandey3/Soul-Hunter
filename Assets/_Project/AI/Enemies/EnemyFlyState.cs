@@ -12,19 +12,25 @@ namespace SoulHunter.Gameplay.AI
     {
         public const float DefaultLifetimeSeconds = 15f;
         public const float SpeedMultiplier = 1.5f;
+        /// <summary>The period of an event flier's own weave: the Floaty default (EnemyData.FloatyPeriodSeconds).</summary>
+        public const float WeavePeriodSeconds = 1.8f;
 
         private readonly EnemyController _controller;
         private readonly Vector3 _flyDirection;
         private readonly float _lifetime;
         private readonly float _speedMultiplier;
+        private readonly float _weave;
         private float _aliveTimer;
 
         public Vector3 Direction => _flyDirection;
 
         /// <param name="speedMultiplier">Stage-event formations fly at 1.5x; a Fixed Direction enemy at its own speed (1).</param>
-        public EnemyFlyState(EnemyController controller, Vector3 direction, float lifetime = DefaultLifetimeSeconds, float speedMultiplier = SpeedMultiplier)
+        /// <param name="weave">Above 0, the flier weaves along its line whatever its type (Omens' Serpent Streams: VS Shrimp
+        /// Swarm "fly in wave-like patterns"), with the Floaty period.</param>
+        public EnemyFlyState(EnemyController controller, Vector3 direction, float lifetime = DefaultLifetimeSeconds, float speedMultiplier = SpeedMultiplier, float weave = 0f)
         {
             _speedMultiplier = speedMultiplier;
+            _weave = Mathf.Max(0f, weave);
             _controller = controller;
             direction.y = 0f;
             _flyDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
@@ -52,7 +58,9 @@ namespace SoulHunter.Gameplay.AI
             // Seedha fly karo (player ko ignore), ground plane par hi.
             // VS "[[Floaty]], [[Fixed Direction]]" (Sneaky Heads): keep the line, weave along it.
             Vector3 direction = _flyDirection;
-            if (_controller.Movement == SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection)
+            if (_weave > 0f)
+                direction = EnemyChaseState.FloatyDirection(direction, _weave, WeavePeriodSeconds, Time.time, _controller.FloatyPhase);
+            else if (_controller.Movement == SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection)
             {
                 var data = _controller.Data;
                 direction = EnemyChaseState.FloatyDirection(direction, data != null ? data.FloatyWeave : 0.7f,

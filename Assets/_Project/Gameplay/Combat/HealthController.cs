@@ -248,10 +248,19 @@ namespace SoulHunter.Gameplay.Combat
             var enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
             if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, damage);
-            if (SoulHunter.Core.Persistence.GameSettings.DamageNumbers && SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
+            // A screen wipe erases hundreds in one frame: only the first numbers of a frame are shown (they would cover
+            // each other anyway), which is part of what stalled the game for 650-800 ms per Pentagram (2026-10-13).
+            if (Time.frameCount != _instantKillFrame) { _instantKillFrame = Time.frameCount; _instantKillNumbers = 0; }
+            if (++_instantKillNumbers <= InstantKillNumbersPerFrame
+                && SoulHunter.Core.Persistence.GameSettings.DamageNumbers && SoulHunter.Gameplay.UI.DamagePopupManager.Instance != null)
                 SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(InstantKillShownDamage(damage, UnityEngine.Random.value), transform.position + Vector3.up * 1.5f);
             KillSilently();
         }
+
+        /// <summary>Instant-kill damage numbers shown per frame.</summary>
+        public const int InstantKillNumbersPerFrame = 32;
+        private static int _instantKillFrame = -1;
+        private static int _instantKillNumbers;
 
         /// <summary>The number an instant kill shows: the damage, or 655-665 when it is under 660 (wiki Pentagram).</summary>
         public static int InstantKillShownDamage(int damage, float roll01) =>

@@ -33,7 +33,8 @@ namespace SoulHunter.Gameplay.Combat
             RingOfDarkHours,   // VS Gold Ring (stage-item passive, Curse)
             DuskRaven,         // VS Ebony Wings (weapon)
             AzureRepeater,     // VS Eight The Sparrow (weapon)
-            TwilightFlock      // VS Vandalier (union of Peachone and Dusk Raven; it has levels of its own)
+            TwilightFlock,     // VS Vandalier (union of Peachone and Dusk Raven; it has levels of its own)
+            CursedCoffer       // VS Torrona's Box (passive: Might, Speed, Duration, Area; its last level is Curse), 2026-10-13
         }
         public UpgradeType Type;
         

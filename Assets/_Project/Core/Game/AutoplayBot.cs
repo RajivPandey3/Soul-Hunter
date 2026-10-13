@@ -1164,6 +1164,44 @@ namespace SoulHunter.Gameplay.Core
                 Event("xp-burst", $"\"levels\": {levels}, \"fromLevel\": {_experience.CurrentLevel}");
                 for (int i = 0; i < levels; i++) _experience.AddXP(Mathf.Max(1, _experience.XPToNextLevel - _experience.CurrentXP));
             }
+            // -sh-autoplay-give "Pentagram:8,Garlic:8" (and -sh-autoplay-give-after S, default 12): gives those items at
+            // those levels once, so a build run can measure one weapon (the Pentagram's screen wipe, 2026-10-13).
+            if (!_giveDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-give-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var giveAt) ? giveAt : 12f))
+            {
+                _giveDone = true;
+                var weapons = WeaponManager.Instance;
+                foreach (string part in (ArgValue("-sh-autoplay-give") ?? "").Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var bits = part.Split(':');
+                    if (weapons == null || !System.Enum.TryParse<UpgradeData.UpgradeType>(bits[0].Trim(), true, out var type)) continue;
+                    int level = bits.Length > 1 && int.TryParse(bits[1], out var l) ? l : 1;
+                    weapons.GiveWeapon(type, level);
+                    Event("give", $"\"item\": \"{type}\", \"level\": {weapons.GetWeaponLevel(type)}");
+                }
+            }
+            // -sh-autoplay-omen <OmenEvent name> (and -sh-autoplay-omen-after S, default 20): fires that Omen once, then takes
+            // screenshots 1, 4 and 10 s later, so a build run can show an Omen without waiting for the wheel.
+            if (!_omenDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-omen-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var omenAt) ? omenAt : 20f)
+                && System.Enum.TryParse<OmenEvent>(ArgValue("-sh-autoplay-omen") ?? "", true, out var omen) && RandomEventDirector.Instance != null)
+            {
+                _omenDone = true;
+                bool fired = RandomEventDirector.Instance.Fire(omen);
+                Event("omen", $"\"name\": \"{OmenTable.Name(omen)}\", \"fired\": {(fired ? "true" : "false")}");
+                StartCoroutine(OmenShots(omen.ToString()));
+            }
+        }
+
+        private bool _omenDone, _giveDone;
+
+        private IEnumerator OmenShots(string name)
+        {
+            float last = 0f;
+            foreach (float at in new[] { 1f, 4f, 10f })
+            {
+                yield return new WaitForSeconds(at - last);
+                last = at;
+                yield return Shot($"omen-{name}-{at:0}s");
+            }
         }
 
         private LevelUpManager _levelUpManager;

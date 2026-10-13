@@ -57,6 +57,21 @@ namespace SoulHunter.Gameplay.Core
         TramplingRanks,
         /// <summary>VS Scorpion Lair: "Summons rows of big Twin Skulls to the left and right of the player. They disappear after 1 minute."</summary>
         CrossfireRows,
+        // --- The last seven (owner, 2026-10-13: "kuch bhi nahi bachna chahiye"), each with the system it needed.
+        /// <summary>VS Candybox: "Puts a Candybox on the floor near the player, enabling them to add any weapon they want to their inventory."</summary>
+        ArmouryCache,
+        /// <summary>VS Shrimp Swarm: "Summons several Serpentine Dragon Shrimps that fly in wave-like patterns through the room."</summary>
+        SerpentStreams,
+        /// <summary>VS Roulette: "Spawns a ring of poltergeists that self-destruct when the player approaches them."</summary>
+        PowderRing,
+        /// <summary>VS Summon II Molise: "Replaces all enemies with random plant enemies from Il Molise. These don't move and don't give a lot of experience points. Lasts for ~2 minutes."</summary>
+        Rootbound,
+        /// <summary>VS Summon Night: "Replaces all enemies with different kinds of bats for ~1 minute."</summary>
+        Nightfall,
+        /// <summary>VS The Drowner: "Summons the Drowner, who fills the stage with damaging water from the bottom up, for ~1 minute."</summary>
+        RisingTide,
+        /// <summary>VS Flower Wall: "Summons a circular Flower Wall around the player that slowly closes in on them. Disappears after ~50 seconds."</summary>
+        ThornCircle,
     }
 
     /// <summary>
@@ -69,19 +84,18 @@ namespace SoulHunter.Gameplay.Core
     /// Built on 2026-10-13 with the level's own enemies in place of the VS-only ones (as the six VS swarms already are):
     /// Mino Rush (Stampede), Panic Time (Dread Circles), Crab Fest (Trampling Ranks) and Scorpion Lair (Crossfire Rows).
     ///
-    /// Still left out, with the reason:
-    /// - Candybox: a Candybox item and its pick-any-weapon screen do not exist;
-    /// - Shrimp Swarm ("fly in wave-like patterns through the room"): an event flier keeps a straight line; the weaving
-    ///   flight is a per-type movement that only Level 2's moths have (EnemyMovement.FloatyFixedDirection);
-    /// - Roulette ("poltergeists that self-destruct when the player approaches them"): no still, self-destructing enemy
-    ///   type exists (it needs a new EnemyData asset);
-    /// - Summon II Molise and Summon Night (every enemy replaced by Il Molise plants or by bats, for 1-2 minutes): the
-    ///   spawner cannot swap a wave's types, Soul Hunter has no still plant types, and only Levels 1, 2, 4 and 6 have bats;
-    /// - The Drowner (rising damaging water): no such hazard;
-    /// - Flower Wall ("a circular Flower Wall ... that slowly closes in"; Flower_Wall_(event): the walls "trap both the
-    ///   player and enemies inside"): the event is a trap, and Soul Hunter's enemy bodies never block the hero (owner crowd
-    ///   rule 2026-09-26: "the horde never walls the player in"), so a slow ring would trap nobody;
-    /// - The Stalker outside Stages 5 and 9: the owner placed Death's Shadow on those stages only (2026-10-09).
+    /// The last seven were built on 2026-10-13 (owner: "kuch bhi nahi bachna chahiye"), each with the system it lacked:
+    /// - Candybox -> Armoury Cache: a floor pickup that opens the list of base weapons (WeaponCachePickup);
+    /// - Shrimp Swarm -> Serpent Streams: event fliers that weave along their line (EnemyFlyState's weave);
+    /// - Roulette -> Powder Ring: a still ring that blows itself up when the hero comes close (MineSentry);
+    /// - Summon II Molise -> Rootbound and Summon Night -> Nightfall: the spawner's wave takeover
+    ///   (EnemySpawner.BeginWaveTakeover) with Level 1's plant and bat types on every level;
+    /// - The Drowner -> Rising Tide: the Tide Caller and its rising water (RisingTide);
+    /// - Flower Wall -> Thorn Circle: a closing ring whose members stop the hero (ThornCircle), the one exception to the
+    ///   owner's crowd rule of 2026-09-26;
+    /// - The Stalker: as an Omen, Death's Shadow now comes on every level (the page: Random Events are the same on any
+    ///   stage). The owner's placement on Levels 5 and 9 (2026-10-09) still holds for the stage's own timetable.
+    /// No VS Random Event is left out.
     ///
     /// Weights: the raw page (2026-10-13) still lists no chance or weight for any event ("The exact number of possible
     /// events is not yet certain"), so every event of the pool stays equally likely.
@@ -98,13 +112,17 @@ namespace SoulHunter.Gameplay.Core
         /// </summary>
         public const float StaleSeconds = 10f;
 
-        /// <summary>Owner placement (2026-09-27 hazards, kept for Omens 2026-10-09): Death's Shadow only on Stages 5 and 9.</summary>
+        /// <summary>
+        /// The stages whose own timetable sends Death's Shadow (owner placement, 2026-09-27). As an Omen it comes on every
+        /// level since 2026-10-13.
+        /// </summary>
         public static bool ShadowStage(int stage) => stage == 5 || stage == 9;
 
         /// <summary>Events that send a formation through EnemySpawner (refused by the spawner while a stage boss lives).</summary>
         public static bool IsFormation(OmenEvent e) =>
             e == OmenEvent.ClosingRing || e == OmenEvent.HordeSwarm || e == OmenEvent.SwarmRush || e == OmenEvent.MarchingLine
-            || e == OmenEvent.Stampede || e == OmenEvent.DreadCircles || e == OmenEvent.TramplingRanks;
+            || e == OmenEvent.Stampede || e == OmenEvent.DreadCircles || e == OmenEvent.TramplingRanks
+            || e == OmenEvent.SerpentStreams;
 
         /// <summary>
         /// Events that act on the hero and so outlast a stage clear. A timed stage clears at 30:00 and wipes the arena in the
@@ -116,7 +134,7 @@ namespace SoulHunter.Gameplay.Core
             e == OmenEvent.HellfireBreath || e == OmenEvent.GildedFever || e == OmenEvent.FortunesFavour;
 
         /// <summary>
-        /// The events the wheel can pick on a stage. Death's Shadow only on Stages 5 and 9 (owner). While a stage boss is
+        /// The events the wheel can pick on a stage: every one, on every level. While a stage boss is
         /// expected or alive, formations are left out: the spawner sends no formation during a boss fight, so a picked one
         /// would never come (balance method; the wiki does not say whether Random Events fire during a boss).
         /// With <paramref name="stageClearsAtFire"/> (the 29:30 pick of a timed stage) only the events that
@@ -127,7 +145,6 @@ namespace SoulHunter.Gameplay.Core
             var pool = new List<OmenEvent>();
             foreach (OmenEvent e in System.Enum.GetValues(typeof(OmenEvent)))
             {
-                if (e == OmenEvent.DeathsShadow && !ShadowStage(stage)) continue;
                 if (!formationsAllowed && IsFormation(e)) continue;
                 if (stageClearsAtFire && !OutlastsStageClear(e)) continue;
                 pool.Add(e);
@@ -190,6 +207,13 @@ namespace SoulHunter.Gameplay.Core
                 case OmenEvent.DreadCircles: return "Dread Circles";
                 case OmenEvent.TramplingRanks: return "Trampling Ranks";
                 case OmenEvent.CrossfireRows: return "Crossfire Rows";
+                case OmenEvent.ArmouryCache: return WeaponCachePickup.DisplayName;
+                case OmenEvent.SerpentStreams: return "Serpent Streams";
+                case OmenEvent.PowderRing: return "Powder Ring";
+                case OmenEvent.Rootbound: return "Rootbound";
+                case OmenEvent.Nightfall: return "Nightfall";
+                case OmenEvent.RisingTide: return "Rising Tide";
+                case OmenEvent.ThornCircle: return "Thorn Circle";
             }
             return e.ToString();
         }
@@ -260,6 +284,41 @@ namespace SoulHunter.Gameplay.Core
         public const float CrossfireSeconds = 60f;
         /// <summary>Skull_Pile_Pile: "a pair of columns of 12 Skull Piles on both sides of the player".</summary>
         public const int CrossfirePerRow = StageHazardTable.PileColumnLength;
+
+        // --- The last seven (2026-10-13; raw Random_Events, Candybox, The_Drowner, Dragon_Swarm, Flower_Wall_(event)).
+
+        /// <summary>VS Shrimp Swarm: "several ... fly in wave-like patterns": three streams (as the other "several" events),
+        /// 4 s apart, each a file of 12 one behind the other, 1.6 apart, so it reads as one long serpent.</summary>
+        public const int SerpentStreamCount = 3;
+        public const float SerpentGapSeconds = 4f;
+        public const int SerpentMembers = 12;
+        public const float SerpentSpacing = 1.6f;
+        /// <summary>The weave of a Floaty enemy (EnemyData.FloatyWeave's default), on the event's usual pace.</summary>
+        public const float SerpentWeave = 0.7f;
+        /// <summary>Each stream crosses on its own lane, up to this far above or below the hero.</summary>
+        public const float SerpentLaneSpread = 5f;
+        /// <summary>VS Summon II Molise: "Lasts for ~2 minutes."</summary>
+        public const float RootboundSeconds = 120f;
+        /// <summary>"don't give a lot of experience points": the smallest gem (PickupPoolManager.DefaultGemValue).</summary>
+        public const int RootboundGem = 10;
+        /// <summary>VS Summon Night: "for ~1 minute".</summary>
+        public const float NightfallSeconds = 60f;
+        /// <summary>The Armoury Cache lies as near as the Wandering Relic ("near the player").</summary>
+        public const float CacheDistance = RelicDistance;
+
+        /// <summary>
+        /// The paths of one Serpent Stream: a file of <paramref name="count"/> starting <paramref name="edge"/> units to one
+        /// side of the hero (Dragon_Swarm: they "travel horizontally accross the map"), on a lane <paramref name="lane"/>
+        /// units above or below it. <paramref name="fromLeft"/> picks the side.
+        /// </summary>
+        public static List<(Vector3 position, Vector3 direction)> SerpentPaths(Vector3 hero, bool fromLeft, float lane, float edge, int count)
+        {
+            var paths = new List<(Vector3, Vector3)>();
+            Vector3 direction = fromLeft ? Vector3.right : Vector3.left;
+            Vector3 head = hero - direction * edge + Vector3.forward * lane;
+            for (int i = 0; i < Mathf.Max(1, count); i++) paths.Add((head - direction * (SerpentSpacing * i), direction));
+            return paths;
+        }
     }
 
     /// <summary>
@@ -413,8 +472,7 @@ namespace SoulHunter.Gameplay.Core
                 case OmenEvent.WanderingRelic: return DropRelic(at);
                 case OmenEvent.LanternBloom: return LanternRing(at);
                 case OmenEvent.DeathsShadow:
-                    return OmenTable.ShadowStage(_progression != null ? _progression.CurrentStage : 0)
-                           && StageHazards.Instance != null && StageHazards.Instance.SpawnDeathsShadow(OmenTable.ShadowSeconds) != null;
+                    return StageHazards.Instance != null && StageHazards.Instance.SpawnDeathsShadow(OmenTable.ShadowSeconds) != null;
                 case OmenEvent.SwellingHorde:
                     RunModes.EventFrequencyBoost = OmenTable.SwellingFactor;
                     _swellingLeft = OmenTable.SwellingSeconds;
@@ -446,8 +504,72 @@ namespace SoulHunter.Gameplay.Core
                 case OmenEvent.CrossfireRows:
                     return StageHazards.Instance != null
                            && StageHazards.Instance.StartPileColumns(OmenTable.CrossfirePerRow, OmenTable.CrossfireSeconds).Count > 0;
+                case OmenEvent.ArmouryCache: return DropCache(at);
+                case OmenEvent.SerpentStreams:
+                    if (!SerpentStream(spawner, 0)) return false;
+                    StartCoroutine(MoreSerpents(spawner));
+                    return true;
+                case OmenEvent.PowderRing:
+                    return StageHazards.Instance != null && StageHazards.Instance.StartMineRing().Count > 0;
+                case OmenEvent.Rootbound:
+                {
+                    var catalog = GameContentCatalog.Load();
+                    return spawner != null && catalog != null
+                           && spawner.BeginWaveTakeover(catalog.OmenPlants, OmenTable.RootboundSeconds, RootEnemy) >= 0;
+                }
+                case OmenEvent.Nightfall:
+                {
+                    var catalog = GameContentCatalog.Load();
+                    return spawner != null && catalog != null
+                           && spawner.BeginWaveTakeover(catalog.OmenBats, OmenTable.NightfallSeconds) >= 0;
+                }
+                case OmenEvent.RisingTide:
+                    return StageHazards.Instance != null && StageHazards.Instance.StartRisingTide() != null;
+                case OmenEvent.ThornCircle:
+                    return StageHazards.Instance != null && StageHazards.Instance.StartThornCircle() != null;
             }
             return false;
+        }
+
+        /// <summary>Rootbound: the plant stands where it is and leaves only the smallest gem.</summary>
+        private static void RootEnemy(GameObject enemy)
+        {
+            if (enemy == null) return;
+            StillEnemy.Begin(enemy);
+            var drop = enemy.GetComponent<EnemyDrop>();
+            if (drop != null) drop.GemValue = OmenTable.RootboundGem;
+        }
+
+        private static bool SerpentStream(EnemySpawner spawner, int index)
+        {
+            var player = PlayerController.Instance;
+            if (spawner == null || player == null) return false;
+            bool fromLeft = index % 2 == 0;
+            Vector3 direction = fromLeft ? Vector3.right : Vector3.left;
+            float edge = spawner.EventRadius(StageEventType.Swarm, direction);
+            float lane = Random.Range(-OmenTable.SerpentLaneSpread, OmenTable.SerpentLaneSpread);
+            var paths = OmenTable.SerpentPaths(player.transform.position, fromLeft, lane, edge, OmenTable.SerpentMembers);
+            return spawner.SpawnFliers(paths, 1f, OmenTable.SerpentWeave).Count > 0;
+        }
+
+        private System.Collections.IEnumerator MoreSerpents(EnemySpawner spawner)
+        {
+            for (int i = 1; i < OmenTable.SerpentStreamCount; i++)
+            {
+                yield return new WaitForSeconds(OmenTable.SerpentGapSeconds); // game time: a pause holds the streams
+                if (spawner == null || _progression == null || _progression.IsStageTransitioning) yield break;
+                SerpentStream(spawner, i);
+            }
+        }
+
+        /// <summary>VS Candybox: a cache on open ground near the player; walking over it opens the weapon list.</summary>
+        private static bool DropCache(Vector3 centre)
+        {
+            Vector2 dir = Random.insideUnitCircle.normalized;
+            if (dir.sqrMagnitude < 0.01f) dir = Vector2.up;
+            Vector3 spot = GroundCheck.NearestOpen(StageCorridor.Clamp(centre + new Vector3(dir.x, 0f, dir.y) * OmenTable.CacheDistance), 0.9f);
+            spot.y = centre.y;
+            return WeaponCachePickup.Create(spot) != null;
         }
 
         private static bool Formation(EnemySpawner spawner, StageEventType type, int count, float speed = 1f) =>

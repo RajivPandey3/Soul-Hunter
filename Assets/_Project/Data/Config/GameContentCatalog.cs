@@ -92,6 +92,12 @@ namespace SoulHunter.Gameplay.Data
         public EnemyData[] BestiaryEnemies;
         [UnityEngine.Tooltip("The guardians of the hidden stage items, one prefab per level and guardian (ItemGuardians; built by ItemGuardianBuilder).")]
         public UnityEngine.GameObject[] ItemGuards;
+        [UnityEngine.Tooltip("Omens: the bat types every enemy becomes during Nightfall (Level 1's bats; built by OmenContentBuilder).")]
+        public UnityEngine.GameObject[] OmenBats;
+        [UnityEngine.Tooltip("Omens: the plant types every enemy becomes during Rootbound (Level 1's Grave Lily and Thorn Wall).")]
+        public UnityEngine.GameObject[] OmenPlants;
+        [UnityEngine.Tooltip("Omens: the member of a Thorn Circle (Level 1's Thorn Wall).")]
+        public UnityEngine.GameObject OmenThornWall;
         [UnityEngine.Tooltip("The credit files the Credits screen shows (the CC0 audio and the OFL fonts CREDITS.md).")]
         public UnityEngine.TextAsset[] Credits;
 

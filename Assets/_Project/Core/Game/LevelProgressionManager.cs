@@ -139,6 +139,7 @@ namespace SoulHunter.Gameplay.Core
             _runDurationReached = false;
             _stageTransitionQueued = false;
             _bossDefeated = false;
+            StageFailed = false;
             // Stage transition must not carry the previous stage's slow motion forward,
             // but a level-up, chest or merchant screen still open keeps its pause.
             SoulHunter.Core.Services.GameTime.SetSlowMotion(1f);
@@ -207,6 +208,22 @@ namespace SoulHunter.Gameplay.Core
             if (CurrentStage >= MaxStages) CompleteStage("its final boss was defeated");
         }
 
+        /// <summary>
+        /// Owner decision (2026-10-13: "lv 1 mein kuch achive kare tabhi lv 2 open ho sake athwa nahi"; chosen: defeat the
+        /// stage boss; otherwise the run ends; for this run only). The next level opens only when this level's guardian
+        /// (the 25:00 boss) has been defeated by 30:00. If it still stands at 30:00 the run ends there with the Results
+        /// screen. Nothing is kept on the save: every run starts at Level 1 and earns each level again.
+        /// VS unlocks its stages by hero level in the stage before (wiki Stages: Inlaid Library "reaching level 20 in the
+        /// Mad Forest", then 40, 60, 80); in Soul Hunter's one run the hero's level carries on, so the owner chose the boss.
+        /// Level 10 is unchanged: it has no time limit and ends only with Shadow Kael.
+        /// </summary>
+        public bool StageFailed { get; private set; }
+        /// <summary>Raised at 30:00 of a level whose guardian still stands, just before the run ends.</summary>
+        public event Action<int> OnStageFailed;
+        /// <summary>The line shown when the level's boss arrives (and under GAME OVER when it was not defeated in time).</summary>
+        public static string GuardianGoal(int stage) => $"Defeat the guardian before 30:00 to open Level {stage + 1}.";
+        public static string GuardianFailed(int stage) => $"The guardian of Level {stage} still stood at 30:00. Level {stage + 1} stays closed.";
+
         private void CompleteStageAfterSurvival()
         {
             // The owner's story (Docs/Game_Design_Document.md, Level 10 and the twist): "To free his daughter's soul,
@@ -217,7 +234,16 @@ namespace SoulHunter.Gameplay.Core
                 Debug.Log("[LevelProgressionManager] The Soul Core has no time limit: Kael must destroy his shadow.");
                 return;
             }
-            CompleteStage("it was survived for the full 30 minutes");
+            if (!_bossDefeated)
+            {
+                StageFailed = true;
+                Debug.Log($"[LevelProgressionManager] Stage {CurrentStage}: its guardian still stands at 30:00. The run ends.");
+                OnStageFailed?.Invoke(CurrentStage);
+                var session = GameSessionManager.Instance;
+                if (session != null) session.GameOver();
+                return;
+            }
+            CompleteStage("its guardian was defeated and the 30 minutes were survived");
         }
 
         private void CompleteStage(string reason)
