@@ -705,8 +705,8 @@ namespace SoulHunter.Gameplay.AI
 
         /// <summary>
         /// One enemy of this level's type as a wave boss without a chest (ChestlessWaveBosses; Level 1's are
-        /// MadForestEnemies.ChestlessBosses). The prefab is found among the stage wave's own enemy types by name, so no
-        /// scene or asset names it twice.
+        /// MadForestEnemies.ChestlessBosses). The prefab is found among the stage wave's own enemy types by name (its
+        /// minutes, then its boss-only types), so no scene or asset names it twice.
         /// </summary>
         public GameObject SpawnChestlessBoss(string typeId)
         {
@@ -721,6 +721,9 @@ namespace SoulHunter.Gameplay.AI
                     if (type != null && type.name == wanted) { prefab = type; break; }
                 if (prefab != null) break;
             }
+            if (prefab == null && _currentWave.BossTypes != null)
+                foreach (var type in _currentWave.BossTypes)
+                    if (type != null && type.name == wanted) { prefab = type; break; }
             if (prefab == null) return null;
             var boss = SpawnEnemy(prefab);
             if (boss != null) Debug.Log($"[EnemySpawner] Chest-less wave boss {typeId} at {_stageTimePassed:0}s.");

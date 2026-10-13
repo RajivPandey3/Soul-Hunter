@@ -113,6 +113,9 @@ namespace SoulHunter.Gameplay.Data
         public List<MinuteWave> Minutes = new List<MinuteWave>();
         [System.NonSerialized] private WavePhase[] _minutePhases;
 
+        [Tooltip("Enemy types that come only as wave bosses, never in a minute's wave (StageEnemyTable.BossOnly).")]
+        public List<GameObject> BossTypes = new List<GameObject>();
+
         public bool HasMinuteTable => (Phases == null || Phases.Count == 0) && Minutes != null && Minutes.Count > 0;
 
         [Header("Optional VS-style timed phases")]

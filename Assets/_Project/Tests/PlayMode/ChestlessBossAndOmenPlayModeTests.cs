@@ -74,6 +74,39 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator LevelFive_SendsItsOwnBossType_At24Minutes_WithItsStatbox()
+        {
+            // Raw Abyss_Foscari "Waves": 24:00 "Bosses & Treasure" = Maronna Meea Boss, no {{treasure}}. Maronna_Meea:
+            // "skills = HP x Level | health = 200 ... res-freeze = 1.1 | res-kill = 1 | res-debuff = 1".
+            yield return BootIntoGameplay();
+            MakeHeroHarmlessAndSafe();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            var progression = LevelProgressionManager.Instance;
+            progression.StartStage(5);
+            yield return null;
+            yield return null;
+            string wanted = ChestlessWaveBosses.PrefabName(5, "GreatBogMother");
+            Assert.That(Alive(wanted), Is.Zero, "No minute's wave lists it.");
+
+            progression.SkipTo(24f * 60f);
+            yield return WaitUntilRealtime(() => spawner.ChestlessBossesSpawned == 1, "the 24:00 wave boss");
+            Assert.That(Alive(wanted), Is.EqualTo(1), "One Great Bog Mother (VS Maronna Meea Boss) comes at 24:00. " + Errors());
+            var boss = EnemyController.ActiveEnemies.First(e => e != null && e.gameObject.activeInHierarchy && e.name.StartsWith(wanted));
+            int level = PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel;
+            float curse = PlayerController.Instance.GetComponent<PlayerStats>().Curse;
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(200 * level, curse), boss.GetComponent<HealthController>().MaxHealth,
+                $"HP x Level: 200 x the player's level {level} x Curse {curse}.");
+            Assert.That(boss.FreezeResistance, Is.EqualTo(1.1f).Within(1e-4), "res-freeze 1.1");
+            Assert.That(boss.TryWeaponFreeze(ClockLancetWeapon.VsFreezeChance, 1f), Is.False, "Clock Lancet cannot freeze it.");
+            Assert.That(boss.ApplyGarlicDebuff(), Is.False, "res-debuff: Garlic's debuffs do nothing.");
+            Assert.That(boss.Data.InstantKillResistance, Is.True, "res-kill");
+            var drop = boss.GetComponent<EnemyDrop>();
+            Assert.That(drop == null || !drop.WillDropChest, Is.True, "It carries no chest.");
+            Assert.That(boss.IsStageBoss, Is.False);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator ALevelWithoutChestlessBosses_SendsNone()
         {
             // Raw Inlaid_Library "Waves": every boss cell has a {{treasure}}.

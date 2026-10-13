@@ -1733,7 +1733,7 @@ Passed by the owner (2026-10-12: "pass, poora test chalao aur commit karo"). Ful
 
 ### VS table closed: open rows, new items, unlocks, caskets, relics, map (owner, 2026-10-12 and 2026-10-13)
 
-Owner: "sare pending pura karo rule wiko se lo nahi mile balance method apnao", then "bache 15 rows bhi naya system banao saath mein kuch addition ke sath" (the additions were left to the agent: "tum apna best do"). `Docs/VS_DOT_Table.md` now counts MATCH 147, PARTIAL 4, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2 (176 rows). Raw wiki pages are in the session scratchpad (`wiki/`).
+Owner: "sare pending pura karo rule wiko se lo nahi mile balance method apnao", then "bache 15 rows bhi naya system banao saath mein kuch addition ke sath" (the additions were left to the agent: "tum apna best do"). `Docs/VS_DOT_Table.md` now counts MATCH 148, PARTIAL 3, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2 (176 rows). Raw wiki pages are in the session scratchpad (`wiki/`).
 
 The owner offered their installed copy of VS as a source. Not used: the no-copy rule in section 2 forbids extracted game data, and only the owner can change that rule. Watching the running game on screen stays allowed.
 
@@ -1781,7 +1781,7 @@ The owner offered their installed copy of VS as a source. Not used: the no-copy 
 
 **Spawner.**
 - Chest-less wave bosses on Levels 3-6 from their source stages (`ChestlessWaveBosses`).
-  - **Known gap:** Level 5's 24:00 boss is a stand-in type with 100 x Level health and no resistances (VS 200 x Level). That is outside the 5% rule until its own enemy type is built.
+  - Level 5's 24:00 boss first used a stand-in type (100 x Level, no resistances). It now has its own type, Great Bog Mother, from the wiki's Maronna_Meea "Maronna Meea Boss" statbox: 200 x Level health, speed 180, damage 20, no knockback, res-freeze 1.1, res-kill, res-debuff. No minute's wave lists it, so it is a boss-only type (`StageEnemyTable.BossOnly`, `WaveData.BossTypes`). Tests: `ChestlessBossAndOmenTests`, `StageEnemyTypeTests` (T) and `ChestlessBossAndOmenPlayModeTests.LevelFive_SendsItsOwnBossType_At24Minutes_WithItsStatbox` (R). EditMode 913/913, PlayMode 412/412, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-l5boss-full/`).
 - Four more Omens (Stampede, Dread Circles, Trampling Ranks, Crossfire Rows; 19 in the pool), and the wheel also picks at 29:30.
 - Inverse music: Level n plays Level 11-n's track (`MusicSelection.StageTrackLevel`); Soul Hunter has no alternate recordings.
 

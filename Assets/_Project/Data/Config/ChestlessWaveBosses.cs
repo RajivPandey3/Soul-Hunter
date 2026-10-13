@@ -23,11 +23,8 @@ namespace SoulHunter.Gameplay.Data
     ///   Scarleton page): Thrice-Risen. "4:00 ... {{Sprite|Undead Mage|medium}}[[Undead Mage]]": Gate Sorcerer.
     /// - Level 5, Abyss Foscari: "24:00 ... {{Sprite|Maronna Meea|...|Maronna Meea Boss}}", no treasure. The
     ///   Maronna_Meea page gives that boss its own statbox ("Maronna Meea Boss ... skills = HP x Level, health = 200,
-    ///   movespeed = 180, damage = 20, knockback = 0, knockback-max = 1, xp = 30"). Soul Hunter has no type with that
-    ///   statbox, and a new type needs its asset built in the editor. Until then the nearest Level 5 type by health
-    ///   stands in: Great Marshfire Skull (VS Flaming Skull Boss: HP x Level 100, movespeed 180, damage 20, knockback 0,
-    ///   cap 1, xp 30), the same numbers but half the health per level and without the freeze/kill/debuff resistances.
-    ///   This is outside the 5% rule and is recorded as a gap (owner / next builder run).
+    ///   movespeed = 180, damage = 20, knockback = 0, knockback-max = 1, xp = 30, res-freeze = 1.1, res-kill = 1,
+    ///   res-debuff = 1"): Great Bog Mother, a boss-only type (StageEnemyTable.BossOnly; no minute's wave lists it).
     /// - Level 6, Mt.Moonspell: "8:00 ... {{Sprite|Thunderous Oni}}", no treasure: Thunder Ogre. "21:00 ...
     ///   {{Sprite|Tsuchigumo}} {{Sprite|Spiritello-4|link=Spiritello Boss}} {{treasure ... reward1=arcana}}" with the note
     ///   "The Spiritello Boss boss is an Arcana holder ... the chest dropped by it only awards an Arcana", so the
@@ -63,7 +60,7 @@ namespace SoulHunter.Gameplay.Data
             new Row(3, 24, "RuinedKnight",        "Sword Guardian (Giant Armored Knight)"),
             new Row(4, 1,  "ThriceRisen",         "Scarleton"),
             new Row(4, 4,  "GateSorcerer",        "Undead Mage"),
-            new Row(5, 24, "GreatMarshfireSkull", "Maronna Meea Boss (stand-in: Flaming Skull Boss)"),
+            new Row(5, 24, "GreatBogMother",      "Maronna Meea Boss"),
             new Row(6, 8,  "ThunderOgre",         "Thunderous Oni"),
             new Row(6, 21, "GlacierSpider",       "Tsuchigumo"),
             new Row(6, 24, "GreatGlacierSpider",  "Tsuchigumo Boss"),

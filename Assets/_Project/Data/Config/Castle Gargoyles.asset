@@ -225,6 +225,7 @@ MonoBehaviour:
     EnemyTypes:
     - {fileID: 8636569884693360304, guid: 9953091acf3d4654fa63fb5365000052, type: 3}
     - {fileID: 5941278288589895044, guid: cdd85178cf836e445a6669bed2d327ad, type: 3}
+  BossTypes: []
   Phases: []
   Events:
   - TimeSeconds: 120

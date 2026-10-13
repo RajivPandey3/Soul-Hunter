@@ -89,6 +89,8 @@ namespace SoulHunter.Gameplay.Data
         public string Folder;        // "Level02": data and prefab sub-folder
         public StageEnemyType[] Types;
         public string[][] ByMinute;  // minutes 0-29: type ids
+        /// <summary>Types the wiki's "Enemies" column never lists: they come only as wave bosses (ChestlessWaveBosses).</summary>
+        public string[] BossOnly = new string[0];
         public int[] Minimum;
         public float[] Interval;
         /// <summary>Owner signature (AGENTS.md Part 2): this level's normal enemies are Floaty (L2 and L7).</summary>

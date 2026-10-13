@@ -30,8 +30,8 @@ namespace SoulHunter.Tests.EditMode
             CollectionAssert.AreEqual(new[] { (24, "RuinedKnight") }, ChestlessWaveBosses.For(3));
             // Gallo Tower 1:00 Scarleton, 4:00 Undead Mage.
             CollectionAssert.AreEqual(new[] { (1, "ThriceRisen"), (4, "GateSorcerer") }, ChestlessWaveBosses.For(4));
-            // Abyss Foscari 24:00 Maronna Meea Boss (stand-in type, see ChestlessWaveBosses).
-            CollectionAssert.AreEqual(new[] { (24, "GreatMarshfireSkull") }, ChestlessWaveBosses.For(5));
+            // Abyss Foscari 24:00 Maronna Meea Boss.
+            CollectionAssert.AreEqual(new[] { (24, "GreatBogMother") }, ChestlessWaveBosses.For(5));
             // Mt.Moonspell 8:00 Thunderous Oni, 21:00 Tsuchigumo, 24:00 Tsuchigumo Boss.
             CollectionAssert.AreEqual(new[] { (8, "ThunderOgre"), (21, "GlacierSpider"), (24, "GreatGlacierSpider") }, ChestlessWaveBosses.For(6));
             // Lake Foscari and Cappella Magna: none.
@@ -59,8 +59,9 @@ namespace SoulHunter.Tests.EditMode
 
                     string prefab = ChestlessWaveBosses.PrefabName(level, id);
                     Assert.That(prefab, Is.EqualTo($"SH10_L{level:00}_{id}_Gameplay"));
-                    bool inWave = wave.Minutes.Any(m => m != null && m.EnemyTypes != null && m.EnemyTypes.Any(p => p != null && p.name == prefab));
-                    Assert.That(inWave, Is.True, $"Level {level}: {prefab} is one of the wave asset's types, so the spawner finds it.");
+                    bool inWave = wave.Minutes.Any(m => m != null && m.EnemyTypes != null && m.EnemyTypes.Any(p => p != null && p.name == prefab))
+                               || (wave.BossTypes != null && wave.BossTypes.Any(p => p != null && p.name == prefab));
+                    Assert.That(inWave, Is.True, $"Level {level}: {prefab} is one of the wave asset's types (a minute's or boss-only), so the spawner finds it.");
                 }
             }
         }
@@ -73,11 +74,45 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(row.Level, Is.InRange(2, 10));
                 Assert.That(string.IsNullOrEmpty(row.VsEnemy), Is.False);
                 var type = StageEnemyTables.For(row.Level).Find(row.Id);
-                // The one stand-in (Level 5) is recorded as such; every other row's type follows the row's own VS enemy.
-                if (row.VsEnemy.Contains("stand-in")) Assert.That(row.VsEnemy, Does.Contain(type.VsVariant), row.Id);
-                else Assert.That(row.VsEnemy, Does.StartWith(type.VsVariant), $"Level {row.Level} {row.Id}");
+                Assert.That(row.VsEnemy, Does.StartWith(type.VsVariant), $"Level {row.Level} {row.Id}");
             }
-            Assert.That(ChestlessWaveBosses.Rows.Count(r => r.VsEnemy.Contains("stand-in")), Is.EqualTo(1), "Only Level 5's 24:00 boss lacks its own type.");
+            Assert.That(ChestlessWaveBosses.Rows.Count(r => r.VsEnemy.Contains("stand-in")), Is.EqualTo(0), "Every chest-less boss has its own type.");
+        }
+
+        [Test]
+        public void LevelFivesBoss_FollowsItsOwnStatbox_AndComesOnlyAsABoss()
+        {
+            // Maronna_Meea, "Maronna Meea Boss": HP x Level 200, movespeed 180, damage 20, knockback 0 (cap 1), xp 30,
+            // res-freeze 1.1, res-kill 1, res-debuff 1.
+            var table = StageEnemyTables.For(5);
+            var type = table.Find("GreatBogMother");
+            Assert.That(type.HealthTimesLevel, Is.True);
+            Assert.That(type.Health, Is.EqualTo(200f));
+            Assert.That(type.VsSpeed, Is.EqualTo(180f));
+            Assert.That(type.Damage, Is.EqualTo(20));
+            Assert.That(type.Knockback, Is.EqualTo(0f));
+            Assert.That(type.MaxKnockback, Is.EqualTo(1f));
+            Assert.That(type.VsXp, Is.EqualTo(30f));
+            Assert.That(type.FreezeResistance, Is.EqualTo(1.1f).Within(1e-5));
+            Assert.That(type.InstantKillResistance, Is.True);
+            Assert.That(type.DebuffResistance, Is.True);
+            CollectionAssert.AreEqual(new[] { "GreatBogMother" }, table.BossOnly);
+            Assert.That(table.ByMinute.Any(m => m.Contains("GreatBogMother")), Is.False, "The wiki's Enemies column never lists it.");
+
+            var data = AssetDatabase.LoadAssetAtPath<EnemyData>(table.DataPath("GreatBogMother"));
+            Assert.IsNotNull(data, "Built asset.");
+            Assert.That(data.HealthPerPlayerLevel, Is.EqualTo(200));
+            Assert.That(data.FreezeResistance, Is.EqualTo(1.1f).Within(1e-5));
+            Assert.That(data.InstantKillResistance, Is.True);
+            Assert.That(data.DebuffResistance, Is.True);
+            var wave = AssetDatabase.LoadAssetAtPath<WaveData>(WaveTables.StageWaveAssets[4]);
+            CollectionAssert.AreEqual(new[] { table.PrefabName("GreatBogMother") }, wave.BossTypes.Select(p => p.name).ToArray());
+            for (int level = 1; level <= 10; level++)
+            {
+                if (level == 5) continue;
+                var other = AssetDatabase.LoadAssetAtPath<WaveData>(WaveTables.StageWaveAssets[level - 1]);
+                Assert.That(other.BossTypes, Is.Empty, $"Level {level} has no boss-only type.");
+            }
         }
 
         // ---------------------------------------------------------------- Inverse mode music

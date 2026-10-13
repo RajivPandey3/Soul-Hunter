@@ -15,6 +15,8 @@ namespace SoulHunter.Gameplay.Data
     ///   Conand, Balor and Indech.
     /// - Stationary shooters (Lost_Head): Lost Head "Shoots a bullet every 2 seconds" (Bullet 1: speed 140, power 20);
     ///   Lost Head 2 "every 1.5 seconds" (Bullet 2: 250, 25); both "immune to knockback".
+    /// - Great Bog Mother (Maronna Meea Boss) is never in a minute's wave: it is the 24:00 chest-less wave boss
+    ///   (ChestlessWaveBosses). Its 27:00 appearance carries a {{treasure}}, which Soul Hunter's 27:00 chest elite covers.
     /// </summary>
     public static class AbyssFoscariEnemies
     {
@@ -51,7 +53,12 @@ namespace SoulHunter.Gameplay.Data
                 T("ColossalRotHead",     "Colossal Rot Head",      "Colossal Redusa Head",  100, true,  20, 180, 0f,   1f, 30f,   0.01f),
                 T("BurstingFleshClot",   "Bursting Flesh Clot",    "Spicy Meatball",        80,  true,  20, 120, 0f,   1f, 0f,    0.99f).Resists(0f, kill: true),
                 T("GreatTrailingRot",    "Great Trailing Rot",     "Giant Followa",         80,  true,  20, 120, 0f,   1f, 25f,   0.21f).Resists(1f),
+                // Maronna_Meea, "Unlisted variants": "Maronna Meea Boss ... skills = HP x Level | health = 200 | movespeed = 180
+                // | damage = 20 | knockback = 0 | knockback-max = 1 | xp = 30 | res-freeze = 1.1 | res-kill = 1 | res-debuff = 1".
+                T("GreatBogMother",      "Great Bog Mother",       "Maronna Meea Boss",     200, true,  20, 180, 0f,   1f, 30f,   0.94f).Resists(1.1f, kill: true, debuff: true),
             },
+            // "24:00 | Edna, Well Dweller, Cold Cauld | 200 | 0.1 | Maronna Meea Boss": only in the boss column.
+            BossOnly = new[] { "GreatBogMother" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "BogLeech" },

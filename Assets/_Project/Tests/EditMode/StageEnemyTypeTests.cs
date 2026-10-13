@@ -231,7 +231,12 @@ namespace SoulHunter.Tests.EditMode
                     foreach (var id in minute) Assert.DoesNotThrow(() => table.Find(id), $"Level {level}: {id}");
                 }
                 foreach (var type in table.Types)
-                    Assert.That(table.ByMinute.Any(m => m.Contains(type.Id)), $"Level {level}: {type.Id} appears in a minute.");
+                    Assert.That(table.ByMinute.Any(m => m.Contains(type.Id)) || table.BossOnly.Contains(type.Id), $"Level {level}: {type.Id} appears in a minute, or is a boss-only type.");
+                foreach (var id in table.BossOnly)
+                {
+                    Assert.DoesNotThrow(() => table.Find(id), $"Level {level}: {id}");
+                    Assert.That(table.ByMinute.Any(m => m.Contains(id)), Is.False, $"Level {level}: {id} is boss-only.");
+                }
                 Assert.AreEqual(table.Types.Length, table.Types.Select(t => t.Id).Distinct().Count(), "Unique ids.");
                 Assert.AreEqual(table.Types.Length, table.Types.Select(t => t.Name).Distinct().Count(), "Unique names.");
             }

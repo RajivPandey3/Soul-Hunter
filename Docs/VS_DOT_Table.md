@@ -4,7 +4,8 @@ Built 2026-09-30 from raw vampire.survivors.wiki pages (fetched that day) and th
 Re-checked 2026-10-12: every row's "Soul Hunter now" and Status were checked again in the code (working tree after c284f5fa). The "VS rule" column is still the 2026-09-30 wiki reading; the pages were not fetched again, except that the Stalker row now describes the Stalker XL the owner chose.
 Status: MATCH, PARTIAL, MISSING, DIFFERS-OWNER (an owner decision), BALANCE (the wiki is silent or contradicts itself, so the balance method decided: owner rule 2026-10-09), SH-ONLY (not in VS, no owner decision), N/A, UNKNOWN.
 
-Counts (13 Oct, after the new items, unlocks, caskets, relics, map and menu work): MATCH 147, PARTIAL 4, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2
+Counts (13 Oct, after Level 5's 24:00 boss got its own type): MATCH 148, PARTIAL 3, MISSING 0, DIFFERS-OWNER 12, BALANCE 9, UNKNOWN 2, N/A 2
+Earlier on 13 Oct, after the new items, unlocks, caskets, relics, map and menu work: MATCH 147, PARTIAL 4.
 After the open-row pass of 12 Oct: MATCH 137, PARTIAL 10, MISSING 5, DIFFERS-OWNER 12, BALANCE 8, UNKNOWN 2, N/A 2.
 On 2026-10-12 before that pass: MATCH 129, PARTIAL 26, MISSING 7, DIFFERS-OWNER 10, UNKNOWN 2, N/A 2.
 On 2026-09-30 the rows counted MATCH 76, PARTIAL 59, MISSING 26, DIFFERS-OWNER 8, UNKNOWN 3, SH-ONLY 2, N/A 2.
@@ -13,11 +14,10 @@ On 2026-09-30 the rows counted MATCH 76, PARTIAL 59, MISSING 26, DIFFERS-OWNER 8
 
 As of 13 Oct no row is MISSING. What is left:
 
-1. **Level 5's 24:00 chest-less boss.** A stand-in type with 100 x Level health and no resistances (VS 200 x Level); it needs its own enemy type.
-2. **Guards.** The Metaglios, the two Rings and the Idol lie unguarded (VS places guardian enemies around them).
-3. **Omens.** Seven VS events are left out because they need VS-only enemies or hazards.
-4. **Banish ranks.** Ranks above the Collection's size cannot be earned yet.
-5. **Art.** The eight new items, the relics, the Soul Caskets and the map markers use placeholders; none is owner-approved.
+1. **Guards.** The Metaglios, the two Rings and the Idol lie unguarded (VS places guardian enemies around them).
+2. **Omens.** Seven VS events are left out because they need VS-only enemies or hazards.
+3. **Banish ranks.** Ranks above the Collection's size cannot be earned yet.
+4. **Art.** The eight new items, the relics, the Soul Caskets and the map markers use placeholders; none is owner-approved.
 6. **Owner approval pending.** The nine-button main menu, Quick Start, the start prompt, Peachone circling clockwise, and the story lines' place on screen.
 
 ## Owner decisions
@@ -119,7 +119,7 @@ As of 13 Oct no row is MISSING. What is left:
 | Bosses | HP x Level at spawn | Enemies | Data | Wave enemies, chest elites and bosses use EnemyData.HealthForPlayerLevel at spawn | MATCH |  |
 | Bosses | Resist freeze, instant kill, debuff, knockback | Enemies | Data | All bosses | MATCH |  |
 | Chest elites | MF minutes 1,3,5,7,9,10,12,14,15,16,18,20,22,23,25,27,29; Arcana 11, 21 | Mad_Forest | Timing | DefaultChestEliteMinutes | MATCH |  |
-| Mini-bosses | Chest-less wave bosses (MF 8:00 Giant Bat, 21:00 and 24:00 Venus) | Mad_Forest | Data | Level 1 (8:00, 21:00, 24:00), Level 3 (24:00), Level 4 (1:00, 4:00), Level 5 (24:00), Level 6 (8:00, 21:00, 24:00); the other source stages have none (ChestlessWaveBosses, 13 Oct) | PARTIAL | Level 5's 24:00 boss is a stand-in type with 100 x Level health and no resistances (VS Maronna Meea Boss: 200 x Level): outside the 5% rule until its own type is built |
+| Mini-bosses | Chest-less wave bosses (MF 8:00 Giant Bat, 21:00 and 24:00 Venus) | Mad_Forest | Data | Level 1 (8:00, 21:00, 24:00), Level 3 (24:00), Level 4 (1:00, 4:00), Level 5 (24:00), Level 6 (8:00, 21:00, 24:00); the other source stages have none (ChestlessWaveBosses, 13 Oct). Level 5's is its own boss-only type, Great Bog Mother (200 x Level, res-freeze 1.1, res-kill, res-debuff) | MATCH | - |
 | Chest elites | Chest chance and tier per wave row | Enemies, Mad_Forest | Data | ChestTiers.ForMinute gives each chest elite its Mad Forest row; three separate Luck rolls | BALANCE | Owner answer 2026-10-09: the owner fixed the chest minutes for every stage (Mad Forest's), so Mad Forest's rows stay on Levels 2-10 |
 | Enemy stats | Per-enemy HP, power, speed, kb, XP (Pipeestrello: 1 HP, 5 dmg, 1 XP) | Enemies, Pipeestrello | Data | Per-type health, damage, speed, knockback and XP x10 for Level 1 (16 types) and Levels 2-10 (235 types) | MATCH |  |
 | Knockback | Reverse 120 ms x weapon kb x enemy kb; Garlic +0.3 to 3 | Knockback | Behavior | EnemyController.ApplyKnockback | MATCH |  |
