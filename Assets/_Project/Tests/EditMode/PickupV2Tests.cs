@@ -13,6 +13,38 @@ namespace SoulHunter.Tests.EditMode
     /// </summary>
     public class PickupV2Tests
     {
+        /// <summary>
+        /// Owner (2026-10-13): "coin kisi stiker ke jaisa lag raha hai use asli gold coin jaisa banao". The coin lay face up
+        /// and turned like a record, and a strong glow of its own colour removed all shading. It now stands on its edge
+        /// (its thin side is horizontal, so the turn shows face, edge, face) and its glow is weak next to its colour.
+        /// </summary>
+        [Test]
+        public void TheCoin_StandsOnItsEdge_AndItsMetalIsShadedNotGlowing()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Items/SH10_Gold_Coin.prefab");
+            var copy = Object.Instantiate(prefab);
+            try
+            {
+                foreach (var tier in copy.GetComponent<TieredVisual>().Tiers)
+                {
+                    tier.SetActive(true);
+                    var renderers = tier.GetComponentsInChildren<MeshRenderer>();
+                    var bounds = renderers[0].bounds;
+                    foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+                    float thin = Mathf.Min(bounds.size.x, bounds.size.z);
+                    Assert.That(bounds.size.y, Is.GreaterThan(thin * 3f), tier.name + " stands on its edge: taller than it is thick.");
+                    Assert.That(thin, Is.GreaterThan(bounds.size.y * 0.12f), tier.name + " is thick enough for its edge to show.");
+                    foreach (var material in renderers.SelectMany(r => r.sharedMaterials).Where(m => m.name.Contains("_Metal") || m.name.Contains("_Emblem")))
+                    {
+                        Color glow = material.GetColor("_EmissionColor"), colour = material.GetColor("_BaseColor");
+                        Assert.That(glow.maxColorComponent, Is.LessThanOrEqualTo(colour.maxColorComponent * 0.25f), material.name + ": the glow must not flatten the shading.");
+                        Assert.That(material.GetFloat("_Smoothness"), Is.GreaterThanOrEqualTo(0.6f), material.name + " catches the light.");
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(copy); }
+        }
+
         [TestCase(1, 0)] [TestCase(10, 0)] [TestCase(20, 0)] [TestCase(21, 1)] [TestCase(50, 1)] [TestCase(90, 1)] [TestCase(91, 2)] [TestCase(250, 2)]
         public void GemTier_FollowsXp(int xp, int tier)
         {

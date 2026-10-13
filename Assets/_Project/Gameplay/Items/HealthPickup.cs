@@ -12,8 +12,6 @@ namespace SoulHunter.Gameplay.Pickups
         public int HealAmount = 30;
         /// <summary>How close the hero must come to a stage-placed chicken (the walk-over distance of every Pickup).</summary>
         public const float StageItemTouchRadius = 1.5f;
-        [Tooltip("Unused: the radius is PlayerStats.MagnetRadius (one radius for every pickup, VS). Kept so prefabs keep their data.")]
-        [SerializeField] private float _magnetRadius = 3f;
         [SerializeField] private float _flySpeed = 15f;
         [SerializeField] private LayerMask _playerLayer;
 

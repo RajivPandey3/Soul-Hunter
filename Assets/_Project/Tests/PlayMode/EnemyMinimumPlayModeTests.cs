@@ -41,5 +41,41 @@ namespace SoulHunter.Tests.PlayMode
 
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Memory (CTO MIS M6/M19, 2026-10-13): a 30-minute build run grew by 311 MB because pooled bodies of enemy types
+        /// that no longer spawn were kept for ever. A pool nobody has spawned from for PoolIdleSeconds is emptied, a few
+        /// bodies per frame; a pool still in use is left alone.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator PooledBodies_OfATypeThatNoLongerSpawns_AreFreed_AFewPerFrame()
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            float idle = EnemySpawner.PoolIdleSeconds;
+            try
+            {
+                // A type the Level 1 waves do not use now: the level's elite, spawned ten times and then put back.
+                var spawn = typeof(EnemySpawner).GetMethod("SpawnEnemy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var bodies = new System.Collections.Generic.List<GameObject>();
+                for (int i = 0; i < 10; i++) bodies.Add((GameObject)spawn.Invoke(spawner, new object[] { spawner.StageElitePrefab }));
+                Assert.That(bodies, Has.All.Not.Null);
+                foreach (var body in bodies) body.SetActive(false);
+                int pooled = spawner.PooledEnemies;
+                Assert.That(pooled, Is.GreaterThanOrEqualTo(10), "The ten bodies went back to their pool.");
+                yield return null;
+                Assert.That(bodies.TrueForAll(b => b != null), Is.True, "A pool used a moment ago is kept.");
+
+                EnemySpawner.PoolIdleSeconds = 0.2f;
+                yield return new WaitForSeconds(0.3f);
+                yield return null;
+                int gone = bodies.FindAll(b => b == null).Count;
+                Assert.That(gone, Is.GreaterThan(0), "An idle pool starts to be freed.");
+                yield return WaitUntilRealtime(() => bodies.TrueForAll(b => b == null), "every idle pooled body to be freed");
+                Assert.That(EnemyController.ActiveEnemies.Count, Is.GreaterThan(0), "The horde that is still spawning is untouched.");
+            }
+            finally { EnemySpawner.PoolIdleSeconds = idle; }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

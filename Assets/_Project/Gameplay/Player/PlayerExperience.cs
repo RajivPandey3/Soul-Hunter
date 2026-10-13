@@ -53,9 +53,6 @@ namespace SoulHunter.Gameplay.Player
         public event Action<int> OnLevelUp;
         public event Action<int> OnSoulCollected; // Fired when a gem is absorbed
 
-        [Header("Magnet Settings (Soul Gathering)")]
-        [Tooltip("Unused: the radius is PlayerStats.MagnetRadius (one radius for every pickup, VS). Kept so prefabs keep their data.")]
-        [SerializeField] private float _magnetRadius = 4f;
         private Collider[] _magnetHits = new Collider[256];
         private float _magnetCheckTimer = 0f;
 

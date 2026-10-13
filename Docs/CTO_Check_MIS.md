@@ -16,33 +16,33 @@ Tareekh: 2026-10-13. Yeh list batati hai ki ek CTO ke roop mein main poore game 
 
 | Hissa | Rows | OK | MASLA | BAAKI |
 |---|---|---|---|---|
-| A. Shuruaat aur loading | 6 | 2 | 0 | 4 |
+| A. Shuruaat aur loading | 6 | 3 | 0 | 3 |
 | B. Main menu aur uski screens | 10 | 8 | 0 | 2 |
 | C. Character aur mode chunna | 7 | 5 | 0 | 2 |
 | D. Run ki shuruaat | 5 | 4 | 0 | 1 |
-| E. Khel ka mool chakra | 14 | 10 | 2 | 2 |
+| E. Khel ka mool chakra | 14 | 12 | 1 | 1 |
 | F. Run ke andar UI | 12 | 10 | 1 | 1 |
 | G. Events, hazards, Omens | 8 | 6 | 1 | 1 |
 | H. Boss aur agla level | 6 | 3 | 1 | 2 |
 | I. Har level ki apni cheezein | 10 | 6 | 2 | 2 |
 | J. Run ka ant | 6 | 4 | 0 | 2 |
 | K. Sound | 10 | 3 | 0 | 7 |
-| L. VFX aur dikhavat | 11 | 4 | 3 | 4 |
-| M. Lag, memory aur performance | 21 | 5 | 3 | 13 |
+| L. VFX aur dikhavat | 11 | 5 | 2 | 4 |
+| M. Lag, memory aur performance | 21 | 8 | 3 | 10 |
 | N. Save aur data | 8 | 6 | 0 | 2 |
-| O. Controls aur devices | 7 | 3 | 0 | 4 |
+| O. Controls aur devices | 7 | 4 | 0 | 3 |
 | P. Phone | 8 | 4 | 0 | 4 |
-| Q. Build aur sthirta | 7 | 3 | 0 | 4 |
+| Q. Build aur sthirta | 7 | 4 | 0 | 3 |
 | R. Text, naam, kanooni | 6 | 3 | 1 | 2 |
 | S. Kinare ke maamle (ek saath do cheezein) | 12 | 6 | 0 | 6 |
 | T. Camera, takkar aur bhautiki | 7 | 4 | 0 | 3 |
 | U. Run modes, Arcanas, items: har ek alag se | 12 | 10 | 0 | 2 |
 | V. Santulan aur arthvyavastha | 8 | 1 | 1 | 6 |
 | W. Pahunch aur aaram (accessibility) | 6 | 2 | 0 | 4 |
-| X. Naye khiladi ka pehla anubhav | 5 | 3 | 0 | 2 |
-| Y. Code aur project ki sehat | 10 | 1 | 3 | 6 |
+| X. Naye khiladi ka pehla anubhav | 5 | 4 | 0 | 1 |
+| Y. Code aur project ki sehat | 10 | 3 | 3 | 4 |
 | Z. Release ki taiyaari | 10 | 0 | 0 | 10 |
-| **Kul** | **232** | **116** | **18** | **98** |
+| **Kul** | **232** | **128** | **16** | **88** |
 
 Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memory aur performance** (21 mein 13 baaki) aur **Sound** (aaj tak kisi ne game suna nahi hai, sirf tests kehte hain ki clip baj rahi hai).
 
@@ -52,7 +52,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 
 | ID | Kya jaanchna hai | Kaise | Pass ki rekha | Gambhirta | Aaj ki sthiti | Tippani |
 |---|---|---|---|---|---|---|
-| A1 | Icon par click se main menu tak ka samay | B, P | 10 second se kam (reference laptop) | S3 | BAAKI | Kabhi naapa nahi |
+| A1 | Icon par click se main menu tak ka samay | B, P | 10 second se kam (reference laptop) | S3 | OK (dekha) | Launch se khel ke pehle 5 second tak 10 second (bot seedha run mein jaata hai); menu tak ka samay alag se nahi naapa. `run-20261013-mis` |
 | A2 | Splash aur loading screen sahi dikhti hai, kuch kata hua nahi | M | Har window size par poori tasveer | S3 | BAAKI | Loading sirf ek tasveer hai |
 | A3 | Bootstrap se Loading se MainMenu ka kram | T | Har baar yahi kram | S1 | OK (test) | `BootstrapPlayModeTests` |
 | A4 | Pehli baar chalane par (koi save nahi) game khulta hai | T | Naya save banta hai, koi error nahi | S1 | OK (test) | `SaveServiceTests` |
@@ -105,7 +105,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | E3 | Koi weapon hero ko khud chot nahi deta | T | Hero ki health na ghate | S1 | OK (test) | |
 | E4 | Duplicator har weapon par asar dikhata hai | T | 2 zyada shot, ek ke upar ek nahi | S2 | OK (test) | |
 | E5 | Enemy ka contact damage aur 240 ms ki suraksha | T | Ek hit ke baad turant doosra na lage | S2 | OK (test) | |
-| E6 | Koi cheez hero ko har frame damage na de | B | Health achanak 1-1 karke na gire | S1 | MASLA | Stage 9 ka ghera: theek kiya, commit baaki |
+| E6 | Koi cheez hero ko har frame damage na de | B | Health achanak 1-1 karke na gire | S1 | OK (test) | Stage 9 ka ghera theek hua aur commit `326e8dd7` mein hai; test `LastOmensPlayModeTests` |
 | E7 | XP gem, coin, chicken uthaye jate hain; Magnet kaam karta hai | T | Kuch zameen par atka na rahe | S2 | OK (test) | |
 | E8 | Level-up screen: game rukta hai, card chunne par chalta hai | T | Kabhi atka hua pause nahi | S1 | OK (test) | |
 | E9 | Chest screen: OPEN, DONE, skip ke niyam | T | Har window size par button dikhe | S1 | OK (test) | |
@@ -113,7 +113,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | E11 | Chhupe items ke guardians: nyaaypoorn ya nahi | B, M | Hero ko sambhalne ka mauka mile | S2 | MASLA | 50 damage: do hit mein maut (Stage 4, 8, 9 ke bot run) |
 | E12 | Passive items sach mein stat badalte hain | T | Stats panel mein fark dikhe | S2 | OK (test) | |
 | E13 | Difficulty ka dhalaan Level 1 se 10 | B, M | Koi level bina chot ya turant maut wala nahi | S2 | BAAKI | Bot: Level 2, 3, 5, 6 par ek bhi chot nahi |
-| E14 | 30 minute lagatar khelne par kuch nahi tootta | B | 0 error, koi atka pause nahi | S1 | BAAKI | Naye code par poora 30 minute nahi khela |
+| E14 | 30 minute lagatar khelne par kuch nahi tootta | B | 0 error, koi atka pause nahi | S1 | OK (dekha) | Level 1 poore 30 minute (god mode): 0 error, koi atka pause nahi, 12,274 kill, boss 90 second mein mara, Level 2 khula. `run-20261013-mis`/long30 |
 
 ## F. Run ke andar UI
 
@@ -152,7 +152,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | H1 | Boss 25:00 par aata hai, door chhootne par wapas aata hai | T | Har level | S2 | OK (test) | |
 | H2 | Boss marne par chest aur soul gem | T | Dono giren | S2 | OK (test) | |
 | H3 | Naya niyam: boss 30:00 se pehle mara to agla level | T, B | Level 3 se 4 build mein hua | S1 | OK (dekha) | Aaj bana |
-| H4 | 5 minute mein boss maarna mumkin hai, har level par | B, M | Aam loadout se 3 minute ke andar | S1 | MASLA | Level 5 ka boss (90,000 health) 5 minute mein nahi mara |
+| H4 | 5 minute mein boss maarna mumkin hai, har level par | B, M | Aam loadout se 3 minute ke andar | S1 | MASLA | Level 5 ka boss (90,000 health, Coffer ke Curse se dugna) 5 minute mein nahi mara. Level 1: level-31 hero ne 90 second mein, level-8 hero ne 184 second mein maara. Baaki levels aam loadout se naapne baaki |
 | H5 | Boss na mare to Results par saaf kaaran | T | "Level n+1 stays closed" dikhe | S2 | BAAKI | Test likha hai, aankh se nahi dekha |
 | H6 | Level badalne ka pal: purane enemy, items, hazards saaf | T, B | Naye level par purana kuch na bache | S2 | BAAKI | Naye hazards (paani, kaante) ke saath nahi jaancha |
 
@@ -203,7 +203,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 |---|---|---|---|---|---|---|
 | L1 | Har weapon ka apna effect (koi placeholder gola nahi) | T | Sab weapon | S3 | OK (test) | |
 | L2 | Koi effect hero ko na dhake | B | Hero hamesha dikhe | S2 | OK (dekha) | Kaala dhuaan aaj hataya |
-| L3 | Coin asli sone jaisa dikhe | B, M | Motai, kinara, chamak | S3 | MASLA | Sapaat peela tukda dikhta hai; kaam shuru nahi hua |
+| L3 | Coin asli sone jaisa dikhe | B, M | Motai, kinara, chamak | S3 | OK (dekha) | Theek kiya: coin ab kinare par khada hokar ghoomta hai (chehra, kinara, chehra), chamak ghata kar chhaya lautayi. Pehle/baad: `run-20261013-coin/coin-before.png`, `coin-after2.png`. Aapki manzoori baaki |
 | L4 | Har enemy type alag pehchana jaye | M | Rang ke alawa bhi fark | S3 | MASLA | Ek hi model alag rang mein (placeholder) |
 | L5 | Level 6: enemy aur zameen alag dikhen | B | Saaf contrast | S3 | MASLA | Dono halke neele |
 | L6 | Khoon ka spray: 300 particle, zameen par kuch nahi | T | Disable Blood par band | S3 | OK (test) | |
@@ -217,25 +217,25 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 
 | ID | Kya jaanchna hai | Kaise | Pass ki rekha | Gambhirta | Aaj ki sthiti | Tippani |
 |---|---|---|---|---|---|---|
-| M1 | Aam khel ka FPS, har level | B | Median 60, kabhi 30 se neeche nahi | S2 | OK (dekha) | 23 bot runs: median 60 |
+| M1 | Aam khel ka FPS, har level | B | Median 60, kabhi 30 se neeche nahi | S2 | OK (dekha) | 30 minute ka run: median 60, 5% sabse kharab 52, sabse kam 45. `run-20261013-mis`/long30 |
 | M2 | 300 enemy par FPS | P | Average 60, 1% low 30 se upar | S2 | OK (dekha) | Purana benchmark: 76-88 |
-| M3 | Pentagram chalne par jhatka | B | 100 ms se bada frame nahi | S2 | MASLA | 650-800 ms har 60 second; ilaaj likha, naapa nahi |
-| M4 | Bahut tez killing (level 100+ hero) | P | 30 FPS se neeche nahi | S2 | MASLA | Level 7 der se: median 43, sabse kam 27 |
-| M5 | Chest kholne, level-up par jhatka | B | 250 ms se kam | S3 | MASLA | Chest par 333 ms dekha |
-| M6 | Poore 30 minute mein FPS girta nahi jaata | B | Shuru aur ant mein barabar | S2 | OK (dekha) | 10 Oct ka run; naye code par dobara baaki |
-| M7 | Managed memory (heap): 30 minute mein badhti nahi jaati | P | Shuru aur ant ka fark 20 MB se kam | S2 | BAAKI | 6 minute ke runs mein 8 se 18 MB tak badhi; 30 minute par naapa nahi |
+| M3 | Pentagram chalne par jhatka | B | 100 ms se bada frame nahi | S2 | OK (dekha) | Theek hua. Asli kaaran: har kill par character aur PowerUp unlock ki poori jaanch chalti thi (ek wipe mein 300 baar). Ab frame mein ek baar. Naap: 92-164 enemy mitane wale 4 wipe, har ek ka frame 17 ms (pehle 266-733 ms). `run-20261013-mis2`/pentagram |
+| M4 | Bahut tez killing (level 100+ hero) | P | 30 FPS se neeche nahi | S2 | MASLA | Level 7 der se: median 43, sabse kam 27. Har kill par chalne wali unlock-jaanch hatayi (M3), jisse tez killing sasti hui; Level 7 par dobara naapna baaki |
+| M5 | Chest kholne, level-up par jhatka | B | 250 ms se kam | S3 | MASLA | Pehle 30 minute ke run mein chest par 683 aur 717 ms ke jhatke dikhe the; doosre run mein 8 chest khule aur koi jhatka nahi. Jhatka shayad Pentagram ke wipe ka tha (ab theek); chest ko akele naapna baaki |
+| M6 | Poore 30 minute mein FPS girta nahi jaata | B | Shuru aur ant mein barabar | S2 | OK (dekha) | Naye code par FPS ka median: 0-5 min 60, 15-20 min 59, 25-30 min 58 (sabse kam 48). `run-20261013-mis`/long30 |
+| M7 | Managed memory (heap): 30 minute mein badhti nahi jaati | P | Shuru aur ant ka fark 20 MB se kam | S2 | OK (dekha) | Heap 8.4 se 20.9 MB (30 minute mein +12.5 MB; seema 20). Rekha ke paas hai, dheere badhti hai. `run-20261013-mis`/long30 |
 | M8 | 8 GB RAM wali machine | D | Wahi rekha | S2 | BAAKI | Sirf 16 GB par naapa |
 | M9 | Asli 1920x1080 fullscreen | P | Wahi rekha | S2 | BAAKI | Window mein naapa |
 | M10 | Naye Omens ka bojh (paani, kaante, takeover) | P | Koi naya jhatka nahi | S3 | BAAKI | |
 | M11 | Loading ka samay level badalne par | B | 3 second se kam | S3 | BAAKI | |
 | M12 | Garbage collection ke jhatke | P | GC se 16 ms se bada koi frame nahi | S2 | OK (dekha) | Aaj ke har jhatke ke log mein GC ki ginti 0 thi: jhatke GC ke nahi the |
 | M13 | Har frame ka kachra (allocation) | P | Aam khel mein 1 KB per frame se kam | S3 | BAAKI | Kabhi naapa nahi; yahi GC ko bulata hai |
-| M14 | GC kitni baar chalta hai (gen 0, 1, 2) | B, P | Gen 2 poore level mein gine-chune baar | S3 | BAAKI | Bot ginti likhta hai, par kisi ne 30 minute ka jod nahi dekha |
+| M14 | GC kitni baar chalta hai (gen 0, 1, 2) | B, P | Gen 2 poore level mein gine-chune baar | S3 | OK (dekha) | 31 minute mein 259 GC (lagbhag 8 prati minute); yeh Unity ka ek-hi-peedhi wala GC hai, isliye teeno ginti barabar. Kisi jhatke ke saath GC nahi juda |
 | M15 | Zinda objects ki ginti badhti nahi jaati (pool ka leak) | B | 30 minute mein sthir (7,000-9,000) | S1 | OK (dekha) | 29 Sep ko 30,000 tak badhti thi, theek kiya; aaj ke runs mein 4,400-8,300 |
 | M16 | Pool wapas lete hain: enemy, projectile, pickup, VFX, damage number | T, P | Koi cheez pool ke bahar na banti rahe | S2 | BAAKI | Naye Omens (kaante ke khambhe, paani, weapon cards) ke saath nahi jaancha |
 | M17 | Run khatam karke menu par lautne par memory wapas milti hai | P | Menu par memory pehle launch jaisi | S2 | BAAKI | Kabhi naapa nahi |
 | M18 | Paanch run lagatar: har run ke baad memory | P | Run-dar-run badhat nahi | S1 | BAAKI | Kabhi naapa nahi |
-| M19 | Level badalne par purane level ka maal (floor, enemy pool, textures) chhootta hai | P | Level 10 par memory Level 1 se dugni se kam | S2 | BAAKI | Das level ke enemy pool ek run mein jamaa hote jaate hain: sandeh hai |
+| M19 | Level badalne par purane level ka maal (floor, enemy pool, textures) chhootta hai | P | Level 10 par memory Level 1 se dugni se kam | S2 | MASLA | Ilaaj laga: 90 second bekaar pade enemy pool khaali hote hain. Doosra 30 minute ka run: pool mein kabhi 398 se zyada shareer nahi, memory 434 se 535 MB (+101; pehle +311). Par is run ka hero kamzor tha (3,829 kill banaam 12,274), isliye tulna pakki nahi; Level 2-10 par naapna baaki |
 | M20 | Textures aur audio ki memory (native) | P | Reference laptop ke 8 GB mein aaram se | S2 | BAAKI | 30 HD icons 512 px bina compression ke; music stream hota hai |
 | M21 | Phone par memory aur "low memory" ki chetavni | D | App band na ho | S1 | BAAKI | |
 
@@ -261,7 +261,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | O3 | Controller ke buttons | T | Start se pause | S2 | OK (test) | Nakli controller se |
 | O4 | Asli controller (Xbox, PlayStation) | D | Har screen chale | S2 | BAAKI | |
 | O5 | Mouse se har button | M | Hover aur click sahi | S3 | BAAKI | |
-| O6 | Focus khone par pause (alt-tab) | M | Wapas aane par theek | S2 | BAAKI | |
+| O6 | Focus khone par pause (alt-tab) | M | Wapas aane par theek | S2 | OK (dekha) | 30 minute ke run mein window ka focus gaya: game ruka (pause GameSystemManager ke paas), wapas aane par chala, 0 error. `run-20261013-mis2`/long30 |
 | O7 | Do monitor, alag refresh rate | D | Na phate, na dheema | S3 | BAAKI | |
 
 ## P. Phone
@@ -285,7 +285,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | Q2 | Android build banta hai | B | Har baar | S1 | BAAKI | Aaj ke code par nahi banaya |
 | Q3 | Poore test suite | T | Sab pass, 0 exception | S1 | OK (test) | 927 + 416 pass; naye code par poora run chal raha tha |
 | Q4 | Player log mein koi error ya warning ki baadh | B | 0 error | S2 | OK (dekha) | Aaj ke 23 runs mein 0 error |
-| Q5 | Build ka size | B | Tay seema ke andar | S4 | BAAKI | 142 MB tha; seema tay nahi |
+| Q5 | Build ka size | B | Tay seema ke andar | S4 | OK (dekha) | Aaj ka Windows build 205.8 MB (pehle 142 MB tha: 63 MB badha). Seema tay nahi: aapka faisla |
 | Q6 | Saaf machine par install aur pehla launch | D | Bina kisi extra install ke chale | S1 | BAAKI | |
 | Q7 | Do ghante lagatar chalane par crash nahi | B | 0 crash | S1 | BAAKI | |
 
@@ -376,7 +376,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 |---|---|---|---|---|---|---|
 | X1 | Bina bataye samajh aaye ki kya karna hai | M | Pehle 1 minute mein | S2 | BAAKI | Koi tutorial nahi (VS mein bhi nahi) |
 | X2 | Controls kahin dikhte hain | M | Options mein mil jayen | S3 | OK (test) | |
-| X3 | Naya niyam (boss maaro) khiladi ko samay par pata chale | M | 25:00 se pehle bhi sanket | S2 | BAAKI | Abhi sirf boss aane par soochna |
+| X3 | Naya niyam (boss maaro) khiladi ko samay par pata chale | M | 25:00 se pehle bhi sanket | S2 | OK (test) | Joda: 20:00 par soochna "The guardian of Level n comes at 25:00. Defeat it before 30:00 to open Level n+1." Test likha; poore run mein jaanch chal rahi hai |
 | X4 | Band cheez par likha ho ki kaise khulegi | T | Har band button, card, PowerUp | S3 | OK (test) | |
 | X5 | Pehli maut ke baad wapas khelne ka raasta saaf | T | DONE se menu, phir Start | S2 | OK (test) | |
 
@@ -384,11 +384,11 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 
 | ID | Kya jaanchna hai | Kaise | Pass ki rekha | Gambhirta | Aaj ki sthiti | Tippani |
 |---|---|---|---|---|---|---|
-| Y1 | Compile warnings | B | Naye warning shoonya | S4 | BAAKI | Kabhi gine nahi |
+| Y1 | Compile warnings | B | Naye warning shoonya | S4 | OK (dekha) | Apne code mein 10 warning the (sab bekaar fields); hata diye. Baaki 4 Unity ke package ke hain |
 | Y2 | Scene aur prefab mein toote hue reference | T, M | Shoonya | S2 | MASLA | `Main_Gameplay` mein 6 khaali union reference (code unhe chhod deta hai) |
 | Y3 | Aapki bina commit ki files | M | Aap tay karen: rakhni ya hatani | S2 | MASLA | Scene, HUD prefab, 2 material, 1 meta, chest v3: hafton se bina commit |
 | Y4 | Commit jo push nahi hue | M | Backup door bhi ho | S1 | OK (dekha) | 13 Oct: 133 commit GitHub par push hue (`2e17745e` tak). Aaj ka bina commit ka kaam abhi sirf laptop par hai |
-| Y5 | Game ki log mein har frame ya har kill par likhna | B | Shoonya | S3 | BAAKI | `CampaignSignatureSystem` mein "Diagnostic" log bache hain |
+| Y5 | Game ki log mein har frame ya har kill par likhna | B | Shoonya | S3 | OK (dekha) | Har frame ya har kill par koi log nahi. Teen faltu log ("Diagnostic", Soul Tide, Death Pulse) hata diye |
 | Y6 | Quality settings: Standalone ka default | M | Medium (performance contract) | S2 | MASLA | Default ab bhi Ultra hai |
 | Y7 | Unity ka package error (pixel-perfect) | B | Saaf compile | S3 | BAAKI | Purana jaana hua, Unity 6000.0.43 mein theek |
 | Y8 | Test jo kabhi-kabhi fail hote hain | T | Shoonya | S3 | BAAKI | Kuch pehle dekhe gaye (Soul Meteor, Pentagram chest) |

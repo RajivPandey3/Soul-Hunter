@@ -52,9 +52,10 @@ namespace SoulHunter.Gameplay.Core
         {
             // Time and player level change continuously; checking once per stage second is enough.
             int second = _progression != null ? Mathf.FloorToInt(_progression.StageElapsedTime) : 0;
-            if (second != _lastCheckedSecond)
+            if (second != _lastCheckedSecond || _killsChanged)
             {
                 _lastCheckedSecond = second;
+                _killsChanged = false;
                 Evaluate();
             }
             UpdateNotice();
@@ -160,7 +161,10 @@ namespace SoulHunter.Gameplay.Core
             Evaluate();
         }
 
-        private void HandleKills(int _) => Evaluate();
+        // A kill only marks the check as due: a screen wipe ends 300 lives in one frame, and checking every character's
+        // and PowerUp's condition 300 times was part of that frame's stall (2026-10-13). Update checks once.
+        private void HandleKills(int _) => _killsChanged = true;
+        private bool _killsChanged;
         private void HandleWeapon(UpgradeData _) => Evaluate();
 
         public RunProgress CurrentProgress()

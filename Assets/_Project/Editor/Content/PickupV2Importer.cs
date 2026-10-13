@@ -237,13 +237,22 @@ namespace SoulHunter.Editor.Content
         /// nothing to reflect drew as dark brown rings ("donuts") on the stage. Coin metal is less metallic and carries a
         /// soft glow of its own colour, so bronze reads as warm copper, silver as silver and gold as gold.
         /// </summary>
-        public const float CoinMetallic = 0.55f, CoinGlowStrength = 0.38f;
+        /// <remarks>
+        /// Owner (2026-10-13): "coin kisi stiker ke jaisa lag raha hai use asli gold coin jaisa banao". The 0.38 glow lit
+        /// every part of the coin alike, so it had no shading left, and the coin lay flat and turned like a record. The
+        /// glow is now only a floor under the shading, the metal is shinier so the sun flashes on it as it turns, and the
+        /// coin stands on its edge (see BuildCoin).
+        /// </remarks>
+        public const float CoinMetallic = 0.45f, CoinGlowStrength = 0.2f, CoinSmoothness = 0.7f;
+        /// <summary>A coin is drawn this many times thicker than its model, so its reeded edge reads from the game camera.</summary>
+        public const float CoinThickness = 1.25f;
 
         private static bool IsCoinMetal(string path) => path.Contains("Coin_") && (path.Contains("_Metal") || path.Contains("_Emblem"));
 
         private static void CoinGlow(Material mat, Color color)
         {
             mat.SetFloat("_Metallic", CoinMetallic);
+            mat.SetFloat("_Smoothness", CoinSmoothness);
             mat.EnableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", color * CoinGlowStrength);
             mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
@@ -273,19 +282,37 @@ namespace SoulHunter.Editor.Content
             EditorApplication.Exit(code);
         }
 
+        /// <summary>Rebuilds only the coin prefab and re-tunes its materials (the gem and the chest are left alone).</summary>
+        [MenuItem("Soul Hunter/Content/Rebuild Soul Coin")]
+        public static void RebuildCoin()
+        {
+            BuildCoin();
+            RetuneCoins();
+        }
+
+        public static void RebuildCoinFromCommandLine()
+        {
+            int code = 0;
+            try { RebuildCoin(); }
+            catch (System.Exception e) { Debug.LogException(e); code = 1; }
+            EditorApplication.Exit(code);
+        }
+
         private static void BuildCoin()
         {
             var root = PrefabUtility.LoadPrefabContents(CoinPrefab);
             try
             {
-                // The coin model lies flat (face up); stand it up to face the camera, and spin it.
-                var pivot = FreshPivot(root, 0.5f, new Vector3(90f, 0f, 0f));
+                // The coin stands on its edge and turns about the world's up axis, so it shows its face, its reeded edge
+                // and its other face in turn. (It lay face up before and turned like a record: a flat disc.)
+                var pivot = FreshPivot(root, 0.5f, Vector3.zero);
                 var tierObjects = new List<GameObject>();
                 foreach (string model in new[] { "SH10_Pickup_Coin_Bronze", "SH10_Pickup_Coin_Silver", "SH10_Pickup_Coin_Gold" })
                 {
                     var tier = new GameObject(model.Replace("SH10_Pickup_Coin_", "Tier_")).transform;
                     tier.SetParent(pivot, false);
                     Model(tier, model, 0.75f);
+                    tier.localScale = new Vector3(1f, 1f, CoinThickness); // the pivot's Z is the coin's axis
                     tier.gameObject.SetActive(tierObjects.Count == 0);
                     tierObjects.Add(tier.gameObject);
                 }

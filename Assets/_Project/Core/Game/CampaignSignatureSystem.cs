@@ -115,8 +115,6 @@ private void TrySubscribeToProgression()
         private void HandleStageStarted(int stage)
         {
             _level = CampaignLevelCatalog.Get(stage);
-            // Diagnostic: confirm HandleStageStarted called
-            Debug.Log("[Diagnostic] HandleStageStarted invoked for stage " + stage);
             _stageTime = 0f; _slowTimer = 0f; _slowDuration = 0f;
             _soulTideTimer = _soulTideInterval;
             _corePulseTimer = _corePulseInterval;
@@ -226,7 +224,6 @@ private void TrySubscribeToProgression()
             if (_soulTideTimer > 0f || _playerHealth == null) return;
             _soulTideTimer = Mathf.Max(1f, _soulTideInterval);
             _playerHealth.TakeDamage(new DamagePacket(Mathf.Max(1, _soulTideDamage), _player.transform.position, Vector3.zero));
-            Debug.Log("[CampaignSignatureSystem] Sea of Lost Souls: Soul Tide hit Kael.");
         }
 
         private void ApplySoulCorePulse()
@@ -235,7 +232,6 @@ private void TrySubscribeToProgression()
             if (_corePulseTimer > 0f || _playerHealth == null) return;
             _corePulseTimer = Mathf.Max(1f, _corePulseInterval);
             _playerHealth.TakeDamage(new DamagePacket(Mathf.Max(1, _corePulseDamage), _player.transform.position, Vector3.zero));
-            Debug.Log("[CampaignSignatureSystem] Soul Core: Death Pulse released.");
         }
 
         private void EnforceContractingArena()

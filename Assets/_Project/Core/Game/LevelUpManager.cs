@@ -28,10 +28,6 @@ namespace SoulHunter.Gameplay.Core
         // VS rule: Reroll naye choices deta hai, Skip level-up chhod deta hai, Banish item ko
         // is run ke liye pool se hata deta hai. Starting charges provisional hain (baad mein
         // meta shop / character se aayenge).
-        [Header("Level-up actions (charges per run)")]
-        [SerializeField] private int _startingRerolls = 2;
-        [SerializeField] private int _startingSkips = 2;
-        [SerializeField] private int _startingBanishes = 2;
 
         public int RerollsLeft { get; private set; }
         public int SkipsLeft { get; private set; }

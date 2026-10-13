@@ -120,6 +120,17 @@ namespace SoulHunter.Gameplay.Core
             if (second == _lastStageSecond) return;
             _lastStageSecond = second;
 
+            // The guardian rule is told before the guardian comes, so the player can get ready (CTO MIS X3, 2026-10-13).
+            if (!_guardianWarned && StageElapsedTime >= CurrentLevel.BossStartSeconds - GuardianWarningLeadSeconds)
+            {
+                _guardianWarned = true;
+                if (CurrentStage < MaxStages && StageElapsedTime < CurrentLevel.BossStartSeconds)
+                {
+                    var notices = FindFirstObjectByType<CharacterUnlockTracker>();
+                    if (notices != null) notices.ShowMessage(GuardianWarning(CurrentStage, CurrentLevel.BossStartSeconds));
+                }
+            }
+
             if (!_runDurationReached && StageElapsedTime >= CurrentLevel.RunDurationSeconds)
             {
                 _runDurationReached = true;
@@ -139,6 +150,7 @@ namespace SoulHunter.Gameplay.Core
             _runDurationReached = false;
             _stageTransitionQueued = false;
             _bossDefeated = false;
+            _guardianWarned = false;
             StageFailed = false;
             // Stage transition must not carry the previous stage's slow motion forward,
             // but a level-up, chest or merchant screen still open keeps its pause.
@@ -222,6 +234,11 @@ namespace SoulHunter.Gameplay.Core
         public event Action<int> OnStageFailed;
         /// <summary>The line shown when the level's boss arrives (and under GAME OVER when it was not defeated in time).</summary>
         public static string GuardianGoal(int stage) => $"Defeat the guardian before 30:00 to open Level {stage + 1}.";
+        /// <summary>Stage seconds before the guardian comes at which its rule is told (20:00 for a 25:00 guardian).</summary>
+        public const float GuardianWarningLeadSeconds = 300f;
+        private bool _guardianWarned;
+        public static string GuardianWarning(int stage, float bossStartSeconds) =>
+            $"The guardian of Level {stage} comes at {Mathf.FloorToInt(bossStartSeconds / 60f)}:{Mathf.FloorToInt(bossStartSeconds % 60f):00}. Defeat it before 30:00 to open Level {stage + 1}.";
         public static string GuardianFailed(int stage) => $"The guardian of Level {stage} still stood at 30:00. Level {stage + 1} stays closed.";
 
         private void CompleteStageAfterSurvival()

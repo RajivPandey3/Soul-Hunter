@@ -62,7 +62,6 @@ namespace SoulHunter.Gameplay.AI
         private float _timer;
         private WaveData _currentWave;
         private bool _bossSpawnedForCurrentWave;
-        private bool _bossDefeatedForCurrentWave;
 
         // Har prefab ke liye alag Object Pool (Stack for O(1) performance)
         private Dictionary<GameObject, Stack<GameObject>> _enemyPools = new Dictionary<GameObject, Stack<GameObject>>();
@@ -115,7 +114,6 @@ namespace SoulHunter.Gameplay.AI
             int waveIndex = Mathf.Clamp(stageNum - 1, 0, _waves.Count - 1);
             _currentWave = _waves[waveIndex];
             _bossSpawnedForCurrentWave = false;
-            _bossDefeatedForCurrentWave = false;
             _isBossAlive = false;
             _stageTimePassed = 0f;
             _timer = 0f;
@@ -141,8 +139,49 @@ namespace SoulHunter.Gameplay.AI
             PrewarmActiveStagePools();
         }
 
+        /// <summary>
+        /// A 30-minute Level 1 build run (2026-10-13) grew from 432 to 743 MB: each minute's enemy types leave up to a few
+        /// hundred pooled bodies behind, and nothing ever freed them (a run has 250 types over ten levels). A pool no
+        /// spawn has used for this long is emptied, a few bodies per frame so that freeing them is never a hitch itself.
+        /// </summary>
+        public static float PoolIdleSeconds = 90f;
+        public const int PoolTrimPerFrame = 4;
+        private readonly Dictionary<GameObject, float> _poolLastUsed = new Dictionary<GameObject, float>();
+
+        /// <summary>Pooled (inactive) enemy bodies waiting for reuse, over every type (tests, the bot's memory log).</summary>
+        public int PooledEnemies
+        {
+            get
+            {
+                int total = 0;
+                foreach (var pool in _enemyPools.Values) total += pool.Count;
+                return total;
+            }
+        }
+
+        private void TrimIdlePools()
+        {
+            float now = Time.time;
+            int budget = PoolTrimPerFrame;
+            foreach (var entry in _enemyPools)
+            {
+                if (entry.Value.Count == 0) continue;
+                if (!_poolLastUsed.TryGetValue(entry.Key, out float used)) { _poolLastUsed[entry.Key] = now; continue; }
+                if (now - used < PoolIdleSeconds) continue;
+                while (budget > 0 && entry.Value.Count > 0)
+                {
+                    var body = entry.Value.Pop();
+                    if (body == null) continue;
+                    Destroy(body);
+                    budget--;
+                }
+                if (budget <= 0) return;
+            }
+        }
+
         private void Update()
         {
+            TrimIdlePools();
             // Player visuals are selected/instantiated during scene startup,
             // which can occur after this manager's Start(). Reacquire cheaply
             // instead of permanently disabling all ten stage spawners.
@@ -446,7 +485,6 @@ namespace SoulHunter.Gameplay.AI
                     health.OnDied += () =>
                     {
                         _isBossAlive = false;
-                        _bossDefeatedForCurrentWave = true;
                         var progression = FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelProgressionManager>();
                         if (progression != null) progression.ReportBossDefeated();
                     };
@@ -522,6 +560,7 @@ namespace SoulHunter.Gameplay.AI
                 pool = new Stack<GameObject>();
                 _enemyPools[prefab] = pool;
             }
+            _poolLastUsed[prefab] = Time.time;
             GameObject enemyToSpawn = null;
             
             if (pool.Count > 0)

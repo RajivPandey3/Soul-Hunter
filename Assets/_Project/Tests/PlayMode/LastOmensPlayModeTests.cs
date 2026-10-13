@@ -377,6 +377,27 @@ namespace SoulHunter.Tests.PlayMode
                 "The player is told what the guardian is for. " + Errors());
         }
 
+        /// <summary>CTO MIS X3: the rule is told five minutes before the guardian comes, not only when it is already there.</summary>
+        [UnityTest]
+        public IEnumerator TheGuardianRule_IsTold_FiveMinutesBeforeItComes()
+        {
+            yield return BootWithOmens();
+            var progression = LevelProgressionManager.Instance;
+            float bossAt = progression.CurrentLevel.BossStartSeconds;
+            string warning = LevelProgressionManager.GuardianWarning(1, bossAt);
+            Assert.That(warning, Does.Contain("25:00").And.Contain("Level 2"));
+            bool Shown() => Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None).Any(t => t.text != null && t.text.Contains(warning));
+            Assert.That(Shown(), Is.False, "Not told at the start of the level.");
+            // Other notices that the skipped minutes bring (unlocks) show first, in these frames.
+            progression.SkipTo(bossAt - LevelProgressionManager.GuardianWarningLeadSeconds - 3f);
+            yield return null;
+            yield return null;
+            Assert.That(Shown(), Is.False, "Not told before 20:00.");
+            progression.SkipTo(bossAt - LevelProgressionManager.GuardianWarningLeadSeconds);
+            progression.AdvanceClock(1.1f);
+            Assert.That(Shown(), Is.True, "At 20:00 the player is told the guardian is coming and what defeating it opens. " + Errors());
+        }
+
         // ---------------------------------------------------------------- Level 9: the Closing Arena
 
         [UnityTest]

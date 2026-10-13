@@ -28,11 +28,6 @@ namespace SoulHunter.UI
         [SerializeField] private Button _buyGreedButton;
         [SerializeField] private Button _buyRevivalButton;
 
-        [Header("Old prices (unused since 2026-09-30; the v2 save migration refunds them)")]
-        [SerializeField] private int _mightPrice = 500;
-        [SerializeField] private int _armorPrice = 300;
-        [SerializeField] private int _greedPrice = 400;
-        [SerializeField] private int _revivalPrice = 1000;
 
         private static readonly Dictionary<PowerUpId, UpgradeType> IconItem = new Dictionary<PowerUpId, UpgradeType>
         {

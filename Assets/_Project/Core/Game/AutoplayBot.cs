@@ -1119,6 +1119,12 @@ namespace SoulHunter.Gameplay.Core
             float dt = Time.unscaledDeltaTime;
             // Garbage collections since the last frame (a full collection of a large heap is a usual cause of a long frame).
             int gc0 = System.GC.CollectionCount(0), gc1 = System.GC.CollectionCount(1), gc2 = System.GC.CollectionCount(2);
+            // A Pentagram wipe: the length of its own frame and of the frame after it, with the wipe's own measured parts.
+            int sinceWipe = Time.frameCount - PentagramWeapon.LastWipeFrame;
+            if (PentagramWeapon.LastWipeFrame >= 0 && (sinceWipe == 1 || sinceWipe == 2))
+                Event("wipe", string.Format(CultureInfo.InvariantCulture,
+                    "\"frame\": \"{0}\", \"ms\": {1:0}, \"erased\": {2}, \"enemyPassMs\": {3:0.0}, \"itemPassMs\": {4:0.0}",
+                    sinceWipe == 1 ? "wipe" : "after", dt * 1000f, PentagramWeapon.LastWipeCount, PentagramWeapon.LastEnemyWipeMs, PentagramWeapon.LastItemWipeMs));
             if (dt > 0.25f && Time.frameCount > _shotFrame + 3 && Elapsed > 3f)
             {
                 var progression = LevelProgressionManager.Instance;
@@ -1192,6 +1198,7 @@ namespace SoulHunter.Gameplay.Core
         }
 
         private bool _omenDone, _giveDone;
+        private EnemySpawner _spawnerForLog; // pooled enemy bodies in the timeline (memory checks)
 
         private IEnumerator OmenShots(string name)
         {
@@ -1262,13 +1269,15 @@ namespace SoulHunter.Gameplay.Core
             if (fps > 0 && Elapsed > 5f) _minFps = Mathf.Min(_minFps, fps);
             var weapons = WeaponManager.Instance != null ? WeaponManager.Instance.GetActiveWeaponTypes().Select(t => $"\"{t}:{WeaponManager.Instance.GetWeaponLevel(t)}\"") : Enumerable.Empty<string>();
             var stats = RunStatsTracker.Instance;
+            if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}]}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
                 GameTime.IsPaused ? "true" : "false", string.Join(", ", weapons), XPGem.ActiveGems.Count,
-                System.GC.GetTotalMemory(false) / 1048576f, System.GC.CollectionCount(0), System.GC.CollectionCount(1), System.GC.CollectionCount(2)));
+                System.GC.GetTotalMemory(false) / 1048576f, System.GC.CollectionCount(0), System.GC.CollectionCount(1), System.GC.CollectionCount(2),
+                _spawnerForLog != null ? _spawnerForLog.PooledEnemies : 0, UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576f));
             File.WriteAllText(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
         }
 

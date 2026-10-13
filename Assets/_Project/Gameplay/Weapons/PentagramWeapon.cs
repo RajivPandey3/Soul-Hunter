@@ -84,6 +84,8 @@ namespace SoulHunter.Gameplay.Combat
             // them from ActiveEnemies. Iterate backwards so that removal during
             // this wipe cannot invalidate an enumerator or skip the remaining
             // lower indices.
+            long wipeStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            LastWipeCount = 0;
             var allEnemies = EnemyController.ActiveEnemies;
             for (int i = allEnemies.Count - 1; i >= 0; i--)
             {
@@ -105,8 +107,18 @@ namespace SoulHunter.Gameplay.Combat
                 
                 var health = enemy.GetComponent<HealthController>();
                 if (health != null) using (DamageSource.From(this)) health.EraseByInstantKill(); // VS: max-health damage
+                LastWipeCount++;
             }
+            long itemsStart = System.Diagnostics.Stopwatch.GetTimestamp();
             if (eraseItems) LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
+            long end = System.Diagnostics.Stopwatch.GetTimestamp();
+            LastEnemyWipeMs = (itemsStart - wipeStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
+            LastItemWipeMs = (end - itemsStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
+            LastWipeFrame = Time.frameCount;
         }
+
+        /// <summary>The last wipe's cost, for the bot's hitch log: enemies erased, and the time the enemy and item passes took.</summary>
+        public static int LastWipeCount, LastWipeFrame = -1;
+        public static float LastEnemyWipeMs, LastItemWipeMs;
     }
 }

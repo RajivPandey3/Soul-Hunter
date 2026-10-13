@@ -1866,7 +1866,7 @@ The agent played every level for 3 minutes in a build first (`D:/SoulHunter-Vali
 **Screen wipes stalled the game** (found by the lag check the owner asked for, 2026-10-13). In build play a level-8 Pentagram erased about 300 enemies in one frame and the game stood still for 650-800 ms, every 60 s. Each death started its soul puff, neck spray, sinking body and damage number in that one frame.
 - Only the first 32 deaths of a frame get their look (`EnemyDrop.ShownDeathsPerFrame`, `CountShownDeath`; 32 is the corpse cap), and only the first 32 instant-kill numbers are shown (`HealthController.InstantKillNumbersPerFrame`). Every death still counts as a kill and drops as before.
 - `EnemyCorpsePlayModeTests.DeathsInOneFrame_ShowOnlyTheFirstThirtyTwo_AndTheNextFrameShowsAgain` (R).
-- **Not measured again in a build yet**, so whether the stall is gone is `UNKNOWN`. `AutoplayBot -sh-autoplay-give "Pentagram:8"` (and `-sh-autoplay-give-after S`) gives items at set levels for that measurement.
+- Measured in a build afterwards: that change alone was not enough (266-733 ms per wipe). The rest of the cause and the final numbers are in "CTO check, first pass" below. `AutoplayBot -sh-autoplay-give "Pentagram:8"` (and `-sh-autoplay-give-after S`) gives items at set levels for such a measurement.
 - Other lag numbers from the same build runs: normal play held a median of 60 FPS over 23 runs (V-Sync on); Level 7 late fell to a median of 43 and a minimum of 27; a chest opening hitched 333 ms once. About 9-10 GCs a minute with no hitch tied to one; the heap grew about 1 MB a minute over 6 minutes (10 to 17 MB).
 
 **Tests:** `LastOmensTests` (T) and `LastOmensPlayModeTests` (R: each of the seven Omens in the real game, the Shadow as an Omen on Level 1, the guardian rule with its Results line and its notice, and the Closing Arena). Updated: `RandomizerModeTests`, `ItemUnlockTests`, `NewVsItemsTests` (the Coffer's levels, the Idol's places), `StageItemTests`, `BossStageAdvanceTests`, `WeaponVfxTests`, `ChestlessBossAndOmenPlayModeTests`, `RandomizersPlayModeTests`.
@@ -1877,6 +1877,51 @@ The agent played every level for 3 minutes in a build first (`D:/SoulHunter-Vali
 - After that fix, the screen-wipe change and the bot option: EditMode 927/927 and nine fixtures 29/29, 0 exceptions, save untouched (`-lastrows-fix3/`). No single full run passed every test, and no full run covers the screen-wipe change.
 - Build play (`D:/SoulHunter-Validation/run-20261013-lastrows-play/`, script `lastrows-play.ps1`, god mode): 0 errors, save untouched. Screenshots show the Level 9 ring, the Rising Tide's water, the Thorn Circle, Rootbound's plants and Nightfall's bats (partial `V`). The Armoury Cache's box was not caught in a screenshot; only its test confirms it is drawn.
 - `Docs/CTO_Check_MIS.md` (owner, 2026-10-13: a CTO list of everything to check from the Start button to the end of a run) has 232 checks in 26 sections; 98 are still to be done.
+
+Not yet played by the owner.
+
+### CTO check, first pass: coin, screen wipes, memory, 30-minute runs (owner, 2026-10-13)
+
+Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start button to the end of a run: UI, sound, VFX, lag, memory), then "shuru karo" and "kaam jaari rakho". The list is `Docs/CTO_Check_MIS.md`: 232 checks, each with its status and evidence. After this pass: 128 OK, 16 with a problem, 88 not checked yet (sound by ear, real devices, release items and balance mostly need the owner or hardware).
+
+**Coin** (owner: "coin kisi stiker ke jaisa lag raha hai use asli gold coin jaisa banao pahle tum khud check karo").
+- Found with a render of the coin as the game camera sees it (`CoinLookPreview`, menu Soul Hunter/Content/Render Coin Looks): the coin lay face up and turned like a record, so it was always the same flat disc, and a 0.38 glow of its own colour removed all shading.
+- Now (`PickupV2Importer.BuildCoin`, `CoinGlow`; menu Soul Hunter/Content/Rebuild Soul Coin): it stands on its edge and turns about the world's up axis (face, reeded edge, other face); drawn 1.25x thicker (`CoinThickness`); metallic 0.45, smoothness 0.7, glow 0.2 of its colour, so the sun shades it and flashes on it.
+- Before and after: `D:/SoulHunter-Validation/run-20261013-coin/coin-before.png` (its close-up half is white, a first-render fault of the tool; the small half shows the old look) and `coin-after2.png`. Checked by the agent in those renders only; **not seen in play and not owner-approved**.
+- `PickupV2Tests.TheCoin_StandsOnItsEdge_AndItsMetalIsShadedNotGlowing` (T). Script `D:\SoulHunter-Validation\coin-look.ps1`.
+
+**Screen wipes, the real cause.** After the 32-deaths-per-frame change a build still stalled 266-483 ms per Pentagram wipe (300-733 ms in a 30-minute run). `CharacterUnlockTracker` ran its whole unlock check (every character and PowerUp condition) on every single kill, 300 times in a wipe's frame, and on every kill in normal play too. A kill now only marks the check as due and `Update` runs it once.
+- Measured (`D:/SoulHunter-Validation/run-20261013-mis2/pentagram`, level-8 Pentagram, Level 1 from 12:00): four wipes of 92-164 enemies, each in a 17 ms frame; the enemy pass itself took 5-7 ms. `PentagramWeapon.LastEnemyWipeMs` / `LastItemWipeMs` and the bot's `wipe` event record this.
+- A profiler capture of the old stall was made (`run-20261013-pentprof/capture.raw`, 3.5 GB) but summarising it was stopped when the laptop ran low on memory; it was not needed in the end.
+
+**Memory.** The first 30-minute build run (`run-20261013-mis/long30`) grew from 432 to 743 MB of process memory. Suspected cause: pooled bodies of enemy types that no longer spawn were never freed (a run has about 250 types over ten levels).
+- `EnemySpawner.TrimIdlePools`: a pool no spawn has used for 90 s (`PoolIdleSeconds`) is emptied, 4 bodies per frame (`PoolTrimPerFrame`). `PooledEnemies` and Unity's allocated memory are in the bot's timeline (`pooled`, `unityMb`).
+- `EnemyMinimumPlayModeTests.PooledBodies_OfATypeThatNoLongerSpawns_AreFreed_AFewPerFrame` (R).
+- Second 30-minute run (`run-20261013-mis2/long30`): never more than 398 pooled bodies; process memory 434 to 535 MB (+101). **Not a clean comparison:** that run's hero stayed at level 8 with 3,829 kills, against level 37 and 12,274 kills in the first. Levels 2-10 and a whole run are not measured (`P` partial).
+
+**The two 30-minute Level 1 runs** (release build, reference laptop, 1366x768, V-Sync on, god mode, 0 errors, save untouched):
+
+| | First (`run-20261013-mis`) | Second, after the fixes (`-mis2`) |
+|---|---|---|
+| FPS median / 5th percentile / min | 60 / 52 / 45 | 60 / 60 / 39 |
+| Frames over 250 ms | 15, of 300-733 ms (most at a wipe) | 1 (the window lost focus and the game paused, as it should) |
+| Managed heap | 8.4 to 20.9 MB | 8.3 to 12.9 MB |
+| GC runs | 259 in 31 min, none tied to a hitch | not counted |
+| Boss | 4,650 health at level 31, killed in 90 s | 1,200 at level 8, killed in 184 s |
+| End | Level 2 opened | Level 2 opened |
+
+- The bot's loadouts differ run to run (level 37 against level 8), so the second run is a lighter load.
+- Launch to the first seconds of play took 2-27 s in four launches (a cold start is the slow one); launch to the main menu was not timed.
+- The Windows build is 205.8 MB (142 MB on 2026-10-02).
+
+**Also in this pass:**
+- The guardian rule is told five minutes early: at 20:00 the notice shows "The guardian of Level n comes at 25:00. Defeat it before 30:00 to open Level n+1." (`LevelProgressionManager.GuardianWarning`, `GuardianWarningLeadSeconds`; `LastOmensPlayModeTests.TheGuardianRule_IsTold_FiveMinutesBeforeItComes`, R).
+- Ten unused fields (old shop prices, old starting charges, two old magnet radii, a spawner flag) and three leftover logs were removed; the project's own code now compiles without warnings.
+- Mistake: `-sh-autoplay-give` at 12 s silently gave nothing once the bot's level-ups had filled the six weapon slots (one whole run measured no Pentagram). The measurement runs now give at 0.5 s.
+
+**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): five minutes for the boss on every level; the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (every bot run above was on that default); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
+
+**Validation:** one full run on the final code passed every test: EditMode 928/928, PlayMode 430/430, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis2-full/`). The build runs above are the play evidence (partial `P`, partial `V`).
 
 Not yet played by the owner.
 
