@@ -72,7 +72,8 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [TestCase("Assets/Prefabs/Items/XP_Gem.prefab", new[] { "SH10_Pickup_SoulGem_T1", "SH10_Pickup_SoulGem_T2", "SH10_Pickup_SoulGem_T3" })]
-        [TestCase("Assets/Prefabs/Items/SH10_Gold_Coin.prefab", new[] { "SH10_Pickup_Coin_Bronze", "SH10_Pickup_Coin_Silver", "SH10_Pickup_Coin_Gold" })]
+        // Owner (2026-10-13): every coin is the gold coin; its worth shows by its size.
+        [TestCase("Assets/Prefabs/Items/SH10_Gold_Coin.prefab", new[] { "SH10_Pickup_Coin_Gold", "SH10_Pickup_Coin_Gold", "SH10_Pickup_Coin_Gold" })]
         public void TieredPickup_ShowsTheApprovedModels(string path, string[] models)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
@@ -87,6 +88,33 @@ namespace SoulHunter.Tests.EditMode
             foreach (var r in prefab.GetComponentsInChildren<MeshRenderer>(true).Where(r => r.name != "GroundGlow" && r.enabled))
                 foreach (var m in r.sharedMaterials)
                     Assert.That(m.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"), $"{r.name} material {m.name}.");
+        }
+
+        [Test]
+        public void EveryCoin_IsGold_GrowsWithItsWorth_AndHasNoFlatGlowUnderIt()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Items/SH10_Gold_Coin.prefab");
+            Assert.That(prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "GroundGlow"), Is.False, "No flat disc under the coin.");
+            Assert.That(SoulHunter.Gameplay.UI.ChestPreviewStage.CoinVisual(prefab), Is.Not.Null, "The chest screen's coin burst finds its coin model.");
+            var copy = Object.Instantiate(prefab);
+            try
+            {
+                float last = 0f;
+                foreach (var tier in copy.GetComponent<TieredVisual>().Tiers)
+                {
+                    tier.SetActive(true);
+                    var renderers = tier.GetComponentsInChildren<MeshRenderer>();
+                    float height = renderers.Max(r => r.bounds.max.y) - renderers.Min(r => r.bounds.min.y);
+                    Assert.That(height, Is.GreaterThan(last * 1.1f), tier.name + " is bigger than the coin worth less.");
+                    last = height;
+                    foreach (var material in renderers.SelectMany(r => r.sharedMaterials).Where(m => m.name.Contains("_Metal")))
+                    {
+                        Color c = material.GetColor("_BaseColor");
+                        Assert.That(c.r > 0.9f && c.g > 0.6f && c.g < 0.9f && c.b < 0.3f, material.name + " is gold, not bronze or silver: " + c);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(copy); }
         }
 
         [Test]

@@ -62,14 +62,34 @@ namespace SoulHunter.Gameplay.Core
 
         public static string RefreshRateLabel(int hz) => hz <= 0 ? "Default" : hz + " Hz";
 
-        /// <summary>Frames a second asked for on a phone (the performance contract's target).</summary>
-        public const int MobileFrameRate = 60;
+        /// <summary>Frames a second the game asks for on every platform (the performance contract's target).</summary>
+        public const int TargetFrameRate = 60;
+        public const int MobileFrameRate = TargetFrameRate;
+        /// <summary>Measuring tools (the benchmark, the bot's quality A/B) set this to run without V-Sync or a frame cap.</summary>
+        public static bool Uncapped;
+
+        /// <summary>
+        /// V-Sync intervals that bring a display of <paramref name="hz"/> closest to 60 frames a second: 1 on a 60 or 75 Hz
+        /// display, 2 on 120 or 144 Hz, 4 on 240 Hz.
+        /// </summary>
+        public static int VSyncCountFor(double hz) => hz <= 0d ? 1 : Mathf.Clamp(Mathf.RoundToInt((float)hz / TargetFrameRate), 1, 4);
 
         public static void Apply()
         {
-            QualitySettings.vSyncCount = GameSettings.VSync ? 1 : 0;
-            // Owner (2026-10-12: "60 fps kar do"): Unity holds a phone at 30 frames a second unless told otherwise.
-            if (Application.isMobilePlatform) Application.targetFrameRate = MobileFrameRate;
+            if (Uncapped)
+            {
+                QualitySettings.vSyncCount = 0;
+                Application.targetFrameRate = -1;
+            }
+            else
+            {
+                // Owner (2026-10-12: "60 fps kar do" on phones; 2026-10-13: "pure game ko 60 FPS par chalao"): the whole game
+                // runs at 60 frames a second. Unity holds a phone at 30 unless told otherwise; on a PC the cap holds 60
+                // with V-Sync off, and with V-Sync on a faster display skips refreshes (120 Hz shows every second one).
+                QualitySettings.vSyncCount = GameSettings.VSync ? VSyncCountFor(Screen.currentResolution.refreshRateRatio.value) : 0;
+                // Not in batch mode: the test runner has no display, and a cap would only slow every test down.
+                Application.targetFrameRate = Application.isBatchMode ? -1 : TargetFrameRate;
+            }
             // The editor's Game view cannot change window mode or resolution; builds follow the options.
             if (Application.isEditor || Application.isMobilePlatform) return;
             var mode = ModeFor(GameSettings.WindowMode);

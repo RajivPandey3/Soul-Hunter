@@ -28,7 +28,7 @@ Tareekh: 2026-10-13. Yeh list batati hai ki ek CTO ke roop mein main poore game 
 | J. Run ka ant | 6 | 4 | 0 | 2 |
 | K. Sound | 10 | 3 | 0 | 7 |
 | L. VFX aur dikhavat | 11 | 5 | 2 | 4 |
-| M. Lag, memory aur performance | 21 | 9 | 2 | 10 |
+| M. Lag, memory aur performance | 21 | 8 | 3 | 10 |
 | N. Save aur data | 8 | 6 | 0 | 2 |
 | O. Controls aur devices | 7 | 4 | 0 | 3 |
 | P. Phone | 8 | 4 | 0 | 4 |
@@ -42,7 +42,7 @@ Tareekh: 2026-10-13. Yeh list batati hai ki ek CTO ke roop mein main poore game 
 | X. Naye khiladi ka pehla anubhav | 5 | 4 | 0 | 1 |
 | Y. Code aur project ki sehat | 10 | 3 | 3 | 4 |
 | Z. Release ki taiyaari | 10 | 0 | 0 | 10 |
-| **Kul** | **232** | **129** | **15** | **88** |
+| **Kul** | **232** | **128** | **16** | **88** |
 
 Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memory aur performance** (21 mein 13 baaki) aur **Sound** (aaj tak kisi ne game suna nahi hai, sirf tests kehte hain ki clip baj rahi hai).
 
@@ -152,7 +152,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | H1 | Boss 25:00 par aata hai, door chhootne par wapas aata hai | T | Har level | S2 | OK (test) | |
 | H2 | Boss marne par chest aur soul gem | T | Dono giren | S2 | OK (test) | |
 | H3 | Naya niyam: boss 30:00 se pehle mara to agla level | T, B | Level 3 se 4 build mein hua | S1 | OK (dekha) | Aaj bana |
-| H4 | 5 minute mein boss maarna mumkin hai, har level par | B, M | Aam loadout se 3 minute ke andar | S1 | MASLA | 24:50 se boss ki ladai, god mode, mazboot hero (`run-20261013-mis3`): Level 2 58 s, Level 4 114 s, Level 8 219 s mein mara aur agla level khula. Level 6 ka boss (75,000 health, level-100 hero) 30:00 tak nahi mara: run khatam, "Level 7 stays closed". Pehle Level 5 par bhi yahi hua tha. 5 minute Level 5 aur 6 par kaafi nahi: aapka faisla |
+| H4 | 5 minute mein boss maarna mumkin hai, har level par | B, M | Aam loadout se 3 minute ke andar | S1 | MASLA | Level 5 aur 6 ka guardian ab 20:00 par aata hai (aapka faisla). Naapa (`run-20261013-mis4`): Level 5 ka boss 166 s, Level 6 ka 61 s mein mara. Par ladai loadout par tiki hai: `run-20261013-mis6`/ab-l2 mein kamzor loadout wala level-50 hero Level 2 ka boss (12,500) 5 minute mein nahi maar paya aur run khatam hua. Kamzor loadout kisi bhi level par fail ho sakta hai: aapka faisla |
 | H5 | Boss na mare to Results par saaf kaaran | T | "Level n+1 stays closed" dikhe | S2 | BAAKI | Test likha hai, aankh se nahi dekha |
 | H6 | Level badalne ka pal: purane enemy, items, hazards saaf | T, B | Naye level par purana kuch na bache | S2 | BAAKI | Naye hazards (paani, kaante) ke saath nahi jaancha |
 
@@ -203,7 +203,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 |---|---|---|---|---|---|---|
 | L1 | Har weapon ka apna effect (koi placeholder gola nahi) | T | Sab weapon | S3 | OK (test) | |
 | L2 | Koi effect hero ko na dhake | B | Hero hamesha dikhe | S2 | OK (dekha) | Kaala dhuaan aaj hataya |
-| L3 | Coin asli sone jaisa dikhe | B, M | Motai, kinara, chamak | S3 | OK (dekha) | Coin ab kinare par khada hokar ghoomta hai, chamak ghata kar chhaya lautayi. Render mein aur khel mein dekha (Gilded Fever, `run-20261013-mis3`/coin): alag-alag kon par dikhta hai, par khel ke camera se chhota hai. Aapki manzoori baaki |
+| L3 | Coin asli sone jaisa dikhe | B, M | Motai, kinara, chamak | S3 | OK (dekha) | Ab har coin ek hi chamakdaar gold ka hai, keemat aakaar se dikhti hai, bada (1.15) aur mota, neeche ki chapti disc hata di. Render `coin-gold-render.png`, khel mein `coin-gold-in-play.png`. Tez chamak nahi hai aur neela soul flame bacha hai. Aapki manzoori baaki |
 | L4 | Har enemy type alag pehchana jaye | M | Rang ke alawa bhi fark | S3 | MASLA | Ek hi model alag rang mein (placeholder) |
 | L5 | Level 6: enemy aur zameen alag dikhen | B | Saaf contrast | S3 | MASLA | Dono halke neele |
 | L6 | Khoon ka spray: 300 particle, zameen par kuch nahi | T | Disable Blood par band | S3 | OK (test) | |
@@ -220,7 +220,7 @@ Sabse bade khaali hisse: **Release ki taiyaari** (10 mein 10 baaki), **Lag, memo
 | M1 | Aam khel ka FPS, har level | B | Median 60, kabhi 30 se neeche nahi | S2 | OK (dekha) | 30 minute ka run: median 60, 5% sabse kharab 52, sabse kam 45. `run-20261013-mis`/long30 |
 | M2 | 300 enemy par FPS | P | Average 60, 1% low 30 se upar | S2 | OK (dekha) | Purana benchmark: 76-88 |
 | M3 | Pentagram chalne par jhatka | B | 100 ms se bada frame nahi | S2 | OK (dekha) | Theek hua. Asli kaaran: har kill par character aur PowerUp unlock ki poori jaanch chalti thi (ek wipe mein 300 baar). Ab frame mein ek baar. Naap: 92-164 enemy mitane wale 4 wipe, har ek ka frame 17 ms (pehle 266-733 ms). `run-20261013-mis2`/pentagram |
-| M4 | Bahut tez killing (level 100+ hero) | P | 30 FPS se neeche nahi | S2 | OK (dekha) | Level 7 der se dobara naapa (20:00 se 6 minute, level-110 hero, 321 tak enemy): median 57, 5% sabse kharab 51, sabse kam 36 (pehle 43 / 27). Par boss ki ladai mein Level 2 par median 43 aur Level 8 par sabse kam 25 dikha: dekhein H4. `run-20261013-mis3`/l7late |
+| M4 | Bahut tez killing (level 100+ hero) | P | 30 FPS se neeche nahi | S2 | MASLA | Bina seema ke naapa (`run-20261013-mis6`): Level 8 ki boss ladai, level-120 hero, 6 minute mein 11,616 kill: median 56-58, 5% sabse kharab 48-50, sabse kam 42-47 (ek reading 29). 60 nahi tikta. Ultra aur Medium mein fark nahi, to kharcha game code ka hai. Level 2 (310 enemy): 72 / 62 / 58. Wajah dhoondhne ko profiler chahiye |
 | M5 | Chest kholne, level-up par jhatka | B | 250 ms se kam | S3 | MASLA | Pehle 30 minute ke run mein chest par 683 aur 717 ms ke jhatke dikhe the; doosre run mein 8 chest khule aur koi jhatka nahi. Jhatka shayad Pentagram ke wipe ka tha (ab theek); chest ko akele naapna baaki |
 | M6 | Poore 30 minute mein FPS girta nahi jaata | B | Shuru aur ant mein barabar | S2 | OK (dekha) | Naye code par FPS ka median: 0-5 min 60, 15-20 min 59, 25-30 min 58 (sabse kam 48). `run-20261013-mis`/long30 |
 | M7 | Managed memory (heap): 30 minute mein badhti nahi jaati | P | Shuru aur ant ka fark 20 MB se kam | S2 | OK (dekha) | Heap 8.4 se 20.9 MB (30 minute mein +12.5 MB; seema 20). Rekha ke paas hai, dheere badhti hai. `run-20261013-mis`/long30 |

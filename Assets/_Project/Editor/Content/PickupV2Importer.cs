@@ -243,9 +243,18 @@ namespace SoulHunter.Editor.Content
         /// glow is now only a floor under the shading, the metal is shinier so the sun flashes on it as it turns, and the
         /// coin stands on its edge (see BuildCoin).
         /// </remarks>
-        public const float CoinMetallic = 0.45f, CoinGlowStrength = 0.2f, CoinSmoothness = 0.7f;
+        public const float CoinMetallic = 0.55f, CoinGlowStrength = 0.25f, CoinSmoothness = 0.82f;
+        /// <summary>
+        /// Owner (2026-10-13, after seeing the coin in play: "gold nahi lagta, stiker dikh raha hai"): every coin is the
+        /// gold coin in one bright gold; its worth shows by its size, not by bronze or silver metal. The flat glow disc
+        /// under the coin is gone (it read as a sticker on the floor).
+        /// </summary>
+        public static readonly Color CoinGold = new Color(1f, 0.76f, 0.12f), CoinGoldEmblem = new Color(1f, 0.9f, 0.45f);
+        public static readonly float[] CoinTierSizes = { 0.85f, 1f, 1.25f };
         /// <summary>A coin is drawn this many times thicker than its model, so its reeded edge reads from the game camera.</summary>
-        public const float CoinThickness = 1.25f;
+        public const float CoinThickness = 1.8f;
+        /// <summary>The coin's width in world units. Owner (2026-10-13: "coin bada karo"): it was 0.75 and read small in play.</summary>
+        public const float CoinSize = 1.15f;
 
         private static bool IsCoinMetal(string path) => path.Contains("Coin_") && (path.Contains("_Metal") || path.Contains("_Emblem"));
 
@@ -268,6 +277,8 @@ namespace SoulHunter.Editor.Content
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (!IsCoinMetal(path)) continue;
                 var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (path.Contains("Coin_Gold_Metal")) mat.SetColor("_BaseColor", CoinGold);
+                if (path.Contains("Coin_Gold_Emblem")) mat.SetColor("_BaseColor", CoinGoldEmblem);
                 CoinGlow(mat, mat.GetColor("_BaseColor"));
                 Debug.Log($"[PickupV2Importer] Coin glow: {path}");
             }
@@ -305,18 +316,17 @@ namespace SoulHunter.Editor.Content
             {
                 // The coin stands on its edge and turns about the world's up axis, so it shows its face, its reeded edge
                 // and its other face in turn. (It lay face up before and turned like a record: a flat disc.)
-                var pivot = FreshPivot(root, 0.5f, Vector3.zero);
+                var pivot = FreshPivot(root, CoinSize * CoinTierSizes[CoinTierSizes.Length - 1] * 0.5f + 0.1f, Vector3.zero);
                 var tierObjects = new List<GameObject>();
-                foreach (string model in new[] { "SH10_Pickup_Coin_Bronze", "SH10_Pickup_Coin_Silver", "SH10_Pickup_Coin_Gold" })
+                for (int i = 0; i < CoinTierSizes.Length; i++)
                 {
-                    var tier = new GameObject(model.Replace("SH10_Pickup_Coin_", "Tier_")).transform;
+                    var tier = new GameObject("Tier_" + (i + 1)).transform;
                     tier.SetParent(pivot, false);
-                    Model(tier, model, 0.75f);
+                    Model(tier, "SH10_Pickup_Coin_Gold", CoinSize * CoinTierSizes[i]);
                     tier.localScale = new Vector3(1f, 1f, CoinThickness); // the pivot's Z is the coin's axis
                     tier.gameObject.SetActive(tierObjects.Count == 0);
                     tierObjects.Add(tier.gameObject);
                 }
-                GroundGlow(root.transform, Glow("Gold", new Color(1f, 0.75f, 0.3f, 0.45f)), 1.1f, 0f);
                 var tiered = root.GetComponent<TieredVisual>() ?? root.AddComponent<TieredVisual>();
                 tiered.Thresholds = CoinThresholds;
                 tiered.Tiers = tierObjects.ToArray();

@@ -206,11 +206,16 @@ namespace SoulHunter.Gameplay.UI
             _lidSign = (Quaternion.AngleAxis(60f, Vector3.right) * front).y > 0f ? 1f : -1f;
         }
 
-        private static GameObject CoinVisual(GameObject coinPrefab)
+        /// <summary>The coin model the burst copies: the prefab's biggest tier (every tier is the gold coin since 2026-10-13).</summary>
+        public static GameObject CoinVisual(GameObject coinPrefab)
         {
             if (coinPrefab == null) return null;
-            var gold = coinPrefab.transform.Find("Visual/Tier_Gold") ?? coinPrefab.transform.Find("Tier_Gold");
-            return gold != null ? gold.gameObject : null;
+            foreach (string name in new[] { "Tier_3", "Tier_Gold" })
+            {
+                var gold = coinPrefab.transform.Find("Visual/" + name) ?? coinPrefab.transform.Find(name);
+                if (gold != null) return gold.gameObject;
+            }
+            return null;
         }
 
         /// <summary>Opens the lid and starts the coin burst (<paramref name="coins"/> coins over about a second).</summary>

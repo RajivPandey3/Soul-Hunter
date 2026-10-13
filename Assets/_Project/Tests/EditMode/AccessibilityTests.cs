@@ -88,6 +88,14 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRates(modes, size), Is.EqualTo(new[] { 60, 120, 144 }),
                 "59.94 reads as 60; other sizes and empty rates are left out.");
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRateLabel(0), Is.EqualTo("Default"));
+            // Owner (2026-10-13: "pure game ko 60 FPS par chalao"): the game asks for 60 everywhere; a faster display skips refreshes.
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.TargetFrameRate, Is.EqualTo(60));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(60), Is.EqualTo(1));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(59.94), Is.EqualTo(1));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(120), Is.EqualTo(2));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(144), Is.EqualTo(2));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(240), Is.EqualTo(4));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(0), Is.EqualTo(1));
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRateLabel(144), Is.EqualTo("144 Hz"));
             // VS: "Only visible when using Exclusive Fullscreen Window Mode" (Window Mode 1), and PC-exclusive.
             for (int mode = 0; mode < 4; mode++)

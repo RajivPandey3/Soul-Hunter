@@ -206,7 +206,7 @@ Not yet played by the owner.
 Owner decision (2026-09-24): one run plays through all 10 levels in order. This intentionally differs from Vampire Survivors' separate per-stage runs.
 
 ~~Killing a stage's boss clears that stage and starts the next one.~~ Superseded by the owner on 2026-09-27, after VS research. vampire.survivors.wiki/w/Mad_Forest: a 30-minute run; chest bosses at 1, 3, 5, 7, 9, 10, 12, 14, 15, 16, 18, 20, 22, 23, 25 and 29 minutes, plus Arcana-only chests at 11 and 21; at 30:00 the screen is cleared and the Reaper comes.
-- Every stage lasts the full 30 minutes, like VS. The stage boss comes at 25:00, and killing it no longer ends the stage (`LevelProgressionManager.IsBossDefeated`).
+- Every stage lasts the full 30 minutes, like VS. The stage boss comes at 25:00 (at 20:00 on Levels 5 and 6 since 2026-10-13), and killing it no longer ends the stage (`LevelProgressionManager.IsBossDefeated`).
 - At 30:00 the screen is cleared and the next stage starts after a short transition. There is no Reaper; the run moves on instead.
 - Killing the Level 10 boss (Shadow Kael, the end of the story) still wins the run.
 - Chest elites come at the VS minutes 1, 3, 5, 7, 9, 10, 12, 14, 15, 16, 18, 20, 22, 23, 27 and 29 (`EnemySpawner.DefaultChestEliteMinutes`), 16 per stage. They were every 5 minutes before the boss, and they also come during a boss fight.
@@ -1823,7 +1823,7 @@ Not yet played by the owner.
 The agent played every level for 3 minutes in a build first (`D:/SoulHunter-Validation/run-20261013-allstages/`, script `allstages-play.ps1`: no god mode, hero at a believable level per stage, 0 errors, save untouched). Eight levels were survived; the bot died on Level 4 at 1:23 (pinned against the corridor wall) and on Level 9 after 16 s (the arena defect below). Owner, after that: "kuch bhi nahi bachna chahiye agar kahani ko tora gumana parta hai to use bhi ghuma sakte ho per kahani storg hona chahiye". `Docs/VS_DOT_Table.md` now counts MATCH 151, PARTIAL 0, MISSING 0, DIFFERS-OWNER 12, BALANCE 11, UNKNOWN 0, N/A 2 (176 rows).
 
 **Owner decision: a level's guardian opens the next level** (2026-10-13: "lv 1 mein kuch achive kare tabhi lv 2 open ho sake athwa nahi"; chosen by AskUserQuestion: defeat the stage boss; otherwise the run ends; for this run only).
-- On Levels 1 to 9 the next level starts at 30:00 only if this level's boss (it comes at 25:00) has been defeated. If it still stands at 30:00 the run ends there: the Results screen shows GAME OVER and "The guardian of Level n still stood at 30:00. Level n+1 stays closed." No stage-clear gold is paid (`LevelProgressionManager.StageFailed`, `OnStageFailed`, `RunResults.EndReason`).
+- On Levels 1 to 9 the next level starts at 30:00 only if this level's boss (it comes at 25:00; at 20:00 on Levels 5 and 6 since later that day) has been defeated. If it still stands at 30:00 the run ends there: the Results screen shows GAME OVER and "The guardian of Level n still stood at 30:00. Level n+1 stays closed." No stage-clear gold is paid (`LevelProgressionManager.StageFailed`, `OnStageFailed`, `RunResults.EndReason`).
 - When the boss comes, the notice shows "Defeat the guardian before 30:00 to open Level n+1." (`EnemySpawner.SpawnBoss`).
 - Nothing is kept on the save: every run starts at Level 1 and earns each level again. Level 10 is unchanged.
 - This replaces "30:00 starts the next stage whatever happened to the boss" (2026-09-27). VS unlocks stages by hero level in the stage before (wiki Stages: 20, 40, 60, 80); the owner chose the boss.
@@ -1882,7 +1882,7 @@ Not yet played by the owner.
 
 ### CTO check, first pass: coin, screen wipes, memory, 30-minute runs (owner, 2026-10-13)
 
-Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start button to the end of a run: UI, sound, VFX, lag, memory), then "shuru karo" and "kaam jaari rakho". The list is `Docs/CTO_Check_MIS.md`: 232 checks, each with its status and evidence. After both batches: 129 OK, 15 with a problem, 88 not checked yet (sound by ear, real devices, release items and balance mostly need the owner or hardware).
+Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start button to the end of a run: UI, sound, VFX, lag, memory), then "shuru karo" and "kaam jaari rakho". The list is `Docs/CTO_Check_MIS.md`: 232 checks, each with its status and evidence. After three batches: 128 OK, 16 with a problem, 88 not checked yet (sound by ear, real devices, release items and balance mostly need the owner or hardware).
 
 **Coin** (owner: "coin kisi stiker ke jaisa lag raha hai use asli gold coin jaisa banao pahle tum khud check karo").
 - Found with a render of the coin as the game camera sees it (`CoinLookPreview`, menu Soul Hunter/Content/Render Coin Looks): the coin lay face up and turned like a record, so it was always the same flat disc, and a 0.38 glow of its own colour removed all shading.
@@ -1934,7 +1934,27 @@ Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start bu
   With the earlier Level 5 run, two of nine levels ended a god-mode run of a strong hero. The bot flees bosses, so a player may do better; whether five minutes stay is the owner's decision. Level 8's minimum of 25 FPS is under the 30 FPS hard minimum (one 5 s sample).
 - Memory in those 6.5-minute runs: process memory grew 30-90 MB each (for example 538 to 628), 567-792 pooled bodies at most, Unity's own memory 124 to 164-182 MB. A whole ten-level run is not measured.
 
-**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): five minutes for the boss on every level; the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (every bot run above was on that default); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
+**Third batch: guardian time, gold coin, 60 FPS (owner, 2026-10-13).**
+- **Guardians of Levels 5 and 6 come at 20:00** (owner: "boss ko pehle bulao"). `CampaignLevelCatalog.EarlyGuardianSeconds` 1200; the other levels keep 25:00. The warning comes five minutes before, at 15:00. Measured (`run-20261013-mis4`, god mode, clock skipped to 19:50): Level 5's boss (45,000 health, level-90 hero) fell in 166 s and Level 6's (50,000, level 100) in 61 s. `BossStageAdvanceTests.TheGuardiansOfLevelsFiveAndSix_ComeAtTwentyMinutes_TheOthersAtTwentyFive` (T).
+  - The fight's length depends on the bot's random loadout: in `run-20261013-mis6/ab-l2` a level-50 hero with a weak draw (781 kills in 5 minutes) did not kill Level 2's boss (12,500) by 30:00 and the run ended, where the earlier run killed it in 58 s. So a weak loadout can still fail any level's five minutes.
+- **Coin** (owner: "coin bada karo", then "coin abhi bhi bekar hai ... gold nahi lagta, stiker dikh raha hai"). Every coin is now the gold coin in one bright gold (`PickupV2Importer.CoinGold`); its worth shows by size (`CoinTierSizes` 0.85 / 1 / 1.25 of `CoinSize` 1.15, was 0.75); 1.8x thick; metallic 0.55, smoothness 0.82, glow 0.25; the flat glow disc under it is gone. Bronze and silver coins are no longer shown.
+  - Renders `D:/SoulHunter-Validation/coin-gold-render.png` and, in play, `coin-gold-in-play.png` (`run-20261013-mis5/coin`). The agent's view: gold and 3D, but no strong glint, and the cyan soul flame remains. **Not owner-approved.**
+  - Defect this caused, found by the full run: the chest screen's coin burst looked the coin model up by its old name `Tier_Gold` and threw no coins (`ChestFlowPlayModeTests` timed out). `ChestPreviewStage.CoinVisual` now takes the biggest tier; `PickupV2Tests.EveryCoin_IsGold_GrowsWithItsWorth_AndHasNoFlatGlowUnderIt` (T) guards the lookup.
+- **60 FPS everywhere** (owner: "pure game ko 60 FPS par chalao"). `DisplaySettingsApplier.TargetFrameRate` 60 on every platform (it was phones only). With V-Sync on, a faster display skips refreshes (`VSyncCountFor`: 120 Hz gives 60, 240 Hz gives 60, 144 Hz gives 72). Measuring tools set `DisplaySettingsApplier.Uncapped`. `AccessibilityTests` (T).
+  - This is a cap, not a speed-up. Measured in a build without the cap (`run-20261013-mis6`, script `mis6-run.ps1`, reference laptop, 1366x768, god mode, 0 errors, save untouched), switching Ultra and Medium every 30 s in the same run (`AutoplayBot -sh-autoplay-quality-ab "5,2"`, timeline field `quality`):
+
+    | Run | Ultra: median / 5th percentile / min | Medium |
+    |---|---|---|
+    | Level 2 from 24:50, level-50 hero, about 310 enemies | 72 / 62 / 60 | 72 / 62 / 58 |
+    | Level 8 from 24:50, level-120 hero, 11,616 kills in 6 min, about 270 enemies | 56 / 48 / 42 | 58 / 50 / 47 |
+
+    These are 5 s averages; the Level 8 run's worst single reading was 29. **Quality level makes no real difference** (within noise), so the cost is in game code under heavy killing, not in rendering. Level 8 with a level-120 hero does not hold 60; finding out why needs a profiler capture, which the owner has paused.
+  - With the cap on (Level 1, 2 minutes): 60 / 60 / 60.
+  - Not measured: V-Sync off with the cap, a display faster than 60 Hz, the phone.
+- **The stored quality level.** A player build keeps its quality level between launches (registry), and `PerformanceBenchmark` and the A/B switch set it. After the A/B it read Medium on this laptop; what it was before is not known, so the earlier line "every bot run above was on that default (Ultra)" is not proven. The bot now puts back the level it found. A fresh install still starts on Ultra (owner decision open).
+- Validation: full run before the 60 FPS change: EditMode 930/930, PlayMode 429/430 (the chest coin defect above), 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis5-full/`). After the fix and the 60 FPS change: EditMode 930/930 and the chest, accessibility and bot fixtures 17/17 (`run-20261013-mis6/tests`), then with the bot putting the quality level back 7/7 (`-mis6/tests2`). No full run covers the 60 FPS change.
+
+**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): whether a weak loadout may fail a level's guardian; heavy-kill FPS on Level 8 (56-58, not 60); the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (measured: no FPS difference); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
 
 **Validation:** one full run on the final code passed every test: EditMode 928/928, PlayMode 430/430, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis2-full/`). The build runs above are the play evidence (partial `P`, partial `V`).
 

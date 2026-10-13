@@ -61,14 +61,20 @@ namespace SoulHunter.Gameplay.Data
         // e.g. L5 "a slow, heavy horde and fast swarms" at 0.9, L6 1.45): the owner chose "VS waves + own rules"
         // (2026-10-09), and an approved decision comes before the VS stage speed (x1.25 / x1.4 on the source stages).
         // The spawn interval multiplier is 1 (release item P2-02): each minute's VS interval is used as the wiki gives it.
+        /// <summary>
+        /// Owner (2026-10-13: "boss ko pehle bulao"): the guardians of Levels 5 and 6 come earlier than 25:00, because a
+        /// strong hero could not defeat them in five minutes and the guardian rule then ended the run.
+        /// </summary>
+        public const float EarlyGuardianSeconds = 1200f;
+
         private static readonly CampaignLevelDefinition[] Levels =
         {
             new(1, "The Cursed Graveyard", "Kael starts his journey near his daughter's grave, harvesting wandering souls.", "Teach movement, dash, souls and auto-attacks", CampaignSignature.CursedGraveyard, "SH10_L01_Showcase", 1.00f, 1.00f),
             new(2, "The Dark Forest", "The souls run in fear. Kael realizes the forest is rejecting his dark presence.", "Darkness accelerates enemy pressure", CampaignSignature.DarkForest, "SH10_L02_Showcase", 1.10f, 1.00f),
             new(3, "The Forgotten Village", "Kael encounters the remnants of a village burned down by demons.", "A Wandering Merchant sells weapons and Soul Eggs for gold", CampaignSignature.ForgottenVillage, "SH10_L03_Showcase", 1.15f, 1.00f),
             new(4, "The Ruined Castle", "The gateway to the Underworld. The Gatekeeper warns Kael that he is being deceived.", "Castle corridors: gargoyles come mostly from the left and right", CampaignSignature.RuinedCastle, "SH10_L04_Showcase", 1.20f, 1.00f),
-            new(5, "The Crimson Swamp", "Kael's soul begins to rot. He hears whispers and voices.", "A slow, heavy horde and fast swarms", CampaignSignature.CrimsonSwamp, "SH10_L05_Showcase", 0.90f, 1.00f),
-            new(6, "The Frozen Peaks", "The icy descent into the deep underworld. The cold reflects Kael's fading humanity.", "Blizzards and periodic movement slow; fast enemies from above and below", CampaignSignature.FrozenPeaks, "SH10_L06_Showcase", 1.45f, 1.00f),
+            new(5, "The Crimson Swamp", "Kael's soul begins to rot. He hears whispers and voices.", "A slow, heavy horde and fast swarms", CampaignSignature.CrimsonSwamp, "SH10_L05_Showcase", 0.90f, 1.00f, bossStartSeconds: EarlyGuardianSeconds),
+            new(6, "The Frozen Peaks", "The icy descent into the deep underworld. The cold reflects Kael's fading humanity.", "Blizzards and periodic movement slow; fast enemies from above and below", CampaignSignature.FrozenPeaks, "SH10_L06_Showcase", 1.45f, 1.00f, bossStartSeconds: EarlyGuardianSeconds),
             new(7, "The Sea of Lost Souls", "The resting place of souls who gave up. Kael starts losing his sanity.", "Spectral enemies and holy-damage checks", CampaignSignature.SeaOfLostSouls, "SH10_L07_Showcase", 1.30f, 1.00f),
             new(8, "The Blood Arenas", "The Death God's elite guards test Kael's worthiness.", "Elite waves replace ordinary swarms", CampaignSignature.BloodArenas, "SH10_L08_Showcase", 1.40f, 1.00f),
             new(9, "The Throne of Death", "The 99,999th soul is collected. Kael approaches the final throne.", "The safe zone shrinks; outside it you lose health", CampaignSignature.ThroneOfDeath, "SH10_L09_Showcase", 1.50f, 1.00f),

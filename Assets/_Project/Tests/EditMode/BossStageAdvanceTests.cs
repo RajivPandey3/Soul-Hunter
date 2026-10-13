@@ -124,5 +124,17 @@ namespace SoulHunter.Tests.EditMode
 
             Assert.That(won, Is.True);
         }
+
+        [Test]
+        public void TheGuardiansOfLevelsFiveAndSix_ComeAtTwentyMinutes_TheOthersAtTwentyFive()
+        {
+            // Owner (2026-10-13: "boss ko pehle bulao"): five minutes were not enough on Levels 5 and 6.
+            for (int level = 1; level <= LevelProgressionManager.MaxStages; level++)
+            {
+                float expected = level == 5 || level == 6 ? 1200f : 1500f;
+                Assert.That(SoulHunter.Gameplay.Data.CampaignLevelCatalog.Get(level).BossStartSeconds, Is.EqualTo(expected), "Level " + level);
+            }
+            Assert.That(LevelProgressionManager.GuardianWarning(5, 1200f), Does.Contain("20:00").And.Contain("Level 6"));
+        }
     }
 }

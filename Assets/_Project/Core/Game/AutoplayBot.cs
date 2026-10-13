@@ -197,6 +197,8 @@ namespace SoulHunter.Gameplay.Core
         {
             foreach (var undo in _unsubscribe) undo();
             _unsubscribe.Clear();
+            // A player build stores its quality level between launches; a measuring run must not leave its own behind.
+            if (_qualityBefore >= 0) QualitySettings.SetQualityLevel(_qualityBefore, true);
         }
 
         private void OnEnable() => Application.logMessageReceived += OnLog;
@@ -1185,6 +1187,30 @@ namespace SoulHunter.Gameplay.Core
                     Event("give", $"\"item\": \"{type}\", \"level\": {weapons.GetWeaponLevel(type)}");
                 }
             }
+            // -sh-autoplay-quality N sets the quality level once. -sh-autoplay-quality-ab "A,B" switches between two levels
+            // every 30 s with V-Sync and the frame cap off, so one run compares them on the same hero (the timeline's
+            // "quality" field says which was on).
+            if (!_qualitySet && int.TryParse(ArgValue("-sh-autoplay-quality"), out int fixedQuality))
+            {
+                _qualitySet = true;
+                if (_qualityBefore < 0) _qualityBefore = QualitySettings.GetQualityLevel();
+                QualitySettings.SetQualityLevel(fixedQuality, true);
+                DisplaySettingsApplier.Apply(); // a quality level carries its own V-Sync count; the game's rule comes back
+            }
+            string qualityAb = ArgValue("-sh-autoplay-quality-ab");
+            if (qualityAb != null && Elapsed >= _nextQualitySwitch)
+            {
+                var levels = qualityAb.Split(',');
+                if (levels.Length == 2 && int.TryParse(levels[_qualityAbIndex % 2], out int abQuality))
+                {
+                    if (_qualityBefore < 0) _qualityBefore = QualitySettings.GetQualityLevel();
+                    QualitySettings.SetQualityLevel(abQuality, true);
+                    DisplaySettingsApplier.Uncapped = true;
+                    DisplaySettingsApplier.Apply();
+                }
+                _qualityAbIndex++;
+                _nextQualitySwitch = Elapsed + 30f;
+            }
             // -sh-autoplay-omen <OmenEvent name> (and -sh-autoplay-omen-after S, default 20): fires that Omen once, then takes
             // screenshots 1, 4 and 10 s later, so a build run can show an Omen without waiting for the wheel.
             if (!_omenDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-omen-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var omenAt) ? omenAt : 20f)
@@ -1262,6 +1288,11 @@ namespace SoulHunter.Gameplay.Core
             return Mathf.RoundToInt(1f / Mathf.Max(avg, 0.0001f));
         }
 
+        private bool _qualitySet;
+        private int _qualityBefore = -1;
+        private int _qualityAbIndex;
+        private float _nextQualitySwitch;
+
         private void WriteTimeline()
         {
             var progression = LevelProgressionManager.Instance;
@@ -1271,13 +1302,13 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
                 GameTime.IsPaused ? "true" : "false", string.Join(", ", weapons), XPGem.ActiveGems.Count,
                 System.GC.GetTotalMemory(false) / 1048576f, System.GC.CollectionCount(0), System.GC.CollectionCount(1), System.GC.CollectionCount(2),
-                _spawnerForLog != null ? _spawnerForLog.PooledEnemies : 0, UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576f));
+                _spawnerForLog != null ? _spawnerForLog.PooledEnemies : 0, UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576f, QualitySettings.GetQualityLevel()));
             File.WriteAllText(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
         }
 

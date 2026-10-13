@@ -242,6 +242,7 @@ namespace SoulHunter.Gameplay.Core
         {
             int medium = System.Array.IndexOf(QualitySettings.names, "Medium");
             if (medium >= 0) QualitySettings.SetQualityLevel(medium, true);
+            DisplaySettingsApplier.Uncapped = true;
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = -1;
             // The contract baseline is 1920x1080. On a smaller display the 3D view is rendered at a URP render scale
