@@ -15,6 +15,88 @@ namespace SoulHunter.Gameplay.AI
     {
         public static readonly List<EnemyController> ActiveEnemies = new List<EnemyController>();
         public Rigidbody Rigidbody { get; private set; }
+        /// <summary>This enemy's transform, cached (read for every enemy on every step).</summary>
+        public Transform CachedTransform { get; private set; }
+        /// <summary>True when it has an EntityAnimator (looked up once).</summary>
+        public bool HasAnimator { get; private set; }
+        private bool _flatBody;       // no gravity and height frozen: its vertical velocity is always 0
+        private bool _rotationLocked; // every rotation axis frozen: nothing can spin it
+        private bool _scans;          // its EnvironmentScanner is switched on (off on every horde prefab)
+
+        /// <summary>The body's vertical velocity (0 without an engine call for a body that cannot move vertically).</summary>
+        public float VerticalVelocity => _flatBody || Rigidbody == null ? 0f : Rigidbody.linearVelocity.y;
+        /// <summary>True when the body cannot rotate, so its spin never needs clearing.</summary>
+        public bool RotationLocked => _rotationLocked;
+
+        // ---------------------------------------------------------------- one loop for the whole horde
+        // 60 FPS pass (2026-10-14): about 300 enemies each had their own Update and FixedUpdate, and each read the
+        // clock and the player's position from the engine several times a step. EnemyRunner now steps them all from
+        // one Update and one FixedUpdate; during a step the clock and the target's position are read once.
+        private static bool _inStep;
+        private static float _stepTime;
+        private static bool _stepTargetKnown, _stepTargetAlive;
+        private static Transform _stepTarget;
+        private static Vector3 _stepTargetPosition;
+
+        /// <summary>True while EnemyRunner is stepping the horde.</summary>
+        public static bool InStep => _inStep;
+        /// <summary>Game time: read once per step while the horde is stepped, else Time.time.</summary>
+        public static float Now => _inStep ? _stepTime : Time.time;
+
+        /// <summary>The target's position (read once per step for the whole horde); false when there is no target.</summary>
+        public bool TryGetTargetPosition(out Vector3 position)
+        {
+            var target = Target;
+            if (!_inStep)
+            {
+                bool alive = target != null;
+                position = alive ? target.position : default;
+                return alive;
+            }
+            if (!_stepTargetKnown || !ReferenceEquals(target, _stepTarget))
+            {
+                _stepTarget = target;
+                _stepTargetKnown = true;
+                _stepTargetAlive = target != null;
+                _stepTargetPosition = _stepTargetAlive ? target.position : default;
+            }
+            position = _stepTargetPosition;
+            return _stepTargetAlive;
+        }
+
+        /// <summary>Steps every live enemy: its frame logic (physics false) or its movement (physics true).</summary>
+        internal static void StepAll(bool physics)
+        {
+            if (ActiveEnemies.Count == 0) return;
+            _stepTime = Time.time;
+            _stepTargetKnown = false;
+            _stepTarget = null;
+            _inStep = true;
+            try
+            {
+                if (physics) EnemyCrowd.EnsureBuilt();
+                // Backwards: an enemy that leaves during its own step (a flier's lifetime) removes itself from the list.
+                for (int i = ActiveEnemies.Count - 1; i >= 0; i--)
+                {
+                    if (i >= ActiveEnemies.Count) continue;
+                    var enemy = ActiveEnemies[i];
+                    if (ReferenceEquals(enemy, null)) continue;
+                    try
+                    {
+                        if (physics) enemy.PhysicsStep(); else enemy.FrameStep();
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogException(e, enemy); // one enemy's error never stops the rest of the horde
+                    }
+                }
+            }
+            finally
+            {
+                _inStep = false;
+                _stepTarget = null;
+            }
+        }
         public EntityAnimator Animator { get; private set; }
         public Transform Target { get; set; } // Can be set by an aggro sphere or event
 
@@ -38,6 +120,14 @@ namespace SoulHunter.Gameplay.AI
         private float _bodyRadius = 0.5f;
         /// <summary>Flat body radius for crowd separation (collider radius x scale: chest elites and bosses are bigger).</summary>
         public float CrowdRadius => _bodyRadius * Mathf.Abs(transform.lossyScale.x);
+        private float _crowdRadius;
+        private bool _crowdRadiusKnown;
+        /// <summary>CrowdRadius as last read; EnemyCrowd reads it afresh for a new spawn and every few rebuilds.</summary>
+        internal float CrowdRadiusCached(bool refresh)
+        {
+            if (refresh || !_crowdRadiusKnown) { _crowdRadius = CrowdRadius; _crowdRadiusKnown = true; }
+            return _crowdRadius;
+        }
         /// <summary>This physics step's push from the crowd, written by EnemyCrowd.Rebuild.</summary>
         public Vector3 CrowdPush { get; set; }
         private int _crowdId;
@@ -71,6 +161,12 @@ namespace SoulHunter.Gameplay.AI
         private void Awake()
         {
             Rigidbody = GetComponent<Rigidbody>();
+            CachedTransform = transform;
+            if (Rigidbody != null)
+            {
+                _flatBody = !Rigidbody.useGravity && (Rigidbody.constraints & RigidbodyConstraints.FreezePositionY) != 0;
+                _rotationLocked = (Rigidbody.constraints & RigidbodyConstraints.FreezeRotation) == RigidbodyConstraints.FreezeRotation;
+            }
             // VS-style swarm movement: enemy bodies damage the player but do
             // not form a physical wall that blocks backward movement.
             var bodyCollider = GetComponent<Collider>();
@@ -87,6 +183,7 @@ namespace SoulHunter.Gameplay.AI
             foreach (var animator in GetComponentsInChildren<Animator>(true))
                 animator.cullingMode = AnimatorCullingMode.CullCompletely;
             Animator = GetComponentInChildren<EntityAnimator>();
+            HasAnimator = Animator != null;
             _visualRoot = transform.Find("SH10_Visual");
             _scanner = GetComponent<EnvironmentScanner>();
             
@@ -153,6 +250,10 @@ namespace SoulHunter.Gameplay.AI
             if (_hitSoundHealth == null) _hitSoundHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
+            EnemyRunner.Ensure();
+            _scans = _scanner != null && _scanner.enabled;
+            _crowdRadiusKnown = false; // spawners resize pooled bodies (chest elites, guardians)
+            CrowdPush = Vector3.zero;  // the last life's push is not this life's
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
             ClearResistanceOverrides(); // Garlic's freeze-resistance reduction, and any override, last one life too
             RestartAbilities();    // VS skills start again on every spawn (pooling-safe)
@@ -320,7 +421,7 @@ namespace SoulHunter.Gameplay.AI
 
         public float KnockbackTaken => _knockbackTaken;
         public float MaxKnockback => _enemyData != null ? _enemyData.MaxKnockback : 3f;
-        public bool IsKnockedBack => Time.time < _knockbackUntil;
+        public bool IsKnockedBack => Now < _knockbackUntil;
         /// <summary>This knockback's reversed speed as a multiple of the enemy's move speed.</summary>
         public float KnockbackStrength => _knockbackStrength;
 
@@ -417,7 +518,8 @@ namespace SoulHunter.Gameplay.AI
             return type == _vulnerabilityType ? _vulnerabilityMultiplier : 1f;
         }
 
-        private void Update()
+        // Called by EnemyRunner once a frame (it was this enemy's own Update).
+        private void FrameStep()
         {
             FaceTarget();
             _currentState?.UpdateLogic();
@@ -426,8 +528,8 @@ namespace SoulHunter.Gameplay.AI
         private void FaceTarget()
         {
             // Fliers keep facing their path, set once by FaceDirection.
-            if (_visualRoot == null || Target == null || IsFlying) return;
-            FaceDirection(Target.position - transform.position);
+            if (_visualRoot == null || IsFlying || !TryGetTargetPosition(out Vector3 target)) return;
+            FaceDirection(target - CachedTransform.position);
         }
 
         public void FaceDirection(Vector3 direction)
@@ -448,20 +550,21 @@ namespace SoulHunter.Gameplay.AI
                                    * Quaternion.Euler(0f, 180f, 0f);
         }
 
-        private void FixedUpdate()
+        // Called by EnemyRunner once a physics step (it was this enemy's own FixedUpdate).
+        private void PhysicsStep()
         {
             if (_currentState != null)
             {
                 // Agar scanner disable kiya hua hai, toh CPU bachaane ke liye usey mat chalao
-                if (_scanner != null && _scanner.isActiveAndEnabled)
+                if (_scans)
                 {
                     // Ground data does not need to be recalculated at every physics
                     // tick for a moving swarm. Refresh at 20 Hz and reuse the last
                     // result between scans.
-                    if (Time.time >= _nextEnvironmentScanTime)
+                    if (Now >= _nextEnvironmentScanTime)
                     {
                         _cachedEnvironmentData = _scanner.ScanEnvironment();
-                        _nextEnvironmentScanTime = Time.time + 0.05f;
+                        _nextEnvironmentScanTime = Now + 0.05f;
                     }
                 }
                 else

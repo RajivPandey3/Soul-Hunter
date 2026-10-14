@@ -32,6 +32,18 @@ namespace SoulHunter.Gameplay.AI
         private static int[] _cellStart = new int[MaxCells + 1];
         private static int _count;
         private static int _builtFrame = -1;
+        private static int _rebuilds;
+
+        /// <summary>Rendered frames one set of pushes serves in play: a crowd moves under 0.2 units in two frames.</summary>
+        public const int FramesPerRebuild = 2;
+
+        /// <summary>Rebuilds the pushes when they are FramesPerRebuild frames old (EnemyRunner, before it moves the horde).</summary>
+        internal static void EnsureBuilt()
+        {
+            if (!Enabled || !Application.isPlaying) return;
+            int age = Time.frameCount - _builtFrame;
+            if (age >= FramesPerRebuild || age < 0) Rebuild(); // below 0: a new play session without a domain reload
+        }
 
         /// <summary>
         /// Recomputes every enemy's push. Called lazily once per rendered frame (at low frame rates one frame runs
@@ -41,6 +53,10 @@ namespace SoulHunter.Gameplay.AI
         {
             _builtFrame = Time.frameCount;
             _count = 0;
+            // In play the live list holds only enabled enemies (OnDisable removes them), so the per-enemy engine checks
+            // are skipped; a body's size is read afresh for a new spawn and every 16th rebuild (lossyScale is costly).
+            bool playing = Application.isPlaying;
+            bool refreshRadii = !playing || (_rebuilds++ & 15) == 0;
             var live = EnemyController.ActiveEnemies;
             if (_enemies.Length < live.Count)
             {
@@ -60,12 +76,14 @@ namespace SoulHunter.Gameplay.AI
             {
                 var enemy = live[i];
                 // Event fliers keep their formation and path; they neither push nor get pushed.
-                if (!enemy || !enemy.isActiveAndEnabled || enemy.IsFlying) continue;
-                Vector3 position = enemy.transform.position;
+                if (ReferenceEquals(enemy, null)) continue;
+                if (!playing && (!enemy || !enemy.isActiveAndEnabled)) continue;
+                if (enemy.IsFlying) continue;
+                Vector3 position = playing ? enemy.CachedTransform.position : enemy.transform.position;
                 int index = _count++;
                 _enemies[index] = enemy;
                 _positions[index] = new Vector2(position.x, position.z);
-                float radius = enemy.CrowdRadius;
+                float radius = enemy.CrowdRadiusCached(refreshRadii);
                 _radii[index] = radius;
                 _ids[index] = enemy.CrowdId;
                 maxRadius = Mathf.Max(maxRadius, radius);
@@ -138,6 +156,8 @@ namespace SoulHunter.Gameplay.AI
         public static Vector3 Separation(EnemyController self)
         {
             if (!Enabled || ReferenceEquals(self, null)) return Vector3.zero;
+            // While EnemyRunner steps the horde the pushes are already built for this frame.
+            if (EnemyController.InStep) return self.CrowdPush;
             // Recomputed once per frame, by the first enemy asking. EditMode has no frames: tests call Rebuild.
             if (_builtFrame != Time.frameCount && Application.isPlaying) Rebuild();
             return self.CrowdPush;

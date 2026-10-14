@@ -29,6 +29,32 @@ namespace SoulHunter.Gameplay.UI
         private Color _textColor;
         private float _timer;
 
+        /// <summary>
+        /// 60 FPS pass (2026-10-14): a number wrote its fading colour to the text every frame, and TextMeshPro rebuilt
+        /// the whole text each time (25 numbers, about 0.6 ms a frame). The fade is now shown in this many steps.
+        /// </summary>
+        public const int FadeSteps = 10;
+        private float _shownAlpha;
+
+        // The camera's pose, read once a frame for every number.
+        private static int _cameraFrame = -1;
+        private static bool _hasCamera, _orthographic;
+        private static Quaternion _cameraRotation;
+        private static Vector3 _cameraForward;
+
+        private static void ReadCamera()
+        {
+            if (_cameraFrame == Time.frameCount) return;
+            _cameraFrame = Time.frameCount;
+            var cam = Camera.main;
+            _hasCamera = cam != null;
+            if (!_hasCamera) return;
+            var t = cam.transform;
+            _cameraRotation = t.rotation;
+            _cameraForward = t.forward;
+            _orthographic = cam.orthographic;
+        }
+
         public void Setup(int damageAmount)
         {
             if (_textMesh == null) _textMesh = GetComponent<TextMeshPro>();
@@ -40,6 +66,7 @@ namespace SoulHunter.Gameplay.UI
             _textColor = _textMesh.color;
             _textColor.a = 1f; // Full visible
             _textMesh.color = _textColor;
+            _shownAlpha = 1f;
 
             // ...and lives a shorter time (0.65 s), so fewer stay on screen at once.
             _timer = Mathf.Min(_lifeTime, MaxLifetime);
@@ -51,10 +78,9 @@ namespace SoulHunter.Gameplay.UI
         /// <summary>At the anchor on screen, facing the camera and pulled toward it (see TowardCamera).</summary>
         private void Place()
         {
-            var cam = Camera.main;
-            if (cam == null) { transform.position = _anchor; return; }
-            transform.rotation = cam.transform.rotation;
-            transform.position = _anchor - cam.transform.forward * (cam.orthographic ? TowardCamera : 0f);
+            ReadCamera();
+            if (!_hasCamera) { transform.position = _anchor; return; }
+            transform.SetPositionAndRotation(_anchor - _cameraForward * (_orthographic ? TowardCamera : 0f), _cameraRotation);
         }
 
         private void Update()
@@ -67,9 +93,13 @@ namespace SoulHunter.Gameplay.UI
             _timer -= Time.deltaTime;
             _textColor.a -= _fadeSpeed * Time.deltaTime;
             
-            if (_textMesh != null)
+            float alpha = Mathf.Ceil(Mathf.Clamp01(_textColor.a) * FadeSteps) / FadeSteps;
+            if (_textMesh != null && alpha != _shownAlpha)
             {
-                _textMesh.color = _textColor;
+                _shownAlpha = alpha;
+                var shown = _textColor;
+                shown.a = alpha;
+                _textMesh.color = shown;
             }
 
             // Jab time khatam ho jaye toh pool mein wapas bhej do (Ya abhi ke liye Destroy)

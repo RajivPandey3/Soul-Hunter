@@ -67,10 +67,8 @@ namespace SoulHunter.Tests.PlayMode
                 Assert.That(bodies.TrueForAll(b => b != null), Is.True, "A pool used a moment ago is kept.");
 
                 EnemySpawner.PoolIdleSeconds = 0.2f;
-                yield return new WaitForSeconds(0.3f);
-                yield return null;
-                int gone = bodies.FindAll(b => b == null).Count;
-                Assert.That(gone, Is.GreaterThan(0), "An idle pool starts to be freed.");
+                // Real time: a level-up from the opening horde can hold game time while this waits.
+                yield return WaitUntilRealtime(() => bodies.Exists(b => b == null), "an idle pool to start being freed");
                 yield return WaitUntilRealtime(() => bodies.TrueForAll(b => b == null), "every idle pooled body to be freed");
                 Assert.That(EnemyController.ActiveEnemies.Count, Is.GreaterThan(0), "The horde that is still spawning is untouched.");
             }

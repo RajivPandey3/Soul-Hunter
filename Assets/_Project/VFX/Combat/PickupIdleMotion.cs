@@ -19,6 +19,11 @@ namespace SoulHunter.Gameplay.VFX
         private Vector3 _base;
         private float _phase;
         internal int RunnerIndex = -1;
+        // 60 FPS pass (2026-10-14): the root and the visual's parent rotation are read once per life, so a step is
+        // three engine calls (root position, visual rotation, one write) where it was about seven.
+        internal Transform Root;
+        private Quaternion _parentRotation = Quaternion.identity, _parentInverse = Quaternion.identity;
+        private bool _parentTurned;
 
         private void Awake()
         {
@@ -29,6 +34,11 @@ namespace SoulHunter.Gameplay.VFX
         private void OnEnable()
         {
             _phase = Random.value * Mathf.PI * 2f;
+            Root = transform;
+            var parent = Visual != null ? Visual.parent : null;
+            _parentRotation = parent != null ? parent.rotation : Quaternion.identity;
+            _parentInverse = Quaternion.Inverse(_parentRotation);
+            _parentTurned = Quaternion.Dot(_parentRotation, Quaternion.identity) < 0.99999f;
             PickupIdleMotionRunner.Add(this);
         }
 
@@ -37,8 +47,15 @@ namespace SoulHunter.Gameplay.VFX
         internal void Step(float time, float deltaTime)
         {
             if (Visual == null) return;
-            Visual.localPosition = _base + Vector3.up * (Mathf.Sin(time * BobSpeed + _phase) * 0.5f + 0.5f) * BobHeight;
-            Visual.Rotate(Vector3.up, SpinDegreesPerSecond * deltaTime, Space.World);
+            Vector3 position = _base;
+            position.y += (Mathf.Sin(time * BobSpeed + _phase) * 0.5f + 0.5f) * BobHeight;
+            // A turn about the world's up axis, as Rotate(up, degrees, Space.World), worked out without engine calls.
+            float half = SpinDegreesPerSecond * deltaTime * Mathf.Deg2Rad * 0.5f;
+            var turn = new Quaternion(0f, Mathf.Sin(half), 0f, Mathf.Cos(half));
+            Quaternion local = Visual.localRotation;
+            local = _parentTurned ? _parentInverse * turn * _parentRotation * local : turn * local;
+            local.Normalize(); // many small turns in a row must not let the rotation drift
+            Visual.SetLocalPositionAndRotation(position, local);
         }
     }
 
@@ -99,7 +116,7 @@ namespace SoulHunter.Gameplay.VFX
                     Motions.RemoveAt(last);
                     continue;
                 }
-                if (near && (motion.transform.position - center).sqrMagnitude > radiusSqr) continue;
+                if (near && (motion.Root.position - center).sqrMagnitude > radiusSqr) continue;
                 motion.Step(time, deltaTime);
             }
         }

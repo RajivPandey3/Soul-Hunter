@@ -529,7 +529,7 @@ namespace SoulHunter.Tests.EditMode
                 BindingFlags.Instance | BindingFlags.NonPublic);
             triggerMethod?.Invoke(touchDamage, new object[] { targetCollider });
 
-            MethodInfo updateMethod = typeof(TouchDamage).GetMethod("Update",
+            MethodInfo updateMethod = typeof(TouchDamage).GetMethod("Tick",
                 BindingFlags.Instance | BindingFlags.NonPublic);
             updateMethod?.Invoke(touchDamage, null);
         }

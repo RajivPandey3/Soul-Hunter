@@ -43,6 +43,11 @@ namespace SoulHunter.Gameplay.Combat
 
         private void OnEnable() { _targets.Clear(); _targetKeysSnapshot.Clear(); }
 
+        // 60 FPS pass (2026-10-14): every enemy carries one of these, and about 300 Update calls a frame did nothing
+        // (no contact). Only a TouchDamage that is touching something is ticked, by TouchDamageTicker.
+        internal int TickIndex = -1;
+        private int _tickedFrame = -1;
+
         private void OnCollisionEnter(Collision collision)
         {
             RegisterContact(collision.collider);
@@ -53,6 +58,8 @@ namespace SoulHunter.Gameplay.Combat
         private void RegisterContact(Collider other)
         {
             if (other == null || !other.CompareTag(TargetTag)) return;
+            // Unity sends trigger messages to a switched-off component too; it deals no damage and keeps no contact.
+            if (!enabled) return;
             var damageable = other.GetComponentInParent<IDamageable>();
             if (damageable == null) return;
             
@@ -60,9 +67,10 @@ namespace SoulHunter.Gameplay.Combat
             {
                 _targets[damageable] = new ContactInfo { TargetTransform = other.transform, Timer = 0f };
             }
+            TouchDamageTicker.Add(this);
         }
 
-        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); } 
+        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); TouchDamageTicker.Remove(this); } 
         
         private void OnCollisionExit(Collision collision)
         {
@@ -86,9 +94,17 @@ namespace SoulHunter.Gameplay.Combat
         private SoulHunter.Gameplay.AI.EnemyController _owner;
         private bool _ownerLooked;
 
-        private void Update()
+        /// <summary>One frame of contact damage. Called by TouchDamageTicker while something is being touched.</summary>
+        internal void Tick()
         {
-            if (_targets.Count == 0) return;
+            if (_targets.Count == 0) { TouchDamageTicker.Remove(this); return; }
+            // Once a frame, whatever the ticker's list does while targets die.
+            if (Application.isPlaying)
+            {
+                int frame = Time.frameCount;
+                if (_tickedFrame == frame) return;
+                _tickedFrame = frame;
+            }
             // VS Defang: a defanged enemy cannot deal damage to the player.
             if (!_ownerLooked) { _owner = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>(); _ownerLooked = true; }
             if (_owner != null && _owner.IsDefanged) return;
@@ -133,6 +149,76 @@ namespace SoulHunter.Gameplay.Combat
                     }
                 }
             }
+        }
+    }
+
+    /// <summary>Ticks every TouchDamage that is touching something, once a frame (created on first use).</summary>
+    public sealed class TouchDamageTicker : MonoBehaviour
+    {
+        private static readonly List<TouchDamage> Touching = new List<TouchDamage>();
+        private static TouchDamageTicker _instance;
+
+        /// <summary>TouchDamage components being ticked now (tests).</summary>
+        public static int Count => Touching.Count;
+
+        internal static void Add(TouchDamage touch)
+        {
+            // The stored index is only trusted when the list agrees: a pooled copy can carry its template's index.
+            int listed = touch.TickIndex;
+            if (listed >= 0 && listed < Touching.Count && ReferenceEquals(Touching[listed], touch)) return;
+            touch.TickIndex = Touching.Count;
+            Touching.Add(touch);
+            if (_instance == null && Application.isPlaying)
+            {
+                var go = new GameObject("TouchDamageTicker") { hideFlags = HideFlags.HideInHierarchy };
+                DontDestroyOnLoad(go);
+                _instance = go.AddComponent<TouchDamageTicker>();
+            }
+        }
+
+        internal static void Remove(TouchDamage touch)
+        {
+            int i = touch.TickIndex;
+            touch.TickIndex = -1;
+            if (i < 0 || i >= Touching.Count || !ReferenceEquals(Touching[i], touch)) return;
+            int last = Touching.Count - 1;
+            Touching[i] = Touching[last];
+            Touching[i].TickIndex = i;
+            Touching.RemoveAt(last);
+            touch.TickIndex = -1;
+        }
+
+        private void Update()
+        {
+            for (int i = Touching.Count - 1; i >= 0; i--)
+            {
+                if (i >= Touching.Count) continue;
+                var touch = Touching[i];
+                if (touch == null)
+                {
+                    // Destroyed without OnDisable (never expected): swap-remove so the others keep their indices.
+                    int last = Touching.Count - 1;
+                    Touching[i] = Touching[last];
+                    if (Touching[i] != null) Touching[i].TickIndex = i;
+                    Touching.RemoveAt(last);
+                    continue;
+                }
+                try { touch.Tick(); }
+                catch (System.Exception e) { Debug.LogException(e, touch); }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this) _instance = null;
+        }
+
+        // Domain reload may be off, so contacts of the last play session must not stay listed.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Touching.Clear();
+            _instance = null;
         }
     }
 }

@@ -16,6 +16,11 @@ namespace SoulHunter.Gameplay.Animation
         // Cached Hash IDs for Zero-Allocation
         private int _speedHash;
         private int _attackHash;
+        // The last Speed sent: a horde of 300 sent the same value every physics step. An Animator forgets its
+        // parameters when its object is switched off, so a pooled body sends its first value again (OnEnable).
+        private float _lastSpeed = float.NaN;
+
+        private void OnEnable() => _lastSpeed = float.NaN;
 
         private void Awake()
         {
@@ -27,9 +32,11 @@ namespace SoulHunter.Gameplay.Animation
 
         public void UpdateSpeed(float currentSpeed)
         {
+            if (Mathf.Abs(currentSpeed - _lastSpeed) < 0.01f) return;
             if (_animator != null)
             {
                 _animator.SetFloat(_speedHash, currentSpeed);
+                _lastSpeed = currentSpeed;
             }
         }
 

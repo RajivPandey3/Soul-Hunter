@@ -127,14 +127,19 @@ namespace SoulHunter.Gameplay.Core
 
         // ------------------------------------------------------------------ start-up
 
+        // The command line, read once: GetCommandLineArgs builds a new array on every call, and the bot asked about ten
+        // times a frame (about 1 ms a frame of the bot's own cost in the 2026-10-14 profile).
+        private static string[] _args;
+        private static string[] Args => _args ?? (_args = System.Environment.GetCommandLineArgs());
+
         public static string ArgValue(string name)
         {
-            var args = System.Environment.GetCommandLineArgs();
+            var args = Args;
             int i = System.Array.IndexOf(args, name);
             return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
         }
 
-        public static bool HasArg(string name) => System.Array.IndexOf(System.Environment.GetCommandLineArgs(), name) >= 0;
+        public static bool HasArg(string name) => System.Array.IndexOf(Args, name) >= 0;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void StartIfRequested()
@@ -385,27 +390,35 @@ namespace SoulHunter.Gameplay.Core
             _maxEnemies = Mathf.Max(_maxEnemies, EnemyController.ActiveEnemies.Count);
 
             Vector3 pull = Vector3.zero;
-            var gem = Nearest(XPGem.ActiveGems.Where(g => g != null && g.isActiveAndEnabled).Select(g => g.transform), me, 12f);
-            if (gem != null) pull += Flat(gem.position - me).normalized * (near > 8 ? 0.8f : 1.6f);
-            var chest = Nearest(FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
-            if (chest != null) pull += Flat(chest.position - me).normalized * 2f;
-            // Walk up to the Level 3 merchant while it is there, as a player would.
-            var merchant = Nearest(FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None).Where(m => !m.HasLeft).Select(m => m.transform), me, 30f);
-            if (merchant != null) pull += Flat(merchant.position - me).normalized * 3f;
-            // Like a VS player: break Soul Lanterns in view and pick up what they drop (coins, bags, items). Since the
-            // 2026-09-29 VS drop rule these are where coins and chickens come from; the bot used to ignore them.
+            // The whole-scene searches (gems, chests, merchant, lanterns, items, food) run four times a second and their
+            // answers are kept in between: at ten times a second they were most of the bot's own frame cost.
+            if (Time.realtimeSinceStartup >= _nextLook)
+            {
+                _nextLook = Time.realtimeSinceStartup + 0.25f;
+                _gemGoal = Nearest(XPGem.ActiveGems.Where(g => g != null && g.isActiveAndEnabled).Select(g => g.transform), me, 12f);
+                _chestGoal = Nearest(FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
+                // Walk up to the Level 3 merchant while it is there, as a player would.
+                _merchantGoal = Nearest(FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None).Where(m => !m.HasLeft).Select(m => m.transform), me, 30f);
+                // Like a VS player: break Soul Lanterns in view and pick up what they drop (coins, bags, items). Since the
+                // 2026-09-29 VS drop rule these are where coins and chickens come from; the bot used to ignore them.
+                _lanternGoal = _itemGoal = _foodGoal = null;
+                if (near < 6)
+                {
+                    _lanternGoal = Nearest(FindObjectsByType<LightSource>(FindObjectsSortMode.None).Where(l => l.isActiveAndEnabled).Select(l => l.transform), me, 18f);
+                    _itemGoal = Nearest(FindObjectsByType<Pickup>(FindObjectsSortMode.None).Where(p => p.isActiveAndEnabled).Select(p => p.transform), me, 14f);
+                }
+                if (_health.CurrentHealth < _health.MaxHealth * 0.5f)
+                    _foodGoal = Nearest(FindObjectsByType<HealthPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
+            }
+            if (Reachable(_gemGoal)) pull += Flat(_gemGoal.position - me).normalized * (near > 8 ? 0.8f : 1.6f);
+            if (Reachable(_chestGoal)) pull += Flat(_chestGoal.position - me).normalized * 2f;
+            if (Reachable(_merchantGoal)) pull += Flat(_merchantGoal.position - me).normalized * 3f;
             if (near < 6)
             {
-                var lantern = Nearest(FindObjectsByType<LightSource>(FindObjectsSortMode.None).Where(l => l.isActiveAndEnabled).Select(l => l.transform), me, 18f);
-                if (lantern != null) pull += Flat(lantern.position - me).normalized * 1.8f;
-                var item = Nearest(FindObjectsByType<Pickup>(FindObjectsSortMode.None).Where(p => p.isActiveAndEnabled).Select(p => p.transform), me, 14f);
-                if (item != null) pull += Flat(item.position - me).normalized * 1.8f;
+                if (Reachable(_lanternGoal)) pull += Flat(_lanternGoal.position - me).normalized * 1.8f;
+                if (Reachable(_itemGoal)) pull += Flat(_itemGoal.position - me).normalized * 1.8f;
             }
-            if (_health.CurrentHealth < _health.MaxHealth * 0.5f)
-            {
-                var food = Nearest(FindObjectsByType<HealthPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
-                if (food != null) pull += Flat(food.position - me).normalized * 2.5f;
-            }
+            if (Reachable(_foodGoal)) pull += Flat(_foodGoal.position - me).normalized * 2.5f;
 
             if (push.sqrMagnitude < 0.01f && pull.sqrMagnitude < 0.01f)
             {
@@ -436,6 +449,11 @@ namespace SoulHunter.Gameplay.Core
         }
 
         private static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+
+        private float _nextLook;
+        private Transform _gemGoal, _chestGoal, _merchantGoal, _lanternGoal, _itemGoal, _foodGoal;
+        /// <summary>A goal kept from the last look is still there (not collected, broken or gone).</summary>
+        private static bool Reachable(Transform goal) => goal != null && goal.gameObject.activeInHierarchy;
 
         private static Transform Nearest(IEnumerable<Transform> items, Vector3 from, float range)
         {

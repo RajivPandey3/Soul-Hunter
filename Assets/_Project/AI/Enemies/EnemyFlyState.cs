@@ -59,18 +59,18 @@ namespace SoulHunter.Gameplay.AI
             // VS "[[Floaty]], [[Fixed Direction]]" (Sneaky Heads): keep the line, weave along it.
             Vector3 direction = _flyDirection;
             if (_weave > 0f)
-                direction = EnemyChaseState.FloatyDirection(direction, _weave, WeavePeriodSeconds, Time.time, _controller.FloatyPhase);
+                direction = EnemyChaseState.FloatyDirection(direction, _weave, WeavePeriodSeconds, EnemyController.Now, _controller.FloatyPhase);
             else if (_controller.Movement == SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection)
             {
                 var data = _controller.Data;
                 direction = EnemyChaseState.FloatyDirection(direction, data != null ? data.FloatyWeave : 0.7f,
-                    data != null ? data.FloatyPeriodSeconds : 1.8f, Time.time, _controller.FloatyPhase);
+                    data != null ? data.FloatyPeriodSeconds : 1.8f, EnemyController.Now, _controller.FloatyPhase);
             }
             var velocity = direction * (_controller.MoveSpeed * _speedMultiplier);
-            velocity.y = _controller.Rigidbody.linearVelocity.y;
+            velocity.y = _controller.VerticalVelocity;
             _controller.Rigidbody.linearVelocity = velocity;
 
-            if (_controller.Animator != null) _controller.Animator.UpdateSpeed(1f);
+            if (_controller.HasAnimator) _controller.Animator.UpdateSpeed(1f);
         }
 
         public void Exit()
