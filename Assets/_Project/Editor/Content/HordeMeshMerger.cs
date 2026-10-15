@@ -63,6 +63,66 @@ namespace SoulHunter.Editor.Content
             Debug.Log($"[HordeMeshMerger] Merged {renderers} renderers in {prefabs} model prefabs into one material each.");
         }
 
+        /// <summary>
+        /// Owner, 2026-10-15: "sabhi ko single mesh or single material banao". Every other prefab under Assets/Prefabs
+        /// drawn with FacetedPreview (heroes, the player, weapon models and their projectiles, Floor Chicken, Vacuum,
+        /// Orologion, the showcase props) gets the same treatment: one mesh per renderer, the one HordeMerged material.
+        /// Prefabs that nest no other prefab go first, so a nesting prefab picks up its already merged model instead of
+        /// writing an override of its own. The hit flash (DamageFlash) and the Laurel shield tint the whole model through
+        /// HordeMerged's _TintAmount, as their _Color did on FacetedPreview.
+        /// Menu: Soul Hunter/Content/Merge Every Faceted Model, or -executeMethod ...HordeMeshMerger.MergeEveryFaceted -quit
+        /// </summary>
+        /// <summary>The asset-review study of the grave ghoul (scene L01_AssetReview only) drew differently once merged
+        /// (dark with its override materials before, light after), so it is left as it was.</summary>
+        public static readonly HashSet<string> LeftAsTheyAre = new HashSet<string> { "Assets/Prefabs/Characters/L01R_GraveGhoulStudy.prefab" };
+
+        [MenuItem("Soul Hunter/Content/Merge Every Faceted Model")]
+        public static void MergeEveryFaceted()
+        {
+            Directory.CreateDirectory(MeshFolder);
+            AssetDatabase.Refresh();
+            var material = SharedMaterial();
+            var horde = new HashSet<string>(ModelPrefabs());
+            var paths = new List<(int nests, string path)>();
+            foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (horde.Contains(path) || LeftAsTheyAre.Contains(path)) continue;
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab == null) continue;
+                bool faceted = false;
+                foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+                    foreach (var m in r.sharedMaterials)
+                        faceted |= m != null && m.shader != null && m.shader.name == FacetedShader;
+                if (!faceted) continue;
+                int nests = 0;
+                foreach (var t in prefab.GetComponentsInChildren<Transform>(true))
+                    if (t.gameObject != prefab && PrefabUtility.IsAnyPrefabInstanceRoot(t.gameObject)) nests++;
+                paths.Add((nests, path));
+            }
+            paths.Sort((a, b) => a.nests != b.nests ? a.nests.CompareTo(b.nests) : string.CompareOrdinal(a.path, b.path));
+            int renderers = 0, prefabs = 0;
+            foreach (var (_, path) in paths)
+            {
+                var root = PrefabUtility.LoadPrefabContents(path);
+                int merged = 0;
+                try
+                {
+                    foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+                    {
+                        if (renderer is ParticleSystemRenderer) continue;
+                        if (MergeRenderer(renderer, Path.GetFileNameWithoutExtension(path), material)) merged++;
+                    }
+                    if (merged > 0) PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+                renderers += merged;
+                if (merged > 0) { prefabs++; Debug.Log($"[HordeMeshMerger] {path}: {merged} renderer(s) merged"); }
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[HordeMeshMerger] Every faceted model: {renderers} renderers in {prefabs} prefabs now draw with one material.");
+        }
+
         public static Material SharedMaterial()
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);

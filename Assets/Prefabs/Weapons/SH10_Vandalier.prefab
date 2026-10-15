@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16b7aa147f629ef4ba3632a0535fe229, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 16b7aa147f629ef4ba3632a0535fe229, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 6270434b896d44142b229e8f58e05c5d, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 16b7aa147f629ef4ba3632a0535fe229, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: a8ce35bc70976ca46be3c350aa6ac6cb, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 16b7aa147f629ef4ba3632a0535fe229, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: d68882e3763e5444e997c65e67d011f0, type: 2}
     - target: {fileID: 919132149155446097, guid: 16b7aa147f629ef4ba3632a0535fe229, type: 3}
       propertyPath: m_Name
       value: SH10_Vandalier

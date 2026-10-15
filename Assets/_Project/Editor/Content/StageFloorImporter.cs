@@ -47,6 +47,7 @@ namespace SoulHunter.Editor.Content
             catalog.StageFloors = floors;
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
+            FloorMeshMerger.MergeAll(); // one mesh and one material per tile renderer (draw calls, 2026-10-15)
             Debug.Log($"[StageFloorImporter] Imported {Stages} stage floors into the content catalog.");
         }
 

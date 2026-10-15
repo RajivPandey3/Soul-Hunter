@@ -80,6 +80,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8507390299213385185, guid: 4ab7e216d7af6144086aa007a6ce3ca5, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 7d9fe1d43b300c3499c0360d7c6eb19b, type: 2}
+    - target: {fileID: -8507390299213385185, guid: 4ab7e216d7af6144086aa007a6ce3ca5, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8507390299213385185, guid: 4ab7e216d7af6144086aa007a6ce3ca5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: 919132149155446097, guid: 4ab7e216d7af6144086aa007a6ce3ca5, type: 3}
       propertyPath: m_Name
       value: SH10_Hero_Elaria

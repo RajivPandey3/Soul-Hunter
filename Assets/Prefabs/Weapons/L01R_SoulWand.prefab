@@ -81,9 +81,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: fdc042732a156314c80234e8d50c4bb1, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: fdc042732a156314c80234e8d50c4bb1, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: c335d725b992f85449e7811831c71364, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: fdc042732a156314c80234e8d50c4bb1, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
@@ -92,6 +96,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
       objectReference: {fileID: 2100000, guid: 410cc137c7443c145877492da2c85100, type: 2}
+    - target: {fileID: -5754084199372789682, guid: fdc042732a156314c80234e8d50c4bb1, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: db4bd1300de478f4389755913424f1ad, type: 2}
     - target: {fileID: 919132149155446097, guid: fdc042732a156314c80234e8d50c4bb1, type: 3}
       propertyPath: m_Name
       value: L01R_SoulWand

@@ -123,6 +123,7 @@ namespace SoulHunter.Gameplay.Combat
                 renderer.GetPropertyBlock(_shieldColor);
                 _shieldColor.SetColor("_Color", color);
                 _shieldColor.SetColor("_BaseColor", color);
+                _shieldColor.SetFloat("_TintAmount", 1f); // a merged model (SoulHunter/HordeMerged) takes the colour whole
                 renderer.SetPropertyBlock(_shieldColor);
             }
         }

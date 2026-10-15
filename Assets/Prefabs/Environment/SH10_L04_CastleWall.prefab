@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 24576c9f965762a408e119a2c111bd6b, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 24576c9f965762a408e119a2c111bd6b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 1e71bc32d22b23943b4d2c6541c6f681, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 24576c9f965762a408e119a2c111bd6b, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: a8a18bbd9c07377408b8df857b4c2cc5, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 24576c9f965762a408e119a2c111bd6b, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 6d25ad0c2ff7a8c4083ea47b10821b99, type: 2}
     - target: {fileID: 919132149155446097, guid: 24576c9f965762a408e119a2c111bd6b, type: 3}
       propertyPath: m_Name
       value: SH10_L04_CastleWall

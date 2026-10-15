@@ -84,6 +84,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: SH10_Hero_Seraphina
       objectReference: {fileID: 0}
+    - target: {fileID: 5117765390345845781, guid: 594719ab0db76c14ebfd82e1ef25dc23, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: ff708d3f2ccf0f84b90b5d0b7ee04c6b, type: 2}
+    - target: {fileID: 5117765390345845781, guid: 594719ab0db76c14ebfd82e1ef25dc23, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5117765390345845781, guid: 594719ab0db76c14ebfd82e1ef25dc23, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

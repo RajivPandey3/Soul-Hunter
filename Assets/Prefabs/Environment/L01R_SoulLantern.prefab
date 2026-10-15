@@ -81,9 +81,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 6a83d35557d4f0a46a4f28c4af73df9a, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 6a83d35557d4f0a46a4f28c4af73df9a, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 2b6430d0009cad04eba6d3eced6d6e60, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 6a83d35557d4f0a46a4f28c4af73df9a, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
@@ -96,6 +100,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[3]'
       value: 
       objectReference: {fileID: 2100000, guid: 410cc137c7443c145877492da2c85100, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 6a83d35557d4f0a46a4f28c4af73df9a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: da9a5e712a0e5e74a8c6e7b605e57c8a, type: 2}
     - target: {fileID: 919132149155446097, guid: 6a83d35557d4f0a46a4f28c4af73df9a, type: 3}
       propertyPath: m_Name
       value: L01R_SoulLantern

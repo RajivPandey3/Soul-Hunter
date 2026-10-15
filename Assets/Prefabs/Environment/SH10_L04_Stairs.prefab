@@ -83,7 +83,11 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 0c23241d6fa3dfa408a8a25958eda366, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 41cbadbe1b26a384eb9b08222612e4f7, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 0c23241d6fa3dfa408a8a25958eda366, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: aeba21a49d57bbb4c869de3c3d78b675, type: 2}
     - target: {fileID: 919132149155446097, guid: 0c23241d6fa3dfa408a8a25958eda366, type: 3}
       propertyPath: m_Name
       value: SH10_L04_Stairs

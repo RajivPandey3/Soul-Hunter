@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: aee9ceb027f4a7e439f001a378d0da76, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: aee9ceb027f4a7e439f001a378d0da76, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: fc94b56dda5d20047af14e262b05c20d, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: aee9ceb027f4a7e439f001a378d0da76, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: 5b636b39e7f09514c8d561e18c159b12, type: 2}
+    - target: {fileID: -5754084199372789682, guid: aee9ceb027f4a7e439f001a378d0da76, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: c18ab58cd2c2a464f9129e1cc99b19e7, type: 2}
     - target: {fileID: 919132149155446097, guid: aee9ceb027f4a7e439f001a378d0da76, type: 3}
       propertyPath: m_Name
       value: SH10_ClockLancet

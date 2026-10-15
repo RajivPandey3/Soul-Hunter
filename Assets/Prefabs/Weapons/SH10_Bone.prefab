@@ -83,7 +83,11 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 67d0e378f30524b409aeb0ce0445990f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 1083328812dc57847b88f009e69b3cd6, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 67d0e378f30524b409aeb0ce0445990f, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 55fefefbce97ed64998689d6265fab01, type: 2}
     - target: {fileID: 919132149155446097, guid: 67d0e378f30524b409aeb0ce0445990f, type: 3}
       propertyPath: m_Name
       value: SH10_Bone

@@ -81,9 +81,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 908e711fb2890684b87cc34634105873, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 908e711fb2890684b87cc34634105873, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 3b479d64d8210d44b82e6feffa660f94, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 908e711fb2890684b87cc34634105873, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
@@ -92,6 +96,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
       objectReference: {fileID: 2100000, guid: 4b77153dba460cc4aa4783ae82bf8029, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 908e711fb2890684b87cc34634105873, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 7eb8fe9b1e062534a977c2d18c4c1909, type: 2}
     - target: {fileID: 919132149155446097, guid: 908e711fb2890684b87cc34634105873, type: 3}
       propertyPath: m_Name
       value: SH10_Chest

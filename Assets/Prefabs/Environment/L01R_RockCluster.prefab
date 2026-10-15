@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 27f6099b555c55b438fe1b8fe88899a3, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 27f6099b555c55b438fe1b8fe88899a3, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 526bc5aaf54f7814b8e6b3a4f1dad980, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 27f6099b555c55b438fe1b8fe88899a3, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: 1467fd888c184a14cb14cf5fd81aaf2f, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 27f6099b555c55b438fe1b8fe88899a3, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 996636cb1bc098f499ac9ed1b1295e1a, type: 2}
     - target: {fileID: 919132149155446097, guid: 27f6099b555c55b438fe1b8fe88899a3, type: 3}
       propertyPath: m_Name
       value: L01R_RockCluster

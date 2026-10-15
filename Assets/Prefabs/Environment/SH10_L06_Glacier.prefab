@@ -81,9 +81,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 4979a80c68c718647b338e5b1ac61244, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 4979a80c68c718647b338e5b1ac61244, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 259ec21f1c1aafd429224764df83e2aa, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 4979a80c68c718647b338e5b1ac61244, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
@@ -92,6 +96,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
       objectReference: {fileID: 2100000, guid: 21933f035e9eece4f88fad8632cc6fc9, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 4979a80c68c718647b338e5b1ac61244, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: c12ddf4b31cbc044c9e0a20592fe90f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 4979a80c68c718647b338e5b1ac61244, type: 3}
       propertyPath: m_Name
       value: SH10_L06_Glacier

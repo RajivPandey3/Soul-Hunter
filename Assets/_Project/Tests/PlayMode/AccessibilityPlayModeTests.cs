@@ -168,8 +168,14 @@ namespace SoulHunter.Tests.PlayMode
                 LevelProgressionManager.Instance.StartStage(8);
                 yield return null;
                 var map = Object.FindFirstObjectByType<SoulHunter.Gameplay.Environment.InfiniteMap>();
-                bool HasBlood() => map.ChunkAt(1, 1).GetComponentsInChildren<Renderer>()
-                    .SelectMany(r => r.sharedMaterials).Any(m => m != null && m.name.EndsWith("_Blood"));
+                // The merged floor (FloorMeshMerger) bakes the stains (vertex alpha 1) and the plain floor under them, and
+                // FloorMergedLook switches between them for every tile at once.
+                bool HasBlood() => map.ChunkAt(1, 1).GetComponentsInChildren<Renderer>().Any(r =>
+                    SoulHunter.Gameplay.Environment.FloorMergedLook.IsMerged(r)
+                        ? !SoulHunter.Gameplay.Environment.FloorMergedLook.HideBlood &&
+                          Shader.GetGlobalFloat("_SH_FloorHideBlood") < 0.5f &&
+                          r.GetComponent<MeshFilter>().sharedMesh.colors.Any(c => c.a > 0.5f)
+                        : r.sharedMaterials.Any(m => m != null && m.name.EndsWith("_Blood")));
                 Assert.That(HasBlood(), Is.True, "Blood Arenas floor shows stains by default.");
                 data.DisableBlood = true; GameSettings.NotifyChanged();
                 Assert.That(HasBlood(), Is.False, "Disable Blood removes them.");

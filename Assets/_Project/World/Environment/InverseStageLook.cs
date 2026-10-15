@@ -35,6 +35,7 @@ namespace SoulHunter.Gameplay.Environment
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            FloorMergedLook.SetInverse(false);
         }
 
         private void MarkDirty() => _dirty = true;
@@ -60,6 +61,7 @@ namespace SoulHunter.Gameplay.Environment
             if (_map == null) _map = FindFirstObjectByType<InfiniteMap>();
             if (_map == null) return;
             bool active = InverseMap.Active;
+            if (FloorMergedLook.Inverse != active) FloorMergedLook.SetInverse(active); // merged floors: the graded tint is baked
             if (_dirty)
             {
                 _dirty = false;
@@ -97,7 +99,7 @@ namespace SoulHunter.Gameplay.Environment
             _block ??= new MaterialPropertyBlock();
             foreach (var renderer in renderers)
             {
-                if (renderer == null) continue;
+                if (renderer == null || FloorMergedLook.IsMerged(renderer)) continue;
                 var materials = renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
                 {

@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: c3f676b4f0b81b3478f1e3ae59d4c1c2, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: c3f676b4f0b81b3478f1e3ae59d4c1c2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 1dafdd51a44564742941048c46aa6f29, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: c3f676b4f0b81b3478f1e3ae59d4c1c2, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: 49623b4eb1080a94498c00a66bfd77b1, type: 2}
+    - target: {fileID: -5754084199372789682, guid: c3f676b4f0b81b3478f1e3ae59d4c1c2, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 83e4fa4ac02b556459ae367bdb823e73, type: 2}
     - target: {fileID: 919132149155446097, guid: c3f676b4f0b81b3478f1e3ae59d4c1c2, type: 3}
       propertyPath: m_Name
       value: SH10_Gun

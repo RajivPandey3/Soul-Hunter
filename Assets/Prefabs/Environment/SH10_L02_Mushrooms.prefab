@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 260e6cd6ddca82e4c98fae536d1705d8, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 260e6cd6ddca82e4c98fae536d1705d8, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: b786c9ae4ad35644a8d3a7b97350c194, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 260e6cd6ddca82e4c98fae536d1705d8, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: 5041dac0d9b3a904e95f4fef3337887c, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 260e6cd6ddca82e4c98fae536d1705d8, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: a3cdfcc1bfc17bc439f7b62b5699bc7b, type: 2}
     - target: {fileID: 919132149155446097, guid: 260e6cd6ddca82e4c98fae536d1705d8, type: 3}
       propertyPath: m_Name
       value: SH10_L02_Mushrooms

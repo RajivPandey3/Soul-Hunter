@@ -240,18 +240,22 @@ namespace SoulHunter.Tests.PlayMode
             Assert.IsNotNull(look, "GameSessionManager adds the Inverse look.");
             var map = Object.FindFirstObjectByType<InfiniteMap>();
             var renderer = map.ChunkAt(InfiniteMap.GridSize / 2, InfiniteMap.GridSize / 2).GetComponentsInChildren<Renderer>()
-                .First(r => r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseColor"));
+                .First(r => r.sharedMaterial != null);
             Assert.That(look.IsGraded(renderer), Is.True, "The floor carries the inverted grade.");
-            var block = new MaterialPropertyBlock();
-            renderer.GetPropertyBlock(block, 0);
-            Color drawn = block.GetColor("_BaseColor"), original = renderer.sharedMaterials[0].GetColor("_BaseColor");
-            // A property block may hold the colour in linear space; either way it is InverseMap.Grade of the floor's colour.
-            Color graded = InverseMap.Grade(original);
-            bool same = Near(drawn, graded) || Near(drawn, graded.linear);
-            Assert.That(same, Is.True, $"Darker and turned in hue (InverseMap.Grade): drawn {drawn}, graded {graded}, from {original}.");
-            Color.RGBToHSV(graded, out _, out _, out float v);
-            Color.RGBToHSV(original, out _, out _, out float v0);
-            Assert.That(v, Is.GreaterThanOrEqualTo(Mathf.Min(v0, InverseMap.ComfortMinTint) - 1e-3f), "Never below the ground comfort band.");
+            Assert.That(FloorMergedLook.IsMerged(renderer), Is.True, "The floor is one merged mesh (FloorMeshMerger).");
+            Assert.That(Shader.GetGlobalFloat("_SH_FloorInverse"), Is.EqualTo(1f), "The merged floor draws its baked Inverse tint.");
+            // The baked Inverse tint is InverseMap.Grade of the part's own tint (FloorMergeTests checks every part).
+            var mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+            var tints = mesh.colors;
+            var inverse = new System.Collections.Generic.List<Vector3>();
+            mesh.GetUVs(2, inverse);
+            Assert.That(inverse.Count, Is.EqualTo(tints.Length));
+            Color first = tints[0].gamma, graded = InverseMap.Grade(new Color(first.r, first.g, first.b, 1f)).linear;
+            Assert.That(Near(new Color(inverse[0].x, inverse[0].y, inverse[0].z, 1f), new Color(graded.r, graded.g, graded.b, 1f)), Is.True,
+                $"Darker and turned in hue (InverseMap.Grade): baked {inverse[0]}, graded {graded}.");
+            Color.RGBToHSV(graded.gamma, out _, out _, out float v);
+            Color.RGBToHSV(first, out _, out _, out float v0);
+            Assert.That(v, Is.GreaterThanOrEqualTo(Mathf.Min(v0, InverseMap.ComfortMinTint) - 1e-2f), "Never below the ground comfort band.");
 
             // "Visually Invert Stages" off: the floor looks as it always does.
             GameSettings.Data.VisuallyInvertStages = false;
@@ -259,6 +263,7 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             yield return null;
             Assert.That(look.IsGraded(renderer), Is.False, "Option off: no inverted grade.");
+            Assert.That(Shader.GetGlobalFloat("_SH_FloorInverse"), Is.EqualTo(0f));
             Assert.That(InverseMap.Active, Is.False);
             Assert.That(RunModes.Inverse, Is.True, "The Inverse numbers stay; only the look goes.");
         }

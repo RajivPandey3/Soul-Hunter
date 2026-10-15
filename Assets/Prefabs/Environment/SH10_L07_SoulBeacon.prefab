@@ -81,9 +81,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 83f8d81971194164992666d39e43def9, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 83f8d81971194164992666d39e43def9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 2643fc747473c214cbc578cba3dd5aaf, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 83f8d81971194164992666d39e43def9, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
@@ -100,6 +104,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[4]'
       value: 
       objectReference: {fileID: 2100000, guid: fcad4eb197e3aba4e90c3dbd7ce869ef, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 83f8d81971194164992666d39e43def9, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 801e1230eac837548b0ab2f1c51b3f66, type: 2}
     - target: {fileID: 919132149155446097, guid: 83f8d81971194164992666d39e43def9, type: 3}
       propertyPath: m_Name
       value: SH10_L07_SoulBeacon

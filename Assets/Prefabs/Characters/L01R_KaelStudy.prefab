@@ -81,9 +81,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 97f852f340d7eb4469407803f919ff1e, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 97f852f340d7eb4469407803f919ff1e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 2b6430d0009cad04eba6d3eced6d6e60, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 97f852f340d7eb4469407803f919ff1e, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
@@ -104,6 +108,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[5]'
       value: 
       objectReference: {fileID: 2100000, guid: de15e8ef14a07de44b1ef44183d3752b, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 97f852f340d7eb4469407803f919ff1e, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 091181a9cf52a3f42b95687724f3f522, type: 2}
     - target: {fileID: 919132149155446097, guid: 97f852f340d7eb4469407803f919ff1e, type: 3}
       propertyPath: m_Name
       value: L01R_KaelStudy

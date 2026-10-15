@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 13dcf37a84c5ebc4ab96c2213a23d1f1, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 13dcf37a84c5ebc4ab96c2213a23d1f1, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 1a2297bb9bed92143a52fc22a6e1a92f, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 13dcf37a84c5ebc4ab96c2213a23d1f1, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: e91db9c9445420b4fb40908223ad04ae, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 13dcf37a84c5ebc4ab96c2213a23d1f1, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: a5a5f436352742545aaa9e3faf8df731, type: 2}
     - target: {fileID: 919132149155446097, guid: 13dcf37a84c5ebc4ab96c2213a23d1f1, type: 3}
       propertyPath: m_Name
       value: L01R_Fence

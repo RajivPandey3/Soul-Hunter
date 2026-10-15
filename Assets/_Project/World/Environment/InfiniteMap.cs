@@ -60,6 +60,7 @@ namespace SoulHunter.Gameplay.Environment
         {
             SoulHunter.Core.Persistence.GameSettings.Changed -= HandleSettingsChanged;
             if (_progression != null) _progression.OnStageStarted -= HandleStageStarted;
+            FloorMergedLook.SetHideBlood(false);
         }
 
         private void HandleStageStarted(int stage) => BuildChunks(FloorForStage(stage));
@@ -115,6 +116,7 @@ namespace SoulHunter.Gameplay.Environment
         public void ApplyBloodSetting(GameObject chunk)
         {
             bool hide = SoulHunter.Core.Persistence.GameSettings.DisableBlood;
+            FloorMergedLook.SetHideBlood(hide); // a merged floor bakes both looks and switches them globally
             foreach (var renderer in chunk.GetComponentsInChildren<Renderer>())
             {
                 if (!_originalMaterials.TryGetValue(renderer, out var original))

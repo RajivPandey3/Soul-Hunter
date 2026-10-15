@@ -2090,6 +2090,22 @@ Validation of all of the above: EditMode 935/935, PlayMode 441/441, 0 exceptions
   - Also in this batch: damage numbers draw in one batch (`DamagePopupBatcher`, on by default; the fade is now smooth instead of 10 steps), and `SharedVfxEmitter` (blood spray and death puff from one emitter; **off by default**, not measured).
   - Tests: `PropMergeTests`, `ChestMergeTests`, `PlateMergeTests`, `WallCartMergeTests` (T), `DamagePopupBatcherPlayModeTests`, `SharedVfxEmitterPlayModeTests` (R); `PickupV2Tests`, `PressurePlateTests` and `ChestLookPlayModeTests` were updated.
   - Validation: full run EditMode 954/956, PlayMode 445/445, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261015-onemat-full/`). Both failures were test-side: the chest test expected 7 renderers (SoulSeam sits on the seam and is kept, so 8), and the rail cart test counted triangles from the `Sphere.fbx` builtin resource (760) instead of the primitive the builder uses (768). After both fixes, EditMode 956/956 (`-onemat-edit2/`). No PlayMode run after those test-only fixes.
+- **Stage floors and everything else: one mesh, one material** (owner, 2026-10-15: "stage floor ko bhi single mesh or material karo", then "sabhi ko single mesh or single material banao").
+  - **Floors** (`FloorMeshMerger`, menu Soul Hunter/Content/Merge Stage Floors; `StageFloorImporter` runs it after every import). A tile was two renderers with 5-13 textured URP Lit materials (8-13 draws), and InfiniteMap lays 25 tiles. Now each renderer is one mesh with the shared `SH10_FloorMerged` material (shader `SoulHunter/FloorMerged`, URP Lit's forward pass):
+    - the 16 ground textures are one texture array (`Assets/Art/Textures/Ground/SH10_GroundArray.png`, a 5 x 4 flipbook imported as a 2D array, slice 0 white for untextured parts);
+    - each part's linear tint (vertex colour), glow (UV1.xyz) and texture slice (UV1.w) are baked into the mesh, with its Inverse grade (`InverseMap.Grade`, UV2) and, for the Blood Arenas stains (vertex alpha 1), the plain floor that Disable Blood shows (UV3/UV4);
+    - `FloorMergedLook` switches Inverse and Disable Blood with two global shader values, so no property block breaks the SRP Batcher. `InfiniteMap` and `InverseStageLook` call it.
+    - The ground still only receives shadows and the obstacles cast them, so a tile stays 2 renderers: 25 tiles draw in 50 calls (about 200-325 before). Not measured in a build.
+    - Look (`run-20261015-floormerge/look`): old and merged tile rendered from the game's 55-degree camera, normal, Inverse and Disable Blood: mean difference 0.00 on every level (Level 1's first normal render read 9.75, the tool's known first-render fault; its Inverse render read 0.00).
+  - **Every FacetedPreview model** (`HordeMeshMerger.MergeEveryFaceted`, menu Soul Hunter/Content/Merge Every Faceted Model): the horde's existing bake (one mesh per renderer, colours in the vertices, the skin kept, the shared `SH10_HordeMerged` material) now also covers 107 other prefabs: the 13 heroes and `SH10_Kael` (Player nests it), every weapon model and projectile model, Floor Chicken, Vacuum, Orologion, the old SH10 gem and chest, and the showcase props. Heroes went from 6-10 draws to 1.
+    - The hit flash already tints a HordeMerged model through a shared tinted copy (`DamageFlash`, `HordeMaterials`); the Laurel shield now also sets `_TintAmount` 1 so its charge colour still covers the whole model.
+    - Left as it was: `L01R_GraveGhoulStudy` (scene `L01_AssetReview` only), which drew differently once merged (`HordeMeshMerger.LeftAsTheyAre`).
+    - Re-importing heroes (`HeroModelImporter`) or other faceted models rebuilds their prefabs unmerged; run the menu item again after.
+  - **Merchant and the light-source pickups** (`PropMeshMerger.Targets`): the Wandering Merchant (one mesh with 14 URP Lit colours, model object kept) and Gilded Charm, Luck Charm, Hellfire Breath and Soul Toll (3-6 primitives each) are one PropMerged mesh each.
+  - Look (`run-20261015-allmerge/look`): 111 changed prefabs, old against merged from the game camera: mean difference 0.00 for all of them (Gilded Charm read 82 in the first pass and 0.00 when rendered again in another order, the tool's render-order fault).
+  - What is still more than one material: the chest (lid, lock plate, bands, skull and seam stay apart so the lid opens and ChestLook recolours them), the unused `Enemy_Ghost` prefab, the ghoul study, and every transparent glow, trail and particle (they cannot share a draw with an opaque mesh).
+  - Tests: `FloorMergeTests`, `AllMergeTests` (T); `RenderingSetupTests`, `WanderingMerchantTests`, `AccessibilityPlayModeTests` (Disable Blood) and `RandomizersPlayModeTests` (Inverse) were updated.
+  - Validation, related fixtures only (section 10, the 2026-10-15 commit rule): EditMode 988/988; PlayMode 26/26 for the floor fixtures (`run-20261015-floormerge/fx1`) and 78/78 for heroes, weapons, pickups, merchant and the horde (`run-20261015-allmerge/fx1`); save untouched. **No full PlayMode run yet** (due before the next push or build). Not seen by the owner.
 
 Validation before the V-Sync and GPU horde work: EditMode 933/933, PlayMode 440/440, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261015-perf-full/`). `ProjectileRunnerPlayModeTests` (R): one runner flies every shot at its speed and ends it at its lifetime; a switched-off shot stays put; off-screen particles go off and come back; a flat body skips the ground scan and still chases; an enemy bullet keeps its core and halo, has no trail and flies on the EnemyShot layer, which meets only the player.
 
@@ -2776,7 +2792,11 @@ For each bug fix:
    - `D:\6000.0.36f1\Editor\Unity.exe -batchmode -nographics -projectPath <copy> -runTests -testPlatform EditMode -testResults <run>\editmode-results.xml -logFile <run>\editor-edit.log`
    - `D:\6000.0.36f1\Editor\Unity.exe -batchmode -projectPath <copy> -runTests -testPlatform PlayMode -testResults <run>\playmode-results.xml -logFile <run>\editor-play.log`
 3. Always run both suites: scene-startup bugs are invisible to EditMode.
-4. Report the pass counts, compile errors and exceptions logged; commit only when both suites pass.
+4. Report the pass counts, compile errors and exceptions logged.
+5. **When to commit and when to run the full PlayMode suite** (owner, 2026-10-15: "haan niyam badlo"; the full PlayMode suite takes about 80 minutes, because each of its ~445 tests boots the real game):
+   - A commit needs the full EditMode suite and the PlayMode fixtures the change touches (`-testFilter "FixtureA|FixtureB"`), all passing, with the real save unchanged. The commit message names the fixtures that ran.
+   - The full PlayMode suite runs before every push or build for others, and at least once a day while work goes on. A failure it finds is fixed in the next commit.
+   - The save check stays on every run.
 
 PlayMode tests boot the real game and share the canonical save file (`AppData/LocalLow/Nimrita Games/Soul Hunter/soulhunter_save.json`); tests must not write it deliberately.
 

@@ -118,14 +118,38 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 14
       objectReference: {fileID: 0}
+    - target: {fileID: -7108041486197966214, guid: 33a37f96c3436714ba1255aece989564, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 3baaf8039cfbde545b5e1a7a0f4adfcb, type: 2}
+    - target: {fileID: -367759894729147094, guid: 33a37f96c3436714ba1255aece989564, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -367759894729147094, guid: 33a37f96c3436714ba1255aece989564, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 43ae86a04030a98429e922042a1ce9c9, type: 2}
     - target: {fileID: 919132149155446097, guid: 33a37f96c3436714ba1255aece989564, type: 3}
       propertyPath: m_Name
       value: SH10_L02_Floor
       objectReference: {fileID: 0}
+    - target: {fileID: 2121599264015440021, guid: 33a37f96c3436714ba1255aece989564, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: b4b9c2de073711d47b59cf86ce4b173d, type: 2}
     - target: {fileID: 4839521580691891526, guid: 33a37f96c3436714ba1255aece989564, type: 3}
       propertyPath: m_CastShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4839521580691891526, guid: 33a37f96c3436714ba1255aece989564, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4839521580691891526, guid: 33a37f96c3436714ba1255aece989564, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 43ae86a04030a98429e922042a1ce9c9, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

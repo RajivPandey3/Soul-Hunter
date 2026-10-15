@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 7a65d55f0b72279449dba9f109f1fd87, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 7a65d55f0b72279449dba9f109f1fd87, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 45a62bff4318b114681342ecb6b08320, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 7a65d55f0b72279449dba9f109f1fd87, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: f97443154d0a235418f01a11a0fd62dd, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 7a65d55f0b72279449dba9f109f1fd87, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: bcea2d6679cc7b24a8807db271df74be, type: 2}
     - target: {fileID: 919132149155446097, guid: 7a65d55f0b72279449dba9f109f1fd87, type: 3}
       propertyPath: m_Name
       value: SH10_SantaWater

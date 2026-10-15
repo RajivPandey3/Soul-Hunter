@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 7c892264c15cfaa4787df77b2ddcc26c, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 7c892264c15cfaa4787df77b2ddcc26c, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: dabd2e777c88c0443a6f10624e8d4453, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 7c892264c15cfaa4787df77b2ddcc26c, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: b71d92130ab0fea438c42df301e2f031, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 7c892264c15cfaa4787df77b2ddcc26c, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: ccafe78c66ca22444b2d4e8b12f16ef8, type: 2}
     - target: {fileID: 919132149155446097, guid: 7c892264c15cfaa4787df77b2ddcc26c, type: 3}
       propertyPath: m_Name
       value: SH10_L05_Stump

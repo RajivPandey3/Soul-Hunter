@@ -49,9 +49,16 @@ namespace SoulHunter.Tests.EditMode
                 var renderers = floor.GetComponentsInChildren<MeshRenderer>(true);
                 var ground = renderers.Single(r => r.name == floor.name);
                 var obstacles = renderers.Single(r => r.name == floor.name + "_Obstacles");
+                // Draw calls (2026-10-15): one merged material (FloorMeshMerger), lit like URP Lit, its detail textures in
+                // one texture array and each part's slice baked into UV1.w.
                 foreach (var material in ground.sharedMaterials.Concat(obstacles.sharedMaterials))
-                    Assert.That(material.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"), $"{floor.name}: {material.name}");
-                Assert.That(ground.sharedMaterials.Count(m => m.GetTexture("_BaseMap") != null), Is.GreaterThanOrEqualTo(2),
+                {
+                    Assert.That(material.shader.name, Is.EqualTo("SoulHunter/FloorMerged"), $"{floor.name}: {material.name}");
+                    Assert.That(material.GetTexture("_GroundArray"), Is.InstanceOf<Texture2DArray>(), $"{floor.name}: {material.name}");
+                }
+                var parts = new System.Collections.Generic.List<Vector4>();
+                ground.GetComponent<MeshFilter>().sharedMesh.GetUVs(1, parts);
+                Assert.That(parts.Select(p => Mathf.RoundToInt(p.w)).Where(slice => slice > 0).Distinct().Count(), Is.GreaterThanOrEqualTo(1),
                     $"{floor.name}: the ground and its paths use detail textures.");
                 Assert.That(ground.receiveShadows, $"{floor.name} ground receives shadows.");
                 Assert.That(obstacles.shadowCastingMode, Is.EqualTo(ShadowCastingMode.On), $"{floor.name} obstacles cast shadows.");

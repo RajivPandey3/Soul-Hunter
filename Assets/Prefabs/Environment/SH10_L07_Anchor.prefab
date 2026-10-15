@@ -83,7 +83,11 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 4c82396b9da292c47aef05e47a80d58c, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: c1f313d12e195aa468c508cf86b5853b, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 4c82396b9da292c47aef05e47a80d58c, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: c5bf10c54f0ecd8479b2e31e00a6ca8a, type: 2}
     - target: {fileID: 919132149155446097, guid: 4c82396b9da292c47aef05e47a80d58c, type: 3}
       propertyPath: m_Name
       value: SH10_L07_Anchor

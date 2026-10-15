@@ -104,7 +104,21 @@ namespace SoulHunter.Editor.Content
                 Groups = root => new[] { root.transform.Find("Rails"), root.transform.Find("Cart/Visual") }.Where(t => t != null),
                 Keep = KeepByName,
             },
+            // Owner, 2026-10-15: "sabhi ko single mesh or single material banao". The Wandering Merchant: one mesh with 14
+            // URP Lit colours (Level 3). The four light-source pickups: 3-6 primitives each.
+            new Target
+            {
+                PrefabPath = MerchantModelImporter.PrefabPath,
+                Groups = root => One(root.transform.Find("SH10_NPC_WanderingMerchant")), // the model keeps its own object
+                Keep = KeepByName,
+            },
+            new Target { PrefabPath = ExtraPickupBuilder.GildedCharmPath, Groups = VisualOrRoot, Keep = KeepByName },
+            new Target { PrefabPath = ExtraPickupBuilder.LuckCharmPath, Groups = VisualOrRoot, Keep = KeepByName },
+            new Target { PrefabPath = ExtraPickupBuilder.FireBreathPath, Groups = VisualOrRoot, Keep = KeepByName },
+            new Target { PrefabPath = ExtraPickupBuilder.ScreenWipePath, Groups = VisualOrRoot, Keep = KeepByName },
         };
+
+        private static IEnumerable<Transform> VisualOrRoot(GameObject root) => One(root.transform.Find("Visual") ?? root.transform);
 
         private static IEnumerable<Transform> One(Transform t) { if (t != null) yield return t; }
 

@@ -81,13 +81,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 2324f7f879dc5f5489f59a579deda12e, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 2324f7f879dc5f5489f59a579deda12e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: f5929b7c1a08d7d4bbccb1248966cf37, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: -7511558181221131132, guid: 2324f7f879dc5f5489f59a579deda12e, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: 8c7a3ed2c1e2c34488c17fc0458d2694, type: 2}
+    - target: {fileID: -5754084199372789682, guid: 2324f7f879dc5f5489f59a579deda12e, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: c62f584d03e187848aea8221852f231e, type: 2}
     - target: {fileID: 919132149155446097, guid: 2324f7f879dc5f5489f59a579deda12e, type: 3}
       propertyPath: m_Name
       value: SH10_L04_SpikeTrap

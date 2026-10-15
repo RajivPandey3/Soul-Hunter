@@ -394,7 +394,11 @@ namespace SoulHunter.Tests.EditMode
             var model = prefab.transform.Find("SH10_NPC_WanderingMerchant");
             Assert.IsNotNull(model, "Owner-approved Blender model (2026-09-26).");
             var renderers = model.GetComponentsInChildren<Renderer>();
-            var materials = renderers.SelectMany(r => r.sharedMaterials).Where(m => m != null).ToList();
+            // Draw calls (2026-10-15): the 14 colours are baked into one mesh drawn with the shared PropMerged material;
+            // PropMergedLook lists the original materials.
+            Assert.That(renderers.Length, Is.EqualTo(1), "one mesh");
+            Assert.That(renderers[0].sharedMaterial.shader.name, Is.EqualTo("SoulHunter/PropMerged"));
+            var materials = renderers.SelectMany(r => r.GetComponent<SoulHunter.Gameplay.VFX.PropMergedLook>().Sources).Where(m => m != null).ToList();
             Assert.That(materials.Count, Is.GreaterThanOrEqualTo(14));
             Assert.That(materials.All(m => m.shader.name == "Universal Render Pipeline/Lit"), Is.True);
             Assert.That(materials.Any(m => m.name.EndsWith("_Soul") && m.IsKeywordEnabled("_EMISSION")), Is.True, "The soul lantern glows.");
