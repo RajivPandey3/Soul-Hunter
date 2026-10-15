@@ -2095,7 +2095,7 @@ Validation of all of the above: EditMode 935/935, PlayMode 441/441, 0 exceptions
     - the 16 ground textures are one texture array (`Assets/Art/Textures/Ground/SH10_GroundArray.png`, a 5 x 4 flipbook imported as a 2D array, slice 0 white for untextured parts);
     - each part's linear tint (vertex colour), glow (UV1.xyz) and texture slice (UV1.w) are baked into the mesh, with its Inverse grade (`InverseMap.Grade`, UV2) and, for the Blood Arenas stains (vertex alpha 1), the plain floor that Disable Blood shows (UV3/UV4);
     - `FloorMergedLook` switches Inverse and Disable Blood with two global shader values, so no property block breaks the SRP Batcher. `InfiniteMap` and `InverseStageLook` call it.
-    - The ground still only receives shadows and the obstacles cast them, so a tile stays 2 renderers: 25 tiles draw in 50 calls (about 200-325 before). Not measured in a build.
+    - The ground still only receives shadows and the obstacles cast them, so a tile stays 2 renderers. Only the tiles in view are drawn (about 8 of the 25), so the floor costs about 15 draws instead of the 60-100 of its many materials; the build A/B is below.
     - Look (`run-20261015-floormerge/look`): old and merged tile rendered from the game's 55-degree camera, normal, Inverse and Disable Blood: mean difference 0.00 on every level (Level 1's first normal render read 9.75, the tool's known first-render fault; its Inverse render read 0.00).
   - **Every FacetedPreview model** (`HordeMeshMerger.MergeEveryFaceted`, menu Soul Hunter/Content/Merge Every Faceted Model): the horde's existing bake (one mesh per renderer, colours in the vertices, the skin kept, the shared `SH10_HordeMerged` material) now also covers 107 other prefabs: the 13 heroes and `SH10_Kael` (Player nests it), every weapon model and projectile model, Floor Chicken, Vacuum, Orologion, the old SH10 gem and chest, and the showcase props. Heroes went from 6-10 draws to 1.
     - The hit flash already tints a HordeMerged model through a shared tinted copy (`DamageFlash`, `HordeMaterials`); the Laurel shield now also sets `_TintAmount` 1 so its charge colour still covers the whole model.
@@ -2104,6 +2104,18 @@ Validation of all of the above: EditMode 935/935, PlayMode 441/441, 0 exceptions
   - **Merchant and the light-source pickups** (`PropMeshMerger.Targets`): the Wandering Merchant (one mesh with 14 URP Lit colours, model object kept) and Gilded Charm, Luck Charm, Hellfire Breath and Soul Toll (3-6 primitives each) are one PropMerged mesh each.
   - Look (`run-20261015-allmerge/look`): 111 changed prefabs, old against merged from the game camera: mean difference 0.00 for all of them (Gilded Charm read 82 in the first pass and 0.00 when rendered again in another order, the tool's render-order fault).
   - What is still more than one material: the chest (lid, lock plate, bands, skull and seam stay apart so the lid opens and ChestLook recolours them), the unused `Enemy_Ghost` prefab, the ghoul study, and every transparent glow, trail and particle (they cannot share a draw with an opaque mesh).
+  - **Draw-call A/B in builds** (`D:/SoulHunter-Validation/run-20261015-allmerge-draw`, scripts `run.ps1` and `quiet.ps1`): development builds, before = the props-merged build of `79cf85f6` (`run-20261015-onemat-draw/dev`), after = this code; 1366x768, god mode; median of the 5 s timeline windows after 10-20 s; save unchanged.
+
+    | Level start, Kael's Whip only, 45 s | Draw calls before → after | SetPass before → after | Enemies |
+    |---|---|---|---|
+    | Level 1 | 172 → 52 | 67 → 24 | 15-16 |
+    | Level 4 | 192 → 87 | 42 → 26 | 50 |
+    | Level 5 | 132 → 44 | 33 → 17 | 104-112 |
+    | Level 8 | 161 → 48 | 44 → 22 | 20 |
+
+    - With the same enemies on screen, the floor, hero and weapon models cost 60-70% fewer draw calls and 40-65% fewer SetPass calls.
+    - The heavy fight (level-90 hero, fixed loadout, 19:50 on Levels 1, 4 and 5) gave no fair comparison: the after runs had about twice the enemies on Levels 4 and 5 (199-201 against 104-105), so their totals (L1 486 → 612, L4 788 → 716, L5 472 → 641 draw calls) follow the horde, gems and effects, not this change.
+    - FPS was 60 in every run (the development build's cap), so no FPS gain is shown.
   - Tests: `FloorMergeTests`, `AllMergeTests` (T); `RenderingSetupTests`, `WanderingMerchantTests`, `AccessibilityPlayModeTests` (Disable Blood) and `RandomizersPlayModeTests` (Inverse) were updated.
   - Validation, related fixtures only (section 10, the 2026-10-15 commit rule): EditMode 988/988; PlayMode 26/26 for the floor fixtures (`run-20261015-floormerge/fx1`) and 78/78 for heroes, weapons, pickups, merchant and the horde (`run-20261015-allmerge/fx1`); save untouched. **No full PlayMode run yet** (due before the next push or build). Not seen by the owner.
 
