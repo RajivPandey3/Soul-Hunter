@@ -9,6 +9,7 @@ using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Pickups;
 using SoulHunter.Gameplay.Player;
 using SoulHunter.Gameplay.UI;
+using SoulHunter.Gameplay.VFX;
 
 namespace SoulHunter.Tests.PlayMode
 {
@@ -19,8 +20,11 @@ namespace SoulHunter.Tests.PlayMode
     /// </summary>
     public class ChestLookPlayModeTests : GameplayPlayModeTestBase
     {
+        /// <summary>Compares colour only (r, g, b): a merged chest mesh (PropMergedLook) keeps the alpha of its source
+        /// material, and the alpha of a glow is never drawn.</summary>
         private static void AssertColour(Color actual, Color expected, string what) =>
-            Assert.That(Vector4.Distance(actual, expected), Is.LessThan(0.02f), $"{what}: {actual} (expected {expected}).");
+            Assert.That(Vector3.Distance(new Vector3(actual.r, actual.g, actual.b), new Vector3(expected.r, expected.g, expected.b)),
+                Is.LessThan(0.02f), $"{what}: {actual} (expected {expected}).");
 
         private static ChestPickup KillChestCarrier(GameObject enemyPrefab, bool arcana)
         {
@@ -94,7 +98,11 @@ namespace SoulHunter.Tests.PlayMode
                 finally { Object.Destroy(stage.gameObject); }
             }
             // The shared material is never changed (other chests keep their own look).
-            var shared = pool.ChestPrefab.GetComponentsInChildren<Renderer>(true).SelectMany(r => r.sharedMaterials).First(m => m != null && m.name.Contains("Chest_Iron"));
+            // A merged chest mesh holds the iron as a baked part: PropMergedLook names its source material.
+            Material shared = null;
+            foreach (var r in pool.ChestPrefab.GetComponentsInChildren<Renderer>(true))
+                if (PropMergedLook.TryFind(r, "Chest_Iron", out var iron)) { shared = iron.Source; break; }
+            Assert.That(shared, Is.Not.Null, "The chest has its iron bands.");
             AssertColour(shared.GetColor("_BaseColor"), new Color(0.1f, 0.1f, 0.12f), "The iron material itself");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }

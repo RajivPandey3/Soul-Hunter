@@ -73,7 +73,20 @@ namespace SoulHunter.Gameplay.UI
             _fadeSpeed = 1f / _timer;
             _anchor = transform.position; // the hit point (the manager places the popup there before Setup)
             Place();
+            DamagePopupBatcher.Capture(this); // its new text joins the shared mesh (when the batcher is on)
         }
+
+        /// <summary>The text of this number (the batcher copies its mesh).</summary>
+        internal TextMeshPro Text => _textMesh;
+
+        /// <summary>How visible the number is now, 1 to 0 (the batcher fades its copy smoothly).</summary>
+        internal float Alpha => Mathf.Clamp01(_textColor.a);
+
+        /// <summary>True while DamagePopupBatcher draws this number; its own renderer is then not drawn.</summary>
+        internal bool Batched;
+
+        private void OnEnable() => DamagePopupBatcher.Register(this);
+        private void OnDisable() => DamagePopupBatcher.Unregister(this);
 
         /// <summary>At the anchor on screen, facing the camera and pulled toward it (see TowardCamera).</summary>
         private void Place()
@@ -94,7 +107,8 @@ namespace SoulHunter.Gameplay.UI
             _textColor.a -= _fadeSpeed * Time.deltaTime;
             
             float alpha = Mathf.Ceil(Mathf.Clamp01(_textColor.a) * FadeSteps) / FadeSteps;
-            if (_textMesh != null && alpha != _shownAlpha)
+            // Drawn by the batcher, the fade lives in its copy: no TextMeshPro rebuild here.
+            if (_textMesh != null && !Batched && alpha != _shownAlpha)
             {
                 _shownAlpha = alpha;
                 var shown = _textColor;

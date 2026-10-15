@@ -21,6 +21,9 @@ namespace SoulHunter.Gameplay.Pickups
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private readonly List<(Renderer renderer, Color emission, Color baseColor)> _runes = new();
+        /// <summary>Rune parts of a merged plate (PropMeshMerger, one SoulHunter/PropMerged material): the mask A part,
+        /// with its own material's colour and glow. Only that part is dimmed; the stone baked into the same mesh is not.</summary>
+        private readonly List<(SoulHunter.Gameplay.VFX.PropMergedLook.Part part, Color emission, Color baseColor)> _mergedRunes = new();
         private MaterialPropertyBlock _block;
         private float _readyAt;
         private bool _dimmed;
@@ -45,6 +48,16 @@ namespace SoulHunter.Gameplay.Pickups
             _block = new MaterialPropertyBlock();
             foreach (var r in GetComponentsInChildren<Renderer>())
             {
+                if (r.TryGetComponent(out SoulHunter.Gameplay.VFX.PropMergedLook _))
+                {
+                    for (int i = 0; SoulHunter.Gameplay.VFX.PropMergedLook.TryFind(r, "Rune", out var part, i); i++)
+                    {
+                        var src = part.Source;
+                        _mergedRunes.Add((part, src.HasProperty(EmissionId) ? src.GetColor(EmissionId) : Color.black,
+                                                src.HasProperty(BaseColorId) ? src.GetColor(BaseColorId) : Color.white));
+                    }
+                    continue;
+                }
                 var m = r.sharedMaterial;
                 if (m == null || !m.name.Contains("Rune")) continue;
                 _runes.Add((r, m.HasProperty(EmissionId) ? m.GetColor(EmissionId) : Color.black,
@@ -102,6 +115,12 @@ namespace SoulHunter.Gameplay.Pickups
                 _block.SetColor(BaseColorId, dimmed ? baseColor * 0.35f : baseColor);
                 r.SetPropertyBlock(_block);
             }
+            foreach (var (part, emission, baseColor) in _mergedRunes)
+                SoulHunter.Gameplay.VFX.PropMergedLook.Set(part, _block,
+                    dimmed ? baseColor * 0.35f : baseColor, dimmed ? emission * 0.08f : emission);
         }
+
+        /// <summary>Rune parts found on this plate (ordinary rune renderers plus merged rune masks); for tests.</summary>
+        public int RunePartCount => _runes.Count + _mergedRunes.Count;
     }
 }

@@ -144,7 +144,13 @@ namespace SoulHunter.Gameplay.VFX
         public void PlayChestOpenVFX(Vector3 position) => PlayInternal(VfxKind.ChestOpen, position, null, 1f);
 
         /// <summary>Number of pooled instances of a kind (tests).</summary>
-        public int PooledCount(VfxKind kind) => _pools.TryGetValue(kind, out var pool) ? pool.Count : 0;
+        public int PooledCount(VfxKind kind)
+        {
+            int count = _pools.TryGetValue(kind, out var pool) ? pool.Count : 0;
+            var shared = GetComponent<SharedVfxEmitter>();
+            if (shared != null && shared.HasSystems(kind)) count++; // the shared systems show this kind too
+            return count;
+        }
 
         /// <summary>The instances of a kind that are playing now (tests).</summary>
         public List<GameObject> Playing(VfxKind kind) =>
@@ -172,9 +178,24 @@ namespace SoulHunter.Gameplay.VFX
             if (prefab == null) return;
             _lastPlayed[k] = Time.time;
 
+            // Draw calls (2026-10-15): the per-kill effects can play through one shared system per particle system.
+            Quaternion pose = rotation.HasValue ? rotation.Value * prefab.transform.rotation : prefab.transform.rotation;
+            if (SharedVfxEmitter.Enabled && SharedVfxEmitter.Handles(kind) && !PlaysWhilePaused(kind))
+            {
+                var shared = SharedVfxEmitter.For(this);
+                System.Func<int, int, int> steps = null;
+                if (kind == VfxKind.BloodSpray)
+                {
+                    int playing = shared.LiveCount(VfxKind.BloodSpray); // the same budget as the pooled sprays
+                    steps = (channel, burst) => channel == 0 && burst < SprayPulses.Length ? SprayStepCount(playing, burst) : -1;
+                }
+                float shownScale = Mathf.Max(0.05f, scale) * prefab.transform.localScale.x;
+                if (shared.TryPlay(kind, prefab, position, pose, shownScale, steps)) return;
+            }
+
             var vfx = GetOrCreate(kind, prefab);
             if (vfx == null) return;
-            vfx.transform.SetPositionAndRotation(position, rotation.HasValue ? rotation.Value * prefab.transform.rotation : prefab.transform.rotation);
+            vfx.transform.SetPositionAndRotation(position, pose);
             vfx.transform.localScale = prefab.transform.localScale * Mathf.Max(0.05f, scale);
             if (vfx.activeSelf) vfx.SetActive(false); // a recycled one restarts cleanly
             configure?.Invoke(vfx); // before it starts, so its particle setup is never changed mid-play

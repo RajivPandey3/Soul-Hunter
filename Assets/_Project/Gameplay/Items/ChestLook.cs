@@ -1,3 +1,4 @@
+using SoulHunter.Gameplay.VFX;
 using UnityEngine;
 
 namespace SoulHunter.Gameplay.Pickups
@@ -31,13 +32,28 @@ namespace SoulHunter.Gameplay.Pickups
         private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
         private static MaterialPropertyBlock _block;
 
-        /// <summary>Recolours every chest renderer under <paramref name="root"/>; the shared materials are untouched.</summary>
+        /// <summary>
+        /// Recolours every chest renderer under <paramref name="root"/>; the shared materials are untouched. An ordinary
+        /// renderer is recoloured per submesh as before. A merged one (PropMeshMerger, one PropMerged material with a
+        /// PropMergedLook) holds its iron bands as mask A and its soul seam as mask B in one mesh, so its one property
+        /// block is cleared once and then both parts are set on it (clearing per part would undo the other).
+        /// </summary>
         public static void Apply(Transform root, ChestKind kind)
         {
             if (root == null) return;
             if (_block == null) _block = new MaterialPropertyBlock();
             foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
             {
+                if (renderer.TryGetComponent(out PropMergedLook _))
+                {
+                    _block.Clear();
+                    renderer.SetPropertyBlock(_block);
+                    if (PropMergedLook.TryFind(renderer, "Chest_Iron", out var iron))
+                        PropMergedLook.Set(iron, _block, BandsFor(kind), null);
+                    if (kind == ChestKind.Arcana && PropMergedLook.TryFind(renderer, "Chest_Soul", out var soul))
+                        PropMergedLook.Set(soul, _block, ArcanaSoul, ArcanaSoulGlow * 2f);
+                    continue;
+                }
                 var materials = renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
                 {
@@ -56,37 +72,23 @@ namespace SoulHunter.Gameplay.Pickups
             }
         }
 
-        /// <summary>The band colour the chest shows (tests): the property block's, or the material's own.</summary>
+        /// <summary>The band colour the chest shows (tests): the property block's, or the material's own (merged or not).</summary>
         public static Color BandColour(Transform root)
         {
             if (_block == null) _block = new MaterialPropertyBlock();
             foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
-            {
-                var materials = renderer.sharedMaterials;
-                for (int i = 0; i < materials.Length; i++)
-                {
-                    if (materials[i] == null || !materials[i].name.Contains("Chest_Iron")) continue;
-                    renderer.GetPropertyBlock(_block, i);
-                    return _block.isEmpty ? materials[i].GetColor(BaseColor) : _block.GetColor(BaseColor);
-                }
-            }
+                if (PropMergedLook.TryFind(renderer, "Chest_Iron", out var part))
+                    return PropMergedLook.CurrentBase(part, _block);
             return Color.clear;
         }
 
-        /// <summary>The soul seam's glow (tests): the property block's, or the material's own.</summary>
+        /// <summary>The soul seam's glow (tests): the property block's, or the material's own (merged or not).</summary>
         public static Color SoulGlow(Transform root)
         {
             if (_block == null) _block = new MaterialPropertyBlock();
             foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
-            {
-                var materials = renderer.sharedMaterials;
-                for (int i = 0; i < materials.Length; i++)
-                {
-                    if (materials[i] == null || !materials[i].name.Contains("Chest_Soul")) continue;
-                    renderer.GetPropertyBlock(_block, i);
-                    return _block.isEmpty || !_block.HasColor(EmissionColor) ? materials[i].GetColor(EmissionColor) : _block.GetColor(EmissionColor);
-                }
-            }
+                if (PropMergedLook.TryFind(renderer, "Chest_Soul", out var part))
+                    return PropMergedLook.CurrentEmission(part, _block);
             return Color.clear;
         }
     }

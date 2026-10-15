@@ -148,7 +148,9 @@ namespace SoulHunter.Gameplay.UI
 
         private static void StripBehaviours(GameObject root)
         {
-            foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true)) Destroy(behaviour);
+            // PropMergedLook stays: it only tells ChestLook and the seam dimming which parts a merged mesh holds.
+            foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true))
+                if (!(behaviour is SoulHunter.Gameplay.VFX.PropMergedLook)) Destroy(behaviour);
             foreach (var collider in root.GetComponentsInChildren<Collider>(true)) Destroy(collider);
         }
 
@@ -197,7 +199,7 @@ namespace SoulHunter.Gameplay.UI
             // The soul-light seam left in the body (its top fills the opening once the lid is up).
             _seams.Clear();
             foreach (var r in _chest.GetComponentsInChildren<Renderer>(true))
-                if (!r.transform.IsChildOf(hinge) && System.Array.Exists(r.sharedMaterials, m => m != null && m.name.Contains("Chest_Soul")))
+                if (!r.transform.IsChildOf(hinge) && SoulHunter.Gameplay.VFX.PropMergedLook.Draws(r, "Chest_Soul"))
                     _seams.Add(r);
             _hingeBase = hinge.rotation;
 
@@ -232,7 +234,6 @@ namespace SoulHunter.Gameplay.UI
         }
 
         private readonly List<Renderer> _seams = new List<Renderer>();
-        private static readonly int SeamBase = Shader.PropertyToID("_BaseColor"), SeamEmission = Shader.PropertyToID("_EmissionColor");
 
         /// <summary>The seam glows dimly once the lid is up (Bug MIS v2 C07: it filled the opening as a flat cyan slab).</summary>
         public const float OpenSeamGlow = 0.1f;
@@ -254,16 +255,14 @@ namespace SoulHunter.Gameplay.UI
             foreach (var r in _seams)
             {
                 if (r == null) continue;
-                var mats = r.sharedMaterials;
-                for (int i = 0; i < mats.Length; i++)
+                // Every soul part of the renderer: each Chest_Soul submesh of an ordinary one, the mask B part of a
+                // merged one (PropMergedLook keeps its iron bands' colour on the same block).
+                for (int index = 0; SoulHunter.Gameplay.VFX.PropMergedLook.TryFind(r, "Chest_Soul", out var part, index); index++)
                 {
-                    if (mats[i] == null || !mats[i].name.Contains("Chest_Soul")) continue;
-                    r.GetPropertyBlock(block, i);
-                    Color emission = block.HasColor(SeamEmission) ? block.GetColor(SeamEmission) : mats[i].GetColor(SeamEmission);
-                    Color baseColor = block.HasColor(SeamBase) ? block.GetColor(SeamBase) : mats[i].GetColor(SeamBase);
-                    block.SetColor(SeamEmission, emission * OpenSeamGlow);
-                    block.SetColor(SeamBase, baseColor * 0.12f); // a dark inside with a faint soul glow
-                    r.SetPropertyBlock(block, i);
+                    Color emission = SoulHunter.Gameplay.VFX.PropMergedLook.CurrentEmission(part, block);
+                    Color baseColor = SoulHunter.Gameplay.VFX.PropMergedLook.CurrentBase(part, block);
+                    // a dark inside with a faint soul glow
+                    SoulHunter.Gameplay.VFX.PropMergedLook.Set(part, block, baseColor * 0.12f, emission * OpenSeamGlow);
                 }
             }
         }

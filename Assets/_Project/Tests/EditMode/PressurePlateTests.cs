@@ -25,7 +25,7 @@ namespace SoulHunter.Tests.EditMode
             try
             {
                 var renderers = instance.GetComponentsInChildren<MeshRenderer>();
-                Assert.That(renderers.Any(r => r.sharedMaterial != null && r.sharedMaterial.name.Contains("Rune")), Is.True, "Glowing runes show it is ready.");
+                Assert.That(renderers.Any(r => SoulHunter.Gameplay.VFX.PropMergedLook.Draws(r, "Rune")), Is.True, "Glowing runes show it is ready (merged or not).");
                 var bounds = renderers[0].bounds;
                 foreach (var r in renderers) bounds.Encapsulate(r.bounds);
                 Assert.That(bounds.size.y, Is.LessThan(0.3f), "Flat on the ground.");

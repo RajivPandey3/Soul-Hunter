@@ -116,7 +116,9 @@ namespace SoulHunter.Gameplay.Pickups
             _visual.localPosition = Vector3.zero;
             _visual.localScale = source.localScale * 1.5f;
             // Only the model is wanted: no pickup scripts, no colliders of the chest.
-            foreach (var behaviour in _visual.GetComponentsInChildren<MonoBehaviour>(true)) Destroy(behaviour);
+            // PropMergedLook stays: ApplyLook needs it to find a merged mesh's soul seam (it runs again when the casket is ready).
+            foreach (var behaviour in _visual.GetComponentsInChildren<MonoBehaviour>(true))
+                if (!(behaviour is SoulHunter.Gameplay.VFX.PropMergedLook)) Destroy(behaviour);
             foreach (var collider in _visual.GetComponentsInChildren<Collider>(true)) Destroy(collider);
             ApplyLook();
         }
@@ -129,6 +131,18 @@ namespace SoulHunter.Gameplay.Pickups
             if (_block == null) _block = new MaterialPropertyBlock();
             foreach (var renderer in _visual.GetComponentsInChildren<Renderer>(true))
             {
+                // A merged chest mesh (PropMeshMerger: one PropMerged material, every part's look baked in) is darkened
+                // through the shader's colour multiplier, which acts like the old per-material tint on every baked part
+                // (iron bands included); its soul seam (mask B) then takes the seam colour and glow.
+                if (renderer.TryGetComponent(out SoulHunter.Gameplay.VFX.PropMergedLook _))
+                {
+                    _block.Clear();
+                    _block.SetColor(BaseColor, DarkTint);
+                    renderer.SetPropertyBlock(_block);
+                    if (SoulHunter.Gameplay.VFX.PropMergedLook.TryFind(renderer, "Chest_Soul", out var seam))
+                        SoulHunter.Gameplay.VFX.PropMergedLook.Set(seam, _block, SeamColour, SeamColour * (IsReady ? 3f : 1f));
+                    continue;
+                }
                 var materials = renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
                 {

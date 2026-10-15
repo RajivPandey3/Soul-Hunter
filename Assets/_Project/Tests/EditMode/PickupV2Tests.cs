@@ -34,12 +34,20 @@ namespace SoulHunter.Tests.EditMode
                     float thin = Mathf.Min(bounds.size.x, bounds.size.z);
                     Assert.That(bounds.size.y, Is.GreaterThan(thin * 3f), tier.name + " stands on its edge: taller than it is thick.");
                     Assert.That(thin, Is.GreaterThan(bounds.size.y * 0.12f), tier.name + " is thick enough for its edge to show.");
-                    foreach (var material in renderers.SelectMany(r => r.sharedMaterials).Where(m => m.name.Contains("_Metal") || m.name.Contains("_Emblem")))
+                    // The coin is one merged renderer (PropMeshMerger): its metal and emblem looks are read from the source
+                    // materials it lists, and MergedProps checks they are baked into its mesh as they are.
+                    var metals = renderers.SelectMany(MergedProps.SourcesOf).Where(m => m.name.Contains("_Metal") || m.name.Contains("_Emblem")).Distinct().ToList();
+                    Assert.That(metals.Any(m => m.name.Contains("_Metal")), Is.True, tier.name + " draws its metal (merged sources included).");
+                    foreach (var material in metals)
                     {
                         Color glow = material.GetColor("_EmissionColor"), colour = material.GetColor("_BaseColor");
                         Assert.That(glow.maxColorComponent, Is.LessThanOrEqualTo(colour.maxColorComponent * 0.25f), material.name + ": the glow must not flatten the shading.");
                         Assert.That(material.GetFloat("_Smoothness"), Is.GreaterThanOrEqualTo(0.6f), material.name + " catches the light.");
+                        // PickupV2Importer.CoinMetallic / CoinSmoothness (owner, 2026-10-13).
+                        Assert.That(material.GetFloat("_Metallic"), Is.EqualTo(0.55f).Within(1e-4f), material.name + " metallic.");
+                        Assert.That(material.GetFloat("_Smoothness"), Is.EqualTo(0.82f).Within(1e-4f), material.name + " smoothness.");
                     }
+                    foreach (var r in renderers.Where(MergedProps.IsMerged)) MergedProps.AssertMergedSound(r, tier.name);
                 }
             }
             finally { Object.DestroyImmediate(copy); }
@@ -82,12 +90,31 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(tiered.Tiers.Length, Is.EqualTo(3));
             for (int i = 0; i < 3; i++)
             {
-                Assert.That(tiered.Tiers[i].GetComponentsInChildren<Transform>(true).Any(t => t.name == models[i]), $"{path} tier {i} is {models[i]}.");
+                // The merge removes the emptied model object, so a merged tier is matched to its model by what it draws:
+                // the model's materials (baked in) and its triangles.
+                var tier = tiered.Tiers[i].transform;
+                if (!tier.GetComponentsInChildren<Transform>(true).Any(t => t.name == models[i]))
+                {
+                    var model = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Art/Models/{models[i]}.fbx");
+                    Assert.IsNotNull(model, models[i]);
+                    var modelMaterials = model.GetComponentsInChildren<MeshRenderer>(true).SelectMany(r => r.sharedMaterials).Where(m => m != null).Distinct();
+                    Assert.That(MergedProps.Drawn(tier), Is.EquivalentTo(modelMaterials), $"{path} tier {i} draws the materials of {models[i]}.");
+                    Assert.That(MergedProps.Triangles(tier), Is.EqualTo(MergedProps.Triangles(model.transform)), $"{path} tier {i} draws every triangle of {models[i]}.");
+                }
                 Assert.That(tiered.Tiers[i].activeSelf, Is.EqualTo(i == 0), "Only the lowest tier shows until a value is set.");
             }
-            foreach (var r in prefab.GetComponentsInChildren<MeshRenderer>(true).Where(r => r.name != "GroundGlow" && r.enabled))
-                foreach (var m in r.sharedMaterials)
-                    Assert.That(m.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"), $"{r.name} material {m.name}.");
+            // Every model part is drawn with its URP Lit look: either on its own renderer, or baked into the one merged
+            // renderer of its tier (SoulHunter/PropMerged), whose sources are the URP Lit materials.
+            foreach (var r in prefab.GetComponentsInChildren<MeshRenderer>(true).Where(r => !MergedProps.IsGlow(r) && r.enabled))
+            {
+                if (MergedProps.IsMerged(r))
+                {
+                    Assert.That(r.sharedMaterial.shader.name, Is.EqualTo(MergedProps.MergedShader), $"{r.name} is drawn with the shared merged material.");
+                    MergedProps.AssertMergedSound(r, path);
+                }
+                foreach (var m in MergedProps.SourcesOf(r))
+                    Assert.That(m.shader.name, Is.EqualTo(MergedProps.LitShader), $"{r.name} material {m.name}.");
+            }
         }
 
         [Test]
@@ -107,7 +134,9 @@ namespace SoulHunter.Tests.EditMode
                     float height = renderers.Max(r => r.bounds.max.y) - renderers.Min(r => r.bounds.min.y);
                     Assert.That(height, Is.GreaterThan(last * 1.1f), tier.name + " is bigger than the coin worth less.");
                     last = height;
-                    foreach (var material in renderers.SelectMany(r => r.sharedMaterials).Where(m => m.name.Contains("_Metal")))
+                    var metals = renderers.SelectMany(MergedProps.SourcesOf).Where(m => m.name.Contains("_Metal")).Distinct().ToList();
+                    Assert.That(metals, Is.Not.Empty, tier.name + " draws its gold metal (merged sources included).");
+                    foreach (var material in metals)
                     {
                         Color c = material.GetColor("_BaseColor");
                         Assert.That(c.r > 0.9f && c.g > 0.6f && c.g < 0.9f && c.b < 0.3f, material.name + " is gold, not bronze or silver: " + c);
@@ -123,7 +152,8 @@ namespace SoulHunter.Tests.EditMode
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Items/Chest.prefab");
             Assert.That(prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "SH10_Pickup_Chest"));
             Assert.That(prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "SH10_Chest"), Is.False, "The old chest model is gone.");
-            var glowing = prefab.GetComponentsInChildren<MeshRenderer>(true).SelectMany(r => r.sharedMaterials)
+            // Merged chest parts list their URP Lit sources (PropMergedLook.Sources); kept parts keep their materials.
+            var glowing = prefab.GetComponentsInChildren<MeshRenderer>(true).SelectMany(MergedProps.SourcesOf)
                 .Any(m => m != null && m.IsKeywordEnabled("_EMISSION"));
             Assert.That(glowing, "The soul lock, seam and eyes glow.");
         }
