@@ -53,6 +53,10 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(array.width, Is.EqualTo(512));
             Assert.That(array.wrapMode, Is.EqualTo(TextureWrapMode.Repeat), "The floor's world UVs repeat.");
             Assert.That(array.mipmapCount, Is.GreaterThan(1));
+            // No alpha: like the ground PNGs it compresses to DXT1, not DXT5 (twice the reads; -11% FPS on Level 4).
+            var importer = (TextureImporter)AssetImporter.GetAtPath(ArrayPath);
+            Assert.That(importer.alphaSource, Is.EqualTo(TextureImporterAlphaSource.None));
+            Assert.That(importer.DoesSourceTextureHaveAlpha(), Is.False);
             var material = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
             Assert.That(material.shader.name, Is.EqualTo(FloorMergedLook.ShaderName));
             Assert.That(material.GetTexture("_GroundArray"), Is.EqualTo(array));

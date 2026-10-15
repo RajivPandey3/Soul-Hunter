@@ -52,7 +52,9 @@ namespace SoulHunter.Editor.Content
         {
             var names = SliceNames();
             if (names.Length > Columns * Rows) throw new System.InvalidOperationException($"{names.Length} slices do not fit {Columns}x{Rows}.");
-            var sheet = new Texture2D(Slice * Columns, Slice * Rows, TextureFormat.RGBA32, false);
+            // RGB, like the ground PNGs: an alpha channel made the array DXT5 (twice the GPU memory reads of the DXT1 textures),
+            // which cost about 11% FPS on Level 4 in a release build (run-20261015-allmerge-fps).
+            var sheet = new Texture2D(Slice * Columns, Slice * Rows, TextureFormat.RGB24, false);
             var white = Enumerable.Repeat(new Color32(255, 255, 255, 255), Slice * Slice).ToArray();
             var map = new Dictionary<string, int>();
             for (int i = 0; i < Columns * Rows; i++)
@@ -84,6 +86,7 @@ namespace SoulHunter.Editor.Content
             settings.flipbookRows = Rows;
             importer.SetTextureSettings(settings);
             importer.sRGBTexture = true;
+            importer.alphaSource = TextureImporterAlphaSource.None;
             importer.mipmapEnabled = true;
             importer.wrapMode = TextureWrapMode.Repeat;
             importer.anisoLevel = 4;
@@ -106,6 +109,8 @@ namespace SoulHunter.Editor.Content
             material.SetTexture("_GroundArray", AssetDatabase.LoadAssetAtPath<Texture2DArray>(ArrayPath));
             material.SetFloat("_Smoothness", 0.08f); // StageFloorImporter.ApplyLook
             material.enableInstancing = false;
+            // Drawing the floor last in the opaque queue (2449) was tried and measured no gain (run-20261015-allmerge-fps).
+            material.renderQueue = -1;
             EditorUtility.SetDirty(material);
             return material;
         }
