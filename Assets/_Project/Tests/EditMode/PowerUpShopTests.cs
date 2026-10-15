@@ -76,7 +76,7 @@ namespace SoulHunter.Tests.EditMode
             SaveService.Migrate(data);
             Assert.That(data.Currency, Is.EqualTo(21271 + 9 * 500 + 300 + 2 * 200));
             Assert.That(data.MetaMightLevel + data.MetaArmorLevel + data.MetaMaxHealthLevel, Is.EqualTo(0));
-            Assert.That(data.SaveVersion, Is.EqualTo(2));
+            Assert.That(data.SaveVersion, Is.EqualTo(GameData.CurrentVersion));
             Assert.That(PowerUps.TotalBought(data), Is.EqualTo(0), "The VS shop starts at 0.");
             SaveService.Migrate(data);
             Assert.That(data.Currency, Is.EqualTo(21271 + 9 * 500 + 300 + 2 * 200), "Only once.");

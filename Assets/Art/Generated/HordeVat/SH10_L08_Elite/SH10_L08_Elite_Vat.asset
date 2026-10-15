@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff104c6e5fb960f40a0f507b8e4c7e2f, type: 3}
+  m_Name: SH10_L08_Elite_Vat
+  m_EditorClassIdentifier: 
+  Mesh: {fileID: 4300000, guid: 518f061645acc904dbb5ccde9860f3b2, type: 2}
+  Positions: {fileID: 2800000, guid: 4e6cfbf8c700d4349b9e3ad303888aef, type: 2}
+  Normals: {fileID: 2800000, guid: fdc8dffff12c96844b980f8b11a99ce5, type: 2}
+  Materials:
+  - {fileID: 2100000, guid: 27f4a5ff6693cd74e82b2cae0a4b8999, type: 2}
+  VertexCount: 1168
+  TextureWidth: 1168
+  RowsPerFrame: 1
+  TotalFrames: 98
+  Clips:
+  - Name: Idle
+    StartFrame: 0
+    StartRow: 0
+    FrameCount: 24
+    Fps: 24
+    Loop: 1
+  - Name: Run
+    StartFrame: 24
+    StartRow: 24
+    FrameCount: 24
+    Fps: 24
+    Loop: 1
+  - Name: Attack
+    StartFrame: 48
+    StartRow: 48
+    FrameCount: 25
+    Fps: 24
+    Loop: 0
+  - Name: Death
+    StartFrame: 73
+    StartRow: 73
+    FrameCount: 25
+    Fps: 24
+    Loop: 0
+  Bounds:
+    m_Center: {x: 0, y: 1.0149996, z: 0.00000011920929}
+    m_Extent: {x: 0.62000036, y: 1.0399996, z: 0.3749999}
+  SourceMesh: {fileID: 4300000, guid: 1767fd401a85f2b48b35c72c98be8a54, type: 2}
+  SourceModel: {fileID: 7317860461582191411, guid: b92d7019af1731b498f32589f08c33d8, type: 3}
+  SourceModelPath: Assets/Prefabs/Enemies/SH10_L08_Elite.prefab
+  SourceClipsPath: Assets/Art/Models/SH10_L08_Elite.fbx
+  SourceMaterials:
+  - {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
+  SourceRenderers:
+  - SH10_L08_Elite/SH10_L08_Elite

@@ -127,8 +127,10 @@ namespace SoulHunter.Tests.PlayMode
             int before = health.CurrentHealth;
             yield return new WaitForSeconds(1.5f);
             Assert.That(health.CurrentHealth, Is.EqualTo(before), "A defanged enemy touching the hero deals no damage.");
-            var block = new MaterialPropertyBlock();
-            var rendererWithTint = enemy.GetComponentsInChildren<Renderer>().FirstOrDefault(r => { r.GetPropertyBlock(block); return block.GetColor("_BaseColor") == EnemyController.DefangTint; });
+            // Horde models wear a shared tinted material (no property block, so the SRP Batcher keeps batching them).
+            var rendererWithTint = enemy.GetComponentsInChildren<Renderer>().FirstOrDefault(r =>
+                r.sharedMaterial != null && r.sharedMaterial.HasProperty("_TintAmount") && r.sharedMaterial.GetFloat("_TintAmount") == 1f
+                && ((Vector4)(r.sharedMaterial.GetColor("_Color") - EnemyController.DefangTint)).magnitude < 1e-3f);
             Assert.That(rendererWithTint, Is.Not.Null, "It looks green (Show Defanged Enemies is on by default).");
 
             controller.SetDefanged(false);

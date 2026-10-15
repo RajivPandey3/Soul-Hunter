@@ -251,7 +251,10 @@ namespace SoulHunter.Gameplay.AI
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
             EnemyRunner.Ensure();
-            _scans = _scanner != null && _scanner.enabled;
+            // A flat body (no gravity, height frozen) never uses the ground scan: every stage floor is flat, so the chase
+            // never tilts its path, and its vertical speed is 0 grounded or not. Skipping it saves two physics queries per
+            // enemy 20 times a second (12,000 a second for 300 enemies; 60 FPS pass, 2026-10-14).
+            _scans = _scanner != null && _scanner.enabled && !_flatBody;
             _crowdRadiusKnown = false; // spawners resize pooled bodies (chest elites, guardians)
             CrowdPush = Vector3.zero;  // the last life's push is not this life's
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)

@@ -85,9 +85,17 @@ PrefabInstance:
       value: SH10_L03_Boss
       objectReference: {fileID: 0}
     - target: {fileID: 8951947413338789795, guid: 86660877b12c87e48bc52350ec231f33, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 0776745416409f5498399dd7efb7b0ff, type: 2}
+    - target: {fileID: 8951947413338789795, guid: 86660877b12c87e48bc52350ec231f33, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8951947413338789795, guid: 86660877b12c87e48bc52350ec231f33, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: ba4f0f04b256c9a4dadbaa168694618f, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: 8951947413338789795, guid: 86660877b12c87e48bc52350ec231f33, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 

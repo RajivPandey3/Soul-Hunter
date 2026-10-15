@@ -19,7 +19,11 @@ namespace SoulHunter.Gameplay.Pickups
         private bool _isMagnetized = false;
         public bool IsMagnetized => _isMagnetized;
 
-        private void Update()
+        /// <summary>
+        /// CPU audit (2026-10-14): up to 400 gems lie on the ground, and 400 separate Update calls cost about 0.1 ms a frame.
+        /// One GemRunner ticks them all from ActiveGems; a gem keeps its place in that list, so leaving it is O(1).
+        /// </summary>
+        internal void Tick()
         {
             if (_isShot)
             {
@@ -40,14 +44,32 @@ namespace SoulHunter.Gameplay.Pickups
 
         private float _spawnTime;
 
+        private int _activeIndex = -1;
+        internal int ActiveIndex { set => _activeIndex = value; }
+
         private void OnEnable()
         {
             _isShot = false;
-            if (!ActiveGems.Contains(this)) ActiveGems.Add(this);
+            // The stored index is only trusted when the list agrees: a pooled copy can carry its template's index.
+            if (!(_activeIndex >= 0 && _activeIndex < ActiveGems.Count && ActiveGems[_activeIndex] == this))
+            {
+                _activeIndex = ActiveGems.Count;
+                ActiveGems.Add(this);
+            }
             _spawnTime = Time.time;
+            GemRunner.Ensure();
         }
 
-        private void OnDisable() { ActiveGems.Remove(this); }
+        private void OnDisable()
+        {
+            int i = _activeIndex;
+            _activeIndex = -1;
+            if (i < 0 || i >= ActiveGems.Count || ActiveGems[i] != this) { ActiveGems.Remove(this); return; }
+            int last = ActiveGems.Count - 1;
+            ActiveGems[i] = ActiveGems[last];
+            if (ActiveGems[i] != null) ActiveGems[i]._activeIndex = i;
+            ActiveGems.RemoveAt(last);
+        }
 
         public void Magnetize(Transform playerTransform)
         {

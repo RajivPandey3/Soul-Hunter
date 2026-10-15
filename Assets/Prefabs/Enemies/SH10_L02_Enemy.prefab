@@ -85,9 +85,17 @@ PrefabInstance:
       value: SH10_L02_Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 2159811106459413877, guid: 7491a2e5b980ec041a44055afbb126a4, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 44c9caf46d634c64cbd0df7420a42d3f, type: 2}
+    - target: {fileID: 2159811106459413877, guid: 7491a2e5b980ec041a44055afbb126a4, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2159811106459413877, guid: 7491a2e5b980ec041a44055afbb126a4, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 52bfce66eca910f4ba83c21135d3f725, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: 2159811106459413877, guid: 7491a2e5b980ec041a44055afbb126a4, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 

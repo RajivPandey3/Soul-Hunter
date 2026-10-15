@@ -165,6 +165,11 @@ namespace SoulHunter.Gameplay.Hazards
             if (source != null)
             {
                 template = Object.Instantiate(source, _holder.transform);
+                // 60 FPS pass (2026-10-15): enemy bullets keep the bolt's core and halo but not its trail. Level 5's Lost
+                // Heads keep about 350 bullets in the air, and their trails were 350 of the 800 particle systems running
+                // (1.7 ms a frame). The player's own Magic Wand bolt keeps its trail.
+                foreach (var fx in template.GetComponentsInChildren<ParticleSystem>(true))
+                    if (fx != null && fx.gameObject.name == "Trail") Object.DestroyImmediate(fx.gameObject);
             }
             else
             {
@@ -191,6 +196,10 @@ namespace SoulHunter.Gameplay.Hazards
                 }
                 r.materials = materials;
             }
+            // Draw calls (2026-10-15): EnemyBulletDrawer draws every enemy bullet's core and halo in two instanced draws.
+            var halo = template.transform.Find("Halo");
+            template.AddComponent<EnemyBulletLook>().Setup(template.GetComponentInChildren<MeshRenderer>(true),
+                halo != null && halo.GetComponent<ParticleSystem>() != null ? halo.gameObject : null);
             _template = template;
             return _template;
         }

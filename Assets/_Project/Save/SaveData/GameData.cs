@@ -13,7 +13,7 @@ namespace SoulHunter.Core.Persistence
     public class GameData
     {
         /// <summary>Save schema version this build writes. Raise it and add a step to SaveService.Migrate when the format changes.</summary>
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         /// <summary>
         /// Schema version of this save. No initializer on purpose: a file written before versioning has no such
@@ -36,7 +36,12 @@ namespace SoulHunter.Core.Persistence
         public int WindowMode = 0;
         /// <summary>Index into the distinct screen resolutions; -1 = the display's native resolution.</summary>
         public int ResolutionIndex = -1;
-        public bool VSync = true;
+        /// <summary>
+        /// V-Sync, off by default (owner, 2026-10-15: "pehle V-Sync off"): with V-Sync on, a frame that takes a little over
+        /// 16.7 ms waits for the next refresh and shows as a 33 ms jolt; off, the 60 cap holds the pace and such a frame shows
+        /// as 58-59. Tearing is possible; a player can turn it on in Options.
+        /// </summary>
+        public bool VSync = false;
         public bool DisableBlood = false;
         public bool ShowStageProgression = true;
         /// <summary>On-screen touch joystick (VS "Visible Joysticks"); always shown on mobile.</summary>

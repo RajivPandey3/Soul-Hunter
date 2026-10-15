@@ -231,9 +231,14 @@ namespace SoulHunter.Gameplay.Hazards
         private void Tint(bool on)
         {
             if (_block == null) _block = new MaterialPropertyBlock();
+            // Horde models darken through a shared shaded material (CPU audit, 2026-10-14): a property block would take the
+            // body out of the SRP Batcher, and DamageFlash would draw its hit flash in the property block's colour.
+            var flash = GetComponent<SoulHunter.Gameplay.VFX.DamageFlash>();
+            if (flash != null) flash.SetShade(on ? ShadowTint : (Color?)null);
             foreach (var r in GetComponentsInChildren<Renderer>(true))
             {
                 if (r is ParticleSystemRenderer) continue;
+                if (flash != null && flash.ColoursItself(r)) continue;
                 if (!on) { r.SetPropertyBlock(null); continue; }
                 var m = r.sharedMaterial;
                 if (m == null) continue;

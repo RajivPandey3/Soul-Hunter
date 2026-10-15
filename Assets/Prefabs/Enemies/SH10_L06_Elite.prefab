@@ -85,9 +85,17 @@ PrefabInstance:
       value: SH10_L06_Elite
       objectReference: {fileID: 0}
     - target: {fileID: 6393077188271079319, guid: fc4c4902d3affed49872670d390e5605, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 5db4b86f4b928f74db4d659c13e92929, type: 2}
+    - target: {fileID: 6393077188271079319, guid: fc4c4902d3affed49872670d390e5605, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6393077188271079319, guid: fc4c4902d3affed49872670d390e5605, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 01e70157a92999943b1047476df195f4, type: 2}
+      objectReference: {fileID: 2100000, guid: 447207a4a0ce3594b881e78accaa0588, type: 2}
     - target: {fileID: 6393077188271079319, guid: fc4c4902d3affed49872670d390e5605, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 

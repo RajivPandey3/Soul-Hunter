@@ -121,7 +121,9 @@ namespace SoulHunter.Gameplay.VFX
                 }
                 if (mesh == null) continue;
                 part.Filter.sharedMesh = mesh;
-                part.Renderer.sharedMaterials = source.sharedMaterials;
+                var rest = source.GetComponentInParent<DamageFlash>()?.RestMaterial(source); // not the killing hit's flash
+                if (rest != null) part.Renderer.sharedMaterial = rest;
+                else part.Renderer.sharedMaterials = source.sharedMaterials;
                 part.Renderer.receiveShadows = source.receiveShadows;
                 part.Go.SetActive(true);
                 used++;

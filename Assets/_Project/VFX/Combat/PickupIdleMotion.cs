@@ -97,13 +97,48 @@ namespace SoulHunter.Gameplay.VFX
         /// <summary>Pickups further than this from the hero are off screen and are not moved (the camera shows about 22 x 12 units).</summary>
         public const float ActiveRadius = 30f;
 
-        private void Update()
+        /// <summary>
+        /// CPU audit (2026-10-14): pickups are moved only inside the camera's view of the ground, plus this margin, so a
+        /// pickup never bobs into view mid-step. The 30-unit circle moved about twice as many as the screen shows.
+        /// </summary>
+        public const float ScreenMargin = 2f;
+        private static Vector2 _viewMin, _viewMax;
+
+        private static readonly Vector3[] Corners = { new Vector3(0, 0), new Vector3(1, 0), new Vector3(0, 1), new Vector3(1, 1) };
+
+        /// <summary>The ground area (x, z) the camera sees at height <paramref name="groundY"/>, grown by the margin; false if it cannot tell.</summary>
+        public static bool ViewOnGround(Camera camera, float groundY, out Vector2 min, out Vector2 max)
         {
-            float time = Time.time, deltaTime = Time.deltaTime;
+            min = new Vector2(float.MaxValue, float.MaxValue);
+            max = new Vector2(float.MinValue, float.MinValue);
+            if (camera == null) return false;
+            var plane = new Plane(Vector3.up, new Vector3(0f, groundY, 0f));
+            foreach (var corner in Corners)
+            {
+                var ray = camera.ViewportPointToRay(corner);
+                if (!plane.Raycast(ray, out float distance)) return false;
+                Vector3 p = ray.GetPoint(distance);
+                min = Vector2.Min(min, new Vector2(p.x, p.z));
+                max = Vector2.Max(max, new Vector2(p.x, p.z));
+            }
+            min -= Vector2.one * ScreenMargin;
+            max += Vector2.one * ScreenMargin;
+            return true;
+        }
+
+        /// <summary>False moves every pickup in the old 30-unit circle (A/B measurement in tests).</summary>
+        public static bool ScreenCulling = true;
+
+        private void Update() => StepAll(Time.time, Time.deltaTime);
+
+        /// <summary>One frame of bobbing for every listed pickup (Update; tests time it).</summary>
+        public static void StepAll(float time, float deltaTime)
+        {
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
             bool near = player != null;
             Vector3 center = near ? player.transform.position : Vector3.zero;
             const float radiusSqr = ActiveRadius * ActiveRadius;
+            bool onScreen = ScreenCulling && near && ViewOnGround(Camera.main, center.y, out _viewMin, out _viewMax);
             for (int i = Motions.Count - 1; i >= 0; i--)
             {
                 var motion = Motions[i];
@@ -116,7 +151,12 @@ namespace SoulHunter.Gameplay.VFX
                     Motions.RemoveAt(last);
                     continue;
                 }
-                if (near && (motion.Root.position - center).sqrMagnitude > radiusSqr) continue;
+                if (onScreen)
+                {
+                    Vector3 p = motion.Root.position;
+                    if (p.x < _viewMin.x || p.x > _viewMax.x || p.z < _viewMin.y || p.z > _viewMax.y) continue;
+                }
+                else if (near && (motion.Root.position - center).sqrMagnitude > radiusSqr) continue;
                 motion.Step(time, deltaTime);
             }
         }
@@ -132,6 +172,7 @@ namespace SoulHunter.Gameplay.VFX
         {
             Motions.Clear();
             _instance = null;
+            ScreenCulling = true;
         }
     }
 }

@@ -69,8 +69,16 @@ namespace SoulHunter.Gameplay.VFX
                 _propBlock.SetColor(BaseColorId, _tint.Value);
                 _propBlock.SetColor(ColorId, _tint.Value);
             }
-            foreach (var target in _renderers)
-                if (target != null) target.SetPropertyBlock(_propBlock);
+            for (int i = 0; i < _renderers.Count; i++)
+            {
+                var target = _renderers[i];
+                if (target == null) continue;
+                var horde = _hordeBase[i];
+                // Horde models (one HordeMerged material) swap to a shared tinted copy: no property block, so the
+                // SRP Batcher keeps batching them (CPU audit, 2026-10-14).
+                if (horde != null) target.sharedMaterial = RestFor(horde);
+                else target.SetPropertyBlock(_propBlock);
+            }
         }
 
         private void Awake()
@@ -79,7 +87,7 @@ namespace SoulHunter.Gameplay.VFX
 
             if (_renderer != null)
             {
-                _renderers.Add(_renderer);
+                AddRenderer(_renderer);
                 return;
             }
 
@@ -88,8 +96,54 @@ namespace SoulHunter.Gameplay.VFX
             foreach (var candidate in GetComponentsInChildren<Renderer>(true))
             {
                 if (candidate.enabled && !(candidate is ParticleSystemRenderer))
-                    _renderers.Add(candidate);
+                    AddRenderer(candidate);
             }
+        }
+
+        /// <summary>The horde material each renderer rests in (null for a renderer that uses the property block).</summary>
+        private readonly List<Material> _hordeBase = new List<Material>();
+
+        /// <summary>
+        /// The material a horde renderer shows when not flashing (its tint, or its own colours); null for other renderers.
+        /// A dying body copies this, so the killing hit's flash is not frozen into the corpse.
+        /// </summary>
+        public Material RestMaterial(Renderer renderer)
+        {
+            int i = _renderers.IndexOf(renderer);
+            if (i < 0 || _hordeBase[i] == null) return null;
+            return RestFor(_hordeBase[i]);
+        }
+
+        private Color? _shade;
+
+        /// <summary>
+        /// Darkens a horde body's own colours (Death's Shadow), as a shared material so the SRP Batcher keeps it; it wins
+        /// over a type's tint. Null clears it. Renderers that are not horde models are left to the caller.
+        /// </summary>
+        public void SetShade(Color? shade)
+        {
+            _shade = shade;
+            if (!_isFlashing) ApplyRest();
+        }
+
+        // The shade wins over a type's tint, as Death's Shadow's property block did over the tint's.
+        private Material RestFor(Material horde) =>
+            _shade.HasValue ? HordeMaterials.Shade(horde, _shade.Value)
+            : _tint.HasValue ? HordeMaterials.Tint(horde, _tint.Value)
+            : horde;
+
+        /// <summary>True when this renderer is a horde model that this component colours itself.</summary>
+        public bool ColoursItself(Renderer renderer)
+        {
+            int i = _renderers.IndexOf(renderer);
+            return i >= 0 && _hordeBase[i] != null;
+        }
+
+        private void AddRenderer(Renderer candidate)
+        {
+            _renderers.Add(candidate);
+            var materials = candidate.sharedMaterials;
+            _hordeBase.Add(materials.Length == 1 && HordeMaterials.IsHorde(materials[0]) ? HordeMaterials.BaseFor(materials[0]) : null);
         }
 
         /// <summary>
@@ -101,10 +155,11 @@ namespace SoulHunter.Gameplay.VFX
             if (_renderer != null) return;
             _isFlashing = false; // old renderers may already be destroyed
             _renderers.Clear();
+            _hordeBase.Clear();
             foreach (var candidate in GetComponentsInChildren<Renderer>(true))
             {
                 if (candidate.enabled && candidate.gameObject.activeInHierarchy && !(candidate is ParticleSystemRenderer))
-                    _renderers.Add(candidate);
+                    AddRenderer(candidate);
             }
         }
 
@@ -139,11 +194,14 @@ namespace SoulHunter.Gameplay.VFX
             _flashTimer = Mathf.Min(_flashDuration, MaxDuration);
 
             _isFlashing = true;
-            Color flash = _flashColor * FlashTint * Mathf.Min(_flashBrightness, MaxBrightness);
+            DamageFlashRunner.Add(this);
+            Color flash =_flashColor * FlashTint * Mathf.Min(_flashBrightness, MaxBrightness);
             flash.a = _flashColor.a;
-            foreach (var target in _renderers)
+            for (int i = 0; i < _renderers.Count; i++)
             {
+                var target = _renderers[i];
                 if (target == null) continue;
+                if (_hordeBase[i] != null) { target.sharedMaterial = HordeMaterials.Tint(_hordeBase[i], flash); continue; }
                 target.GetPropertyBlock(_propBlock);
                 _propBlock.SetColor(BaseColorId, flash);
                 _propBlock.SetColor(ColorId, flash);
@@ -151,17 +209,22 @@ namespace SoulHunter.Gameplay.VFX
             }
         }
 
-        private void Update()
+        /// <summary>
+        /// CPU audit (2026-10-14): each of 300 enemies ran an Update every frame only to find it was not flashing. Only a
+        /// flashing body is ticked now, by DamageFlashRunner; it returns true when the flash is over.
+        /// </summary>
+        internal bool TickFlash(float unscaledDeltaTime)
         {
-            if (!_isFlashing) return;
-
-            _flashTimer -= Time.unscaledDeltaTime; // real time: a flash never freezes white during a pause
-            if (_flashTimer <= 0f) EndFlash();
+            if (!_isFlashing) { DamageFlashRunner.Remove(this); return true; } // stopped elsewhere (RefreshRenderers)
+            _flashTimer -= unscaledDeltaTime; // real time: a flash never freezes white during a pause
+            if (_flashTimer <= 0f) { EndFlash(); return true; }
+            return false;
         }
 
         private void EndFlash()
         {
             _isFlashing = false;
+            DamageFlashRunner.Remove(this);
             _nextFlashAllowed = Time.unscaledTime + FlashGap;
             // Back to the material's own colour, or to the lasting tint (Defang).
             ApplyRest();

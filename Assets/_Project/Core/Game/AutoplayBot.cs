@@ -32,6 +32,7 @@ namespace SoulHunter.Gameplay.Core
     ///   -sh-autoplay-character Name            hero to play (default Kael)
     ///   -sh-autoplay-stage N                   start at stage N
     ///   -sh-autoplay-shots S     (default 10)  seconds between timed screenshots
+    ///   -sh-autoplay-no-shots    no screenshots at all (frame-time measurements)
     ///   -sh-autoplay-god                       invincible, for long visual tours
     ///   -sh-autoplay-gold N                    start with N gold (on the throw-away save), e.g. to try the merchant
     ///   -sh-autoplay-boss-after S              after S seconds of play, skip the stage clock to its boss (e.g. Shadow Kael)
@@ -204,6 +205,9 @@ namespace SoulHunter.Gameplay.Core
             _unsubscribe.Clear();
             // A player build stores its quality level between launches; a measuring run must not leave its own behind.
             if (_qualityBefore >= 0) QualitySettings.SetQualityLevel(_qualityBefore, true);
+            _drawCalls.Dispose();
+            _setPass.Dispose();
+            _batchesCount.Dispose();
         }
 
         private void OnEnable() => Application.logMessageReceived += OnLog;
@@ -231,6 +235,9 @@ namespace SoulHunter.Gameplay.Core
             // redirects saving to a temp file first: gold pickups save immediately and would change real progress.
             if (!HasArg(Argument)) save.UseFile(Path.Combine(Application.temporaryCachePath, "autoplay_save.json"));
             save.CurrentData.SelectedCharacterName = Config.Character;
+            // A bot run must not stop when its window loses focus (a whole profile run sat paused, 2026-10-15); the benchmark
+            // does the same. This is the throw-away save.
+            save.CurrentData.PauseOnFocusLoss = false;
             // VS item unlocks (2026-10-12): bot runs measure the whole item pool, so the throw-away save has every item
             // unlocked; -sh-autoplay-locked-items plays a new save's locked pool instead.
             if (HasArg("-sh-autoplay-locked-items")) SoulHunter.Core.Persistence.ItemUnlocks.LockEverything(save.CurrentData);
@@ -279,6 +286,10 @@ namespace SoulHunter.Gameplay.Core
             if (HasArg("-sh-autoplay-evolutions-shot")) StartCoroutine(EvolutionsShot());
             // -sh-autoplay-unlock-shot: screenshot every unlock notice while it is on screen (not hidden behind a menu).
             if (HasArg("-sh-autoplay-unlock-shot")) StartCoroutine(UnlockNoticeShots());
+            // -sh-autoplay-render-census "60,120": at those run seconds, list what the camera draws, grouped by renderer kind
+            // and material and by source object (render-census.txt), to find where the draw calls come from (2026-10-15).
+            string census = ArgValue("-sh-autoplay-render-census");
+            if (!string.IsNullOrEmpty(census)) StartCoroutine(RenderCensus(census));
             yield return new WaitForSecondsRealtime(1f);
 
             _player = PlayerController.Instance;
@@ -322,6 +333,9 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.Pickups.LightSource.AnyBroken += lantern;
             _unsubscribe.Add(() => SoulHunter.Gameplay.Pickups.LightSource.AnyBroken -= lantern);
 
+            // A give list due in the first second goes in before the start-level XP below: those level-ups used to fill the
+            // six weapon slots first, so the list gave nothing (the frame-time suite's "heavykill" ran without it).
+            if (!string.IsNullOrEmpty(ArgValue("-sh-autoplay-give")) && GiveAfter <= 1f) GiveListedItems();
             // Start at a later player level: grant the XP, and the level-up screens that follow are answered by the bot.
             while (_experience != null && _experience.CurrentLevel < Config.StartLevel)
                 _experience.AddXP(_experience.XPToNextLevel - _experience.CurrentXP);
@@ -392,23 +406,27 @@ namespace SoulHunter.Gameplay.Core
             Vector3 pull = Vector3.zero;
             // The whole-scene searches (gems, chests, merchant, lanterns, items, food) run four times a second and their
             // answers are kept in between: at ten times a second they were most of the bot's own frame cost.
-            if (Time.realtimeSinceStartup >= _nextLook)
+            // 60 FPS pass (2026-10-15): one search a frame in turn, so the bot's own cost no longer lands in one frame and
+            // shows up as a stutter in the frame-time runs.
+            if (_lookStep > 0 || Time.realtimeSinceStartup >= _nextLook)
             {
-                _nextLook = Time.realtimeSinceStartup + 0.25f;
-                _gemGoal = Nearest(XPGem.ActiveGems.Where(g => g != null && g.isActiveAndEnabled).Select(g => g.transform), me, 12f);
-                _chestGoal = Nearest(FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
-                // Walk up to the Level 3 merchant while it is there, as a player would.
-                _merchantGoal = Nearest(FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None).Where(m => !m.HasLeft).Select(m => m.transform), me, 30f);
-                // Like a VS player: break Soul Lanterns in view and pick up what they drop (coins, bags, items). Since the
-                // 2026-09-29 VS drop rule these are where coins and chickens come from; the bot used to ignore them.
-                _lanternGoal = _itemGoal = _foodGoal = null;
-                if (near < 6)
+                if (_lookStep == 0) _nextLook = Time.realtimeSinceStartup + 0.25f;
+                switch (_lookStep)
                 {
-                    _lanternGoal = Nearest(FindObjectsByType<LightSource>(FindObjectsSortMode.None).Where(l => l.isActiveAndEnabled).Select(l => l.transform), me, 18f);
-                    _itemGoal = Nearest(FindObjectsByType<Pickup>(FindObjectsSortMode.None).Where(p => p.isActiveAndEnabled).Select(p => p.transform), me, 14f);
+                    case 0: _gemGoal = Nearest(XPGem.ActiveGems.Where(g => g != null && g.isActiveAndEnabled).Select(g => g.transform), me, 12f); break;
+                    case 1: _chestGoal = Nearest(FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f); break;
+                    // Walk up to the Level 3 merchant while it is there, as a player would.
+                    case 2: _merchantGoal = Nearest(FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None).Where(m => !m.HasLeft).Select(m => m.transform), me, 30f); break;
+                    // Like a VS player: break Soul Lanterns in view and pick up what they drop (coins, bags, items). Since the
+                    // 2026-09-29 VS drop rule these are where coins and chickens come from; the bot used to ignore them.
+                    case 3: _lanternGoal = near < 6 ? Nearest(FindObjectsByType<LightSource>(FindObjectsSortMode.None).Where(l => l.isActiveAndEnabled).Select(l => l.transform), me, 18f) : null; break;
+                    case 4: _itemGoal = near < 6 ? Nearest(FindObjectsByType<Pickup>(FindObjectsSortMode.None).Where(p => p.isActiveAndEnabled).Select(p => p.transform), me, 14f) : null; break;
+                    default:
+                        _foodGoal = _health.CurrentHealth < _health.MaxHealth * 0.5f
+                            ? Nearest(FindObjectsByType<HealthPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f) : null;
+                        break;
                 }
-                if (_health.CurrentHealth < _health.MaxHealth * 0.5f)
-                    _foodGoal = Nearest(FindObjectsByType<HealthPickup>(FindObjectsSortMode.None).Select(c => c.transform), me, 25f);
+                _lookStep = (_lookStep + 1) % 6;
             }
             if (Reachable(_gemGoal)) pull += Flat(_gemGoal.position - me).normalized * (near > 8 ? 0.8f : 1.6f);
             if (Reachable(_chestGoal)) pull += Flat(_chestGoal.position - me).normalized * 2f;
@@ -611,13 +629,17 @@ namespace SoulHunter.Gameplay.Core
                     Event("stage-jump", $"\"stage\": {Config.JumpToStage}");
                 }
                 WatchStrongEnemies();
+                var progressionNow = LevelProgressionManager.Instance;
                 if (Config.BossAfterSeconds >= 0f && !_bossSkipped && Elapsed >= Config.BossAfterSeconds)
                 {
                     _bossSkipped = true;
                     LevelProgressionManager.Instance.SkipToBoss();
                     Event("boss-skip", $"\"stage\": {LevelProgressionManager.Instance.CurrentStage}");
                 }
-                var kael = FindFirstObjectByType<SoulHunter.Gameplay.AI.ShadowKaelController>();
+                // Scene searches only where they can find something: a search of the whole scene every 0.4 s made a bot-only
+                // stutter that the frame-time runs counted as the game's (60 FPS pass, 2026-10-15).
+                var kael = !_shadowKaelSeen && progressionNow != null && progressionNow.CurrentStage == 10
+                    ? FindFirstObjectByType<SoulHunter.Gameplay.AI.ShadowKaelController>() : null;
                 if (kael != null && !_shadowKaelSeen)
                 {
                     _shadowKaelSeen = true;
@@ -656,7 +678,10 @@ namespace SoulHunter.Gameplay.Core
                         arcanaChoice.Selected != null ? Escape(arcanaChoice.Selected.CardName) : ""));
                     arcanaChoice.PressTake();
                 }
-                foreach (var chest in FindObjectsByType<ChestUI>(FindObjectsSortMode.None))
+                // A chest screen and the merchant's shop pause the game; the merchant stands only on Level 3.
+                bool pausedNow = GameTime.IsPaused;
+                bool merchantStage = progressionNow != null && progressionNow.CurrentStage == 3;
+                foreach (var chest in pausedNow ? FindObjectsByType<ChestUI>(FindObjectsSortMode.None) : System.Array.Empty<ChestUI>())
                     if (chest != null && chest.IsOpen)
                     {
                         // VS chest screen: wait for OPEN, press it, shoot the reveal, press DONE (like a player).
@@ -672,7 +697,8 @@ namespace SoulHunter.Gameplay.Core
                             screen.ItemCount, screen.ShownGold, screen.CanSkip ? "true" : "false"));
                         yield return chest.OpenAndClose();
                     }
-                foreach (var merchant in FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None))
+                foreach (var merchant in pausedNow || (merchantStage && !_merchantSeen)
+                             ? FindObjectsByType<WanderingMerchant>(FindObjectsSortMode.None) : System.Array.Empty<WanderingMerchant>())
                 {
                     if (!_merchantSeen)
                     {
@@ -1192,18 +1218,14 @@ namespace SoulHunter.Gameplay.Core
             }
             // -sh-autoplay-give "Pentagram:8,Garlic:8" (and -sh-autoplay-give-after S, default 12): gives those items at
             // those levels once, so a build run can measure one weapon (the Pentagram's screen wipe, 2026-10-13).
-            if (!_giveDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-give-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var giveAt) ? giveAt : 12f))
+            if (!_giveDone && Elapsed >= GiveAfter) GiveListedItems();
+            // -sh-autoplay-chest-after S: drops one chest on the hero once (the chest screen's cost in a profile).
+            if (!_chestDropped && float.TryParse(ArgValue("-sh-autoplay-chest-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var chestAt)
+                && Elapsed >= chestAt && PickupPoolManager.Instance != null && _player != null)
             {
-                _giveDone = true;
-                var weapons = WeaponManager.Instance;
-                foreach (string part in (ArgValue("-sh-autoplay-give") ?? "").Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var bits = part.Split(':');
-                    if (weapons == null || !System.Enum.TryParse<UpgradeData.UpgradeType>(bits[0].Trim(), true, out var type)) continue;
-                    int level = bits.Length > 1 && int.TryParse(bits[1], out var l) ? l : 1;
-                    weapons.GiveWeapon(type, level);
-                    Event("give", $"\"item\": \"{type}\", \"level\": {weapons.GetWeaponLevel(type)}");
-                }
+                _chestDropped = true;
+                PickupPoolManager.Instance.SpawnChest(_player.transform.position);
+                Event("chest-dropped", "\"by\": \"bot\"");
             }
             // -sh-autoplay-quality N sets the quality level once. -sh-autoplay-quality-ab "A,B" switches between two levels
             // every 30 s with V-Sync and the frame cap off, so one run compares them on the same hero (the timeline's
@@ -1236,7 +1258,9 @@ namespace SoulHunter.Gameplay.Core
                     }
                     slowEnough = _profileSlowSeconds >= 2;
                 }
-                if (_profileState == 0 && Elapsed >= at && Time.timeScale > 0f && slowEnough)
+                // -sh-autoplay-profile-paused: also start while a menu holds the game (level-up, chest, pause screens).
+                bool running = Time.timeScale > 0f || HasArg("-sh-autoplay-profile-paused");
+                if (_profileState == 0 && Elapsed >= at && running && slowEnough)
                 {
                     UnityEngine.Profiling.Profiler.logFile = profileFile;
                     UnityEngine.Profiling.Profiler.enableBinaryLog = true;
@@ -1267,6 +1291,31 @@ namespace SoulHunter.Gameplay.Core
                 _qualityAbIndex++;
                 _nextQualitySwitch = Elapsed + 30f;
             }
+            // -sh-autoplay-vsync-ab: V-Sync on for 30 s, then off for 30 s, and so on, with the game's 60 FPS cap (the throw-away
+            // save's option), so one run compares what the player feels (the timeline's "vsync" and "jolts" fields).
+            if (HasArg("-sh-autoplay-vsync-ab") && Elapsed >= _nextVSyncSwitch && GameSettings.Data != null)
+            {
+                GameSettings.Data.VSync = _vSyncAbIndex % 2 == 0;
+                DisplaySettingsApplier.Apply();
+                _vSyncAbIndex++;
+                _nextVSyncSwitch = Elapsed + 30f;
+            }
+            // -sh-autoplay-vat-ab: the horde is drawn on the GPU (HordeVatDrawer) for 30 s, then by its own skinned renderers for
+            // 30 s, and so on, so one run compares both on the same hero (the timeline's "vat" field says which was on).
+            if (HasArg("-sh-autoplay-vat-ab") && Elapsed >= _nextVatSwitch)
+            {
+                HordeVatDrawer.Enabled = _vatAbIndex % 2 == 0;
+                _vatAbIndex++;
+                _nextVatSwitch = Elapsed + 30f;
+            }
+            // -sh-autoplay-bullet-ab: enemy bullets are drawn instanced (EnemyBulletDrawer) for 30 s, then by their own
+            // renderers and halo particles for 30 s, and so on (the timeline's "bulletDraw" field says which was on).
+            if (HasArg("-sh-autoplay-bullet-ab") && Elapsed >= _nextBulletSwitch)
+            {
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Enabled = _bulletAbIndex % 2 == 0;
+                _bulletAbIndex++;
+                _nextBulletSwitch = Elapsed + 30f;
+            }
             // -sh-autoplay-omen <OmenEvent name> (and -sh-autoplay-omen-after S, default 20): fires that Omen once, then takes
             // screenshots 1, 4 and 10 s later, so a build run can show an Omen without waiting for the wheel.
             if (!_omenDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-omen-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var omenAt) ? omenAt : 20f)
@@ -1279,7 +1328,23 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
-        private bool _omenDone, _giveDone;
+        private float GiveAfter => float.TryParse(ArgValue("-sh-autoplay-give-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var giveAt) ? giveAt : 12f;
+
+        private void GiveListedItems()
+        {
+            _giveDone = true;
+            var weapons = WeaponManager.Instance;
+            foreach (string part in (ArgValue("-sh-autoplay-give") ?? "").Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                var bits = part.Split(':');
+                if (weapons == null || !System.Enum.TryParse<UpgradeData.UpgradeType>(bits[0].Trim(), true, out var type)) continue;
+                int level = bits.Length > 1 && int.TryParse(bits[1], out var l) ? l : 1;
+                weapons.GiveWeapon(type, level);
+                Event("give", $"\"item\": \"{type}\", \"level\": {weapons.GetWeaponLevel(type)}");
+            }
+        }
+
+        private bool _omenDone, _giveDone, _chestDropped;
         private EnemySpawner _spawnerForLog; // pooled enemy bodies in the timeline (memory checks)
 
         private IEnumerator OmenShots(string name)
@@ -1298,12 +1363,15 @@ namespace SoulHunter.Gameplay.Core
         private float _levelUpSeconds, _levelUpWorst;
         private bool _xpBurstDone;
 
+        private int _lookStep;
         private int _shotFrame = -10;
         private float _pausedSince = -1f;
         private bool _pauseReported;
 
         private IEnumerator Shot(string name)
         {
+            // -sh-autoplay-no-shots: no screenshots at all, for frame-time runs (a capture stalls its frame by 80-100 ms).
+            if (HasArg("-sh-autoplay-no-shots")) yield break;
             if (HasArg("-sh-autoplay-touch-sizes")) LogTouchSizes(name);
             _shotFrame = Time.frameCount;
             string file = Path.Combine(Config.OutputFolder, "shots", $"{_shots.Count:000}_{name}.png");
@@ -1336,9 +1404,27 @@ namespace SoulHunter.Gameplay.Core
             rt.Release();
         }
 
+        // 60 FPS in every window (2026-10-14): an average hides short stutters, so each timeline line also counts the frames
+        // slower than 60 FPS allows (16.7 ms plus 0.5 ms of timer jitter) and keeps the slowest frame.
+        private const float SlowFrameSeconds = 0.0172f;
+        private int _windowSlowFrames;
+        private float _windowMaxFrame;
+        // A jolt the eye sees: over 25 ms (with V-Sync on, a frame just past 16.7 ms waits for the next refresh: 33 ms).
+        private const float JoltFrameSeconds = 0.025f;
+        private int _windowJolts;
+
         private int RecentFps()
         {
+            _windowSlowFrames = 0;
+            _windowMaxFrame = 0f;
+            _windowJolts = 0;
             if (_frameTimes.Count == 0) return 0;
+            foreach (float dt in _frameTimes)
+            {
+                if (dt > SlowFrameSeconds) _windowSlowFrames++;
+                if (dt > JoltFrameSeconds) _windowJolts++;
+                if (dt > _windowMaxFrame) _windowMaxFrame = dt;
+            }
             float avg = _frameTimes.Average();
             _frameTimes.Clear();
             return Mathf.RoundToInt(1f / Mathf.Max(avg, 0.0001f));
@@ -1351,6 +1437,22 @@ namespace SoulHunter.Gameplay.Core
         private int _qualityBefore = -1;
         private int _qualityAbIndex;
         private float _nextQualitySwitch;
+        private int _vSyncAbIndex;
+        private int _vatAbIndex;
+        private int _bulletAbIndex;
+        private float _nextBulletSwitch;
+
+        // Draw calls (2026-10-15): the render counters of the last frame, in the timeline. Unity fills them in a development
+        // build; a release build gives -1 (the recorder is not valid there).
+        private Unity.Profiling.ProfilerRecorder _drawCalls, _setPass, _batchesCount;
+
+        private static long RenderCounter(ref Unity.Profiling.ProfilerRecorder recorder, string name)
+        {
+            if (!recorder.Valid) recorder = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Render, name);
+            return recorder.Valid ? recorder.LastValue : -1;
+        }
+        private float _nextVatSwitch;
+        private float _nextVSyncSwitch;
 
         private void WriteTimeline()
         {
@@ -1361,13 +1463,36 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
                 GameTime.IsPaused ? "true" : "false", string.Join(", ", weapons), XPGem.ActiveGems.Count,
                 System.GC.GetTotalMemory(false) / 1048576f, System.GC.CollectionCount(0), System.GC.CollectionCount(1), System.GC.CollectionCount(2),
-                _spawnerForLog != null ? _spawnerForLog.PooledEnemies : 0, UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576f, QualitySettings.GetQualityLevel()));
+                _spawnerForLog != null ? _spawnerForLog.PooledEnemies : 0, UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / 1048576f, QualitySettings.GetQualityLevel(),
+                _windowSlowFrames, _windowMaxFrame * 1000f, SoulHunter.Gameplay.Combat.Projectile.ActiveShots.Count,
+                _windowJolts, QualitySettings.vSyncCount,
+                HordeVatDrawer.Exists && HordeVatDrawer.Enabled ? "true" : "false", HordeVatDrawer.LastBodies,
+                RenderCounter(ref _drawCalls, "Draw Calls Count"), RenderCounter(ref _setPass, "SetPass Calls Count"), RenderCounter(ref _batchesCount, "Batches Count"),
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Exists && SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Enabled ? "true" : "false",
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount));
+            // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
+            if (HasArg("-sh-autoplay-count-fx"))
+            {
+                var owners = new Dictionary<string, int>();
+                int playing = 0;
+                foreach (var ps in FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+                {
+                    if (!ps.isPlaying) continue;
+                    playing++;
+                    var root = ps.transform.root.name.Replace("(Clone)", "");
+                    owners[root] = owners.TryGetValue(root, out var n) ? n + 1 : 1;
+                }
+                var shots = SoulHunter.Gameplay.Combat.Projectile.ActiveShots;
+                Event("fx-count", string.Format(CultureInfo.InvariantCulture, "\"playing\": {0}, \"shots\": {1}, \"shotsFxOff\": {2}, \"owners\": {{{3}}}",
+                    playing, shots.Count, shots.Count(x => x != null && x.FxStopped),
+                    string.Join(", ", owners.OrderByDescending(o => o.Value).Take(12).Select(o => $"\"{Escape(o.Key)}\": {o.Value}"))));
+            }
             File.WriteAllText(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
         }
 
@@ -1492,6 +1617,55 @@ namespace SoulHunter.Gameplay.Core
                     words.Replace('\n', ' '), cut ? "cut " : "", Mathf.Max(0f, over)));
             }
             return found;
+        }
+
+        private IEnumerator RenderCensus(string times)
+        {
+            var at = times.Split(',').Select(t => float.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out float v) ? v : -1f)
+                .Where(v => v >= 0f).OrderBy(v => v).ToList();
+            foreach (float t in at)
+            {
+                while (Elapsed < t || Time.timeScale <= 0f) yield return null;
+                yield return new WaitForEndOfFrame(); // isVisible holds the frame just drawn
+                var byMaterial = new Dictionary<string, int>();
+                var bySource = new Dictionary<string, int>();
+                var materials = new HashSet<Material>();
+                var shaders = new HashSet<Shader>();
+                int visible = 0, particles = 0;
+                foreach (var r in FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                {
+                    if (!r.enabled || !r.isVisible || r.forceRenderingOff) continue;
+                    if (r is ParticleSystemRenderer)
+                    {
+                        var ps = r.GetComponent<ParticleSystem>();
+                        if (ps == null || ps.particleCount == 0) continue;
+                        particles += ps.particleCount;
+                    }
+                    visible++;
+                    var mat = r.sharedMaterial;
+                    if (mat != null) { materials.Add(mat); if (mat.shader != null) shaders.Add(mat.shader); }
+                    string kind = r.GetType().Name.Replace("Renderer", "");
+                    string key = $"{kind} | {(mat != null ? mat.name : "-")} | {(mat != null && mat.shader != null ? mat.shader.name : "-")}";
+                    byMaterial[key] = byMaterial.TryGetValue(key, out int c) ? c + 1 : 1;
+                    string root = r.transform.root.name.Replace("(Clone)", "").Trim();
+                    root = System.Text.RegularExpressions.Regex.Replace(root, @"\s*\(\d+\)$", "");
+                    string src = $"{root} / {r.gameObject.name.Replace("(Clone)", "").Trim()}";
+                    bySource[src] = bySource.TryGetValue(src, out int d) ? d + 1 : 1;
+                }
+                var sb = new StringBuilder();
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
+                    "== t {0:0} s: {1} visible renderers, {2} materials, {3} shaders, {4} particles; enemies {5}; GPU horde {6} bodies in {7} draws; enemy bullets {8} in {9} draws",
+                    Elapsed, visible, materials.Count, shaders.Count, particles, EnemyController.ActiveEnemies.Count,
+                    HordeVatDrawer.LastBodies, HordeVatDrawer.LastDraws,
+                    SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastDraws));
+                sb.AppendLine("-- by renderer | material | shader");
+                foreach (var kv in byMaterial.OrderByDescending(k => k.Value).Take(45)) sb.AppendLine($"  {kv.Value,5}  {kv.Key}");
+                sb.AppendLine("-- by source (root / object)");
+                foreach (var kv in bySource.OrderByDescending(k => k.Value).Take(45)) sb.AppendLine($"  {kv.Value,5}  {kv.Key}");
+                if (Config != null && !string.IsNullOrEmpty(Config.OutputFolder))
+                    File.AppendAllText(Path.Combine(Config.OutputFolder, "render-census.txt"), sb.ToString());
+                Event("render-census", $"\"visible\": {visible}, \"materials\": {materials.Count}");
+            }
         }
 
         private void Event(string kind, string fields)

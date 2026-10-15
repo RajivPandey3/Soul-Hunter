@@ -74,7 +74,8 @@ namespace SoulHunter.Tests.PlayMode
             yield return BootIntoGameplay();
             StopTheHorde();
             var pool = PickupPoolManager.Instance;
-            var origin = PlayerController.Instance.transform.position + Vector3.forward * 20f;
+            // Out of the hero's reach but partly on screen: the runner moves only pickups the camera sees (CPU audit, 2026-10-14).
+            var origin = PlayerController.Instance.transform.position + Vector3.forward * 7f;
             var spawned = new List<GameObject>();
             for (int i = 0; i < 60; i++) spawned.Add(pool.SpawnChicken(origin + new Vector3(i % 10, 0f, i / 10) * 1.5f));
             yield return null;
@@ -85,7 +86,10 @@ namespace SoulHunter.Tests.PlayMode
             int enabled = Object.FindObjectsByType<PickupIdleMotion>(FindObjectsSortMode.None).Length;
             Assert.That(PickupIdleMotionRunner.Count, Is.EqualTo(enabled), "Every enabled bobbing pickup is on the runner, once.");
 
-            var visual = motions[0].Visual;
+            Assert.That(PickupIdleMotionRunner.ViewOnGround(Camera.main, PlayerController.Instance.transform.position.y, out var min, out var max), Is.True);
+            var seen = motions.Find(m => { var p = m.transform.position; return p.x > min.x && p.x < max.x && p.z > min.y && p.z < max.y; });
+            Assert.That(seen, Is.Not.Null, "Some of the chickens are on screen.");
+            var visual = seen.Visual;
             var start = visual.localPosition;
             var turn = visual.rotation;
             yield return new WaitForSeconds(0.3f);

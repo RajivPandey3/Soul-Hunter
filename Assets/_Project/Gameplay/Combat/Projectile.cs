@@ -27,10 +27,42 @@ namespace SoulHunter.Gameplay.Combat
         [System.NonSerialized] public AutoAttackWeapon SourceWeapon;
         public event System.Action<Projectile> Deactivated;
         /// <summary>Fired by a boss's mirrored weapon: hits only the player. Reset on every reuse from the pool.</summary>
-        public bool TargetsPlayer { get; set; }
+        public bool TargetsPlayer
+        {
+            get => _targetsPlayer;
+            set
+            {
+                _targetsPlayer = value;
+                // 60 FPS pass (2026-10-15): a shot that hits only the player flies on the EnemyShot layer, which meets
+                // only the Player layer. On Default it made a trigger pair with every enemy it crossed (Level 5's Lost
+                // Heads keep about 390 bullets in the air through the horde) and each pair ran OnTriggerEnter for nothing.
+                if (EnemyShotLayer >= 0) gameObject.layer = value ? EnemyShotLayer : _homeLayer;
+            }
+        }
+        private bool _targetsPlayer;
+        private int _homeLayer;
+        /// <summary>The layer of shots that hit only the player (-1 when the project has no such layer).</summary>
+        public static int EnemyShotLayer => _enemyShotLayer ??= LayerMask.NameToLayer("EnemyShot");
+        private static int? _enemyShotLayer;
+
+        /// <summary>Every enabled shot; ProjectileRunner moves them all from one Update (60 FPS pass, 2026-10-15).</summary>
+        public static readonly System.Collections.Generic.List<Projectile> ActiveShots = new System.Collections.Generic.List<Projectile>();
+        private int _activeIndex = -1;
+        internal int ActiveIndex { set => _activeIndex = value; }
+        private Transform _transform;
 
         private void OnDisable()
         {
+            int i = _activeIndex;
+            _activeIndex = -1;
+            if (i < 0 || i >= ActiveShots.Count || ActiveShots[i] != this) ActiveShots.Remove(this);
+            else
+            {
+                int last = ActiveShots.Count - 1;
+                ActiveShots[i] = ActiveShots[last];
+                if (ActiveShots[i] != null) ActiveShots[i]._activeIndex = i;
+                ActiveShots.RemoveAt(last);
+            }
             _recentHits.Clear();
             Deactivated?.Invoke(this);
             Deactivated = null;
@@ -74,6 +106,11 @@ namespace SoulHunter.Gameplay.Combat
         private void Awake()
         {
             _rb = GetComponent<Rigidbody>();
+            _transform = transform;
+            if (gameObject.layer != EnemyShotLayer) _homeLayer = gameObject.layer;
+            // Only the shot's own running glow and trail (looping, playing on enable); a one-off burst such as an
+            // explosion at the end of a flight is played by its weapon and left alone.
+            _fx = System.Array.FindAll(GetComponentsInChildren<ParticleSystem>(true), fx => fx.main.loop && fx.main.playOnAwake);
             _rb.useGravity = false;
             _rb.isKinematic = true; // Use trigger collisions
             
@@ -94,14 +131,49 @@ namespace SoulHunter.Gameplay.Combat
             _maxBounces = 0;
             _screenBouncesLeft = 0;
             ConfigureContacts(1, _maxBounces, false);
+            // The stored index is only trusted when the list agrees: a pooled copy can carry its template's index.
+            if (!(_activeIndex >= 0 && _activeIndex < ActiveShots.Count && ActiveShots[_activeIndex] == this))
+            {
+                _activeIndex = ActiveShots.Count;
+                ActiveShots.Add(this);
+            }
+            ProjectileRunner.Ensure();
+            if (_fxStopped) { _fxStopped = false; foreach (var fx in _fx) if (fx != null) fx.Play(false); }
         }
 
-        private void Update()
+        // 60 FPS pass (2026-10-15): a shot's glow and trail particles are switched off while the shot is well off the
+        // screen (Level 5 with Knife, Fire Wand and Song of Mana kept 850 systems running, 2.5 ms a frame) and switched
+        // back on when it returns. Only the look changes; flight, hits and lifetime do not.
+        private ParticleSystem[] _fx = System.Array.Empty<ParticleSystem>();
+        private bool _fxStopped;
+        private const float OffScreenMargin = 0.25f; // of the view: its trail (a few units behind it) is off screen too
+
+        internal void UpdateFx(Camera cam)
         {
-            transform.position += transform.forward * (_speed * Time.deltaTime);
+            if (_fx.Length == 0 || cam == null) return;
+            Vector3 v = cam.WorldToViewportPoint(_transform.position);
+            bool off = v.x < -OffScreenMargin || v.x > 1f + OffScreenMargin || v.y < -OffScreenMargin || v.y > 1f + OffScreenMargin;
+            if (off == _fxStopped) return;
+            _fxStopped = off;
+            foreach (var fx in _fx)
+            {
+                if (fx == null) continue;
+                if (off) fx.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                else fx.Play(false);
+            }
+        }
+
+        /// <summary>True while this shot's particles are off because it is far off the screen (tests).</summary>
+        public bool FxStopped => _fxStopped;
+
+        /// <summary>One frame of flight, called by ProjectileRunner (it was this shot's own Update).</summary>
+        internal void Tick(float dt)
+        {
+            if (_transform == null) _transform = transform;
+            _transform.position += _transform.forward * (_speed * dt);
             if (_screenBouncesLeft > 0) BounceOffScreenEdge();
 
-            _currentLifetime -= Time.deltaTime;
+            _currentLifetime -= dt;
             if (_currentLifetime <= 0f)
             {
                 gameObject.SetActive(false);

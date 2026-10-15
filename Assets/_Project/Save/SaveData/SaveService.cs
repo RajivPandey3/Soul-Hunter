@@ -494,6 +494,13 @@ namespace SoulHunter.Core.Persistence
                 data.MetaMaxHealthLevel = data.MetaRecoveryLevel = 0;
                 data.SaveVersion = 2;
             }
+            if (data.SaveVersion < 3)
+            {
+                // v2 -> v3 (owner, 2026-10-15: "pehle V-Sync off"): V-Sync is off by default, once, for saves that had the old
+                // default; the 60 FPS cap keeps the pace. A player can turn it back on in Options.
+                data.VSync = false;
+                data.SaveVersion = 3;
+            }
             if (data.SaveVersion > GameData.CurrentVersion)
                 Debug.LogWarning($"[SaveService] Save version {data.SaveVersion} is newer than this build ({GameData.CurrentVersion}).");
 

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05c96bef169612f4da7666df3f51d3a9, type: 3}
+  m_Name: HordeVatLibrary
+  m_EditorClassIdentifier: 
+  Assets:
+  - {fileID: 11400000, guid: bbc1c215d1570b74786d0bdcb0ac6979, type: 2}
+  - {fileID: 11400000, guid: 1652c6ea702c69a478e8a2d415661437, type: 2}
+  - {fileID: 11400000, guid: 01eca9a338028ca429288d8a21620f5d, type: 2}
+  - {fileID: 11400000, guid: 7e1919a8ca42bfa40b656e4c9a014d09, type: 2}
+  - {fileID: 11400000, guid: 2b29352b5c89f7e4481fc8681edc9f16, type: 2}
+  - {fileID: 11400000, guid: ac45a38e66fff2345b62468884964d5e, type: 2}
+  - {fileID: 11400000, guid: 5321c0f7817bafb4191310070c7bda6b, type: 2}
+  - {fileID: 11400000, guid: c0ee95fb7c391784fb20682570222f01, type: 2}
+  - {fileID: 11400000, guid: 41734ea4f098a4e43abf21f1f4a32604, type: 2}
+  - {fileID: 11400000, guid: 74f0e134d0d4577458548bb5e26d4791, type: 2}
+  - {fileID: 11400000, guid: 43a687bc6fa941d48bb2eb4fd838d976, type: 2}
+  - {fileID: 11400000, guid: c74d64ecad3ebee4387cdab12a64900d, type: 2}
+  - {fileID: 11400000, guid: adff2c0d052060d4ba767c486048dd7f, type: 2}
+  - {fileID: 11400000, guid: 7c014198001b65a439eaae15a57f708c, type: 2}
+  - {fileID: 11400000, guid: 80d443fc075ffd6499039ea43e12486c, type: 2}
+  - {fileID: 11400000, guid: 317d588688cc09040a6dc8eb7fc4aa37, type: 2}
+  - {fileID: 11400000, guid: 74a4e0de45c60f84cbaba668fa22938c, type: 2}
+  - {fileID: 11400000, guid: 3754e77f588409c4a9f5e4462c1d1004, type: 2}
+  - {fileID: 11400000, guid: 1da01c7f13f6eb141bdfd20ba17b4400, type: 2}
+  - {fileID: 11400000, guid: 69f509c41174b8b47aac4e25c68522cb, type: 2}

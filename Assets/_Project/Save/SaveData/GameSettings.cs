@@ -29,7 +29,7 @@ namespace SoulHunter.Core.Persistence
         public static bool ScreenShake => Data == null || Data.ScreenShake;
         public static int WindowMode => Data != null ? Data.WindowMode : 0;
         public static int ResolutionIndex => Data != null ? Data.ResolutionIndex : -1;
-        public static bool VSync => Data == null || Data.VSync;
+        public static bool VSync => Data != null && Data.VSync;
         public static bool DisableBlood => Data != null && Data.DisableBlood;
         public static bool ShowStageProgression => Data == null || Data.ShowStageProgression;
         public static bool VisibleJoystick => Data != null && Data.VisibleJoystick;

@@ -2004,6 +2004,75 @@ Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start bu
 
 Not yet played by the owner.
 
+### 60 FPS, third pass: every level (owner, 2026-10-15: "full optimisation chalo, mera goal achieve karo")
+
+Goal: 60 FPS in every part of every level on the reference laptop. Measured with `D:\SoulHunter-Validation\frametime-suite.ps1`: a release build, V-Sync and the frame cap off, 1366x768, god mode, no screenshots. Each level's late fight plays for 3 minutes, plus a Shadow Kael fight, a heavy-kill loadout and a Pentagram wipe run. The timeline counts every frame over 17.2 ms ("slow") in each 5 s window (`AutoplayBot` fields `slow`, `maxMs`, `shots`).
+
+Found first:
+- The owner's `SPIKE1.data` was an Editor capture. EditorLoop took about 14 ms a frame and the 650 ms spike was editor work; the game's own work was 4.7 ms.
+- In a development build every spike of 25 ms or more came from the bot itself (screenshots and scene searches). Housekeeping searches are now gated and goal searches are spread over frames, and `-sh-autoplay-no-shots` turns screenshots off. `ProfileSummary.SlowFrameMs` is 25.
+
+Changes:
+- **One runner flies every shot** (`ProjectileRunner`, `Projectile.Tick`, `Projectile.ActiveShots`), in place of up to 560 separate `Update` calls. A shot well off the screen switches its looping glow and trail particles off until it returns (`Projectile.UpdateFx`, `FxStopped`); one-off bursts are left alone.
+- **Enemy bullets fly on their own layer.** `EnemyShot` (layer 15) collides only with Player (`TagManager.asset`, `DynamicsManager.asset`). Before, the Lost Heads' bullets were on Default, which collides with Enemy, so each of about 390 bullets in the air made trigger pairs with the horde. `Projectile.TargetsPlayer` moves the shot to that layer, and a reused shot goes back to its own layer.
+- **Enemy bullets have no trail** (`HazardBullets.Template`); they keep their core and halo. **A look change on placeholder art; the owner has not seen it.** The player's Magic Wand bolt keeps its trail.
+- A flat enemy body (no gravity, height frozen) skips the ground scan (`EnemyController._scans`).
+- Measurement fix: `-sh-autoplay-give` gave nothing once the start-level picks had filled the six weapon slots, so the suite's "heavykill" part never got its loadout. The bot now gives the items before those picks when give-after is at most 1 s (`AutoplayBot.GiveListedItems`). The suite's `-Fixed` switch gives every level fight the same loadout (Whip, Garlic, Bible, Dusk Raven, Santa Water, Lightning Ring at 8, Duplicator 2, Spinach 5).
+
+Results (slow frames per part; the median FPS is in brackets where it matters):
+
+| Part | before (random loadouts) | after (random) | after (fixed loadout) |
+|---|---|---|---|
+| L1 | 22 | 0 | 9 |
+| L2 | 257 | 3 | 12 |
+| L3 | 31 | 1 | 859 (69) in one run, 25 (102) in another |
+| L4 | 134 | 48 (93) | 135 (84) |
+| L5 | 242 | 432 (76) | 897 (84); 57 (128) in an 8-minute run |
+| L6 | 74 | 6 | 2 |
+| L7 | 18 | 6 | 11 |
+| L8 | 138 | 7 | 11 |
+| L9 | 425 | 22 | 6 |
+| L10 (Shadow Kael) | 116 | 4 | 30 |
+| Heavy kill | 48 | 3 | 8 |
+| Pentagram wipe | 10 | 3 | 2 |
+
+- **Not reached: 60 in every frame of every part.** The slow frames come when the horde is at the 300 cap **and** the hero kills about 60 or more a second (Level 5 at 20:00+, Level 3 late with a strong loadout). In those minutes the median is 62-90 FPS and 5-20% of frames take over 17.2 ms. The same level with about 200 enemies and 30 kills a second holds a median of 128 with about 1 slow frame per 5 s.
+- Even with a fixed loadout, the kill rate differs run to run (Level 3: 15,232 and 3,927 kills), so single runs compare poorly. Comparisons were made inside one run, switching the feature every 30 s.
+- **Tried and dropped,** because they measured no gain:
+  - PhysX Automatic Box Pruning broadphase: Level 5 at 300 enemies was 62-70 FPS either way.
+  - Drawing gems with GPU instancing: a development profile of Level 3 showed 2,009 draw calls, about 1,200 of them gems, and a 10.4 ms render thread. In release with an A/B in one run, Level 5 was 95 FPS without it and 90 with it.
+  - Switching enemy bullet particles off on screen: 0.8 slow frames per window both ways.
+- What is left in the profile (development build, Level 5, 300 enemies): the render thread (about 11 ms, about 1,950 draw calls, 600 SetPass) and skinning 136 enemies. The game scripts together take about 3 ms. Further steps are larger work and not done: IL2CPP (the owner installs the module), baked or instanced horde animation (art pipeline), V-Sync off with the 60 cap.
+- Disk: drive D: filled up during these runs (a build failed with "not enough space"). This session's own release copies and profiler captures were deleted; timelines and summaries were kept. About 5 GB is free.
+
+**V-Sync off by default (owner, "pehle V-Sync off"), measured as no gain.** `GameData.VSync` defaults to false, `GameData.CurrentVersion` 3, and `SaveService.Migrate` v2→v3 switches it off once; after that the player's choice stays (`AccessibilityTests`). An A/B in one run with the 60 cap (`AutoplayBot -sh-autoplay-vsync-ab`, switching every 30 s; `run-20261015-vsyncab`): the median was 60 both ways, but V-Sync off had more slow frames and jolts (frames over 25 ms, timeline field `jolts`): L2 141/11 against 7/6, L3 58/0 against 1/1, L5 67/0 against 0/0, L9 61/1 against 0/0. **V-Sync on is steadier.** Putting the default back to on waits for the owner.
+
+**The horde on the GPU (vertex animation textures).** `HordeVatBaker` (Editor, `-executeMethod SoulHunter.Editor.Content.HordeVatBaker.BakeAll`, script `D:\SoulHunter-Validation\vat-bake.ps1`) bakes the 20 enemy and elite models (Idle, Run, Attack and Death, 98 frames at 24 fps) into `Assets/Art/Generated/HordeVat/` (73 MB; the textures are stored as text assets and could shrink) and lists them in `Resources/HordeVatLibrary`. `HordeVatDrawer` draws every body of a baked model in instanced draws (`Graphics.RenderMeshInstanced`, shader `SoulHunter/HordeVat`). The body's own renderer stays enabled with `forceRenderingOff`, so it is not skinned and its Animator is culled, while renderer checks, corpses and the hit flash keep working on it. The colour (type tint, flash, Defang, shade) is read from the material `DamageFlash` puts on the body. Bosses, Death's Shadow and any body with shadows or another material draw themselves. The horde plays only Idle, as before (no enemy prefab drives its Animator), each body at its own phase. `-sh-autoplay-vat-ab` switches it every 30 s.
+- Defect found on the way: the first bake used `BakeMesh(…, true)`, which bakes in the renderer's scale (100), so the horde came out 1/100 size. It is `false` now; the baked body measures 1.49 x 2.03 x 0.70.
+- A/B in one run (`run-20261015-vatab`, release, no cap), median FPS off → on: L1 110 → 142, L2 104 → 137, L5 111 → 119.5, L9 106 → 133; slow frames per 5 s window L5 4.6 → 2.2, the others 0.3-1.0 → 0.3-0.8.
+- Screenshots with and without it (`run-20261015-vatab/look/shots/037_t0022.png`, `039_t0042.png`) show the same models, tints, size and facing. **Not yet seen by the owner.**
+- Tests: `HordeVatTests` (T: 20 assets, clips, instanced materials, bounds, library) and `HordeVatPlayModeTests` (R: bodies handed to the drawer stay enabled, a few draws for the whole horde, baked height within 25% of the skinned one, the flash colour, switching off hands every body back).
+
+Validation of all of the above: EditMode 935/935, PlayMode 441/441, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261015-vat-full/`).
+
+**Draw calls (owner, 2026-10-15: "SRP batcher or call drop kam se kam karna hai").**
+- Checked: the SRP Batcher is on (`UniversalRP.asset`) and the four custom shaders keep their numbers in `UnityPerMaterial`. A development profile after the GPU horde (`run-20261015-arch-prof/l5b.summary.txt`, Level 5, 100-158 enemies) gave 1,766 draw calls, 274 SetPass and 9.9 ms on the render thread per frame.
+- `AutoplayBot -sh-autoplay-render-census "S,S"` lists what the camera draws by material and by source object. The timeline now records `drawCalls`, `setPass` and `batches` (development builds only; a release build writes -1).
+- **Gems, a second time (mistake: the 2026-10-15 attempt above was rebuilt without searching first).** An instanced gem drawer halved the draw calls on Level 1 with 400 gems (769 to 362, SetPass 180 to 137), but FPS was 109 both ways (`run-20261015-gemab/l1`). With the earlier release A/B (3-5 FPS slower), it stays dropped and was removed again. The same run overwrote that folder's old `dev` build and `build.log`; its A/B timelines are kept.
+- **Enemy bullets** (`EnemyBulletDrawer`, `EnemyBulletLook`, added to `HazardBullets.Template`):
+  - Every bullet drew twice (its core mesh and its halo particle system). All bullets already shared one tinted material copy, so they were SRP Batcher-friendly. Level 5 keeps up to about 900 in the air.
+  - Now every enemy bullet on screen is drawn in two instanced draws: all cores, and all halos as one soft camera-facing quad each (0.9 units, the particles' start colour). The core renderer stays enabled with `forceRenderingOff`, and the halo particle object is switched off. Flight, hits and pooling are unchanged.
+  - The quad replaces the 2-3 overlapping halo particles, without their short smear behind a moving bullet. **A small look change on placeholder art; the owner has not seen it.** Screenshots with and without it (`run-20261015-bulletab3/look/shots/155_t0143.png`, `161_t0160.png`) look alike.
+  - `SH10_Core_Magic.mat` and `SH10_Vfx_Soft.mat` have GPU instancing on, so the build keeps the variants (no effect on normal renderers under the SRP Batcher).
+  - Measured, A/B every 30 s in one run (`-sh-autoplay-bullet-ab`; timeline `bulletDraw`, `bullets`, `bulletsAlive`), Level 5 from 19:50 with the fixed loadout:
+    - development build (`run-20261015-bulletab3/l5`), the heavy minute: drawer on with 450-740 bullets, 500-870 draw calls, 76-89 FPS; off with 760-900 bullets, 960-2,180 draw calls, SetPass 240-418, 56-81 FPS and 7-118 slow frames per 5 s;
+    - release builds (`run-20261015-bulletab2`), the heavy windows: on 108 against off 77 FPS (run 1), on 102 against off 97 (run 2).
+    - The bullet count differs between windows, so the FPS gain is not proven; the draw-call drop is.
+  - Tests: `EnemyBulletDrawerPlayModeTests` (R: 30 real enemy bullets in at most 2 draws, the core kept but not drawn, the halo particles off, they still fly, switching off hands every bullet back).
+  - Validation: EditMode 935/935, PlayMode 442/442, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261015-bulletdraw-full/`).
+
+Validation before the V-Sync and GPU horde work: EditMode 933/933, PlayMode 440/440, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261015-perf-full/`). `ProjectileRunnerPlayModeTests` (R): one runner flies every shot at its speed and ends it at its lifetime; a switched-off shot stays put; off-screen particles go off and come back; a flat body skips the ground scan and still chases; an enemy bullet keeps its core and halo, has no trail and flies on the EnemyShot layer, which meets only the player.
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).
