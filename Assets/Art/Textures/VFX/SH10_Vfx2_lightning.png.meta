@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      SH10_Vfx2_lightning_0: 304010605013290180
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
