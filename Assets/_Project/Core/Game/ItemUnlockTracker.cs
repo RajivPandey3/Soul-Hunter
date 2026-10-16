@@ -174,7 +174,7 @@ namespace SoulHunter.Gameplay.Core
                 changed = true;
                 Announce($"PowerUp unlocked: Omni. {PowerUps.Info(PowerUpId.Omni).Description}");
             }
-            if (changed) _save.SaveGame();
+            if (changed) _save.SaveInBackground();
         }
 
         /// <summary>Evolved (or united) weapons the inventory holds now.</summary>

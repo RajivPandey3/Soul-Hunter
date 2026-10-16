@@ -107,7 +107,7 @@ namespace SoulHunter.Gameplay.Pickups
                     else Debug.Log($"[RelicPickup] {lines[i]}");
                 }
                 if (items != null) items.ApplyBoon(Info); // this run gets the boon now; later runs get it at their start
-                save.SaveGame();
+                save.SaveInBackground();
             }
             // Results ("pickups and the amount of them"); CollectionTracker sees the same name, already found above.
             var stats = SoulHunter.Gameplay.Core.RunStatsTracker.Instance;

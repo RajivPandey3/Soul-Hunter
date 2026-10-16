@@ -89,13 +89,13 @@ namespace SoulHunter.Gameplay.Core
                 _evolutionCount = evolutions;
                 var news = CollectionBook.GrantCountUnlocks(data);
                 foreach (var line in news) Announce(line);
-                if (news.Count > 0) _save.SaveGame();
+                if (news.Count > 0) _save.SaveInBackground();
             }
             var progression = LevelProgressionManager.Instance;
             if (data != null && progression != null && progression.CurrentStage >= Bestiary.UnlockLevel && Bestiary.Unlock(data))
             {
                 Announce("Unlocked: the Bestiary (main menu)");
-                _save.SaveGame();
+                _save.SaveInBackground();
             }
         }
 
@@ -119,7 +119,7 @@ namespace SoulHunter.Gameplay.Core
             var news = CollectionBook.MarkFound(data, id, out bool isNew);
             foreach (var line in news) Announce(line);
             if (isNew) _save.SaveSoon();
-            if (news.Count > 0) _save.SaveGame();
+            if (news.Count > 0) _save.SaveInBackground();
         }
 
         private void HandleKill(EnemyData type)

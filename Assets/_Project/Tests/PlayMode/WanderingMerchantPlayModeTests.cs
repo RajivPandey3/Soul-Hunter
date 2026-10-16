@@ -102,6 +102,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(merchant.BuySoulEgg(), Is.True, "Soul Egg for 10,000 gold. " + Errors());
             Assert.That(economy.CurrentGold, Is.EqualTo(500));
             Assert.That(SoulEggs.For(save.CurrentData, "Kael").Eggs, Is.EqualTo(1));
+            save.WaitForBackgroundWrite(); // a purchase during a run writes the file on a worker (2026-10-16)
             Assert.That(File.Exists(temp), Is.True, "The purchase is saved (to the throw-away file).");
             var saved = JsonUtility.FromJson<GameData>(File.ReadAllText(temp));
             Assert.That(SoulEggs.For(saved, "Kael")?.Eggs, Is.EqualTo(1), "The egg is in the saved file.");

@@ -271,7 +271,7 @@ namespace SoulHunter.Gameplay.Core
             if (!TryGetEconomy(out var economy) || !GameServices.Instance.TryGet<SaveService>(out var save) || save.CurrentData == null)
                 return false;
             bool bought = TryBuySoulEgg(save.CurrentData, save.CurrentData.SelectedCharacterName, economy.SpendGold, new System.Random(), out _);
-            if (bought) { save.SaveGame(); ShowCost(_soulEggPrice); }
+            if (bought) { save.SaveInBackground(); ShowCost(_soulEggPrice); }
             RefreshShopUI();
             return bought;
         }

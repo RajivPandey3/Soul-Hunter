@@ -88,6 +88,33 @@ namespace SoulHunter.Tests.EditMode
             finally { Directory.Delete(directory, true); }
         }
 
+        [Test]
+        public void SaveInBackground_WritesAtOnce_AtomicallyKeepingThePreviousSave()
+        {
+            // 2026-10-16: the chest-close SaveGame spent 62-363 ms writing the file on the main thread. Saves made during a
+            // run now queue the write at once on a worker; the file is the same atomic save with its ".prev".
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                var service = Loaded(path);
+                service.CurrentData.Currency = 5;
+                service.SaveGame();
+                service.CurrentData.Currency = 9;
+                service.SaveInBackground();
+                Assert.That(service.HasPendingSave, Is.False, "Nothing waits for the timed flush.");
+                service.WaitForBackgroundWrite();
+                var saved = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(path), saved);
+                Assert.That(saved.Currency, Is.EqualTo(9));
+                var previous = new GameData();
+                JsonUtility.FromJsonOverwrite(File.ReadAllText(path + ".prev"), previous);
+                Assert.That(previous.Currency, Is.EqualTo(5), "The last good save is kept.");
+                Assert.That(File.Exists(path + ".tmp"), Is.False);
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
         // Learning Comment: Save kabhi aadha na likha jaye, aur kharab save par pichla achha save wapas mile.
         private static string NewDirectory()
         {

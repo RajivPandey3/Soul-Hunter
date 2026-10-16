@@ -37,14 +37,17 @@ namespace SoulHunter.Gameplay.UI
         public static ChestPreviewStage Create(GameObject chestPrefab, GameObject coinPrefab, bool arcana,
             SoulHunter.Gameplay.Pickups.ChestKind kind = SoulHunter.Gameplay.Pickups.ChestKind.Silver)
         {
-            var go = new GameObject("ChestPreviewStage");
-            go.transform.position = StagePosition;
-            var stage = go.AddComponent<ChestPreviewStage>();
-            stage.Build(chestPrefab, coinPrefab, arcana);
-            // The opened chest's own look (bronze, silver, Arcana) on the preview copy.
-            if (stage._chest != null)
-                SoulHunter.Gameplay.Pickups.ChestLook.Apply(stage._chest, arcana ? SoulHunter.Gameplay.Pickups.ChestKind.Arcana : kind);
-            return stage;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("ChestPreviewStage.Create"))
+            {
+                var go = new GameObject("ChestPreviewStage");
+                go.transform.position = StagePosition;
+                var stage = go.AddComponent<ChestPreviewStage>();
+                stage.Build(chestPrefab, coinPrefab, arcana);
+                // The opened chest's own look (bronze, silver, Arcana) on the preview copy.
+                if (stage._chest != null)
+                    SoulHunter.Gameplay.Pickups.ChestLook.Apply(stage._chest, arcana ? SoulHunter.Gameplay.Pickups.ChestKind.Arcana : kind);
+                return stage;
+            }
         }
 
         private void Build(GameObject chestPrefab, GameObject coinPrefab, bool arcana)

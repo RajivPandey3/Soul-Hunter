@@ -286,7 +286,7 @@ namespace SoulHunter.Gameplay.Pickups
                 if (tracker != null) tracker.AnnounceUnlock(line);
                 else Debug.Log($"[SoulCasket] {line}");
             }
-            if (save != null && data != null) save.SaveGame();
+            if (save != null && data != null) save.SaveInBackground();
             SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position + Vector3.up * 0.6f);
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null) audio.PlaySFX(audio.ChestOpenSound, 0.9f);

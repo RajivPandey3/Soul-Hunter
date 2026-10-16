@@ -60,64 +60,67 @@ namespace SoulHunter.Gameplay.Pickups
 
         private void Collect(Transform playerTransform)
         {
-            if (_isCollected || !isActiveAndEnabled || Time.timeScale <= 0f) return;
-            _isCollected = true;
-
-            SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position);
-
-            // VS (wiki Treasure_Chest, Patch 0.2.4): "a brief moment of invulnerability after picking up a treasure"; 240 ms
-            // (owner, 2026-10-01). Game time stands still while the chest screen is open, so it covers the resume.
-            var pickerHealth = playerTransform != null ? playerTransform.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>() : null;
-            if (pickerHealth != null) pickerHealth.GrantInvulnerability(SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime);
-
-            // Chest UI aur Backend Logic Trigger karo
-            string rewardMessage = "";
-            if (_logicController != null)
+            using (SoulHunter.Core.Services.SlowSpan.Measure("ChestPickup.Collect"))
             {
-                // VS Arcana mode: an Arcana chest gives an Arcana instead of items.
-                rewardMessage = IsArcana
-                    ? _logicController.ProcessArcanaChest(_tiers, offerChoice: Application.isPlaying)
-                    : _logicController.ProcessChest(_tiers); // UI bypass / Backend processing
-            }
-            else
-            {
-                Debug.LogWarning("[ChestPickup] ChestLogicController nahi mila!");
-            }
+                if (_isCollected || !isActiveAndEnabled || Time.timeScale <= 0f) return;
+                _isCollected = true;
 
-            // UI call
-            if (_chestUI != null)
-            {
-                var result = _logicController != null ? _logicController.LastResult : null;
-                // An Arcana chest that could give no Arcana opened as a bronze or silver chest (wiki Treasure_Chest, Arcana);
-                // ChestLogicController set that look. Every other chest shows its own look.
-                bool arcanaFellBack = IsArcana && result != null && !result.IsArcana;
-                if (result != null && !arcanaFellBack) result.Kind = Kind;
-                // VS Results: chests are listed by size (wiki Treasure_Chest: silver for 3 items, gold for 5).
-                if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-                    SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(PickupNames.ForChest(result != null ? result.ItemCount : 1, IsArcana && !arcanaFellBack));
-                if (result != null && result.ArcanaDraft != null && SoulHunter.Gameplay.Core.ArcanaManager.Instance != null)
+                SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position);
+
+                // VS (wiki Treasure_Chest, Patch 0.2.4): "a brief moment of invulnerability after picking up a treasure"; 240 ms
+                // (owner, 2026-10-01). Game time stands still while the chest screen is open, so it covers the resume.
+                var pickerHealth = playerTransform != null ? playerTransform.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>() : null;
+                if (pickerHealth != null) pickerHealth.GrantInvulnerability(SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime);
+
+                // Chest UI aur Backend Logic Trigger karo
+                string rewardMessage = "";
+                if (_logicController != null)
                 {
-                    // VS Arcana chest: the Arcana choice screen instead of the chest screen (release item P2-01).
-                    _chestUI.RecordOpened(1);
-                    var logic = _logicController;
-                    var ui = _chestUI;
-                    var tiers = _tiers;
-                    SoulHunter.Gameplay.Core.ArcanaManager.Instance.OpenChestDraft(result.ArcanaDraft, logic, () =>
-                    {
-                        // VS Game Killer (0) (wiki Treasure_Chest: "Will provide two additional items if the player has Game
-                        // Killer (0)"): after the pick, the chest's two extra items open on the usual chest screen.
-                        int extra = SoulHunter.Gameplay.Core.ArcanaManager.ArcanaChestExtraItems;
-                        if (extra <= 0 || logic == null || ui == null) return;
-                        string message = logic.ProcessChest(Object.FindFirstObjectByType<SoulHunter.Gameplay.Combat.WeaponManager>(),
-                            Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>(), extra, tiers.AsRegular(false), Random.value);
-                        if (logic.LastResult != null) logic.LastResult.Kind = ChestKind.Arcana;
-                        ui.OpenChest(message, logic.LastResult, countAsChest: false);
-                    });
+                    // VS Arcana mode: an Arcana chest gives an Arcana instead of items.
+                    rewardMessage = IsArcana
+                        ? _logicController.ProcessArcanaChest(_tiers, offerChoice: Application.isPlaying)
+                        : _logicController.ProcessChest(_tiers); // UI bypass / Backend processing
                 }
-                else _chestUI.OpenChest(rewardMessage, result);
-            }
+                else
+                {
+                    Debug.LogWarning("[ChestPickup] ChestLogicController nahi mila!");
+                }
 
-            gameObject.SetActive(false);
+                // UI call
+                if (_chestUI != null)
+                {
+                    var result = _logicController != null ? _logicController.LastResult : null;
+                    // An Arcana chest that could give no Arcana opened as a bronze or silver chest (wiki Treasure_Chest, Arcana);
+                    // ChestLogicController set that look. Every other chest shows its own look.
+                    bool arcanaFellBack = IsArcana && result != null && !result.IsArcana;
+                    if (result != null && !arcanaFellBack) result.Kind = Kind;
+                    // VS Results: chests are listed by size (wiki Treasure_Chest: silver for 3 items, gold for 5).
+                    if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
+                        SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordPickup(PickupNames.ForChest(result != null ? result.ItemCount : 1, IsArcana && !arcanaFellBack));
+                    if (result != null && result.ArcanaDraft != null && SoulHunter.Gameplay.Core.ArcanaManager.Instance != null)
+                    {
+                        // VS Arcana chest: the Arcana choice screen instead of the chest screen (release item P2-01).
+                        _chestUI.RecordOpened(1);
+                        var logic = _logicController;
+                        var ui = _chestUI;
+                        var tiers = _tiers;
+                        SoulHunter.Gameplay.Core.ArcanaManager.Instance.OpenChestDraft(result.ArcanaDraft, logic, () =>
+                        {
+                            // VS Game Killer (0) (wiki Treasure_Chest: "Will provide two additional items if the player has Game
+                            // Killer (0)"): after the pick, the chest's two extra items open on the usual chest screen.
+                            int extra = SoulHunter.Gameplay.Core.ArcanaManager.ArcanaChestExtraItems;
+                            if (extra <= 0 || logic == null || ui == null) return;
+                            string message = logic.ProcessChest(Object.FindFirstObjectByType<SoulHunter.Gameplay.Combat.WeaponManager>(),
+                                Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>(), extra, tiers.AsRegular(false), Random.value);
+                            if (logic.LastResult != null) logic.LastResult.Kind = ChestKind.Arcana;
+                            ui.OpenChest(message, logic.LastResult, countAsChest: false);
+                        });
+                    }
+                    else _chestUI.OpenChest(rewardMessage, result);
+                }
+
+                gameObject.SetActive(false);
+            }
         }
 
         public void ResetPickup()

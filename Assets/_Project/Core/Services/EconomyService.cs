@@ -54,7 +54,7 @@ namespace SoulHunter.Core.Services
             if (_saveService.CurrentData.Currency >= amount)
             {
                 _saveService.CurrentData.Currency -= amount;
-                _saveService.SaveGame();
+                _saveService.SaveInBackground();
                 OnGoldChanged?.Invoke(_saveService.CurrentData.Currency);
                 return true;
             }

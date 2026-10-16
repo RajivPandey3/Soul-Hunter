@@ -147,6 +147,18 @@ namespace SoulHunter.Core.Persistence
             if (_dirty) WriteInBackground();
         }
 
+        /// <summary>
+        /// Saves now, with the disk write on a worker thread, for saves made while a run plays (a chest closing, an unlock,
+        /// a relic). A spike hunt (2026-10-16, SlowSpan on Level 5) found ChestUI.CloseChest's SaveGame spending 62-363 ms in
+        /// File.WriteAllText / File.Replace on the main thread, a visible freeze right after a chest; the JSON took under 5 ms.
+        /// The write is queued at once and still atomic; quit and loads wait for it.
+        /// </summary>
+        public void SaveInBackground()
+        {
+            WriteInBackground();
+            SaveFlusher.Ensure(this); // its quit hook waits for the queued write
+        }
+
         // One write at a time: the background write and a direct SaveGame share this lock, so the temp file and the
         // swap never interleave.
         private readonly object _writeLock = new object();
@@ -160,7 +172,8 @@ namespace SoulHunter.Core.Persistence
         {
             if (CurrentData == null) return;
             if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
-            string json = JsonUtility.ToJson(CurrentData, true);
+            string json;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.FlushToJson")) json = JsonUtility.ToJson(CurrentData, true);
             _dirty = false;
             LastSaveTime = Time.unscaledTime;
             SavesWritten++;
@@ -176,25 +189,34 @@ namespace SoulHunter.Core.Persistence
         /// <summary>Blocks until a background write in flight has finished (quit, tests).</summary>
         public void WaitForBackgroundWrite()
         {
-            var write = _backgroundWrite;
-            if (write == null) return;
-            try { write.Wait(); } catch (System.Exception) { }
+            using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.WaitForBackgroundWrite"))
+            {
+                var write = _backgroundWrite;
+                if (write == null) return;
+                try { write.Wait(); } catch (System.Exception) { }
+            }
         }
 
         public bool SaveGame()
         {
-            if (CurrentData == null) return false;
-            if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
-            string json = JsonUtility.ToJson(CurrentData, true);
-            WaitForBackgroundWrite(); // an older background write must not land after this one
-            if (!WriteJson(json, _filePath, fromWorker: false)) return false;
-            SavesWritten++;
-            _dirty = false;
-            LastSaveTime = Time.unscaledTime;
-#if UNITY_EDITOR
-            Debug.Log($"[SaveService] Game Saved to: {_filePath}");
-#endif
-            return true;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.SaveGame"))
+            {
+                if (CurrentData == null) return false;
+                if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
+                string json;
+                using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.ToJson")) json = JsonUtility.ToJson(CurrentData, true);
+                WaitForBackgroundWrite(); // an older background write must not land after this one
+                bool written;
+                using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.WriteJson")) written = WriteJson(json, _filePath, fromWorker: false);
+                if (!written) return false;
+                SavesWritten++;
+                _dirty = false;
+                LastSaveTime = Time.unscaledTime;
+    #if UNITY_EDITOR
+                Debug.Log($"[SaveService] Game Saved to: {_filePath}");
+    #endif
+                return true;
+            }
         }
 
         private bool WriteJson(string json, string path, bool fromWorker)

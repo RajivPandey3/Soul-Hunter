@@ -66,39 +66,42 @@ namespace SoulHunter.Gameplay.UI
         /// <param name="countAsChest">False for a chest already counted (Game Killer's extra items after an Arcana chest).</param>
         public void OpenChest(string message, ChestResult result, bool countAsChest)
         {
-            if (_rewardText != null) _rewardText.text = message;
-            int items = result != null ? result.ItemCount : 1;
-            int before, fiveBefore;
-            if (countAsChest) (before, fiveBefore) = RecordOpened(items);
-            else
+            using (SoulHunter.Core.Services.SlowSpan.Measure("ChestUI.OpenChest"))
             {
-                var data = SaveData();
-                before = data != null ? data.ChestsOpened : 0;
-                fiveBefore = data != null ? data.FiveItemChestsOpened : 0;
-            }
+                if (_rewardText != null) _rewardText.text = message;
+                int items = result != null ? result.ItemCount : 1;
+                int before, fiveBefore;
+                if (countAsChest) (before, fiveBefore) = RecordOpened(items);
+                else
+                {
+                    var data = SaveData();
+                    before = data != null ? data.ChestsOpened : 0;
+                    fiveBefore = data != null ? data.FiveItemChestsOpened : 0;
+                }
 
-            // VS: once 5-item chests can be skipped, coin-only chests just play a quick in-game animation.
-            if (result != null && ChestSkipRules.SkipsItself(before, fiveBefore, result.OnlyCoins))
-            {
-                QuickChests++;
-                var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
-                if (audio != null) audio.PlaySFX(audio.ChestOpenSound);
-                var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
-                if (player != null) SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.GoldPickup, player.transform.position);
-                return;
-            }
+                // VS: once 5-item chests can be skipped, coin-only chests just play a quick in-game animation.
+                if (result != null && ChestSkipRules.SkipsItself(before, fiveBefore, result.OnlyCoins))
+                {
+                    QuickChests++;
+                    var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+                    if (audio != null) audio.PlaySFX(audio.ChestOpenSound);
+                    var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+                    if (player != null) SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.GoldPickup, player.transform.position);
+                    return;
+                }
 
-            if (_screen == null)
-            {
-                _screen = ChestOpeningScreen.Create(ScreenCanvas());
-                _screen.Closed += CloseChest;
-            }
+                if (_screen == null)
+                {
+                    _screen = ChestOpeningScreen.Create(ScreenCanvas());
+                    _screen.Closed += CloseChest;
+                }
 
-            if (!_paused) { SoulHunter.Core.Services.GameTime.Pause(this); _paused = true; }
-            DisablePauseAction();
-            var pool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
-            _screen.Show(result, ChestSkipRules.CanSkip(before, fiveBefore, items),
-                pool != null ? pool.ChestPrefab : null, pool != null ? pool.GoldCoinPrefab : null);
+                if (!_paused) { SoulHunter.Core.Services.GameTime.Pause(this); _paused = true; }
+                DisablePauseAction();
+                var pool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+                _screen.Show(result, ChestSkipRules.CanSkip(before, fiveBefore, items),
+                    pool != null ? pool.ChestPrefab : null, pool != null ? pool.GoldCoinPrefab : null);
+            }
         }
 
         public const int ScreenSortingOrder = 400;
@@ -145,10 +148,13 @@ namespace SoulHunter.Gameplay.UI
 
         private void CloseChest()
         {
-            if (_chestPanel != null) _chestPanel.SetActive(false);
-            RestorePauseAction();
-            if (_paused) { SoulHunter.Core.Services.GameTime.Resume(this); _paused = false; }
-            SaveService()?.SaveGame();
+            using (SoulHunter.Core.Services.SlowSpan.Measure("ChestUI.CloseChest"))
+            {
+                if (_chestPanel != null) _chestPanel.SetActive(false);
+                RestorePauseAction();
+                if (_paused) { SoulHunter.Core.Services.GameTime.Resume(this); _paused = false; }
+                SaveService()?.SaveInBackground(); // the disk write froze the game 62-363 ms on the main thread
+            }
         }
 
         // Esc skips a chest (VS), so it must not open the pause menu at the same time (as OptionsMenuUI does).

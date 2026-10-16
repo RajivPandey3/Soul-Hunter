@@ -2128,6 +2128,29 @@ Validation of all of the above: EditMode 935/935, PlayMode 441/441, 0 exceptions
 
 Validation before the V-Sync and GPU horde work: EditMode 933/933, PlayMode 440/440, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261015-perf-full/`). `ProjectileRunnerPlayModeTests` (R): one runner flies every shot at its speed and ends it at its lifetime; a switched-off shot stays put; off-screen particles go off and come back; a flat body skips the ground scan and still chases; an enemy bullet keeps its core and halo, has no trail and flies on the EnemyShot layer, which meets only the player.
 
+### Chest hitches and a frozen run (owner, 2026-10-16: "CPU PROFILE CHALAO", "HAAN TIMER LAGAO AUR L5 CHALAO", "continue karo")
+
+A development-build CPU profile of Level 5 (`D:/SoulHunter-Validation/run-20261016-cpuprof`) had a 9,050 ms frame when a chest elite died and its chest dropped, and a 348 ms frame at a chest opening. The profiler window had missed both.
+
+**Timers** (`SlowSpan`, Core/Services): `using (SlowSpan.Measure("name"))` keeps sections of 5 ms or more and logs those of 50 ms or more. `AutoplayBot`'s `hitch` event lists them under `spans`. They wrap the save path, chest pickup, chest screen and enemy drops. A watchdog (`SlowSpan.StartWatchdog`, started by `AutoplayBot`, file `stall.txt`) writes the sections open on the main thread, the process CPU time and the thread count once frames have stopped for 3 s.
+
+**Cause 1, fixed: the chest-close save.**
+- Measured: 4 runs (`run-20261016-spans`), Level 5 from 19:50, level-90 hero, fixed loadout.
+- `ChestUI.CloseChest` called `SaveService.SaveGame`, and its file write (`File.WriteAllText` / `File.Replace`) took 62-363 ms on the main thread. The JSON took under 5 ms.
+- New `SaveService.SaveInBackground`: the JSON is made at once, and the write is queued on the worker that the timed gold save already used. It is the same atomic write with its `.prev`, and quit and loads wait for it.
+- Saves made during a run now use it: the chest closing, Collection, Bestiary, character, PowerUp and item unlocks, Soul Egg, Soul Casket, relic, merchant purchase and spending gold. Menu screens still save at once.
+- After the change (`run-20261016-bgsave2`, 4 runs): no save section over 50 ms during play, only one of 157 ms at quit.
+
+**Cause 2, open: native frames and one frozen run.**
+- One of those 4 runs froze for 8 minutes right after picking up a chest. Its log ends at the chest's gold line.
+- The release A/B's "before" build (2026-10-15, without this change) also stalled at about 80 s.
+- 16 more runs did not freeze (`run-20261016-hang`, `-hang2`). For these, every runtime `Update`, `FixedUpdate` and `LateUpdate` was wrapped in a timer (in the isolated copy only, `run-20261016-hang/wrap_updates.py`).
+- In one of them, two frames of 1,547 and 1,415 ms came in the frames where chest elites died. They had no script section of 5 ms, no GC and no pause, so the time went outside script `Update`s: physics, rendering or the GPU, physics callbacks or coroutines.
+- Three profiler captures of that window (`run-20261016-hangprof`) caught no slow frame (worst 30.7 ms).
+- The cause is not found. The clock skip in these runs spawns about 11 chest elites at once (a debug-skip artifact).
+
+Tests: `SaveServiceTests.SaveInBackground_WritesAtOnce_AtomicallyKeepingThePreviousSave` (T). `WanderingMerchantPlayModeTests` now waits for the queued write before reading the file. Validation is in the commit message.
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

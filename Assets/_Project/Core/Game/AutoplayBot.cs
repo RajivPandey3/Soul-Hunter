@@ -228,6 +228,8 @@ namespace SoulHunter.Gameplay.Core
             if (orientation == "portrait") Screen.orientation = ScreenOrientation.Portrait;
             else if (orientation == "landscape") Screen.orientation = ScreenOrientation.LandscapeLeft;
             Directory.CreateDirectory(Path.Combine(Config.OutputFolder, "shots"));
+            // A run froze for 8 minutes after a chest (2026-10-16); the watchdog writes where the main thread is stuck.
+            SoulHunter.Core.Services.SlowSpan.StartWatchdog(Path.Combine(Config.OutputFolder, "stall.txt"));
             while (SceneManager.GetActiveScene().name != "MainMenu") yield return null;
             yield return new WaitForSecondsRealtime(0.5f);
             var save = GameServices.Instance.Get<SaveService>();
@@ -1180,8 +1182,9 @@ namespace SoulHunter.Gameplay.Core
                     GameTime.PauserNames(), EnemyController.ActiveEnemies.Count, XPGem.ActiveGems.Count,
                     _experience != null ? _experience.CurrentLevel : 0,
                     gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2, System.GC.GetTotalMemory(false) / 1048576f,
-                    FindObjectsByType<Transform>(FindObjectsSortMode.None).Length));
+                    FindObjectsByType<Transform>(FindObjectsSortMode.None).Length) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"");
             }
+            else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
             _lastGc0 = gc0; _lastGc1 = gc1; _lastGc2 = gc2;
             if (!GameTime.IsPaused) { _pausedSince = -1f; _pauseReported = false; return; }
             if (_pausedSince < 0f) _pausedSince = now;

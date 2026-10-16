@@ -161,7 +161,7 @@ namespace SoulHunter.Gameplay.Core
             // or for Level 10 when Shadow Kael dies, so this is the level completed with the character played.
             var data = _save != null ? _save.CurrentData : null;
             if (data != null && CharacterStages.Record(data, GameContentCatalog.CurrentName(data.SelectedCharacterName), stage))
-                _save.SaveGame();
+                _save.SaveInBackground();
             // A stage clears at 30:00: that is the full stage survived, even though the clock moves on to the next one.
             RecordPowerUpUnlocks(stage, 30f * 60f);
             Evaluate();
@@ -202,7 +202,7 @@ namespace SoulHunter.Gameplay.Core
                 OnCharacterUnlocked?.Invoke(character);
             }
             bool powerUps = RecordPowerUpUnlocks(_progression != null ? _progression.CurrentStage : 1, _progression != null ? _progression.StageElapsedTime : 0f, save: false);
-            if (unlocked.Count > 0 || powerUps) _save.SaveGame();
+            if (unlocked.Count > 0 || powerUps) _save.SaveInBackground();
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace SoulHunter.Gameplay.Core
                 ShowNotice(line);
                 if (RunStatsTracker.Instance != null) RunStatsTracker.Instance.RecordUnlock(line);
             }
-            if (news.Count > 0 && save) _save.SaveGame();
+            if (news.Count > 0 && save) _save.SaveInBackground();
             return news.Count > 0;
         }
 

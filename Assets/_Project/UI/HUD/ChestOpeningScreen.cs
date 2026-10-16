@@ -223,30 +223,33 @@ namespace SoulHunter.Gameplay.UI
         /// <summary>Shows the screen for <paramref name="result"/>. The caller pauses the game.</summary>
         public void Show(ChestResult result, bool canSkip, GameObject chestPrefab, GameObject coinPrefab)
         {
-            _result = result ?? new ChestResult { ItemCount = 1 };
-            CanSkip = canSkip;
-            RevealedCount = 0;
-            FireworksShown = 0;
-            gameObject.SetActive(true);
-            ShownGold = 0; // after activation: the HUD now holds back the whole chest gold
-            transform.SetAsLastSibling();
-            ClearCards();
-            if (_stage != null) Destroy(_stage.gameObject);
-            _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana, _result.Kind);
-            _chestImage.texture = _stage.Texture;
-            _chestImage.color = Color.white;
-            _title.text = _result.IsArcana ? "ARCANA CHEST!" : _result.ItemCount >= 5 ? "TREASURE x5!" : _result.ItemCount >= 3 ? "TREASURE x3!" : "TREASURE!";
-            UITheme.ApplyText(_title, _result.IsArcana ? ThemedElement.TextRole.TitleArcana : ThemedElement.TextRole.Title);
-            _coinText.text = "";
-            _coinText.transform.localScale = Vector3.zero;
-            _skipHint.gameObject.SetActive(canSkip);
-            _skipHint.text = SkipHintText;
-            _circle.color = new Color(1f, 1f, 1f, 0f);
-            _openButton.gameObject.SetActive(false);
-            _doneButton.gameObject.SetActive(false);
-            Layout();
-            Current = Phase.Intro;
-            _sequence = StartCoroutine(Intro());
+            using (SoulHunter.Core.Services.SlowSpan.Measure("ChestOpeningScreen.Show"))
+            {
+                _result = result ?? new ChestResult { ItemCount = 1 };
+                CanSkip = canSkip;
+                RevealedCount = 0;
+                FireworksShown = 0;
+                gameObject.SetActive(true);
+                ShownGold = 0; // after activation: the HUD now holds back the whole chest gold
+                transform.SetAsLastSibling();
+                ClearCards();
+                if (_stage != null) Destroy(_stage.gameObject);
+                _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana, _result.Kind);
+                _chestImage.texture = _stage.Texture;
+                _chestImage.color = Color.white;
+                _title.text = _result.IsArcana ? "ARCANA CHEST!" : _result.ItemCount >= 5 ? "TREASURE x5!" : _result.ItemCount >= 3 ? "TREASURE x3!" : "TREASURE!";
+                UITheme.ApplyText(_title, _result.IsArcana ? ThemedElement.TextRole.TitleArcana : ThemedElement.TextRole.Title);
+                _coinText.text = "";
+                _coinText.transform.localScale = Vector3.zero;
+                _skipHint.gameObject.SetActive(canSkip);
+                _skipHint.text = SkipHintText;
+                _circle.color = new Color(1f, 1f, 1f, 0f);
+                _openButton.gameObject.SetActive(false);
+                _doneButton.gameObject.SetActive(false);
+                Layout();
+                Current = Phase.Intro;
+                _sequence = StartCoroutine(Intro());
+            }
         }
 
         private IEnumerator Intro()

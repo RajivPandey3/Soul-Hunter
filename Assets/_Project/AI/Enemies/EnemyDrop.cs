@@ -136,65 +136,68 @@ namespace SoulHunter.Gameplay.AI
 
         private void HandleDeath()
         {
-            // Learning Comment:
-            // Performance Optimization: Dushmano ki bheed (horde) marne par FindFirstObjectByType
-            // call karne se game lag/freeze ho jati thi. Ab hum O(1) PlayerController.Instance use karte hain.
-            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
-
-            if (CountShownDeath())
+            using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.HandleDeath"))
             {
-                SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
-                // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
-                Bounds body = BodyBounds();
-                if (_enemy == null || !_enemy.IsSpectral)
+                // Learning Comment:
+                // Performance Optimization: Dushmano ki bheed (horde) marne par FindFirstObjectByType
+                // call karne se game lag/freeze ho jati thi. Ab hum O(1) PlayerController.Instance use karte hain.
+                var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+
+                if (CountShownDeath())
                 {
-                    Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
-                    SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away);
+                    SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
+                    // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
+                    Bounds body = BodyBounds();
+                    if (_enemy == null || !_enemy.IsSpectral)
+                    {
+                        Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
+                        SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away);
+                    }
+                    // VS-style death (owner, 2026-09-29): the body stays a moment and sinks while the blood sprays.
+                    SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body);
                 }
-                // VS-style death (owner, 2026-09-29): the body stays a moment and sinks while the blood sprays.
-                SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body);
-            }
 
-            if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-            {
-                SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill(_enemy != null ? _enemy.Data : null); // per type for the VS Bestiary
-            }
+                if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
+                {
+                    SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill(_enemy != null ? _enemy.Data : null); // per type for the VS Bestiary
+                }
 
-            if (_erasedThisLife)
-            {
-                if (WillDropChest) PendingChests.Enqueue(ChestTiersAtDeath); // the chest keeps its boss's config
-                return;
-            }
+                if (_erasedThisLife)
+                {
+                    if (WillDropChest) PendingChests.Enqueue(ChestTiersAtDeath); // the chest keeps its boss's config
+                    return;
+                }
 
-            // VS Gold Fever (Gilded Charm): while it runs, each kill has a 75% chance to drop a fever coin.
-            SoulHunter.Gameplay.Pickups.GoldFever.OnEnemyKilled(transform.position);
+                // VS Gold Fever (Gilded Charm): while it runs, each kill has a 75% chance to drop a fever coin.
+                SoulHunter.Gameplay.Pickups.GoldFever.OnEnemyKilled(transform.position);
 
-            if (DropsChest || _dropsChestThisLife)
-            {
+                if (DropsChest || _dropsChestThisLife)
+                {
+                    if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
+                    {
+                        var chest = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChest(transform.position);
+                        var chestPickup = chest != null ? chest.GetComponent<SoulHunter.Gameplay.Pickups.ChestPickup>() : null;
+                        // P1-14 (2026-10-09): the chest's tiers and evolution flag (its bronze/silver look) come from the boss that
+                        // carried it, not from the stage clock at death: a 9:00 elite killed after 10:00 still drops a bronze chest.
+                        if (chestPickup != null) chestPickup.Tiers = ChestTiersAtDeath;
+                        // Owner's story (2026-09-27): Kael harvests souls, so a boss or chest elite also leaves its big
+                        // soul gem (EnemyData.ExperienceValue: 50 elite, 250 boss), set a little aside from the chest.
+                        SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position + new Vector3(-1.2f, 0f, 0f), GemValue);
+                        Debug.Log("Boss killed! Chest dropped!");
+                    }
+                    return;
+                }
+
+                // Owner (2026-09-29, heavy-kill pass): "VS rule: no enemy drops". VS wiki: Floor Chicken, Gold Coin, Coin Bag,
+                // Vacuum and Orologion drop from light sources (Floor_Chicken, Gold_Coin_(pickup), Coin_Bag, Vacuum and
+                // Orologion pages); enemies drop Experience Gems (Experience_Gem). Before, each kill also rolled a Magnet (1%),
+                // a Time Freeze (1%), a coin (2%) and a chicken (5%, which replaced the gem), and with a strong hero thousands of
+                // coins and chickens piled up on the ground and slowed the game. Those now come from Soul Lanterns, stage items,
+                // chests and Gold Fever only. EnemyData's DropChanceChicken/DropChanceGold/GoldValue are no longer used here.
                 if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                 {
-                    var chest = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnChest(transform.position);
-                    var chestPickup = chest != null ? chest.GetComponent<SoulHunter.Gameplay.Pickups.ChestPickup>() : null;
-                    // P1-14 (2026-10-09): the chest's tiers and evolution flag (its bronze/silver look) come from the boss that
-                    // carried it, not from the stage clock at death: a 9:00 elite killed after 10:00 still drops a bronze chest.
-                    if (chestPickup != null) chestPickup.Tiers = ChestTiersAtDeath;
-                    // Owner's story (2026-09-27): Kael harvests souls, so a boss or chest elite also leaves its big
-                    // soul gem (EnemyData.ExperienceValue: 50 elite, 250 boss), set a little aside from the chest.
-                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position + new Vector3(-1.2f, 0f, 0f), GemValue);
-                    Debug.Log("Boss killed! Chest dropped!");
+                    SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position, GemValue);
                 }
-                return;
-            }
-
-            // Owner (2026-09-29, heavy-kill pass): "VS rule: no enemy drops". VS wiki: Floor Chicken, Gold Coin, Coin Bag,
-            // Vacuum and Orologion drop from light sources (Floor_Chicken, Gold_Coin_(pickup), Coin_Bag, Vacuum and
-            // Orologion pages); enemies drop Experience Gems (Experience_Gem). Before, each kill also rolled a Magnet (1%),
-            // a Time Freeze (1%), a coin (2%) and a chicken (5%, which replaced the gem), and with a strong hero thousands of
-            // coins and chickens piled up on the ground and slowed the game. Those now come from Soul Lanterns, stage items,
-            // chests and Gold Fever only. EnemyData's DropChanceChicken/DropChanceGold/GoldValue are no longer used here.
-            if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
-            {
-                SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position, GemValue);
             }
         }
     }

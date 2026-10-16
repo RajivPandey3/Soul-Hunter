@@ -85,7 +85,7 @@ namespace SoulHunter.Gameplay.Pickups
             if (given)
             {
                 LastStat = SoulEggs.Add(data, data.SelectedCharacterName, new System.Random());
-                save.SaveGame();
+                save.SaveInBackground();
                 string line = $"Soul Egg: {SoulEggs.Describe(LastStat)} for {data.SelectedCharacterName} (from the next run)";
                 var session = SoulHunter.Gameplay.Core.GameSessionManager.Instance;
                 var notice = session != null ? session.GetComponent<SoulHunter.Gameplay.Core.CharacterUnlockTracker>() : null;
