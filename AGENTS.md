@@ -2172,6 +2172,8 @@ Changes:
 
 The hang came about once in 30-40 runs, so 12 clean runs do not prove it is gone. **The cause is not proven**: no stack has been caught.
 
+Full run before the push of `7ba222fc` and `f7298039`: EditMode 989/989, PlayMode 445/445, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261016-prepush-full/`).
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).
