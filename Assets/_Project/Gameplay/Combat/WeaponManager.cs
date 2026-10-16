@@ -161,7 +161,7 @@ namespace SoulHunter.Gameplay.Combat
             level = Mathf.Clamp(level, 0, GetMaxWeaponLevel(type));
             if (level > 0 && GetWeaponLevel(type) == 0 && IsWeaponType(type) && GetActiveWeaponsCount() >= _maxWeaponSlots)
             {
-                Debug.Log($"[WeaponManager] Weapon slots full; {type} was not acquired.");
+                SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] Weapon slots full; {type} was not acquired.");
                 return;
             }
             TrackAcquired(type, level);
@@ -244,18 +244,18 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (upgrade == null || upgrade.Level > GetMaxWeaponLevel(upgrade.Type)) return;
             if (IsStagePassive(upgrade.Type) && (GetWeaponLevel(upgrade.Type) == 0 || upgrade.Level != GetWeaponLevel(upgrade.Type) + 1)) return;
-            Debug.Log($"[WeaponManager] Applying Upgrade: {upgrade.UpgradeName}");
+            SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] Applying Upgrade: {upgrade.UpgradeName}");
 
             bool newWeapon = IsWeaponType(upgrade.Type) && GetWeaponLevel(upgrade.Type) == 0;
             if (newWeapon && !_pastTheSlots && GetActiveWeaponsCount() >= _maxWeaponSlots)
             {
-                Debug.Log($"[WeaponManager] Weapon slots full; rejected {upgrade.UpgradeName}.");
+                SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] Weapon slots full; rejected {upgrade.UpgradeName}.");
                 return;
             }
             bool newPassive = IsPassiveType(upgrade.Type) && GetWeaponLevel(upgrade.Type) == 0;
             if (newPassive && !_pastTheSlots && GetPassiveCount() >= _maxPassiveSlots)
             {
-                Debug.Log($"[WeaponManager] Passive slots full; rejected {upgrade.UpgradeName}.");
+                SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] Passive slots full; rejected {upgrade.UpgradeName}.");
                 return;
             }
 
@@ -337,7 +337,7 @@ namespace SoulHunter.Gameplay.Combat
                 case UpgradeData.UpgradeType.RingOfDarkHours: if (upgrade.Level > 1) stats.AddCurse(0.05f); break;
             }
 
-            Debug.Log($"[WeaponManager] Passive Applied: {upgrade.Type} is now Level {upgrade.Level}");
+            SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] Passive Applied: {upgrade.Type} is now Level {upgrade.Level}");
         }
 
         /// <summary>
@@ -351,7 +351,7 @@ namespace SoulHunter.Gameplay.Combat
             TrackAcquired(UpgradeData.UpgradeType.Tiragisu, 0);
             OnItemRemoved?.Invoke(UpgradeData.UpgradeType.Tiragisu);
             OnInventoryChanged?.Invoke();
-            Debug.Log("[WeaponManager] Last Revival used: Tirajisú left the inventory.");
+            SoulHunter.Core.Services.GameLog.Info("[WeaponManager] Last Revival used: Tirajisú left the inventory.");
             return true;
         }
 
@@ -533,13 +533,13 @@ namespace SoulHunter.Gameplay.Combat
                     ApplyWeaponLevel(newWeapon, currentLevel);
                     var definition = DefinitionOf(type);
                     TrackForResults(newWeapon, UpgradeText.NameOf(type), definition != null ? definition.Icon : null, GetMaxWeaponLevel(type), false);
-                    Debug.Log($"[WeaponManager] {weaponPrefab.name} is now SPAWNED and ACTIVE on Player!");
+                    SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] {weaponPrefab.name} is now SPAWNED and ACTIVE on Player!");
                 }
             }
             else
             {
                 // Agar pehle se paida ho chuka hai, toh uski power badhani hogi.
-                Debug.Log($"[WeaponManager] {weaponPrefab.name} Upgraded to Level {currentLevel}!");
+                SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] {weaponPrefab.name} Upgraded to Level {currentLevel}!");
                 var spawned = _spawnedWeapons[weaponPrefab];
                 var upgraded = spawned != null ? spawned.GetComponent<AutoAttackWeapon>() : null;
                 int levelBefore = upgraded != null ? upgraded.CurrentLevel : 0;
@@ -609,7 +609,7 @@ namespace SoulHunter.Gameplay.Combat
                         }
 
                         evolvedWeaponName = evo.EvolvedName;
-                        Debug.Log($"[WeaponManager] EVOLUTION SUCCESS! {evo.BaseWeapon} evolved into {evo.EvolvedName}!");
+                        SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] EVOLUTION SUCCESS! {evo.BaseWeapon} evolved into {evo.EvolvedName}!");
                         OnInventoryChanged?.Invoke();
                         return true;
                     }
@@ -654,7 +654,7 @@ namespace SoulHunter.Gameplay.Combat
                             _evolvedWeapons.Add(union.ResultType); // the HUD frames it like an evolution
                             ActivateOrUpgradeWeapon(resultPrefab, 1, union.ResultType);
                             evolvedWeaponName = union.UnionName;
-                            Debug.Log($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName} (level 1).");
+                            SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName} (level 1).");
                             OnInventoryChanged?.Invoke();
                             return true;
                         }
@@ -672,7 +672,7 @@ namespace SoulHunter.Gameplay.Combat
                         }
 
                         evolvedWeaponName = union.UnionName;
-                        Debug.Log($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName}!");
+                        SoulHunter.Core.Services.GameLog.Info($"[WeaponManager] UNION SUCCESS! {union.WeaponA} + {union.WeaponB} = {union.UnionName}!");
                         OnInventoryChanged?.Invoke();
                         return true;
                     }

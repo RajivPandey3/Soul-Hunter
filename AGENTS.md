@@ -2151,6 +2151,27 @@ A development-build CPU profile of Level 5 (`D:/SoulHunter-Validation/run-202610
 
 Tests: `SaveServiceTests.SaveInBackground_WritesAtOnce_AtomicallyKeepingThePreviousSave` (T). `WanderingMerchantPlayModeTests` now waits for the queued write before reading the file. Validation is in the commit message.
 
+**The hang hunt, second part (owner: "2 karo, hang ke peeche jao").**
+
+Tools:
+- WinDbg was installed (winget `Microsoft.WinDbg`, `cdbX64.exe`). It reads every thread's native stack from a running game without stopping it (`-pv`), with Unity's player PDBs from `PlaybackEngines/windowsstandalonesupport/Variations` and the Microsoft symbol server (cache in `D:\SoulHunter-Validation\symcache`).
+- `D:\SoulHunter-Validation\run-20261016-hangdbg\go.ps1` plays Level 5 runs. When `stall.txt` appears, it takes the stacks twice, 5 s apart, then closes the game. No run has stalled under it yet.
+
+Findings:
+- **Every problem so far was in a development build.** A release build wrote a 78 KB log per run; a development build wrote 2.4 MB, because every line carries a stack trace. 15 release runs were clean (`run-20261016-hangdbg`).
+- The frozen run's last log line was a chest's gold message. One development run (`-hangdbg2`, run 7) had a 328 ms frame at a chest elite's death, timed inside `EnemyDrop.HandleDeath` (314 ms). That method's own `Debug.Log` was its only unmeasured part.
+- **Disk writes on this laptop stall.** D: is 98% full. Once the bot's reports went to a worker, its slowest write per 5 s window (`writeMs`) reached 735 ms and 137 ms (`-hangdbg3`), and the game did not hitch.
+- Windows logged no GPU driver reset. The laptop shut down uncleanly twice on 2026-10-16 (11:19 and 14:44, Kernel-Power 41), and firmware limited the CPU once (event 37).
+- The bot rewrote its whole `events.jsonl` and `timeline.jsonl` on the main thread at every event. The two 1.5 s frames came in the frames it wrote elite-death events.
+
+Changes:
+- `ReportWriter` (Core/Game): the bot's reports are written on one worker thread, the newest content per file wins, and the timeline records `writeMs`.
+- `GameLog.Info` (Core/Services, `[Conditional("UNITY_EDITOR")]`): 40 routine gameplay logs moved to it from Debug.Log, in LevelUpManager (12 lines per level-up), PlayerExperience, WeaponManager, EnemySpawner, ChestLogicController, EnemyDrop, MagnetPickup and TimeFreezePickup. Player builds no longer write them. Warnings and errors are unchanged.
+- More `SlowSpan`s inside `EnemyDrop.HandleDeath` and the pickup pool.
+- After the change (`-hangdbg4`, 12 development runs), the log is 36-42 KB per run, with 0 hitches and 0 stalls.
+
+The hang came about once in 30-40 runs, so 12 clean runs do not prove it is gone. **The cause is not proven**: no stack has been caught.
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

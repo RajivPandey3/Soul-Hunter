@@ -24,7 +24,7 @@ namespace SoulHunter.Gameplay.Pickups
 
         protected override void OnPickedUp(Collider player)
         {
-            Debug.Log($"[TimeFreezePickup] THE WORLD! Freezing all enemies for {_freezeDuration} seconds!");
+            SoulHunter.Core.Services.GameLog.Info($"[TimeFreezePickup] THE WORLD! Freezing all enemies for {_freezeDuration} seconds!");
             BeginWorldFreeze(_freezeDuration);
 
             var allEnemies = EnemyController.ActiveEnemies;

@@ -164,7 +164,7 @@ namespace SoulHunter.Gameplay.Core
 
         private void HandleLevelUp(int newLevel)
         {
-            Debug.Log($"[LevelUpManager] Level Up Event received! New Level: {newLevel}");
+            SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Level Up Event received! New Level: {newLevel}");
             _pendingLevelUps++;
 
             // Agar pehle se koi Level Up menu nahi khula, toh agla process karo
@@ -176,11 +176,11 @@ namespace SoulHunter.Gameplay.Core
 
         private void ProcessNextLevelUp()
 {
-    Debug.Log($"[LevelUpManager] >>> ProcessNextLevelUp ENTER | pending={_pendingLevelUps} | active={_isLevelUpActive} | timeScale={Time.timeScale}");
+    SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] >>> ProcessNextLevelUp ENTER | pending={_pendingLevelUps} | active={_isLevelUpActive} | timeScale={Time.timeScale}");
 
     if (_pendingLevelUps <= 0)
     {
-        Debug.Log("[LevelUpManager] No pending level-ups. Resuming gameplay.");
+        SoulHunter.Core.Services.GameLog.Info("[LevelUpManager] No pending level-ups. Resuming gameplay.");
         _isLevelUpActive = false;
         ResumeGameplay();
         return;
@@ -188,25 +188,25 @@ namespace SoulHunter.Gameplay.Core
 
     _isLevelUpActive = true;
 
-    Debug.Log($"[LevelUpManager] >>> Preparing level-up UI | pending={_pendingLevelUps}");
+    SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] >>> Preparing level-up UI | pending={_pendingLevelUps}");
 
     // IMPORTANT: generate choices BEFORE pausing.
     // VS rule: Luck gives a chance of a 4th choice, rolled once per level-up.
     var stats = _playerController != null ? _playerController.Stats : null;
     _currentChoiceCount = ChoiceCountForLuck(stats != null ? stats.Luck : 1f, Random.value);
 
-    Debug.Log($"[LevelUpManager] >>> Calling GetRandomValidUpgrades({_currentChoiceCount})");
+    SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] >>> Calling GetRandomValidUpgrades({_currentChoiceCount})");
 
     List<UpgradeData> choices = GetLevelUpChoices(_currentChoiceCount);
 
-    Debug.Log($"[LevelUpManager] <<< GetRandomValidUpgrades returned | count={choices.Count}");
+    SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] <<< GetRandomValidUpgrades returned | count={choices.Count}");
 
     if (choices.Count == 0)
     {
         // VS rule: once every item is maxed, a level-up still pays out
         // (floor chicken heal + gold) instead of being thrown away. With Limit Break on, cards are offered instead
         // (see GetLevelUpChoices), so this only happens when the player holds no weapon at all.
-        Debug.Log($"[LevelUpManager] No valid upgrades available. Granting {_pendingLevelUps} maxed-out reward(s).");
+        SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] No valid upgrades available. Granting {_pendingLevelUps} maxed-out reward(s).");
         for (; _pendingLevelUps > 0; _pendingLevelUps--) GrantMaxedOutReward();
         _isLevelUpActive = false;
         ResumeGameplay();
@@ -232,33 +232,33 @@ namespace SoulHunter.Gameplay.Core
         var pick = RandomPick(choices, Random.value);
         if (pick != null)
         {
-            Debug.Log($"[LevelUpManager] Blind Fate picked {pick.UpgradeName}.");
+            SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Blind Fate picked {pick.UpgradeName}.");
             OnRandomPick?.Invoke(pick);
             SelectUpgrade(pick); // the 240 ms after-pick invulnerability still comes from ResumeGameplay
             return;
         }
     }
 
-    Debug.Log("[LevelUpManager] >>> Valid choices found:");
+    SoulHunter.Core.Services.GameLog.Info("[LevelUpManager] >>> Valid choices found:");
 
     for (int i = 0; i < choices.Count; i++)
     {
-        Debug.Log($"[LevelUpManager] Choice {i}: {choices[i].UpgradeName} | Level={choices[i].Level} | Type={choices[i].Type}");
+        SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Choice {i}: {choices[i].UpgradeName} | Level={choices[i].Level} | Type={choices[i].Type}");
     }
 
     // ONLY pause once we know the UI can be presented.
     SoulHunter.Core.Services.GameTime.Pause(this);
 
-    Debug.Log($"[LevelUpManager] >>> Game PAUSED | timeScale={Time.timeScale}");
+    SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] >>> Game PAUSED | timeScale={Time.timeScale}");
 
     if (OnLevelUpUIRound != null)
     {
-        Debug.Log("[LevelUpManager] >>> Sending choices to LevelUpUI");
+        SoulHunter.Core.Services.GameLog.Info("[LevelUpManager] >>> Sending choices to LevelUpUI");
 
         _offered = choices;
         OnLevelUpUIRound.Invoke(choices);
 
-        Debug.Log("[LevelUpManager] <<< LevelUpUI event returned");
+        SoulHunter.Core.Services.GameLog.Info("[LevelUpManager] <<< LevelUpUI event returned");
     }
     else
     {
@@ -280,7 +280,7 @@ namespace SoulHunter.Gameplay.Core
                 _weaponManager.ApplyUpgrade(upgrade);
             }
             
-            Debug.Log($"[LevelUpManager] Acquired Upgrade: {upgrade.UpgradeName}");
+            SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Acquired Upgrade: {upgrade.UpgradeName}");
             CompleteCurrentLevelUp();
         }
 
@@ -331,7 +331,7 @@ namespace SoulHunter.Gameplay.Core
         {
             if (!CanSkip) return false;
             if (!Preserved()) SkipsLeft--;
-            Debug.Log("[LevelUpManager] Level-up skipped.");
+            SoulHunter.Core.Services.GameLog.Info("[LevelUpManager] Level-up skipped.");
             CompleteCurrentLevelUp();
             // "and gain experience instead" (after the level-up closes, so the XP can start the next one).
             if (_experience != null) _experience.AddXP(Mathf.Max(1, Mathf.RoundToInt(_experience.XPToNextLevel * SkipExperienceShare)));
@@ -350,7 +350,7 @@ namespace SoulHunter.Gameplay.Core
             if (!LimitBreak.IsCard(upgrade) && !MaxedRewards.IsCard(upgrade))
             {
                 _banishedTypes.Add(upgrade.Type);
-                Debug.Log($"[LevelUpManager] Banished {upgrade.Type} for this run.");
+                SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Banished {upgrade.Type} for this run.");
             }
             PresentChoicesOrPayOut(GetLevelUpChoices(_currentChoiceCount));
             return true;
@@ -383,7 +383,7 @@ namespace SoulHunter.Gameplay.Core
             {
                 _isLevelUpActive = false;
                 ResumeGameplay();
-                Debug.Log("[LevelUpManager] All Level Ups processed. Game Resumed.");
+                SoulHunter.Core.Services.GameLog.Info("[LevelUpManager] All Level Ups processed. Game Resumed.");
             }
         }
 

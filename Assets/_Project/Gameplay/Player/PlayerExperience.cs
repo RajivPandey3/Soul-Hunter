@@ -109,7 +109,7 @@ namespace SoulHunter.Gameplay.Player
                 // Event fire karo (Game pause karna aur Upgrade menu kholna aage banayenge)
                 SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.LevelUp, transform.position);
                 OnLevelUp?.Invoke(CurrentLevel);
-                Debug.Log($"[PlayerExperience] Level Up! New Level: {CurrentLevel}");
+                SoulHunter.Core.Services.GameLog.Info($"[PlayerExperience] Level Up! New Level: {CurrentLevel}");
             }
 
             OnXPChanged?.Invoke(CurrentXP, XPToNextLevel);

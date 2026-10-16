@@ -407,7 +407,7 @@ namespace SoulHunter.Gameplay.AI
         private bool SpawnBoss(GameObject basePrefab)
         {
             if (basePrefab == null || _playerTransform == null) return false;
-            Debug.Log("[EnemySpawner] BOSS HAS APPEARED!");
+            SoulHunter.Core.Services.GameLog.Info("[EnemySpawner] BOSS HAS APPEARED!");
             var bossAudio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (bossAudio != null) bossAudio.PlaySFX(bossAudio.BossWarningSound, 0.9f);
             // Owner (2026-10-13): the next level opens only if this guardian falls by 30:00; the player is told when it comes.
@@ -746,7 +746,7 @@ namespace SoulHunter.Gameplay.AI
                 enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
                 spawned.Add(enemy);
             }
-            Debug.Log($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
+            SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
             return spawned;
         }
 
@@ -832,7 +832,7 @@ namespace SoulHunter.Gameplay.AI
                 _takeoverSetup?.Invoke(replacement);
                 swapped++;
             }
-            Debug.Log($"[EnemySpawner] Wave takeover: {swapped} enemies replaced, {list.Count} types until {_takeoverUntil:0}s.");
+            SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Wave takeover: {swapped} enemies replaced, {list.Count} types until {_takeoverUntil:0}s.");
             return swapped;
         }
 
@@ -893,7 +893,7 @@ namespace SoulHunter.Gameplay.AI
             if (prefab == null) return null;
             var boss = SpawnEnemy(prefab);
             if (boss != null) _special.Add(boss);
-            if (boss != null) Debug.Log($"[EnemySpawner] Chest-less wave boss {typeId} at {_stageTimePassed:0}s.");
+            if (boss != null) SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Chest-less wave boss {typeId} at {_stageTimePassed:0}s.");
             return boss;
         }
 
@@ -1015,7 +1015,7 @@ namespace SoulHunter.Gameplay.AI
             // item chances and evolution flag belong to the boss, not to the clock when it dies. Off-table minutes (debug
             // spawns) use ChestTiers.Unscheduled.
             elite.GetComponent<EnemyDrop>()?.DropChestThisLife(SoulHunter.Gameplay.Core.ChestTiers.ForMinute(minute));
-            Debug.Log($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
+            SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Chest elite appeared at {_stageTimePassed:0}s.");
             return elite;
         }
 

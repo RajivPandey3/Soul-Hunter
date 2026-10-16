@@ -13,7 +13,7 @@ namespace SoulHunter.Gameplay.Pickups
         public override string ResultsName => PickupNames.Magnet;
         protected override void OnPickedUp(Collider player)
         {
-            Debug.Log("[MagnetPickup] Magnetic Vacuum Activated! All gems flying to player.");
+            SoulHunter.Core.Services.GameLog.Info("[MagnetPickup] Magnetic Vacuum Activated! All gems flying to player.");
 
             var allGems = XPGem.ActiveGems;
             for (int i = allGems.Count - 1; i >= 0; i--)

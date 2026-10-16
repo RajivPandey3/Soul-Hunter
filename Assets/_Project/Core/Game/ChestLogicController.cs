@@ -230,7 +230,7 @@ namespace SoulHunter.Gameplay.Core
                 // (Treasure_Chest: "Generally, only one weapon can be evolved per chest").
                 if (tiers.IsEvolutionSlot(i) && tiers.CanEvolve && weaponManager != null && weaponManager.TryEvolveWeapon(out string evolvedName))
                 {
-                    Debug.Log($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
+                    SoulHunter.Core.Services.GameLog.Info($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
                     string shownName = WeaponEvolutionData.DisplayName(evolvedName);
                     rewards.Add($"<color=red>Ultimate Power: {shownName}</color>");
                     result.Rewards.Add(new ChestReward { Name = shownName, Icon = weaponManager.LastEvolvedIcon, Level = 1, IsEvolution = true });
@@ -248,7 +248,7 @@ namespace SoulHunter.Gameplay.Core
                 if (weaponManager != null && upgrades != null && upgrades.Count > 0)
                 {
                     weaponManager.ApplyUpgrade(upgrades[0]);
-                    Debug.Log($"[ChestLogicController] Chest se Free Upgrade mila: {upgrades[0].UpgradeName}!");
+                    SoulHunter.Core.Services.GameLog.Info($"[ChestLogicController] Chest se Free Upgrade mila: {upgrades[0].UpgradeName}!");
                     rewards.Add($"<color=yellow>+ {upgrades[0].UpgradeName} (Lv {upgrades[0].Level})</color>");
                     var definition = WeaponDefinitionLookup.Find(upgrades[0].Type);
                     result.Rewards.Add(new ChestReward
@@ -269,7 +269,7 @@ namespace SoulHunter.Gameplay.Core
             int gold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(
                 ChestGold(itemCount, goldRoll01) + maxedItems * GoldPerMaxedItem, player != null ? player.Stats : null);
             SoulHunter.Gameplay.Pickups.GoldRewards.CountBigCoinBags(maxedItems); // VS: Big Coin Bags from any source count
-            if (gold > 0) Debug.Log($"[ChestLogicController] Chest se {gold} Gold mile!");
+            if (gold > 0) SoulHunter.Core.Services.GameLog.Info($"[ChestLogicController] Chest se {gold} Gold mile!");
             result.Gold = gold;
             LastResult = result;
 

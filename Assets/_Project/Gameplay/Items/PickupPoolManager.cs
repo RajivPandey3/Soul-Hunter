@@ -129,7 +129,10 @@ namespace SoulHunter.Gameplay.Pickups
         /// lie on a house the player cannot enter. Such drops move to the nearest open ground (stage items already do).
         /// Gems stay where they fall: there are many more of them, and the Vacuum gathers them.
         /// </summary>
-        public static Vector3 Reachable(Vector3 position) => GroundCheck.NearestOpen(position, 0.5f);
+        public static Vector3 Reachable(Vector3 position)
+        {
+            using (SoulHunter.Core.Services.SlowSpan.Measure("PickupPool.Reachable")) return GroundCheck.NearestOpen(position, 0.5f);
+        }
 
         public GameObject SpawnChicken(Vector3 position)
         {
@@ -218,14 +221,14 @@ namespace SoulHunter.Gameplay.Pickups
             }
             else
             {
-                objToSpawn = Instantiate(prefab);
+                using (SoulHunter.Core.Services.SlowSpan.Measure("PickupPool.Instantiate " + prefab.name)) objToSpawn = Instantiate(prefab);
                 SoulHunter.Gameplay.Combat.WeaponPoolManager.NoShadows(objToSpawn);
                 var autoReturn = objToSpawn.AddComponent<AutoReturnToPool>();
                 autoReturn.TargetPool = pool;
             }
 
             objToSpawn.transform.position = position;
-            objToSpawn.SetActive(true);
+            using (SoulHunter.Core.Services.SlowSpan.Measure("PickupPool.SetActive " + prefab.name)) objToSpawn.SetActive(true);
             
             // Reset state if it has XPGem or HealthPickup script
             var gem = objToSpawn.GetComponent<XPGem>();

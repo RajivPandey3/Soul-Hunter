@@ -1466,7 +1466,7 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
@@ -1478,7 +1478,8 @@ namespace SoulHunter.Gameplay.Core
                 HordeVatDrawer.Exists && HordeVatDrawer.Enabled ? "true" : "false", HordeVatDrawer.LastBodies,
                 RenderCounter(ref _drawCalls, "Draw Calls Count"), RenderCounter(ref _setPass, "SetPass Calls Count"), RenderCounter(ref _batchesCount, "Batches Count"),
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Exists && SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Enabled ? "true" : "false",
-                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount));
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount,
+                ReportWriter.TakeSlowestWriteMs()));
             // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
             if (HasArg("-sh-autoplay-count-fx"))
             {
@@ -1496,7 +1497,7 @@ namespace SoulHunter.Gameplay.Core
                     playing, shots.Count, shots.Count(x => x != null && x.FxStopped),
                     string.Join(", ", owners.OrderByDescending(o => o.Value).Take(12).Select(o => $"\"{Escape(o.Key)}\": {o.Value}"))));
             }
-            File.WriteAllText(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
+            ReportWriter.Write(Path.Combine(Config.OutputFolder, "timeline.jsonl"), _timeline.ToString());
         }
 
         /// <summary>
@@ -1675,7 +1676,7 @@ namespace SoulHunter.Gameplay.Core
         {
             _events.AppendLine(string.Format(CultureInfo.InvariantCulture, "{{\"t\": {0:0.0}, \"event\": \"{1}\", {2}}}", _startedAt > 0f ? Elapsed : 0f, kind, fields));
             if (Config != null && !string.IsNullOrEmpty(Config.OutputFolder))
-                File.WriteAllText(Path.Combine(Config.OutputFolder, "events.jsonl"), _events.ToString());
+                ReportWriter.Write(Path.Combine(Config.OutputFolder, "events.jsonl"), _events.ToString());
         }
 
         private void Finish(string reason)
@@ -1704,7 +1705,8 @@ namespace SoulHunter.Gameplay.Core
             if (_levelUpFrames > 0)
                 Event("levelup-frames", string.Format(CultureInfo.InvariantCulture, "\"frames\": {0}, \"avgFps\": {1:0.0}, \"worstMs\": {2:0}",
                     _levelUpFrames, _levelUpFrames / Mathf.Max(0.0001f, _levelUpSeconds), _levelUpWorst * 1000f));
-            File.WriteAllText(Path.Combine(Config.OutputFolder, "summary.json"), summary);
+            ReportWriter.Write(Path.Combine(Config.OutputFolder, "summary.json"), summary);
+            ReportWriter.Flush();
             Debug.Log($"[AutoplayBot] Finished ({reason}). Report in {Config.OutputFolder}");
             yield return new WaitForSecondsRealtime(0.5f);
             if (!Config.QuitWhenDone) yield break;
