@@ -31,12 +31,22 @@ namespace SoulHunter.Gameplay.UI
             }
         }
 
-        private const int MAX_POPUPS = 25;
+        /// <summary>The most damage numbers on screen, and the most started in one frame.</summary>
+        public const int MAX_POPUPS = 25;
+        /// <summary>Numbers started in the current frame (capped at MAX_POPUPS).</summary>
+        public int ShownThisFrame { get; private set; }
+        private int _shownFrame = -1;
         private int _recycleIndex = 0;
 
         public void ShowDamage(int amount, Vector3 position)
         {
             if (_damagePopupPrefab == null) return;
+            // At most a pool's worth of numbers per frame. The pool holds MAX_POPUPS, so every number past that in one frame
+            // overwrote one shown earlier in the same frame and was never seen; each still rewrote its text (about 22 us in a
+            // release build). A packed horde took 400-640 damaging hits in one physics step, 10-16 ms of numbers (2026-10-17).
+            if (Time.frameCount != _shownFrame) { _shownFrame = Time.frameCount; ShownThisFrame = 0; }
+            if (ShownThisFrame >= MAX_POPUPS) return;
+            ShownThisFrame++;
 
             GameObject popupToSpawn = null;
 

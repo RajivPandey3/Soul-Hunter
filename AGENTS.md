@@ -2227,6 +2227,24 @@ Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elit
   - The jolts left are real damage: Lightning Ring dealt 400-691 hits to enemies in one physics step.
 - Validation: EditMode 990/990, PlayMode fixtures 134/134 (weapon and evolved sweeps, Shadow Kael, both Duplicator fixtures, light sources, stage hazards, spectral stage, new evolution rules, Pentagram, player loadout, character sweep), 0 exceptions, save untouched (`run-20261017-fix2/tests2`). A first PlayMode run stopped while loading, before any test ran, with no error logged.
 
+**Fix 3, damage numbers capped per frame.**
+- Why the hits were still dear: Lightning Ring at level 8 with Cursed Coffer strikes about 4.5 units wide. The bot stands in the crowd, so one strike covers most of a 300 horde (correct VS behaviour, not a bug).
+- Measured with `HitTiming` (`AutoplayBot -sh-autoplay-hit-timing`, release build; jolt events list the previous frame's sums; `run-20261017-hittime2`):
+  - a hit on an immune enemy costs under 1 us, and finding the target about 1 us;
+  - a damaging hit costs about 55 us, of which the damage number is about 22-25 us: 10-16 ms per jolt frame;
+  - deaths cost 2-7 ms (about 70 us each), and the other parts of a hit under 1.5 ms together.
+- The cause: the number pool holds 25, so in a 600-hit frame every number past the 25th overwrote one shown earlier in that frame, and was never seen.
+- The fix: `DamagePopupManager.ShowDamage` starts at most `MAX_POPUPS` (25) numbers per frame (`ShownThisFrame`). The screen looks the same; the first 25 hits of a frame show their numbers instead of the last 25.
+- Profiler markers `Hit.*` (free in release) replace the SlowSpans that the hit path had for diagnosis.
+- Result, Level 3 with the Curse passives at 1080p (`run-20261017-fix3/measure`):
+  - numbers in the heaviest frames take at most 2.7 ms;
+  - 3 jolts, all 25-26 ms, in one second;
+  - 2.28% slow frames.
+  - Jolt counts this small vary between runs (1 after fix 2), so only the number cost is a clear gain.
+- Test: `DamagePopupBatcherPlayModeTests.AFrame_StartsAtMostAPoolOfNumbers_AndTheNextFrameShowsAgain` (R).
+- Validation: EditMode 990/990; PlayMode fixtures 41/41 (popup batcher, HUD fixes, accessibility, weapon sweep, Results, Pentagram, damage flash), 0 exceptions, save untouched (`run-20261017-fix3/tests`).
+- Left: about 2% of frames at 17-20 ms with 300 enemies at 1080p, and deaths at about 70 us each.
+
 ### Focus loss stopped the game (owner: "1", 2026-10-17)
 
 The stall that the WPR hang hunt caught (`run-20261017-wprhang`, run 1) was the Unity player stopping because its window lost focus:

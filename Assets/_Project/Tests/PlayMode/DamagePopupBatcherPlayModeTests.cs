@@ -17,6 +17,30 @@ namespace SoulHunter.Tests.PlayMode
     public class DamagePopupBatcherPlayModeTests : GameplayPlayModeTestBase
     {
         [UnityTest]
+        public IEnumerator AFrame_StartsAtMostAPoolOfNumbers_AndTheNextFrameShowsAgain()
+        {
+            // 60 FPS at 1080p (2026-10-17): 400-640 damaging hits in one physics step each rewrote a pooled number's text,
+            // 10-16 ms, though only the pool's 25 could be on screen.
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true))
+                weapon.enabled = false;
+            yield return null;
+            Vector3 centre = PlayerController.Instance.transform.position + Vector3.up;
+            var manager = DamagePopupManager.Instance;
+            for (int i = 0; i < 100; i++) manager.ShowDamage(10 + i, centre + Vector3.forward * (i % 10));
+            Assert.That(manager.ShownThisFrame, Is.EqualTo(DamagePopupManager.MAX_POPUPS), "Only a pool's worth start in one frame.");
+            int active = Object.FindObjectsByType<DamagePopup>(FindObjectsSortMode.None).Count(p => p.gameObject.activeInHierarchy);
+            Assert.That(active, Is.LessThanOrEqualTo(DamagePopupManager.MAX_POPUPS), "No more numbers than the pool holds.");
+            Assert.That(active, Is.GreaterThanOrEqualTo(DamagePopupManager.MAX_POPUPS), "The pool's numbers are all showing.");
+
+            yield return null;
+            manager.ShowDamage(999, centre);
+            Assert.That(manager.ShownThisFrame, Is.EqualTo(1), "A new frame shows numbers again.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator DamageNumbers_AreDrawnInOneDraw_AndHandBackWhenSwitchedOff()
         {
             yield return BootIntoGameplay();

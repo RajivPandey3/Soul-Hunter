@@ -45,6 +45,9 @@ namespace SoulHunter.Gameplay.Combat
         /// </summary>
         public static System.Collections.Generic.Dictionary<string, int> EnterStats;
 
+        private static readonly Unity.Profiling.ProfilerMarker FindMarker = new("Hit.FindTarget");
+        private static readonly Unity.Profiling.ProfilerMarker TakeDamageMarker = new("Hit.TakeDamage");
+
         private void OnTriggerEnter(Collider other)
         {
             bool hit = TryHit(other);
@@ -57,16 +60,32 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>Hits <paramref name="other"/> if it is a target (and the hit gate allows it). True when damage was dealt.</summary>
         public bool TryHit(Collider other)
         {
-            var projectile = GetComponent<Projectile>();
-            if (other == null || !isActiveAndEnabled || (projectile != null && projectile.enabled)) return false;
-            if (!other.CompareTag(TargetTag)) return false;
-            var damageable = DamageableLookup.Of(other);
-            if (damageable == null) return false;
-            if (HitGate != null && !HitGate(damageable as Component)) return false;
+            IDamageable damageable;
+            bool timing = HitTiming.Enabled;
+            long started = timing ? HitTiming.Now : 0;
+            using (FindMarker.Auto())
+            {
+                var projectile = GetComponent<Projectile>();
+                if (other == null || !isActiveAndEnabled || (projectile != null && projectile.enabled)) return false;
+                if (!other.CompareTag(TargetTag)) return false;
+                damageable = DamageableLookup.Of(other);
+                if (damageable == null) return false;
+                if (HitGate != null && !HitGate(damageable as Component)) return false;
+            }
+            long found = timing ? HitTiming.Now : 0;
+            var health = timing ? damageable as HealthController : null;
+            int healthBefore = health != null ? health.CurrentHealth : 0;
             Vector3 knockback = (other.transform.position - transform.position).normalized;
             int dmg = Mathf.RoundToInt(DamageAmount);
             using (DamageSource.From(SourceWeapon, SourceWeaponName != "Unknown" ? SourceWeaponName : null))
-                damageable.TakeDamage(new DamagePacket(dmg, transform.position, knockback, DamageType).WithKnockback(Knockback));
+                using (TakeDamageMarker.Auto()) damageable.TakeDamage(new DamagePacket(dmg, transform.position, knockback, DamageType).WithKnockback(Knockback));
+            if (timing)
+            {
+                long done = HitTiming.Now;
+                HitTiming.FindTicks += found - started; HitTiming.FindCalls++;
+                if (health != null && health.CurrentHealth == healthBefore) { HitTiming.EmptyTicks += done - found; HitTiming.EmptyCalls++; }
+                else { HitTiming.DamagingTicks += done - found; HitTiming.DamagingCalls++; }
+            }
             return true;
         }
     }

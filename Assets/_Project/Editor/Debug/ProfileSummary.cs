@@ -130,7 +130,7 @@ namespace SoulHunter.Editor.Debugging
             foreach (var s in slow.OrderByDescending(x => x.ms).Take(8))
             {
                 sb.AppendLine($"  frame {s.frame}: {s.ms:F1} ms");
-                foreach (var kv in s.totals.OrderByDescending(k => k.Value).Take(25))
+                foreach (var kv in s.totals.OrderByDescending(k => k.Value).Take(80))
                     sb.AppendLine($"      {kv.Value,9:F2}  {kv.Key}");
             }
             ProfilerDriver.ClearAllFrames();

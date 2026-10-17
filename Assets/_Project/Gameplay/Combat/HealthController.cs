@@ -90,6 +90,17 @@ namespace SoulHunter.Gameplay.Combat
         // (2026-10-17, part of the 12-18 ms crowd-hit frames). Looked up again while none is found, so a controller added
         // later is still seen.
         private SoulHunter.Gameplay.AI.EnemyController _enemy;
+
+        // The parts of a hit, in the profiler (a ProfilerMarker costs nothing in a release build). A packed horde takes
+        // 400-700 hits in one physics step (2026-10-17), so each part of a hit is worth seeing.
+        private static readonly Unity.Profiling.ProfilerMarker HitMultiplierMarker = new("Hit.Multiplier");
+        private static readonly Unity.Profiling.ProfilerMarker HitStatsMarker = new("Hit.RecordStats");
+        private static readonly Unity.Profiling.ProfilerMarker HitObserverMarker = new("Hit.WeaponHitObserver");
+        private static readonly Unity.Profiling.ProfilerMarker HitNumberMarker = new("Hit.DamageNumber");
+        private static readonly Unity.Profiling.ProfilerMarker HitOnDamagedMarker = new("Hit.OnDamaged");
+        private static readonly Unity.Profiling.ProfilerMarker HitKnockbackMarker = new("Hit.Knockback");
+        private static readonly Unity.Profiling.ProfilerMarker HitHealthChangedMarker = new("Hit.OnHealthChanged");
+        private static readonly Unity.Profiling.ProfilerMarker HitDieMarker = new("Hit.Die");
         private SoulHunter.Gameplay.AI.EnemyController Enemy => _enemy != null ? _enemy : (_enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>());
 
         private void Awake()
@@ -159,7 +170,7 @@ namespace SoulHunter.Gameplay.Combat
                     if (!isWhitelisted) return;
                 }
 
-                incomingDamage = Mathf.Max(1, Mathf.RoundToInt(incomingDamage * enemy.GetDamageMultiplier(packet.Type)));
+                long t0 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitMultiplierMarker.Auto()) incomingDamage = Mathf.Max(1, Mathf.RoundToInt(incomingDamage * enemy.GetDamageMultiplier(packet.Type))); HitTiming.Add(HitTiming.Part.Multiplier, t0);
             }
             // VS rule: each point of Armor removes 1 damage from every hit, but a hit always deals at least 1.
             if (Armor > 0) incomingDamage = Mathf.Max(1, incomingDamage - Armor);
@@ -168,10 +179,10 @@ namespace SoulHunter.Gameplay.Combat
             _currentHealth -= incomingDamage;
             // VS Results: each weapon's damage. The hit's full damage counts, overkill included (the wiki gives no rule).
             if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
-                SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, incomingDamage);
+                { long t1 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitStatsMarker.Auto()) SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, incomingDamage); HitTiming.Add(HitTiming.Part.Stats, t1); }
             // The player's Arcanas that act on a weapon's hit (Heart of Fire's impact explosion, Jail of Crystal's freeze).
             if (enemy != null && DamageSource.Weapon != null && WeaponHitObserver != null)
-                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.WeaponHitObserver")) WeaponHitObserver(DamageSource.Weapon, enemy, packet.HitPoint);
+                { long t2 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitObserverMarker.Auto()) WeaponHitObserver(DamageSource.Weapon, enemy, packet.HitPoint); HitTiming.Add(HitTiming.Part.Observer, t2); }
             if (PostHitInvulnerability > 0f && !packet.IgnoresHitInvulnerability)
                 _hitInvulnerableUntil = Time.time + PostHitInvulnerability;
             
@@ -181,24 +192,24 @@ namespace SoulHunter.Gameplay.Combat
             {
                 // Thoda sa upar dikhate hain taaki enemy ke sir par aaye
                 Vector3 popupPos = transform.position + Vector3.up * 1.5f; 
-                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.DamageNumber")) SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(incomingDamage, popupPos);
+                long t3 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitNumberMarker.Auto()) SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(incomingDamage, popupPos); HitTiming.Add(HitTiming.Part.Number, t3);
             }
 
             _currentHealth = Mathf.Max(0, _currentHealth);
 
-            if (OnDamaged != null) using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDamaged")) OnDamaged();
+            if (OnDamaged != null) { long t4 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitOnDamagedMarker.Auto()) OnDamaged(); HitTiming.Add(HitTiming.Part.OnDamaged, t4); }
 
             // VS knockback: an enemy's movement is reversed for 120 ms (EnemyController). The player is never knocked
             // back in VS; it used to slide 2 units whenever an enemy touched it.
             if (enemy != null && KnockbackResistance < 1f)
-                enemy.ApplyKnockback(packet.KnockbackOrDefault * (1f - KnockbackResistance));
+                { long t5 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitKnockbackMarker.Auto()) enemy.ApplyKnockback(packet.KnockbackOrDefault * (1f - KnockbackResistance)); HitTiming.Add(HitTiming.Part.Knockback, t5); }
 
-            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+            if (OnHealthChanged != null) { long t6 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitHealthChangedMarker.Auto()) OnHealthChanged(_currentHealth, _maxHealth); HitTiming.Add(HitTiming.Part.HealthChanged, t6); }
 
             if (_currentHealth == 0)
             {
                 if (enemy != null && RetaliationDepth > 0) RetaliationKillObserver?.Invoke(enemy);
-                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Die")) Die();
+                { long t7 = HitTiming.Enabled ? HitTiming.Now : 0; using (HitDieMarker.Auto()) Die(); HitTiming.Add(HitTiming.Part.Die, t7); }
             }
         }
 

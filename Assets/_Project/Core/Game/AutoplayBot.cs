@@ -1193,9 +1193,16 @@ namespace SoulHunter.Gameplay.Core
                     "\"ms\": {0:0.0}, \"paused\": {1}, \"enemies\": {2}, \"gc\": [{3}, {4}, {5}]",
                     dt * 1000f, GameTime.IsPaused ? "true" : "false", EnemyController.ActiveEnemies.Count,
                     gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"" +
-                    $", \"triggers\": \"{Escape(_lastFrameTriggers)}\"");
+                    $", \"triggers\": \"{Escape(_lastFrameTriggers)}\"" +
+                    $", \"hits\": \"{Escape(_lastFrameHits)}\"");
             }
             else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
+            // -sh-autoplay-hit-timing: the release-build time of weapon hits, summed per frame (a jolt lists the previous frame).
+            if (HasArg("-sh-autoplay-hit-timing"))
+            {
+                if (!HitTiming.Enabled) { HitTiming.Enabled = true; HitTiming.Clear(); }
+                else if (_hitTimingFrame != Time.frameCount) { _hitTimingFrame = Time.frameCount; _lastFrameHits = HitTiming.Describe(); HitTiming.Clear(); }
+            }
             // -sh-autoplay-count-triggers: ProjectileDamage trigger enters, counted per frame (a jolt lists the top ones).
             if (HasArg("-sh-autoplay-count-triggers"))
             {
@@ -1507,7 +1514,9 @@ namespace SoulHunter.Gameplay.Core
         private float _nextVSyncSwitch;
         private float _renderScaleBefore = -1f;
         private int _joltEvents, _triggerFrame = -1;
-        private string _lastFrameTriggers = ""; // a jolt is the previous frame: its trigger enters, kept before the clear
+        // A jolt is the previous frame: its trigger enters and hit timing, kept before the clear.
+        private string _lastFrameTriggers = "", _lastFrameHits = "";
+        private int _hitTimingFrame = -1;
 
         /// <summary>The most frequent ProjectileDamage trigger enters since the last clear, "name > layer hit/miss xN".</summary>
         private static string TopTriggerEnters()
