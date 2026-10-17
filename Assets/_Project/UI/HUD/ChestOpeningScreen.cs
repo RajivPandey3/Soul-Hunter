@@ -117,6 +117,17 @@ namespace SoulHunter.Gameplay.UI
         private Coroutine _sequence;
         private float _coinPulse;
 
+        /// <summary>
+        /// Makes a hidden 3D preview ahead of the first chest (ChestUI does it as the run starts). It is switched off at once,
+        /// so its camera never renders during play; the first Show takes its texture, as every later chest does.
+        /// </summary>
+        public void Prewarm(GameObject chestPrefab, GameObject coinPrefab)
+        {
+            if (_stage != null || chestPrefab == null) return;
+            _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, false);
+            _stage.gameObject.SetActive(false);
+        }
+
         public static ChestOpeningScreen Create(Canvas canvas)
         {
             var go = new GameObject("ChestOpeningScreen", typeof(RectTransform));
@@ -229,12 +240,15 @@ namespace SoulHunter.Gameplay.UI
                 CanSkip = canSkip;
                 RevealedCount = 0;
                 FireworksShown = 0;
-                gameObject.SetActive(true);
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Show.Activate")) gameObject.SetActive(true);
                 ShownGold = 0; // after activation: the HUD now holds back the whole chest gold
                 transform.SetAsLastSibling();
-                ClearCards();
-                if (_stage != null) Destroy(_stage.gameObject);
-                _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana, _result.Kind);
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Show.ClearCards")) ClearCards();
+                // The preview's RenderTexture is kept between chests (2026-10-17): a new 512x512 MSAA texture on every chest
+                // was part of the 16-20 ms frame in which the screen opens. The stage that leaves gives it back first.
+                RenderTexture keep = null;
+                if (_stage != null) { keep = _stage.HandBackTexture(); Destroy(_stage.gameObject); }
+                _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana, _result.Kind, keep);
                 _chestImage.texture = _stage.Texture;
                 _chestImage.color = Color.white;
                 _title.text = _result.IsArcana ? "ARCANA CHEST!" : _result.ItemCount >= 5 ? "TREASURE x5!" : _result.ItemCount >= 3 ? "TREASURE x3!" : "TREASURE!";
@@ -246,7 +260,7 @@ namespace SoulHunter.Gameplay.UI
                 _circle.color = new Color(1f, 1f, 1f, 0f);
                 _openButton.gameObject.SetActive(false);
                 _doneButton.gameObject.SetActive(false);
-                Layout();
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Show.Layout")) Layout();
                 Current = Phase.Intro;
                 _sequence = StartCoroutine(Intro());
             }

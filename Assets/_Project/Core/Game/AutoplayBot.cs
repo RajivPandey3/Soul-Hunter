@@ -1185,7 +1185,7 @@ namespace SoulHunter.Gameplay.Core
                     gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2, System.GC.GetTotalMemory(false) / 1048576f,
                     FindObjectsByType<Transform>(FindObjectsSortMode.None).Length) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"");
             }
-            else if (dt > 0.025f && Time.frameCount > _shotFrame + 3 && Elapsed > 3f && _joltEvents < 400)
+            else if (dt > JoltSeconds && Time.frameCount > _shotFrame + 3 && Elapsed > 3f && _joltEvents < 400)
             {
                 // A jolt (a frame over 25 ms, which a 60 FPS player sees): what was slow in it, for the 60 FPS work (2026-10-17).
                 _joltEvents++;
@@ -1514,6 +1514,10 @@ namespace SoulHunter.Gameplay.Core
         private float _nextVSyncSwitch;
         private float _renderScaleBefore = -1f;
         private int _joltEvents, _triggerFrame = -1;
+        private float _joltSeconds = -1f;
+        /// <summary>A jolt event's threshold: 25 ms, or -sh-autoplay-jolt-ms N to log lighter frames too.</summary>
+        private float JoltSeconds => _joltSeconds > 0f ? _joltSeconds
+            : (_joltSeconds = float.TryParse(ArgValue("-sh-autoplay-jolt-ms"), NumberStyles.Float, CultureInfo.InvariantCulture, out float ms) && ms > 0f ? ms / 1000f : 0.025f);
         // A jolt is the previous frame: its trigger enters and hit timing, kept before the clear.
         private string _lastFrameTriggers = "", _lastFrameHits = "";
         private int _hitTimingFrame = -1;

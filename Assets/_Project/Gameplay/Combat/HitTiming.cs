@@ -16,7 +16,8 @@ namespace SoulHunter.Gameplay.Combat
         public static int FindCalls, DamagingCalls, EmptyCalls;
 
         /// <summary>The parts of a damaging hit inside HealthController.TakeDamage.</summary>
-        public enum Part { Multiplier, Stats, Observer, Number, OnDamaged, Knockback, HealthChanged, Die, Count }
+        public enum Part { Multiplier, Stats, Observer, Number, OnDamaged, Knockback, HealthChanged, Die,
+            DeathOnDied, DeathDeactivate, DeathPuff, DeathBlood, DeathCorpse, DeathKillStats, DeathGem, Count }
         private static readonly long[] PartTicks = new long[(int)Part.Count];
         private static readonly int[] PartCalls = new int[(int)Part.Count];
 

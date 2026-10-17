@@ -2245,6 +2245,19 @@ Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elit
 - Validation: EditMode 990/990; PlayMode fixtures 41/41 (popup batcher, HUD fixes, accessibility, weapon sweep, Results, Pentagram, damage flash), 0 exceptions, save untouched (`run-20261017-fix3/tests`).
 - Left: about 2% of frames at 17-20 ms with 300 enemies at 1080p, and deaths at about 70 us each.
 
+**All parts after fixes 1-3** (`run-20261017-final1080`, same setup as the morning run):
+- While playing (not paused), no part had a frame over 25 ms. Slowest running frames were 17.5-23.1 ms; Level 3 went from 43.1 to 22.3 ms and heavy kill from 42.5 to 17.5 ms.
+- The three jolts left were chest screens opening, with the game paused.
+- Slow-frame shares rose a little in several parts (for example 0.8% to 1.3%). The loads are heavier than in the morning: given passives now apply, and several parts had more enemies and kills.
+- Deaths were not changed. A release run with frames over 20 ms logged (`AutoplayBot -sh-autoplay-jolt-ms 20`; release death timing in `HitTiming`) had no running frame over 19.5 ms in Level 3 with the Curse passives.
+
+**Fix 4, chest opening (owner: "safe fix the chest opening", 2026-10-18).**
+- The preview's 512x512 MSAA RenderTexture is kept between chests (`ChestPreviewStage.HandBackTexture`, `Create(..., reuse)`). Later chests now open in about 1 ms (`ChestUI.OpenChest` was 16-20 ms).
+- `ChestUI` builds the chest screen and a hidden, switched-off preview one frame after the run starts (`PrewarmNextFrame`, `ChestOpeningScreen.Prewarm`), so the first chest no longer builds them. The first chest went from 20-22 ms to 7-10 ms in `OpenChest`, and from 34-43 ms to 27-31 ms per frame.
+- Still in that paused frame: `Show.Layout` 3-4 ms on the first chest, and 4-8 ms when a chest makes an evolution (the new weapon is built).
+- The chest's look and behaviour are unchanged. Disabling the Pause key costs under 1 ms.
+- Validation: EditMode 990/990; PlayMode fixtures 23/23 (chest flow, preview, look, screen fit, chest elites and bosses, Arcana choice, Pentagram), 0 exceptions, save untouched (`run-20261018-chest2`).
+
 ### Focus loss stopped the game (owner: "1", 2026-10-17)
 
 The stall that the WPR hang hunt caught (`run-20261017-wprhang`, run 1) was the Unity player stopping because its window lost focus:

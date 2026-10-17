@@ -384,7 +384,7 @@ namespace SoulHunter.Gameplay.Combat
 
         private void DieWithoutPrevention()
         {
-            if (OnDied != null) using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDied")) OnDied();
+            if (OnDied != null) { long td = HitTiming.Enabled ? HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDied")) OnDied(); HitTiming.Add(HitTiming.Part.DeathOnDied, td); }
             // Learning Comment:
             // Generic cloned enemies (horde) ke marne par Debug.Log karne se Unity console freeze ho jata tha.
             // Ab sirf unique entities (jaise Player ya Boss) ka death log hoga.
@@ -395,7 +395,7 @@ namespace SoulHunter.Gameplay.Combat
             
             // Basic death logic (Disable object); an OnDied listener that revived keeps it alive.
             if (_keepAliveAfterDeath) _keepAliveAfterDeath = false;
-            else using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Deactivate")) gameObject.SetActive(false);
+            else { long ta = HitTiming.Enabled ? HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Deactivate")) gameObject.SetActive(false); HitTiming.Add(HitTiming.Part.DeathDeactivate, ta); }
         }
     }
 }

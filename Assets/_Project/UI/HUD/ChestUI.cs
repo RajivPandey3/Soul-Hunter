@@ -33,6 +33,31 @@ namespace SoulHunter.Gameplay.UI
         private void Start()
         {
             if (_chestPanel != null) _chestPanel.SetActive(false);
+            if (Application.isPlaying) StartCoroutine(PrewarmNextFrame());
+        }
+
+        /// <summary>
+        /// Builds the chest screen and a hidden 3D preview while the run starts, one frame after the scene: the first chest
+        /// of a run built both in the frame it opened, 20-22 ms of a 34-43 ms frame at 1080p (2026-10-18). Later chests
+        /// reuse them and open in about 1 ms. Without the chest pool nothing is built here, and the first chest builds them.
+        /// </summary>
+        private System.Collections.IEnumerator PrewarmNextFrame()
+        {
+            yield return null;
+            var pool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+            if (pool == null || pool.ChestPrefab == null) yield break;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("ChestUI.Prewarm"))
+            {
+                EnsureScreen();
+                _screen.Prewarm(pool.ChestPrefab, pool.GoldCoinPrefab);
+            }
+        }
+
+        private void EnsureScreen()
+        {
+            if (_screen != null) return;
+            _screen = ChestOpeningScreen.Create(ScreenCanvas());
+            _screen.Closed += CloseChest;
         }
 
         private void OnDestroy()
@@ -71,7 +96,7 @@ namespace SoulHunter.Gameplay.UI
                 if (_rewardText != null) _rewardText.text = message;
                 int items = result != null ? result.ItemCount : 1;
                 int before, fiveBefore;
-                if (countAsChest) (before, fiveBefore) = RecordOpened(items);
+                if (countAsChest) using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.RecordOpened")) (before, fiveBefore) = RecordOpened(items);
                 else
                 {
                     var data = SaveData();
@@ -90,14 +115,10 @@ namespace SoulHunter.Gameplay.UI
                     return;
                 }
 
-                if (_screen == null)
-                {
-                    _screen = ChestOpeningScreen.Create(ScreenCanvas());
-                    _screen.Closed += CloseChest;
-                }
+                using (SoulHunter.Core.Services.SlowSpan.Measure("ChestUI.EnsureScreen")) EnsureScreen();
 
-                if (!_paused) { SoulHunter.Core.Services.GameTime.Pause(this); _paused = true; }
-                DisablePauseAction();
+                if (!_paused) using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.PauseGame")) { SoulHunter.Core.Services.GameTime.Pause(this); _paused = true; }
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.DisablePauseKey")) DisablePauseAction();
                 var pool = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
                 _screen.Show(result, ChestSkipRules.CanSkip(before, fiveBefore, items),
                     pool != null ? pool.ChestPrefab : null, pool != null ? pool.GoldCoinPrefab : null);

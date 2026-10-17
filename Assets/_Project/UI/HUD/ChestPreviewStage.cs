@@ -35,14 +35,14 @@ namespace SoulHunter.Gameplay.UI
         private readonly List<Coin> _coins = new List<Coin>();
 
         public static ChestPreviewStage Create(GameObject chestPrefab, GameObject coinPrefab, bool arcana,
-            SoulHunter.Gameplay.Pickups.ChestKind kind = SoulHunter.Gameplay.Pickups.ChestKind.Silver)
+            SoulHunter.Gameplay.Pickups.ChestKind kind = SoulHunter.Gameplay.Pickups.ChestKind.Silver, RenderTexture reuse = null)
         {
             using (SoulHunter.Core.Services.SlowSpan.Measure("ChestPreviewStage.Create"))
             {
                 var go = new GameObject("ChestPreviewStage");
                 go.transform.position = StagePosition;
                 var stage = go.AddComponent<ChestPreviewStage>();
-                stage.Build(chestPrefab, coinPrefab, arcana);
+                stage.Build(chestPrefab, coinPrefab, arcana, reuse);
                 // The opened chest's own look (bronze, silver, Arcana) on the preview copy.
                 if (stage._chest != null)
                     SoulHunter.Gameplay.Pickups.ChestLook.Apply(stage._chest, arcana ? SoulHunter.Gameplay.Pickups.ChestKind.Arcana : kind);
@@ -50,7 +50,7 @@ namespace SoulHunter.Gameplay.UI
             }
         }
 
-        private void Build(GameObject chestPrefab, GameObject coinPrefab, bool arcana)
+        private void Build(GameObject chestPrefab, GameObject coinPrefab, bool arcana, RenderTexture reuse)
         {
             // MSAA only as far as the device gives it: on the owner's phone (Vulkan) a 2-sample texture came back with 1, and
             // every chest preview frame logged "RenderPass: Attachment 0 was created with 1 samples but 2 samples were
@@ -58,7 +58,13 @@ namespace SoulHunter.Gameplay.UI
             var desc = new RenderTextureDescriptor(512, 512, RenderTextureFormat.ARGB32, 16) { msaaSamples = 2 };
             // The device's own answer was 2 there too, so phones get none; PCs keep the supported count.
             int samples = Application.isMobilePlatform ? 1 : Mathf.Max(1, SystemInfo.GetRenderTextureSupportedMSAASampleCount(desc));
-            Texture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32) { name = "ChestPreview", antiAliasing = samples };
+            // A texture handed back by the previous chest is used again when it matches (512x512, the same MSAA).
+            if (reuse != null && reuse.width == 512 && reuse.height == 512 && reuse.antiAliasing == samples) Texture = reuse;
+            else
+            {
+                if (reuse != null) { reuse.Release(); Destroy(reuse); }
+                Texture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32) { name = "ChestPreview", antiAliasing = samples };
+            }
 
             var visual = chestPrefab != null ? chestPrefab.transform.Find("Visual") : null;
             if (visual != null)
@@ -345,6 +351,15 @@ namespace SoulHunter.Gameplay.UI
                 T = coin, V = dir * _bounds.size.magnitude * 1.6f,
                 Spin = new Vector3(Random.Range(200f, 600f), Random.Range(-200f, 200f), 0f)
             });
+        }
+
+        /// <summary>Gives this stage's texture to the next chest, which uses it again; this stage then leaves it alone.</summary>
+        public RenderTexture HandBackTexture()
+        {
+            var texture = Texture;
+            if (_camera != null) _camera.targetTexture = null;
+            Texture = null;
+            return texture;
         }
 
         private void OnDestroy()

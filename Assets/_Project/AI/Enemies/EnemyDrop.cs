@@ -145,21 +145,25 @@ namespace SoulHunter.Gameplay.AI
 
                 if (CountShownDeath())
                 {
+                    long tp = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0;
                     using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.DeathVfx")) SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.EnemyDeath, transform.position + Vector3.up * 0.8f);
+                    SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.DeathPuff, tp);
                     // Ghosts (Level 7) have no body to bleed; everything else spurts blood from the neck unless Disable Blood is on.
                     Bounds body = BodyBounds();
                     if (_enemy == null || !_enemy.IsSpectral)
                     {
                         Vector3 away = player != null ? transform.position - player.transform.position : transform.forward;
-                        using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.Blood")) SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away);
+                        { long tb = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.Blood")) SoulHunter.Gameplay.VFX.VFXPoolManager.PlayBlood(SoulHunter.Gameplay.VFX.VFXPoolManager.NeckOf(body), away); SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.DeathBlood, tb); }
                     }
                     // VS-style death (owner, 2026-09-29): the body stays a moment and sinks while the blood sprays.
-                    using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.Corpse")) SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body);
+                    { long tc = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.Corpse")) SoulHunter.Gameplay.VFX.EnemyCorpses.Leave(_bodyRenderers, body); SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.DeathCorpse, tc); }
                 }
 
                 if (SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                 {
+                    long tk = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0;
                     SoulHunter.Gameplay.Core.RunStatsTracker.Instance.AddKill(_enemy != null ? _enemy.Data : null); // per type for the VS Bestiary
+                    SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.DeathKillStats, tk);
                 }
 
                 if (_erasedThisLife)
@@ -197,7 +201,9 @@ namespace SoulHunter.Gameplay.AI
                 // chests and Gold Fever only. EnemyData's DropChanceChicken/DropChanceGold/GoldValue are no longer used here.
                 if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                 {
+                    long tg = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0;
                     SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance.SpawnGem(transform.position, GemValue);
+                    SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.DeathGem, tg);
                 }
             }
         }
