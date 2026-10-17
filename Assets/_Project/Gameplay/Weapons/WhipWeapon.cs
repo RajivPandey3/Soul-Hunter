@@ -118,7 +118,7 @@ namespace SoulHunter.Gameplay.Weapons
 
             for (int i = 0; i < hitsCount; i++)
             {
-                var damageable = _hitsBuffer[i].GetComponentInParent<IDamageable>();
+                var damageable = DamageableLookup.Of(_hitsBuffer[i]);
                 if (damageable != null)
                 {
                     var packet = new DamagePacket

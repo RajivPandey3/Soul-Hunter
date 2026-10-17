@@ -111,7 +111,13 @@ namespace SoulHunter.Gameplay.Data
         /// shows it; the game keeps <see cref="UiTheme"/> until the owner approves.
         /// </summary>
         public SoulHunter.Gameplay.UI.UiThemeAsset UiThemePreview;
-        public static GameContentCatalog Load() => Resources.Load<GameContentCatalog>("GameContent");
+        /// <summary>
+        /// The game's content catalog. Loaded once and kept: each Resources.Load took about 2 ms in a release build, and a
+        /// 5-item chest with nothing left to upgrade loaded it five times in one frame (a 28 ms jolt, 2026-10-17).
+        /// </summary>
+        public static GameContentCatalog Load() => _loaded != null ? _loaded : (_loaded = Resources.Load<GameContentCatalog>("GameContent"));
+
+        private static GameContentCatalog _loaded;
 
         /// <summary>The weapon/passive definition of <paramref name="type"/>, or null when none exists.</summary>
         public static WeaponDefinition FindWeaponDefinition(UpgradeData.UpgradeType type) => WeaponDefinitionLookup.Find(type);

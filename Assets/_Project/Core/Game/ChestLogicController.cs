@@ -118,8 +118,12 @@ namespace SoulHunter.Gameplay.Core
         /// <summary>Opens a chest dropped by a boss with <paramref name="tiers"/>: its item count, evolution flag and slots.</summary>
         public string ProcessChest(ChestTiers tiers)
         {
-            var weaponManager = FindFirstObjectByType<WeaponManager>();
-            var levelUpManager = FindFirstObjectByType<LevelUpManager>();
+            WeaponManager weaponManager; LevelUpManager levelUpManager;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.FindManagers"))
+            {
+                weaponManager = WeaponManager.Instance != null ? WeaponManager.Instance : FindFirstObjectByType<WeaponManager>();
+                levelUpManager = LevelUpManager.Instance != null ? LevelUpManager.Instance : FindFirstObjectByType<LevelUpManager>();
+            }
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
             float luck = player != null && player.Stats != null ? player.Stats.Luck : 1f;
             SoulHunter.Core.Persistence.SaveService save = null;
@@ -228,7 +232,10 @@ namespace SoulHunter.Gameplay.Core
             {
                 // 1. Evolution / Union: slot 1 of a chest that can evolve (Template:Treasure), so at most one per chest
                 // (Treasure_Chest: "Generally, only one weapon can be evolved per chest").
-                if (tiers.IsEvolutionSlot(i) && tiers.CanEvolve && weaponManager != null && weaponManager.TryEvolveWeapon(out string evolvedName))
+                bool evolved = false; string evolvedName = null;
+                if (tiers.IsEvolutionSlot(i) && tiers.CanEvolve && weaponManager != null)
+                    using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.Evolve")) evolved = weaponManager.TryEvolveWeapon(out evolvedName);
+                if (evolved)
                 {
                     SoulHunter.Core.Services.GameLog.Info($"[ChestLogicController] Huzzah! Weapon Evolved/Unioned into {evolvedName}!");
                     string shownName = WeaponEvolutionData.DisplayName(evolvedName);
@@ -244,10 +251,11 @@ namespace SoulHunter.Gameplay.Core
                 // level up existing weapons (or give extra coins if no weapons can be leveled up)". The wiki gives no amount for
                 // one slot; balance method: one Big Coin Bag, as for any slot with nothing left (wiki research 2026-10-09).
                 List<UpgradeData> upgrades = null;
-                if (levelUpManager != null) upgrades = levelUpManager.GetRandomValidUpgradesForChest(weaponsOnly: tiers.IsWeaponSlot(i));
+                if (levelUpManager != null)
+                    using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.DrawUpgrade")) upgrades = levelUpManager.GetRandomValidUpgradesForChest(weaponsOnly: tiers.IsWeaponSlot(i));
                 if (weaponManager != null && upgrades != null && upgrades.Count > 0)
                 {
-                    weaponManager.ApplyUpgrade(upgrades[0]);
+                    using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.ApplyUpgrade")) weaponManager.ApplyUpgrade(upgrades[0]);
                     SoulHunter.Core.Services.GameLog.Info($"[ChestLogicController] Chest se Free Upgrade mila: {upgrades[0].UpgradeName}!");
                     rewards.Add($"<color=yellow>+ {upgrades[0].UpgradeName} (Lv {upgrades[0].Level})</color>");
                     var definition = WeaponDefinitionLookup.Find(upgrades[0].Type);
@@ -259,16 +267,20 @@ namespace SoulHunter.Gameplay.Core
                     continue;
                 }
 
-                var content = GameContentCatalog.Load();
+                GameContentCatalog content;
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.LoadCatalog")) content = GameContentCatalog.Load();
                 result.Rewards.Add(new ChestReward { Name = SoulHunter.Gameplay.Combat.MaxedRewards.GoldCardName, IsCoinBag = true, Icon = content != null ? content.GoldPouchIcon : null });
                 maxedItems++; // 3. nothing left to upgrade: VS pays a Big Coin Bag for this item
             }
 
             // VS: the chest's gold, plus 25 per maxed item, all with Greed.
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
-            int gold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(
-                ChestGold(itemCount, goldRoll01) + maxedItems * GoldPerMaxedItem, player != null ? player.Stats : null);
-            SoulHunter.Gameplay.Pickups.GoldRewards.CountBigCoinBags(maxedItems); // VS: Big Coin Bags from any source count
+            int gold;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.Gold"))
+                gold = SoulHunter.Gameplay.Pickups.GoldRewards.Grant(
+                    ChestGold(itemCount, goldRoll01) + maxedItems * GoldPerMaxedItem, player != null ? player.Stats : null);
+            using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.CountBigCoinBags"))
+                SoulHunter.Gameplay.Pickups.GoldRewards.CountBigCoinBags(maxedItems); // VS: Big Coin Bags from any source count
             if (gold > 0) SoulHunter.Core.Services.GameLog.Info($"[ChestLogicController] Chest se {gold} Gold mile!");
             result.Gold = gold;
             LastResult = result;

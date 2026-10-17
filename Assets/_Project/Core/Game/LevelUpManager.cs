@@ -52,8 +52,13 @@ namespace SoulHunter.Gameplay.Core
             return roll01 < fourthChance ? BaseChoiceCount + 1 : BaseChoiceCount;
         }
 
+        /// <summary>The run's level-up manager (null between runs). Chests reach it here: a scene search on every chest
+        /// cost 5-7 ms with 300 enemies on screen (2026-10-17).</summary>
+        public static LevelUpManager Instance { get; private set; }
+
         private void Awake()
         {
+            if (Instance == null) Instance = this;
             // VS (Reroll, Skip and Banish pages): a run starts with none; the PowerUps give 2 per rank (AddPowerUpCharges),
             // and Soul Eggs add theirs. The scene's _starting* values (2 each, Soul Hunter's old default) are no longer used.
             RerollsLeft = SkipsLeft = BanishesLeft = 0;
@@ -156,6 +161,7 @@ namespace SoulHunter.Gameplay.Core
         
         private void OnDestroy()
         {
+            if (Instance == this) Instance = null;
             if (_experience != null)
             {
                 _experience.OnLevelUp -= HandleLevelUp;

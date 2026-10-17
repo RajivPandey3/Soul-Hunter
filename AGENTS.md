@@ -2174,6 +2174,66 @@ The hang came about once in 30-40 runs, so 12 clean runs do not prove it is gone
 
 Full run before the push of `7ba222fc` and `f7298039`: EditMode 989/989, PlayMode 445/445, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261016-prepush-full/`).
 
+### 60 FPS at 1080p, V-Sync off: the jolts (owner, 2026-10-17)
+
+Owner: V-Sync stays off with the 60 cap; fix where it drops, nothing else first.
+
+Measurement (`frametime-suite.ps1 -Capped -Fixed -More '-sh-autoplay-1080p'`, release, reference laptop):
+- The 3D view renders 1080p's pixel count inside the 1366x768 window (`AutoplayBot -sh-autoplay-1080p`, PerformanceBenchmark's render scale).
+- Quality was the stored Ultra.
+- At 1366x768 every part held 60 with under 0.8% of frames over 17.2 ms and 2 frames over 25 ms in about 87,000 (`run-20261017-fps60cap`).
+- At 1080p, slow frames doubled, and Level 3 had 19 jolts up to 43 ms (`run-20261017-fps60-1080`). That run's level-ups took Skull O'Maniac and Cursed Coffer, so the horde stayed at 300.
+
+New tools:
+- `AutoplayBot` logs a `jolt` event for every frame over 25 ms, with the SlowSpan sections of that frame.
+- `-sh-autoplay-span-ms N` records sections from N ms (default 5).
+- The profiler writes a new file every 4 s (`<name>-partN.raw`), because the editor keeps only the last 300 frames of a loaded capture. The file switch itself makes a 50-80 ms frame and a catch-up frame; ignore those.
+- In development builds SlowSpan sections show in the profiler.
+
+Tool defect found: `-sh-autoplay-give` set a passive's level without applying its stat. Every given passive (Duplicator, Spinach, Skull O'Maniac, Cursed Coffer) did nothing in earlier `-Fixed` runs, so those loads were lighter than they read. Passives are now given through `ApplyUpgrade`, one level at a time.
+
+Fixes:
+- **Chest pickup:** every chest made a 25-34 ms frame.
+  - `ChestLogicController.ProcessChest` searched the scene twice per chest (`FindFirstObjectByType`, 5-7 ms at 300 enemies). It now uses `WeaponManager.Instance` and the new `LevelUpManager.Instance`.
+  - `GameContentCatalog.Load()` ran `Resources.Load` on every call (about 2 ms; five in one 5-item chest). It now loads once.
+- **Crowd hits:** a bomb or pool touching a crowd made 12-18 ms in one physics step.
+  - Every hit searched the parents for its `IDamageable` and its `EnemyController`. `DamageableLookup` now caches the damageable per collider in all 8 hit paths, and `HealthController.Enemy` is cached.
+  - `Projectile` skips the player search for Enemy-tagged colliders.
+
+Result at 1080p, fixed loadout (`run-20261017-fix1`). Levels 1, 2, 3 and heavy kill each read slow frames / jolts / slowest frame:
+- Level 1: 0.79% / 1 / 25 ms before, 0.64% / 0 / 17 ms after.
+- Level 2: 1.62% / 1 / 28 ms before, 1.13% / 0 / 19 ms after.
+- Level 3: 1.92% / 19 / 43 ms before, 0.74% / 0 / 17.5 ms after. The before run had the Curse passives and the after run did not, so this row does not compare like with like.
+- Heavy kill: 1.24% / 1 / 42 ms before, 1.40% / 1 / 34 ms after.
+- Level 3 with the Curse passives: 9 jolts before, 6 after (25-31 ms, cause not found yet).
+
+Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elites, weapon and evolved sweeps, Shadow Kael, spectral stage, Pentagram, accessibility, player loadout, level-up rules), 0 exceptions, save untouched (`run-20261017-fix1/tests`).
+
+### Focus loss stopped the game (owner: "1", 2026-10-17)
+
+The stall that the WPR hang hunt caught (`run-20261017-wprhang`, run 1) was the Unity player stopping because its window lost focus:
+- Main thread in `GetMessage`, process CPU frozen, no SlowSpan open.
+- `ProjectSettings` has `runInBackground: 0`.
+
+Notepad A/B (`D:\SoulHunter-Validation\run-20261017-focus\focus-test.ps1`), with Notepad forced to the foreground at 40 s:
+- the old build stopped at 40 s with the same signature;
+- a build with `runInBackground: 1` played on.
+
+Consequence: the "Pause When Unfocused" option could not really be switched off, because every alt-tab froze the game.
+
+Fix: `DisplaySettingsApplier.Initialize` sets `Application.runInBackground = true`. `ProjectSettings.asset` was not edited, because the owner's editor was open.
+- Option on: alt-tab opens the pause menu, as before.
+- Option off: the run plays on.
+
+Validation:
+- `AccessibilityPlayModeTests` (R): the game runs in the background, and with the option off alt-tab does not pause.
+- EditMode 989/989 and the Accessibility fixtures 7/7, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261017-runinbg/`).
+- Release build of the fix: Notepad at 41 s, and the run played to its end at 143-164 FPS (`run-20261017-focus/C-fixed`).
+
+Not proven: that the older 8-minute hang had this cause.
+
+HWiNFO free cannot log from the command line ("supported in HWiNFO64 Pro only"), and its error window can take focus, so it is not used. Not yet played by the owner.
+
 ### Level 1 to 100%: plan and step 1 (owner, 2026-10-01)
 
 Owner: "haan plan save karo aur step 1 se shuru karo". The plan is in `Docs/VS_DOT_Plan.md`, "Level 1 to 100%" (six steps; no date promised).

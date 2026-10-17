@@ -19,7 +19,8 @@ namespace SoulHunter.Core.Services
     /// </summary>
     public readonly struct SlowSpan : IDisposable
     {
-        public const double RecordMs = 5.0;
+        /// <summary>Sections at least this long are recorded (5 ms; a measuring run may lower it, -sh-autoplay-span-ms).</summary>
+        public static double RecordMs = 5.0;
         public const double WarnMs = 50.0;
         private static readonly List<(int Frame, string Entry)> Recent = new List<(int, string)>();
 
@@ -40,13 +41,26 @@ namespace SoulHunter.Core.Services
             _start = Stopwatch.GetTimestamp();
             _pushed = _mainThread == Thread.CurrentThread.ManagedThreadId && _depth < MaxDepth;
             if (_pushed) { Open[_depth] = name; _depth++; }
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            // The section also shows in the Unity profiler, which does not see inside script code (found 2026-10-17:
+            // an 18 ms ProjectileDamage.OnTriggerEnter with nothing under it).
+            _sampled = _mainThread == Thread.CurrentThread.ManagedThreadId;
+            if (_sampled) UnityEngine.Profiling.Profiler.BeginSample(name);
+#endif
         }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        private readonly bool _sampled;
+#endif
 
         public static SlowSpan Measure(string name) => new SlowSpan(name);
 
         public void Dispose()
         {
             if (_name == null) return;
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (_sampled) UnityEngine.Profiling.Profiler.EndSample();
+#endif
             if (_pushed && _depth > 0) _depth--;
             double ms = (Stopwatch.GetTimestamp() - _start) * 1000.0 / Stopwatch.Frequency;
             if (ms < RecordMs) return;

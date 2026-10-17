@@ -20,6 +20,10 @@ namespace SoulHunter.Gameplay.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Initialize()
         {
+            // The player keeps running when its window loses focus, so the "Pause When Unfocused" option decides: on, the
+            // pause menu opens (GameSystemManager); off, the run plays on. With the project's runInBackground 0 the engine
+            // stopped the whole game on every alt-tab, whatever the option said (focus A/B, 2026-10-17).
+            Application.runInBackground = true;
             GameSettings.Changed -= Apply;
             GameSettings.Changed += Apply;
             Apply();

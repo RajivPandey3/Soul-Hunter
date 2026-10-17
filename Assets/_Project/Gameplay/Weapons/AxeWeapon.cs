@@ -185,7 +185,7 @@ namespace SoulHunter.Gameplay.Weapons
         private void Count(Collider other)
         {
             if (_usedUp || other == null || _damage == null || !other.CompareTag(_damage.TargetTag)) return;
-            var damageable = other.GetComponentInParent<IDamageable>();
+            var damageable = DamageableLookup.Of(other);
             if (damageable == null) return;
             if (!_hit.Add(damageable is Component body ? body.GetInstanceID() : other.GetInstanceID())) return;
             if (_hit.Count >= _pierce) { _usedUp = true; return; }

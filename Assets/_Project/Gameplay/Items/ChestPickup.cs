@@ -65,7 +65,7 @@ namespace SoulHunter.Gameplay.Pickups
                 if (_isCollected || !isActiveAndEnabled || Time.timeScale <= 0f) return;
                 _isCollected = true;
 
-                SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position);
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.Vfx")) SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.ChestOpen, transform.position);
 
                 // VS (wiki Treasure_Chest, Patch 0.2.4): "a brief moment of invulnerability after picking up a treasure"; 240 ms
                 // (owner, 2026-10-01). Game time stands still while the chest screen is open, so it covers the resume.
@@ -75,6 +75,7 @@ namespace SoulHunter.Gameplay.Pickups
                 // Chest UI aur Backend Logic Trigger karo
                 string rewardMessage = "";
                 if (_logicController != null)
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.Process"))
                 {
                     // VS Arcana mode: an Arcana chest gives an Arcana instead of items.
                     rewardMessage = IsArcana
@@ -110,8 +111,10 @@ namespace SoulHunter.Gameplay.Pickups
                             // Killer (0)"): after the pick, the chest's two extra items open on the usual chest screen.
                             int extra = SoulHunter.Gameplay.Core.ArcanaManager.ArcanaChestExtraItems;
                             if (extra <= 0 || logic == null || ui == null) return;
-                            string message = logic.ProcessChest(Object.FindFirstObjectByType<SoulHunter.Gameplay.Combat.WeaponManager>(),
-                                Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>(), extra, tiers.AsRegular(false), Random.value);
+                            var weaponManager = SoulHunter.Gameplay.Combat.WeaponManager.Instance != null ? SoulHunter.Gameplay.Combat.WeaponManager.Instance : Object.FindFirstObjectByType<SoulHunter.Gameplay.Combat.WeaponManager>();
+                            var levelUpManager = SoulHunter.Gameplay.Core.LevelUpManager.Instance != null ? SoulHunter.Gameplay.Core.LevelUpManager.Instance : Object.FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>();
+                            string message = logic.ProcessChest(weaponManager,
+                                levelUpManager, extra, tiers.AsRegular(false), Random.value);
                             if (logic.LastResult != null) logic.LastResult.Kind = ChestKind.Arcana;
                             ui.OpenChest(message, logic.LastResult, countAsChest: false);
                         });
@@ -119,7 +122,7 @@ namespace SoulHunter.Gameplay.Pickups
                     else _chestUI.OpenChest(rewardMessage, result);
                 }
 
-                gameObject.SetActive(false);
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Chest.Deactivate")) gameObject.SetActive(false);
             }
         }
 

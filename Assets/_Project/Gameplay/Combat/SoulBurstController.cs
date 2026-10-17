@@ -103,7 +103,7 @@ namespace SoulHunter.Gameplay.Combat
             {
                 if (_hitsBuffer[i] == null) continue;
 
-                var damageable = _hitsBuffer[i].GetComponentInParent<IDamageable>();
+                var damageable = DamageableLookup.Of(_hitsBuffer[i]);
                 if (damageable != null)
                 {
                     using (DamageSource.From(null, "Soul Burst")) // VS Results lists every damage source

@@ -86,6 +86,12 @@ namespace SoulHunter.Gameplay.Combat
         public bool IsShielded => Time.time < ShieldedUntil;
         private bool _keepAliveAfterDeath;
 
+        // The enemy this health belongs to (null for the player), found once: every hit used to search the parents for it
+        // (2026-10-17, part of the 12-18 ms crowd-hit frames). Looked up again while none is found, so a controller added
+        // later is still seen.
+        private SoulHunter.Gameplay.AI.EnemyController _enemy;
+        private SoulHunter.Gameplay.AI.EnemyController Enemy => _enemy != null ? _enemy : (_enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>());
+
         private void Awake()
         {
             ResetHealth();
@@ -138,7 +144,7 @@ namespace SoulHunter.Gameplay.Combat
             if (packet.Amount <= 0 || (DamageInterceptor != null && DamageInterceptor(packet))) return;
 
             int incomingDamage = packet.Amount;
-            var enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
+            var enemy = Enemy;
             if (enemy != null)
             {
                 // Learning Comment:
@@ -164,7 +170,8 @@ namespace SoulHunter.Gameplay.Combat
             if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, incomingDamage);
             // The player's Arcanas that act on a weapon's hit (Heart of Fire's impact explosion, Jail of Crystal's freeze).
-            if (enemy != null && DamageSource.Weapon != null) WeaponHitObserver?.Invoke(DamageSource.Weapon, enemy, packet.HitPoint);
+            if (enemy != null && DamageSource.Weapon != null && WeaponHitObserver != null)
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.WeaponHitObserver")) WeaponHitObserver(DamageSource.Weapon, enemy, packet.HitPoint);
             if (PostHitInvulnerability > 0f && !packet.IgnoresHitInvulnerability)
                 _hitInvulnerableUntil = Time.time + PostHitInvulnerability;
             
@@ -174,12 +181,12 @@ namespace SoulHunter.Gameplay.Combat
             {
                 // Thoda sa upar dikhate hain taaki enemy ke sir par aaye
                 Vector3 popupPos = transform.position + Vector3.up * 1.5f; 
-                SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(incomingDamage, popupPos);
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.DamageNumber")) SoulHunter.Gameplay.UI.DamagePopupManager.Instance.ShowDamage(incomingDamage, popupPos);
             }
 
             _currentHealth = Mathf.Max(0, _currentHealth);
 
-            OnDamaged?.Invoke();
+            if (OnDamaged != null) using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDamaged")) OnDamaged();
 
             // VS knockback: an enemy's movement is reversed for 120 ms (EnemyController). The player is never knocked
             // back in VS; it used to slide 2 units whenever an enemy touched it.
@@ -191,7 +198,7 @@ namespace SoulHunter.Gameplay.Combat
             if (_currentHealth == 0)
             {
                 if (enemy != null && RetaliationDepth > 0) RetaliationKillObserver?.Invoke(enemy);
-                Die();
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Die")) Die();
             }
         }
 
@@ -245,7 +252,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (_currentHealth <= 0) return;
             int damage = Mathf.Max(1, _maxHealth);
-            var enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
+            var enemy = Enemy;
             if (enemy != null && DamageSource.Any && SoulHunter.Gameplay.Core.RunStatsTracker.Instance != null)
                 SoulHunter.Gameplay.Core.RunStatsTracker.Instance.RecordHit(DamageSource.Weapon, DamageSource.Name, damage);
             // A screen wipe erases hundreds in one frame: only the first numbers of a frame are shown (they would cover
@@ -366,7 +373,7 @@ namespace SoulHunter.Gameplay.Combat
 
         private void DieWithoutPrevention()
         {
-            OnDied?.Invoke();
+            if (OnDied != null) using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDied")) OnDied();
             // Learning Comment:
             // Generic cloned enemies (horde) ke marne par Debug.Log karne se Unity console freeze ho jata tha.
             // Ab sirf unique entities (jaise Player ya Boss) ka death log hoga.
@@ -377,7 +384,7 @@ namespace SoulHunter.Gameplay.Combat
             
             // Basic death logic (Disable object); an OnDied listener that revived keeps it alive.
             if (_keepAliveAfterDeath) _keepAliveAfterDeath = false;
-            else gameObject.SetActive(false);
+            else using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Deactivate")) gameObject.SetActive(false);
         }
     }
 }

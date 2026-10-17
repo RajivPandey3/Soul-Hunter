@@ -121,6 +121,19 @@ namespace SoulHunter.Tests.PlayMode
             system.Resume();
             yield return null;
 
+            // With the option off the run plays on: the player keeps running in the background, so the engine does not stop it.
+            Assert.That(Application.runInBackground, Is.True, "The game keeps running when its window loses focus.");
+            var settings = SoulHunter.Core.Persistence.GameSettings.Data;
+            Assert.IsNotNull(settings, "The run has a save.");
+            settings.PauseOnFocusLoss = false;
+            try
+            {
+                system.SendMessage("OnApplicationFocus", false);
+                yield return null;
+                Assert.That(system.IsPaused || GameTime.IsPaused, Is.False, "With Pause When Unfocused off, alt-tab does not pause.");
+            }
+            finally { settings.PauseOnFocusLoss = true; }
+
             // The merchant shop is a focused uGUI screen now, not mouse-only IMGUI.
             var merchant = new GameObject("TestMerchant", typeof(SphereCollider)).AddComponent<WanderingMerchant>();
             merchant.OpenShop();

@@ -205,6 +205,7 @@ namespace SoulHunter.Gameplay.Core
             _unsubscribe.Clear();
             // A player build stores its quality level between launches; a measuring run must not leave its own behind.
             if (_qualityBefore >= 0) QualitySettings.SetQualityLevel(_qualityBefore, true);
+            RestoreRenderScale();
             _drawCalls.Dispose();
             _setPass.Dispose();
             _batchesCount.Dispose();
@@ -1184,6 +1185,15 @@ namespace SoulHunter.Gameplay.Core
                     gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2, System.GC.GetTotalMemory(false) / 1048576f,
                     FindObjectsByType<Transform>(FindObjectsSortMode.None).Length) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"");
             }
+            else if (dt > 0.025f && Time.frameCount > _shotFrame + 3 && Elapsed > 3f && _joltEvents < 400)
+            {
+                // A jolt (a frame over 25 ms, which a 60 FPS player sees): what was slow in it, for the 60 FPS work (2026-10-17).
+                _joltEvents++;
+                Event("jolt", string.Format(CultureInfo.InvariantCulture,
+                    "\"ms\": {0:0.0}, \"paused\": {1}, \"enemies\": {2}, \"gc\": [{3}, {4}, {5}]",
+                    dt * 1000f, GameTime.IsPaused ? "true" : "false", EnemyController.ActiveEnemies.Count,
+                    gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"");
+            }
             else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
             _lastGc0 = gc0; _lastGc1 = gc1; _lastGc2 = gc2;
             if (!GameTime.IsPaused) { _pausedSince = -1f; _pauseReported = false; return; }
@@ -1269,8 +1279,20 @@ namespace SoulHunter.Gameplay.Core
                     UnityEngine.Profiling.Profiler.enableBinaryLog = true;
                     UnityEngine.Profiling.Profiler.enabled = true;
                     _profileUntil = Time.realtimeSinceStartup + seconds;
+                    _profileNextPart = Time.realtimeSinceStartup + ProfilePartSeconds;
+                    _profilePart = 1;
                     _profileState = 1;
                     Event("profile", "\"state\": \"start\", \"enemies\": " + EnemyController.ActiveEnemies.Count);
+                }
+                else if (_profileState == 1 && Time.realtimeSinceStartup < _profileUntil && Time.realtimeSinceStartup >= _profileNextPart)
+                {
+                    // A new file every few seconds: the editor keeps only the last 300 frames of a loaded capture, so a long
+                    // capture lost all but its last ~4 s (2026-10-17). Parts: l3.raw, l3-part2.raw, l3-part3.raw ...
+                    _profilePart++;
+                    _profileNextPart = Time.realtimeSinceStartup + ProfilePartSeconds;
+                    UnityEngine.Profiling.Profiler.enableBinaryLog = false;
+                    UnityEngine.Profiling.Profiler.logFile = System.IO.Path.ChangeExtension(profileFile, null) + "-part" + _profilePart + System.IO.Path.GetExtension(profileFile);
+                    UnityEngine.Profiling.Profiler.enableBinaryLog = true;
                 }
                 else if (_profileState == 1 && Time.realtimeSinceStartup >= _profileUntil)
                 {
@@ -1280,6 +1302,11 @@ namespace SoulHunter.Gameplay.Core
                     _profileState = 2;
                 }
             }
+            // -sh-autoplay-1080p: the contract baseline is 1920x1080; on a smaller display the 3D view renders at the URP render
+            // scale that gives 1080p's pixel count (PerformanceBenchmark's rule). Put back when the bot goes.
+            if (_renderScaleBefore < 0f && HasArg("-sh-autoplay-1080p")) Apply1080pRenderScale();
+            // -sh-autoplay-span-ms N: record timed sections from N ms (default 5), to break a jolt down further.
+            if (!_spanMsSet) { _spanMsSet = true; if (double.TryParse(ArgValue("-sh-autoplay-span-ms"), NumberStyles.Float, CultureInfo.InvariantCulture, out double spanMs)) SoulHunter.Core.Services.SlowSpan.RecordMs = spanMs; }
             string qualityAb = ArgValue("-sh-autoplay-quality-ab");
             if (qualityAb != null && Elapsed >= _nextQualitySwitch)
             {
@@ -1342,7 +1369,20 @@ namespace SoulHunter.Gameplay.Core
                 var bits = part.Split(':');
                 if (weapons == null || !System.Enum.TryParse<UpgradeData.UpgradeType>(bits[0].Trim(), true, out var type)) continue;
                 int level = bits.Length > 1 && int.TryParse(bits[1], out var l) ? l : 1;
-                weapons.GiveWeapon(type, level);
+                // A passive goes up one level at a time through ApplyUpgrade, as a level-up does, so its stat applies.
+                // GiveWeapon only sets the level: until 2026-10-17 every given passive (Duplicator, Spinach, Skull
+                // O'Maniac, Cursed Coffer ...) changed no stat in measurement runs.
+                var definition = SoulHunter.Gameplay.Data.WeaponDefinitionLookup.Find(type);
+                if (definition != null && definition.IsPassive)
+                {
+                    for (int next = weapons.GetWeaponLevel(type) + 1; next <= level; next++)
+                    {
+                        var upgrade = definition.GetLevel(next);
+                        if (upgrade == null) break;
+                        weapons.ApplyUpgrade(upgrade);
+                    }
+                }
+                else weapons.GiveWeapon(type, level);
                 Event("give", $"\"item\": \"{type}\", \"level\": {weapons.GetWeaponLevel(type)}");
             }
         }
@@ -1433,7 +1473,9 @@ namespace SoulHunter.Gameplay.Core
             return Mathf.RoundToInt(1f / Mathf.Max(avg, 0.0001f));
         }
 
-        private int _profileState, _profileFrames, _profileSlowSeconds;
+        private int _profileState, _profileFrames, _profileSlowSeconds, _profilePart;
+        private float _profileNextPart;
+        private const float ProfilePartSeconds = 4f;
         private float _profileSecondStart;
         private float _profileUntil;
         private bool _qualitySet;
@@ -1456,6 +1498,34 @@ namespace SoulHunter.Gameplay.Core
         }
         private float _nextVatSwitch;
         private float _nextVSyncSwitch;
+        private float _renderScaleBefore = -1f;
+        private int _joltEvents;
+        private bool _spanMsSet;
+
+        private static System.Reflection.PropertyInfo RenderScaleProperty(out Object pipeline)
+        {
+            pipeline = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
+            return pipeline != null ? pipeline.GetType().GetProperty("renderScale") : null;
+        }
+
+        private void Apply1080pRenderScale()
+        {
+            var property = RenderScaleProperty(out var pipeline);
+            if (property == null) { _renderScaleBefore = 0f; return; }
+            _renderScaleBefore = (float)property.GetValue(pipeline);
+            float scale = PerformanceBenchmark.BaselineRenderScale();
+            property.SetValue(pipeline, scale);
+            Event("render-1080p", string.Format(CultureInfo.InvariantCulture, "\"window\": \"{0}x{1}\", \"renderScale\": {2:0.000}, \"rendered\": \"{3}x{4}\"",
+                Screen.width, Screen.height, scale, Mathf.RoundToInt(Screen.width * scale), Mathf.RoundToInt(Screen.height * scale)));
+        }
+
+        private void RestoreRenderScale()
+        {
+            if (_renderScaleBefore <= 0f) return;
+            var property = RenderScaleProperty(out var pipeline);
+            if (property != null) property.SetValue(pipeline, _renderScaleBefore);
+            _renderScaleBefore = 0f;
+        }
 
         private void WriteTimeline()
         {
@@ -1478,7 +1548,7 @@ namespace SoulHunter.Gameplay.Core
                 HordeVatDrawer.Exists && HordeVatDrawer.Enabled ? "true" : "false", HordeVatDrawer.LastBodies,
                 RenderCounter(ref _drawCalls, "Draw Calls Count"), RenderCounter(ref _setPass, "SetPass Calls Count"), RenderCounter(ref _batchesCount, "Batches Count"),
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Exists && SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Enabled ? "true" : "false",
-                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount,
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount,
                 ReportWriter.TakeSlowestWriteMs()));
             // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
             if (HasArg("-sh-autoplay-count-fx"))

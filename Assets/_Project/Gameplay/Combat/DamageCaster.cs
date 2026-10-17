@@ -46,7 +46,7 @@ namespace SoulHunter.Gameplay.Combat
             for (int i = 0; i < hits; i++)
             {
                 // Collider root ya parent par IDamageable dhoondhein
-                var target = _hitColliders[i].GetComponentInParent<IDamageable>();
+                var target = DamageableLookup.Of(_hitColliders[i]);
                 if (target != null)
                 {
                     Vector3 knockback = (_hitColliders[i].transform.position - transform.position).normalized;

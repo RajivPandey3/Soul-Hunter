@@ -545,7 +545,7 @@ namespace SoulHunter.Gameplay.Combat
                 int levelBefore = upgraded != null ? upgraded.CurrentLevel : 0;
                 ApplyWeaponLevel(spawned, currentLevel);
                 // VS (wiki Weapons): upgrading resets the weapon's Cooldown and fires it at once.
-                if (upgraded != null && upgraded.CurrentLevel > levelBefore) upgraded.ResetCooldownAndFire();
+                if (upgraded != null && upgraded.CurrentLevel > levelBefore) using (SoulHunter.Core.Services.SlowSpan.Measure("Weapon.FireOnUpgrade")) upgraded.ResetCooldownAndFire();
             }
         }
 

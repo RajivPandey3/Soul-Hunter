@@ -209,10 +209,11 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (!isActiveAndEnabled) return;
             // Apni goli se khud ko damage na ho: the player's shots skip the player; a boss's mirrored shots hit only the player.
-            bool isPlayer = other.CompareTag("Player") || other.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerController>() != null;
+            bool isPlayer = other.CompareTag("Player") ||
+                (!other.CompareTag("Enemy") && other.GetComponentInParent<SoulHunter.Gameplay.Player.PlayerController>() != null); // an enemy body is never the player: no parent search per hit
             if (isPlayer != TargetsPlayer) return;
 
-            var target = other.GetComponentInParent<IDamageable>();
+            var target = DamageableLookup.Of(other);
             if (target != null)
             {
                 if (_recentHits.TryGetValue(target, out float lastHit) && Time.time - lastHit < 0.1f) return;

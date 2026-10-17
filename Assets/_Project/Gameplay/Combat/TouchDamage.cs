@@ -60,7 +60,7 @@ namespace SoulHunter.Gameplay.Combat
             if (other == null || !other.CompareTag(TargetTag)) return;
             // Unity sends trigger messages to a switched-off component too; it deals no damage and keeps no contact.
             if (!enabled) return;
-            var damageable = other.GetComponentInParent<IDamageable>();
+            var damageable = DamageableLookup.Of(other);
             if (damageable == null) return;
             
             if (!_targets.ContainsKey(damageable))
@@ -83,7 +83,7 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (other != null && other.CompareTag(TargetTag))
             {
-                var damageable = other.GetComponentInParent<IDamageable>();
+                var damageable = DamageableLookup.Of(other);
                 if (damageable != null && _targets.ContainsKey(damageable))
                 {
                     _targets.Remove(damageable);

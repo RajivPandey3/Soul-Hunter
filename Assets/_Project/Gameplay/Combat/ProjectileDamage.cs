@@ -28,7 +28,7 @@ namespace SoulHunter.Gameplay.Combat
             if (!isActiveAndEnabled || (projectile != null && projectile.enabled)) return;
             if (collision.gameObject.CompareTag(TargetTag))
             {
-                var damageable = collision.gameObject.GetComponentInParent<IDamageable>();
+                var damageable = DamageableLookup.Of(collision.collider);
                 if (damageable != null && (HitGate == null || HitGate(damageable as Component)))
                 {
                     Vector3 knockback = (collision.transform.position - transform.position).normalized;
@@ -47,7 +47,7 @@ namespace SoulHunter.Gameplay.Combat
             var projectile = GetComponent<Projectile>();
             if (other == null || !isActiveAndEnabled || (projectile != null && projectile.enabled)) return false;
             if (!other.CompareTag(TargetTag)) return false;
-            var damageable = other.GetComponentInParent<IDamageable>();
+            var damageable = DamageableLookup.Of(other);
             if (damageable == null) return false;
             if (HitGate != null && !HitGate(damageable as Component)) return false;
             Vector3 knockback = (other.transform.position - transform.position).normalized;
