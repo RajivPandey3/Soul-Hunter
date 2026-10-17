@@ -39,7 +39,20 @@ namespace SoulHunter.Gameplay.Combat
             }
         }
 
-        private void OnTriggerEnter(Collider other) => TryHit(other);
+        /// <summary>
+        /// Measuring only (AutoplayBot -sh-autoplay-count-triggers): trigger enters counted by this object, the other collider's
+        /// layer and whether it dealt damage. A Level 3 frame had about 1,000 enters and only 20 hits (2026-10-17). Null = off.
+        /// </summary>
+        public static System.Collections.Generic.Dictionary<string, int> EnterStats;
+
+        private void OnTriggerEnter(Collider other)
+        {
+            bool hit = TryHit(other);
+            if (EnterStats == null || other == null) return;
+            string key = name + " > " + LayerMask.LayerToName(other.gameObject.layer) + (hit ? " hit" : " miss");
+            EnterStats.TryGetValue(key, out int count);
+            EnterStats[key] = count + 1;
+        }
 
         /// <summary>Hits <paramref name="other"/> if it is a target (and the hit gate allows it). True when damage was dealt.</summary>
         public bool TryHit(Collider other)

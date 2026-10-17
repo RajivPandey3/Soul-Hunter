@@ -94,7 +94,8 @@ namespace SoulHunter.Editor.Debugging
                             {
                                 float total = view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnTotalTime);
                                 t.Total += total;
-                                if (frameTotals != null) frameTotals[name] = total;
+                                if (frameTotals != null)
+                                    frameTotals[name + " [x" + view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnCalls).ToString("0") + "]"] = total;
                             }
                             t.Calls += view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnCalls);
                             stack.Push(child);
@@ -263,7 +264,8 @@ namespace SoulHunter.Editor.Debugging
                 view.GetItemChildren(id, children);
                 foreach (int child in children)
                 {
-                    string name = view.GetItemName(child);
+                    // The call count shows how a frame was slow: one long call, or many short ones (2026-10-17, crowd hits).
+                    string name = view.GetItemName(child) + " [x" + view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnCalls).ToString("0") + "]";
                     if (!totals.ContainsKey(name)) totals[name] = view.GetItemColumnDataAsFloat(child, HierarchyFrameDataView.columnTotalTime);
                     stack.Push(child);
                 }

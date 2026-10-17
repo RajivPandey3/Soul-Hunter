@@ -2209,6 +2209,24 @@ Result at 1080p, fixed loadout (`run-20261017-fix1`). Levels 1, 2, 3 and heavy k
 
 Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elites, weapon and evolved sweeps, Shadow Kael, spectral stage, Pentagram, accessibility, player loadout, level-up rules), 0 exceptions, save untouched (`run-20261017-fix1/tests`).
 
+**Fix 2, weapon zones on their own layer.**
+- How it was found:
+  - A split profile showed `ProjectileDamage.OnTriggerEnter` called 904-1,165 times in one physics step, with 14-22 damage numbers.
+  - A trigger counter (`ProjectileDamage.EnterStats`, `AutoplayBot -sh-autoplay-count-triggers`; jolt events list the top entries) gave the source: Lightning Ring strikes and Dusk Raven blasts, on Default, made 700-1,340 enters on Default objects (gems and pickups) per jolt, all doing nothing.
+  - `ProfileSummary` now prints each marker's call count in the slowest frames (`[xN]`).
+- The fix:
+  - The unused `DamageZone` layer (11) now meets only Player and Enemy (`DynamicsManager.asset`).
+  - `AutoAttackWeapon.AimAtHostiles` puts every spawned zone (ProjectileDamage or TouchDamage without a flying Projectile or a physics Rigidbody) on it.
+  - Enemies, Soul Lanterns and rail carts are on the Enemy layer, so weapons still reach them. Shadow Kael's mirrored zones still reach the player.
+- Test: `StageFloorTests.WeaponZones_MeetOnlyThePlayerAndEnemies` (T).
+- Note: `results-run.ps1` and the measuring scripts copy only Assets, so a ProjectSettings change must be copied to the isolated copy by hand.
+- Jolts over 25 ms after 30 s (`run-20261017-fix2`):
+  - Level 1, Level 2 and heavy kill: 0.
+  - Level 3 with the Curse passives: 6 before, 1 after.
+  - Level 3: 2, in a run whose level-ups took the Curse items (300 enemies, 11,512 kills).
+  - The jolts left are real damage: Lightning Ring dealt 400-691 hits to enemies in one physics step.
+- Validation: EditMode 990/990, PlayMode fixtures 134/134 (weapon and evolved sweeps, Shadow Kael, both Duplicator fixtures, light sources, stage hazards, spectral stage, new evolution rules, Pentagram, player loadout, character sweep), 0 exceptions, save untouched (`run-20261017-fix2/tests2`). A first PlayMode run stopped while loading, before any test ran, with no error logged.
+
 ### Focus loss stopped the game (owner: "1", 2026-10-17)
 
 The stall that the WPR hang hunt caught (`run-20261017-wprhang`, run 1) was the Unity player stopping because its window lost focus:

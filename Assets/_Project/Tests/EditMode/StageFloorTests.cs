@@ -58,6 +58,22 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void WeaponZones_MeetOnlyThePlayerAndEnemies()
+        {
+            // 60 FPS at 1080p (2026-10-17): Lightning Ring strikes and Dusk Raven blasts on Default made about 1,000 trigger
+            // calls in one physics step, 90% of them on gems and other Default objects that take no damage.
+            int zone = LayerMask.NameToLayer("DamageZone");
+            Assert.That(zone, Is.GreaterThanOrEqualTo(0), "The DamageZone layer exists.");
+            for (int layer = 0; layer < 32; layer++)
+            {
+                string name = LayerMask.LayerToName(layer);
+                bool meets = !Physics.GetIgnoreLayerCollision(zone, layer);
+                bool should = name == "Player" || name == "Enemy";
+                Assert.That(meets, Is.EqualTo(should), $"DamageZone {(should ? "meets" : "ignores")} layer {layer} ({name}).");
+            }
+        }
+
+        [Test]
         public void EveryStage_HasObstacles_ThatBlockOnlyThePlayer_AndKeepSpawnAndPathsOpen()
         {
             // Learning Comment: VS jaisi rukawatein (ped, kabr, khambe) sirf player ko rokein; beech aur raaste khule rahein.

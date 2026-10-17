@@ -102,11 +102,31 @@ namespace SoulHunter.Gameplay.Combat
             foreach (var touch in TouchDamageBuffer) touch.SourceWeapon = this;
             spawned.GetComponentsInChildren(true, DamageCasterBuffer);
             foreach (var caster in DamageCasterBuffer) caster.SourceWeapon = this;
+            // A zone (a strike, blast or pool that does not fly) goes on the DamageZone layer, which meets only Player and
+            // Enemy. On Default it met every gem and pickup too: a Level 3 crowd made about 1,000 trigger calls in one
+            // physics step, 90% of them on Default objects that take no damage (2026-10-17, 25-33 ms frames).
+            if (ProjectileBuffer.Count == 0 && DamageZoneLayer >= 0)
+            {
+                foreach (var damage in ProjectileDamageBuffer) MoveToZoneLayer(damage.gameObject);
+                foreach (var touch in TouchDamageBuffer) MoveToZoneLayer(touch.gameObject);
+            }
             // VS Twilight Requiem (II): a listed weapon's shot explodes when it expires (ArcanaManager.ArmShot).
             SoulHunter.Gameplay.Core.ArcanaManager.ArmShot(this, spawned);
         }
 
         private static readonly System.Collections.Generic.List<DamageCaster> DamageCasterBuffer = new();
+
+        private static int _damageZoneLayer = int.MinValue;
+        /// <summary>The DamageZone layer (-1 when the project has none).</summary>
+        public static int DamageZoneLayer => _damageZoneLayer != int.MinValue ? _damageZoneLayer : (_damageZoneLayer = LayerMask.NameToLayer("DamageZone"));
+
+        /// <summary>Puts a weapon zone on the DamageZone layer; a body that physics moves (a thrown Axe or Bone) keeps its own.</summary>
+        private static void MoveToZoneLayer(GameObject zone)
+        {
+            var body = zone.GetComponent<Rigidbody>();
+            if (body != null && !body.isKinematic) return;
+            zone.layer = DamageZoneLayer;
+        }
 
         /// <summary>
         /// VS knockback of this weapon's hits (each weapon's wiki infobox, fetched 2026-10-01): 1 for most; weapons with

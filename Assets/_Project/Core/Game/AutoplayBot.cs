@@ -1192,9 +1192,16 @@ namespace SoulHunter.Gameplay.Core
                 Event("jolt", string.Format(CultureInfo.InvariantCulture,
                     "\"ms\": {0:0.0}, \"paused\": {1}, \"enemies\": {2}, \"gc\": [{3}, {4}, {5}]",
                     dt * 1000f, GameTime.IsPaused ? "true" : "false", EnemyController.ActiveEnemies.Count,
-                    gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"");
+                    gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"" +
+                    $", \"triggers\": \"{Escape(_lastFrameTriggers)}\"");
             }
             else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
+            // -sh-autoplay-count-triggers: ProjectileDamage trigger enters, counted per frame (a jolt lists the top ones).
+            if (HasArg("-sh-autoplay-count-triggers"))
+            {
+                if (ProjectileDamage.EnterStats == null) ProjectileDamage.EnterStats = new Dictionary<string, int>();
+                else if (_triggerFrame != Time.frameCount) { _triggerFrame = Time.frameCount; _lastFrameTriggers = TopTriggerEnters(); ProjectileDamage.EnterStats.Clear(); }
+            }
             _lastGc0 = gc0; _lastGc1 = gc1; _lastGc2 = gc2;
             if (!GameTime.IsPaused) { _pausedSince = -1f; _pauseReported = false; return; }
             if (_pausedSince < 0f) _pausedSince = now;
@@ -1499,7 +1506,16 @@ namespace SoulHunter.Gameplay.Core
         private float _nextVatSwitch;
         private float _nextVSyncSwitch;
         private float _renderScaleBefore = -1f;
-        private int _joltEvents;
+        private int _joltEvents, _triggerFrame = -1;
+        private string _lastFrameTriggers = ""; // a jolt is the previous frame: its trigger enters, kept before the clear
+
+        /// <summary>The most frequent ProjectileDamage trigger enters since the last clear, "name > layer hit/miss xN".</summary>
+        private static string TopTriggerEnters()
+        {
+            var stats = ProjectileDamage.EnterStats;
+            if (stats == null || stats.Count == 0) return "";
+            return string.Join("; ", stats.OrderByDescending(kv => kv.Value).Take(6).Select(kv => kv.Key + " x" + kv.Value));
+        }
         private bool _spanMsSet;
 
         private static System.Reflection.PropertyInfo RenderScaleProperty(out Object pipeline)
