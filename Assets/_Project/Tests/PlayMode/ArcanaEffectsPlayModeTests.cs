@@ -326,6 +326,81 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// CORE-02 (2026-10-19). VS wiki Gemini_(I) (raw): counterparts "cannot be evolved or united, and remain as
+        /// independent weapons if their counterparts unite"; "If the Arcana is picked up with Phieraggi ... the
+        /// counterparts of their constituents are given at max level; with Vandalier, both are given at the level of it and
+        /// level up with Vandalier." So counterparts made before a union keep going; Gemini taken while holding Twilight
+        /// Flock or Revenant Wheel used to give nothing.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Gemini_CounterpartsStayAfterAUnion_AndGeminiWithAUnionGivesItsConstituentsCounterparts()
+        {
+            UpgradeData Level(UpgradeType type, int level) =>
+                SoulHunter.Gameplay.Data.GameContentCatalog.Load().Upgrades.First(u => u != null && u.Type == type && u.Level == level);
+            AutoAttackWeapon[] Twins() => PlayerController.Instance.GetComponentsInChildren<GeminiCounterpart>(true)
+                .Select(c => c.Weapon).ToArray();
+
+            // Gemini first, then the union: the birds' counterparts stay, on their own.
+            yield return QuietField();
+            var weapons = WeaponManager.Instance;
+            Grant(ArcanaData.ArcanaType.Gemini);
+            weapons.GiveWeapon(UpgradeType.Peachone, 8);
+            weapons.GiveWeapon(UpgradeType.DuskRaven, 8);
+            yield return null;
+            Assert.That(Twins().Length, Is.EqualTo(2), "Peachone and Dusk Raven come with counterparts. " + Errors());
+            Assert.That(weapons.TryEvolveWeapon(out string united), Is.True);
+            Assert.That(united, Is.EqualTo("Union_TwilightFlock"));
+            yield return null;
+            Assert.That(Twins().Length, Is.EqualTo(2), "No counterpart of the union itself.");
+            Assert.That(Twins().All(t => t.isActiveAndEnabled && t.CurrentLevel == 8), Is.True, "They remain as independent weapons.");
+
+            // The unions first, then Gemini: each constituent gets a counterpart.
+            yield return QuietField();
+            weapons = WeaponManager.Instance;
+            weapons.GiveWeapon(UpgradeType.Peachone, 8);
+            weapons.GiveWeapon(UpgradeType.DuskRaven, 8);
+            yield return null;
+            Assert.That(weapons.TryEvolveWeapon(out _), Is.True, "Twilight Flock.");
+            weapons.ApplyUpgrade(Level(UpgradeType.TwilightFlock, 2));
+            weapons.GiveWeapon(UpgradeType.Gun, 8);
+            weapons.GiveWeapon(UpgradeType.AzureRepeater, 8);
+            weapons.ApplyUpgrade(Level(UpgradeType.Tiragisu, 1));
+            yield return null;
+            Assert.That(weapons.TryEvolveWeapon(out string wheelName), Is.True);
+            Assert.That(wheelName, Is.EqualTo("Union_RevenantWheel"));
+            yield return null;
+            var flock = PlayerController.Instance.GetComponentInChildren<TwilightFlockWeapon>();
+            var wheel = PlayerController.Instance.GetComponentInChildren<RevenantWheelWeapon>();
+            Assert.That(flock != null && wheel != null, Is.True);
+            Assert.That(Twins(), Is.Empty);
+
+            Grant(ArcanaData.ArcanaType.Gemini);
+            yield return null;
+            var twins = Twins();
+            var birds = twins.OfType<PeachoneWeapon>().ToArray();
+            Assert.That(birds.Length, Is.EqualTo(2), "Vandalier: both birds get a counterpart. " + Errors());
+            Assert.That(birds.Count(b => b is DuskRavenWeapon), Is.EqualTo(1));
+            Assert.That(birds.All(b => b.CurrentLevel == 2 && b.GetComponent<GeminiCounterpart>().Original == flock), Is.True,
+                "Given at the union's level, following it.");
+            Assert.That(birds.All(b => b.LimitBreakSource == flock), Is.True, "Vandalier passes its Limit Break bonuses on.");
+            var guns = twins.OfType<GunWeapon>().ToArray();
+            Assert.That(guns.Length, Is.EqualTo(2), "Phieraggi: both guns get a counterpart.");
+            Assert.That(guns.Count(g => g is AzureRepeaterWeapon), Is.EqualTo(1));
+            Assert.That(guns.All(g => g.CurrentLevel == g.MaxLevel && g.isActiveAndEnabled), Is.True, "Given at max level.");
+            Assert.That(weapons.GetEquippedWeapons().Any(p => twins.Contains(p.Value)), Is.False, "No slot, not mirrored.");
+
+            weapons.ApplyUpgrade(Level(UpgradeType.TwilightFlock, 3));
+            yield return null;
+            yield return null;
+            Assert.That(birds.All(b => b.CurrentLevel == 3), Is.True, "They level up with Vandalier.");
+            weapons.ApplyUpgrade(Level(UpgradeType.TwilightFlock, 4));
+            ArcanaManager.Instance.RefreshGemini();
+            yield return null;
+            Assert.That(Twins().Length, Is.EqualTo(4), "One counterpart per kind.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         [UnityTest]
         public IEnumerator Gemini_HellfireBreath_BreathesASecondStreamFromTheBack()
         {
