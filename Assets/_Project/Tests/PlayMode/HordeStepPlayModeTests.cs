@@ -123,5 +123,58 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(health.CurrentHealth, Is.LessThan(afterOff), "A reused body touches and hurts again.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// CMB-03 (2026-10-19): a long-lived weapon zone (King Bible book, Santa Water pool) got no OnTriggerExit when an
+        /// enemy inside it was killed (switched off), kept it listed and hit the pooled body again wherever it respawned.
+        /// The zone now drops a body whose HealthController.Life changed, and a reused body that walks back in is hit.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AWeaponZone_DropsAKilledEnemy_AndDoesNotHitItsPooledBodyElsewhere()
+        {
+            yield return QuietArena();
+            var player = PlayerController.Instance;
+            Vector3 zoneAt = player.transform.position + Vector3.right * 12f;
+            var zone = new GameObject("TestWeaponZone");
+            zone.transform.position = zoneAt;
+            var trigger = zone.AddComponent<SphereCollider>();
+            trigger.isTrigger = true;
+            trigger.radius = 1.5f;
+            var touch = zone.AddComponent<TouchDamage>();
+            touch.TargetTag = "Enemy";
+            touch.DamageAmount = 1f;
+            touch.DamageInterval = 0.3f;
+
+            var enemy = Walker(12f, 0);
+            enemy.Target = null;
+            enemy.GetComponent<TouchDamage>().enabled = false;
+            var body = enemy.GetComponent<Rigidbody>();
+            if (body != null) body.isKinematic = true;
+            enemy.transform.position = zoneAt;
+            Physics.SyncTransforms();
+            var health = enemy.GetComponent<HealthController>();
+            health.Initialize(1000);
+            yield return Seconds(0.6f);
+            Assert.That(health.CurrentHealth, Is.LessThan(1000), "Precondition: the zone hits the enemy inside it.");
+
+            // Killed: switched off as the pool does, then reused far from the zone.
+            enemy.gameObject.SetActive(false);
+            yield return Seconds(0.1f);
+            enemy.transform.position = zoneAt + Vector3.forward * 30f;
+            Physics.SyncTransforms();
+            enemy.gameObject.SetActive(true);
+            enemy.Target = null;
+            enemy.GetComponent<TouchDamage>().enabled = false;
+            health.Initialize(1000);
+            yield return Seconds(1f);
+            Assert.That(health.CurrentHealth, Is.EqualTo(1000), "The pooled body 30 units away is not hit by the old contact.");
+
+            enemy.transform.position = zoneAt;
+            Physics.SyncTransforms();
+            yield return Seconds(0.6f);
+            Assert.That(health.CurrentHealth, Is.LessThan(1000), "Back inside the zone, the reused body is hit again.");
+            Object.Destroy(zone);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

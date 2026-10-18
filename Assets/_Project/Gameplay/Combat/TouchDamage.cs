@@ -36,6 +36,9 @@ namespace SoulHunter.Gameplay.Combat
         {
             public Transform TargetTransform;
             public float Timer;
+            // CMB-03: the body's HealthController.Life when the contact began (null for targets without one).
+            public HealthController Health;
+            public int Life;
         }
 
         private Dictionary<IDamageable, ContactInfo> _targets = new Dictionary<IDamageable, ContactInfo>();
@@ -63,9 +66,16 @@ namespace SoulHunter.Gameplay.Combat
             var damageable = DamageableLookup.Of(other);
             if (damageable == null) return;
             
-            if (!_targets.ContainsKey(damageable))
+            var health = damageable as HealthController;
+            if (!_targets.TryGetValue(damageable, out var known))
             {
-                _targets[damageable] = new ContactInfo { TargetTransform = other.transform, Timer = 0f };
+                _targets[damageable] = new ContactInfo { TargetTransform = other.transform, Timer = 0f, Health = health, Life = health != null ? health.Life : 0 };
+            }
+            else if (known.Health != null && known.Life != known.Health.Life)
+            {
+                // The pool reused a body this zone still listed from its last life: a new contact.
+                known.Life = known.Health.Life;
+                known.Timer = 0f;
             }
             TouchDamageTicker.Add(this);
         }
@@ -136,6 +146,13 @@ namespace SoulHunter.Gameplay.Combat
                 info.Timer -= Time.deltaTime;
                 if (info.Timer <= 0f)
                 {
+                    // CMB-03: a killed enemy is switched off without OnTriggerExit, and the pool may have reused it
+                    // somewhere else since. Its life changed, so the contact is over (checked only when a hit is due).
+                    if (info.Health != null && info.Life != info.Health.Life)
+                    {
+                        _targets.Remove(target);
+                        continue;
+                    }
                     // Target ko damage do
                     // Learning Comment: _damageType pass kiya gaya hai taaki Level 7 spectral enemies Holy damage wagera sahi se receive karein
                     Vector3 knockback = (transform.position - info.TargetTransform.position).normalized;
