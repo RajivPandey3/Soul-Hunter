@@ -184,6 +184,32 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Bug MIS AI-03. The Tide Caller is the level's boss model, whose data drops a chest; its drops are erased, and an
+        /// erased carrier passed its chest on, so killing it gave a free chest. Random_Events says nothing about a chest; the
+        /// Cappella Magna / Boss Rash Drowner, defeatable by Pentagram like the Tide Caller, "won't make it drop a Treasure
+        /// Chest" (/w/The_Drowner).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator RisingTide_TheTideCallersDeath_GivesNoChest()
+        {
+            yield return BootWithOmens();
+            EnemyDrop.PendingChests.Clear();
+            Assert.That(RandomEventDirector.Instance.Fire(OmenEvent.RisingTide), Is.True, "Rising Tide. " + Errors());
+            var caller = StageHazards.Instance.Tides.Single().Caller;
+            Assert.IsNotNull(caller, "The Tide Caller stands at the screen's corner.");
+            Assert.That(caller.GetComponent<EnemyDrop>().WillDropChest, Is.False, "This life carries no chest.");
+            int chestsBefore = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy);
+
+            caller.GetComponent<HealthController>().KillSilently();
+            yield return null;
+            yield return null;
+            Assert.That(EnemyDrop.PendingChests.Count, Is.Zero, "No chest is passed on to another enemy.");
+            Assert.That(Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy),
+                Is.EqualTo(chestsBefore), "No chest drops where it fell.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ---------------------------------------------------------------- Nightfall and Rootbound (VS Summon Night, Summon II Molise)
 
         private IEnumerator OnLevelThreeWithAHorde()

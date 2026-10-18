@@ -27,6 +27,7 @@ namespace SoulHunter.Gameplay.AI
         private bool _dropsChestThisLife;
         private bool _erasedThisLife;
         private bool _arcanaThisLife;
+        private bool _noChestThisLife;
 
         /// <summary>VS Arcana mode: this life's chest is an Arcana chest (11:00 and 21:00). Cleared on respawn.</summary>
         public void CarryArcanaThisLife() => _arcanaThisLife = true;
@@ -76,8 +77,14 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>VS Pentagram: this life ends with no drops (a chest it carried passes to another enemy). Cleared on respawn.</summary>
         public void EraseDropsThisLife() => _erasedThisLife = true;
 
+        /// <summary>
+        /// This life drops no chest and passes none on, though its body's data says it does (a stage-boss model used by a
+        /// hazard: the Rising Tide's Tide Caller, Bug MIS AI-03). Cleared on respawn.
+        /// </summary>
+        public void NoChestThisLife() => _noChestThisLife = true;
+
         /// <summary>True when this enemy drops a chest on death (bosses, and chest elites for this life).</summary>
-        public bool WillDropChest => DropsChest || _dropsChestThisLife;
+        public bool WillDropChest => !_noChestThisLife && (DropsChest || _dropsChestThisLife);
 
         private void Awake()
         {
@@ -90,6 +97,7 @@ namespace SoulHunter.Gameplay.AI
             _dropsChestThisLife = false;
             _erasedThisLife = false;
             _arcanaThisLife = false;
+            _noChestThisLife = false;
             _tiersThisLife = null;
             _health.OnDied += HandleDeath;
         }
@@ -175,7 +183,7 @@ namespace SoulHunter.Gameplay.AI
                 // VS Gold Fever (Gilded Charm): while it runs, each kill has a 75% chance to drop a fever coin.
                 using (SoulHunter.Core.Services.SlowSpan.Measure("EnemyDrop.GoldFever")) SoulHunter.Gameplay.Pickups.GoldFever.OnEnemyKilled(transform.position);
 
-                if (DropsChest || _dropsChestThisLife)
+                if (WillDropChest)
                 {
                     if (SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance != null)
                     {
