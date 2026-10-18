@@ -27,20 +27,41 @@ namespace SoulHunter.Core.Persistence
         /// </summary>
         public static string TestSavePath;
 
+        /// <summary>
+        /// Tests only: runs on the test copy right after it loads, before anything reads it. PlayMode tests clear what the
+        /// owner bought there (PowerUps, Soul Eggs): 53 tests failed on 2026-10-18 once the owner's save held 15 PowerUps.
+        /// </summary>
+        public static System.Action<GameData> TestSaveLoaded;
+
         public void Initialize()
         {
             if (_filePath == null)
                 _filePath = BenchmarkSavePath() ?? Path.Combine(Application.persistentDataPath, "soulhunter_save.json");
             if (!string.IsNullOrEmpty(TestSavePath) && TestSavePath != _filePath)
             {
-                foreach (string file in new[] { TestSavePath, TestSavePath + ".prev", TestSavePath + ".tmp" })
-                    if (File.Exists(file)) File.Delete(file);
-                if (File.Exists(_filePath)) File.Copy(_filePath, TestSavePath);
+                // The previous test's background save can still be writing its copy (another SaveService): retry briefly
+                // instead of failing the next test with "being used by another process" (2026-10-18).
+                RetryWhileInUse(() =>
+                {
+                    foreach (string file in new[] { TestSavePath, TestSavePath + ".prev", TestSavePath + ".tmp" })
+                        if (File.Exists(file)) File.Delete(file);
+                    if (File.Exists(_filePath)) File.Copy(_filePath, TestSavePath);
+                });
                 _filePath = TestSavePath;
             }
             LoadGame();
+            if (_filePath == TestSavePath && CurrentData != null) TestSaveLoaded?.Invoke(CurrentData);
             MigrateSettings();
             Debug.Log("[SaveService] Initialized.");
+        }
+
+        private static void RetryWhileInUse(System.Action work)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                try { work(); return; }
+                catch (IOException) when (attempt < 20) { System.Threading.Thread.Sleep(50); }
+            }
         }
 
         /// <summary>

@@ -2258,6 +2258,15 @@ Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elit
 - The chest's look and behaviour are unchanged. Disabling the Pause key costs under 1 ms.
 - Validation: EditMode 990/990; PlayMode fixtures 23/23 (chest flow, preview, look, screen fit, chest elites and bosses, Arcana choice, Pentagram), 0 exceptions, save untouched (`run-20261018-chest2`).
 
+**Full suite before push (2026-10-18).**
+- The first run gave EditMode 990/990 and PlayMode 393/446 (`run-20261018-prepush-full`).
+- The 53 failures came from the owner's real save, not from the game. It now holds 15 bought PowerUps (Might 5, Armor 3, Max Health 3, Recovery 5, Amount 1, Revival 1, Luck 3 ...). PlayMode tests play on a copy of that save and are written for a hero with none, so for example Duplicator +2 read 3, Shadow Kael gained a revival, and durations and damage moved.
+- One more failure was an `IOException`: the previous test's background save was still writing the test copy when the next test replaced it.
+- Fixes, tests only:
+  - `SaveService.TestSaveLoaded` runs on the test copy right after it loads, and `GameplayPlayModeTestBase` clears PowerUps and Soul Eggs there. The real save is not touched, and tests that need PowerUps set them themselves.
+  - The test-copy delete and copy retries briefly when the file is in use.
+- Rerun: EditMode 990/990, PlayMode 446/446, 0 exceptions, save untouched (`run-20261018-prepush-full2`).
+
 ### Focus loss stopped the game (owner: "1", 2026-10-17)
 
 The stall that the WPR hang hunt caught (`run-20261017-wprhang`, run 1) was the Unity player stopping because its window lost focus:

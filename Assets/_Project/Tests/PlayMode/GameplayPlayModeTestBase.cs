@@ -30,6 +30,13 @@ namespace SoulHunter.Tests.PlayMode
             // reach the real file. Tests that redirect again (UseFile) keep working.
             SoulHunter.Core.Persistence.SaveService.TestSavePath =
                 System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save_copy.json");
+            // The copy starts without what the owner bought (PowerUps, Soul Eggs): tests are written for a hero with none,
+            // and a test that needs some sets them itself. The owner's real save is not touched.
+            SoulHunter.Core.Persistence.SaveService.TestSaveLoaded = data =>
+            {
+                data.PowerUpRanks?.Clear();
+                data.SoulEggs?.Clear();
+            };
             _errors.Clear();
             // The start prompt (VS "PRESS TO START", 2026-10-12) shows once per launch and hides the menu's buttons until it
             // is answered. Tests reach the menu as on a later visit; the prompt's own test sets this back to false.
