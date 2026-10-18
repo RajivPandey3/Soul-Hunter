@@ -557,6 +557,12 @@ namespace SoulHunter.Gameplay.Combat
             if (weapon == null) return;
 
             int safeTargetLevel = Mathf.Clamp(targetLevel, 1, weapon.MaxLevel);
+            // An evolution keeps its own numbers: only its level is recorded (see AutoAttackWeapon.LevelLocked).
+            if (weapon.LevelLocked)
+            {
+                weapon.CurrentLevel = Mathf.Max(weapon.CurrentLevel, safeTargetLevel);
+                return;
+            }
             while (weapon.CurrentLevel < safeTargetLevel)
             {
                 int previousLevel = weapon.CurrentLevel;
@@ -604,6 +610,8 @@ namespace SoulHunter.Gameplay.Combat
                             var newWep = Instantiate(evo.EvolvedWeaponPrefab, spawnTarget);
                             newWep.SetActive(true);
                             _equippedWeapons.Add(new KeyValuePair<GameObject, GameObject>(evo.EvolvedWeaponPrefab, newWep));
+                            var evolvedWeapon = newWep.GetComponent<AutoAttackWeapon>();
+                            if (evolvedWeapon != null) evolvedWeapon.LevelLocked = true; // no base level table on an evolution
                             ApplyWeaponLevel(newWep, evo.BaseWeaponMaxLevel);
                             TrackForResults(newWep, !string.IsNullOrEmpty(evo.EvolvedName) ? WeaponEvolutionData.DisplayName(evo.EvolvedName) : WeaponEvolutionData.DisplayName(evo.name), LastEvolvedIcon, 0, true);
                         }

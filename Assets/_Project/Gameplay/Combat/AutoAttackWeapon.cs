@@ -15,6 +15,13 @@ namespace SoulHunter.Gameplay.Combat
     {
         public int CurrentLevel = 1;
         public virtual int MaxLevel => int.MaxValue;
+        /// <summary>
+        /// VS (wiki Unholy_Vespers, Heaven_Sword, Soul_Eater): an evolution has no level table of its own; its infobox
+        /// holds its numbers and "With Limit Break, [it] can be further leveled up". Set on an evolution so
+        /// <see cref="WeaponManager.ApplyWeaponLevel"/> only records its level and never runs the base weapon's level 2-8
+        /// table (Unholy Vespers, Heaven Sword and Soul Eater are built on the Bible, Cross and Garlic scripts).
+        /// </summary>
+        [System.NonSerialized] public bool LevelLocked;
         public float DamageAmount = 10f;
         public float AttackCooldown = 1.5f;
 

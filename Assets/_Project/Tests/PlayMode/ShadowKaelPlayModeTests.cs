@@ -396,5 +396,53 @@ namespace SoulHunter.Tests.PlayMode
             }
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// CMB-01 (2026-10-19). VS wiki Unholy_Vespers ("Damage 30", "Amount 4"), Heaven_Sword ("Damage 77", "Amount 1",
+        /// "Cooldown 3.3 seconds") and Soul_Eater ("Damage 20", "Cooldown 1.0 second"): an evolution has no level table,
+        /// "With Limit Break, [it] can be further leveled up". Built on the Bible, Cross and Garlic scripts, they used to get
+        /// the base weapon's whole level 2-8 table on evolving (Vespers 50 damage and 7 books, Heaven Sword 107 and 3 swords,
+        /// Soul Eater 30 and 0.7 s), and Shadow Kael copied it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator BaseScriptEvolutions_KeepTheirOwnNumbers_OnThePlayerAndOnShadowKael()
+        {
+            yield return EnterStage10();
+            var player = PlayerController.Instance;
+            var weapons = WeaponManager.Instance;
+            var known = GetPrivateField<List<WeaponEvolutionData>>(weapons, "_availableEvolutions");
+            foreach (var asset in new[] { "Evo_UnholyVespers", "Evo_HeavenSword", "Evo_SoulEater" })
+            {
+                var evolution = known.FirstOrDefault(e => e != null && e.name == asset);
+                Assert.IsNotNull(evolution, $"{asset} is one of WeaponManager's evolutions.");
+                weapons.GiveWeapon(evolution.BaseWeapon, evolution.BaseWeaponMaxLevel);
+                weapons.GiveWeapon(evolution.RequiredPassive, Mathf.Max(1, evolution.RequiredPassiveMaxLevel));
+                yield return null;
+                Assert.That(weapons.TryEvolveWeapon(out _), Is.True, $"{asset} evolves.");
+                yield return null;
+            }
+
+            void Check(IEnumerable<AutoAttackWeapon> held, string who)
+            {
+                var vespers = held.OfType<SoulHunter.Gameplay.Weapons.BibleWeapon>().Single(w => w.gameObject.name.StartsWith("UnholyVespers"));
+                Assert.That(vespers.DamageAmount, Is.EqualTo(30f), $"{who}: Unholy Vespers 30 damage.");
+                Assert.That(vespers.LevelBookCount, Is.EqualTo(0), $"{who}: Unholy Vespers gets no level books (4 in all).");
+                Assert.That(vespers.LevelAreaMultiplier, Is.EqualTo(1f));
+                var sword = held.OfType<SoulHunter.Gameplay.Weapons.CrossWeapon>().Single(w => w.gameObject.name.StartsWith("HeavenSword"));
+                Assert.That(sword.DamageAmount, Is.EqualTo(77f), $"{who}: Heaven Sword 77 damage.");
+                Assert.That(sword.LevelCrossCount, Is.EqualTo(1), $"{who}: one sword.");
+                Assert.That(sword.AttackCooldown, Is.EqualTo(3.3f).Within(0.001f));
+                var eater = held.OfType<SoulHunter.Gameplay.Weapons.GarlicWeapon>().Single(w => w.gameObject.name.StartsWith("SoulEater"));
+                Assert.That(eater.DamageAmount, Is.EqualTo(20f), $"{who}: Soul Eater 20 damage.");
+                Assert.That(eater.AttackCooldown, Is.EqualTo(1f).Within(0.001f), $"{who}: Soul Eater 1.0 s.");
+                Assert.That(eater.LevelAreaMultiplier, Is.EqualTo(1f), $"{who}: Soul Eater keeps its own radius.");
+                Assert.That(vespers.CurrentLevel, Is.EqualTo(8), $"{who}: the level is still recorded.");
+            }
+
+            Check(weapons.GetEquippedWeapons().Select(p => p.Value).ToList(), "player");
+            var kael = SpawnShadowKael();
+            Check(kael.GetComponentsInChildren<AutoAttackWeapon>(true).ToList(), "Shadow Kael");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

@@ -108,6 +108,14 @@ namespace SoulHunter.Gameplay.Combat
             ResetHealth();
         }
 
+        /// <summary>
+        /// Goes up each time this body is switched off (a killed enemy returns to its pool). A switched-off collider gets
+        /// no OnTriggerExit, so a weapon zone compares this with the value it saw on contact and drops a dead or reused body.
+        /// </summary>
+        public int Life { get; private set; }
+
+        private void OnDisable() => Life++;
+
         public void ResetHealth()
         {
             if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;

@@ -78,6 +78,9 @@ namespace SoulHunter.Gameplay.AI
                     // Retarget before the weapon's first attack.
                     ConfigureMirroredWeapon(weaponInstance);
                     weaponInstance.SetActive(true);
+                    // An evolution keeps its own numbers on the boss too (no base level table).
+                    var mirroredWeapon = weaponInstance.GetComponent<AutoAttackWeapon>();
+                    if (mirroredWeapon != null) mirroredWeapon.LevelLocked = pair.Value.LevelLocked;
                     WeaponManager.ApplyWeaponLevel(weaponInstance, pair.Value.CurrentLevel);
                     MirroredWeaponCount++;
                 }

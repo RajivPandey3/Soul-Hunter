@@ -327,36 +327,86 @@ namespace SoulHunter.Gameplay.Core
             foreach (var pair in weapons.GetEquippedWeapons())
             {
                 var original = pair.Value;
-                if (pair.Key == null || original == null || original.IsHeldByEnemy || !HasGeminiCounterpart(original)) continue;
-                if (_geminiCounterparts.TryGetValue(original.GetType(), out var existing) && existing != null) continue;
-
-                var copy = Instantiate(pair.Key, original.transform.parent);
-                copy.name = pair.Key.name + " (Gemini)";
-                copy.SetActive(true);
-                var twin = copy.GetComponent<AutoAttackWeapon>();
-                if (twin == null) { Destroy(copy); continue; }
-                copy.AddComponent<GeminiCounterpart>().Bind(original, twin);
-                if (twin is PeachoneWeapon bird && original is PeachoneWeapon originalBird)
+                if (pair.Key == null || original == null || original.IsHeldByEnemy) continue;
+                if (HasGeminiCounterpart(original))
                 {
-                    bird.SetOrbit(originalBird.CircleRadius + PeachoneWeapon.GeminiExtraRadius, 180f);
-                    // Gemini (I): "Only Peachone, Ebony Wings, Vandalier, Phieraggi, Gatti Amari, and Vicious Hunger can
-                    // transfer their Limit Broken bonuses to their counterparts." The Gun's counterpart keeps none.
-                    twin.LimitBreakSource = original;
+                    if (_geminiCounterparts.TryGetValue(original.GetType(), out var existing) && existing != null) continue;
+                    var originalBird = original as PeachoneWeapon;
+                    SpawnGeminiCounterpart(pair.Key, original, original, original.CurrentLevel,
+                        originalBird != null ? originalBird.CircleRadius : 0f, original.transform.parent);
+                    continue;
                 }
-                if (twin is GunWeapon gun) gun.ArmOffsetDegrees = GunWeapon.GeminiArmOffsetDegrees;
-                WeaponManager.ApplyWeaponLevel(copy, original.CurrentLevel);
-                _geminiCounterparts[original.GetType()] = twin;
 
-                // Results: in VS the counterpart is a weapon of its own (own name and damage). Soul Hunter names it after
-                // its original ("<weapon> Twin") instead of using a VS counterpart name.
-                var type = original is DuskRavenWeapon ? UpgradeData.UpgradeType.DuskRaven
-                    : original is PeachoneWeapon ? UpgradeData.UpgradeType.Peachone
-                    : original is AzureRepeaterWeapon ? UpgradeData.UpgradeType.AzureRepeater
-                    : UpgradeData.UpgradeType.Gun;
-                var definition = WeaponDefinitionLookup.Find(type);
-                var tracker = RunStatsTracker.Instance;
-                if (tracker != null) tracker.TrackWeapon(twin, UpgradeText.NameOf(type) + " Twin", definition != null ? definition.Icon : null, twin.MaxLevel, false);
+                // VS Gemini (I) (raw, 2026-10-19): counterparts "remain as independent weapons if their counterparts unite",
+                // so a counterpart made before a union keeps going on its own. A union itself has no counterpart, but "If
+                // the Arcana is picked up with Phieraggi ... the counterparts of their constituents are given at max level;
+                // with Vandalier, both are given at the level of it and level up with Vandalier." (CORE-02: Gemini taken
+                // while holding Twilight Flock or Revenant Wheel gave nothing.)
+                if (original is TwilightFlockWeapon)
+                {
+                    GiveConstituentCounterpart(weapons, UpgradeData.UpgradeType.Peachone, original, original, original.CurrentLevel);
+                    GiveConstituentCounterpart(weapons, UpgradeData.UpgradeType.DuskRaven, original, original, original.CurrentLevel);
+                }
+                else if (original is RevenantWheelWeapon)
+                {
+                    GiveConstituentCounterpart(weapons, UpgradeData.UpgradeType.Gun, original, null, int.MaxValue);
+                    GiveConstituentCounterpart(weapons, UpgradeData.UpgradeType.AzureRepeater, original, null, int.MaxValue);
+                }
             }
+        }
+
+        /// <summary>
+        /// A counterpart of a union's constituent <paramref name="type"/>, unless one of that kind exists. It levels with
+        /// <paramref name="followed"/> (Vandalier), or with nothing (Phieraggi: given at max level).
+        /// </summary>
+        private void GiveConstituentCounterpart(WeaponManager weapons, UpgradeData.UpgradeType type, AutoAttackWeapon union,
+            AutoAttackWeapon followed, int level)
+        {
+            var prefab = weapons.GetWeaponObject(type);
+            var kind = prefab != null ? prefab.GetComponent<AutoAttackWeapon>() : null;
+            if (kind == null) return;
+            if (_geminiCounterparts.TryGetValue(kind.GetType(), out var existing) && existing != null) return;
+            var prefabBird = kind as PeachoneWeapon;
+            var twin = SpawnGeminiCounterpart(prefab, followed, union, level, prefabBird != null ? prefabBird.CircleRadius : 0f, union.transform.parent);
+            // "Only Peachone, Ebony Wings, Vandalier, Phieraggi ... can transfer their Limit Broken bonuses to their
+            // counterparts": a union's counterparts take the union's.
+            if (twin != null) twin.LimitBreakSource = union;
+        }
+
+        /// <summary>
+        /// Makes one counterpart: a copy of <paramref name="prefab"/> on the player at <paramref name="level"/>, following
+        /// <paramref name="followed"/>'s level (null = none), kept out of WeaponManager.
+        /// </summary>
+        private AutoAttackWeapon SpawnGeminiCounterpart(GameObject prefab, AutoAttackWeapon followed, AutoAttackWeapon limitBreakFrom,
+            int level, float originalRadius, Transform parent)
+        {
+            var copy = Instantiate(prefab, parent);
+            copy.name = prefab.name + " (Gemini)";
+            copy.SetActive(true);
+            var twin = copy.GetComponent<AutoAttackWeapon>();
+            if (twin == null) { Destroy(copy); return null; }
+            copy.AddComponent<GeminiCounterpart>().Bind(followed, twin);
+            if (twin is PeachoneWeapon bird)
+            {
+                bird.SetOrbit(originalRadius + PeachoneWeapon.GeminiExtraRadius, 180f);
+                // Gemini (I): "Only Peachone, Ebony Wings, Vandalier, Phieraggi, Gatti Amari, and Vicious Hunger can
+                // transfer their Limit Broken bonuses to their counterparts." The Gun's counterpart keeps none.
+                twin.LimitBreakSource = limitBreakFrom;
+            }
+            if (twin is GunWeapon gun) gun.ArmOffsetDegrees = GunWeapon.GeminiArmOffsetDegrees;
+            WeaponManager.ApplyWeaponLevel(copy, level);
+            _geminiCounterparts[twin.GetType()] = twin;
+
+            // Results: in VS the counterpart is a weapon of its own (own name and damage). Soul Hunter names it after
+            // its original ("<weapon> Twin") instead of using a VS counterpart name.
+            var type = twin is DuskRavenWeapon ? UpgradeData.UpgradeType.DuskRaven
+                : twin is PeachoneWeapon ? UpgradeData.UpgradeType.Peachone
+                : twin is AzureRepeaterWeapon ? UpgradeData.UpgradeType.AzureRepeater
+                : UpgradeData.UpgradeType.Gun;
+            var definition = WeaponDefinitionLookup.Find(type);
+            var tracker = RunStatsTracker.Instance;
+            if (tracker != null) tracker.TrackWeapon(twin, UpgradeText.NameOf(type) + " Twin", definition != null ? definition.Icon : null, twin.MaxLevel, false);
+            return twin;
         }
 
         // ------------------------------------------------------------------ choices (start, chest, merchant)
