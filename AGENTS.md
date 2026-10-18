@@ -242,7 +242,7 @@ Primary planning/release baseline:
 
 - platform: Steam / Windows
 - resolution: `1920x1080`
-- quality: Medium
+- quality: Ultra (owner decision 2026-10-18: "quality default Ultra hoga"; the Windows default in `QualitySettings` is Ultra, Android stays Medium)
 - target: `60 FPS`
 - hard minimum: `30 FPS`
 - low-end planning reference: Intel Core i5-8350U + Intel UHD 620 + 8 GB RAM
@@ -1998,7 +1998,7 @@ Owner: "as a CTO ... MIS banao" (a list of everything to check from the Start bu
 - Validation of the profile fixes: one full run passed every test: EditMode 931/931, PlayMode 430/430, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis7/full/`). It also covers the 60 FPS cap.
 - Validation before that: full run before the 60 FPS change: EditMode 930/930, PlayMode 429/430 (the chest coin defect above), 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis5-full/`). After the fix and the 60 FPS change: EditMode 930/930 and the chest, accessibility and bot fixtures 17/17 (`run-20261013-mis6/tests`), then with the bot putting the quality level back 7/7 (`-mis6/tests2`). No full run covers the 60 FPS change.
 
-**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): whether a weak loadout may fail a level's guardian; FPS with 300 or more enemies on screen (no cap: median 70-88, single windows 56-58; with V-Sync and the cap such a fight reads 45-57); the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; the Standalone default quality is Ultra while the contract says Medium (measured: no FPS difference); 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
+**Still open from the list** (all in `Docs/CTO_Check_MIS.md`): whether a weak loadout may fail a level's guardian; FPS with 300 or more enemies on screen (no cap: median 70-88, single windows 56-58; with V-Sync and the cap such a fight reads 45-57); the 50-damage item guardians; Level 4's wall; Level 8's floor seams; one model per level in many tints; 6 missing union references in `Main_Gameplay`; nobody has listened to the game.
 
 **Validation:** one full run on the final code passed every test: EditMode 928/928, PlayMode 430/430, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261013-mis2-full/`). The build runs above are the play evidence (partial `P`, partial `V`).
 
@@ -2266,6 +2266,30 @@ Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elit
   - `SaveService.TestSaveLoaded` runs on the test copy right after it loads, and `GameplayPlayModeTestBase` clears PowerUps and Soul Eggs there. The real save is not touched, and tests that need PowerUps set them themselves.
   - The test-copy delete and copy retries briefly when the file is in use.
 - Rerun: EditMode 990/990, PlayMode 446/446, 0 exceptions, save untouched (`run-20261018-prepush-full2`).
+
+### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
+
+Owner: "keyboard se game khel raha hoon to level up selection mein keyboard kaam nahi kar raha", "or chest ko bhi fix karo". VS wiki (Options, patch 0.2.4): "Spacebar can be used just like Enter to interact with the UI".
+
+Found:
+- Each scene's UI module (InputSystemUIInputModule with its embedded DefaultInputActions) submitted on Enter only. The cards stand one above the other, so up/down and W/S move between them.
+- In a release build, Down and Enter sent through the game's own Input System did work (`AutoplayBot -sh-autoplay-manual-menus -sh-autoplay-menu-keys`, `run-20261018-realkeys/menukeys`). Space did nothing.
+- Space is also Dash, and a dash started while a menu paused the game, then ran the moment the menu closed.
+- Measuring traps:
+  - keys sent through Windows (`keybd_event`) did not reach the game;
+  - in a windowless editor (PlayMode tests) the Input System gives the UI no keyboard input at all, because no Game view has focus.
+
+Fix:
+- `UiSubmitKeys` adds Space to every UI module's Submit action when a scene loads (the scenes are not edited).
+- `PlayerController.OnDashEvent` ignores a dash while `GameTime.IsPaused`. In play, Space still dashes.
+
+Validation:
+- `KeyboardMenusPlayModeTests` (R): Submit answers Space and Enter, Navigate has the arrows and W/A/S/D, Space is added once, and no dash starts while paused but one does in play.
+- EditMode 990/990; PlayMode fixtures 20/20 (keyboard menus, dash, accessibility, level-up screen, level-up action buttons, chest flow), 0 exceptions, save untouched (`run-20261018-space-tests`).
+- Release build (`run-20261018-realkeys/menukeys`, after the fix): on all 5 level-ups, Down moved to the next card and Space picked it (closed in about 1.1 s).
+- Space on the chest screen was not seen in that build (no chest was collected in 3 minutes); it uses the same Submit action.
+
+Not yet played by the owner.
 
 ### Focus loss stopped the game (owner: "1", 2026-10-17)
 

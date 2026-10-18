@@ -493,6 +493,31 @@ namespace SoulHunter.Gameplay.Core
         {
             yield return null; // let the level-up screen open (and be captured)
             if (!levelUp.IsLevelUpActive || choices == null || choices.Count == 0) yield break;
+            // -sh-autoplay-manual-menus: leave the screen to a person (or keys sent to the window) for up to 20 s and log
+            // how it went; the bot answers only if nobody does (owner report 2026-10-18: keyboard on the level-up screen).
+            if (HasArg("-sh-autoplay-manual-menus"))
+            {
+                float opened = Time.realtimeSinceStartup;
+                int levelOpened = _experience != null ? _experience.CurrentLevel : 0;
+                // -sh-autoplay-menu-keys: press Down, then Enter on the real keyboard through the Input System, as keys would.
+                if (HasArg("-sh-autoplay-menu-keys"))
+                {
+                    yield return new WaitForSecondsRealtime(1f);
+                    var first = UnityEngine.EventSystems.EventSystem.current != null ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+                    yield return PressKey(UnityEngine.InputSystem.Key.DownArrow);
+                    var afterDown = UnityEngine.EventSystems.EventSystem.current != null ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+                    yield return PressKey(UnityEngine.InputSystem.Key.Space);
+                    Event("menu-keys", string.Format(CultureInfo.InvariantCulture, "\"screen\": \"levelup\", \"first\": \"{0}\", \"afterDown\": \"{1}\", \"closedBySpace\": {2}, \"keyboard\": \"{3}\"",
+                        first != null ? Escape(first.name) : "", afterDown != null ? Escape(afterDown.name) : "", levelUp.IsLevelUpActive ? "false" : "true",
+                        UnityEngine.InputSystem.Keyboard.current != null ? Escape(UnityEngine.InputSystem.Keyboard.current.name) : "none"));
+                }
+                while (levelUp.IsLevelUpActive && Time.realtimeSinceStartup - opened < 20f) yield return null;
+                var selected = UnityEngine.EventSystems.EventSystem.current != null ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+                Event("levelup-manual", string.Format(CultureInfo.InvariantCulture, "\"closedByPlayer\": {0}, \"seconds\": {1:0.0}, \"level\": {2}, \"selected\": \"{3}\", \"focused\": {4}",
+                    levelUp.IsLevelUpActive ? "false" : "true", Time.realtimeSinceStartup - opened, levelOpened,
+                    selected != null ? Escape(selected.name) : "", Application.isFocused ? "true" : "false"));
+                if (!levelUp.IsLevelUpActive) yield break;
+            }
             var weapons = WeaponManager.Instance;
             UpgradeData pick = choices.OrderByDescending(c => Score(weapons, c)).First();
             // -sh-autoplay-levelup-hold S: keep each level-up screen open S seconds, as a player reading the cards would.
@@ -689,6 +714,31 @@ namespace SoulHunter.Gameplay.Core
                     {
                         // VS chest screen: wait for OPEN, press it, shoot the reveal, press DONE (like a player).
                         var screen = chest.Screen;
+                        if (HasArg("-sh-autoplay-manual-menus"))
+                        {
+                            // As for level-ups: a person (or keys sent to the window) opens and closes the chest; logged.
+                            float opened = Time.realtimeSinceStartup;
+                            bool openedByPlayer = false;
+                            if (HasArg("-sh-autoplay-menu-keys"))
+                            {
+                                float waitOpen = Time.unscaledTime + 5f;
+                                while (screen.Current != ChestOpeningScreen.Phase.WaitingToOpen && Time.unscaledTime < waitOpen) yield return null;
+                                yield return new WaitForSecondsRealtime(0.6f); // OPEN turns in, then takes the focus
+                                var focus = UnityEngine.EventSystems.EventSystem.current != null ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+                                yield return PressKey(UnityEngine.InputSystem.Key.Space);
+                                Event("menu-keys", string.Format(CultureInfo.InvariantCulture, "\"screen\": \"chest\", \"focus\": \"{0}\", \"openedBySpace\": {1}",
+                                    focus != null ? Escape(focus.name) : "", screen.Current != ChestOpeningScreen.Phase.WaitingToOpen ? "true" : "false"));
+                            }
+                            while (chest.IsOpen && Time.realtimeSinceStartup - opened < 20f)
+                            {
+                                if (screen.Current != ChestOpeningScreen.Phase.Intro && screen.Current != ChestOpeningScreen.Phase.WaitingToOpen) openedByPlayer = true;
+                                yield return null;
+                            }
+                            var selected = UnityEngine.EventSystems.EventSystem.current != null ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+                            Event("chest-manual", string.Format(CultureInfo.InvariantCulture, "\"openedByPlayer\": {0}, \"closedByPlayer\": {1}, \"seconds\": {2:0.0}, \"selected\": \"{3}\"",
+                                openedByPlayer ? "true" : "false", chest.IsOpen ? "false" : "true", Time.realtimeSinceStartup - opened, selected != null ? Escape(selected.name) : ""));
+                            if (!chest.IsOpen) continue;
+                        }
                         float until = Time.unscaledTime + 5f;
                         while (screen.Current == ChestOpeningScreen.Phase.Intro && Time.unscaledTime < until) yield return null;
                         yield return Shot("chest");
@@ -1513,6 +1563,19 @@ namespace SoulHunter.Gameplay.Core
         private float _nextVatSwitch;
         private float _nextVSyncSwitch;
         private float _renderScaleBefore = -1f;
+
+        /// <summary>Presses and releases a key on the real keyboard through the Input System (-sh-autoplay-menu-keys).</summary>
+        private static IEnumerator PressKey(UnityEngine.InputSystem.Key key)
+        {
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard == null) yield break;
+            UnityEngine.InputSystem.InputSystem.QueueStateEvent(keyboard, new UnityEngine.InputSystem.LowLevel.KeyboardState(key));
+            yield return null;
+            yield return null;
+            UnityEngine.InputSystem.InputSystem.QueueStateEvent(keyboard, new UnityEngine.InputSystem.LowLevel.KeyboardState());
+            yield return null;
+            yield return null;
+        }
         private int _joltEvents, _triggerFrame = -1;
         private float _joltSeconds = -1f;
         /// <summary>A jolt event's threshold: 25 ms, or -sh-autoplay-jolt-ms N to log lighter frames too.</summary>

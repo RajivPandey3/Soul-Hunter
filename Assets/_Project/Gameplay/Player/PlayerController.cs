@@ -379,6 +379,9 @@ namespace SoulHunter.Gameplay.Player
 
         private void OnDashEvent(PlayerDashEvent dashEvent)
         {
+            // A menu that pauses the game (level-up, chest, pause, shop) takes Space as its Submit key (VS: Space works like
+            // Enter in the UI); before, the press also started a dash that ran the moment the game resumed (2026-10-18).
+            if (SoulHunter.Core.Services.GameTime.IsPaused) return;
             if (!IsDashing)
             {
                 StartCoroutine(DashCoroutine());
