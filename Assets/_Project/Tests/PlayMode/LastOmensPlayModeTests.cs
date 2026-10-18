@@ -473,5 +473,33 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(system.ArenaRing == null, Is.True, "The ring goes with the level.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-07. The zone closes on the level's clock (StageElapsedTime), so a clock skip (and Hurry's 2x clock) moves
+        /// it; it used to count its own Time.deltaTime and stayed near its start radius.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheClosingArena_ClosesOnTheStageClock()
+        {
+            yield return BootWithOmens();
+            LevelProgressionManager.Instance.StartStage(9);
+            yield return null;
+            yield return null;
+            var system = Object.FindFirstObjectByType<CampaignSignatureSystem>();
+            Assert.That(system.ArenaActive, Is.True);
+            var level = LevelProgressionManager.Instance.CurrentLevel;
+            float before = system.ArenaRadius;
+            LevelProgressionManager.Instance.SkipTo(level.RunDurationSeconds * 0.5f);
+            yield return null;
+            float half = system.ArenaRadius;
+            Assert.That(half, Is.LessThan(before - 5f), "Half the level gone on the clock: the zone has closed in.");
+            LevelProgressionManager.Instance.SkipTo(level.RunDurationSeconds * 0.75f); // not to 30:00: that would end the run
+            yield return null;
+            float later = system.ArenaRadius;
+            Assert.That(before - half, Is.EqualTo(2f * (half - later)).Within(0.5f), "It closes evenly along the stage clock.");
+            LevelProgressionManager.Instance.StartStage(10);
+            yield return null;
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }
