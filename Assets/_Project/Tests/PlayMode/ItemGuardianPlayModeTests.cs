@@ -170,5 +170,36 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(left.Level, Is.EqualTo(2), "The new stage's items carry the new level's guardians.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-04. The 30:00 clear ("All enemies on the screen are cleared", wiki Mad_Forest) used to kill every
+        /// enemy, so a kited guardian (res-kill) dropped its Soul Egg. It is now taken off the field without dying; an
+        /// ordinary enemy still dies and counts as a kill.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheStageClear_TakesAGuardianAway_WithoutItsSoulEgg_AndOrdinaryEnemiesStillDie()
+        {
+            yield return Boot();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            var body = PostOf(UpgradeType.RingOfDarkHours).Spawn();
+            Assert.IsNotNull(body, "The guardian of the Ring of Dark Hours. " + Errors());
+            var ordinary = (GameObject)typeof(EnemySpawner).GetMethod("SpawnEnemy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .Invoke(spawner, new object[] { spawner.StageEnemyPrefab });
+            Assert.IsNotNull(ordinary, "An ordinary enemy. " + Errors());
+            yield return null;
+            int eggs = ItemGuardian.EggsDropped;
+            int kills = RunStatsTracker.Instance.TotalKills;
+
+            typeof(LevelProgressionManager).GetMethod("CompleteStage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .Invoke(LevelProgressionManager.Instance, new object[] { "test" });
+            yield return null;
+            yield return null;
+            Assert.That(body.activeInHierarchy, Is.False, "The guardian leaves the field with the clear.");
+            Assert.That(ItemGuardian.EggsDropped, Is.EqualTo(eggs), "No Soul Egg: it was not defeated.");
+            Assert.That(Object.FindFirstObjectByType<SoulEggPickup>(), Is.Null);
+            Assert.That(ordinary.activeInHierarchy, Is.False, "The ordinary enemy is cleared too.");
+            Assert.That(RunStatsTracker.Instance.TotalKills, Is.EqualTo(kills + 1), "Only the ordinary enemy counts as a kill.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

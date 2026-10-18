@@ -177,6 +177,7 @@ namespace SoulHunter.Gameplay.Pickups
             }
             if (!IsReady)
             {
+                if (StageClearing()) return; // guards cleared by the stage's end do not open it (AI-04)
                 bool allDown = true;
                 foreach (var guard in _guards)
                 {
@@ -212,7 +213,7 @@ namespace SoulHunter.Gameplay.Pickups
                     var guard = new Guard { Body = body, Health = body.GetComponent<HealthController>() };
                     if (guard.Health != null)
                     {
-                        guard.Died = () => MarkDown(guard);
+                        guard.Died = () => { if (!StageClearing()) MarkDown(guard); };
                         guard.Health.OnDied += guard.Died;
                     }
                     _guards.Add(guard);
@@ -221,6 +222,17 @@ namespace SoulHunter.Gameplay.Pickups
             if (audio != null && _guards.Count > 0) audio.PlaySFX(audio.BossWarningSound, 0.7f);
             // No guard could be spawned (no spawner in a test scene): nothing is left to defeat.
             if (_guards.Count == 0) BecomeReady();
+        }
+
+        /// <summary>
+        /// True from the stage clear until the next level starts. The 30:00 clear wipes the arena ("All enemies on the screen
+        /// are cleared", wiki Mad_Forest), guards included; that is not the hero defeating them, and the next level replaces
+        /// this casket, so the casket stays sealed instead of opening for the 5 s transition (Bug MIS AI-04; balance method).
+        /// </summary>
+        private static bool StageClearing()
+        {
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            return progression != null && progression.IsStageTransitioning;
         }
 
         private void MarkDown(Guard guard)
