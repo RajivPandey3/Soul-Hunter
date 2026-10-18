@@ -18,6 +18,11 @@ namespace SoulHunter.Gameplay.Hazards
         public static int ActiveCount => Active.Count;
         private int _index = -1;
         internal bool Handed;
+        // Phone profile (2026-10-18): about 10 engine calls per bullet per frame (GetComponent, sharedMaterial, transforms)
+        // cost the drawer 1.2 ms at Level 5's ~500 bullets. They never change for a pooled bullet, so the drawer keeps them here.
+        internal EnemyBulletDrawer CachedBy;
+        internal EnemyBulletDrawer.Batch CoreBatch, HaloBatch;
+        internal Transform CoreTransform, HaloTransform;
 
         internal void Setup(MeshRenderer core, GameObject halo) { Core = core; Halo = halo; }
 
@@ -70,7 +75,7 @@ namespace SoulHunter.Gameplay.Hazards
         private const int ChunkSize = 1023;
         private const float ViewMargin = 2f;
 
-        private sealed class Batch
+        internal sealed class Batch
         {
             public Mesh Mesh;
             public Material Material;
@@ -121,16 +126,24 @@ namespace SoulHunter.Gameplay.Hazards
             for (int i = 0; i < bullets.Count; i++)
             {
                 var look = bullets[i];
-                if (look == null || look.Core == null) continue;
-                var coreBatch = CoreBatch(look);
+                if (look == null) continue;
+                if (!ReferenceEquals(look.CachedBy, this))
+                {
+                    if (look.Core == null) continue;
+                    look.CoreBatch = CoreBatch(look);
+                    look.HaloBatch = HaloBatch(look);
+                    look.CoreTransform = look.Core.transform;
+                    look.HaloTransform = look.Halo != null ? look.Halo.transform : null;
+                    look.CachedBy = this;
+                }
+                var coreBatch = look.CoreBatch;
                 if (coreBatch.Mesh == null) continue; // nothing to draw it with: it keeps drawing itself
                 if (!look.Handed) Hand(look, true);
-                var core = look.Core.transform;
-                Vector3 p = core.position;
-                if (cull && (p.x < min.x || p.x > max.x || p.z < min.y || p.z > max.y)) continue;
-                Add(coreBatch, core.localToWorldMatrix);
-                var halo = HaloBatch(look);
-                if (halo != null) Add(halo, Matrix4x4.TRS(look.Halo.transform.position, facing, haloScale));
+                Matrix4x4 m = look.CoreTransform.localToWorldMatrix;
+                if (cull && (m.m03 < min.x || m.m03 > max.x || m.m23 < min.y || m.m23 > max.y)) continue;
+                Add(coreBatch, m);
+                var halo = look.HaloBatch;
+                if (halo != null) Add(halo, Matrix4x4.TRS(look.HaloTransform.position, facing, haloScale));
                 LastBullets++;
             }
 

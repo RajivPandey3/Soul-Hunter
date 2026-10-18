@@ -1628,7 +1628,7 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\"}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
@@ -1641,7 +1641,8 @@ namespace SoulHunter.Gameplay.Core
                 RenderCounter(ref _drawCalls, "Draw Calls Count"), RenderCounter(ref _setPass, "SetPass Calls Count"), RenderCounter(ref _batchesCount, "Batches Count"),
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Exists && SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Enabled ? "true" : "false",
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount,
-                ReportWriter.TakeSlowestWriteMs()));
+                ReportWriter.TakeSlowestWriteMs(), HordeVatDrawer.LastHanded, HordeVatDrawer.LastCulled,
+                HordeVatDrawer.LastCull ? $"{HordeVatDrawer.LastViewMin.x:0.0},{HordeVatDrawer.LastViewMin.y:0.0}..{HordeVatDrawer.LastViewMax.x:0.0},{HordeVatDrawer.LastViewMax.y:0.0} hero {(PlayerController.Instance != null ? PlayerController.Instance.transform.position.x.ToString("0.0", CultureInfo.InvariantCulture) + "," + PlayerController.Instance.transform.position.z.ToString("0.0", CultureInfo.InvariantCulture) : "-")} cam {(Camera.main != null ? Camera.main.name : "none")}" : "no cull"));
             // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
             if (HasArg("-sh-autoplay-count-fx"))
             {

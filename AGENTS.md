@@ -2267,6 +2267,17 @@ Validation: EditMode 989/989; PlayMode fixtures 91/91 (chest flow, look and elit
   - The test-copy delete and copy retries briefly when the file is in use.
 - Rerun: EditMode 990/990, PlayMode 446/446, 0 exceptions, save untouched (`run-20261018-prepush-full2`).
 
+### Phone heavy fight at Ultra (owner: "1", 2026-10-18)
+
+realme RMX5004, Ultra, release APK, Level 5 from 19:50 with a level-90 hero and the fixed loadout, landscape, god mode.
+- **The main thread is the limit, not the GPU.** Development profiles (`D:/SoulHunter-Validation/run-20261018-phone-prof/`, `-prof2/`): main thread 17-25 ms per frame, render thread 3-4 ms. Physics was 5 ms with about 220 enemies and 550 enemy bullets, and 9-11 ms with 300 enemies and 900 bullets.
+- **The phone throttles early.** `dumpsys thermalservice` reached Thermal Status 3 (severe) 30-47 s into every run, with the battery at 36-38.5 °C.
+- **Bullets are what drops it.** In the release A/B run (`run-20261018-phone-bulletab/`), 300 enemies with no enemy bullets in the air held 59-60 FPS even at severe. With 400-1,050 Lost Head bullets in the air it read 45-57.
+- **Fixed:** `EnemyBulletDrawer` keeps each bullet's batches and transforms (`EnemyBulletLook.CachedBy`) instead of about ten engine calls per bullet per frame. The cost per bullet went from about 2.1 to 0.9 µs (1.16 ms for ~550 bullets before, 0.74-0.92 ms for ~880 after).
+- **Tried and dropped:** enemy bullets hitting the player by distance (`PlayerReach`) with their collider and collisions off. In the A/B in one run (`-sh-autoplay-bulletphys-ab`, switching every 30 s) FPS at the same bullet counts was within noise (about 52 against 50 at ~1,000 bullets, 55 against 55 at 400-700). The bodies stay in PhysX because `Projectile` requires a Rigidbody. Patch kept in `run-20261018-phone-bulletab/bullet-distance.patch`.
+- Validation: EditMode 991/991; PlayMode `EnemyBulletDrawerPlayModeTests`, `ProjectileRunnerPlayModeTests`, `StageEnemyTypePlayModeTests` and `HordeVatPlayModeTests` 15/15; 0 exceptions, save untouched (`run-20261018-bulletcache`).
+- Open: what in the bullets costs the frames (halo overdraw on the phone GPU, the bullets' Rigidbody sync, or the shooting itself) is not measured yet.
+
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
 
 Owner: "keyboard se game khel raha hoon to level up selection mein keyboard kaam nahi kar raha", "or chest ko bhi fix karo". VS wiki (Options, patch 0.2.4): "Spacebar can be used just like Enter to interact with the UI".

@@ -21,6 +21,13 @@ namespace SoulHunter.Gameplay.AI
 
         /// <summary>Bodies drawn and draws issued in the last frame (tests and the bot).</summary>
         public static int LastBodies { get; private set; }
+        /// <summary>Last frame: bodies whose own renderer this drawer switched off, and those of them left out as off view.
+        /// On the owner's phone (2026-10-18) the horde was invisible with LastBodies 0, so both are counted.</summary>
+        public static int LastHanded { get; private set; }
+        public static int LastCulled { get; private set; }
+        /// <summary>Last frame's ground view (x, z) used for culling, and whether culling was on.</summary>
+        public static Vector2 LastViewMin, LastViewMax;
+        public static bool LastCull;
         public static int LastDraws { get; private set; }
 
         private static HordeVatDrawer _instance;
@@ -99,6 +106,7 @@ namespace SoulHunter.Gameplay.AI
         {
             LastBodies = 0;
             LastDraws = 0;
+            LastHanded = LastCulled = 0;
             var enemies = EnemyController.ActiveEnemies;
             if (!Enabled)
             {
@@ -114,6 +122,7 @@ namespace SoulHunter.Gameplay.AI
             bool cull = player != null && SoulHunter.Gameplay.VFX.PickupIdleMotionRunner.ViewOnGround(
                 Camera.main, player.transform.position.y, out min, out max);
             if (cull) { min -= Vector2.one * ViewMargin; max += Vector2.one * ViewMargin; }
+            LastCull = cull; LastViewMin = min; LastViewMax = max;
 
             foreach (var batch in _batchList) batch.Count = 0;
             for (int i = 0; i < enemies.Count; i++)
@@ -131,11 +140,12 @@ namespace SoulHunter.Gameplay.AI
                     continue;
                 }
                 if (!body.Handed) { r.forceRenderingOff = true; body.Handed = true; }
+                LastHanded++;
                 if (!r.enabled || !r.gameObject.activeInHierarchy) continue;
                 if (cull)
                 {
                     Vector3 p = body.Visual.position;
-                    if (p.x < min.x || p.x > max.x || p.z < min.y || p.z > max.y) continue;
+                    if (p.x < min.x || p.x > max.x || p.z < min.y || p.z > max.y) { LastCulled++; continue; }
                 }
                 if (!_batches.TryGetValue(body.Asset, out var b))
                 {
