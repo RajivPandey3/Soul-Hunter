@@ -143,5 +143,27 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(RunStatsTracker.Instance.TotalKills, Is.EqualTo(kills + 1));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// CMB-02 (2026-10-19). VS wiki Pentagram: "instantly erasing every enemy, their drops, and all items on the
+        /// screen"; level 1 "Erases everything in sight". Before, every active enemy on the map was erased.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator OnlyEnemiesOnTheScreen_AreErased()
+        {
+            yield return Setup();
+            var enemyPrefab = GetPrivateField<GameObject>(_spawner, "_stageEnemyPrefab");
+            var near = Spawn(enemyPrefab, Vector3.right * 5f);
+            var far = Spawn(enemyPrefab, Vector3.right * 80f);
+            var camera = Camera.main;
+            Assert.IsNotNull(camera);
+            Vector3 v = camera.WorldToViewportPoint(far.transform.position);
+            Assert.That(v.x > 1f || v.x < 0f || v.y > 1f || v.y < 0f, Is.True, "Precondition: the far enemy is off the screen.");
+            Fire();
+            yield return WaitUntilRealtime(() => !near.activeInHierarchy, "the enemy on the screen to be erased");
+            Assert.That(far.activeInHierarchy, Is.True, "An enemy off the screen is not erased.");
+            Assert.That(far.GetComponent<HealthController>().CurrentHealth, Is.GreaterThan(0));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

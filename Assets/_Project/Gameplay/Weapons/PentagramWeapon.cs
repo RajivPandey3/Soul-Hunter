@@ -87,11 +87,15 @@ namespace SoulHunter.Gameplay.Combat
             long wipeStart = System.Diagnostics.Stopwatch.GetTimestamp();
             LastWipeCount = 0;
             var allEnemies = EnemyController.ActiveEnemies;
+            // VS (wiki Pentagram, 2026-10-19): it erases "every enemy, their drops, and all items on the screen", "Erases
+            // everything in sight": enemies off the screen are left (before 2026-10-19 the whole map went, CMB-02).
+            var screenCamera = Camera.main;
             for (int i = allEnemies.Count - 1; i >= 0; i--)
             {
                 if (i >= allEnemies.Count) continue;
                 var enemy = allEnemies[i];
                 if (enemy == null) continue;
+                if (!OnScreen(screenCamera, enemy.transform.position)) continue;
                 // VS: the 25-minute stage bosses are immune to Pentagram's instant kill.
                 if (enemy.IsStageBoss) continue;
                 // VS instant kill resistance (vampire.survivors.wiki/w/Enemies, "Resistances": immunity to Pentagram).
@@ -115,6 +119,14 @@ namespace SoulHunter.Gameplay.Combat
             LastEnemyWipeMs = (itemsStart - wipeStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
             LastItemWipeMs = (end - itemsStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
             LastWipeFrame = Time.frameCount;
+        }
+
+        /// <summary>True when the point is inside the camera's view (as Eclipse Sigil's screen erase); no camera, everywhere.</summary>
+        private static bool OnScreen(Camera camera, Vector3 position)
+        {
+            if (camera == null) return true;
+            Vector3 v = camera.WorldToViewportPoint(position);
+            return v.z > 0f && v.x >= 0f && v.x <= 1f && v.y >= 0f && v.y <= 1f;
         }
 
         /// <summary>The last wipe's cost, for the bot's hitch log: enemies erased, and the time the enemy and item passes took.</summary>
