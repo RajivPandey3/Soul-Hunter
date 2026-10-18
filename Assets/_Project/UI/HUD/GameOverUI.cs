@@ -75,7 +75,10 @@ namespace SoulHunter.Gameplay.UI
 
         private void GoToMainMenu()
         {
-            SoulHunter.Core.Services.GameTime.ResetAll();
+            // The game stays paused (this screen keeps its pause) until the scene really changes: the load is async and
+            // takes frames, and resuming here let gameplay run under the Results screen (gems saved, level-ups opened).
+            // SceneManager.LoadSceneAsync and SceneService's Task.Yield loop do not depend on Time.timeScale; the
+            // gameplay scene's unload resets GameTime (GameSessionManager.OnDestroy, and this object's OnDestroy).
             try
             {
                 if (SoulHunter.Core.Services.GameServices.Instance != null &&
