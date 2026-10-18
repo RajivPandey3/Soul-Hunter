@@ -34,7 +34,10 @@ namespace SoulHunter.Gameplay.Weapons
         private int Level => Mathf.Clamp(CurrentLevel, 1, 8);
         public override int MaxLevel => 8;
         public int BaseDamage => _damage + (Level >= 5 ? 10 : 0) + (Level >= 8 ? 10 : 0);
-        public int ShotCount => Mathf.Max(1, 1 + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + (_stats != null ? _stats.Amount : 0) + SoulHunter.Gameplay.Core.ArcanaManager.AmountBonusFor(this));
+        // CMB-04 (2026-10-19): Amount, damage, speed and area come from the AutoAttackWeapon helpers, so Limit Break (wiki
+        // Magic_Wand "Limit Break": Might +0.5%, Area, Speed, Amount, Pierce), Hyper's projectile speed and the Arcanas
+        // reach the wand. It read the player's stats directly, so only its Pierce cards worked.
+        public int ShotCount => Mathf.Max(1, 1 + (Level >= 2 ? 1 : 0) + (Level >= 4 ? 1 : 0) + (Level >= 6 ? 1 : 0) + ExtraAmount);
         public int Pierce => (Level >= 7 ? 2 : 1) + ExtraPierce;
         public float EffectiveCooldown => Mathf.Max(0.01f, (_cooldown - (Level >= 3 ? 0.2f : 0f)) * (_stats != null ? _stats.Cooldown : 1f));
 
@@ -99,9 +102,9 @@ namespace SoulHunter.Gameplay.Weapons
             shot.SetActive(true);
             var projectile = shot.GetComponent<Projectile>();
             if (projectile == null) projectile = shot.AddComponent<Projectile>();
-            int damage = Mathf.RoundToInt((BaseDamage + SoulHunter.Gameplay.Core.ArcanaManager.FlatDamageFor(this)) * (_stats != null ? _stats.Might : 1f));
-            float speed = _projectileSpeed * (_stats != null ? _stats.ProjectileSpeed : 1f);
-            shot.transform.localScale = _projectilePrefab.transform.localScale * (_stats != null ? _stats.Area : 1f);
+            int damage = Mathf.RoundToInt(ScaledDamage(BaseDamage));
+            float speed = _projectileSpeed * SpeedMultiplier;
+            shot.transform.localScale = _projectilePrefab.transform.localScale * AreaMultiplier;
             // Learning Comment:
             // AGENTS.md Section 5: Spectral enemies ignore Normal damage and require Holy, Magic, or Spectral.
             // Magic Wand projectiles use DamageType.Magic to damage Level 7 spectral enemies.

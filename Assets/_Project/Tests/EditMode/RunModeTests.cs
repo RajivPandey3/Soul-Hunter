@@ -456,5 +456,71 @@ namespace SoulHunter.Tests.EditMode
                 typeof(ArcanaManager).GetMethod("OnDestroy", Private).Invoke(arcanas, null);
             }
         }
+
+        /// <summary>
+        /// CMB-04 (2026-10-19): Limit Break cards that changed nothing. The Magic Wand read the player's stats directly
+        /// (only Pierce worked), Crimson Shroud ignored its Base Damage, Area and Amount cards, and Peachone and Dusk Raven
+        /// ignored Speed. Wiki tables: Magic_Wand (Might +0.5%, Area +2.5%, Speed +5%, Amount +1, Pierce +1);
+        /// Crimson_Shroud (Might +0.5%, Area +2.5%, Amount +1; "Area increases the size of the explosion", "Amount creates
+        /// more explosions"); Peachone and Ebony_Wings ("Speed increases how fast the circle moves", Speed +5%).
+        /// </summary>
+        [Test]
+        public void LimitBreakCards_ReachTheMagicWand_CrimsonShroud_AndThePeachoneOrbit()
+        {
+            // Magic Wand: one real shot, with an enemy to aim at.
+            var wand = Track(new GameObject("TestMagicWand")).AddComponent<MagicWandWeapon>();
+            typeof(MagicWandWeapon).GetMethod("Awake", Private).Invoke(wand, null);
+            var prefab = Track(new GameObject("TestWandShot"));
+            prefab.AddComponent<BoxCollider>();
+            prefab.AddComponent<Rigidbody>();
+            prefab.AddComponent<Projectile>();
+            prefab.SetActive(false);
+            typeof(MagicWandWeapon).GetField("_projectilePrefab", Private).SetValue(wand, prefab);
+            var enemyObject = Track(new GameObject("TestWandTarget"));
+            enemyObject.transform.position = Vector3.forward * 5f;
+            var enemy = enemyObject.AddComponent<SoulHunter.Gameplay.AI.EnemyController>();
+            if (!SoulHunter.Gameplay.AI.EnemyController.ActiveEnemies.Contains(enemy)) SoulHunter.Gameplay.AI.EnemyController.ActiveEnemies.Add(enemy);
+            try
+            {
+                Assert.That(wand.ShotCount, Is.EqualTo(1), "Precondition: one shot at level 1.");
+                for (int i = 0; i < 4; i++) LimitBreak.Apply(wand, LimitBreak.Stat.BaseDamage); // +2
+                for (int i = 0; i < 2; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Speed);      // +10%
+                for (int i = 0; i < 4; i++) LimitBreak.Apply(wand, LimitBreak.Stat.Area);       // +10%
+                LimitBreak.Apply(wand, LimitBreak.Stat.Amount);
+                Assert.That(wand.ShotCount, Is.EqualTo(2), "An Amount card adds a shot.");
+
+                Projectile fired = null;
+                void Fired(Projectile p) { fired = p; if (p != null) Track(p.gameObject); }
+                wand.OnProjectileFired += Fired;
+                typeof(MagicWandWeapon).GetMethod("FireWand", Private).Invoke(wand, null);
+                wand.OnProjectileFired -= Fired;
+                Assert.That(fired, Is.Not.Null, "The wand fired.");
+                Assert.That(typeof(Projectile).GetField("_damage", Private).GetValue(fired), Is.EqualTo(12), "Base Damage cards: 10 + 2.");
+                Assert.That((float)typeof(Projectile).GetField("_speed", Private).GetValue(fired), Is.EqualTo(22f).Within(1e-3f), "Speed cards: 20 x 1.1.");
+                Assert.That(fired.transform.localScale.x, Is.EqualTo(prefab.transform.localScale.x * 1.1f).Within(1e-3f), "Area cards: x 1.1.");
+            }
+            finally { SoulHunter.Gameplay.AI.EnemyController.ActiveEnemies.Remove(enemy); }
+
+            // Crimson Shroud: Area widens the explosion, Amount adds explosions, Base Damage adds to the hit.
+            var shroud = Track(new GameObject("TestCrimsonShroud")).AddComponent<CrimsonShroudWeapon>();
+            float radius = shroud.RetaliationRadius;
+            int damage = shroud.CalculateRetaliationDamage(10);
+            for (int i = 0; i < 4; i++) LimitBreak.Apply(shroud, LimitBreak.Stat.Area);
+            for (int i = 0; i < 4; i++) LimitBreak.Apply(shroud, LimitBreak.Stat.BaseDamage);
+            Assert.That(shroud.RetaliationRadius, Is.EqualTo(radius * 1.1f).Within(1e-3f), "Area cards widen the explosion.");
+            Assert.That(shroud.CalculateRetaliationDamage(10), Is.EqualTo(damage + 2), "Base Damage cards add to the retaliation.");
+            LimitBreak.Apply(shroud, LimitBreak.Stat.Amount);
+            typeof(CrimsonShroudWeapon).GetMethod("QueueRetaliation", Private).Invoke(shroud, new object[] { new DamagePacket(10, Vector3.zero, Vector3.zero) });
+            Assert.That(shroud.PendingPulses, Is.EqualTo(2), "An Amount card adds an explosion.");
+
+            // Peachone and Dusk Raven: Speed turns the circle faster.
+            foreach (var bird in new PeachoneWeapon[] { Track(new GameObject("TestPeachone")).AddComponent<PeachoneWeapon>(), Track(new GameObject("TestDuskRaven")).AddComponent<DuskRavenWeapon>() })
+            {
+                float rate = bird.OrbitRate;
+                Assert.That(Mathf.Abs(rate), Is.GreaterThan(0f));
+                for (int i = 0; i < 4; i++) LimitBreak.Apply(bird, LimitBreak.Stat.Speed); // +20%
+                Assert.That(bird.OrbitRate, Is.EqualTo(rate * 1.2f).Within(1e-3f), $"{bird.GetType().Name}: Speed cards turn the circle faster.");
+            }
+        }
     }
 }

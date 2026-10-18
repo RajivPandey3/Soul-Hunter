@@ -17,7 +17,10 @@ namespace SoulHunter.Gameplay.Combat
         public override float BaseRechargeCooldown => 8f;
         public override float BlockGraceSeconds => 1f;
         public int PendingPulses => _count;
-        public float RetaliationRadius => _retaliationRadius * (_stats != null ? Mathf.Max(0f, _stats.Area) : 1f);
+        // CMB-04 (2026-10-19), VS wiki Crimson_Shroud: "Area increases the size of the explosion", "Amount creates more
+        // explosions"; its Limit Break table is Might +0.5% (Base Damage +0.5), Area +2.5%, Amount +1. Area and Amount now
+        // come from the AutoAttackWeapon helpers, which carry those cards; they read the player's stats only before.
+        public float RetaliationRadius => _retaliationRadius * AreaMultiplier;
         public event Action<int> OnRetaliation;
 
         protected override void OnEnable()
@@ -52,13 +55,15 @@ namespace SoulHunter.Gameplay.Combat
         public int CalculateRetaliationDamage(int receivedDamage)
         {
             float multiplier = _stats != null ? _stats.Might * _stats.Curse * (1f + Mathf.Clamp(_stats.Armor, 0, 50) * 0.1f) : 1f;
-            return Mathf.Max(0, Mathf.RoundToInt(Mathf.Clamp(receivedDamage, 0, 100) * multiplier));
+            // Limit Break Base Damage is added to the damage taken before the multipliers. Wiki silent on where it goes (the
+            // weapon's base damage is 0); balance method: the base the wiki's formula multiplies, as for every other weapon.
+            return Mathf.Max(0, Mathf.RoundToInt((Mathf.Clamp(receivedDamage, 0, 100) + LimitBreak.BaseDamageBonus(this)) * multiplier));
         }
 
         private void QueueRetaliation(DamagePacket packet)
         {
             int damage = CalculateRetaliationDamage(packet.Amount);
-            int pulses = _stats != null ? 1 + Mathf.Clamp(_stats.Amount, 0, 49) : 1;
+            int pulses = 1 + Mathf.Clamp(ExtraAmount, 0, 49);
             for (int i = 0; i < pulses && _count < _queuedDamage.Length; i++)
             {
                 _queuedDamage[(_head + _count) % _queuedDamage.Length] = damage;

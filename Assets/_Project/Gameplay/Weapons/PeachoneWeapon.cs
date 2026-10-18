@@ -62,6 +62,12 @@ namespace SoulHunter.Gameplay.Combat
         /// counterclockwise before 2026-10-12. 50 degrees a second is Soul Hunter's own pace; both birds have Speed 80%.
         /// </summary>
         protected virtual float OrbitDegreesPerSecond => -50f;
+        /// <summary>
+        /// Degrees a second the zone circles now. VS wiki Peachone (2026-10-19): "Speed increases how fast the circle
+        /// moves"; its Limit Break table has "Speed +5%" (Ebony_Wings the same). So the Speed stat, Hyper and the Limit
+        /// Break cards turn the orbit faster, as Twilight Flock's; it ignored Speed before (CMB-04).
+        /// </summary>
+        public float OrbitRate => OrbitDegreesPerSecond * SpeedMultiplier;
         /// <summary>The weapon's name on its damage (Results screen fallback).</summary>
         protected virtual string ResultsName => "Peachone";
 
@@ -82,7 +88,7 @@ namespace SoulHunter.Gameplay.Combat
             if (BirdVisual != null)
             {
                 // Circle around the player on the ground plane (it used to circle vertically, in X-Y).
-                _angle += Time.deltaTime * OrbitDegreesPerSecond;
+                _angle += Time.deltaTime * OrbitRate;
                 float rad = _angle * Mathf.Deg2Rad;
                 Vector3 offset = new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * CircleRadius;
                 BirdVisual.transform.position = transform.position + offset + Vector3.up * BirdHeight;
