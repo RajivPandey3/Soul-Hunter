@@ -100,6 +100,45 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        // Bug MIS UI-02: after Draw a Fate opened the Arcana choice, the shop rebuilt and selected its first ware, hidden
+        // under the choice; the next Enter bought that ware with the player's gold. Focus stays on the cards while the
+        // choice is open, the shop takes no clicks or navigation meanwhile, and focus comes back to the shop afterwards.
+        [UnityTest]
+        public IEnumerator DrawAFate_KeepsFocusOnTheArcanaCards_ThenGivesItBackToTheShop()
+        {
+            yield return OpenStage3Shop(inverse: true, gold: 50000);
+            var merchant = Merchant;
+            Assert.That(merchant.IsShopOpen, Is.True, "The shop opened. " + Errors());
+            Assert.That(merchant.ShopUsable, Is.True, "The shop answers the keys while nothing is over it.");
+            var economy = GameServices.Instance.Get<EconomyService>();
+
+            Click(Card(merchant, "Draw a Fate"), "Draw a Fate");
+            yield return null;
+            var choice = SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current;
+            Assert.That(choice != null && choice.IsOpen, Is.True, "Draw a Fate opens the Arcana choice. " + Errors());
+            int goldWhileChoosing = economy.CurrentGold;
+            var selected = EventSystem.current.currentSelectedGameObject;
+            Assert.That(selected != null && selected.transform.IsChildOf(choice.transform), Is.True,
+                $"Keyboard focus is on an Arcana card, not on '{(selected != null ? selected.name : "nothing")}' under it.");
+            Assert.That(merchant.ShopUsable, Is.False, "The shop under the choice takes no clicks, navigation or focus.");
+            yield return null;
+            selected = EventSystem.current.currentSelectedGameObject;
+            Assert.That(selected != null && selected.transform.IsChildOf(choice.transform), Is.True, "Focus stays on the cards a frame later.");
+            Assert.That(economy.CurrentGold, Is.EqualTo(goldWhileChoosing), "Nothing else was bought.");
+
+            Click(choice.TakeButton, "Take this card");
+            yield return null;
+            yield return null;
+            Assert.That(choice.IsOpen, Is.False, "The choice closed.");
+            Assert.That(merchant.ShopUsable, Is.True, "The shop answers again.");
+            selected = EventSystem.current.currentSelectedGameObject;
+            Assert.That(selected != null && selected.transform.IsChildOf(merchant.ShopUI.transform) && selected.activeInHierarchy, Is.True,
+                "Focus is back on a shop button.");
+            merchant.Leave();
+            yield return null;
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         [UnityTest]
         public IEnumerator InverseMode_SellsSigilsAndDrawAFate_BuyingRaisesTheCharge_AndTheCapHolds()
         {

@@ -560,8 +560,37 @@ namespace SoulHunter.Gameplay.Core
             Canvas.ForceUpdateCanvases(); // a canvas made this frame has no scaled size yet
             LayoutShop();
             if (focus == null) focus = _shopLeave;
-            if (UnityEngine.EventSystems.EventSystem.current != null)
-                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(focus.gameObject);
+            _shopFocus = focus;
+            // Bug MIS UI-02: Draw a Fate opens the Arcana choice over the shop, then the shop rebuilds. Selecting a ware here
+            // took keyboard focus off the Arcana cards, and the next Enter bought another ware with the player's gold. While
+            // a choice screen is open the shop is held back (no clicks, no navigation, no focus); LateUpdate hands focus
+            // back to it when the choice closes.
+            _shopGroup = _shopUI.AddComponent<CanvasGroup>();
+            if (ChoiceScreenOpen) SetShopUsable(false);
+            else SelectShopFocus();
+        }
+
+        private CanvasGroup _shopGroup;
+        private UnityEngine.UI.Selectable _shopFocus;
+
+        /// <summary>True while the Arcana choice (Draw a Fate) is open over the shop.</summary>
+        private static bool ChoiceScreenOpen =>
+            SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current != null && SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current.IsOpen;
+
+        /// <summary>True while the shop answers the mouse, keyboard and controller (false under the Arcana choice).</summary>
+        public bool ShopUsable => _shopGroup != null && _shopGroup.interactable;
+
+        private void SetShopUsable(bool usable)
+        {
+            if (_shopGroup == null) return;
+            _shopGroup.interactable = usable;
+            _shopGroup.blocksRaycasts = usable;
+        }
+
+        private void SelectShopFocus()
+        {
+            var events = UnityEngine.EventSystems.EventSystem.current;
+            if (events != null && _shopFocus != null) events.SetSelectedGameObject(_shopFocus.gameObject);
         }
 
         private void OnEnable() => SoulHunter.Gameplay.UI.UiScreen.Changed += LayoutShop;
@@ -569,6 +598,7 @@ namespace SoulHunter.Gameplay.Core
         private void LateUpdate()
         {
             if (_shopUI == null || _shopPanel == null) return;
+            if (_shopGroup != null && !_shopGroup.interactable && !ChoiceScreenOpen) { SetShopUsable(true); SelectShopFocus(); }
             if (((RectTransform)_shopPanel.parent).rect.size != _shopLaidOutFor) LayoutShop();
         }
 
@@ -832,6 +862,8 @@ namespace SoulHunter.Gameplay.Core
             _shopPanel = null;
             _shopScroll = null;
             _shopLeave = null;
+            _shopGroup = null;
+            _shopFocus = null;
             _wareButtons.Clear();
         }
 
