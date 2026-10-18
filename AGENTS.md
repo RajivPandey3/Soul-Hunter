@@ -2278,10 +2278,17 @@ realme RMX5004, Ultra, release APK, Level 5 from 19:50 with a level-90 hero and 
 - Validation: EditMode 991/991; PlayMode `EnemyBulletDrawerPlayModeTests`, `ProjectileRunnerPlayModeTests`, `StageEnemyTypePlayModeTests` and `HordeVatPlayModeTests` 15/15; 0 exceptions, save untouched (`run-20261018-bulletcache`).
 - **Drawing is not the cost.** An A/B in one run (`run-20261018-phone-bulletlook/`, `-sh-autoplay-bulletlook-ab`, `EnemyBulletDrawer.DrawLevel`) drew cores and halos, cores only, then nothing. With nothing drawn and about 950 bullets in the air it read 46-49 FPS, the worst of the run.
 - **Fixed: enemy bullets have no physics.** `EnemyBullet` (World/Hazards) has no Rigidbody and no Collider. It flies straight (`EnemyBulletRunner`) and hits the player when `PlayerReach` says they touch, through the same damage path (DamageableLookup, DamageSource "Pile Assault", TakeDamage), then ends (pierce 1). `HazardBullets.Fire` makes them from a copy of the bullet template with the Projectile, Rigidbody and Collider taken off; it returns a `Component`. Shadow Kael's mirrored shots stay Projectiles. `HazardBullets.LightBullets = false` fires the old kind (A/B and tests).
-  - **The gain is not proven.** Phone A/B in one run (`run-20261018-phone-lightbullet/`, `-sh-autoplay-lightbullet-ab`), counting the 5 s windows after 115 s with at least 300 bullets in the air:
-    - second run (294-300 enemies): light bullets 58-60 FPS (434-877 bullets), physics bullets 49-60 (497-628). The physics windows came later, on a hotter phone.
-    - first run (`prof-run1`, 198-208 enemies): light bullets 57-60 (338-599), physics bullets 58-60 (417-623).
-    - The commit message of `a13a02ba` ("58-60 FPS"; physics "49-56") overstated this; this entry is the corrected reading. The change was kept because it removes about 900 bodies from PhysX with no behaviour change, not because a gain was measured. A heavier run with more windows is still needed.
+  - **Fair A/B, gain measured** (`D:/SoulHunter-Validation/run-20261018-phone-fair/`, `go.ps1`, `analyse.py`).
+    - Setup: 4 runs of 4 minutes, each started on a cooled phone (thermal status 0, battery under 35.5 °C). The kind switches every 25 s (`-sh-autoplay-lightbullet-ab-seconds 25`), and runs 1 and 3 start light while runs 2 and 4 start physics (`-sh-autoplay-lightbullet-first`).
+    - Counted: every 5 s window that starts at least 6 s after a switch (timeline `lightSince` >= 11), because bullets of the other kind live 6 s.
+
+    | Windows | Light bullets | Physics bullets |
+    |---|---|---|
+    | 300+ bullets in the air | 13; mean 58.9, 57-60 FPS | 14; mean 52.1, 44-60 FPS |
+    | Under 300 bullets | 16; mean 58.8, 57-60 FPS | 16; mean 58.9, 57-60 FPS |
+
+    - With 800-990 bullets in the air, physics bullets read 44-49 FPS; light bullets with 850-936 read 58-60. Run 4 was lighter (224 enemies at most).
+    - An earlier unfair pair (`run-20261018-phone-lightbullet/`: one order, one run on a hotter phone) was first reported as "58-60 against 49-56". The `a13a02ba` commit message carries that overstated reading.
   - Tests: `EnemyBulletPlayModeTests` (R): no Rigidbody or Collider; hits the hero once for its damage and ends; one passing 3 units by does not hit and ends at its lifetime; a pooled bullet starts where it is fired. `ProjectileRunnerPlayModeTests` keeps its checks on the physics kind. EditMode 991/991, PlayMode 58/58 (EnemyBullet, EnemyBulletDrawer, ProjectileRunner, StageHazard, EnemyAbility, StageEnemyType, ShadowKael, Dash), 0 exceptions, save untouched (`run-20261018-enemybullet`).
 - **Open: a late drop with no bullets.** In the second light-bullet run, from 295 s (stage 23:53) to the end, FPS fell to 13-30 with about 295 enemies and almost no bullets, in both modes. Two Gilded Charms were picked up at 291 and 296 s (Gold Fever: 75% of kills drop a coin, at about 100 kills a second). That is a suspect, not a proven cause. The battery was at 39.5 °C.
 
