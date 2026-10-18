@@ -143,5 +143,53 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(RunStatsTracker.Instance.TotalKills, Is.EqualTo(kills + 1));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-02. A Fixed Direction type (Level 2's moths, Level 4's gargoyles) crosses the screen and is pooled
+        /// without dying, so a passed-on chest given to it was lost. It waits for an enemy that stays instead.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator APassedOnChest_SkipsAFixedDirectionEnemy_AndGoesToOneThatStays()
+        {
+            yield return Setup();
+            var enemyPrefab = GetPrivateField<GameObject>(_spawner, "_stageEnemyPrefab");
+            var give = typeof(EnemySpawner).GetMethod("GivePendingChest", BindingFlags.NonPublic | BindingFlags.Static);
+            var crosser = Spawn(enemyPrefab, Vector3.right * 8f);
+            var stayer = Spawn(enemyPrefab, Vector3.left * 8f);
+            var original = crosser.GetComponent<EnemyController>().Data;
+            var crosserData = Object.Instantiate(original);
+            var stayerData = Object.Instantiate(stayer.GetComponent<EnemyController>().Data);
+            try
+            {
+                foreach (var movement in new[] { SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection, SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection })
+                {
+                    crosserData.Movement = movement;
+                    crosser.GetComponent<EnemyController>().UseData(crosserData);
+                    EnemyDrop.PendingChests.Clear();
+                    EnemyDrop.PendingChests.Enqueue(ChestTiers.Minute5);
+                    give.Invoke(null, new object[] { crosser });
+                    Assert.That(crosser.GetComponent<EnemyDrop>().WillDropChest, Is.False, movement + ": an enemy that leaves the screen gets no chest.");
+                    Assert.That(EnemyDrop.PendingChests.Count, Is.EqualTo(1), movement + ": the chest still waits.");
+                }
+
+                stayerData.Movement = SoulHunter.Gameplay.Data.EnemyMovement.Homing;
+                stayer.GetComponent<EnemyController>().UseData(stayerData);
+                give.Invoke(null, new object[] { stayer });
+                Assert.That(stayer.GetComponent<EnemyDrop>().WillDropChest, Is.True, "A homing enemy takes the chest.");
+                Assert.That(EnemyDrop.PendingChests.Count, Is.Zero);
+            }
+            finally
+            {
+                EnemyDrop.PendingChests.Clear();
+                crosser.GetComponent<EnemyController>().UseData(original); // both share the stage enemy's data
+                stayer.GetComponent<EnemyController>().UseData(original);
+                crosser.SetActive(false);
+                stayer.SetActive(false);
+                Object.Destroy(crosserData);
+                Object.Destroy(stayerData);
+            }
+            yield return null;
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

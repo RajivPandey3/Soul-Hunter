@@ -23,6 +23,8 @@ namespace SoulHunter.Gameplay.AI
 
         private HealthController _healthController;
         private bool _captured;
+        // The weapons this encounter mirrored, removed when a pooled body starts a new encounter (Bug MIS AI-01).
+        private readonly System.Collections.Generic.List<GameObject> _mirroredWeapons = new System.Collections.Generic.List<GameObject>();
 
         /// <summary>The boss's copy of the player's stats, read by every mirrored weapon.</summary>
         public PlayerStats MirroredStats { get; private set; }
@@ -41,6 +43,7 @@ namespace SoulHunter.Gameplay.AI
         {
             if (_captured) return;
             _captured = true;
+            ClearMirroredWeapons();
 
             PlayerStats stats = null;
             WeaponManager weapons = null;
@@ -70,6 +73,7 @@ namespace SoulHunter.Gameplay.AI
                 foreach (var pair in weapons.GetEquippedWeapons())
                 {
                     var weaponInstance = Instantiate(pair.Key, transform);
+                    _mirroredWeapons.Add(weaponInstance);
                     weaponInstance.transform.localScale = pair.Key.transform.localScale / bossScale;
                     // Retarget before the weapon's first attack.
                     ConfigureMirroredWeapon(weaponInstance);
@@ -88,6 +92,30 @@ namespace SoulHunter.Gameplay.AI
             // Revivals: a lethal hit is survived without OnDied, so a revival never counts as the boss kill.
             _healthController = GetComponent<HealthController>();
             if (_healthController != null) _healthController.TryPreventDeath = TryRevive;
+        }
+
+        /// <summary>
+        /// The boss body is pooled (EnemySpawner._bossPools) and comes back in the next Endless cycle. Each spawn is a new
+        /// encounter (AGENTS.md Level 10: "At encounter start, the relevant player weapon/stat loadout must be captured"),
+        /// so leaving play ends this encounter's copy and the next CaptureFrom takes the player's loadout of that moment
+        /// (Bug MIS AI-01: the body kept cycle 1's weapons, stats and spent revivals, and skipped the mirrored speed).
+        /// </summary>
+        private void OnDisable()
+        {
+            _captured = false;
+        }
+
+        /// <summary>Removes the previous encounter's mirrored weapons; they are switched off at once so they never fire.</summary>
+        private void ClearMirroredWeapons()
+        {
+            for (int i = 0; i < _mirroredWeapons.Count; i++)
+            {
+                var old = _mirroredWeapons[i];
+                if (old == null) continue;
+                old.SetActive(false);
+                Destroy(old);
+            }
+            _mirroredWeapons.Clear();
         }
 
         /// <summary>

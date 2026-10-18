@@ -327,5 +327,74 @@ namespace SoulHunter.Tests.PlayMode
                 "the final death to defeat the Stage 10 boss");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-01. Endless: the Stage 10 boss body is pooled and comes back next cycle. AGENTS.md Level 10: "At
+        /// encounter start, the relevant player weapon/stat loadout must be captured", so the reused body takes the
+        /// player's loadout of that moment, its revivals are full again, and the last encounter's weapons are gone.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator APooledShadowKael_CapturesTheLoadoutAgain_AtTheNextEncounter()
+        {
+            yield return EnterStage10();
+            var player = PlayerController.Instance;
+            var weapons = WeaponManager.Instance;
+            player.Stats.AddRevival(1);
+            var first = SpawnShadowKael();
+            Assert.That(first.MirroredRevivals, Is.EqualTo(player.Stats.Revivals));
+            first.MirroredRevivals = 0; // spent in the first encounter
+            first.gameObject.SetActive(false); // back to the boss pool, as when it dies
+            yield return null;
+
+            // Between the encounters the player grows (the next Endless cycle).
+            weapons.GiveWeapon(UpgradeType.Knife, 2);
+            weapons.GiveWeapon(UpgradeType.Garlic, 1);
+            player.Stats.AddMight(0.5f);
+            player.Stats.AddRevival(1);
+            yield return null;
+
+            var second = SpawnShadowKael();
+            Assert.That(second, Is.SameAs(first), "The test reuses the pooled boss body.");
+            yield return null; // the old encounter's weapons are destroyed at the end of the frame
+            var expected = weapons.GetEquippedWeapons().Select(p => p.Key.name + ":" + p.Value.CurrentLevel).OrderBy(s => s).ToList();
+            var mirrored = second.GetComponentsInChildren<AutoAttackWeapon>(true).Select(w => BaseName(w.gameObject) + ":" + w.CurrentLevel).OrderBy(s => s).ToList();
+            Assert.That(mirrored, Is.EqualTo(expected), "The reused boss holds exactly the player's weapons now, and none of the last encounter's.");
+            Assert.That(second.MirroredStats.Might, Is.EqualTo(player.Stats.Might).Within(0.001f), "The stats are taken again.");
+            Assert.That(second.MirroredRevivals, Is.EqualTo(player.Stats.Revivals), "The revivals are taken again, not left spent.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>
+        /// Bug MIS AI-05. Endless adds +25% enemy damage per cycle (AGENTS.md run modes). A boss body reused from the pool
+        /// in a later cycle deals that cycle's contact damage, not the damage it had when it was first made.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator APooledBoss_InALaterEndlessCycle_DealsThatCyclesContactDamage()
+        {
+            yield return EnterStage10();
+            foreach (var own in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) own.gameObject.SetActive(false);
+            try
+            {
+                var first = SpawnShadowKael();
+                var data = first.GetComponent<EnemyController>().Data;
+                var touch = first.GetComponent<TouchDamage>();
+                Assert.IsNotNull(data, "The Stage 10 boss has EnemyData.");
+                Assert.IsNotNull(touch, "The Stage 10 boss has contact damage.");
+                Assert.That(touch.DamageAmount, Is.EqualTo(Mathf.RoundToInt(data.DamageToPlayer * 1f)), "Cycle 0 damage.");
+                first.gameObject.SetActive(false);
+                yield return null;
+
+                SoulHunter.Gameplay.Data.RunModes.EndlessCycle = 2;
+                var second = SpawnShadowKael();
+                Assert.That(second, Is.SameAs(first), "The test reuses the pooled boss body.");
+                Assert.That(touch.DamageAmount, Is.EqualTo(Mathf.RoundToInt(data.DamageToPlayer * 1.5f)),
+                    "Cycle 2: +25% per cycle reaches the reused boss.");
+            }
+            finally
+            {
+                SoulHunter.Gameplay.Data.RunModes.EndlessCycle = 0;
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

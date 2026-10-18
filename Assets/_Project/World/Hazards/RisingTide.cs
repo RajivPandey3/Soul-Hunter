@@ -70,7 +70,18 @@ namespace SoulHunter.Gameplay.Hazards
                     tide._callerHealth.KnockbackResistance = 1f;
                 }
                 var drop = callerObject.GetComponent<EnemyDrop>();
-                if (drop != null) drop.EraseDropsThisLife(); // the statbox lists no XP
+                if (drop != null)
+                {
+                    drop.EraseDropsThisLife(); // the statbox lists no XP
+                    // No chest either (Bug MIS AI-03): the body is the level's boss model, whose data drops a chest, and an
+                    // erased carrier passes its chest to the next enemy, so killing the caller gave a free chest.
+                    // vampire.survivors.wiki/w/Random_Events (raw, 2026-10-19) says nothing about a chest from the event's
+                    // Drowner. /w/The_Drowner: the Gallo Tower Drowner, which only instant kills defeat, drops one ("Defeating
+                    // it with instant-kill effects will make it drop a Treasure Chest"), while the Cappella Magna / Boss Rash
+                    // Drowner "can be defeated with Pentagram and defeating it won't make it drop a Treasure Chest". The Tide
+                    // Caller dies to any damage, Pentagram included, like the second one, so it drops none (balance method).
+                    drop.NoChestThisLife();
+                }
                 var flash = callerObject.GetComponentInChildren<SoulHunter.Gameplay.VFX.DamageFlash>();
                 if (flash != null) flash.SetTint(CallerTint);
             }

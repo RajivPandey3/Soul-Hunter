@@ -320,6 +320,13 @@ namespace SoulHunter.Gameplay.Core
             Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} clear reward: {LastStageClearGold} gold.");
         }
 
+        /// <summary>
+        /// The stage clear empties the arena. vampire.survivors.wiki/w/Mad_Forest (raw, 2026-10-19), 30:00 row: "All enemies
+        /// on the screen are cleared." The wiki does not say how; ordinary enemies die as before (kill, gem). An enemy that
+        /// resists instant kills (item guardians, Death's Shadow, res-kill wave bosses; VS Enemies "Resistances") is only
+        /// taken off the field: it goes back to its pool without OnDied, so it leaves no Soul Egg, chest, gem or kill
+        /// (Bug MIS AI-04: a kited 30,000-health guardian dropped its Soul Egg at 30:00; balance method).
+        /// </summary>
         private void WipeArena()
         {
             var enemies = SoulHunter.Gameplay.AI.EnemyController.ActiveEnemies;
@@ -327,6 +334,11 @@ namespace SoulHunter.Gameplay.Core
             {
                 var enemy = enemies[i];
                 if (enemy == null) continue;
+                if (enemy.ResistsInstantKill)
+                {
+                    enemy.gameObject.SetActive(false); // OnDisable takes it off ActiveEnemies; the loop runs backwards
+                    continue;
+                }
                 var health = enemy.GetComponent<HealthController>();
                 // Only kill them if they are alive (don't double kill)
                 if (health != null && health.CurrentHealth > 0)

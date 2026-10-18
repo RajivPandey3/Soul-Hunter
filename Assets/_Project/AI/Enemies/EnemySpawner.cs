@@ -688,7 +688,9 @@ namespace SoulHunter.Gameplay.AI
 
         /// <summary>
         /// VS Pentagram: a chest whose carrier was erased goes to the next ordinary enemy of the horde, with the erased
-        /// boss's ChestTiers (and Arcana flag) kept.
+        /// boss's ChestTiers (and Arcana flag) kept. vampire.survivors.wiki/w/Pentagram (raw, 2026-10-19): "if a boss that
+        /// would have dropped one is erased, the Treasure Chest is then dropped by a different enemy". The wiki does not say
+        /// which; an enemy that leaves the screen without dying never drops it, so those are skipped (balance method).
         /// </summary>
         private static void GivePendingChest(GameObject enemy)
         {
@@ -698,6 +700,10 @@ namespace SoulHunter.Gameplay.AI
             // VS Scarleton: "It cannot drop a Treasure Chest." A type with lives passes the chest to the next enemy.
             var typeController = enemy.GetComponent<EnemyController>();
             if (typeController != null && typeController.Data != null && typeController.Data.Lives > 1) return;
+            // Bug MIS AI-02: a Fixed Direction type crosses the screen and is pooled without dying (EnemyFlyState), so a chest
+            // given to it was lost. Pentagram's rule hands the chest to "a different enemy"; one that will stay is chosen.
+            if (typeController != null && (typeController.Movement == SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection ||
+                                           typeController.Movement == SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection)) return;
             var tiers = EnemyDrop.PendingChests.Dequeue();
             drop.DropChestThisLife(tiers);
             if (tiers.IsArcana) drop.CarryArcanaThisLife();

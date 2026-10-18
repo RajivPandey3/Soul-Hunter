@@ -231,5 +231,34 @@ namespace SoulHunter.Tests.PlayMode
                 RelicPickup.RelicFound -= onFound;
             }
         }
+
+        /// <summary>
+        /// Bug MIS AI-04. Guards cleared by the stage's end (the 30:00 wipe) are not defeated by the hero, and the next level
+        /// replaces the casket: it stays sealed through the transition.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ASoulCasket_StaysSealed_WhenTheStageClearWipesItsGuards()
+        {
+            var first = CasketBook.OnLevel(1).Value;
+            yield return QuietRun(save =>
+            {
+                save.UnlockedCharacters.Remove(first.Character);
+                save.UnlockedAchievements.Remove(CasketBook.OpenedId(1));
+                save.UnlockedAchievements.Remove(CasketBook.FreedId(first.Character));
+            });
+            var sites = GameSessionManager.Instance.GetComponent<UnlockSiteSpawner>();
+            yield return WaitUntilRealtime(() => sites.Casket != null, "Level 1's Soul Casket to be placed");
+            var casket = sites.Casket;
+            casket.SpawnGuards();
+            Assert.That(casket.Guards.Count, Is.GreaterThan(0), "A ring of guards. " + Errors());
+
+            typeof(LevelProgressionManager).GetMethod("CompleteStage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .Invoke(LevelProgressionManager.Instance, new object[] { "test" });
+            for (int i = 0; i < 5; i++) yield return null;
+            Assert.That(casket.Guards.All(g => g == null || !g.activeInHierarchy), Is.True, "The clear empties the arena.");
+            Assert.That(casket.IsReady, Is.False, "The casket stays sealed.");
+            Assert.That(casket.Open(), Is.False);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

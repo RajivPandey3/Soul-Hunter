@@ -51,7 +51,20 @@ namespace SoulHunter.Gameplay.Core
         public bool ArenaActive => _level.Signature == CampaignSignature.ThroneOfDeath;
         public Vector3 ArenaCentre => _arenaCentre;
         /// <summary>The safe zone's radius now: from the start radius down to the end radius over the level's 30 minutes.</summary>
-        public float ArenaRadius => ArenaRadiusAt(_stageTime, _level.RunDurationSeconds, _arenaStartRadius, _arenaEndRadius);
+        public float ArenaRadius => ArenaRadiusAt(StageSeconds, _level.RunDurationSeconds, _arenaStartRadius, _arenaEndRadius);
+        /// <summary>
+        /// The level's own clock (LevelProgressionManager.StageElapsedTime), so the zone closes with the 30:00 it is timed
+        /// on: twice as fast in Hurry mode and moved by the Debug clock skip (Bug MIS AI-07: it counted Time.deltaTime and
+        /// was still at radius ~22.5 when a Hurry run reached 30:00). Falls back to its own count without a progression.
+        /// </summary>
+        private float StageSeconds
+        {
+            get
+            {
+                var progression = LevelProgressionManager.Instance;
+                return progression != null ? progression.StageElapsedTime : _stageTime;
+            }
+        }
         public static float ArenaRadiusAt(float stageSeconds, float runSeconds, float startRadius, float endRadius) =>
             Mathf.Lerp(startRadius, endRadius, Mathf.Clamp01(stageSeconds / Mathf.Max(1f, runSeconds)));
         /// <summary>The damage of one tick outside the zone: the per-second setting over the tick (10 a second: 5 per tick).</summary>

@@ -184,6 +184,32 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Bug MIS AI-03. The Tide Caller is the level's boss model, whose data drops a chest; its drops are erased, and an
+        /// erased carrier passed its chest on, so killing it gave a free chest. Random_Events says nothing about a chest; the
+        /// Cappella Magna / Boss Rash Drowner, defeatable by Pentagram like the Tide Caller, "won't make it drop a Treasure
+        /// Chest" (/w/The_Drowner).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator RisingTide_TheTideCallersDeath_GivesNoChest()
+        {
+            yield return BootWithOmens();
+            EnemyDrop.PendingChests.Clear();
+            Assert.That(RandomEventDirector.Instance.Fire(OmenEvent.RisingTide), Is.True, "Rising Tide. " + Errors());
+            var caller = StageHazards.Instance.Tides.Single().Caller;
+            Assert.IsNotNull(caller, "The Tide Caller stands at the screen's corner.");
+            Assert.That(caller.GetComponent<EnemyDrop>().WillDropChest, Is.False, "This life carries no chest.");
+            int chestsBefore = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy);
+
+            caller.GetComponent<HealthController>().KillSilently();
+            yield return null;
+            yield return null;
+            Assert.That(EnemyDrop.PendingChests.Count, Is.Zero, "No chest is passed on to another enemy.");
+            Assert.That(Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy),
+                Is.EqualTo(chestsBefore), "No chest drops where it fell.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ---------------------------------------------------------------- Nightfall and Rootbound (VS Summon Night, Summon II Molise)
 
         private IEnumerator OnLevelThreeWithAHorde()
@@ -445,6 +471,34 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(system.ArenaActive, Is.False);
             Assert.That(system.ArenaRing == null, Is.True, "The ring goes with the level.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>
+        /// Bug MIS AI-07. The zone closes on the level's clock (StageElapsedTime), so a clock skip (and Hurry's 2x clock) moves
+        /// it; it used to count its own Time.deltaTime and stayed near its start radius.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheClosingArena_ClosesOnTheStageClock()
+        {
+            yield return BootWithOmens();
+            LevelProgressionManager.Instance.StartStage(9);
+            yield return null;
+            yield return null;
+            var system = Object.FindFirstObjectByType<CampaignSignatureSystem>();
+            Assert.That(system.ArenaActive, Is.True);
+            var level = LevelProgressionManager.Instance.CurrentLevel;
+            float before = system.ArenaRadius;
+            LevelProgressionManager.Instance.SkipTo(level.RunDurationSeconds * 0.5f);
+            yield return null;
+            float half = system.ArenaRadius;
+            Assert.That(half, Is.LessThan(before - 5f), "Half the level gone on the clock: the zone has closed in.");
+            LevelProgressionManager.Instance.SkipTo(level.RunDurationSeconds * 0.75f); // not to 30:00: that would end the run
+            yield return null;
+            float later = system.ArenaRadius;
+            Assert.That(before - half, Is.EqualTo(2f * (half - later)).Within(0.5f), "It closes evenly along the stage clock.");
+            LevelProgressionManager.Instance.StartStage(10);
+            yield return null;
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }
