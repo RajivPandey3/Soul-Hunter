@@ -101,6 +101,7 @@ namespace SoulHunter.Gameplay.Core
                 foreach (ChargeWare ware in Enum.GetValues(typeof(ChargeWare))) _heldAtOpen[ware] = Held(ware, levelUp);
             _isShopOpen = true;
             GameTime.Pause(this);
+            DisablePauseAction(); // Bug MIS UI-01: Esc/Start must not open the pause menu under the shop
             BuildShopUI();
         }
 
@@ -109,7 +110,33 @@ namespace SoulHunter.Gameplay.Core
         {
             _isShopOpen = false;
             GameTime.Resume(this);
+            RestorePauseAction();
             DestroyShopUI();
+        }
+
+        // The same switch as the chest, Arcana and Revive screens (ChestUI.DisablePauseAction): with the shop open, Esc /
+        // Start opened the pause menu drawn under it (HUD canvas order 0 against the shop's 900), moved keyboard focus to
+        // its hidden Resume, and its Quit showed the Results screen under the shop.
+        private bool _pauseActionWasEnabled;
+
+        private void DisablePauseAction()
+        {
+            var pause = PauseAction();
+            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+        }
+
+        private void RestorePauseAction()
+        {
+            if (!_pauseActionWasEnabled) return;
+            _pauseActionWasEnabled = false;
+            PauseAction()?.Enable();
+        }
+
+        private static UnityEngine.InputSystem.InputAction PauseAction()
+        {
+            if (GameServices.Instance == null) return null;
+            GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            return input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
         }
 
         /// <summary>VS rule: once the player exits the shop, the merchant disappears from the map.</summary>
@@ -533,8 +560,37 @@ namespace SoulHunter.Gameplay.Core
             Canvas.ForceUpdateCanvases(); // a canvas made this frame has no scaled size yet
             LayoutShop();
             if (focus == null) focus = _shopLeave;
-            if (UnityEngine.EventSystems.EventSystem.current != null)
-                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(focus.gameObject);
+            _shopFocus = focus;
+            // Bug MIS UI-02: Draw a Fate opens the Arcana choice over the shop, then the shop rebuilds. Selecting a ware here
+            // took keyboard focus off the Arcana cards, and the next Enter bought another ware with the player's gold. While
+            // a choice screen is open the shop is held back (no clicks, no navigation, no focus); LateUpdate hands focus
+            // back to it when the choice closes.
+            _shopGroup = _shopUI.AddComponent<CanvasGroup>();
+            if (ChoiceScreenOpen) SetShopUsable(false);
+            else SelectShopFocus();
+        }
+
+        private CanvasGroup _shopGroup;
+        private UnityEngine.UI.Selectable _shopFocus;
+
+        /// <summary>True while the Arcana choice (Draw a Fate) is open over the shop.</summary>
+        private static bool ChoiceScreenOpen =>
+            SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current != null && SoulHunter.Gameplay.UI.ArcanaChoiceScreen.Current.IsOpen;
+
+        /// <summary>True while the shop answers the mouse, keyboard and controller (false under the Arcana choice).</summary>
+        public bool ShopUsable => _shopGroup != null && _shopGroup.interactable;
+
+        private void SetShopUsable(bool usable)
+        {
+            if (_shopGroup == null) return;
+            _shopGroup.interactable = usable;
+            _shopGroup.blocksRaycasts = usable;
+        }
+
+        private void SelectShopFocus()
+        {
+            var events = UnityEngine.EventSystems.EventSystem.current;
+            if (events != null && _shopFocus != null) events.SetSelectedGameObject(_shopFocus.gameObject);
         }
 
         private void OnEnable() => SoulHunter.Gameplay.UI.UiScreen.Changed += LayoutShop;
@@ -542,6 +598,7 @@ namespace SoulHunter.Gameplay.Core
         private void LateUpdate()
         {
             if (_shopUI == null || _shopPanel == null) return;
+            if (_shopGroup != null && !_shopGroup.interactable && !ChoiceScreenOpen) { SetShopUsable(true); SelectShopFocus(); }
             if (((RectTransform)_shopPanel.parent).rect.size != _shopLaidOutFor) LayoutShop();
         }
 
@@ -805,6 +862,8 @@ namespace SoulHunter.Gameplay.Core
             _shopPanel = null;
             _shopScroll = null;
             _shopLeave = null;
+            _shopGroup = null;
+            _shopFocus = null;
             _wareButtons.Clear();
         }
 
@@ -858,6 +917,7 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.UI.UiScreen.Changed -= LayoutShop;
             DestroyShopUI();
             if (_isShopOpen) GameTime.Resume(this);
+            RestorePauseAction(); // a scene unload with the shop open must not leave the Pause key off for the next run
         }
     }
 }

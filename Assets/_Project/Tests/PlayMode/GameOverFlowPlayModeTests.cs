@@ -27,7 +27,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.AreEqual("GAME OVER", screen.TitleText.text, "A death's Results title.");
 
             Click(screen.DoneButton, "DONE");
-            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "DONE to load the main menu");
+            yield return WaitForMenuStayingPaused("death");
             Assert.AreEqual(1f, Time.timeScale, "The menu runs unpaused after DONE. " + Errors());
 
             // Second run from the menu (as Start would): the Results screen works again.
@@ -56,8 +56,25 @@ namespace SoulHunter.Tests.PlayMode
             Assert.AreEqual("RESULTS", screen.TitleText.text);
 
             Click(screen.DoneButton, "DONE");
-            yield return WaitUntilRealtime(() => SceneManager.GetActiveScene().name == "MainMenu", "DONE to load the main menu after a quit");
+            yield return WaitForMenuStayingPaused("quit");
             Assert.AreEqual(1f, Time.timeScale, "The menu runs unpaused. " + Errors());
+        }
+
+        // Bug MIS UI-03: DONE used to resume time before the async MainMenu load, so gameplay ran under the Results
+        // screen for the frames the load took. Every frame until the scene changes must still be paused.
+        private IEnumerator WaitForMenuStayingPaused(string when)
+        {
+            float start = Time.realtimeSinceStartup;
+            int frames = 0;
+            while (SceneManager.GetActiveScene().name != "MainMenu")
+            {
+                if (GameSessionManager.Instance != null)
+                    Assert.AreEqual(0f, Time.timeScale,
+                        $"[{when}] Gameplay resumed under the Results screen {frames} frame(s) after DONE, before the menu loaded. " + Errors());
+                Assert.Less(Time.realtimeSinceStartup - start, 30f, $"[{when}] DONE never loaded the main menu. " + Errors());
+                frames++;
+                yield return null;
+            }
         }
 
         private IEnumerator KillPlayer()
