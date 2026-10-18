@@ -2296,6 +2296,10 @@ realme RMX5004, Ultra, release APK, Level 5 from 19:50 with a level-90 hero and 
   - In `-phone-hot` run 1: 300 enemies for over 4 minutes, battery up to 39.9 °C, 54-60 FPS. The 20 FPS in the last sample is the exit.
   - **The phone throttles in steps.** The big cluster (2.5 GHz) held 2.5 GHz to about 38 °C, 2.4 GHz from about 38.3 °C, and 2.1 GHz from about 39.5 °C, sometimes dropping to 1.3-1.9 GHz.
   - In `-phone-hot` run 2 (40-40.8 °C, big cluster at 2.1 GHz), a wave of about 600 light bullets with about 200 enemies dipped to 40-53 FPS. Without bullets it held 59-60.
+- **Tried and dropped: a per-bullet fast path** (`EnemyBullet.FastPath`). The runner read the player's position once a frame and skipped PlayerReach for far bullets, and the drawer built matrices from the bullet's kept position and rotation instead of reading two transforms. The patch is kept in `run-20261018-phone-fastab/fastpath.patch`.
+  - Phone A/B in one run (`run-20261018-phone-fastab/`): two 7-minute runs back to back, switching every 25 s, in both orders. Battery went from 34.0 to 40.2 °C; the big-cluster median was 2.5 GHz in run 1 and 2.4 GHz in run 2.
+  - Result: fast 59.4 and slow 59.8 FPS mean over the clean windows with 300+ bullets (5 and 4 windows); 59.5 and 59.5 under 300. Minimum FPS was 57 and 58 for the two runs.
+  - No gain was measured, and the 40-53 FPS dips of `-phone-hot` run 2 did not come back with either path.
 
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
 
