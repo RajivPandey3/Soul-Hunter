@@ -8,6 +8,8 @@ using UnityEngine.TestTools;
 using SoulHunter.Core.Events;
 using SoulHunter.Core.Services;
 using SoulHunter.Gameplay.AI;
+using SoulHunter.Gameplay.Combat;
+using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Player;
 using SoulHunter.Gameplay.UI;
 
@@ -66,6 +68,71 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(player.IsDashing, Is.True, "In play, Space still dashes.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        // Bug MIS UI-01: Esc / Start on the level-up screen opened the pause menu drawn under it (HUD canvas order 0 against
+        // 300) and moved keyboard focus to its hidden Resume. The Pause key is off while a level-up holds the pause, as on
+        // the chest, Arcana and Revive screens, and works again once the level-ups are done.
+        [UnityTest]
+        public IEnumerator ThePauseKey_IsOffOnTheLevelUpScreen_AndBackAfterThePick()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            yield return null;
+            var pause = PauseAction();
+            Assert.IsNotNull(pause, "The Pause action exists. " + Errors());
+            Assert.That(pause.enabled, Is.True, "In play the Pause key works.");
+
+            var levelUp = Object.FindFirstObjectByType<LevelUpManager>();
+            var experience = PlayerController.Instance.GetComponent<PlayerExperience>();
+            System.Collections.Generic.List<UpgradeData> choices = null;
+            System.Action<System.Collections.Generic.List<UpgradeData>> onRound = round => choices = round;
+            levelUp.OnLevelUpUIRound += onRound;
+            try
+            {
+                experience.AddXP(experience.XPToNextLevel - experience.CurrentXP);
+                yield return WaitUntilRealtime(() => levelUp.IsLevelUpActive && choices != null, "the level-up screen");
+                Assert.That(pause.enabled, Is.False, "Esc / Start must not open the pause menu under the level-up screen.");
+                Assert.That(GameSystemManager.Instance == null || !GameSystemManager.Instance.IsPaused, Is.True, "The pause menu is not open.");
+
+                yield return CloseOpenLevelUps(); // picks the first card of each chained level-up
+                yield return null;
+            }
+            finally { levelUp.OnLevelUpUIRound -= onRound; }
+            Assert.That(levelUp.IsLevelUpActive, Is.False, "The level-ups are done.");
+            Assert.That(pause.enabled, Is.True, "The Pause key works again after the pick.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        // Bug MIS UI-01: the same with the Wandering Merchant's shop (canvas order 900): Quit from the hidden pause menu
+        // showed the Results screen under the shop. Off while the shop is open, back when the player leaves, and back when
+        // the merchant is destroyed with the shop open (stage change, scene unload).
+        [UnityTest]
+        public IEnumerator ThePauseKey_IsOffInTheMerchantShop_AndBackWhenItCloses()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            LevelProgressionManager.Instance.StartStage(3);
+            yield return WaitUntilRealtime(() => Object.FindFirstObjectByType<WanderingMerchant>() != null, "Level 3 to spawn the merchant");
+            var pause = PauseAction();
+            Assert.That(pause.enabled, Is.True, "In play the Pause key works.");
+
+            var merchant = Object.FindFirstObjectByType<WanderingMerchant>();
+            merchant.OpenShop();
+            yield return null;
+            Assert.That(merchant.IsShopOpen, Is.True, "The shop opened. " + Errors());
+            Assert.That(pause.enabled, Is.False, "Esc / Start must not open the pause menu under the shop.");
+            Object.Destroy(merchant.gameObject);
+            yield return null;
+            Assert.That(pause.enabled, Is.True, "A merchant destroyed with its shop open gives the Pause key back.");
+            Assert.That(GameTime.IsPaused, Is.False, "...and the game runs.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        private static UnityEngine.InputSystem.InputAction PauseAction()
+        {
+            GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            return input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
         }
     }
 }

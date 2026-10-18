@@ -101,6 +101,7 @@ namespace SoulHunter.Gameplay.Core
                 foreach (ChargeWare ware in Enum.GetValues(typeof(ChargeWare))) _heldAtOpen[ware] = Held(ware, levelUp);
             _isShopOpen = true;
             GameTime.Pause(this);
+            DisablePauseAction(); // Bug MIS UI-01: Esc/Start must not open the pause menu under the shop
             BuildShopUI();
         }
 
@@ -109,7 +110,33 @@ namespace SoulHunter.Gameplay.Core
         {
             _isShopOpen = false;
             GameTime.Resume(this);
+            RestorePauseAction();
             DestroyShopUI();
+        }
+
+        // The same switch as the chest, Arcana and Revive screens (ChestUI.DisablePauseAction): with the shop open, Esc /
+        // Start opened the pause menu drawn under it (HUD canvas order 0 against the shop's 900), moved keyboard focus to
+        // its hidden Resume, and its Quit showed the Results screen under the shop.
+        private bool _pauseActionWasEnabled;
+
+        private void DisablePauseAction()
+        {
+            var pause = PauseAction();
+            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+        }
+
+        private void RestorePauseAction()
+        {
+            if (!_pauseActionWasEnabled) return;
+            _pauseActionWasEnabled = false;
+            PauseAction()?.Enable();
+        }
+
+        private static UnityEngine.InputSystem.InputAction PauseAction()
+        {
+            if (GameServices.Instance == null) return null;
+            GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            return input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
         }
 
         /// <summary>VS rule: once the player exits the shop, the merchant disappears from the map.</summary>
@@ -858,6 +885,7 @@ namespace SoulHunter.Gameplay.Core
             SoulHunter.Gameplay.UI.UiScreen.Changed -= LayoutShop;
             DestroyShopUI();
             if (_isShopOpen) GameTime.Resume(this);
+            RestorePauseAction(); // a scene unload with the shop open must not leave the Pause key off for the next run
         }
     }
 }

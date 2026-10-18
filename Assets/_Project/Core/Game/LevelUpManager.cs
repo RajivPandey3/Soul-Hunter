@@ -162,6 +162,7 @@ namespace SoulHunter.Gameplay.Core
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            RestorePauseAction(); // a scene unload during a level-up must not leave the Pause key off for the next run
             if (_experience != null)
             {
                 _experience.OnLevelUp -= HandleLevelUp;
@@ -254,6 +255,7 @@ namespace SoulHunter.Gameplay.Core
 
     // ONLY pause once we know the UI can be presented.
     SoulHunter.Core.Services.GameTime.Pause(this);
+    DisablePauseAction(); // Bug MIS UI-01: Esc/Start must not open the pause menu under the level-up screen
 
     SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] >>> Game PAUSED | timeScale={Time.timeScale}");
 
@@ -411,9 +413,35 @@ namespace SoulHunter.Gameplay.Core
         /// </summary>
         public const float FallbackInvulnerabilitySeconds = SoulHunter.Gameplay.Combat.HealthController.VsInvulnerabilityTime;
 
+        // The same switch as the chest, Arcana and Revive screens (ChestUI.DisablePauseAction): while a level-up holds the
+        // pause, Esc / Start would open the pause menu drawn under this screen (HUD canvas order 0 against the level-up's
+        // 300) and move keyboard focus to its hidden Resume button.
+        private bool _pauseActionWasEnabled;
+
+        private void DisablePauseAction()
+        {
+            var pause = PauseAction();
+            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+        }
+
+        private void RestorePauseAction()
+        {
+            if (!_pauseActionWasEnabled) return;
+            _pauseActionWasEnabled = false;
+            PauseAction()?.Enable();
+        }
+
+        private static UnityEngine.InputSystem.InputAction PauseAction()
+        {
+            if (SoulHunter.Core.Services.GameServices.Instance == null) return null;
+            SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            return input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
+        }
+
         private void ResumeGameplay()
         {
             SoulHunter.Core.Services.GameTime.Resume(this);
+            RestorePauseAction();
             if (_playerController != null)
             {
                 _playerController.ResumeMovementAfterMenu();
