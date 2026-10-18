@@ -1410,6 +1410,22 @@ namespace SoulHunter.Gameplay.Core
                 _bulletAbIndex++;
                 _nextBulletSwitch = Elapsed + 30f;
             }
+            // -sh-autoplay-bulletlook-ab: enemy bullets drawn with cores and halos, cores only, then not at all, 30 s each in
+            // turn (timeline "bulletLook" 2/1/0). Measurement only: tells the GPU cost of the bullets from their game logic.
+            if (HasArg("-sh-autoplay-bulletlook-ab") && Elapsed >= _nextBulletLookSwitch)
+            {
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.DrawLevel = 2 - _bulletLookAbIndex % 3;
+                _bulletLookAbIndex++;
+                _nextBulletLookSwitch = Elapsed + 30f;
+            }
+            // -sh-autoplay-lightbullet-ab: enemy bullets fired as EnemyBullets (no physics) for 30 s, then as physics
+            // Projectiles for 30 s, and so on (timeline "lightBullet"; bullets already in the air keep their kind).
+            if (HasArg("-sh-autoplay-lightbullet-ab") && Elapsed >= _nextLightBulletSwitch)
+            {
+                SoulHunter.Gameplay.Hazards.HazardBullets.LightBullets = _lightBulletAbIndex % 2 == 0;
+                _lightBulletAbIndex++;
+                _nextLightBulletSwitch = Elapsed + 30f;
+            }
             // -sh-autoplay-omen <OmenEvent name> (and -sh-autoplay-omen-after S, default 20): fires that Omen once, then takes
             // screenshots 1, 4 and 10 s later, so a build run can show an Omen without waiting for the wheel.
             if (!_omenDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-omen-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var omenAt) ? omenAt : 20f)
@@ -1550,6 +1566,10 @@ namespace SoulHunter.Gameplay.Core
         private int _vatAbIndex;
         private int _bulletAbIndex;
         private float _nextBulletSwitch;
+        private float _nextBulletLookSwitch;
+        private float _nextLightBulletSwitch;
+        private int _lightBulletAbIndex;
+        private int _bulletLookAbIndex;
 
         // Draw calls (2026-10-15): the render counters of the last frame, in the timeline. Unity fills them in a development
         // build; a release build gives -1 (the recorder is not valid there).
@@ -1628,7 +1648,7 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\"}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\", \"bulletLook\": {37}, \"lightBullet\": {38}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
@@ -1642,7 +1662,9 @@ namespace SoulHunter.Gameplay.Core
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Exists && SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.Enabled ? "true" : "false",
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.LastBullets, SoulHunter.Gameplay.Hazards.EnemyBulletLook.ActiveCount,
                 ReportWriter.TakeSlowestWriteMs(), HordeVatDrawer.LastHanded, HordeVatDrawer.LastCulled,
-                HordeVatDrawer.LastCull ? $"{HordeVatDrawer.LastViewMin.x:0.0},{HordeVatDrawer.LastViewMin.y:0.0}..{HordeVatDrawer.LastViewMax.x:0.0},{HordeVatDrawer.LastViewMax.y:0.0} hero {(PlayerController.Instance != null ? PlayerController.Instance.transform.position.x.ToString("0.0", CultureInfo.InvariantCulture) + "," + PlayerController.Instance.transform.position.z.ToString("0.0", CultureInfo.InvariantCulture) : "-")} cam {(Camera.main != null ? Camera.main.name : "none")}" : "no cull"));
+                HordeVatDrawer.LastCull ? $"{HordeVatDrawer.LastViewMin.x:0.0},{HordeVatDrawer.LastViewMin.y:0.0}..{HordeVatDrawer.LastViewMax.x:0.0},{HordeVatDrawer.LastViewMax.y:0.0} hero {(PlayerController.Instance != null ? PlayerController.Instance.transform.position.x.ToString("0.0", CultureInfo.InvariantCulture) + "," + PlayerController.Instance.transform.position.z.ToString("0.0", CultureInfo.InvariantCulture) : "-")} cam {(Camera.main != null ? Camera.main.name : "none")}" : "no cull",
+                SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.DrawLevel,
+                SoulHunter.Gameplay.Hazards.HazardBullets.LightBullets ? "true" : "false"));
             // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
             if (HasArg("-sh-autoplay-count-fx"))
             {

@@ -60,6 +60,8 @@ namespace SoulHunter.Gameplay.Hazards
     {
         /// <summary>False leaves every bullet to its own renderers (A/B measurement and tests).</summary>
         public static bool Enabled = true;
+        /// <summary>Measurement only (AutoplayBot -sh-autoplay-bulletlook-ab): 2 draws cores and halos, 1 cores only, 0 nothing.</summary>
+        public static int DrawLevel = 2;
 
         /// <summary>Bullets drawn and draws issued in the last frame (tests and the bot).</summary>
         public static int LastBullets { get; private set; }
@@ -141,9 +143,9 @@ namespace SoulHunter.Gameplay.Hazards
                 if (!look.Handed) Hand(look, true);
                 Matrix4x4 m = look.CoreTransform.localToWorldMatrix;
                 if (cull && (m.m03 < min.x || m.m03 > max.x || m.m23 < min.y || m.m23 > max.y)) continue;
-                Add(coreBatch, m);
+                if (DrawLevel >= 1) Add(coreBatch, m);
                 var halo = look.HaloBatch;
-                if (halo != null) Add(halo, Matrix4x4.TRS(look.HaloTransform.position, facing, haloScale));
+                if (halo != null && DrawLevel >= 2) Add(halo, Matrix4x4.TRS(look.HaloTransform.position, facing, haloScale));
                 LastBullets++;
             }
 
@@ -245,6 +247,7 @@ namespace SoulHunter.Gameplay.Hazards
         {
             _instance = null;
             Enabled = true;
+            DrawLevel = 2;
             LastBullets = 0;
             LastDraws = 0;
         }

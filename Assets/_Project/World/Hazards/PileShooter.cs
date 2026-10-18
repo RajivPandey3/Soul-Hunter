@@ -64,7 +64,7 @@ namespace SoulHunter.Gameplay.Hazards
         }
 
         /// <summary>Fires one slow bullet at a point on the ground plane (also used by tests).</summary>
-        public Projectile FireAt(Vector3 target)
+        public Component FireAt(Vector3 target)
         {
             Vector3 from = transform.position + Vector3.up * 0.5f; // inside the player's capsule height (it spans root y -1..+1)
             Vector3 direction = target - transform.position;
@@ -128,9 +128,18 @@ namespace SoulHunter.Gameplay.Hazards
         private static readonly Color BulletTint = new Color(1f, 0.25f, 0.3f, 1f);
         private static GameObject _holder;
         private static GameObject _template;
+        private static GameObject _lightTemplate;
 
-        public static Projectile Fire(Vector3 from, Vector3 direction, float speed, int damage, float lifetime)
+        /// <summary>
+        /// Phone profile (2026-10-18): true fires EnemyBullets (no Rigidbody, no Collider; they hit the player by distance).
+        /// False fires the old physics Projectiles (A/B measurement: AutoplayBot -sh-autoplay-lightbullet-ab; tests).
+        /// </summary>
+        public static bool LightBullets = true;
+
+        /// <summary>Fires one enemy bullet: an EnemyBullet, or a Projectile while LightBullets is off. Null if none could be made.</summary>
+        public static Component Fire(Vector3 from, Vector3 direction, float speed, int damage, float lifetime)
         {
+            if (LightBullets) return FireLight(from, direction, speed, damage, lifetime);
             var template = Template();
             if (template == null) return null;
             var rotation = Quaternion.LookRotation(direction, Vector3.up);
@@ -149,6 +158,51 @@ namespace SoulHunter.Gameplay.Hazards
             projectile.ConfigureContacts(1, 0, false); // the player's Arcana bounces are not for enemy bullets
             projectile.TargetsPlayer = true;           // after OnEnable, which resets it
             return projectile;
+        }
+
+        private static Component FireLight(Vector3 from, Vector3 direction, float speed, int damage, float lifetime)
+        {
+            var template = LightTemplate();
+            if (template == null) return null;
+            var rotation = Quaternion.LookRotation(direction, Vector3.up);
+            GameObject go;
+            if (WeaponPoolManager.Instance != null) go = WeaponPoolManager.Instance.GetFromPool(template, from, rotation);
+            else
+            {
+                go = Object.Instantiate(template, from, rotation);
+                go.SetActive(true);
+                Object.Destroy(go, lifetime + 0.5f);
+            }
+            if (go == null) return null;
+            var bullet = go.GetComponent<EnemyBullet>();
+            if (bullet == null) return null;
+            bullet.Launch(from, direction, speed, damage, lifetime, SourceName);
+            return bullet;
+        }
+
+        /// <summary>The physics template with its Projectile, Rigidbody and Collider taken off and an EnemyBullet in their place.</summary>
+        private static GameObject LightTemplate()
+        {
+            if (_lightTemplate != null) return _lightTemplate;
+            var source = Template();
+            if (source == null) return null;
+            var template = Object.Instantiate(source, _holder.transform);
+            template.name = "HazardBullet_Light";
+            float radius = 0.15f;
+            var sphere = template.GetComponent<SphereCollider>();
+            if (sphere != null)
+            {
+                var scale = template.transform.lossyScale;
+                radius = sphere.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+            }
+            foreach (var projectile in template.GetComponents<Projectile>()) Object.DestroyImmediate(projectile);
+            foreach (var body in template.GetComponents<Rigidbody>()) Object.DestroyImmediate(body);
+            foreach (var collider in template.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            int shotLayer = Projectile.EnemyShotLayer;
+            if (shotLayer >= 0) template.layer = shotLayer;
+            template.AddComponent<EnemyBullet>().HitRadius = radius;
+            _lightTemplate = template;
+            return _lightTemplate;
         }
 
         private static GameObject Template()

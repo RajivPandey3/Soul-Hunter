@@ -150,7 +150,11 @@ namespace SoulHunter.Tests.PlayMode
         {
             yield return QuietArena();
             Vector3 hero = PlayerController.Instance.transform.position;
-            var bullet = SoulHunter.Gameplay.Hazards.HazardBullets.Fire(hero + Vector3.forward * 6f, Vector3.right, 1f, 0, 5f);
+            // The physics kind (HazardBullets.LightBullets off); the EnemyBullet kind is EnemyBulletPlayModeTests'.
+            SoulHunter.Gameplay.Hazards.HazardBullets.LightBullets = false;
+            Projectile bullet;
+            try { bullet = SoulHunter.Gameplay.Hazards.HazardBullets.Fire(hero + Vector3.forward * 6f, Vector3.right, 1f, 0, 5f) as Projectile; }
+            finally { SoulHunter.Gameplay.Hazards.HazardBullets.LightBullets = true; }
             Assert.That(bullet, Is.Not.Null);
             yield return null;
             var systems = bullet.GetComponentsInChildren<ParticleSystem>(true);
