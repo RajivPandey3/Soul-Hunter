@@ -240,8 +240,9 @@ namespace SoulHunter.Gameplay.Core
 
         private static void ApplyBenchmarkSettings()
         {
-            int medium = System.Array.IndexOf(QualitySettings.names, "Medium");
-            if (medium >= 0) QualitySettings.SetQualityLevel(medium, true);
+            // The contract's quality (owner, 2026-10-18: Ultra by default on every device).
+            int ultra = System.Array.IndexOf(QualitySettings.names, "Ultra");
+            if (ultra >= 0) QualitySettings.SetQualityLevel(ultra, true);
             DisplaySettingsApplier.Uncapped = true;
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = -1;

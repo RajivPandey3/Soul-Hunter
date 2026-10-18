@@ -242,7 +242,7 @@ Primary planning/release baseline:
 
 - platform: Steam / Windows
 - resolution: `1920x1080`
-- quality: Ultra (owner decision 2026-10-18: "quality default Ultra hoga"; the Windows default in `QualitySettings` is Ultra, Android stays Medium)
+- quality: Ultra on every device (owner decisions 2026-10-18: "quality default Ultra hoga", then "quality should be default ultra in all devises"). `QualitySettings` starts every platform on Ultra (Android, iPhone, tvOS and WebGL were Medium or lower). `PerformanceBenchmark` measures on Ultra. A player build keeps a quality level chosen before between launches. Ultra on a phone is not measured yet (`P`).
 - target: `60 FPS`
 - hard minimum: `30 FPS`
 - low-end planning reference: Intel Core i5-8350U + Intel UHD 620 + 8 GB RAM

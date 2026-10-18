@@ -15,6 +15,23 @@ namespace SoulHunter.Tests.EditMode
     public class RenderingSetupTests
     {
         [Test]
+        public void EveryDevice_StartsOnUltra()
+        {
+            // Owner decision (2026-10-18): "quality should be default ultra in all devices". Android, iPhone, tvOS and WebGL
+            // started on Medium or lower before.
+            int ultra = System.Array.IndexOf(QualitySettings.names, "Ultra");
+            Assert.That(ultra, Is.GreaterThanOrEqualTo(0), "The project has an Ultra level.");
+            string text = System.IO.File.ReadAllText("ProjectSettings/QualitySettings.asset");
+            int start = text.IndexOf("m_PerPlatformDefaultQuality:", System.StringComparison.Ordinal);
+            Assert.That(start, Is.GreaterThanOrEqualTo(0));
+            var platforms = text.Substring(start).Split('\n').Select(line => line.TrimEnd('\r'))
+                .Skip(1).TakeWhile(line => line.StartsWith("    ")).ToList();
+            Assert.That(platforms, Is.Not.Empty);
+            foreach (string line in platforms)
+                Assert.That(line.Trim(), Does.EndWith(": " + ultra), "Every device starts on Ultra: " + line.Trim());
+        }
+
+        [Test]
         public void Pipeline_UsesThe3DUniversalRenderer()
         {
             var pipeline = GraphicsSettings.defaultRenderPipeline;
