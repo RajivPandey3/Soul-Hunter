@@ -2290,7 +2290,12 @@ realme RMX5004, Ultra, release APK, Level 5 from 19:50 with a level-90 hero and 
     - With 800-990 bullets in the air, physics bullets read 44-49 FPS; light bullets with 850-936 read 58-60. Run 4 was lighter (224 enemies at most).
     - An earlier unfair pair (`run-20261018-phone-lightbullet/`: one order, one run on a hotter phone) was first reported as "58-60 against 49-56". The `a13a02ba` commit message carries that overstated reading.
   - Tests: `EnemyBulletPlayModeTests` (R): no Rigidbody or Collider; hits the hero once for its damage and ends; one passing 3 units by does not hit and ends at its lifetime; a pooled bullet starts where it is fired. `ProjectileRunnerPlayModeTests` keeps its checks on the physics kind. EditMode 991/991, PlayMode 58/58 (EnemyBullet, EnemyBulletDrawer, ProjectileRunner, StageHazard, EnemyAbility, StageEnemyType, ShadowKael, Dash), 0 exceptions, save untouched (`run-20261018-enemybullet`).
-- **Open: a late drop with no bullets.** In the second light-bullet run, from 295 s (stage 23:53) to the end, FPS fell to 13-30 with about 295 enemies and almost no bullets, in both modes. Two Gilded Charms were picked up at 291 and 296 s (Gold Fever: 75% of kills drop a coin, at about 100 kills a second). That is a suspect, not a proven cause. The battery was at 39.5 °C.
+- **Open: a late drop with no bullets, seen once and not reproduced.** In the second light-bullet run, from 295 s (stage 23:53) to the end, FPS fell to 13-30 with about 295 enemies and almost no bullets, in both bullet kinds. The battery was at 39.2-39.5 °C, and the load (300 enemies, about 125 kills a second) was unchanged from the 80 s before, which held 57-60.
+  - **Gold Fever is not the cause** (`run-20261018-phone-fever/`). A Gilded Fever Omen at 230 s with about 60 kills a second left at most 58 coins on the ground (the magnet collects them), and FPS stayed 58-60.
+  - **Not reproduced** in a development profile of 23:25-24:23 (`run-20261018-phone-late/`; only about 200 enemies, 58-60 FPS) or in three 7-minute runs logging the CPU clusters' current frequency (`run-20261018-phone-freq/`, `-phone-hot/`).
+  - In `-phone-hot` run 1: 300 enemies for over 4 minutes, battery up to 39.9 °C, 54-60 FPS. The 20 FPS in the last sample is the exit.
+  - **The phone throttles in steps.** The big cluster (2.5 GHz) held 2.5 GHz to about 38 °C, 2.4 GHz from about 38.3 °C, and 2.1 GHz from about 39.5 °C, sometimes dropping to 1.3-1.9 GHz.
+  - In `-phone-hot` run 2 (40-40.8 °C, big cluster at 2.1 GHz), a wave of about 600 light bullets with about 200 enemies dipped to 40-53 FPS. Without bullets it held 59-60.
 
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
 
