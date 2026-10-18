@@ -363,5 +363,38 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(second.MirroredRevivals, Is.EqualTo(player.Stats.Revivals), "The revivals are taken again, not left spent.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-05. Endless adds +25% enemy damage per cycle (AGENTS.md run modes). A boss body reused from the pool
+        /// in a later cycle deals that cycle's contact damage, not the damage it had when it was first made.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator APooledBoss_InALaterEndlessCycle_DealsThatCyclesContactDamage()
+        {
+            yield return EnterStage10();
+            foreach (var own in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) own.gameObject.SetActive(false);
+            try
+            {
+                var first = SpawnShadowKael();
+                var data = first.GetComponent<EnemyController>().Data;
+                var touch = first.GetComponent<TouchDamage>();
+                Assert.IsNotNull(data, "The Stage 10 boss has EnemyData.");
+                Assert.IsNotNull(touch, "The Stage 10 boss has contact damage.");
+                Assert.That(touch.DamageAmount, Is.EqualTo(Mathf.RoundToInt(data.DamageToPlayer * 1f)), "Cycle 0 damage.");
+                first.gameObject.SetActive(false);
+                yield return null;
+
+                SoulHunter.Gameplay.Data.RunModes.EndlessCycle = 2;
+                var second = SpawnShadowKael();
+                Assert.That(second, Is.SameAs(first), "The test reuses the pooled boss body.");
+                Assert.That(touch.DamageAmount, Is.EqualTo(Mathf.RoundToInt(data.DamageToPlayer * 1.5f)),
+                    "Cycle 2: +25% per cycle reaches the reused boss.");
+            }
+            finally
+            {
+                SoulHunter.Gameplay.Data.RunModes.EndlessCycle = 0;
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

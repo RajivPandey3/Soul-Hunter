@@ -195,8 +195,8 @@ namespace SoulHunter.Gameplay.AI
                 var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
                 if (health != null) health.Initialize(_enemyData.MaxHealth);
 
-                var touchDamage = GetComponent<SoulHunter.Gameplay.Combat.TouchDamage>();
-                if (touchDamage != null) touchDamage.DamageAmount = Mathf.RoundToInt(_enemyData.DamageToPlayer * SoulHunter.Gameplay.Data.RunModes.EnemyDamageMultiplier);
+                _touchDamage = GetComponent<SoulHunter.Gameplay.Combat.TouchDamage>();
+                ApplyContactDamage();
 
                 var drop = GetComponent<EnemyDrop>();
                 if (drop != null) 
@@ -216,6 +216,19 @@ namespace SoulHunter.Gameplay.AI
 
             // Force override inspector serialization value to ensure they always chase
             ChaseDistance = 500f;
+        }
+
+        private SoulHunter.Gameplay.Combat.TouchDamage _touchDamage;
+
+        /// <summary>
+        /// Contact damage from the data, times the Endless cycle's enemy damage (AGENTS.md run modes: +25% per cycle).
+        /// Applied on every spawn (OnEnable), not only in Awake: pooled bodies, stage bosses among them, are reused in a
+        /// later Endless cycle and kept cycle 0's damage (Bug MIS AI-05).
+        /// </summary>
+        private void ApplyContactDamage()
+        {
+            if (_touchDamage != null && _enemyData != null)
+                _touchDamage.DamageAmount = Mathf.RoundToInt(_enemyData.DamageToPlayer * SoulHunter.Gameplay.Data.RunModes.EnemyDamageMultiplier);
         }
 
         private void Start()
@@ -262,6 +275,7 @@ namespace SoulHunter.Gameplay.AI
             RestartAbilities();    // VS skills start again on every spawn (pooling-safe)
             SetDefanged(false); // Defang lasts one life; this also restores the type's own tint
             LingeringSlow = 1f;                 // Requiem of Souls' slow lasts one life
+            ApplyContactDamage();  // this cycle's Endless damage on every spawn, pooled reuse included (AI-05)
             if (Rigidbody != null)
             {
                 Rigidbody.linearVelocity = Vector3.zero;
