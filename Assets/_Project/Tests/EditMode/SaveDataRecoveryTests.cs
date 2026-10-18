@@ -125,6 +125,42 @@ namespace SoulHunter.Tests.EditMode
             finally { Directory.Delete(directory, true); }
         }
 
+        /// <summary>
+        /// Bug MIS ITM-01: a second restore (a double press, or a save written in between) copied over ".replaced.bak",
+        /// so the newer progress the first restore had kept was lost. Backups are never overwritten now.
+        /// </summary>
+        [Test]
+        public void RestoringTwice_NeverLosesTheNewerSave_TheFirstRestoreKept()
+        {
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                var service = TwoSaves(path);
+                byte[] newest = File.ReadAllBytes(path); // 900 gold, Corvan and Aria
+
+                Assert.That(service.RestorePrevious(), Is.True);
+                Assert.That(service.LastReplacedBackupPath, Is.EqualTo(service.ReplacedBackupPath));
+
+                // A second press before anything is written: it replaces nothing, so it keeps nothing and overwrites nothing.
+                Assert.That(service.RestorePrevious(), Is.True);
+                Assert.That(Read(path).Currency, Is.EqualTo(100));
+                Assert.That(service.LastReplacedBackupPath, Is.Null, "The second press replaced nothing.");
+                Assert.That(File.ReadAllBytes(service.ReplacedBackupPath), Is.EqualTo(newest), "The newer progress is still kept.");
+
+                // A save in between, then another restore: the save it replaces gets its own numbered copy.
+                service.CurrentData.Currency = 150;
+                Assert.That(service.SaveGame(), Is.True);
+                byte[] between = File.ReadAllBytes(path);
+                Assert.That(service.RestorePrevious(), Is.True);
+                Assert.That(Read(path).Currency, Is.EqualTo(100));
+                Assert.That(service.LastReplacedBackupPath, Is.EqualTo(path + ".replaced.1.bak"));
+                Assert.That(File.ReadAllBytes(path + ".replaced.1.bak"), Is.EqualTo(between));
+                Assert.That(File.ReadAllBytes(service.ReplacedBackupPath), Is.EqualTo(newest), "The first backup is never overwritten.");
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
         [Test]
         public void Restore_WithoutAPreviousSave_ChangesNothing()
         {

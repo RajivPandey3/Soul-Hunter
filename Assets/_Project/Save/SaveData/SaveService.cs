@@ -316,7 +316,11 @@ namespace SoulHunter.Core.Persistence
         // Delete Save and confirm through all the pop-ups". The wiki does not say what Recovery restores from or what Delete
         // keeps, so (balance method, owner rule 2026-10-09):
         // - Recovery restores the previous good save this service already keeps (".prev", the file before the last write),
-        //   and the save it replaces is kept beside it as ".replaced.bak", so a restore loses nothing.
+        //   and the save it replaces is kept beside it as ".replaced.bak", so a restore loses nothing. A backup is never
+        //   overwritten: a later restore keeps its replaced save as ".replaced.1.bak", ".replaced.2.bak" ... (as Delete Save
+        //   numbers its copies), and a restore whose save is already the previous one (a second press before anything was
+        //   written) keeps no copy at all, because it replaces nothing. Before 2026-10-19 every restore copied over
+        //   ".replaced.bak", so a second restore destroyed the newer progress the first one had kept (Bug MIS ITM-01).
         // - Delete Save removes the progress but keeps this device's options (sound, display, the accessibility switches and
         //   the remapped controls): a player who turned Flashing VFX off must not get the flashes back by resetting progress.
         //   A copy of the deleted save stays on disk as ".deleted.bak" (numbered when one exists); the game never reads it.
@@ -336,6 +340,9 @@ namespace SoulHunter.Core.Persistence
 
         /// <summary>The copy of the save a restore replaced.</summary>
         public string ReplacedBackupPath => _filePath + ".replaced.bak";
+        /// <summary>Where the last restore kept the save it replaced (null before any restore in this session, or when it
+        /// replaced nothing).</summary>
+        public string LastReplacedBackupPath { get; private set; }
         /// <summary>Where the last Delete Save kept its copy (null before any delete in this session).</summary>
         public string LastDeletedBackupPath { get; private set; }
 
@@ -379,8 +386,9 @@ namespace SoulHunter.Core.Persistence
 
         /// <summary>
         /// Data Recovery: the previous good save becomes the save again. The save it replaces is kept as
-        /// <see cref="ReplacedBackupPath"/>. Returns false, changing nothing, when there is no readable previous save or a
-        /// file step fails.
+        /// <see cref="ReplacedBackupPath"/>, numbered when that exists (<see cref="LastReplacedBackupPath"/>), and never
+        /// over an older backup. Returns false, changing nothing, when there is no readable previous save or a file step
+        /// fails.
         /// </summary>
         public bool RestorePrevious()
         {
@@ -392,12 +400,20 @@ namespace SoulHunter.Core.Persistence
                 Debug.LogWarning("[SaveService] Data Recovery: no readable previous save.");
                 return false;
             }
+            string backup = null;
             lock (_writeLock)
             {
                 try
                 {
                     string restoredJson = File.ReadAllText(PreviousPath);
-                    if (File.Exists(_filePath)) File.Copy(_filePath, ReplacedBackupPath, true);
+                    // The save already is the previous one (a second press): there is nothing new to keep.
+                    if (File.Exists(_filePath) && File.ReadAllText(_filePath) != restoredJson)
+                    {
+                        backup = ReplacedBackupPath;
+                        int suffix = 1;
+                        while (File.Exists(backup)) backup = _filePath + ".replaced." + suffix++ + ".bak";
+                        File.Copy(_filePath, backup, false); // never over an older backup
+                    }
                     File.WriteAllText(TempPath, restoredJson);
                     // The previous save stays as ".prev" until the next write rotates it: the file is replaced without one.
                     if (File.Exists(_filePath)) File.Delete(_filePath);
@@ -408,10 +424,11 @@ namespace SoulHunter.Core.Persistence
                     Debug.LogError($"[SaveService] Data Recovery failed; the save is unchanged where possible. Exception: {e.Message}");
                     try { if (File.Exists(TempPath)) File.Delete(TempPath); } catch (System.Exception) { }
                     // The delete may have run before the move failed: put the replaced save back.
-                    try { if (!File.Exists(_filePath) && File.Exists(ReplacedBackupPath)) File.Copy(ReplacedBackupPath, _filePath, false); } catch (System.Exception) { }
+                    try { if (!File.Exists(_filePath) && backup != null && File.Exists(backup)) File.Copy(backup, _filePath, false); } catch (System.Exception) { }
                     return false;
                 }
             }
+            LastReplacedBackupPath = backup;
             CurrentData = previous;
             Migrate(CurrentData);
             LastSaveTime = Time.unscaledTime;
