@@ -55,6 +55,23 @@ namespace SoulHunter.Gameplay.Player
 
         private Collider[] _magnetHits = new Collider[256];
         private float _magnetCheckTimer = 0f;
+        // Gems, coins, the Vacuum, Time Freeze and the light-source pickups all lie on Default (their prefabs, the coin
+        // template built by PickupPoolManager.PrepareGoldTemplate and the ExtraPickupPool stand-ins); the unused Pickup
+        // layer is included so a pickup moved there keeps working. Before (Bug MIS ITM-02) the sweep took every layer, so
+        // the horde (Enemy) and weapon zones (DamageZone) filled the 256 slots and gems in range were skipped.
+        private static int _magnetMask;
+        private static int MagnetMask
+        {
+            get
+            {
+                if (_magnetMask == 0)
+                {
+                    _magnetMask = LayerMask.GetMask("Default", "Pickup");
+                    if (_magnetMask == 0) _magnetMask = 1; // Default is layer 0 in every project
+                }
+                return _magnetMask;
+            }
+        }
 
         private void Update()
         {
@@ -65,13 +82,19 @@ namespace SoulHunter.Gameplay.Player
                 _magnetCheckTimer = 0f;
                 var stats = GetComponent<PlayerStats>();
                 float pickupRadius = stats != null ? stats.MagnetRadius : PlayerStats.BaseMagnetRadius;
-                int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, pickupRadius, _magnetHits);
+                int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, pickupRadius, _magnetHits, MagnetMask, QueryTriggerInteraction.Collide);
+                // A full buffer may have left colliders out (shots and floor tiles share Default): grow it and ask again.
+                // This allocates only when a new record is reached, never in a steady frame.
+                while (count == _magnetHits.Length)
+                {
+                    _magnetHits = new Collider[_magnetHits.Length * 2];
+                    count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, pickupRadius, _magnetHits, MagnetMask, QueryTriggerInteraction.Collide);
+                }
                 for (int i = 0; i < count; i++)
                 {
                     if (_magnetHits[i] == null) continue;
-                    
-                    var gem = _magnetHits[i].GetComponent<SoulHunter.Gameplay.Pickups.XPGem>();
-                    if (gem != null)
+
+                    if (_magnetHits[i].TryGetComponent<SoulHunter.Gameplay.Pickups.XPGem>(out var gem))
                     {
                         gem.Magnetize(this.transform);
                         continue;

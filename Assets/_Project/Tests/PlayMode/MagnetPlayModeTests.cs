@@ -13,7 +13,8 @@ namespace SoulHunter.Tests.PlayMode
     /// <summary>
     /// VS Magnet (vampire.survivors.wiki/w/Magnet, Pickups, Treasure_Chest, Vacuum; fetched 2026-10-09): gems "and other
     /// pickups" inside the Magnet radius fly to the player, chests are never pulled, and the Vacuum pulls only gems.
-    /// Before, every pickup but the gem and the chicken waited to be walked over (1.5 units).
+    /// Before, every pickup but the gem and the chicken waited to be walked over (1.5 units). A crowd of other colliders
+    /// in range never hides a pickup (Bug MIS ITM-02).
     /// </summary>
     public class MagnetPlayModeTests : GameplayPlayModeTestBase
     {
@@ -124,6 +125,56 @@ namespace SoulHunter.Tests.PlayMode
             yield return WaitUntilRealtime(() => !vacuum.activeInHierarchy, "the hero to pick up the Vacuum");
             foreach (var gem in gems) Assert.That(!gem.gameObject.activeInHierarchy || gem.IsMagnetized, Is.True, "wiki Vacuum: every gem flies in.");
             Assert.That(coin.gameObject.activeInHierarchy && !coin.IsPulled, Is.True, "wiki Vacuum: \"Ignores all pickups.\"");
+        }
+
+        /// <summary>
+        /// Bug MIS ITM-02: the sweep took every layer into 256 slots, so a crowd of enemy bodies and weapon zones (or more
+        /// than 256 shots on Default) left coins inside the Magnet radius on the ground. 600 enemy-layer triggers, 300
+        /// weapon-zone triggers and 300 Default triggers stand around the hero; every coin inside the radius still flies in.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ACrowdInsideTheMagnetRadius_NeverHidesTheCoins()
+        {
+            yield return BootIntoGameplay();
+            StopTheHorde();
+            var player = PlayerController.Instance;
+            float radius = player.GetComponent<PlayerStats>().MagnetRadius;
+            var p = player.transform.position;
+            var junk = new List<GameObject>();
+            void Crowd(int count, string layer)
+            {
+                int layerIndex = LayerMask.NameToLayer(layer);
+                Assert.That(layerIndex, Is.GreaterThanOrEqualTo(0), layer + " layer");
+                for (int i = 0; i < count; i++)
+                {
+                    var go = new GameObject($"MagnetCrowd_{layer}_{i}");
+                    go.layer = layerIndex;
+                    var sphere = go.AddComponent<SphereCollider>();
+                    sphere.isTrigger = true;
+                    sphere.radius = 0.2f;
+                    float angle = i * 137.5f;
+                    go.transform.position = p + Quaternion.Euler(0f, angle, 0f) * Vector3.forward * (radius * (0.2f + 0.7f * ((i % 10) / 10f)));
+                    junk.Add(go);
+                }
+            }
+            try
+            {
+                Crowd(600, "Enemy");
+                Crowd(300, "DamageZone");
+                Crowd(300, "Default");
+                Physics.SyncTransforms();
+                var pool = PickupPoolManager.Instance;
+                var coins = new List<GoldPickup>();
+                for (int i = 0; i < 12; i++)
+                    coins.Add(pool.SpawnGold(p + Quaternion.Euler(0f, i * 30f, 0f) * Vector3.forward * radius * 0.85f, 1));
+                Physics.SyncTransforms();
+
+                yield return WaitUntilRealtime(() => coins.TrueForAll(c => !c.gameObject.activeInHierarchy),
+                    "every coin inside the Magnet radius to fly in through the crowd",
+                    () => $"radius {radius:0.00}, coins left {coins.FindAll(c => c.gameObject.activeInHierarchy).Count}/12");
+                Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+            }
+            finally { foreach (var go in junk) if (go != null) Object.Destroy(go); }
         }
 
         private static void StopTheHorde()
