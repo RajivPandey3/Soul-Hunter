@@ -2392,7 +2392,11 @@ Five fixer agents worked in their own worktrees (`D:/SoulHunter-Validation/s3-*`
 **Validation**
 - Integration, full run: EditMode 999/999, PlayMode 494/499 (`D:/SoulHunter-Validation/run-20261019-full-s3-integ3/`).
 - After the three fixes: EditMode 999/999, and the HordeVat, UiThemeLive, WeaponS3Fixes and EnemyMinimum fixtures 21/21. 0 exceptions, save untouched (`-s3-fix1/`).
-- The full suite on main and an FPS check follow.
+- **Full suite on main** (`159192f4`): EditMode 999/999, PlayMode 499/499, 0 exceptions, save untouched (`run-20261019-full-main-s3/`). The Holy Wand pierce commit after it ran its fixtures only (40/40).
+- **FPS check** (`run-20261019-fps-after-mis/`): release build, 1080p pixel count, V-Sync off and the 60 cap, fixed loadout, 3 minutes per part, against `run-20261017-final1080`.
+  - Slow frames (over 17.2 ms) went down in 10 of 13 parts, for example Level 7 1.30% to 0.79%, Shadow Kael 1.31% to 0.73% and Level 3 with Curse 1.58% to 1.10%. They went up on Level 1 (1.19% to 1.61%) and were about the same in heavy kill. Every part is between 0.7% and 1.7%.
+  - Slowest running frame: better on Level 5 (25.8 to 17.5 ms), Level 7 (23.1 to 17.5), Shadow Kael (27.1 to 17.4) and Level 3 with Curse (42.3 to 19.2). Worse on Level 4 (18.8 to 34.1 ms, 2 jolts), the Pentagram wipe (17.7 to 25.6 ms, 1 jolt in a frame with a GC and two elite deaths) and Level 3 (22.3 to 24 ms; 4 frames of 25-31 ms in one second with no timed section of 1 ms or more).
+  - Loads differ run to run (kills, enemies), so single parts compare loosely. **Not a constant 60**: about 1% of frames still exceed 17.2 ms, as before.
 - Not played by the owner.
 
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
