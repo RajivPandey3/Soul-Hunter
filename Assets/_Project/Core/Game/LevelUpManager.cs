@@ -319,6 +319,14 @@ namespace SoulHunter.Gameplay.Core
         public bool OfferingMaxedChoices => _offered != null && (AreMaxedRewardCards(_offered) || _offered.Any(LimitBreak.IsCard));
         public bool CanReroll => _isLevelUpActive && RerollsLeft > 0 && !OfferingMaxedChoices;
         public bool CanSkip => _isLevelUpActive && SkipsLeft > 0 && !OfferingMaxedChoices;
+        /// <summary>
+        /// Banish on the maxed-out Gold Pouch / Roast Chicken cards spent a charge and did nothing (Bug MIS CORE-09,
+        /// 2026-10-19). VS wiki (Banish, raw 2026-10-19): Banish "affects the amount of times the player can remove an item
+        /// choice for the rest of the run"; gold and a Floor Chicken are not items, and the page says nothing of them, so by
+        /// the balance method Banish is unavailable there, as Skip and Reroll are (wiki Level_up). Limit Break cards keep it:
+        /// "Banished weapons can be offered Limit Break upgrades", and banishing one deals new cards.
+        /// </summary>
+        public bool CanBanish => _isLevelUpActive && BanishesLeft > 0 && !AreMaxedRewardCards(_offered);
 
         private static bool AreMaxedRewardCards(List<UpgradeData> choices) => choices != null && choices.Count > 0 && choices.All(MaxedRewards.IsCard);
 
@@ -352,10 +360,10 @@ namespace SoulHunter.Gameplay.Core
         /// </summary>
         public bool Banish(UpgradeData upgrade)
         {
-            if (!_isLevelUpActive || BanishesLeft <= 0 || upgrade == null) return false;
+            if (!CanBanish || upgrade == null || MaxedRewards.IsCard(upgrade)) return false;
             if (!Preserved()) BanishesLeft--;
             // A Limit Break card is not an item: banishing it only deals new cards and keeps its weapon in the pool.
-            if (!LimitBreak.IsCard(upgrade) && !MaxedRewards.IsCard(upgrade))
+            if (!LimitBreak.IsCard(upgrade))
             {
                 _banishedTypes.Add(upgrade.Type);
                 SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Banished {upgrade.Type} for this run.");

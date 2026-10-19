@@ -178,5 +178,24 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(_manager.IsLevelUpActive, Is.False);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
         }
+
+        [Test]
+        public void Banish_IsUnavailable_OnTheGoldPouchAndRoastChickenCards()
+        {
+            // Bug MIS CORE-09 (2026-10-19): Banish on the maxed-out cards spent a charge and did nothing. VS Banish removes
+            // "an item choice"; gold and a chicken are not items (wiki silent: balance method, like Skip and Reroll).
+            UsePool(UpgradeData.UpgradeType.MagicWand);
+            OpenLevelUp();
+            Assert.That(_manager.Banish(_lastRound[0]), Is.True, "Banishing the last item deals the reward cards.");
+            Assert.That(_lastRound.TrueForAll(MaxedRewards.IsCard), Is.True);
+            int banishes = _manager.BanishesLeft;
+            int rounds = _rounds;
+
+            Assert.That(_manager.CanBanish, Is.False, "No Banish on the maxed-out cards.");
+            Assert.That(_manager.Banish(_lastRound[0]), Is.False);
+            Assert.That(_manager.BanishesLeft, Is.EqualTo(banishes), "No charge is spent.");
+            Assert.That(_rounds, Is.EqualTo(rounds), "The same cards stay.");
+            Assert.That(_manager.IsLevelUpActive, Is.True);
+        }
     }
 }
