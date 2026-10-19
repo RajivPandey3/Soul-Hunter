@@ -1076,11 +1076,12 @@ namespace SoulHunter.Gameplay.AI
         /// Null when the screen is full: Bug MIS AI-08, VS (wiki Curse, raw 2026-10-19): "Total enemy quantity allowed on
         /// screen is capped at 500, regardless of Curse and Charm value." Map events already stopped there; hazard members,
         /// Omen spawns, summons, casket guards and item guardians did not. Every caller copes with null (fewer members, or
-        /// it tries again later). Stage bosses and chest elites do not come through here and are not held back.
+        /// it tries again later). Stage bosses and chest elites do not come through here and are not held back; item
+        /// guardians (one per guarded item, carrying its Soul Egg) pass <paramref name="ignoreHardCap"/> and are not either.
         /// </summary>
-        public GameObject SpawnHazardEnemy(GameObject prefab, Vector3 position)
+        public GameObject SpawnHazardEnemy(GameObject prefab, Vector3 position, bool ignoreHardCap = false)
         {
-            if (AtHardCap) return null;
+            if (!ignoreHardCap && AtHardCap) return null;
             var enemy = SpawnEnemy(prefab);
             if (enemy == null) return null;
             _special.Add(enemy);

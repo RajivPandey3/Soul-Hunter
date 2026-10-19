@@ -96,6 +96,18 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartMineRing().Count, Is.Zero, "No Powder Ring on a full screen.");
             Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartRisingTide(), Is.Null, "No flood without its caller on a full screen.");
             Assert.That(EnemyController.ActiveEnemies.Count, Is.EqualTo(EnemySpawner.HardCap), "At most 500 enemies.");
+
+            // An item guardian is unique (one per guarded item, with its Soul Egg): like a stage boss it still comes.
+            var item = new GameObject("CapTest_GuardedItem");
+            item.transform.position = PlayerController.Instance.transform.position + Vector3.right * 8f;
+            var post = SoulHunter.Gameplay.Pickups.ItemGuardPost.Attach(item, SoulHunter.Gameplay.Data.ItemGuardians.All[0], 1);
+            var guardian = post.Spawn();
+            Assert.IsNotNull(guardian, "An item guardian is not held back by the 500 cap. " + Errors());
+            Assert.That(post.Spawned, Is.True);
+            Assert.That(EnemyController.ActiveEnemies.Count, Is.EqualTo(EnemySpawner.HardCap + 1), "Only the guardian goes past the cap.");
+            guardian.SetActive(false);
+            Object.Destroy(item);
+            yield return null;
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

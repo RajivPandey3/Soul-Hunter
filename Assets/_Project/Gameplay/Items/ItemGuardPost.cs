@@ -48,8 +48,7 @@ namespace SoulHunter.Gameplay.Pickups
             if (moved.sqrMagnitude > MovedDistance * MovedDistance) return; // drawn away: only taking it wakes the guardian
             Vector3 to = player.transform.position - _home;
             to.y = 0f;
-            // A full screen (500, Bug MIS AI-08) holds the guardian back; checked first so no scene search runs each frame.
-            if (to.sqrMagnitude <= ItemGuardians.WakeDistance * ItemGuardians.WakeDistance && !SoulHunter.Gameplay.AI.EnemySpawner.AtHardCap) Spawn();
+            if (to.sqrMagnitude <= ItemGuardians.WakeDistance * ItemGuardians.WakeDistance) Spawn();
         }
 
         /// <summary>The item was taken: a guardian that has not come yet comes now.</summary>
@@ -62,7 +61,8 @@ namespace SoulHunter.Gameplay.Pickups
             var spawner = FindFirstObjectByType<SoulHunter.Gameplay.AI.EnemySpawner>();
             var prefab = ItemGuardians.Prefab(Level, Guard.Id);
             if (spawner == null || prefab == null) return null;
-            var body = spawner.SpawnHazardEnemy(prefab, _home);
+            // Like a stage boss, a guardian is unique (one per item, with its Soul Egg), so the 500 cap does not hold it back.
+            var body = spawner.SpawnHazardEnemy(prefab, _home, ignoreHardCap: true);
             if (body == null) return null; // tried again on the next frame while the hero stays close
             Spawned = true;
             Body = body;
