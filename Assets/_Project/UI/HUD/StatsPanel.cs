@@ -155,6 +155,9 @@ namespace SoulHunter.Gameplay.UI
 
         private Vector2 _sizeAtRefresh;
 
+        // Bug MIS UI-09: Fit runs every frame; its corner buffer is kept instead of allocated each time.
+        private readonly Vector3[] _corners = new Vector3[4];
+
         private void LateUpdate()
         {
             Fit();
@@ -165,7 +168,7 @@ namespace SoulHunter.Gameplay.UI
         private void Fit()
         {
             if (_below == null || !(transform.parent is RectTransform parent)) return;
-            var corners = new Vector3[4];
+            var corners = _corners;
             float cardsTop = float.MinValue, cardsBottom = float.MaxValue, cardsLeft = float.MaxValue;
             foreach (var card in _below)
             {
@@ -273,7 +276,7 @@ namespace SoulHunter.Gameplay.UI
                 if (heading.alignment != TextAlignmentOptions.Center) { heading.alignment = TextAlignmentOptions.Center; heading.ForceMeshUpdate(); }
                 return;
             }
-            var corners = new Vector3[4];
+            var corners = _corners; // shared with Fit, which fills it again before its next read
             _above.GetWorldCorners(corners);
             float unitsPerWorld = parent.rect.height / Mathf.Max(1f, span);
             float bandUnits = (corners[0].y - cardsTop) * unitsPerWorld - parent.rect.height * 0.03f; // the two gaps
