@@ -80,6 +80,10 @@ namespace SoulHunter.Gameplay.Combat
 
         private void OnUltimatePressed(PlayerUltimateEvent evt)
         {
+            // A menu that pauses the game (level-up, chest, pause, shop) shows over the run; the burst went off behind it,
+            // dealing its damage while the game stood still (Bug MIS CORE-05, 2026-10-19). Ignored while paused, as the
+            // dash is (PlayerController.OnDashEvent, 2026-10-18); the meter stays full.
+            if (GameTime.IsPaused) return;
             if (!_isReady)
             {
                 Debug.Log($"[Soul Burst] Not ready yet. Need {_soulsRequired - _currentSouls} more souls.");
