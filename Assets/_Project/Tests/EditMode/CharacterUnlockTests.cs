@@ -45,6 +45,18 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void AClearStageCondition_SaysTheLevelMustBeCleared_NotOnlyItsBossDefeated()
+        {
+            // Bug MIS ITM-12: the text said "Defeat the boss of Stage n", but the unlock comes only when the level clears
+            // (guardian defeated, then 30:00); a boss kill followed by a death unlocks nothing.
+            var gideon = Catalog("Gideon"); // clear stage 3
+            Assert.That(gideon.Unlock, Is.EqualTo(CharacterData.UnlockCondition.ClearStage));
+            string text = CharacterUnlocks.ConditionText(gideon);
+            Assert.That(text, Does.StartWith("Clear Stage 3: ").And.Contain("guardian").And.Contain("30:00"), text);
+            Assert.That(text, Does.Not.StartWith("Defeat the boss"));
+        }
+
+        [Test]
         public void Conditions_AreMetOnlyByTheRightProgress()
         {
             // Learning Comment: Har shart sirf sahi progress par poori ho.

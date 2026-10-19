@@ -122,7 +122,13 @@ namespace SoulHunter.Gameplay.Player
             switch (character.Unlock)
             {
                 case CharacterData.UnlockCondition.None: return "Available from the start.";
-                case CharacterData.UnlockCondition.ClearStage: return $"Defeat the boss of {stage}.";
+                // A level clears at 30:00 once its guardian is defeated (owner rule 2026-10-13); Level 10 clears when Shadow
+                // Kael is destroyed (LevelProgressionManager). Before 2026-10-19 the text said only "Defeat the boss",
+                // though the boss kill alone unlocks nothing (Bug MIS ITM-12).
+                case CharacterData.UnlockCondition.ClearStage:
+                    return character.UnlockStage >= CampaignLevelCatalog.Count
+                        ? $"Destroy Shadow Kael in {stage}."
+                        : $"Clear {stage}: defeat its guardian and survive to 30:00.";
                 case CharacterData.UnlockCondition.SurviveInStage:
                     return $"Survive {Clock(character.UnlockTarget)} in {stage}.";
                 case CharacterData.UnlockCondition.ReachPlayerLevel: return $"Reach level {character.UnlockTarget:0} in one run.";
