@@ -47,7 +47,9 @@ namespace SoulHunter.Gameplay.UI
         public RectTransform Root => _root;
         /// <summary>The plate and the texts on it, for the readability tests.</summary>
         public Image Plate { get; private set; }
-        public IReadOnlyList<TextMeshProUGUI> Texts => new[] { _heading, _name, _when };
+        // Place reads this every frame: one array, made once the texts exist (Bug MIS UI-07).
+        private TextMeshProUGUI[] _texts;
+        public IReadOnlyList<TextMeshProUGUI> Texts => _texts != null && _texts[0] == _heading ? _texts : (_texts = new[] { _heading, _name, _when });
         public float RingAngle(int ring) => _rings[ring] != null ? _rings[ring].localEulerAngles.z : 0f;
 
         public void Setup()
@@ -162,15 +164,17 @@ namespace SoulHunter.Gameplay.UI
         {
             if (_name == null) return;
             _heading.text = "Omen";
-            if (_spinLeft > 0f) { _when.text = "Choosing"; return; }
+            if (_spinLeft > 0f) { _idleMark = int.MinValue; _when.text = "Choosing"; return; }
             if (_firedLeft > 0f && _shown.HasValue)
             {
+                _idleMark = int.MinValue;
                 _name.text = OmenTable.Name(_shown.Value);
                 _when.text = "Now";
                 return;
             }
             if (_shown.HasValue)
             {
+                _idleMark = int.MinValue;
                 _name.text = OmenTable.Name(_shown.Value);
                 _when.text = "Comes at " + Clock(_shownAt);
                 return;
@@ -180,8 +184,14 @@ namespace SoulHunter.Gameplay.UI
             float now = progression != null ? progression.StageElapsedTime : 0f;
             // The next XX:30 mark.
             float next = (Mathf.Floor((now - OmenTable.MarkSeconds) / 60f) + 1f) * 60f + OmenTable.MarkSeconds;
+            // Bug MIS UI-07: the idle line is refreshed every frame; its string is built only when the mark it names changes.
+            int mark = Mathf.Max(0, Mathf.RoundToInt(next));
+            if (mark == _idleMark) return;
+            _idleMark = mark;
             _when.text = "Spins at " + Clock(next);
         }
+
+        private int _idleMark = int.MinValue;
 
         /// <summary>m:ss of the stage clock.</summary>
         public static string Clock(float seconds)

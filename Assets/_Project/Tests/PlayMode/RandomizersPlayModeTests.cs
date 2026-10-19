@@ -147,6 +147,17 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(wheel.EventText, Is.EqualTo(OmenTable.Name(OmenEvent.FortunesFavour)));
             Assert.That(wheel.WhenText, Is.EqualTo("Now"));
+
+            // Bug MIS UI-07: the idle line is built only when its mark changes. After the hold it must still name
+            // the next XX:30 mark, and stay the same text from frame to frame.
+            director.ForcedPick = null;
+            yield return WaitUntilRealtime(() => wheel.WhenText.StartsWith("Spins at"), "the wheel to go idle after the hold");
+            Assert.That(wheel.WhenText, Is.EqualTo("Spins at 1:30"), "Idle after 1:00, the wheel names 1:30.");
+            Assert.That(wheel.EventText, Is.EqualTo("The wheel waits"));
+            string idle = wheel.WhenText;
+            yield return null;
+            yield return null;
+            Assert.That(wheel.WhenText, Is.SameAs(idle), "The idle line is not rebuilt while its mark stays.");
         }
 
         [UnityTest]
