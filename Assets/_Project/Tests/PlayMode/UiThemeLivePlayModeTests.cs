@@ -142,8 +142,9 @@ namespace SoulHunter.Tests.PlayMode
             try
             {
                 UiThemeAsset.SetActive(look);
-                // Hollow Heart changes Max Health, so the stats show one value in the highlight.
-                SoulHunter.Gameplay.Combat.WeaponManager.Instance.GiveWeapon(SoulHunter.Gameplay.Combat.UpgradeData.UpgradeType.MaxHealth, 1);
+                // +10% Might, so the stats show one changed value in the highlight. (GiveWeapon sets a passive's level
+                // without applying its stat, so a given Hollow Heart changed nothing on screen.)
+                SoulHunter.Gameplay.Player.PlayerController.Instance.Stats.AddMight(0.1f);
                 var system = GameSystemManager.Instance;
                 system.TogglePause();
                 yield return null;

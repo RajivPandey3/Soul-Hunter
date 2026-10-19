@@ -60,7 +60,10 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var root in probe.scene.GetRootGameObjects())
                 Object.Destroy(root);
 
-            var empty = SceneManager.CreateScene("PlayModeTestCleanup");
+            // A test that never booted the game leaves the last cleanup scene active; reuse it (a second scene of the same
+            // name throws in CreateScene).
+            var empty = SceneManager.GetSceneByName("PlayModeTestCleanup");
+            if (!empty.IsValid() || !empty.isLoaded) empty = SceneManager.CreateScene("PlayModeTestCleanup");
             SceneManager.SetActiveScene(empty);
             for (int i = SceneManager.sceneCount - 1; i >= 0; i--)
             {

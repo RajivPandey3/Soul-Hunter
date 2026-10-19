@@ -107,6 +107,9 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>Forget destroyed bodies and materials on a later frame (scene loads, EnemySpawner.TrimIdlePools).</summary>
         public static void RequestPrune()
         {
+            // A request made while one is due keeps the first frame: TrimIdlePools frees bodies every frame for a while, and
+            // moving the frame on each time starved the prune for as long as the trimming lasted.
+            if (_pruneDue) return;
             _pruneDue = true;
             _pruneAfterFrame = Time.frameCount;
         }
