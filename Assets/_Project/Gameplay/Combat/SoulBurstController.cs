@@ -80,6 +80,10 @@ namespace SoulHunter.Gameplay.Combat
 
         private void OnUltimatePressed(PlayerUltimateEvent evt)
         {
+            // A menu that pauses the game (level-up, chest, pause, shop) shows over the run; the burst went off behind it,
+            // dealing its damage while the game stood still (Bug MIS CORE-05, 2026-10-19). Ignored while paused, as the
+            // dash is (PlayerController.OnDashEvent, 2026-10-18); the meter stays full.
+            if (GameTime.IsPaused) return;
             if (!_isReady)
             {
                 Debug.Log($"[Soul Burst] Not ready yet. Need {_soulsRequired - _currentSouls} more souls.");
@@ -133,7 +137,8 @@ namespace SoulHunter.Gameplay.Combat
         {
             // Player ko 2 seconds ke liye Amar (Invincible) banao
             var playerHealth = GetComponent<HealthController>();
-            if (playerHealth != null) playerHealth.IsInvincible = true;
+            // Its own count (CMB-10): a dash ending inside these 2 s no longer ends it, and it never clears god mode.
+            if (playerHealth != null) playerHealth.BeginAbilityImmunity();
 
             // Hit-Stop (Slow motion effect for Anime feel)
             SoulHunter.Core.Services.GameTime.SetSlowMotion(0.1f);
@@ -145,7 +150,7 @@ namespace SoulHunter.Gameplay.Combat
 
             // Wait remaining 1.5 seconds for invincibility to wear off
             yield return new WaitForSeconds(1.5f);
-            if (playerHealth != null) playerHealth.IsInvincible = false;
+            if (playerHealth != null) playerHealth.EndAbilityImmunity();
         }
     }
 }

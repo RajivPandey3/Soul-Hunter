@@ -319,6 +319,14 @@ namespace SoulHunter.Gameplay.Core
         public bool OfferingMaxedChoices => _offered != null && (AreMaxedRewardCards(_offered) || _offered.Any(LimitBreak.IsCard));
         public bool CanReroll => _isLevelUpActive && RerollsLeft > 0 && !OfferingMaxedChoices;
         public bool CanSkip => _isLevelUpActive && SkipsLeft > 0 && !OfferingMaxedChoices;
+        /// <summary>
+        /// Banish on the maxed-out Gold Pouch / Roast Chicken cards spent a charge and did nothing (Bug MIS CORE-09,
+        /// 2026-10-19). VS wiki (Banish, raw 2026-10-19): Banish "affects the amount of times the player can remove an item
+        /// choice for the rest of the run"; gold and a Floor Chicken are not items, and the page says nothing of them, so by
+        /// the balance method Banish is unavailable there, as Skip and Reroll are (wiki Level_up). Limit Break cards keep it:
+        /// "Banished weapons can be offered Limit Break upgrades", and banishing one deals new cards.
+        /// </summary>
+        public bool CanBanish => _isLevelUpActive && BanishesLeft > 0 && !AreMaxedRewardCards(_offered);
 
         private static bool AreMaxedRewardCards(List<UpgradeData> choices) => choices != null && choices.Count > 0 && choices.All(MaxedRewards.IsCard);
 
@@ -352,10 +360,10 @@ namespace SoulHunter.Gameplay.Core
         /// </summary>
         public bool Banish(UpgradeData upgrade)
         {
-            if (!_isLevelUpActive || BanishesLeft <= 0 || upgrade == null) return false;
+            if (!CanBanish || upgrade == null || MaxedRewards.IsCard(upgrade)) return false;
             if (!Preserved()) BanishesLeft--;
             // A Limit Break card is not an item: banishing it only deals new cards and keeps its weapon in the pool.
-            if (!LimitBreak.IsCard(upgrade) && !MaxedRewards.IsCard(upgrade))
+            if (!LimitBreak.IsCard(upgrade))
             {
                 _banishedTypes.Add(upgrade.Type);
                 SoulHunter.Core.Services.GameLog.Info($"[LevelUpManager] Banished {upgrade.Type} for this run.");
@@ -395,15 +403,19 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
-        public const int MaxedOutHealAmount = 30;
-        public const int MaxedOutGoldAmount = 25;
-
+        /// <summary>
+        /// A maxed-out level-up that no card screen can show (no WeaponManager, so no reward cards are built). It gave both
+        /// 30 health and 25 gold, with no Recovery bonus and no Big Coin Bag counted (Bug MIS ITM-13, 2026-10-19). VS wiki
+        /// (Level_up, raw 2026-10-19) offers "the options to gain extra Gold or restore health with Floor Chicken", one of
+        /// the two, and "The 'Always Floor Chicken' option will only give Floor Chickens if the player has missing health.
+        /// If the player is fully healed, they will receive Gold instead." With no screen to choose on, the run's "always"
+        /// choice pays if one was made; otherwise the same rule as Always Floor Chicken (balance method: the wiki is silent
+        /// on a level-up with no screen): a Floor Chicken with Recovery when hurt, else one counted Big Coin Bag.
+        /// </summary>
         private void GrantMaxedOutReward()
         {
-            var health = _playerController != null ? _playerController.GetComponent<HealthController>() : null;
-            if (health != null) health.Heal(MaxedOutHealAmount);
-
-            SoulHunter.Gameplay.Pickups.GoldRewards.Grant(MaxedOutGoldAmount, _playerController != null ? _playerController.Stats : null);
+            if (MaxedRewards.ApplyAlways(_playerController)) return;
+            MaxedRewards.GiveChickenOrGold(_playerController);
         }
 
         /// <summary>

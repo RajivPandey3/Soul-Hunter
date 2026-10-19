@@ -393,7 +393,9 @@ namespace SoulHunter.Gameplay.Player
             IsDashing = true;
 
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            if (health != null) health.IsInvincible = true;
+            // Its own count, not IsInvincible (Bug MIS CMB-10, 2026-10-19): ending the dash used to clear Soul Burst's
+            // 2 s immunity and the bot's god mode with the same bool.
+            if (health != null) health.BeginAbilityImmunity();
 
             // 1. Phasing: Kinematic on taake dushmano ki bheed (horde) dash ko rok na sake
             Rigidbody.isKinematic = true;
@@ -414,6 +416,9 @@ namespace SoulHunter.Gameplay.Player
             float elapsed = 0;
             while(elapsed < _dashDuration)
             {
+                // A pause (a level-up from XP gained mid-dash, a chest, the pause menu) holds the dash: the step is 0 then,
+                // and the wall check below used to read that as a wall and end the dash for good (Bug MIS CORE-07, 2026-10-19).
+                if (SoulHunter.Core.Services.GameTime.IsPaused) { yield return null; continue; }
                 float step = _dashSpeed * Time.deltaTime;
                 Vector3 from = Rigidbody.position;
                 if (UnityEngine.Physics.SphereCast(from, DashProbeRadius, dashDirection, out RaycastHit wall, step + DashSkin, obstacles, QueryTriggerInteraction.Ignore))
@@ -429,7 +434,7 @@ namespace SoulHunter.Gameplay.Player
 
             // Revert Phasing
             Rigidbody.isKinematic = false;
-            if (health != null) health.IsInvincible = false;
+            if (health != null) health.EndAbilityImmunity();
 
             // Cooldown
             yield return new WaitForSeconds(_dashCooldown);

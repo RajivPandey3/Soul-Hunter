@@ -73,6 +73,53 @@ namespace SoulHunter.Tests.PlayMode
         // Bug MIS UI-01: Esc / Start on the level-up screen opened the pause menu drawn under it (HUD canvas order 0 against
         // 300) and moved keyboard focus to its hidden Resume. The Pause key is off while a level-up holds the pause, as on
         // the chest, Arcana and Revive screens, and works again once the level-ups are done.
+        /// <summary>
+        /// Bug MIS CORE-05 (2026-10-19): Ultimate on a paused menu set off Soul Burst behind it (9999 damage within 30
+        /// units while the game stood still). It is now ignored while paused, like the dash, and the meter stays full.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator SoulBurst_DoesNotGoOffWhileAMenuPausesTheGame()
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            foreach (var stray in EnemyController.ActiveEnemies.ToList())
+                if (stray != null) stray.gameObject.SetActive(false);
+            var prefab = GetPrivateField<System.Collections.Generic.List<GameObject>>(spawner, "_stageEnemyPrefabs")[0];
+            var enemy = Object.Instantiate(prefab, player.transform.position + Vector3.right * 4f, Quaternion.identity);
+            var enemyHealth = enemy.GetComponent<HealthController>();
+            enemyHealth.Initialize(100000);
+            yield return null;
+
+            var burst = Object.FindFirstObjectByType<SoulBurstController>();
+            Assert.IsNotNull(burst, "The player has the Soul Burst ultimate.");
+            var ready = typeof(SoulBurstController).GetField("_isReady", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            ready.SetValue(burst, true);
+            var bus = GameServices.Instance.Get<EventBus>();
+            int before = enemyHealth.CurrentHealth;
+            var owner = new object();
+            GameTime.Pause(owner);
+            try
+            {
+                bus.Raise(new PlayerUltimateEvent());
+                yield return null;
+                Assert.That(enemyHealth.CurrentHealth, Is.EqualTo(before), "Ultimate on a paused menu deals no damage behind it.");
+                Assert.That((bool)ready.GetValue(burst), Is.True, "The meter stays full.");
+            }
+            finally { GameTime.Resume(owner); }
+            yield return null;
+            Assert.That(enemyHealth.CurrentHealth, Is.EqualTo(before), "Nothing was queued for when the game resumes.");
+            bus.Raise(new PlayerUltimateEvent());
+            yield return null;
+            Assert.That(enemyHealth.CurrentHealth, Is.LessThan(before), "In play, Ultimate still bursts.");
+            float slowEnds = Time.realtimeSinceStartup + 0.6f; // let the burst's hit-stop end before the next test
+            while (Time.realtimeSinceStartup < slowEnds) yield return null;
+            Object.Destroy(enemy);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         [UnityTest]
         public IEnumerator ThePauseKey_IsOffOnTheLevelUpScreen_AndBackAfterThePick()
         {

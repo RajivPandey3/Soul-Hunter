@@ -388,7 +388,7 @@ namespace SoulHunter.Gameplay.UI
         private void OnBanishClicked()
         {
             if (_levelUpManager == null) return;
-            if (!_banishMode && _levelUpManager.BanishesLeft <= 0) return;
+            if (!_banishMode && !_levelUpManager.CanBanish) return;
             // Banish is a two-step action: arm it, then click the card to remove.
             _banishMode = !_banishMode;
             for (int i = 0; i < _upgradeButtons.Length && i < _currentChoices.Count; i++)
@@ -430,7 +430,9 @@ namespace SoulHunter.Gameplay.UI
             if (_banishButton != null)
             {
                 SetButtonLabel(_banishButton, _banishMode ? "Cancel Banish" : $"Banish ({_levelUpManager.BanishesLeft})");
-                ShowAction(_banishButton, _banishMode || _levelUpManager.BanishesLeft > 0);
+                // Off on the Gold Pouch / Roast Chicken cards too, like Reroll and Skip (Bug MIS CORE-09).
+                if (_banishMode && !_levelUpManager.CanBanish) _banishMode = false;
+                ShowAction(_banishButton, _banishMode || _levelUpManager.CanBanish);
             }
             // The shared row goes too when it has nothing to offer, so the cards do not keep an empty strip.
             var anyAction = new[] { _rerollButton, _skipButton, _banishButton }.FirstOrDefault(b => b != null);
