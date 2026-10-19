@@ -173,6 +173,7 @@ namespace SoulHunter.Gameplay.AI
                     var body = entry.Value.Pop();
                     if (body == null) continue;
                     Destroy(body);
+                    HordeVatDrawer.RequestPrune(); // Bug MIS AI-12: the drawer forgets it on a later frame
                     budget--;
                 }
                 if (budget <= 0) return;

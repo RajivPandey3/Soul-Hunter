@@ -21,6 +21,7 @@ namespace SoulHunter.Gameplay.Hazards
         // Phone profile (2026-10-18): about 10 engine calls per bullet per frame (GetComponent, sharedMaterial, transforms)
         // cost the drawer 1.2 ms at Level 5's ~500 bullets. They never change for a pooled bullet, so the drawer keeps them here.
         internal EnemyBulletDrawer CachedBy;
+        internal int CachedGeneration;
         internal EnemyBulletDrawer.Batch CoreBatch, HaloBatch;
         internal Transform CoreTransform, HaloTransform;
 
@@ -93,6 +94,42 @@ namespace SoulHunter.Gameplay.Hazards
         private readonly Matrix4x4[] _chunk = new Matrix4x4[ChunkSize];
         private Mesh _quad;
         private bool _wasEnabled = true;
+        private int _generation;
+
+        // Bug MIS AI-12: the drawer lives across scenes (DontDestroyOnLoad) and kept a batch, and a halo material copy, for
+        // every bullet template it had seen. The template (HazardBullets) is made again in each scene, so every run added
+        // batches keyed by the old scene's materials and kept those materials and copies alive. After a scene load it
+        // forgets them all and destroys its copies; bullets still in flight look their batches up again.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Hook()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            if (_instance != null) _instance.ForgetBatches();
+        }
+
+        /// <summary>Batches the drawer keeps (tests).</summary>
+        public static int KnownBatches => _instance != null ? _instance._batchList.Count : 0;
+
+        /// <summary>Forgets every batch and destroys its halo material copies (scene loads; also called by tests).</summary>
+        public static void ForgetAll()
+        {
+            if (_instance != null) _instance.ForgetBatches();
+        }
+
+        private void ForgetBatches()
+        {
+            HandBackAll();
+            foreach (var b in _halos.Values) if (b.Material != null) Destroy(b.Material);
+            _cores.Clear();
+            _halos.Clear();
+            _batchList.Clear();
+            _generation++;
+        }
 
         internal static void Ensure()
         {
@@ -129,7 +166,7 @@ namespace SoulHunter.Gameplay.Hazards
             {
                 var look = bullets[i];
                 if (look == null) continue;
-                if (!ReferenceEquals(look.CachedBy, this))
+                if (!ReferenceEquals(look.CachedBy, this) || look.CachedGeneration != _generation)
                 {
                     if (look.Core == null) continue;
                     look.CoreBatch = CoreBatch(look);
@@ -137,6 +174,7 @@ namespace SoulHunter.Gameplay.Hazards
                     look.CoreTransform = look.Core.transform;
                     look.HaloTransform = look.Halo != null ? look.Halo.transform : null;
                     look.CachedBy = this;
+                    look.CachedGeneration = _generation;
                 }
                 var coreBatch = look.CoreBatch;
                 if (coreBatch.Mesh == null) continue; // nothing to draw it with: it keeps drawing itself

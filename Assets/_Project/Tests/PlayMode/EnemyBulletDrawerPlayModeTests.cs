@@ -68,5 +68,39 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-12. The drawer outlives scenes and kept a batch and a halo material copy per bullet template for ever;
+        /// the template is made again in every scene. A scene load (ForgetAll) now drops them and destroys the copies, and
+        /// a bullet in flight is drawn again from fresh batches.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ForgettingBatches_DestroysTheHaloCopies_AndBulletsAreDrawnAgain()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<SoulHunter.Gameplay.AI.EnemySpawner>().enabled = false;
+            var hero = PlayerController.Instance.transform.position;
+            var bullet = HazardBullets.Fire(hero + Vector3.forward * 6f, Vector3.right, 0.2f, 1, 30f);
+            yield return null;
+            yield return null;
+            Assert.That(EnemyBulletDrawer.KnownBatches, Is.GreaterThanOrEqualTo(1));
+            const System.Reflection.BindingFlags any = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            var drawer = typeof(EnemyBulletDrawer).GetField("_instance", any).GetValue(null);
+            var halos = (System.Collections.IDictionary)typeof(EnemyBulletDrawer).GetField("_halos", any).GetValue(drawer);
+            var copies = new System.Collections.Generic.List<Material>();
+            foreach (var b in halos.Values) copies.Add((Material)b.GetType().GetField("Material").GetValue(b));
+
+            EnemyBulletDrawer.ForgetAll();
+            Assert.That(EnemyBulletDrawer.KnownBatches, Is.Zero, "Every batch is forgotten.");
+            yield return null; // Destroy completes at the end of the frame
+            Assert.That(copies.TrueForAll(m => m == null), Is.True, "Its halo material copies are destroyed.");
+            yield return null;
+            Assert.That(EnemyBulletDrawer.LastBullets, Is.GreaterThanOrEqualTo(1), "The bullet in flight is drawn again.");
+            Assert.That(bullet.GetComponentInChildren<MeshRenderer>(true).forceRenderingOff, Is.True);
+            bullet.gameObject.SetActive(false);
+            yield return null;
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

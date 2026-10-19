@@ -89,7 +89,53 @@ namespace SoulHunter.Gameplay.AI
             Create();
         }
 
-        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) => Create();
+        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            Create();
+            RequestPrune(); // the old scene's bodies are gone
+        }
+
+        // Bug MIS AI-12: the drawer lives across scenes (DontDestroyOnLoad) and kept every body it had ever seen, and every
+        // material it had read a colour from, after they were destroyed (scene changes, idle pools trimmed), so it grew over
+        // long Endless sessions and repeated runs. Destroyed entries are forgotten, not every frame: after a scene load and
+        // after EnemySpawner frees idle pooled bodies, one frame later (Destroy completes at the end of a frame).
+        private static bool _pruneDue;
+        private static int _pruneAfterFrame;
+        private readonly List<EnemyController> _deadBodies = new List<EnemyController>();
+        private readonly List<Material> _deadMaterials = new List<Material>();
+
+        /// <summary>Forget destroyed bodies and materials on a later frame (scene loads, EnemySpawner.TrimIdlePools).</summary>
+        public static void RequestPrune()
+        {
+            _pruneDue = true;
+            _pruneAfterFrame = Time.frameCount;
+        }
+
+        /// <summary>Bodies the drawer remembers (tests).</summary>
+        public static int KnownBodies => _instance != null ? _instance._bodies.Count : 0;
+
+        /// <summary>Forgets every destroyed body and material now (also called by tests).</summary>
+        public static void PruneNow()
+        {
+            _pruneDue = false;
+            if (_instance != null) _instance.Prune();
+        }
+
+        private void Prune()
+        {
+            _deadBodies.Clear();
+            foreach (var entry in _bodies)
+                if (entry.Key == null || (entry.Value != null && (entry.Value.Renderer == null || entry.Value.Visual == null))) _deadBodies.Add(entry.Key);
+            foreach (var key in _deadBodies) _bodies.Remove(key);
+            _deadBodies.Clear();
+            _deadMaterials.Clear();
+            foreach (var key in _colorOf.Keys) if (key == null) _deadMaterials.Add(key);
+            foreach (var key in _deadMaterials) _colorOf.Remove(key);
+            _deadMaterials.Clear();
+            foreach (var key in _tintOf.Keys) if (key == null) _deadMaterials.Add(key);
+            foreach (var key in _deadMaterials) _tintOf.Remove(key);
+            _deadMaterials.Clear();
+        }
 
         private static void Create()
         {
@@ -104,6 +150,7 @@ namespace SoulHunter.Gameplay.AI
 
         private void LateUpdate()
         {
+            if (_pruneDue && Time.frameCount > _pruneAfterFrame) PruneNow();
             LastBodies = 0;
             LastDraws = 0;
             LastHanded = LastCulled = 0;
@@ -267,6 +314,7 @@ namespace SoulHunter.Gameplay.AI
         {
             _instance = null;
             Enabled = true;
+            _pruneDue = false;
             LastBodies = 0;
             LastDraws = 0;
         }

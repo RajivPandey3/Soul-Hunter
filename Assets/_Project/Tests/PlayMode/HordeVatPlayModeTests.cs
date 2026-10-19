@@ -71,5 +71,48 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        private static int DeadBodiesKnown()
+        {
+            const System.Reflection.BindingFlags any = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+            var drawer = typeof(HordeVatDrawer).GetField("_instance", any).GetValue(null);
+            var bodies = (System.Collections.IDictionary)typeof(HordeVatDrawer).GetField("_bodies", any).GetValue(drawer);
+            int dead = 0;
+            foreach (var key in bodies.Keys) if ((Object)key == null) dead++;
+            return dead;
+        }
+
+        /// <summary>
+        /// Bug MIS AI-12. The drawer outlives scenes and kept every body it had drawn after the body was destroyed (here: an
+        /// idle pool freed by EnemySpawner.TrimIdlePools). It now forgets them a frame later.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator FreedPooledBodies_AreForgottenByTheDrawer()
+        {
+            yield return BootIntoGameplay();
+            var player = PlayerController.Instance;
+            player.GetComponent<HealthController>().IsInvincible = true;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            float idle = EnemySpawner.PoolIdleSeconds;
+            try
+            {
+                var spawn = typeof(EnemySpawner).GetMethod("SpawnEnemy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var bodies = new System.Collections.Generic.List<GameObject>();
+                for (int i = 0; i < 8; i++) bodies.Add((GameObject)spawn.Invoke(spawner, new object[] { spawner.StageElitePrefab }));
+                yield return null;
+                yield return null; // the drawer has met them
+                Assert.That(HordeVatDrawer.KnownBodies, Is.GreaterThanOrEqualTo(8));
+                foreach (var body in bodies) body.SetActive(false);
+                EnemySpawner.PoolIdleSeconds = 0.2f;
+                yield return WaitUntilRealtime(() => bodies.TrueForAll(b => b == null), "the idle pooled bodies to be freed");
+                yield return null;
+                yield return null;
+                Assert.That(DeadBodiesKnown(), Is.Zero, "The drawer forgot every destroyed body.");
+            }
+            finally { EnemySpawner.PoolIdleSeconds = idle; }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }
