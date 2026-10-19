@@ -27,6 +27,10 @@ namespace SoulHunter.Gameplay.Combat
         public static AlwaysChoice Always { get; set; } = AlwaysChoice.None;
 
         private static readonly Dictionary<UpgradeData, Kind> Cards = new Dictionary<UpgradeData, Kind>();
+        // One card per kind, made once and reused. Every maxed level-up, reroll and banish used to create 2-4 new
+        // UpgradeData objects that were never destroyed (Bug MIS CORE-10, 2026-10-19; a 5-hour run is maxed from about
+        // level 80). A card destroyed elsewhere (a test, an asset unload) is made again.
+        private static readonly UpgradeData[] Cached = new UpgradeData[4];
 
         public static bool IsCard(UpgradeData upgrade) => upgrade != null && Cards.ContainsKey(upgrade);
         public static bool IsGoldCard(UpgradeData upgrade) => upgrade != null && Cards.TryGetValue(upgrade, out var kind) && (kind == Kind.Gold || kind == Kind.AlwaysGold);
@@ -38,7 +42,6 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>The choices, with the two "always" cards once 100 Big Coin Bags have been received.</summary>
         public static List<UpgradeData> BuildCards(bool withAlways)
         {
-            Cards.Clear();
             var content = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             var list = new List<UpgradeData>
             {
@@ -55,7 +58,13 @@ namespace SoulHunter.Gameplay.Combat
 
         private static UpgradeData Card(Kind kind, string name, string description, Sprite icon)
         {
-            var card = ScriptableObject.CreateInstance<UpgradeData>();
+            var card = Cached[(int)kind];
+            if (card == null) // Unity's null: never made, or destroyed
+            {
+                if (!ReferenceEquals(card, null)) Cards.Remove(card);
+                card = ScriptableObject.CreateInstance<UpgradeData>();
+                Cached[(int)kind] = card;
+            }
             card.UpgradeName = name;
             card.Description = description;
             card.Icon = icon;

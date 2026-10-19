@@ -229,6 +229,28 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void MaxedRewardCards_AreMadeOnce_AndReused_NotLeakedPerLevelUp()
+        {
+            // Bug MIS CORE-10 (2026-10-19): every maxed level-up, reroll and banish created 2-4 UpgradeData objects that
+            // were never destroyed. The cards are now made once per kind and reused.
+            var first = MaxedRewards.BuildCards(true);
+            int objects = Resources.FindObjectsOfTypeAll<UpgradeData>().Length;
+            for (int i = 0; i < 20; i++) MaxedRewards.BuildCards(i % 2 == 0);
+            var again = MaxedRewards.BuildCards(true);
+            Assert.That(Resources.FindObjectsOfTypeAll<UpgradeData>().Length, Is.EqualTo(objects), "No new card objects per level-up.");
+            for (int i = 0; i < first.Count; i++) Assert.That(again[i], Is.SameAs(first[i]));
+            Assert.That(again.TrueForAll(MaxedRewards.IsCard), Is.True);
+            Assert.That(MaxedRewards.TryGetKind(again[3], out var kind) && kind == MaxedRewards.Kind.AlwaysChicken, Is.True);
+
+            // A card destroyed elsewhere is made again, and the new one is a card.
+            Object.DestroyImmediate(again[0]);
+            var remade = MaxedRewards.BuildCards();
+            Assert.That(remade[0] != null, Is.True);
+            Assert.That(MaxedRewards.IsGoldCard(remade[0]), Is.True);
+            Assert.That(remade[0].UpgradeName, Is.EqualTo(MaxedRewards.GoldCardName));
+        }
+
+        [Test]
         public void MaxedChickenCard_HealsThirty_AndGoldCard_Pays25()
         {
             var player = Track(new GameObject("MaxedPlayer"));
