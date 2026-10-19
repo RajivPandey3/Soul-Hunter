@@ -44,6 +44,7 @@ namespace SoulHunter.Gameplay.Core
         private Vector3 _arenaCentre;
         private float _arenaTick;
         private LineRenderer _arenaRing;
+        private Material _arenaRingMaterial; // Bug MIS CORE-11: made per Level 9 start, destroyed with the ring
         private const int ArenaRingPoints = 96;
         private static readonly Color ArenaRingColour = new Color(0.95f, 0.2f, 0.25f, 0.85f);
 
@@ -278,6 +279,7 @@ private void TrySubscribeToProgression()
             var shader = Shader.Find("SoulHunter/VFX/Particle");
             if (shader == null) shader = Shader.Find("Sprites/Default");
             var material = new Material(shader);
+            _arenaRingMaterial = material;
             if (material.HasProperty("_Color")) material.SetColor("_Color", ArenaRingColour);
             _arenaRing.sharedMaterial = material;
             _arenaRing.startColor = _arenaRing.endColor = ArenaRingColour;
@@ -301,6 +303,9 @@ private void TrySubscribeToProgression()
         {
             for (int i = _runtimeHazards.Count - 1; i >= 0; i--) if (_runtimeHazards[i] != null) Destroy(_runtimeHazards[i]);
             _runtimeHazards.Clear();
+            // A runtime Material is not destroyed with the renderer that uses it; each Level 9 start (every Endless cycle) left one.
+            if (_arenaRingMaterial != null) Destroy(_arenaRingMaterial);
+            _arenaRingMaterial = null;
         }
 
         private void RestoreEnvironment()

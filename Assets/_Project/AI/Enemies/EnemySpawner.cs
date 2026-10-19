@@ -173,6 +173,7 @@ namespace SoulHunter.Gameplay.AI
                     var body = entry.Value.Pop();
                     if (body == null) continue;
                     Destroy(body);
+                    HordeVatDrawer.RequestPrune(); // Bug MIS AI-12: the drawer forgets it on a later frame
                     budget--;
                 }
                 if (budget <= 0) return;
@@ -577,6 +578,9 @@ namespace SoulHunter.Gameplay.AI
             }
 
             enemyToSpawn.transform.position = spawnPos;
+            // Bug MIS AI-10: a pooled body that served as a hazard member or guardian is ordinary again on this life (the
+            // callers that make it special add it back), so an Omen takeover swaps it like any wave enemy.
+            _special.Remove(enemyToSpawn);
             if (!_prefabScales.TryGetValue(prefab, out var originalScale))
             {
                 originalScale = enemyToSpawn.transform.localScale;
@@ -750,6 +754,7 @@ namespace SoulHunter.Gameplay.AI
                 if (enemy == null) continue;
                 enemyObject.transform.position = StageCorridor.Clamp(position);
                 enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
+                KeepWorldFreeze(enemy);
                 spawned.Add(enemy);
             }
             SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
@@ -780,9 +785,25 @@ namespace SoulHunter.Gameplay.AI
                 at.y = _playerTransform.position.y;
                 enemyObject.transform.position = StageCorridor.Clamp(at);
                 enemy.StartFlyingMode(direction, Mathf.Max(0.2f, speed), weave);
+                KeepWorldFreeze(enemy);
                 spawned.Add(enemy);
             }
             return spawned;
+        }
+
+        /// <summary>
+        /// Bug MIS AI-06. VS (wiki Orologion, raw 2026-10-19): "Enemies will continue to spawn, and new enemies will also
+        /// become frozen." SpawnEnemy freezes a new enemy during an Orologion, but a map-event flier or a hazard member is
+        /// then given its own state (a flight, a hold), which replaced the freeze. Called after that state is set: the enemy
+        /// is frozen for what is left of the Orologion and then resumes its own state (EnemyFrozenState.ResumeState), as an
+        /// enemy frozen mid-flight does. It goes straight to the frozen state, so a second Freeze call does not fire the
+        /// freeze effects (Out of Bounds blasts) twice for one spawn.
+        /// </summary>
+        public static void KeepWorldFreeze(EnemyController enemy)
+        {
+            float frozenFor = SoulHunter.Gameplay.Pickups.TimeFreezePickup.WorldFreezeRemaining;
+            if (enemy == null || frozenFor <= 0f || enemy.IsFrozen) return;
+            enemy.ChangeState(new EnemyFrozenState(enemy, frozenFor, enemy.CurrentState));
         }
 
         /// <summary>Enemies that are not part of the ordinary wave: hazard members, guardians, chest-less wave bosses.</summary>
@@ -1047,9 +1068,20 @@ namespace SoulHunter.Gameplay.AI
         public GameObject StageElitePrefab => _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
         public GameObject StageBossPrefab => _stageBossPrefab;
 
-        /// <summary>Spawns one of this stage's enemies the normal way (pool, stage speed, health, damage rule) at a position.</summary>
-        public GameObject SpawnHazardEnemy(GameObject prefab, Vector3 position)
+        /// <summary>True when the screen holds the VS hard cap of enemies, and no hazard or special enemy can come.</summary>
+        public static bool AtHardCap => EnemyController.ActiveEnemies.Count >= HardCap;
+
+        /// <summary>
+        /// Spawns one of this stage's enemies the normal way (pool, stage speed, health, damage rule) at a position.
+        /// Null when the screen is full: Bug MIS AI-08, VS (wiki Curse, raw 2026-10-19): "Total enemy quantity allowed on
+        /// screen is capped at 500, regardless of Curse and Charm value." Map events already stopped there; hazard members,
+        /// Omen spawns, summons, casket guards and item guardians did not. Every caller copes with null (fewer members, or
+        /// it tries again later). Stage bosses and chest elites do not come through here and are not held back; item
+        /// guardians (one per guarded item, carrying its Soul Egg) pass <paramref name="ignoreHardCap"/> and are not either.
+        /// </summary>
+        public GameObject SpawnHazardEnemy(GameObject prefab, Vector3 position, bool ignoreHardCap = false)
         {
+            if (!ignoreHardCap && AtHardCap) return null;
             var enemy = SpawnEnemy(prefab);
             if (enemy == null) return null;
             _special.Add(enemy);

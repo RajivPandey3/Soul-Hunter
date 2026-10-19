@@ -68,5 +68,47 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(EnemyController.ActiveEnemies.Count, Is.LessThanOrEqualTo(EnemySpawner.HardCap), "At most 500 enemies.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-08. VS (wiki Curse): "Total enemy quantity allowed on screen is capped at 500, regardless of Curse and
+        /// Charm". Hazard and special spawns (pile rings, Thorn Circle, summons, casket guards, Omen members) went past it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator HazardAndSpecialSpawns_StopAt500Enemies()
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) weapon.enabled = false;
+            var prefab = (GameObject)typeof(EnemySpawner).GetField("_stageEnemyPrefab", Private).GetValue(spawner);
+            var spawn = typeof(EnemySpawner).GetMethod("SpawnEnemy", Private);
+            int guard = 0;
+            while (EnemyController.ActiveEnemies.Count < EnemySpawner.HardCap - 3 && guard++ < 1000) spawn.Invoke(spawner, new object[] { prefab });
+            yield return null;
+            int before = EnemyController.ActiveEnemies.Count;
+            Assert.That(before, Is.EqualTo(EnemySpawner.HardCap - 3));
+            var shooters = SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartPileAssault(12, 20f);
+            Assert.That(shooters.Count, Is.EqualTo(3), "The pile ring fills the room left and no more.");
+            Assert.That(EnemySpawner.AtHardCap, Is.True);
+            Assert.That(spawner.SpawnHazardEnemy(prefab, PlayerController.Instance.transform.position + Vector3.right * 8f), Is.Null,
+                "A full screen takes no hazard enemy.");
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartThornCircle(), Is.Null, "No Thorn Circle on a full screen.");
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartMineRing().Count, Is.Zero, "No Powder Ring on a full screen.");
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartRisingTide(), Is.Null, "No flood without its caller on a full screen.");
+            Assert.That(EnemyController.ActiveEnemies.Count, Is.EqualTo(EnemySpawner.HardCap), "At most 500 enemies.");
+
+            // An item guardian is unique (one per guarded item, with its Soul Egg): like a stage boss it still comes.
+            var item = new GameObject("CapTest_GuardedItem");
+            item.transform.position = PlayerController.Instance.transform.position + Vector3.right * 8f;
+            var post = SoulHunter.Gameplay.Pickups.ItemGuardPost.Attach(item, SoulHunter.Gameplay.Data.ItemGuardians.All[0], 1);
+            var guardian = post.Spawn();
+            Assert.IsNotNull(guardian, "An item guardian is not held back by the 500 cap. " + Errors());
+            Assert.That(post.Spawned, Is.True);
+            Assert.That(EnemyController.ActiveEnemies.Count, Is.EqualTo(EnemySpawner.HardCap + 1), "Only the guardian goes past the cap.");
+            guardian.SetActive(false);
+            Object.Destroy(item);
+            yield return null;
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

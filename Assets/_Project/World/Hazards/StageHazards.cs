@@ -344,6 +344,8 @@ namespace SoulHunter.Gameplay.Hazards
             Vector3 corner = origin + Vector3.left * Mathf.Max(1f, left - StageHazardTable.TideCallerInset)
                                     + Vector3.back * Mathf.Max(1f, down - StageHazardTable.TideCallerInset);
             var body = prefab != null ? spawner.SpawnHazardEnemy(prefab, corner) : null;
+            // A full screen (500, Bug MIS AI-08) holds the Tide Caller back: no flood without a caller to defeat.
+            if (body == null && prefab != null) return null;
             var tide = RisingTide.Begin(body, line, rise, seconds, PlayerLevel());
             _tides.Add(tide);
             Debug.Log($"[StageHazards] Rising Tide on Stage {_stage} for {seconds:0} s.");
@@ -447,6 +449,7 @@ namespace SoulHunter.Gameplay.Hazards
             _thornCircles.Clear();
             foreach (var tide in _tides) if (tide != null) tide.End();
             _tides.Clear();
+            HazardBullets.EndAll(); // Bug MIS AI-11: enemy bullets go with the stage
             ClearRails();
         }
 

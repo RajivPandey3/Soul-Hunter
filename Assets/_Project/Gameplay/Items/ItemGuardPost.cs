@@ -61,7 +61,8 @@ namespace SoulHunter.Gameplay.Pickups
             var spawner = FindFirstObjectByType<SoulHunter.Gameplay.AI.EnemySpawner>();
             var prefab = ItemGuardians.Prefab(Level, Guard.Id);
             if (spawner == null || prefab == null) return null;
-            var body = spawner.SpawnHazardEnemy(prefab, _home);
+            // Like a stage boss, a guardian is unique (one per item, with its Soul Egg), so the 500 cap does not hold it back.
+            var body = spawner.SpawnHazardEnemy(prefab, _home, ignoreHardCap: true);
             if (body == null) return null; // tried again on the next frame while the hero stays close
             Spawned = true;
             Body = body;

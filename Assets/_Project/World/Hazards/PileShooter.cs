@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using SoulHunter.Gameplay.AI;
 using SoulHunter.Gameplay.Combat;
@@ -34,6 +35,9 @@ namespace SoulHunter.Gameplay.Hazards
             shooter._nextShot = Mathf.Max(0f, firstShotDelay);
             shooter.IsLeaving = false;
             shooter.Hold();
+            // Bug MIS AI-06 (wiki Orologion: "new enemies will also become frozen"): a member spawned during an Orologion
+            // was frozen by SpawnEnemy, and the hold replaced that; it stays frozen for the rest of it, then holds again.
+            EnemySpawner.KeepWorldFreeze(shooter._enemy);
             return shooter;
         }
 
@@ -157,7 +161,34 @@ namespace SoulHunter.Gameplay.Hazards
             projectile.Initialize(direction, speed, damage, lifetime, DamageType.Normal, SourceName, 1);
             projectile.ConfigureContacts(1, 0, false); // the player's Arcana bounces are not for enemy bullets
             projectile.TargetsPlayer = true;           // after OnEnable, which resets it
+            PhysicsShots.Add(projectile);              // one entry per pooled object (EndAll)
             return projectile;
+        }
+
+        /// <summary>The physics bullets this class has fired (pooled objects of its own template; EndAll).</summary>
+        private static readonly HashSet<Projectile> PhysicsShots = new HashSet<Projectile>();
+
+        /// <summary>
+        /// Bug MIS AI-11. Ends every enemy bullet in flight: the stage clear at 30:00 ("All enemies on the screen are
+        /// cleared", wiki Mad_Forest; a bullet is the enemies' attack and goes with them) and the stage change. Before, a
+        /// Lost Head's bullets kept hitting through the 5 s transition and into the next level. Not a per-frame call.
+        /// </summary>
+        public static int EndAll()
+        {
+            int ended = 0;
+            var light = EnemyBullet.Active;
+            for (int i = light.Count - 1; i >= 0; i--)
+            {
+                if (i >= light.Count) continue;
+                var bullet = light[i];
+                if (bullet == null) { light.RemoveAt(i); continue; }
+                bullet.gameObject.SetActive(false); // back to its pool (it swap-removes itself from Active)
+                ended++;
+            }
+            PhysicsShots.RemoveWhere(p => p == null);
+            foreach (var projectile in PhysicsShots)
+                if (projectile.isActiveAndEnabled && projectile.TargetsPlayer) { projectile.gameObject.SetActive(false); ended++; }
+            return ended;
         }
 
         private static Component FireLight(Vector3 from, Vector3 direction, float speed, int damage, float lifetime)

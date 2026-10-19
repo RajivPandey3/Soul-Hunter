@@ -30,6 +30,9 @@ namespace SoulHunter.Gameplay.Hazards
             still.RemainingSeconds = lifetimeSeconds;
             still.IsLeaving = false;
             still.Hold();
+            // Bug MIS AI-06 (wiki Orologion: "new enemies will also become frozen"): a member spawned during an Orologion
+            // was frozen by SpawnEnemy, and the hold replaced that; it stays frozen for the rest of it, then holds again.
+            EnemySpawner.KeepWorldFreeze(still._enemy);
             return still;
         }
 

@@ -172,7 +172,7 @@ namespace SoulHunter.Gameplay.Pickups
             to.y = 0f;
             if (!GuardsSpawned)
             {
-                if (to.sqrMagnitude <= GuardWakeDistance * GuardWakeDistance) SpawnGuards();
+                if (to.sqrMagnitude <= GuardWakeDistance * GuardWakeDistance && !SoulHunter.Gameplay.AI.EnemySpawner.AtHardCap) SpawnGuards();
                 return;
             }
             if (!IsReady)
@@ -218,6 +218,9 @@ namespace SoulHunter.Gameplay.Pickups
                     }
                     _guards.Add(guard);
                 }
+            // A full screen (the 500 cap, Bug MIS AI-08) let no guard come: try again on a later frame instead of opening
+            // the casket for free.
+            if (_guards.Count == 0 && prefab != null && SoulHunter.Gameplay.AI.EnemySpawner.AtHardCap) { GuardsSpawned = false; return; }
             var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
             if (audio != null && _guards.Count > 0) audio.PlaySFX(audio.BossWarningSound, 0.7f);
             // No guard could be spawned (no spawner in a test scene): nothing is left to defeat.
