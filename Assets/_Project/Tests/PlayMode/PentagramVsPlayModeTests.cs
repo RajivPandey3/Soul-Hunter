@@ -95,7 +95,7 @@ namespace SoulHunter.Tests.PlayMode
             PickupTicker.CopyTo(ticked);
             foreach (var pickup in ticked) if (pickup is Component c && c != null) Old(c.gameObject);
             foreach (var chest in Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None)) Old(chest.gameObject);
-            Assert.That(expected, Does.Contain(chestOn).And.Contain(coin.gameObject).And.Not.Contain(chestOff).And.Not.Contain(stageChicken));
+            Assert.That(expected, Has.Member(chestOn).And.Member(coin.gameObject).And.No.Member(chestOff).And.No.Member(stageChicken));
 
             int erased = GroundItemEraser.EraseOnScreen(view);
             Assert.That(erased, Is.EqualTo(expected.Count), "As many items go as the old scan found.");

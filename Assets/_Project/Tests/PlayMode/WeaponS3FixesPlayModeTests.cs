@@ -296,7 +296,7 @@ namespace SoulHunter.Tests.PlayMode
             probe.Volley(4, 0.05f, Vector3.zero); // warm up: the runner and its list are made once
             yield return new WaitForSeconds(0.4f);
             probe.Clear();
-            Assert.That(() => probe.Volley(4, 0.05f, Vector3.forward), UnityEngine.TestTools.Constraints.Is.Not.AllocatingGCMemory(),
+            Assert.That(() => probe.Volley(4, 0.05f, Vector3.forward), UnityEngine.TestTools.Constraints.ConstraintExtensions.AllocatingGCMemory(UnityEngine.TestTools.Constraints.Is.Not),
                 "An attack of four shots allocated (a closure, an iterator and a WaitForSeconds per shot before CMB-13).");
             yield return new WaitForSeconds(0.4f);
             Assert.That(probe.Indices.Count, Is.EqualTo(4));
