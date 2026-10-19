@@ -94,6 +94,7 @@ namespace SoulHunter.Tests.PlayMode
                 "A full screen takes no hazard enemy.");
             Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartThornCircle(), Is.Null, "No Thorn Circle on a full screen.");
             Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartMineRing().Count, Is.Zero, "No Powder Ring on a full screen.");
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartRisingTide(), Is.Null, "No flood without its caller on a full screen.");
             Assert.That(EnemyController.ActiveEnemies.Count, Is.EqualTo(EnemySpawner.HardCap), "At most 500 enemies.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
