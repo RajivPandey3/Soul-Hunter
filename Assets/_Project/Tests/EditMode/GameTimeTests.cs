@@ -71,6 +71,20 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void DestroyedLastOwner_Pruned_ByIsPaused_AlsoResumesTimeScale()
+        {
+            // Bug MIS UI-11: IsPaused pruned the destroyed owner but left Time.timeScale at 0,
+            // so it said "running" while the game stayed frozen.
+            var owner = new GameObject("DestroyedScreen");
+            GameTime.Pause(owner);
+            Assert.That(Time.timeScale, Is.EqualTo(0f));
+            Object.DestroyImmediate(owner);
+
+            Assert.That(GameTime.IsPaused, Is.False);
+            Assert.That(Time.timeScale, Is.EqualTo(1f), "Pruning the last pause must set the time scale again.");
+        }
+
+        [Test]
         public void PauseMenuToggledTwice_DuringMerchantShop_KeepsGamePaused()
         {
             var merchant = _object.AddComponent<WanderingMerchant>();
