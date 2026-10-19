@@ -3,7 +3,11 @@
 **Date:** 2026-10-19
 **Asked by owner:** "is project mein kitna bug hai wo dhoondho, sirf dhoondho, ek ek game object ko check karo or MIS banakar save karo"
 **Code state:** `main` at `ca1b93ec` (local, not pushed)
-**Status:** the register itself changed nothing in the project. Batch 1 (2026-10-19, merged at `ac7077fc`) fixed these S2 rows: CMB-01, CMB-02, CMB-03, CMB-04, CORE-02 (row half wrong; see AGENTS.md), AI-01, AI-02, AI-03, AI-04, AI-05, AI-07, ITM-01, ITM-02, UI-01, UI-02, UI-03. CMB-05 waits for the owner. Every other row is OPEN.
+**Status (2026-10-19):** the register itself changed nothing in the project. Then:
+- **Batch 1** (merged at `ac7077fc`) fixed the S2 rows CMB-01..04, CORE-02 (row half wrong), AI-01..05, AI-07, ITM-01, ITM-02 and UI-01..03.
+- **Batch 2** (merged at `159192f4`) fixed CMB-05 (owner exception), AI-03 (owner: "SH = VS", the VS Drowner rule) and every S3 row except the three below. Two rows turned out partly wrong: ITM-13 (only the no-screen path was wrong) and CORE-10 (the Limit Break part was already fine).
+- **Left:** AI-09 (owner design call), CMB-14 (dead data, harmless), and the Holy Wand pierce contradiction on the wiki (owner).
+- **Found during batch 2:** the HordeVatDrawer prune was starved by repeated requests. Fixed.
 
 ## How it was found
 

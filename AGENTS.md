@@ -2333,6 +2333,68 @@ Owner: "rules wiki ka follow hoga, jo bhi fix hoga wo safe hoga, fps 60 constant
   - The full PlayMode suite and an FPS check follow; this entry is updated with their results.
 - Not played by the owner.
 
+### Full bug MIS, batch 2: owner decisions and the S3 rows (owner, 2026-10-19)
+
+Five fixer agents worked in their own worktrees (`D:/SoulHunter-Validation/s3-*`). The lead merged their work with the owner-decision branch into `fix/s3-integration` and fixed what the first Unity runs found: two glued method lines and two compile errors in new tests, and the HordeVatDrawer prune being starved by repeated requests.
+
+**Owner decisions**
+- CMB-05: Shadow Kael's mirrored Laurel and Crimson Shroud protect him from nothing. There is no shield block, no 10-damage cap, and no shield shown. His copy's retaliation also stops, because in VS it fires only on a block.
+- AI-03 ("SH = VS", The_Drowner):
+  - the Tide Caller is unaffected by Pentagram;
+  - it keeps freeze, debuff and knockback resistance, but not instant-kill resistance;
+  - Eclipse Sigil, Sundered Hour, Crimson Shroud and Soul Toll kill it and drop the Drowner's 6/66/100 chest;
+  - ordinary damage defeats it with no chest.
+- Bloody Tear ("SH = VS", Bloody_Tear): heals 8 only on a crit hit that damages, at most once a second. This replaces Soul Hunter's earlier per-lash heal.
+- Holy Wand (Holy_Wand): 30 damage, cooldown 0.5 s, 4 bolts 0.1 s apart. Its pierce stays 1, because the wiki contradicts itself ("pierce = 2" against "non-piercing"). **Owner decision open.**
+
+**Weapons**
+- CMB-06: an axe's 5 s life is kept on the axe.
+- CMB-07: Requiem and Garlic query only the hostile layer and grow their buffers.
+- CMB-09: an upgrade restarts a Peachone or Dusk Raven activation instead of running two.
+- CMB-12: a duplicate WeaponManager is destroyed.
+- CMB-13: FireInSuccession allocates nothing. One `SuccessionRunner` fires the later shots, with the same timing.
+
+**Enemies**
+- AI-06: fliers and hazard members spawned during an Orologion freeze.
+- AI-08: hazard spawns stop at 500; item guardians are exempt.
+- AI-10: `_special` is cleared on reuse.
+- AI-11: enemy bullets end on the stage clear and the stage change.
+- AI-12: the drawers forget destroyed bodies.
+- CORE-11: the Level 9 ring material is destroyed.
+
+**Items and save**
+- ITM-03: stage-item clean-up leaves reused pool objects alone.
+- ITM-04: a failed background save is retried.
+- ITM-05: a pending save is flushed on pause and focus loss.
+- ITM-06: chest counters are saved on every path.
+- ITM-07: the Orologion freeze is reset between runs.
+- ITM-08 to ITM-11: performance fixes.
+- ITM-12: the unlock text now reads "Clear Stage n: ... defeat its guardian and survive to 30:00".
+
+**UI**
+- UI-04: later chests reuse the preview texture.
+- UI-05: a skip leaves no half-faded flash.
+- UI-06: Esc and gamepad B close Evolutions and Map (`PauseKeyGate`).
+- UI-07 to UI-09: no per-frame strings or arrays.
+- UI-10: rich-text colours follow a live theme change. The stats panel now uses the theme accent, not #FFD940.
+- UI-11: GameTime re-applies the time scale when it prunes a destroyed owner.
+
+**Core**
+- CORE-04: Omen formations are filtered at fire time.
+- CORE-05: Soul Burst is ignored while paused.
+- CMB-10: dash and Soul Burst immunity is counted (`HealthController.BeginAbilityImmunity`), and `IsInvincible` stays the god-mode switch.
+- CORE-07: a pause holds a dash.
+- CORE-08: with V-Sync on, the interval is the floor of hz/60. V-Sync stays off by default.
+- CORE-09 (balance): Banish is unavailable on the Gold Pouch and Roast Chicken cards.
+- ITM-13 (balance): a maxed level-up with no screen pays one reward.
+- CORE-10: the maxed reward cards are reused.
+
+**Validation**
+- Integration, full run: EditMode 999/999, PlayMode 494/499 (`D:/SoulHunter-Validation/run-20261019-full-s3-integ3/`).
+- After the three fixes: EditMode 999/999, and the HordeVat, UiThemeLive, WeaponS3Fixes and EnemyMinimum fixtures 21/21. 0 exceptions, save untouched (`-s3-fix1/`).
+- The full suite on main and an FPS check follow.
+- Not played by the owner.
+
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
 
 Owner: "keyboard se game khel raha hoon to level up selection mein keyboard kaam nahi kar raha", "or chest ko bhi fix karo". VS wiki (Options, patch 0.2.4): "Spacebar can be used just like Enter to interact with the UI".
