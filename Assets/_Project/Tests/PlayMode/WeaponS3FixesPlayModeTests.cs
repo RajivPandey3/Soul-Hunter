@@ -193,6 +193,23 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var target in SpawnTargets(3, 1f)) target.transform.position += Vector3.right * 25f;
         }
 
+        // ------------------------------------------------------------------ CMB-12 duplicate WeaponManager
+
+        [UnityTest]
+        public IEnumerator ASecondWeaponManager_IsDestroyed_AndTheFirstStays()
+        {
+            yield return Prepare();
+            var first = WeaponManager.Instance;
+            Assert.IsNotNull(first);
+            var duplicate = new GameObject("DuplicateWeaponManager");
+            duplicate.AddComponent<WeaponManager>();
+            yield return null;
+            yield return null;
+            Assert.IsTrue(duplicate == null, "The duplicate manager's object is destroyed.");
+            Assert.AreSame(first, WeaponManager.Instance, "The first manager stays the instance.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>Boots a quiet run: no spawner, an invincible hero, no weapons, no enemies and no gems (no level-ups).</summary>
