@@ -146,6 +146,13 @@ namespace SoulHunter.Gameplay.Weapons
 
             // Player ke center se ek bada gola (Sphere) phek kar usme aaye dushmano ko dhoondho (NonAlloc for max performance)
             int hitsCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, actualRadius, _hitsBuffer, _enemyLayer);
+            // A full buffer may have left enemies out (CMB-07: 200 slots against a 300 crowd): grow it and ask again. It grows
+            // rarely and only up to the crowd's size, so a steady state allocates nothing (as the magnet sweep does).
+            while (hitsCount == _hitsBuffer.Length)
+            {
+                _hitsBuffer = new Collider[_hitsBuffer.Length * 2];
+                hitsCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, actualRadius, _hitsBuffer, _enemyLayer);
+            }
             int enemiesHit = 0;
 
             for (int i = 0; i < hitsCount; i++)

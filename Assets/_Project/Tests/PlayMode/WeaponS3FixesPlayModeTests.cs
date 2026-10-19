@@ -66,6 +66,42 @@ namespace SoulHunter.Tests.PlayMode
         private static List<AxePierce> LiveAxes() =>
             Object.FindObjectsByType<AxePierce>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).ToList();
 
+        // ------------------------------------------------------------------ CMB-07 crowd buffers
+
+        // More than the old buffers held (Garlic 200, Requiem 128), all inside the aura.
+        private const int CrowdSize = 260;
+
+        [UnityTest]
+        public IEnumerator Garlic_HitsEveryEnemyOfABigCrowd()
+        {
+            yield return Prepare();
+            var targets = SpawnTargets(CrowdSize, 2f);
+            yield return null;
+            var garlic = Give<GarlicWeapon>(UpgradeType.Garlic);
+            garlic.ResetCooldownAndFire();
+            yield return null;
+            yield return null;
+            int hit = targets.Count(t => t.GetComponent<HealthController>().CurrentHealth < 1000000);
+            Assert.That(hit, Is.EqualTo(CrowdSize), "One Garlic pulse reaches the whole crowd inside its radius.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator RequiemOfSouls_HitsEveryEnemyOfABigCrowd()
+        {
+            yield return Prepare();
+            var targets = SpawnTargets(CrowdSize, 4.5f);
+            yield return null;
+            RequiemOfSoulsWeapon requiem = null;
+            yield return Evolve("Evo_RequiemOfSouls", w => requiem = w as RequiemOfSoulsWeapon);
+            Assert.IsNotNull(requiem, "Requiem of Souls is equipped.");
+            requiem.ResetCooldownAndFire();
+            yield return new WaitForSeconds(0.5f); // several 0.1 s pulses; each enemy's first hit lands at once
+            int hit = targets.Count(t => t.GetComponent<HealthController>().CurrentHealth < 1000000);
+            Assert.That(hit, Is.EqualTo(CrowdSize), "The wave reaches the whole crowd inside its radius.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>Boots a quiet run: no spawner, an invincible hero, no weapons, no enemies and no gems (no level-ups).</summary>
@@ -87,6 +123,23 @@ namespace SoulHunter.Tests.PlayMode
             var weapon = PlayerController.Instance.GetComponentsInChildren<T>().FirstOrDefault();
             Assert.IsNotNull(weapon, $"{typeof(T).Name} is equipped.");
             return weapon;
+        }
+
+        private IEnumerator Evolve(string evolutionAsset, System.Action<AutoAttackWeapon> found)
+        {
+            var weapons = WeaponManager.Instance;
+            var evolution = GetPrivateField<List<WeaponEvolutionData>>(weapons, "_availableEvolutions")
+                .FirstOrDefault(e => e != null && e.name == evolutionAsset);
+            Assert.IsNotNull(evolution, $"{evolutionAsset} is one of WeaponManager's evolutions.");
+            weapons.GiveWeapon(evolution.BaseWeapon, evolution.BaseWeaponMaxLevel);
+            weapons.GiveWeapon(evolution.RequiredPassive, Mathf.Max(1, evolution.RequiredPassiveMaxLevel));
+            yield return null;
+            Assert.IsTrue(weapons.TryEvolveWeapon(out string evolved), $"{evolutionAsset} evolves.");
+            yield return null;
+            var weapon = weapons.GetEquippedWeapons().Select(p => p.Value).LastOrDefault();
+            foreach (var other in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>())
+                if (other != weapon) other.gameObject.SetActive(false);
+            found(weapon);
         }
 
         /// <summary>Unkillable, still targets of this stage's enemy type around the hero, within <paramref name="radius"/>.</summary>
