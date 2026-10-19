@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -39,12 +40,12 @@ namespace SoulHunter.Tests.PlayMode
             GameServices.Instance.Get<EventBus>().Raise(new PlayerDashEvent());
             yield return null;
             Assert.That(player.IsDashing, Is.True, "The dash starts.");
-            Assert.That(playerHealth.IsInvincible, Is.True, "The dash avoids damage.");
+            Assert.That(playerHealth.IsAbilityInvulnerable, Is.True, "The dash avoids damage.");
             yield return new WaitForSeconds(0.3f);
 
             Assert.That(Vector3.Distance(start, player.transform.position), Is.GreaterThan(2f), "The dash moves the hero.");
             Assert.That(enemyHealth.CurrentHealth, Is.EqualTo(enemyBefore), "The dash deals no damage.");
-            Assert.That(playerHealth.IsInvincible, Is.False, "Invulnerability ends with the dash.");
+            Assert.That(playerHealth.IsAbilityInvulnerable, Is.False, "Invulnerability ends with the dash.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
@@ -73,6 +74,58 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(travelled, Is.LessThan(1.5f - 0.35f), $"The dash stops before the wall face (1.5 ahead); it went {travelled:0.00}.");
             Assert.That(travelled, Is.GreaterThan(0.5f), "It still moved up to the wall.");
             Object.Destroy(wall);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>
+        /// Bug MIS CMB-10 / CORE-06 (2026-10-19): the dash and Soul Burst shared HealthController.IsInvincible, so the
+        /// first to end cleared the other's immunity and the bot's or benchmark's god mode (IsInvincible = true).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheDash_EndsNeitherGodMode_NorSoulBurstsImmunity()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            var health = player.GetComponent<HealthController>();
+            var bus = GameServices.Instance.Get<EventBus>();
+            // No horde: the burst's kills would drop gems whose level-up pauses the game mid-check.
+            foreach (var stray in new List<EnemyController>(EnemyController.ActiveEnemies))
+                if (stray != null) stray.gameObject.SetActive(false);
+            yield return null;
+
+            // God mode, as -sh-autoplay-god and the benchmark set it, outlives a dash.
+            health.IsInvincible = true;
+            bus.Raise(new PlayerDashEvent());
+            yield return null;
+            Assert.That(player.IsDashing, Is.True, "The dash starts.");
+            yield return new WaitForSeconds(0.35f);
+            Assert.That(health.IsInvincible, Is.True, "Ending the dash does not clear god mode.");
+            health.IsInvincible = false;
+            yield return new WaitUntil(() => !player.IsDashing); // the dash cooldown
+
+            // Soul Burst's 2 s immunity outlives a dash that starts and ends inside it.
+            var burst = Object.FindFirstObjectByType<SoulBurstController>();
+            Assert.IsNotNull(burst, "The player has the Soul Burst ultimate.");
+            typeof(SoulBurstController).GetMethod("TriggerSoulBurst", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(burst, null);
+            float slowEnds = Time.realtimeSinceStartup + 0.6f; // its 0.5 s real-time hit-stop
+            while (Time.realtimeSinceStartup < slowEnds) yield return null;
+            Assert.That(health.IsAbilityInvulnerable, Is.True, "Soul Burst makes the hero immune.");
+            float burstStarted = Time.time;
+            bus.Raise(new PlayerDashEvent());
+            yield return null;
+            Assert.That(player.IsDashing, Is.True, "A dash starts during the burst's immunity.");
+            yield return new WaitForSeconds(0.35f);
+            Assert.That(Time.time - burstStarted, Is.LessThan(1.4f), "Still inside the burst's 1.5 s of game time.");
+            Assert.That(health.IsAbilityInvulnerable, Is.True, "Ending the dash does not end Soul Burst's immunity.");
+            int before = health.CurrentHealth;
+            health.TakeDamage(new DamagePacket(10, player.transform.position, Vector3.zero) { IgnoresHitInvulnerability = true });
+            Assert.That(health.CurrentHealth, Is.EqualTo(before), "No damage while the burst's immunity runs.");
+
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(health.IsAbilityInvulnerable, Is.False, "The burst's immunity ends on its own.");
+            Assert.That(health.IsInvincible, Is.False);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

@@ -133,7 +133,8 @@ namespace SoulHunter.Gameplay.Combat
         {
             // Player ko 2 seconds ke liye Amar (Invincible) banao
             var playerHealth = GetComponent<HealthController>();
-            if (playerHealth != null) playerHealth.IsInvincible = true;
+            // Its own count (CMB-10): a dash ending inside these 2 s no longer ends it, and it never clears god mode.
+            if (playerHealth != null) playerHealth.BeginAbilityImmunity();
 
             // Hit-Stop (Slow motion effect for Anime feel)
             SoulHunter.Core.Services.GameTime.SetSlowMotion(0.1f);
@@ -145,7 +146,7 @@ namespace SoulHunter.Gameplay.Combat
 
             // Wait remaining 1.5 seconds for invincibility to wear off
             yield return new WaitForSeconds(1.5f);
-            if (playerHealth != null) playerHealth.IsInvincible = false;
+            if (playerHealth != null) playerHealth.EndAbilityImmunity();
         }
     }
 }

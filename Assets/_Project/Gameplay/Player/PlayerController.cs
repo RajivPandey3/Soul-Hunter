@@ -393,7 +393,9 @@ namespace SoulHunter.Gameplay.Player
             IsDashing = true;
 
             var health = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            if (health != null) health.IsInvincible = true;
+            // Its own count, not IsInvincible (Bug MIS CMB-10, 2026-10-19): ending the dash used to clear Soul Burst's
+            // 2 s immunity and the bot's god mode with the same bool.
+            if (health != null) health.BeginAbilityImmunity();
 
             // 1. Phasing: Kinematic on taake dushmano ki bheed (horde) dash ko rok na sake
             Rigidbody.isKinematic = true;
@@ -429,7 +431,7 @@ namespace SoulHunter.Gameplay.Player
 
             // Revert Phasing
             Rigidbody.isKinematic = false;
-            if (health != null) health.IsInvincible = false;
+            if (health != null) health.EndAbilityImmunity();
 
             // Cooldown
             yield return new WaitForSeconds(_dashCooldown);

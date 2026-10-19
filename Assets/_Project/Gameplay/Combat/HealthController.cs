@@ -60,9 +60,21 @@ namespace SoulHunter.Gameplay.Combat
 
         public bool IsInvincible { get; set; } = false;
 
+        // The dash and Soul Burst each grant immunity for as long as they run. They shared IsInvincible, so the first to
+        // end cleared the other's protection and the bot's or benchmark's god mode (IsInvincible = true) too (Bug MIS
+        // CMB-10 / CORE-06, 2026-10-19). Each now holds one count here and releases only its own; IsInvincible stays the
+        // god-mode / hazard switch that nothing in an ability clears.
+        private int _abilityImmunity;
+        /// <summary>A dash or Soul Burst is protecting this body (see <see cref="BeginAbilityImmunity"/>).</summary>
+        public bool IsAbilityInvulnerable => _abilityImmunity > 0;
+        /// <summary>Blocks every hit until the matching <see cref="EndAbilityImmunity"/>; calls nest.</summary>
+        public void BeginAbilityImmunity() => _abilityImmunity++;
+        /// <summary>Releases one <see cref="BeginAbilityImmunity"/>; the others keep blocking.</summary>
+        public void EndAbilityImmunity() { if (_abilityImmunity > 0) _abilityImmunity--; }
+
         /// <summary>
         /// Seconds of immunity after taking a hit (VS-style). 0 = none; enemies keep 0 so rapid
-        /// hits land, and the player sets it. Separate from IsInvincible, which dash/revive toggle.
+        /// hits land, and the player sets it. Separate from IsInvincible (god mode, hazards) and the dash / Soul Burst count.
         /// </summary>
         public float PostHitInvulnerability { get; set; }
 
@@ -122,6 +134,7 @@ namespace SoulHunter.Gameplay.Combat
             _currentHealth = _maxHealth;
             _hitInvulnerableUntil = -1f;
             _revivalInvulnerableUntil = -1f;
+            _abilityImmunity = 0; // a stopped dash or burst coroutine never leaves a body immune for good
             IsAwaitingRevive = false;
         }
 
@@ -156,7 +169,7 @@ namespace SoulHunter.Gameplay.Combat
 
         public void TakeDamage(DamagePacket packet)
         {
-            if (_currentHealth <= 0 || IsInvincible) return; // Already dead or invincible
+            if (_currentHealth <= 0 || IsInvincible || _abilityImmunity > 0) return; // Already dead, invincible, or dashing / bursting
             if (IsRevivalInvulnerable) return; // the revival's immunity blocks every hit
             if (IsShielded) return; // starting shield blocks every hit
             if (IsHitInvulnerable && !packet.IgnoresHitInvulnerability) return; // brief immunity after the last hit
