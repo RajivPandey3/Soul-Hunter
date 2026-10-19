@@ -246,8 +246,16 @@ namespace SoulHunter.Gameplay.UI
                 using (SoulHunter.Core.Services.SlowSpan.Measure("Show.ClearCards")) ClearCards();
                 // The preview's RenderTexture is kept between chests (2026-10-17): a new 512x512 MSAA texture on every chest
                 // was part of the 16-20 ms frame in which the screen opens. The stage that leaves gives it back first.
-                RenderTexture keep = null;
-                if (_stage != null) { keep = _stage.HandBackTexture(); Destroy(_stage.gameObject); }
+                // Bug MIS UI-04: Close destroyed the stage with its texture, so only the prewarmed first chest reused one.
+                // Close now hands the texture back too and keeps it here for the next chest.
+                RenderTexture keep = _keptTexture;
+                _keptTexture = null;
+                if (_stage != null)
+                {
+                    var handed = _stage.HandBackTexture();
+                    if (handed != null && handed != keep) { ReleaseTexture(keep); keep = handed; }
+                    Destroy(_stage.gameObject);
+                }
                 _stage = ChestPreviewStage.Create(chestPrefab, coinPrefab, _result.IsArcana, _result.Kind, keep);
                 _chestImage.texture = _stage.Texture;
                 _chestImage.color = Color.white;
@@ -367,7 +375,15 @@ namespace SoulHunter.Gameplay.UI
         {
             StopAllCoroutines();
             Current = Phase.Closed;
-            if (_stage != null) { Destroy(_stage.gameObject); _stage = null; }
+            if (_stage != null)
+            {
+                // The texture stays for the next chest (Bug MIS UI-04); the image lets go of it while hidden.
+                var handed = _stage.HandBackTexture();
+                if (handed != null && handed != _keptTexture) { ReleaseTexture(_keptTexture); _keptTexture = handed; }
+                Destroy(_stage.gameObject);
+                _stage = null;
+            }
+            _chestImage.texture = null;
             foreach (var spark in _sparks) if (spark.img != null) Destroy(spark.img.gameObject);
             _sparks.Clear();
             HudGoldHold.Set(0);
@@ -379,6 +395,19 @@ namespace SoulHunter.Gameplay.UI
         {
             HudGoldHold.Set(0);
             if (_stage != null) Destroy(_stage.gameObject);
+            ReleaseTexture(_keptTexture);
+            _keptTexture = null;
+        }
+
+        /// <summary>The preview texture kept between chests while the screen is closed (tests).</summary>
+        public RenderTexture KeptTexture => _keptTexture;
+        private RenderTexture _keptTexture;
+
+        private static void ReleaseTexture(RenderTexture texture)
+        {
+            if (texture == null) return;
+            texture.Release();
+            Destroy(texture);
         }
 
         // ---------- pieces ----------

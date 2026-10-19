@@ -238,6 +238,44 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator LaterChests_ReuseThePreviewTexture_AfterTheScreenCloses()
+        {
+            // Bug MIS UI-04: Close destroyed the preview with its RenderTexture, so only the prewarmed first chest
+            // reused one and every later chest made a new 512x512 MSAA texture.
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 20; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var chestUI = LiveChestUI();
+            var screen = OpenSkippableChest(chestUI);
+            yield return null;
+            var first = screen.Preview.Texture;
+            Assert.That(first, Is.Not.Null);
+            Assert.That(screen.TrySkip(), Is.True);
+            screen.PressDone();
+            yield return null;
+            Assert.That(screen.KeptTexture, Is.SameAs(first), "Closing keeps the preview texture for the next chest.");
+
+            OpenSkippableChest(chestUI);
+            yield return null;
+            Assert.That(screen.Preview.Texture, Is.SameAs(first), "The second chest renders into the same texture.");
+            Assert.That(screen.KeptTexture, Is.Null, "The open chest owns the texture while shown.");
+            Assert.That(screen.TrySkip(), Is.True);
+            screen.PressDone();
+            yield return null;
+            Assert.That(screen.KeptTexture, Is.SameAs(first));
+            Assert.AreEqual(1f, Time.timeScale);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        private static ChestOpeningScreen OpenSkippableChest(ChestUI chestUI)
+        {
+            var result = new ChestResult { ItemCount = 1, Gold = 120 };
+            result.Rewards.Add(new ChestReward { Name = "Whip", Level = 2 });
+            chestUI.OpenChest("TREASURE!", result);
+            Assert.That(chestUI.Screen.CanSkip, Is.True, "From the seventh chest a chest can be skipped.");
+            return chestUI.Screen;
+        }
+
+        [UnityTest]
         public IEnumerator ChestOpenEffect_KeepsPlaying_WhileTheGameIsPaused()
         {
             // Found 2026-09-28: the chest effect started in the frame the game paused and froze on its first frame.
