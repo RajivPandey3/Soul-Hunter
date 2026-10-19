@@ -260,6 +260,35 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void AFailedBackgroundWrite_StaysPending_AndTheNextFlushWritesIt()
+        {
+            // Bug MIS ITM-04: a failed background write was only logged; the save was no longer pending, so nothing retried.
+            string directory = NewDirectory();
+            try
+            {
+                string path = Path.Combine(directory, "save.json");
+                WriteSave(path, 30);
+                var service = Loaded(path);
+                service.CurrentData.Currency = 31;
+                LogAssert.ignoreFailingMessages = true; // the worker's error log arrives from another thread
+                using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None)) // e.g. locked by antivirus
+                {
+                    service.SaveInBackground();
+                    service.WaitForBackgroundWrite();
+                }
+                Assert.That(service.HasPendingSave, Is.True, "The failed write is still pending.");
+                service.FlushPendingSave();
+                Assert.That(service.HasPendingSave, Is.False);
+                Assert.That(Loaded(path).CurrentData.Currency, Is.EqualTo(31), "The retry wrote the gold.");
+            }
+            finally
+            {
+                LogAssert.ignoreFailingMessages = false;
+                Directory.Delete(directory, true);
+            }
+        }
+
+        [Test]
         public void FailedWrite_KeepsTheLastGoodSave_AndDoesNotThrow()
         {
             string directory = NewDirectory();
