@@ -266,6 +266,36 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        [UnityTest]
+        public IEnumerator SkippingDuringTheBlast_LeavesNoHalfFadedFlashOrRing()
+        {
+            // Bug MIS UI-05: a skip stopped the flash and ring pulses mid-fade, and they stayed half-faded into the next chest.
+            yield return BootIntoGameplay(save => { save.ChestsOpened = 20; save.FiveItemChestsOpened = 0; });
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var chestUI = LiveChestUI();
+            var screen = OpenSkippableChest(chestUI);
+            Assert.That(screen.FlashImage.texture, Is.Not.Null, "The chest flash has its approved sprite.");
+            yield return WaitUntilRealtime(() => screen.FlashImage.color.a > 0.05f, "the intro blast to show its flash");
+            Assert.That(screen.TrySkip(), Is.True);
+            Assert.That(screen.FlashImage.color.a, Is.EqualTo(0f), "Skipping clears the flash.");
+            Assert.That(screen.RingImage.color.a, Is.EqualTo(0f), "Skipping clears the ring.");
+            Assert.That(screen.FlashImage.rectTransform.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(screen.RingImage.rectTransform.localScale, Is.EqualTo(Vector3.one));
+            yield return null;
+            Assert.That(screen.FlashImage.color.a, Is.EqualTo(0f), "Nothing keeps fading it after the skip.");
+            screen.PressDone();
+            yield return null;
+
+            OpenSkippableChest(chestUI);
+            Assert.That(screen.FlashImage.color.a, Is.EqualTo(0f), "The next chest starts with a clear flash.");
+            Assert.That(screen.RingImage.color.a, Is.EqualTo(0f));
+            Assert.That(screen.TrySkip(), Is.True);
+            screen.PressDone();
+            yield return null;
+            Assert.AreEqual(1f, Time.timeScale);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         private static ChestOpeningScreen OpenSkippableChest(ChestUI chestUI)
         {
             var result = new ChestResult { ItemCount = 1, Gold = 120 };

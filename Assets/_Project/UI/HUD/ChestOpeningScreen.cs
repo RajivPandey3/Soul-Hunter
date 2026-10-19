@@ -266,6 +266,7 @@ namespace SoulHunter.Gameplay.UI
                 _skipHint.gameObject.SetActive(canSkip);
                 _skipHint.text = SkipHintText;
                 _circle.color = new Color(1f, 1f, 1f, 0f);
+                ResetBlast();
                 _openButton.gameObject.SetActive(false);
                 _doneButton.gameObject.SetActive(false);
                 using (SoulHunter.Core.Services.SlowSpan.Measure("Show.Layout")) Layout();
@@ -347,6 +348,7 @@ namespace SoulHunter.Gameplay.UI
             if (!CanSkip || Current == Phase.Done || Current == Phase.Closed) return false;
             if (_sequence != null) StopCoroutine(_sequence);
             StopAllCoroutines();
+            ResetBlast(); // a blast stopped mid-pulse would stay half-faded (Bug MIS UI-05)
             _openButton.gameObject.SetActive(false);
             _backdrop.color = Veil(BackdropAlpha, _result.IsArcana);
             _stage.FinishNow();
@@ -374,6 +376,7 @@ namespace SoulHunter.Gameplay.UI
         private void Close()
         {
             StopAllCoroutines();
+            ResetBlast();
             Current = Phase.Closed;
             if (_stage != null)
             {
@@ -409,6 +412,28 @@ namespace SoulHunter.Gameplay.UI
             texture.Release();
             Destroy(texture);
         }
+
+        /// <summary>
+        /// Bug MIS UI-05: skipping or closing stopped the flash and ring pulses mid-fade, and they stayed half-faded
+        /// into the next chest. Every stop, and every Show, puts them back clear at their own size.
+        /// </summary>
+        private void ResetBlast()
+        {
+            ClearPulse(_flash);
+            ClearPulse(_ring);
+        }
+
+        private static void ClearPulse(RawImage image)
+        {
+            if (image == null) return;
+            var c = image.color;
+            image.color = new Color(c.r, c.g, c.b, 0f);
+            image.rectTransform.localScale = Vector3.one;
+        }
+
+        /// <summary>The flash and ring images (tests).</summary>
+        public RawImage FlashImage => _flash;
+        public RawImage RingImage => _ring;
 
         // ---------- pieces ----------
 
