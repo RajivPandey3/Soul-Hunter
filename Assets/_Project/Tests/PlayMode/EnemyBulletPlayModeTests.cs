@@ -59,5 +59,35 @@ namespace SoulHunter.Tests.PlayMode
             again.gameObject.SetActive(false);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS AI-11. Enemy bullets (EnemyBullets, and the physics Projectiles of the A/B mode) outlived the stage: they
+        /// kept flying and hitting through the stage clear and into the next level. StageHazards.ClearAll now ends them.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EnemyBullets_EndWhenTheStageChanges()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            Vector3 hero = player.transform.position;
+            var light = HazardBullets.Fire(hero + Vector3.forward * 12f, Vector3.forward, 0.5f, 7, 60f);
+            Component heavy;
+            HazardBullets.LightBullets = false;
+            try { heavy = HazardBullets.Fire(hero + Vector3.right * 12f, Vector3.right, 0.5f, 7, 60f); }
+            finally { HazardBullets.LightBullets = true; }
+            Assert.That(light, Is.InstanceOf<EnemyBullet>());
+            Assert.That(heavy, Is.InstanceOf<Projectile>(), "The physics bullet of the A/B mode.");
+            yield return null;
+            Assert.That(light.gameObject.activeSelf && heavy.gameObject.activeSelf, Is.True, "Both are in flight.");
+
+            SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.StartStage(2);
+            yield return null;
+            Assert.That(light.gameObject.activeSelf, Is.False, "The enemy bullet ended with the stage.");
+            Assert.That(heavy.gameObject.activeSelf, Is.False, "The physics enemy bullet ended with the stage.");
+            Assert.That(EnemyBullet.ActiveCount, Is.Zero, "No enemy bullet flies into the next level.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

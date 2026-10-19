@@ -447,6 +447,7 @@ namespace SoulHunter.Gameplay.Hazards
             _thornCircles.Clear();
             foreach (var tide in _tides) if (tide != null) tide.End();
             _tides.Clear();
+            HazardBullets.EndAll(); // Bug MIS AI-11: enemy bullets go with the stage
             ClearRails();
         }
 
