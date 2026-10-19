@@ -148,6 +148,24 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        // ------------------------------------------------------------------ CMB-09 Peachone restart
+
+        [UnityTest]
+        public IEnumerator Peachone_UpgradedDuringAnActivation_RestartsIt_InsteadOfRunningTwo()
+        {
+            yield return Prepare();
+            var peachone = Give<PeachoneWeapon>(UpgradeType.Peachone);
+            yield return new WaitForSeconds(1.5f); // the gain's activation is half way through its 4 s
+            WeaponManager.Instance.ApplyUpgrade(WeaponDefinitionLookup.Find(UpgradeType.Peachone).GetLevel(2));
+            yield return null;
+            yield return null; // the upgrade fires it at once: a new activation, its first set now
+            int sets = peachone.SetsStarted;
+            yield return new WaitForSeconds(2.2f);
+            Assert.That(peachone.SetsStarted - sets, Is.EqualTo(2),
+                "One activation runs: a set every second (two activations made four).");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>Boots a quiet run: no spawner, an invincible hero, no weapons, no enemies and no gems (no level-ups).</summary>
