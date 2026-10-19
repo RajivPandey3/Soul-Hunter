@@ -79,7 +79,18 @@ namespace SoulHunter.Gameplay.UI
             // OnXPChanged fires after any level-ups, so this also keeps the level label current.
             EnsureLevelLabel();
             if (_levelLabel != null && _playerExperience != null)
-                _levelLabel.text = FormatLevel(_playerExperience.CurrentLevel);
+                ShowLevel(_playerExperience.CurrentLevel);
+        }
+
+        // Bug MIS UI-08: the label's string was built every frame. It is built only when the
+        // level shown changes; every write goes through here so the cache always matches the label.
+        private int _shownLevel = int.MinValue;
+
+        private void ShowLevel(int level)
+        {
+            if (level == _shownLevel) return;
+            _shownLevel = level;
+            _levelLabel.text = FormatLevel(level);
         }
 
         public const string LevelLabelName = "XPBar_LevelLabel";
@@ -103,8 +114,7 @@ namespace SoulHunter.Gameplay.UI
             if (_levelLabel == null || _playerExperience == null) return;
             if (_levelUps == null) _levelUps = FindFirstObjectByType<SoulHunter.Gameplay.Core.LevelUpManager>();
             int level = _levelUps != null && _levelUps.IsLevelUpActive ? _levelUps.LevelOnScreen : _playerExperience.CurrentLevel;
-            string text = FormatLevel(level);
-            if (_levelLabel.text != text) _levelLabel.text = text;
+            ShowLevel(level);
         }
 
         /// <summary>
