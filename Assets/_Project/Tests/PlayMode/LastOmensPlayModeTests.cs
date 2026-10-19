@@ -465,6 +465,8 @@ namespace SoulHunter.Tests.PlayMode
             Vector3 centre = system.ArenaCentre;
             Assert.That(new Vector2(centre.x - 140f, centre.z + 90f).magnitude, Is.LessThan(1f), "The zone is where the hero starts the level.");
             Assert.That(system.ArenaRing != null && system.ArenaRing.enabled, Is.True, "Its edge is drawn.");
+            var ringMaterial = system.ArenaRing.sharedMaterial;
+            Assert.IsNotNull(ringMaterial);
             float radius = system.ArenaRadius;
             Vector3 ringPoint = system.ArenaRing.GetPosition(0);
             Assert.That(new Vector2(ringPoint.x - centre.x, ringPoint.z - centre.z).magnitude, Is.EqualTo(radius).Within(0.2f), "The ring is the edge.");
@@ -495,6 +497,7 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(system.ArenaActive, Is.False);
             Assert.That(system.ArenaRing == null, Is.True, "The ring goes with the level.");
+            Assert.That(ringMaterial == null, Is.True, "Its material goes with it (Bug MIS CORE-11).");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
