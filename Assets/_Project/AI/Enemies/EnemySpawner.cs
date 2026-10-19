@@ -1064,9 +1064,19 @@ namespace SoulHunter.Gameplay.AI
         public GameObject StageElitePrefab => _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
         public GameObject StageBossPrefab => _stageBossPrefab;
 
-        /// <summary>Spawns one of this stage's enemies the normal way (pool, stage speed, health, damage rule) at a position.</summary>
+        /// <summary>True when the screen holds the VS hard cap of enemies, and no hazard or special enemy can come.</summary>
+        public static bool AtHardCap => EnemyController.ActiveEnemies.Count >= HardCap;
+
+        /// <summary>
+        /// Spawns one of this stage's enemies the normal way (pool, stage speed, health, damage rule) at a position.
+        /// Null when the screen is full: Bug MIS AI-08, VS (wiki Curse, raw 2026-10-19): "Total enemy quantity allowed on
+        /// screen is capped at 500, regardless of Curse and Charm value." Map events already stopped there; hazard members,
+        /// Omen spawns, summons, casket guards and item guardians did not. Every caller copes with null (fewer members, or
+        /// it tries again later). Stage bosses and chest elites do not come through here and are not held back.
+        /// </summary>
         public GameObject SpawnHazardEnemy(GameObject prefab, Vector3 position)
         {
+            if (AtHardCap) return null;
             var enemy = SpawnEnemy(prefab);
             if (enemy == null) return null;
             _special.Add(enemy);

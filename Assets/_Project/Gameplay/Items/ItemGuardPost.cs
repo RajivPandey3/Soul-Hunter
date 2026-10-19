@@ -48,7 +48,8 @@ namespace SoulHunter.Gameplay.Pickups
             if (moved.sqrMagnitude > MovedDistance * MovedDistance) return; // drawn away: only taking it wakes the guardian
             Vector3 to = player.transform.position - _home;
             to.y = 0f;
-            if (to.sqrMagnitude <= ItemGuardians.WakeDistance * ItemGuardians.WakeDistance) Spawn();
+            // A full screen (500, Bug MIS AI-08) holds the guardian back; checked first so no scene search runs each frame.
+            if (to.sqrMagnitude <= ItemGuardians.WakeDistance * ItemGuardians.WakeDistance && !SoulHunter.Gameplay.AI.EnemySpawner.AtHardCap) Spawn();
         }
 
         /// <summary>The item was taken: a guardian that has not come yet comes now.</summary>
