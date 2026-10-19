@@ -750,6 +750,7 @@ namespace SoulHunter.Gameplay.AI
                 if (enemy == null) continue;
                 enemyObject.transform.position = StageCorridor.Clamp(position);
                 enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
+                KeepWorldFreeze(enemy);
                 spawned.Add(enemy);
             }
             SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
@@ -780,9 +781,25 @@ namespace SoulHunter.Gameplay.AI
                 at.y = _playerTransform.position.y;
                 enemyObject.transform.position = StageCorridor.Clamp(at);
                 enemy.StartFlyingMode(direction, Mathf.Max(0.2f, speed), weave);
+                KeepWorldFreeze(enemy);
                 spawned.Add(enemy);
             }
             return spawned;
+        }
+
+        /// <summary>
+        /// Bug MIS AI-06. VS (wiki Orologion, raw 2026-10-19): "Enemies will continue to spawn, and new enemies will also
+        /// become frozen." SpawnEnemy freezes a new enemy during an Orologion, but a map-event flier or a hazard member is
+        /// then given its own state (a flight, a hold), which replaced the freeze. Called after that state is set: the enemy
+        /// is frozen for what is left of the Orologion and then resumes its own state (EnemyFrozenState.ResumeState), as an
+        /// enemy frozen mid-flight does. It goes straight to the frozen state, so a second Freeze call does not fire the
+        /// freeze effects (Out of Bounds blasts) twice for one spawn.
+        /// </summary>
+        public static void KeepWorldFreeze(EnemyController enemy)
+        {
+            float frozenFor = SoulHunter.Gameplay.Pickups.TimeFreezePickup.WorldFreezeRemaining;
+            if (enemy == null || frozenFor <= 0f || enemy.IsFrozen) return;
+            enemy.ChangeState(new EnemyFrozenState(enemy, frozenFor, enemy.CurrentState));
         }
 
         /// <summary>Enemies that are not part of the ordinary wave: hazard members, guardians, chest-less wave bosses.</summary>

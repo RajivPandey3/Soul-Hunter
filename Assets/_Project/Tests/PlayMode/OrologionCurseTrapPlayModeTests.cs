@@ -57,6 +57,47 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Bug MIS AI-06. A map-event flier or a hazard member spawned during an Orologion was frozen by SpawnEnemy, then its
+        /// own state (the flight, the hold) replaced the freeze: formations flew and pile shooters fired through a Time
+        /// Freeze. They now stay frozen for what is left of it and then do what they came for.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator DuringAnOrologion_NewFliersAndHazardMembersFreeze_ThenResumeTheirOwnBehaviour()
+        {
+            yield return Boot();
+            TimeFreezePickup.BeginWorldFreeze(1.5f);
+            var fliers = Spawner.TriggerStageEvent(SoulHunter.Gameplay.Data.StageEventType.Swarm, 4);
+            Assert.That(fliers.Count, Is.GreaterThan(0), "The swarm spawned. " + Errors());
+            Assert.That(fliers.All(f => f.IsFrozen && f.IsFlying), Is.True, "New fliers are frozen and keep their flight to resume.");
+            var shooters = SoulHunter.Gameplay.Hazards.StageHazards.Instance.StartPileAssault(3, 20f);
+            Assert.That(shooters.Count, Is.EqualTo(3), "The pile ring spawned. " + Errors());
+            var still = SoulHunter.Gameplay.Hazards.StillEnemy.Begin(
+                Spawner.SpawnHazardEnemy(Spawner.StageEnemyPrefab, PlayerController.Instance.transform.position + Vector3.right * 6f));
+            Assert.IsNotNull(still);
+            Assert.That(shooters.All(p => p.GetComponent<EnemyController>().IsFrozen), Is.True, "Pile shooters spawned during the freeze are frozen.");
+            Assert.That(still.GetComponent<EnemyController>().IsFrozen, Is.True, "A still enemy spawned during the freeze is frozen.");
+            var flier = fliers[0];
+            Vector3 at = flier.transform.position;
+            yield return new WaitForSeconds(1f);
+            Assert.That(shooters.Sum(p => p.ShotsFired), Is.Zero, "A frozen pile shooter does not fire.");
+            if (flier != null && flier.gameObject.activeInHierarchy)
+                Assert.That(Vector3.Distance(flier.transform.position, at), Is.LessThan(0.3f), "A frozen flier stays put.");
+
+            yield return new WaitForSeconds(1.2f);
+            Assert.That(TimeFreezePickup.WorldFrozen, Is.False);
+            var live = fliers.Where(f => f != null && f.gameObject.activeInHierarchy).ToList();
+            Assert.That(live.Count, Is.GreaterThan(0));
+            Assert.That(live.All(f => f.IsFlying && !f.IsFrozen), Is.True, "Afterwards the fliers resume their path.");
+            Assert.That(shooters.All(p => p.GetComponent<EnemyController>().CurrentState is SoulHunter.Gameplay.Hazards.EnemyHoldState),
+                Is.True, "Afterwards the shooters hold their spot again.");
+            Assert.That(still.GetComponent<EnemyController>().CurrentState is SoulHunter.Gameplay.Hazards.EnemyHoldState, Is.True,
+                "Afterwards the still enemy stands again.");
+            foreach (var p in shooters) p.Leave();
+            still.Leave();
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         [UnityTest]
         public IEnumerator CurseGainedMidMinute_SpeedsUpEnemiesOnlyFromTheNextMinute()
         {
