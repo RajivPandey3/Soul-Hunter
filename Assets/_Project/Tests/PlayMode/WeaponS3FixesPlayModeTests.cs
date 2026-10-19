@@ -211,6 +211,11 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(shots.Count, Is.EqualTo(HolyWandWeapon.VsAmount), "Four bolts (wiki amount 4). " + detail);
             for (int i = 1; i < shots.Count; i++)
                 Assert.That(shots[i].Time - shots[i - 1].Time, Is.GreaterThan(0.08f), "One after another, 0.1 s apart. " + detail);
+            // Owner 2026-10-19 "SH = VS": infobox "pierce = 2", Tips "even with the extra pierce".
+            var hits = typeof(Projectile).GetField("_remainingHits", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var bolts = Projectile.ActiveShots.Where(p => p != null && p.SourceWeapon == wand).ToList();
+            Assert.That(bolts, Is.Not.Empty, "Bolts still in flight.");
+            Assert.That(bolts.All(p => (int)hits.GetValue(p) == HolyWandWeapon.VsPierce), Is.True, "Each bolt pierces 2 enemies.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

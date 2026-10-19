@@ -6,7 +6,7 @@
 **Status (2026-10-19):** the register itself changed nothing in the project. Then:
 - **Batch 1** (merged at `ac7077fc`) fixed the S2 rows CMB-01..04, CORE-02 (row half wrong), AI-01..05, AI-07, ITM-01, ITM-02 and UI-01..03.
 - **Batch 2** (merged at `159192f4`) fixed CMB-05 (owner exception), AI-03 (owner: "SH = VS", the VS Drowner rule) and every S3 row except the three below. Two rows turned out partly wrong: ITM-13 (only the no-screen path was wrong) and CORE-10 (the Limit Break part was already fine).
-- **Left:** AI-09 (owner design call), CMB-14 (dead data, harmless), and the Holy Wand pierce contradiction on the wiki (owner).
+- **Left:** AI-09 (owner design call), CMB-14 (dead data, harmless). The Holy Wand pierce is 2 (owner: "SH = VS"; the infobox and the Tips agree).
 - **Found during batch 2:** the HordeVatDrawer prune was starved by repeated requests. Fixed.
 
 ## How it was found

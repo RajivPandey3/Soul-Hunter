@@ -2345,7 +2345,7 @@ Five fixer agents worked in their own worktrees (`D:/SoulHunter-Validation/s3-*`
   - Eclipse Sigil, Sundered Hour, Crimson Shroud and Soul Toll kill it and drop the Drowner's 6/66/100 chest;
   - ordinary damage defeats it with no chest.
 - Bloody Tear ("SH = VS", Bloody_Tear): heals 8 only on a crit hit that damages, at most once a second. This replaces Soul Hunter's earlier per-lash heal.
-- Holy Wand (Holy_Wand): 30 damage, cooldown 0.5 s, 4 bolts 0.1 s apart. Its pierce stays 1, because the wiki contradicts itself ("pierce = 2" against "non-piercing"). **Owner decision open.**
+- Holy Wand (Holy_Wand): 30 damage, cooldown 0.5 s, 4 bolts 0.1 s apart, and pierce 2 plus Limit Break Pierce cards. On pierce the owner said "SH = VS". The infobox says "pierce = 2" and the Tips say "its damage against multiple enemies is lacking even with the extra pierce"; only the Effects line says "non-piercing". Tests: WeaponS3Fixes, DuplicatorEverywhere, EvolvedWeaponSweep and ArcanaEffects 40/40, EditMode 999/999.
 
 **Weapons**
 - CMB-06: an axe's 5 s life is kept on the axe.

@@ -16,12 +16,14 @@ namespace SoulHunter.Gameplay.Combat
         // "Even if the sequence lasts longer than the Cooldown, it does not prevent another volley to start shooting."
         // CMB-11: it fired 1 + Amount bolts in one frame from one spot every 0.1 s at a hard-coded 40, and DamageAmount
         // (read by the Arcana zones) stayed at the prefab's 10.
-        // Not changed: the infobox says "pierce = 2" while Effects says "non-piercing" (the wiki contradicts itself), so
-        // the bolt keeps its one hit; "Ignores Duration": the bolt's 5 s flight is not scaled.
+        // Pierce (owner 2026-10-19: "SH = VS"): the infobox says "pierce = 2" and the Tips confirm it ("its damage against
+        // multiple enemies is lacking even with the extra pierce"); only the Effects line says "non-piercing", so 2, plus
+        // the Limit Break "Pierce +1" cards. "Ignores Duration": the bolt's 5 s flight is not scaled.
         public const float VsDamage = 30f;
         public const float VsCooldown = 0.5f;
         public const float VsInterval = 0.1f;
         public const int VsAmount = 4;
+        public const int VsPierce = 2;
         /// <summary>Double the Magic Wand's bolt speed (its 20 units/s), wiki "speed = 2 (+100%)".</summary>
         public const float VsProjectileSpeed = 40f;
 
@@ -63,7 +65,7 @@ namespace SoulHunter.Gameplay.Combat
 
             var proj = projObj.GetComponent<Projectile>();
             if (proj == null) proj = projObj.AddComponent<Projectile>();
-            proj.Initialize(shootDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 5f, DamageType.Holy);
+            proj.Initialize(shootDir, ProjectileSpeed * SpeedMultiplier, ScaledDamage(DamageAmount), 5f, DamageType.Holy, null, VsPierce + ExtraPierce);
             proj.AddBounces(ExtraBounces + ArcanaBounces); // + Waltz of Pearls (XI)
 
             var damageDealer = projObj.GetComponent<ProjectileDamage>();
