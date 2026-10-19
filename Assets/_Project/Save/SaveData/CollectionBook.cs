@@ -185,16 +185,30 @@ namespace SoulHunter.Core.Persistence
         }
 
         /// <summary>Counts one defeat of <paramref name="enemyId"/>; true when it is the first (the entry becomes known).</summary>
-        public static bool RecordKill(GameData data, string enemyId)
+        public static bool RecordKill(GameData data, string enemyId) => RecordKill(data, enemyId, out _);
+
+        /// <summary>As <see cref="RecordKill(GameData,string)"/>, and gives the record counted, so a caller can count the
+        /// next defeat of the same type with <see cref="CountKill"/> without searching the list again.</summary>
+        public static bool RecordKill(GameData data, string enemyId, out EnemyKillRecord record)
         {
+            record = null;
             if (data == null || string.IsNullOrEmpty(enemyId)) return false;
             data.BestiaryKills ??= new List<EnemyKillRecord>();
-            var record = data.BestiaryKills.Find(r => r != null && r.Enemy == enemyId);
+            var kills = data.BestiaryKills;
+            for (int i = 0; i < kills.Count; i++)
+                if (kills[i] != null && kills[i].Enemy == enemyId) { record = kills[i]; break; }
             if (record == null)
             {
-                data.BestiaryKills.Add(new EnemyKillRecord { Enemy = enemyId, Kills = 1 });
+                record = new EnemyKillRecord { Enemy = enemyId, Kills = 1 };
+                kills.Add(record);
                 return true;
             }
+            return CountKill(record);
+        }
+
+        /// <summary>Counts one more defeat on a record of the save; true when it is the first.</summary>
+        public static bool CountKill(EnemyKillRecord record)
+        {
             if (record.Kills < int.MaxValue) record.Kills++;
             return record.Kills == 1;
         }

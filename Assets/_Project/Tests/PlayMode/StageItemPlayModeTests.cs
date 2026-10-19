@@ -96,6 +96,27 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ATakenStageChicken_ReusedByThePoolAsADrop_SurvivesTheNextStage()
+        {
+            // Bug MIS ITM-03: the spawner kept the pooled chicken after it was taken; the pool handed the same object out
+            // again as an ordinary drop, and the next stage's Clear() switched that live drop off.
+            yield return Boot();
+            var chicken = _items.Placed.First(i => i != null && i.GetComponent<HealthPickup>() != null);
+            chicken.SetActive(false); // taken: back to its pool
+            yield return null;
+            var drop = PickupPoolManager.Instance.SpawnChicken(_start + new Vector3(9f, 0f, 9f));
+            Assert.That(drop, Is.SameAs(chicken), "The pool reuses the last returned chicken (LIFO), as in a real run.");
+            Assert.That(StageItemMark.StillOnGround(drop), Is.False, "A reused chicken is an ordinary drop, not a stage item.");
+            Teleport(_start + new Vector3(-7f, 0f, -3f));
+            LevelProgressionManager.Instance.StartStage(2);
+            yield return null;
+            yield return null;
+            yield return null;
+            Assert.That(drop != null && drop.activeInHierarchy, Is.True, "The ordinary drop is still on the ground after the stage changes.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator WithNoFreeSlot_AStageItemBecomesAnExtraItem_AndAMaxedOnePaysGold()
         {
             // VS wiki (Passive_items, "Stage items"): "If they already have 6 or more passive items, it becomes an additional

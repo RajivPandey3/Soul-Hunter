@@ -73,7 +73,10 @@ namespace SoulHunter.Gameplay.UI
         /// Counts a chest opened on the save (VS skip rules and the first-six sequence) without a chest screen: an Arcana
         /// chest opens the Arcana choice instead (release item P2-01). Returns the counts before this chest.
         /// </summary>
-        public (int before, int fiveBefore) RecordOpened(int items)
+        /// <param name="saveNow">True on a path that never reaches CloseChest (the Arcana draft): the count is saved at once.
+        /// Before 2026-10-19 only CloseChest saved it, so quitting after such a chest repeated it in the 1-1-3-1-1-5
+        /// sequence or the skip rules (Bug MIS ITM-06).</param>
+        public (int before, int fiveBefore) RecordOpened(int items, bool saveNow = false)
         {
             var data = SaveData();
             int before = data != null ? data.ChestsOpened : 0;
@@ -82,6 +85,7 @@ namespace SoulHunter.Gameplay.UI
             {
                 data.ChestsOpened++;
                 if (items >= 5) data.FiveItemChestsOpened++;
+                if (saveNow) SaveService()?.SaveInBackground(); // the write runs on the worker, as CloseChest's
             }
             return (before, fiveBefore);
         }
@@ -112,6 +116,7 @@ namespace SoulHunter.Gameplay.UI
                     if (audio != null) audio.PlaySFX(audio.ChestOpenSound);
                     var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
                     if (player != null) SoulHunter.Gameplay.VFX.VFXPoolManager.Play(SoulHunter.Gameplay.VFX.VfxKind.GoldPickup, player.transform.position);
+                    if (countAsChest) SaveService()?.SaveInBackground(); // no CloseChest follows: save the count (ITM-06)
                     return;
                 }
 

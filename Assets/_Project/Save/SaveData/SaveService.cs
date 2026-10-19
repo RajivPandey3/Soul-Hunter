@@ -135,8 +135,14 @@ namespace SoulHunter.Core.Persistence
 
         private bool _dirty;
 
-        /// <summary>True while a SaveSoon request has not been written yet.</summary>
-        public bool HasPendingSave => _dirty;
+        // Set by the worker thread when the newest background write failed (locked or full disk), cleared when a later
+        // write lands. Only a plain volatile bool crosses threads: the worker never calls a Unity API. Before 2026-10-19 a
+        // failed background write was only logged; _dirty had been cleared when it was queued, so nothing tried again and
+        // the gold and unlocks of that save waited for some later save (Bug MIS ITM-04).
+        private volatile bool _backgroundWriteFailed;
+
+        /// <summary>True while a SaveSoon request, or a background write that failed, has not been written yet.</summary>
+        public bool HasPendingSave => _dirty || _backgroundWriteFailed;
 
         /// <summary>
         /// Heavy-kill pass (2026-09-29): saves soon instead of now. Gold pickups saved the whole file on every coin, up to
@@ -147,16 +153,18 @@ namespace SoulHunter.Core.Persistence
         public void SaveSoon()
         {
             if (CurrentData == null) return;
-            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) { WriteInBackground(); return; }
-            _dirty = true;
+            // The flusher is ensured on both paths: its quit, pause and focus hooks wait for or retry this write. Before
+            // 2026-10-19 the first SaveSoon after a load wrote without it, so quitting did not wait (Bug MIS ITM-05).
+            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) WriteInBackground();
+            else _dirty = true;
             SaveFlusher.Ensure(this);
         }
 
         /// <summary>Writes a pending SaveSoon now, on this thread (quit, scene teardown and tests).</summary>
         public void FlushPendingSave()
         {
-            if (_dirty) SaveGame();
-            WaitForBackgroundWrite();
+            WaitForBackgroundWrite(); // its outcome decides whether a failed write must be tried again
+            if (HasPendingSave) SaveGame();
         }
 
         /// <summary>
@@ -165,7 +173,7 @@ namespace SoulHunter.Core.Persistence
         /// </summary>
         public void FlushPendingSaveInBackground()
         {
-            if (_dirty) WriteInBackground();
+            if (HasPendingSave) WriteInBackground();
         }
 
         /// <summary>
@@ -203,7 +211,9 @@ namespace SoulHunter.Core.Persistence
             _backgroundWrite = System.Threading.Tasks.Task.Run(() =>
             {
                 try { previous?.Wait(); } catch (System.Exception) { }
-                WriteJson(json, path, fromWorker: true);
+                // Writes run one after another, so the newest one to finish decides: a failure is retried by SaveFlusher
+                // SaveSoonSeconds later (LastSaveTime was set when this write was queued), a success clears it.
+                _backgroundWriteFailed = !WriteJson(json, path, fromWorker: true);
             });
         }
 
@@ -232,6 +242,7 @@ namespace SoulHunter.Core.Persistence
                 if (!written) return false;
                 SavesWritten++;
                 _dirty = false;
+                _backgroundWriteFailed = false; // the background writes have finished (waited above) and this one is newer
                 LastSaveTime = Time.unscaledTime;
     #if UNITY_EDITOR
                 Debug.Log($"[SaveService] Game Saved to: {_filePath}");

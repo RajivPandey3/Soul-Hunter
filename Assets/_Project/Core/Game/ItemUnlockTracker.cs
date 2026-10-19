@@ -28,7 +28,17 @@ namespace SoulHunter.Gameplay.Core
         private WeaponManager _watchedWeapons;
         private int _lastCheckedSecond = -1;
         private bool _checkSoon = true;
+        // Bug MIS ITM-08: every pickup (each Gold Fever coin, each gem in a stream) made the whole check run on its frame.
+        // A pickup or a broken lantern now only marks the check as due, and it runs at most once every PickupCheckSeconds
+        // of real time (as CharacterUnlockTracker does for kills). An unlock shows at most that much later; the per-second,
+        // inventory and stage-clear checks are unchanged.
+        private bool _pickupCheckDue;
+        private float _nextPickupCheck;
+        public const float PickupCheckSeconds = 0.25f;
         private float _clearedSeconds;
+
+        /// <summary>How many times the full check has run (tests).</summary>
+        public int EvaluationCount { get; private set; }
 
         /// <summary>The relic boons this run was given (tests): charges and fractions, by kind.</summary>
         public bool BoonsApplied { get; private set; }
@@ -77,10 +87,13 @@ namespace SoulHunter.Gameplay.Core
                 _checkSoon = true;
             }
             int second = _progression != null ? Mathf.FloorToInt(_progression.StageElapsedTime) : 0;
-            if (second != _lastCheckedSecond || _checkSoon)
+            bool pickupCheck = _pickupCheckDue && Time.unscaledTime >= _nextPickupCheck;
+            if (second != _lastCheckedSecond || _checkSoon || pickupCheck)
             {
                 _lastCheckedSecond = second;
                 _checkSoon = false;
+                _pickupCheckDue = false;
+                _nextPickupCheck = Time.unscaledTime + PickupCheckSeconds;
                 Evaluate();
             }
         }
@@ -101,7 +114,7 @@ namespace SoulHunter.Gameplay.Core
             if (data == null) return;
             if (data.LightSourcesBroken < int.MaxValue) data.LightSourcesBroken++;
             _save.SaveSoon();
-            _checkSoon = true;
+            _pickupCheckDue = true;
         }
 
         private void HandlePickup(string resultsName)
@@ -114,8 +127,8 @@ namespace SoulHunter.Gameplay.Core
                 _save.SaveSoon();
             }
             // "Find a ..." conditions read the Collection, which CollectionTracker fills from this same event: check next
-            // frame, when it has been marked whichever handler ran first.
-            _checkSoon = true;
+            // frame (or PickupCheckSeconds later), when it has been marked whichever handler ran first.
+            _pickupCheckDue = true;
         }
 
         /// <summary>What the run has reached now, for ItemUnlocks.</summary>
@@ -132,13 +145,25 @@ namespace SoulHunter.Gameplay.Core
                 StageSeconds = Mathf.Max(_clearedSeconds, _progression != null ? _progression.StageElapsedTime : 0f),
                 WeaponsHeld = weapons != null ? weapons.GetActiveWeaponsCount() : 0,
                 EvolutionsHeld = weapons != null ? EvolvedHeld(weapons) : 0,
-                ItemLevel = name => weapons != null && TryType(name, out var type) ? weapons.GetWeaponLevel(type) : 0,
-                CharacterUnlocked = name =>
-                {
-                    var character = GameContentCatalog.FindCharacterExact(name);
-                    return character != null && CharacterUnlocks.IsUnlocked(character, data);
-                },
+                // Cached delegates (no two closures per check); they read the manager and the save when called.
+                ItemLevel = _itemLevel ??= ItemLevelNow,
+                CharacterUnlocked = _characterUnlocked ??= CharacterUnlockedNow,
             };
+        }
+
+        private System.Func<string, int> _itemLevel;
+        private System.Func<string, bool> _characterUnlocked;
+
+        private static int ItemLevelNow(string name)
+        {
+            var weapons = WeaponManager.Instance;
+            return weapons != null && TryType(name, out var type) ? weapons.GetWeaponLevel(type) : 0;
+        }
+
+        private bool CharacterUnlockedNow(string name)
+        {
+            var character = GameContentCatalog.FindCharacterExact(name);
+            return character != null && CharacterUnlocks.IsUnlocked(character, Data);
         }
 
         /// <summary>An UpgradeType by its name; false for a name this build's enum does not have.</summary>
@@ -158,6 +183,7 @@ namespace SoulHunter.Gameplay.Core
         {
             var data = Data;
             if (data == null) return;
+            EvaluationCount++;
             var news = ItemUnlocks.Evaluate(data, CurrentProgress());
             bool changed = false;
             foreach (var info in news)

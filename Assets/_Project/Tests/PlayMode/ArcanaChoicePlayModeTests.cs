@@ -222,6 +222,8 @@ namespace SoulHunter.Tests.PlayMode
             var arcanas = ArcanaManager.Instance;
             TakeStartCard();
             yield return null;
+            var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            int opened = save.CurrentData.ChestsOpened;
             var chest = ArcanaChestOnThePlayer();
             yield return WaitUntilRealtime(() => !chest.gameObject.activeInHierarchy, "the player to collect the Arcana chest");
             yield return null;
@@ -230,6 +232,11 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(arcanas.ActiveArcanas.Count, Is.EqualTo(1), "VS patch 0.11.0: a draft can be skipped.");
             Assert.That(GameTime.IsPaused, Is.False);
+            // Bug MIS ITM-06: the Arcana draft never reached CloseChest, so the chest count was not saved.
+            save.WaitForBackgroundWrite();
+            var onDisk = new SoulHunter.Core.Persistence.GameData();
+            JsonUtility.FromJsonOverwrite(System.IO.File.ReadAllText(save.FilePath), onDisk);
+            Assert.That(onDisk.ChestsOpened, Is.EqualTo(opened + 1), "The Arcana chest's count is on the save file.");
         }
 
         [UnityTest]

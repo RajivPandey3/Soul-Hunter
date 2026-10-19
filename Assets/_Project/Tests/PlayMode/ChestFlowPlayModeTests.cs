@@ -232,6 +232,8 @@ namespace SoulHunter.Tests.PlayMode
             for (int i = 0; i < 3; i++) coins.Rewards.Add(new ChestReward { Name = "Coin Bag", IsCoinBag = true });
             chestUI.OpenChest("TREASURE x3!", coins);
             Assert.That(chestUI.IsOpen, Is.False, "No screen for a coin-only chest.");
+            // Bug MIS ITM-06: the quick chest never reached CloseChest, so its count was not saved.
+            Assert.That(SavedOnDisk().ChestsOpened, Is.EqualTo(Save().ChestsOpened), "The quick chest's count is on the save file.");
             Assert.That(chestUI.QuickChests, Is.EqualTo(1));
             Assert.AreEqual(1f, Time.timeScale, "The game never paused.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
@@ -259,6 +261,15 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         private static GameData Save() => GameServices.Instance.Get<SaveService>().CurrentData;
+
+        private static GameData SavedOnDisk()
+        {
+            var service = GameServices.Instance.Get<SaveService>();
+            service.WaitForBackgroundWrite();
+            var data = new GameData();
+            JsonUtility.FromJsonOverwrite(System.IO.File.ReadAllText(service.FilePath), data);
+            return data;
+        }
 
         private static bool PauseActionEnabled()
         {

@@ -122,11 +122,28 @@ namespace SoulHunter.Gameplay.Core
             if (news.Count > 0) _save.SaveInBackground();
         }
 
+        // Bug MIS ITM-09: each kill read type.name (a new string) and searched the Bestiary list with a closure, 300 times in
+        // a wipe frame. The record of each type is kept here once found; the index is dropped whenever the save's list is
+        // replaced or changes size elsewhere (a load, Delete Save, the repair), so a kill always lands on the save's record.
+        private readonly Dictionary<EnemyData, EnemyKillRecord> _records = new Dictionary<EnemyData, EnemyKillRecord>();
+        private List<EnemyKillRecord> _recordsOf;
+        private int _recordsCount;
+
         private void HandleKill(EnemyData type)
         {
             var data = Data;
             if (data == null || type == null) return;
-            bool first = Bestiary.RecordKill(data, type.name);
+            var list = data.BestiaryKills;
+            if (list == null || list != _recordsOf || list.Count != _recordsCount) { _records.Clear(); _recordsOf = list; }
+            bool first;
+            if (list != null && _records.TryGetValue(type, out var record)) first = Bestiary.CountKill(record);
+            else
+            {
+                first = Bestiary.RecordKill(data, type.name, out record);
+                if (record != null) _records[type] = record;
+                _recordsOf = data.BestiaryKills;
+            }
+            _recordsCount = data.BestiaryKills != null ? data.BestiaryKills.Count : 0;
             _unsaved = true;
             if (first || Time.unscaledTime - _lastKillSave >= KillSaveSeconds)
             {

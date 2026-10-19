@@ -31,6 +31,19 @@ namespace SoulHunter.Core.Persistence
 
         private void OnApplicationQuit() => _save?.FlushPendingSave();
 
+        // Bug MIS ITM-05: a phone sends the app to the background and may kill it without OnApplicationQuit, which lost the
+        // pending gold (up to SaveSoonSeconds) and Bestiary kills. Going to the background writes a pending save at once
+        // (the app is stopping anyway); losing focus queues it on the worker, so an alt-tab on PC does not hitch.
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused) _save?.FlushPendingSave();
+        }
+
+        private void OnApplicationFocus(bool focused)
+        {
+            if (!focused) _save?.FlushPendingSaveInBackground();
+        }
+
         private void OnDestroy()
         {
             _save?.FlushPendingSave();

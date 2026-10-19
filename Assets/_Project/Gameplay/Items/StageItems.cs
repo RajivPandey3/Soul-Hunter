@@ -262,7 +262,10 @@ namespace SoulHunter.Gameplay.Pickups
             {
                 if (item == null) continue;
                 if (item.GetComponent<StageItemPickup>() != null) Destroy(item);
-                else item.SetActive(false); // pooled pickups go back to their pools
+                // Pooled pickups go back to their pools, but only while they still lie here as this stage's item: one
+                // that was taken went back to its pool then, and the pool may have handed the same object out again as an
+                // ordinary drop (a lantern's chicken), which must stay (Bug MIS ITM-03).
+                else if (StageItemMark.StillOnGround(item)) item.SetActive(false);
             }
             _placed.Clear();
             foreach (var plate in _plates) if (plate != null) Destroy(plate.gameObject);
@@ -273,7 +276,19 @@ namespace SoulHunter.Gameplay.Pickups
     /// <summary>Marks an item placed on the map by the stage (VS "stage item"); removed when the item leaves the ground.</summary>
     public sealed class StageItemMark : MonoBehaviour
     {
-        private void OnDisable() => Destroy(this);
+        /// <summary>True once the item left the ground; Destroy runs at the end of the frame, so a pooled object reused
+        /// in the same frame may still carry the mark for a moment.</summary>
+        public bool Left { get; private set; }
+
+        /// <summary>Whether the object still lies on the map as the stage item it was placed as.</summary>
+        public static bool StillOnGround(GameObject item)
+            => item != null && item.TryGetComponent<StageItemMark>(out var mark) && !mark.Left;
+
+        private void OnDisable()
+        {
+            Left = true;
+            Destroy(this);
+        }
     }
 
     /// <summary>

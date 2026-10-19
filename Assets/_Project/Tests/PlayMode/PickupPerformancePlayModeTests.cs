@@ -69,6 +69,32 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ActiveCoins_ListsEveryCoinOnTheGround_Once_AsCoinsComeAndGo()
+        {
+            // Bug MIS ITM-10: the coin list now leaves by a swap; it must still hold exactly the coins on the ground.
+            yield return BootIntoGameplay();
+            StopTheHorde();
+            var pool = PickupPoolManager.Instance;
+            var origin = PlayerController.Instance.transform.position + Vector3.forward * 20f;
+            var coins = new List<GoldPickup>();
+            for (int i = 0; i < 40; i++) coins.Add(pool.SpawnGold(origin + new Vector3(i % 8, 0f, i / 8) * 1.2f, 1));
+            for (int round = 0; round < 3; round++)
+            {
+                for (int i = round; i < coins.Count; i += 3) coins[i].gameObject.SetActive(false); // some collected
+                yield return null;
+                for (int i = 0; i < 10; i++) coins.Add(pool.SpawnGold(origin + new Vector3(i, 0f, -3f - round), 1)); // pooled coins reused
+                yield return null;
+                var onGround = Object.FindObjectsByType<GoldPickup>(FindObjectsSortMode.None);
+                var listed = new HashSet<GoldPickup>(GoldPickup.ActiveCoins);
+                Assert.That(GoldPickup.ActiveCoins.Count, Is.EqualTo(listed.Count), "No coin is listed twice.");
+                Assert.That(listed.SetEquals(onGround), Is.True,
+                    $"The list holds exactly the {onGround.Length} coins on the ground ({GoldPickup.ActiveCoins.Count} listed).");
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator BobbingPickups_AreMovedByOneRunner()        [UnityTest]
         public IEnumerator BobbingPickups_AreMovedByOneRunner()
         {
             yield return BootIntoGameplay();
@@ -145,6 +171,31 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(SoulHunter.Core.Persistence.SaveService.SavesWritten, Is.EqualTo(before + 1), "One save writes the whole burst.");
             Assert.That(save.HasPendingSave, Is.False);
             Assert.That(save.CurrentData.Currency, Is.EqualTo(gold + 10));
+        }
+
+        [UnityTest]
+        public IEnumerator APendingSave_IsWrittenAtOnce_WhenTheAppGoesToTheBackground_OrLosesFocus()
+        {
+            // Bug MIS ITM-05: Android can kill a backgrounded app without OnApplicationQuit; the pending gold was lost.
+            yield return BootIntoGameplay();
+            StopTheHorde();
+            var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            var economy = GameServices.Instance.Get<EconomyService>();
+            foreach (bool pause in new[] { true, false })
+            {
+                save.SaveGame();
+                int before = SoulHunter.Core.Persistence.SaveService.SavesWritten;
+                economy.AddGold(1);
+                Assert.That(save.HasPendingSave, Is.True, "The coin waits for the timed save.");
+                var flusher = Object.FindFirstObjectByType<SoulHunter.Core.Persistence.SaveFlusher>();
+                Assert.IsNotNull(flusher, "A pending save has its flusher.");
+                if (pause) flusher.SendMessage("OnApplicationPause", true);
+                else flusher.SendMessage("OnApplicationFocus", false);
+                save.WaitForBackgroundWrite();
+                Assert.That(save.HasPendingSave, Is.False, pause ? "Going to the background writes it." : "Losing focus writes it.");
+                Assert.That(SoulHunter.Core.Persistence.SaveService.SavesWritten, Is.EqualTo(before + 1));
+                yield return null;
+            }
         }
 
         private static void StopTheHorde()

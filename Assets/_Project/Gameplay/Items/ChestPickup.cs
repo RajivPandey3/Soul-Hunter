@@ -36,6 +36,17 @@ namespace SoulHunter.Gameplay.Pickups
             ChestLook.Apply(visual != null ? visual : transform, Kind);
         }
 
+        /// <summary>Chests in the world with this component on (Pentagram's GroundItemEraser reads it instead of a scene
+        /// search, Bug MIS ITM-11). A handful at most, so a plain list.</summary>
+        public static readonly System.Collections.Generic.List<ChestPickup> Active = new System.Collections.Generic.List<ChestPickup>();
+
+        private void OnEnable() { if (!Active.Contains(this)) Active.Add(this); }
+        private void OnDisable() => Active.Remove(this);
+
+        // Domain reload may be off, so chests from the last play session must not stay listed.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActive() => Active.Clear();
+
         private readonly Collider[] _playerHits = new Collider[1];
 
         private void Update()
@@ -101,7 +112,7 @@ namespace SoulHunter.Gameplay.Pickups
                     if (result != null && result.ArcanaDraft != null && SoulHunter.Gameplay.Core.ArcanaManager.Instance != null)
                     {
                         // VS Arcana chest: the Arcana choice screen instead of the chest screen (release item P2-01).
-                        _chestUI.RecordOpened(1);
+                        _chestUI.RecordOpened(1, saveNow: true); // no chest screen closes after a draft, so the count is saved here
                         var logic = _logicController;
                         var ui = _chestUI;
                         var tiers = _tiers;

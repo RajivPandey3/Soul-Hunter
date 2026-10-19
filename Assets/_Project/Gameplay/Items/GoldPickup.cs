@@ -30,17 +30,41 @@ namespace SoulHunter.Gameplay.Pickups
         /// </summary>
         public bool IsFeverCoin { get; set; }
 
+        // Bug MIS ITM-10: Contains and Remove searched the whole list on every coin, with hundreds on the ground during
+        // Gold Fever. Each coin keeps its place in the list and leaves by a swap with the last one (as PickupTicker); the
+        // list's order is not used by any reader. Not serialized, so a pooled copy starts at -1 like a new coin.
+        private int _activeIndex = -1;
+
+        private bool IsListed => _activeIndex >= 0 && _activeIndex < ActiveCoins.Count && ReferenceEquals(ActiveCoins[_activeIndex], this);
+
         protected override void OnEnable()
         {
             base.OnEnable();
-            if (!ActiveCoins.Contains(this)) ActiveCoins.Add(this);
+            if (IsListed) return;
+            // A stale index (never expected) falls back to the old search, so a coin is never listed twice.
+            if (_activeIndex >= 0 && ActiveCoins.Contains(this)) { _activeIndex = ActiveCoins.IndexOf(this); return; }
+            _activeIndex = ActiveCoins.Count;
+            ActiveCoins.Add(this);
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
-            ActiveCoins.Remove(this);
+            if (IsListed)
+            {
+                int last = ActiveCoins.Count - 1;
+                var moved = ActiveCoins[last];
+                ActiveCoins[_activeIndex] = moved;
+                if (moved != null) moved._activeIndex = _activeIndex;
+                ActiveCoins.RemoveAt(last);
+            }
+            else ActiveCoins.Remove(this); // a stale index (never expected): the old search
+            _activeIndex = -1;
         }
+
+        // Domain reload may be off, so coins from the last play session must not stay listed.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => ActiveCoins.Clear();
 
         public override void ResetPickup()
         {
