@@ -147,6 +147,31 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(save.CurrentData.Currency, Is.EqualTo(gold + 10));
         }
 
+        [UnityTest]
+        public IEnumerator APendingSave_IsWrittenAtOnce_WhenTheAppGoesToTheBackground_OrLosesFocus()
+        {
+            // Bug MIS ITM-05: Android can kill a backgrounded app without OnApplicationQuit; the pending gold was lost.
+            yield return BootIntoGameplay();
+            StopTheHorde();
+            var save = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            var economy = GameServices.Instance.Get<EconomyService>();
+            foreach (bool pause in new[] { true, false })
+            {
+                save.SaveGame();
+                int before = SoulHunter.Core.Persistence.SaveService.SavesWritten;
+                economy.AddGold(1);
+                Assert.That(save.HasPendingSave, Is.True, "The coin waits for the timed save.");
+                var flusher = Object.FindFirstObjectByType<SoulHunter.Core.Persistence.SaveFlusher>();
+                Assert.IsNotNull(flusher, "A pending save has its flusher.");
+                if (pause) flusher.SendMessage("OnApplicationPause", true);
+                else flusher.SendMessage("OnApplicationFocus", false);
+                save.WaitForBackgroundWrite();
+                Assert.That(save.HasPendingSave, Is.False, pause ? "Going to the background writes it." : "Losing focus writes it.");
+                Assert.That(SoulHunter.Core.Persistence.SaveService.SavesWritten, Is.EqualTo(before + 1));
+                yield return null;
+            }
+        }
+
         private static void StopTheHorde()
         {
             Object.FindFirstObjectByType<EnemySpawner>().enabled = false;

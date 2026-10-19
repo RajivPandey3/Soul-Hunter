@@ -153,8 +153,10 @@ namespace SoulHunter.Core.Persistence
         public void SaveSoon()
         {
             if (CurrentData == null) return;
-            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) { WriteInBackground(); return; }
-            _dirty = true;
+            // The flusher is ensured on both paths: its quit, pause and focus hooks wait for or retry this write. Before
+            // 2026-10-19 the first SaveSoon after a load wrote without it, so quitting did not wait (Bug MIS ITM-05).
+            if (LastSaveTime < 0f || Time.unscaledTime - LastSaveTime >= SaveSoonSeconds) WriteInBackground();
+            else _dirty = true;
             SaveFlusher.Ensure(this);
         }
 
