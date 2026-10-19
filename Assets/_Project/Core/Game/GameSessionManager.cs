@@ -35,6 +35,7 @@ namespace SoulHunter.Gameplay.Core
             IsVictory = false;
             IsQuit = false;
             SoulHunter.Core.Services.GameTime.ResetAll();
+            SoulHunter.Gameplay.Pickups.TimeFreezePickup.ResetWorldFreeze(); // a new run starts unfrozen (ITM-07)
         }
 
         public void CompleteCampaign()
@@ -168,6 +169,7 @@ namespace SoulHunter.Gameplay.Core
             if (Instance == this)
             {
                 SoulHunter.Core.Services.GameTime.ResetAll();
+                SoulHunter.Gameplay.Pickups.TimeFreezePickup.ResetWorldFreeze();
                 Instance = null;
             }
         }

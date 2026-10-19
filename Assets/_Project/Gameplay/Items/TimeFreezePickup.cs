@@ -22,6 +22,14 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>Starts (or extends) the Orologion's world freeze.</summary>
         public static void BeginWorldFreeze(float seconds) => WorldFreezeEndsAt = Mathf.Max(WorldFreezeEndsAt, Time.time + Mathf.Max(0f, seconds));
 
+        /// <summary>
+        /// Ends the world freeze. Called when a run starts or its session goes (GameSessionManager) and on entering Play
+        /// Mode. Time.time runs on across scene loads, so before 2026-10-19 an Orologion taken just before a restart froze the
+        /// next run's first spawns and slowed its Gold Fever (Bug MIS ITM-07).
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetWorldFreeze() => WorldFreezeEndsAt = -1f;
+
         protected override void OnPickedUp(Collider player)
         {
             SoulHunter.Core.Services.GameLog.Info($"[TimeFreezePickup] THE WORLD! Freezing all enemies for {_freezeDuration} seconds!");

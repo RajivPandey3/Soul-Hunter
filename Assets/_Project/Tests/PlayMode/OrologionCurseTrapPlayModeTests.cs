@@ -58,6 +58,21 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AnOrologion_DoesNotCarryIntoTheNextRun()
+        {
+            // Bug MIS ITM-07: the freeze's end time was a static on Time.time, which runs on across a restart.
+            yield return Boot();
+            TimeFreezePickup.BeginWorldFreeze(10f);
+            Assert.That(TimeFreezePickup.WorldFrozen, Is.True);
+            GameSessionManager.Instance.ResetSession(); // what a restart or a new run does
+            Assert.That(TimeFreezePickup.WorldFrozen, Is.False, "A new run starts with no Orologion freeze.");
+            var prefab = (GameObject)typeof(EnemySpawner).GetField("_stageEnemyPrefab", Private).GetValue(Spawner);
+            var enemy = ((GameObject)typeof(EnemySpawner).GetMethod("SpawnEnemy", Private).Invoke(Spawner, new object[] { prefab })).GetComponent<EnemyController>();
+            Assert.That(enemy.IsFrozen, Is.False, "The new run's first enemies move.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator CurseGainedMidMinute_SpeedsUpEnemiesOnlyFromTheNextMinute()
         {
             yield return Boot();
