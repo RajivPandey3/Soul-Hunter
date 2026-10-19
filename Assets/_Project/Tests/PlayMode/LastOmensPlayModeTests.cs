@@ -267,6 +267,30 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Bug MIS AI-10. A pooled body that once was a hazard member stayed in the spawner's "special" set after it came back
+        /// as an ordinary wave enemy, so Nightfall and Rootbound left it as it was.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ATakeover_SwapsAPooledBodyThatOnceWasAHazardMember()
+        {
+            yield return BootWithOmens();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            yield return null;
+            var prefab = spawner.StageEnemyPrefab;
+            var hazard = spawner.SpawnHazardEnemy(prefab, PlayerController.Instance.transform.position + Vector3.right * 6f);
+            Assert.IsNotNull(hazard);
+            hazard.SetActive(false); // back to its pool
+            var spawn = typeof(EnemySpawner).GetMethod("SpawnEnemy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var reused = (GameObject)spawn.Invoke(spawner, new object[] { prefab });
+            Assert.That(reused, Is.SameAs(hazard), "The pool hands the same body out again, now as an ordinary enemy.");
+            Assert.That(spawner.BeginWaveTakeover(new[] { spawner.StageElitePrefab }, 30f), Is.GreaterThan(0), "The takeover starts. " + Errors());
+            Assert.That(reused.activeInHierarchy, Is.False, "The ordinary enemy was swapped.");
+            spawner.EndWaveTakeover();
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ---------------------------------------------------------------- Serpent Streams (VS Shrimp Swarm)
 
         [UnityTest]

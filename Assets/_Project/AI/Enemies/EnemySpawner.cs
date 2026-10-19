@@ -577,6 +577,9 @@ namespace SoulHunter.Gameplay.AI
             }
 
             enemyToSpawn.transform.position = spawnPos;
+            // Bug MIS AI-10: a pooled body that served as a hazard member or guardian is ordinary again on this life (the
+            // callers that make it special add it back), so an Omen takeover swaps it like any wave enemy.
+            _special.Remove(enemyToSpawn);
             if (!_prefabScales.TryGetValue(prefab, out var originalScale))
             {
                 originalScale = enemyToSpawn.transform.localScale;
