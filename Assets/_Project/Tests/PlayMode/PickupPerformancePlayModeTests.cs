@@ -94,7 +94,6 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator BobbingPickups_AreMovedByOneRunner()        [UnityTest]
         public IEnumerator BobbingPickups_AreMovedByOneRunner()
         {
             yield return BootIntoGameplay();

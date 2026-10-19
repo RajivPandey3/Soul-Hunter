@@ -97,7 +97,6 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator BreakingTwentyLanterns_UnlocksItsItem_WithANotice()        [UnityTest]
         public IEnumerator BreakingTwentyLanterns_UnlocksItsItem_WithANotice()
         {
             yield return QuietRun(ItemUnlocks.LockEverything);
