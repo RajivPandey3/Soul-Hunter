@@ -101,7 +101,7 @@ namespace SoulHunter.Gameplay.Pickups
                     if (result != null && result.ArcanaDraft != null && SoulHunter.Gameplay.Core.ArcanaManager.Instance != null)
                     {
                         // VS Arcana chest: the Arcana choice screen instead of the chest screen (release item P2-01).
-                        _chestUI.RecordOpened(1);
+                        _chestUI.RecordOpened(1, saveNow: true); // no chest screen closes after a draft, so the count is saved here
                         var logic = _logicController;
                         var ui = _chestUI;
                         var tiers = _tiers;
