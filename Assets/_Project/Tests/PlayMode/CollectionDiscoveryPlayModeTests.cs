@@ -67,6 +67,15 @@ namespace SoulHunter.Tests.PlayMode
             }
             yield return null;
             Assert.That(Bestiary.Kills(data, type.name), Is.EqualTo(kills + 2), "Each defeat of the type is counted.");
+            Assert.That(data.BestiaryKills.FindAll(r => r.Enemy == type.name).Count, Is.EqualTo(1), "One record per type.");
+
+            // Bug MIS ITM-09: the tracker now keeps each type's record; a save whose list is replaced (Delete Save, a load)
+            // must still get the next kill on its own list.
+            data.BestiaryKills = new List<EnemyKillRecord>();
+            var again = Object.Instantiate(prefab, player.transform.position + Vector3.forward * 31f, Quaternion.identity);
+            again.GetComponent<HealthController>().TakeDamage(new DamagePacket(1000000, again.transform.position, Vector3.zero, DamageType.Normal));
+            yield return null;
+            Assert.That(Bestiary.Kills(data, type.name), Is.EqualTo(1), "The kill is counted on the new list.");
             Assert.That(Bestiary.IsUnlocked(data), Is.False, "Level 1 does not open the Bestiary.");
 
             // Reaching Level 3 opens the Bestiary (balance method for VS's Ars Gouda in Dairy Plant).
@@ -78,7 +87,7 @@ namespace SoulHunter.Tests.PlayMode
             var written = new GameData();
             JsonUtility.FromJsonOverwrite(File.ReadAllText(save.FilePath), written);
             Assert.That(written.CollectionFound, Does.Contain(CollectionCatalog.ItemId(UpgradeData.UpgradeType.Knife)));
-            Assert.That(written.BestiaryKills.Exists(r => r.Enemy == type.name && r.Kills == kills + 2), Is.True);
+            Assert.That(written.BestiaryKills.Exists(r => r.Enemy == type.name && r.Kills == 1), Is.True);
             Assert.That(save.FilePath, Is.Not.EqualTo(RealSave));
             Assert.That(File.Exists(RealSave) ? File.ReadAllText(RealSave) : null, Is.EqualTo(before), "The real save is unchanged.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
