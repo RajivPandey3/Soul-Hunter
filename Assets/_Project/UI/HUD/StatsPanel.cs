@@ -17,7 +17,9 @@ namespace SoulHunter.Gameplay.UI
     public sealed class StatsPanel : MonoBehaviour
     {
         public const string ObjectName = "Stats_Panel";
-        private const string BonusColor = "#FFD940";
+        // Bug MIS UI-10: changed values are in the theme's accent gold (it was a fixed "#FFD940" of this panel's own, which a
+        // theme change never reached). Read on each Refresh, every 0.25 s while shown, so a live theme change follows.
+        private static string BonusColor => "#" + ColorUtility.ToHtmlStringRGB(UITheme.Accent);
         private const float RefreshSeconds = 0.25f;
 
         private TextMeshProUGUI[] _columns;
@@ -155,6 +157,9 @@ namespace SoulHunter.Gameplay.UI
 
         private Vector2 _sizeAtRefresh;
 
+        // Bug MIS UI-09: Fit runs every frame; its corner buffer is kept instead of allocated each time.
+        private readonly Vector3[] _corners = new Vector3[4];
+
         private void LateUpdate()
         {
             Fit();
@@ -165,7 +170,7 @@ namespace SoulHunter.Gameplay.UI
         private void Fit()
         {
             if (_below == null || !(transform.parent is RectTransform parent)) return;
-            var corners = new Vector3[4];
+            var corners = _corners;
             float cardsTop = float.MinValue, cardsBottom = float.MaxValue, cardsLeft = float.MaxValue;
             foreach (var card in _below)
             {
@@ -273,7 +278,7 @@ namespace SoulHunter.Gameplay.UI
                 if (heading.alignment != TextAlignmentOptions.Center) { heading.alignment = TextAlignmentOptions.Center; heading.ForceMeshUpdate(); }
                 return;
             }
-            var corners = new Vector3[4];
+            var corners = _corners; // shared with Fit, which fills it again before its next read
             _above.GetWorldCorners(corners);
             float unitsPerWorld = parent.rect.height / Mathf.Max(1f, span);
             float bandUnits = (corners[0].y - cardsTop) * unitsPerWorld - parent.rect.height * 0.03f; // the two gaps
@@ -329,6 +334,7 @@ namespace SoulHunter.Gameplay.UI
             float size = Mathf.Max(SoulHunter.Gameplay.UI.UiScreen.MinTextUnits, best);
             _fontSize = size;
             _lines = lines;
+            string bonus = BonusColor;
             for (int c = 0; c < _columns.Length; c++)
             {
                 if (c >= used) { _columns[c].text = _values[c].text = ""; continue; }
@@ -339,7 +345,7 @@ namespace SoulHunter.Gameplay.UI
                 {
                     var row = Rows[r];
                     labels.Append(row.Label).Append('\n');
-                    values.Append(row.Changed ? $"<color={BonusColor}>{row.Value}</color>" : row.Value).Append('\n');
+                    values.Append(row.Changed ? $"<color={bonus}>{row.Value}</color>" : row.Value).Append('\n');
                 }
                 _columns[c].fontSize = _values[c].fontSize = size;
                 _columns[c].text = labels.ToString();

@@ -124,5 +124,114 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Bug MIS UI-10: the Results screen and the pause stats wrote the theme's gold and dim into their text as rich-text
+        /// colours (the stats used a fixed gold of their own), so a live theme change left them in the old colours.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator EditingTheTheme_RecoloursTheRichTextOfResultsAndStats()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            foreach (var weapon in SoulHunter.Gameplay.Player.PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true)) weapon.enabled = false;
+            yield return CloseOpenLevelUps();
+            var original = UiThemeAsset.Active;
+            var look = Object.Instantiate(original);
+            var owner = new GameObject("ResultsThemeOwner");
+            try
+            {
+                UiThemeAsset.SetActive(look);
+                // Hollow Heart changes Max Health, so the stats show one value in the highlight.
+                SoulHunter.Gameplay.Combat.WeaponManager.Instance.GiveWeapon(SoulHunter.Gameplay.Combat.UpgradeData.UpgradeType.MaxHealth, 1);
+                var system = GameSystemManager.Instance;
+                system.TogglePause();
+                yield return null;
+                var stats = system.PauseMenuPanel.GetComponentInChildren<StatsPanel>(true);
+                Assert.IsNotNull(stats, "The pause menu has a stats panel. " + Errors());
+                yield return new WaitForSecondsRealtime(0.3f);
+                Assert.That(StatsText(stats), Does.Contain("<color=#" + Hex(look.Text.Accent)), "Changed stats use the theme's accent.");
+
+                var screen = RunResultsScreen.Show(owner.transform, RunResults.Capture(RunResults.EndKind.Quit), null);
+                yield return null;
+                Assert.That(screen.SummaryText.text, Does.Contain("#" + Hex(look.Text.Accent)));
+                Assert.That(screen.ListsText.text, Does.Contain("#" + Hex(look.Text.DimOnDark)));
+
+                string oldAccent = Hex(look.Text.Accent);
+                look.Text.Accent = new Color(0.2f, 0.9f, 0.4f, 1f);
+                look.Text.DimOnDark = new Color(0.5f, 0.6f, 0.9f, 1f);
+                UiThemeAsset.NotifyChanged(); // what Theme Studio does after each edit
+                yield return null;
+                Assert.That(screen.SummaryText.text, Does.Contain("#" + Hex(look.Text.Accent)), "The Results gold follows the theme at once.");
+                Assert.That(screen.SummaryText.text, Does.Not.Contain("#" + oldAccent));
+                Assert.That(screen.ListsText.text, Does.Contain("#" + Hex(look.Text.DimOnDark)), "The Results headers follow the theme.");
+                yield return new WaitForSecondsRealtime(0.3f);
+                Assert.That(StatsText(stats), Does.Contain("<color=#" + Hex(look.Text.Accent)), "The stats follow the theme.");
+
+                Object.Destroy(screen.gameObject);
+                system.Resume();
+                yield return null;
+                Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+            }
+            finally
+            {
+                Object.Destroy(owner);
+                UiThemeAsset.SetActive(null);
+                Object.Destroy(look);
+            }
+        }
+
+        /// <summary>Bug MIS UI-10 on the main menu: the Power Up cells and the character stats follow a live theme change.</summary>
+        [UnityTest]
+        public IEnumerator EditingTheTheme_RecoloursThePowerUpCellsAndTheCharacterStats()
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Bootstrap");
+            yield return WaitUntilRealtime(() => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "MainMenu", "MainMenu to load");
+            var save = SoulHunter.Core.Services.GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
+            save.UseFile(System.IO.Path.Combine(Application.temporaryCachePath, "playmode_test_save.json"));
+            save.CurrentData.PowerUpRanks.Clear();
+            save.CurrentData.DisabledPowerUps.Clear();
+            SoulHunter.Core.Persistence.PowerUps.SetRank(save.CurrentData, SoulHunter.Core.Persistence.PowerUpId.Might, 1);
+            var original = UiThemeAsset.Active;
+            var look = Object.Instantiate(original);
+            try
+            {
+                UiThemeAsset.SetActive(look);
+                var navigation = Object.FindFirstObjectByType<SoulHunter.UI.MainMenuNavigation>();
+                navigation.ShowPowerUps();
+                for (int i = 0; i < 3; i++) { Canvas.ForceUpdateCanvases(); yield return null; }
+                var shop = Object.FindFirstObjectByType<SoulHunter.UI.PowerUpMenuUI>();
+                var cell = shop.CellFor(SoulHunter.Core.Persistence.PowerUpId.Might).GetComponentInChildren<TMP_Text>();
+                Assert.That(cell.text, Does.Contain("#" + Hex(look.Text.SoftOnLight)), "A part-bought cell shows its rank in the theme's soft colour.");
+                look.Text.SoftOnLight = new Color(0.1f, 0.3f, 0.6f, 1f);
+                UiThemeAsset.NotifyChanged();
+                yield return null;
+                Assert.That(cell.text, Does.Contain("#" + Hex(look.Text.SoftOnLight)), "The cell follows the theme at once.");
+
+                navigation.ShowCharacters();
+                for (int i = 0; i < 3; i++) { Canvas.ForceUpdateCanvases(); yield return null; }
+                var select = Object.FindFirstObjectByType<SoulHunter.UI.CharacterSelectionUI>();
+                Assert.That(select.StatsText.text, Does.Contain("#" + Hex(look.Text.Accent)), "PowerUp values show in the theme's accent.");
+                look.Text.Accent = new Color(0.2f, 0.9f, 0.4f, 1f);
+                UiThemeAsset.NotifyChanged();
+                yield return null;
+                Assert.That(select.StatsText.text, Does.Contain("#" + Hex(look.Text.Accent)), "The stats follow the theme at once.");
+                Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+            }
+            finally
+            {
+                UiThemeAsset.SetActive(null);
+                Object.Destroy(look);
+            }
+        }
+
+        private static string Hex(Color c) => ColorUtility.ToHtmlStringRGB(c);
+
+        private static string StatsText(StatsPanel panel)
+        {
+            var all = new System.Text.StringBuilder();
+            foreach (var text in panel.GetComponentsInChildren<TMP_Text>()) all.Append(text.text);
+            return all.ToString();
+        }
     }
 }

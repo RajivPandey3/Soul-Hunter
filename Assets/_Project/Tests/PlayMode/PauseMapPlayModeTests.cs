@@ -108,6 +108,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(screen.BackButton.gameObject), "Back is focused.");
             Assert.AreEqual(0f, Time.timeScale, "Still paused.");
             Assert.That(screen.TitleText.text, Is.EqualTo(PauseMapScreen.TitleLine));
+            // Bug MIS UI-06: Esc / B go back to the pause menu (as in Options), so the Pause action is off while open.
+            Assert.That(screen.HoldsPauseKey, Is.True, "The map holds the Pause action.");
+            Assert.That(PauseActionEnabled(), Is.False, "Esc must not resume the game under the map.");
 
             // The hero: one mark, at the centre of the map.
             var hero = screen.Markers.Where(m => m.Kind == MapMarkerKind.Hero).ToList();
@@ -168,6 +171,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(screen.IsOpen, Is.False);
             Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(pause.MapButton.gameObject), "Back returns to the Map button.");
             Assert.That(pause.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1f), "The pause menu is back.");
+            Assert.That(PauseActionEnabled(), Is.True, "Back puts the Pause action back.");
             Assert.AreEqual(0f, Time.timeScale, "Still paused.");
 
             // A collected item leaves the map, and something that asks for a mark (a Soul Casket) appears on it.
@@ -206,6 +210,7 @@ namespace SoulHunter.Tests.PlayMode
             system.Resume();
             yield return null;
             Assert.That(screen.IsOpen, Is.False, "Resuming closes the map.");
+            Assert.That(PauseActionEnabled(), Is.True, "Closed with the pause menu: the Pause action is back.");
             Assert.AreEqual(1f, Time.timeScale);
             Object.Destroy(casketGo);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
@@ -397,6 +402,14 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(MapGuides.EdgePoint(Vector2.up).y, Is.EqualTo(1f - MapGuides.InsetTop).Within(0.0001f));
             Assert.That(MapGuides.EdgePoint(Vector2.down).y, Is.EqualTo(MapGuides.InsetBottom).Within(0.0001f));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>Bug MIS UI-06: the game's Pause action (Esc / Start) is on.</summary>
+        private static bool PauseActionEnabled()
+        {
+            SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            var action = input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
+            return action != null && action.enabled;
         }
 
         private static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);

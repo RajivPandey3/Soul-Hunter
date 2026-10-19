@@ -196,6 +196,9 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(screen != null && screen.IsOpen, Is.True, "The recipes open. " + Errors());
             Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(screen.BackButton.gameObject), "Back is focused.");
             Assert.AreEqual(0f, Time.timeScale, "Still paused.");
+            // Bug MIS UI-06: Esc / B go back to the pause menu (as in Options), so the Pause action is off while open.
+            Assert.That(screen.HoldsPauseKey, Is.True, "The list holds the Pause action.");
+            Assert.That(PauseActionEnabled(), Is.False, "Esc must not resume the game under the list.");
 
             int total = EvolutionRecipes.All(manager).Count;
             Assert.That(screen.Recipes.Count, Is.EqualTo(total));
@@ -263,13 +266,16 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(screen.IsOpen, Is.False);
             Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(pause.EvolutionsButton.gameObject), "Back returns to Evolutions.");
+            Assert.That(PauseActionEnabled(), Is.True, "Back puts the Pause action back.");
 
-            // The pause key resumes the game and closes the recipes with it.
+            // Resuming from code (the pause key while open is off) closes the recipes with it.
             Click(pause.EvolutionsButton, "Evolutions");
             yield return null;
+            Assert.That(PauseActionEnabled(), Is.False);
             system.Resume();
             yield return null;
             Assert.That(screen.IsOpen, Is.False, "Resuming closes the recipes.");
+            Assert.That(PauseActionEnabled(), Is.True, "Closed with the pause menu: the Pause action is back.");
             Assert.AreEqual(1f, Time.timeScale);
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
@@ -363,6 +369,14 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         private static bool OnScreen(Rect r) => r.xMin >= -0.5f && r.yMin >= -0.5f && r.xMax <= Screen.width + 0.5f && r.yMax <= Screen.height + 0.5f;
+
+        /// <summary>Bug MIS UI-06: the game's Pause action (Esc / Start) is on.</summary>
+        private static bool PauseActionEnabled()
+        {
+            SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input);
+            var action = input?.Actions?.FindAction(SoulHunter.Core.Input.InputService.PauseAction);
+            return action != null && action.enabled;
+        }
 
         private static Transform Hint(Button card) => card.transform.Find(LevelUpUI.EvoHintName);
 

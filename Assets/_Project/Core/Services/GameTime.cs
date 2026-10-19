@@ -18,7 +18,13 @@ namespace SoulHunter.Core.Services
 
         public static bool IsPaused
         {
-            get { PruneDestroyedOwners(); return _pausers.Count > 0; }
+            get
+            {
+                // A pruned owner can be the last pause: set the scale again, so IsPaused never
+                // says "running" while Time.timeScale is still 0 (Bug MIS UI-11).
+                if (PruneDestroyedOwners()) ApplyScale();
+                return _pausers.Count > 0;
+            }
         }
 
         public static float SlowMotion => _slowMotion;
@@ -82,13 +88,19 @@ namespace SoulHunter.Core.Services
         private static void Apply()
         {
             PruneDestroyedOwners();
+            ApplyScale();
+        }
+
+        private static void ApplyScale()
+        {
             Time.timeScale = _pausers.Count > 0 ? 0f : _slowMotion;
         }
 
         // A screen destroyed without releasing its pause (scene unload) must not freeze the game forever.
-        private static void PruneDestroyedOwners()
+        // Returns true when an owner was removed.
+        private static bool PruneDestroyedOwners()
         {
-            _pausers.RemoveAll(owner => owner is Object unityObject && unityObject == null);
+            return _pausers.RemoveAll(owner => owner is Object unityObject && unityObject == null) > 0;
         }
     }
 }
