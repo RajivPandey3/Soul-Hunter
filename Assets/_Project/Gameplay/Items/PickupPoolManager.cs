@@ -93,6 +93,29 @@ namespace SoulHunter.Gameplay.Pickups
 
         public const int DefaultGemValue = 10;
 
+        /// <summary>
+        /// Jolt hunt (2026-10-19): a Pentagram wipe kills hundreds at once, the gem pool (32 prewarmed) ran dry, and new gems
+        /// were made in that frame (PickupPool.Instantiate XP_Gem 3 ms, with a GC). After the start, the pool is topped up
+        /// to the VS gem cap (gems on the ground plus pooled ones), a few per frame so the opening second does not hitch.
+        /// </summary>
+        public const int GemTopUpPerFrame = 8;
+
+        private void Start()
+        {
+            if (_xpGemPrefab != null) StartCoroutine(TopUpGems());
+        }
+
+        private System.Collections.IEnumerator TopUpGems()
+        {
+            while (_xpGemPrefab != null)
+            {
+                int missing = MaxGemsOnGround - _gemPool.Count - XPGem.ActiveGems.Count;
+                if (missing <= 0) yield break;
+                PrewarmPool(_gemPool, _xpGemPrefab, _gemPool.Count + Mathf.Min(GemTopUpPerFrame, missing));
+                yield return null;
+            }
+        }
+
         public void SpawnGem(Vector3 position) => SpawnGem(position, DefaultGemValue);
 
         /// <summary>A Soul Gem worth <paramref name="value"/> XP; its tier model (cyan / violet / crimson) follows the value.</summary>

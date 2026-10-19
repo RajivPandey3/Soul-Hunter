@@ -1348,8 +1348,13 @@ namespace SoulHunter.Gameplay.Core
                     _profileState = 1;
                     Event("profile", "\"state\": \"start\", \"enemies\": " + EnemyController.ActiveEnemies.Count);
                 }
-                else if (_profileState == 1 && Time.realtimeSinceStartup < _profileUntil && Time.realtimeSinceStartup >= _profileNextPart)
+                // -sh-autoplay-profile-keep-jolts MS: keep only the parts in which a running frame took longer than MS ms (the
+                // first frames after a file switch are the switch itself and are not counted); the other parts are deleted,
+                // so a long capture keeps just the jolts. Each kept jolt is logged as a "profile-jolt" event.
+                if (_profileState == 1) TrackProfileJolt();
+                if (_profileState == 1 && Time.realtimeSinceStartup < _profileUntil && Time.realtimeSinceStartup >= _profileNextPart)
                 {
+                    FinishProfilePart(UnityEngine.Profiling.Profiler.logFile);
                     // A new file every few seconds: the editor keeps only the last 300 frames of a loaded capture, so a long
                     // capture lost all but its last ~4 s (2026-10-17). Parts: l3.raw, l3-part2.raw, l3-part3.raw ...
                     _profilePart++;
@@ -1360,11 +1365,14 @@ namespace SoulHunter.Gameplay.Core
                 }
                 else if (_profileState == 1 && Time.realtimeSinceStartup >= _profileUntil)
                 {
+                    string last = UnityEngine.Profiling.Profiler.logFile;
                     UnityEngine.Profiling.Profiler.enabled = false;
                     UnityEngine.Profiling.Profiler.enableBinaryLog = false;
                     UnityEngine.Profiling.Profiler.logFile = "";
+                    FinishProfilePart(last);
                     _profileState = 2;
                 }
+                DeleteQueuedProfileParts();
             }
             // -sh-autoplay-1080p: the contract baseline is 1920x1080; on a smaller display the 3D view renders at the URP render
             // scale that gives 1080p's pixel count (PerformanceBenchmark's rule). Put back when the bot goes.
@@ -1562,6 +1570,43 @@ namespace SoulHunter.Gameplay.Core
         private float _profileNextPart;
         private const float ProfilePartSeconds = 4f;
         private float _profileSecondStart;
+        private bool _profilePartHadJolt;
+        private int _framesSinceProfileSwitch;
+        private readonly List<string> _profileDeleteQueue = new List<string>();
+
+        private void TrackProfileJolt()
+        {
+            if (!float.TryParse(ArgValue("-sh-autoplay-profile-keep-jolts"), NumberStyles.Float, CultureInfo.InvariantCulture, out float keepMs)) return;
+            _framesSinceProfileSwitch++;
+            float ms = Time.unscaledDeltaTime * 1000f;
+            if (_framesSinceProfileSwitch <= 3 || Time.timeScale <= 0f || ms <= keepMs) return;
+            _profilePartHadJolt = true;
+            Event("profile-jolt", string.Format(CultureInfo.InvariantCulture, "\"part\": {0}, \"ms\": {1:0.0}, \"enemies\": {2}",
+                _profilePart, ms, EnemyController.ActiveEnemies.Count));
+        }
+
+        /// <summary>A profile part is complete: without a jolt it is queued for deletion (-sh-autoplay-profile-keep-jolts).</summary>
+        private void FinishProfilePart(string file)
+        {
+            bool keepJoltsOnly = ArgValue("-sh-autoplay-profile-keep-jolts") != null;
+            if (keepJoltsOnly && !_profilePartHadJolt && !string.IsNullOrEmpty(file)) { _profileDeleteQueue.Add(file); _profileDeleteQueue.Add(file + ".data"); }
+            _profilePartHadJolt = false;
+            _framesSinceProfileSwitch = 0;
+        }
+
+        private void DeleteQueuedProfileParts()
+        {
+            for (int i = _profileDeleteQueue.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    if (System.IO.File.Exists(_profileDeleteQueue[i])) System.IO.File.Delete(_profileDeleteQueue[i]);
+                    _profileDeleteQueue.RemoveAt(i);
+                }
+                catch (System.IO.IOException) { } // still open for a frame after the switch: tried again next frame
+                catch (System.UnauthorizedAccessException) { }
+            }
+        }
         private float _profileUntil;
         private bool _qualitySet;
         private int _qualityBefore = -1;

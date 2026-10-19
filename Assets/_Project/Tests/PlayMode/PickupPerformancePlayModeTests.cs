@@ -204,5 +204,31 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
             PlayerController.Instance.GetComponent<HealthController>().IsInvincible = false;
         }
+
+        /// <summary>
+        /// Jolt hunt (2026-10-19): a Pentagram wipe made new gems in its frame once the 32 prewarmed ran out (Instantiate 3 ms
+        /// with a GC). The pool now tops up to the VS gem cap after the start, so a wipe-sized burst makes no new gem object.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator TheGemPool_FillsToTheGemCap_SoAWipeSizedBurstMakesNoNewGems()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<SoulHunter.Gameplay.AI.EnemySpawner>().enabled = false;
+            foreach (var weapon in SoulHunter.Gameplay.Player.PlayerController.Instance.GetComponentsInChildren<SoulHunter.Gameplay.Combat.AutoAttackWeapon>(true)) weapon.enabled = false;
+            var pool = PickupPoolManager.Instance;
+            var gems = (System.Collections.Generic.Stack<GameObject>)typeof(PickupPoolManager)
+                .GetField("_gemPool", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(pool);
+            yield return WaitUntilRealtime(() => gems.Count + XPGem.ActiveGems.Count >= PickupPoolManager.MaxGemsOnGround, "the gem pool to fill to the gem cap");
+            Assert.That(gems.Count + XPGem.ActiveGems.Count, Is.EqualTo(PickupPoolManager.MaxGemsOnGround), "It stops at the cap.");
+
+            int objectsBefore = Object.FindObjectsByType<XPGem>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
+            int burst = Mathf.Min(300, gems.Count);
+            Vector3 far = SoulHunter.Gameplay.Player.PlayerController.Instance.transform.position + Vector3.right * 60f;
+            for (int i = 0; i < burst; i++) pool.SpawnGem(far + new Vector3(i % 20, 0f, i / 20), 10);
+            yield return null;
+            Assert.That(Object.FindObjectsByType<XPGem>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, Is.EqualTo(objectsBefore),
+                $"{burst} gems at once come from the pool; none is made new.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }
