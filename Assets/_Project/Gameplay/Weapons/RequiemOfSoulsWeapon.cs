@@ -33,7 +33,8 @@ namespace SoulHunter.Gameplay.Combat
 
         private float _activeUntil = -1f, _nextPulse, _nextRing;
         private readonly Dictionary<HealthController, float> _nextHit = new Dictionary<HealthController, float>();
-        private readonly Collider[] _hits = new Collider[128];
+        private Collider[] _hits = new Collider[128];
+        private static int _enemyMask, _playerMask;
 
         public bool WaveActive => Time.time < _activeUntil;
         public float Radius => WaveRadius * AreaMultiplier;
@@ -70,7 +71,19 @@ namespace SoulHunter.Gameplay.Combat
         private void Pulse()
         {
             string hostileTag = HostileTag;
-            int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, Radius, _hits, ~0, QueryTriggerInteraction.Collide);
+            // Only the hostile's layer (CMB-07): with every layer (~0) the 128 slots filled with gems, shots and props, and a
+            // late crowd of 300 left part of it untouched. Enemies, Soul Lanterns and rail carts are on the Enemy layer; a
+            // boss-held copy (Shadow Kael) looks for the player. A full buffer grows (rarely, never in a steady state) and asks
+            // again, as the magnet sweep does.
+            if (_enemyMask == 0) { _enemyMask = LayerMask.GetMask("Enemy"); _playerMask = LayerMask.GetMask("Player"); }
+            int mask = HeldByEnemy ? _playerMask : _enemyMask;
+            float radius = Radius;
+            int count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, radius, _hits, mask, QueryTriggerInteraction.Collide);
+            while (count == _hits.Length)
+            {
+                _hits = new Collider[_hits.Length * 2];
+                count = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, radius, _hits, mask, QueryTriggerInteraction.Collide);
+            }
             int amount = Mathf.RoundToInt(ScaledDamage(VsDamage));
             for (int i = 0; i < count; i++)
             {

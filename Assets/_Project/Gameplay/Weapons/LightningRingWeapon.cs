@@ -66,26 +66,30 @@ namespace SoulHunter.Gameplay.Combat
             int strikesThisTurn = Mathf.Min(StrikeCount + ExtraAmount, validTargets.Count);
 
             // VS interval (wiki Lightning_Ring): the Amount of shots leave 0.05s apart.
-            FireInSuccession(strikesThisTurn, VsInterval, i =>
-            {
-                // Owner decision: aim at the nearest enemy; strike the nearest remaining enemies first.
-                // Strikes come 0.05 s apart now: an enemy killed or pooled in between is passed over for the next one,
-                // so every strike still lands while enemies remain.
-                EnemyController target = null;
-                while (target == null)
-                {
-                    int nearestIndex = NearestIndex(validTargets);
-                    if (nearestIndex < 0) return;
-                    target = validTargets[nearestIndex];
-                    validTargets.RemoveAt(nearestIndex); // Ek dushman pe 2 bijliyan na giren
-                    if (target != null && !target.gameObject.activeInHierarchy) target = null;
-                }
+            FireInSuccession(strikesThisTurn, VsInterval, _strikeShot ??= StrikeShot);
+        }
 
-                if (Vector3.Distance(transform.position, target.transform.position) <= StrikeRadius)
-                {
-                    SpawnLightning(target.transform.position);
-                }
-            });
+        private SuccessionShot _strikeShot;
+
+        private void StrikeShot(int i, int count, Vector3 arg)
+        {
+            // Owner decision: aim at the nearest enemy; strike the nearest remaining enemies first.
+            // Strikes come 0.05 s apart now: an enemy killed or pooled in between is passed over for the next one,
+            // so every strike still lands while enemies remain.
+            EnemyController target = null;
+            while (target == null)
+            {
+                int nearestIndex = NearestIndex(_targetBuffer);
+                if (nearestIndex < 0) return;
+                target = _targetBuffer[nearestIndex];
+                _targetBuffer.RemoveAt(nearestIndex); // Ek dushman pe 2 bijliyan na giren
+                if (target != null && !target.gameObject.activeInHierarchy) target = null;
+            }
+
+            if (Vector3.Distance(transform.position, target.transform.position) <= StrikeRadius)
+            {
+                SpawnLightning(target.transform.position);
+            }
         }
 
         private int NearestIndex(List<EnemyController> candidates)

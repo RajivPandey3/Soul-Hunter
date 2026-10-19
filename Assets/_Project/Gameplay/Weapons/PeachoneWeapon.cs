@@ -51,6 +51,8 @@ namespace SoulHunter.Gameplay.Combat
         public float ActiveSeconds => VsDuration * DurationMultiplier;
         /// <summary>Sets fired by the last activation (tests).</summary>
         public int LastActivationSets { get; private set; }
+        /// <summary>Sets started since the weapon was made, across activations (tests).</summary>
+        public int SetsStarted { get; private set; }
 
         public const float BirdHeight = 1.6f;
 
@@ -107,8 +109,17 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (BombPrefab == null || BirdVisual == null) return;
             SetNextAttackIn(ActiveSeconds + CooldownForLevel * CooldownMultiplier);
-            StartCoroutine(Activation());
+            // CMB-09: an upgrade fires the weapon at once (ResetCooldownAndFire, also for a Gemini counterpart), which
+            // started a second activation beside the running one: two sets a second for the rest of the first. The
+            // running activation and its set are stopped, so the new one starts alone ("Upgrading a weapon will also
+            // reset its Cooldown and activate it instantly", wiki Weapons).
+            if (_activation != null) StopCoroutine(_activation);
+            if (_bombingRun != null) StopCoroutine(_bombingRun);
+            _bombingRun = null;
+            _activation = StartCoroutine(Activation());
         }
+
+        private Coroutine _activation, _bombingRun;
 
         private IEnumerator Activation()
         {
@@ -118,10 +129,12 @@ namespace SoulHunter.Gameplay.Combat
             while (elapsed < ActiveSeconds - 0.001f)
             {
                 LastActivationSets++;
-                StartCoroutine(BombingRun());
+                SetsStarted++;
+                _bombingRun = StartCoroutine(BombingRun()); // the latest set, stopped if an upgrade restarts the activation
                 yield return new WaitForSeconds(setInterval);
                 elapsed += setInterval;
             }
+            _activation = null;
         }
 
         /// <summary>VS interval (wiki Peachone): 0.025 s between bombs (it was 0.1 s).</summary>

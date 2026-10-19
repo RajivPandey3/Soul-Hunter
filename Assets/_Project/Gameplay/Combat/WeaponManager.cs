@@ -93,6 +93,15 @@ namespace SoulHunter.Gameplay.Combat
             {
                 Instance = this;
             }
+            else if (Instance != this)
+            {
+                // CMB-12: the duplicate guard sat in the else of the GameContent evolutions branch, so with evolutions
+                // listed (always) a second manager stayed and would also hand out the starting weapon. Switched off at
+                // once, so its Start never runs before the end-of-frame Destroy.
+                enabled = false;
+                Destroy(gameObject);
+                return;
+            }
             // VS evolutions built since 2026-10-01 live in GameContent (EvolutionBuilder), so the scene is not edited.
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             // VS unions (built 2026-10-12, NewVsItemsBuilder) live in GameContent the same way.
@@ -107,10 +116,6 @@ namespace SoulHunter.Gameplay.Combat
                 _availableEvolutions ??= new List<WeaponEvolutionData>();
                 foreach (var evolution in catalog.Evolutions)
                     if (evolution != null && !_availableEvolutions.Contains(evolution)) _availableEvolutions.Add(evolution);
-            }
-            else if (Instance != this)
-            {
-                Destroy(gameObject);
             }
         }
 

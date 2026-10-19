@@ -60,17 +60,21 @@ namespace SoulHunter.Gameplay.Combat
             if (allEnemies.Count == 0) return;
 
             // VS interval (wiki Fire_Wand): the Amount of shots leave 0.02s apart.
-            FireInSuccession(FireballsPerAttack + ExtraAmount, VsInterval, i =>
+            FireInSuccession(FireballsPerAttack + ExtraAmount, VsInterval, _fireballShot ??= FireballShot);
+        }
+
+        private SuccessionShot _fireballShot;
+
+        private void FireballShot(int i, int count, Vector3 arg)
+        {
+            // Fire wand hamesha completely random enemy ko target karta hai (VS rule)
+            // Owner decision: aim at the nearest enemy; extra fireballs fan out around it.
+            Transform target = FindNearestEnemy(FireRange);
+            if (target != null)
             {
-                // Fire wand hamesha completely random enemy ko target karta hai (VS rule)
-                // Owner decision: aim at the nearest enemy; extra fireballs fan out around it.
-                Transform target = FindNearestEnemy(FireRange);
-                if (target != null)
-                {
-                    Vector3 fan = Quaternion.Euler(0f, (i - (FireballsPerAttack + ExtraAmount - 1) * 0.5f) * 8f, 0f) * FlatDirectionTo(target);
-                    ShootFireball(transform.position + fan * 10f);
-                }
-            });
+                Vector3 fan = Quaternion.Euler(0f, (i - (FireballsPerAttack + ExtraAmount - 1) * 0.5f) * 8f, 0f) * FlatDirectionTo(target);
+                ShootFireball(transform.position + fan * 10f);
+            }
         }
 
         private void ShootFireball(Vector3 targetPosition)

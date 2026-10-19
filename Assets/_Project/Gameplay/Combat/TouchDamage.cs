@@ -31,6 +31,12 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>The weapon that spawned this (set by AutoAttackWeapon.AimAtHostiles), credited on the Results screen.</summary>
         [System.NonSerialized] public AutoAttackWeapon SourceWeapon;
         public string TargetTag = "Player";
+        /// <summary>
+        /// Called when a hit of this zone really took health off a body (not on an immune Level 7 ghost, a shield or an
+        /// invulnerable body). Bloody Tear heals on it (CMB-08). Cleared when the zone is switched off, so a pooled copy
+        /// never keeps an earlier owner's callback.
+        /// </summary>
+        [System.NonSerialized] public System.Action<TouchDamage> DamagedTarget;
 
         private class ContactInfo
         {
@@ -80,7 +86,7 @@ namespace SoulHunter.Gameplay.Combat
             TouchDamageTicker.Add(this);
         }
 
-        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); TouchDamageTicker.Remove(this); } 
+        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); TouchDamageTicker.Remove(this); DamagedTarget = null; } 
         
         private void OnCollisionExit(Collision collision)
         {
@@ -156,8 +162,13 @@ namespace SoulHunter.Gameplay.Combat
                     // Target ko damage do
                     // Learning Comment: _damageType pass kiya gaya hai taaki Level 7 spectral enemies Holy damage wagera sahi se receive karein
                     Vector3 knockback = (transform.position - info.TargetTransform.position).normalized;
+                    var health = info.Health;
+                    int healthBefore = health != null ? health.CurrentHealth : 0;
+                    int lifeBefore = health != null ? health.Life : 0;
                     using (DamageSource.From(SourceWeapon, SourceWeaponName != "Unknown" ? SourceWeaponName : null))
                         target.TakeDamage(new DamagePacket(Mathf.RoundToInt(_damageAmount), transform.position, -knockback, _damageType).WithKnockback(Knockback));
+                    if (DamagedTarget != null && health != null && (health.CurrentHealth < healthBefore || health.Life != lifeBefore))
+                        DamagedTarget(this);
                     
                     // Learning Comment: TakeDamage() ke baad check karein ke target abhi bhi _targets mein hai ya OnTriggerExit se remove ho chuka hai
                     if (_targets.TryGetValue(target, out var stillActiveInfo))

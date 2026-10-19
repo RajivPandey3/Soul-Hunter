@@ -45,12 +45,16 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (WaterZonePrefab == null) return;
             int count = VsAmount + ExtraAmount;
-            FireInSuccession(count, VsInterval * CooldownMultiplier, i =>
-            {
-                _angle -= 360f / Mathf.Max(1, count); // clockwise seen from above
-                Vector3 around = Quaternion.Euler(0f, _angle, 0f) * Vector3.forward * RingRadius;
-                SpawnPool(transform.position + around);
-            });
+            FireInSuccession(count, VsInterval * CooldownMultiplier, _poolShot ??= PoolShot);
+        }
+
+        private SuccessionShot _poolShot;
+
+        private void PoolShot(int i, int count, Vector3 arg)
+        {
+            _angle -= 360f / Mathf.Max(1, count); // clockwise seen from above
+            Vector3 around = Quaternion.Euler(0f, _angle, 0f) * Vector3.forward * RingRadius;
+            SpawnPool(transform.position + around);
         }
 
         private void SpawnPool(Vector3 position)

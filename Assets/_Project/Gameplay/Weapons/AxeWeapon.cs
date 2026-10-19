@@ -89,7 +89,14 @@ namespace SoulHunter.Gameplay.Weapons
 
             // VS (wiki Axe): "subsequent axes from Amount are thrown in quick succession ... in progressively wider arcs";
             // interval 0.2 s. Each later axe goes a little further (Soul Hunter's arc along the ground).
-            FireInSuccession(LevelAxeCount + ExtraAmount, VsInterval, i => ThrowSingleAxe(1f + i * 0.35f));
+            FireInSuccession(LevelAxeCount + ExtraAmount, VsInterval, _throwAxeShot ??= ThrowAxeShot);
+        }
+
+        private SuccessionShot _throwAxeShot;
+
+        private void ThrowAxeShot(int i, int count, Vector3 arg)
+        {
+            ThrowSingleAxe(1f + i * 0.35f);
         }
 
         public const float VsInterval = 0.2f;
@@ -115,7 +122,10 @@ namespace SoulHunter.Gameplay.Weapons
             var pierce = axeObj.GetComponent<AxePierce>();
             if (pierce == null) pierce = axeObj.AddComponent<AxePierce>();
             // Iron Blue Will (VII): up to 3 bounces off enemies on top of the pierce.
-            pierce.Arm(Pierce + ExtraPierce, projectileDamage, ArcanaBounces);
+            // The axe's 5 s life is kept on the axe itself, per throw (CMB-06): a coroutine on the weapon switched a recycled
+            // axe off mid-flight when its earlier throw's 5 s ran out, and stopped when the Axe evolved or was switched off,
+            // so the axes then in flight never went back to the pool.
+            pierce.Arm(Pierce + ExtraPierce, projectileDamage, ArcanaBounces, AxeLifetimeSeconds);
 
             // Rigidbody ko dhakka do
             Rigidbody rb = axeObj.GetComponent<Rigidbody>();
@@ -137,15 +147,10 @@ namespace SoulHunter.Gameplay.Weapons
                 rb.AddTorque(Vector3.Cross(aim, Vector3.up) * 10f, ForceMode.VelocityChange); // tumble end over end along the throw
             }
 
-            // 5 second baad axe wapas pool mein chala jayega (Destroy nahi hoga)
-            StartCoroutine(DisableAxeRoutine(axeObj));
         }
 
-        private System.Collections.IEnumerator DisableAxeRoutine(GameObject axe)
-        {
-            yield return new WaitForSeconds(5f);
-            if (axe != null && axe.activeSelf) axe.SetActive(false);
-        }
+        /// <summary>A thrown axe goes back to the pool this long after its throw (game time; Soul Hunter's number).</summary>
+        public const float AxeLifetimeSeconds = 5f;
     }
 
     /// <summary>
@@ -160,6 +165,7 @@ namespace SoulHunter.Gameplay.Weapons
         private int _pierce = int.MaxValue;
         private int _bouncesLeft;
         private bool _usedUp;
+        private float _expiresAt = float.PositiveInfinity;
 
         public int HitCount => _hit.Count;
         /// <summary>Hits this axe can make before it is used up: its pierce plus its Arcana bounces (tests).</summary>
@@ -168,8 +174,10 @@ namespace SoulHunter.Gameplay.Weapons
         public int BouncesLeft => _bouncesLeft;
 
         /// <param name="bounces">VS Iron Blue Will (VII): extra hits, each turning the axe away from the enemy it hit.</param>
-        public void Arm(int pierce, ProjectileDamage damage, int bounces = 0)
+        /// <param name="lifetime">Game seconds from this throw until the axe returns to the pool (0 or less = no limit).</param>
+        public void Arm(int pierce, ProjectileDamage damage, int bounces = 0, float lifetime = 0f)
         {
+            _expiresAt = lifetime > 0f ? Time.time + lifetime : float.PositiveInfinity;
             _bouncesLeft = Mathf.Max(0, bounces);
             _pierce = Mathf.Max(1, pierce) + _bouncesLeft;
             _damage = damage;
@@ -177,7 +185,7 @@ namespace SoulHunter.Gameplay.Weapons
             _usedUp = false;
         }
 
-        private void OnDisable() { _hit.Clear(); _usedUp = false; }
+        private void OnDisable() { _hit.Clear(); _usedUp = false; _expiresAt = float.PositiveInfinity; }
 
         private void OnTriggerEnter(Collider other) => Count(other);
         private void OnCollisionEnter(Collision collision) => Count(collision.collider);
@@ -210,7 +218,7 @@ namespace SoulHunter.Gameplay.Weapons
 
         private void LateUpdate()
         {
-            if (_usedUp) gameObject.SetActive(false);
+            if (_usedUp || Time.time >= _expiresAt) gameObject.SetActive(false);
         }
     }
 }

@@ -39,25 +39,29 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (MeteorPrefab == null) return;
             int count = VsAmount + ExtraAmount;
-            FireInSuccession(count, VsInterval, i =>
-            {
-                Vector3 aim = AimDirection(RandomFlatDirection());
-                Vector3 dir = Quaternion.Euler(0f, (i - (count - 1) * 0.5f) * 10f, 0f) * aim;
-                GameObject meteor = WeaponPoolManager.Instance != null
-                    ? WeaponPoolManager.Instance.GetFromPool(MeteorPrefab, transform.position, Quaternion.identity)
-                    : Instantiate(MeteorPrefab, transform.position, Quaternion.identity);
-                if (meteor == null) return;
-                meteor.transform.localScale = MeteorPrefab.transform.localScale * MeteorScale * AreaMultiplier;
-                var proj = meteor.GetComponent<Projectile>();
-                if (proj == null) proj = meteor.AddComponent<Projectile>();
-                proj.Initialize(dir, MeteorSpeed * SpeedMultiplier, RollDamage(DamageAmount), FlightSeconds, DamageType.Magic, "Hellmaw Comet", InfinitePierce);
-                proj.ConfigureContacts(InfinitePierce, ExtraBounces, false); // passes through walls (VS)
-                proj.AddScreenBounces(ArcanaScreenBounces); // Waltz of Pearls (XI): bounces off the screen edge once
-                var damage = meteor.GetComponent<ProjectileDamage>();
-                if (damage == null) damage = meteor.AddComponent<ProjectileDamage>();
-                damage.SourceWeaponName = "Hellmaw Comet";
-                AimAtHostiles(meteor);
-            });
+            FireInSuccession(count, VsInterval, _meteorShot ??= MeteorShot);
+        }
+
+        private SuccessionShot _meteorShot;
+
+        private void MeteorShot(int i, int count, Vector3 arg)
+        {
+            Vector3 aim = AimDirection(RandomFlatDirection());
+            Vector3 dir = Quaternion.Euler(0f, (i - (count - 1) * 0.5f) * 10f, 0f) * aim;
+            GameObject meteor = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(MeteorPrefab, transform.position, Quaternion.identity)
+                : Instantiate(MeteorPrefab, transform.position, Quaternion.identity);
+            if (meteor == null) return;
+            meteor.transform.localScale = MeteorPrefab.transform.localScale * MeteorScale * AreaMultiplier;
+            var proj = meteor.GetComponent<Projectile>();
+            if (proj == null) proj = meteor.AddComponent<Projectile>();
+            proj.Initialize(dir, MeteorSpeed * SpeedMultiplier, RollDamage(DamageAmount), FlightSeconds, DamageType.Magic, "Hellmaw Comet", InfinitePierce);
+            proj.ConfigureContacts(InfinitePierce, ExtraBounces, false); // passes through walls (VS)
+            proj.AddScreenBounces(ArcanaScreenBounces); // Waltz of Pearls (XI): bounces off the screen edge once
+            var damage = meteor.GetComponent<ProjectileDamage>();
+            if (damage == null) damage = meteor.AddComponent<ProjectileDamage>();
+            damage.SourceWeaponName = "Hellmaw Comet";
+            AimAtHostiles(meteor);
         }
     }
 }

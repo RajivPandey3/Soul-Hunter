@@ -46,11 +46,38 @@ namespace SoulHunter.Gameplay.Combat
             Vector3 aim = AimDirection(Vector3.right);
             int whips = BaseWhipCount + ExtraAmount;
             // One after another (VS interval 0.1 s, like the Whip): extra lashes used to land on top of the first ones.
-            FireInSuccession(whips, VsInterval, i => FireWhip(i % 2 == 0 ? aim : -aim));
+            FireInSuccession(whips, VsInterval, _lashShot ??= LashShot, aim);
+        }
+
+        private SuccessionShot _lashShot;
+
+        private void LashShot(int i, int count, Vector3 arg)
+        {
+            FireWhip(i % 2 == 0 ? arg : -arg);
         }
 
         /// <summary>vampire.survivors.wiki/w/Bloody_Tear: "interval = 0.1 seconds" between lashes.</summary>
         public const float VsInterval = 0.1f;
+
+        /// <summary>
+        /// VS (vampire.survivors.wiki/w/Bloody_Tear, raw, fetched 2026-10-19): "Restores 8 HP/attack if it hits any enemies
+        /// with a crit"; "The player can heal 8 points of health if an enemy was damaged by a critical hit"; "This lifesteal
+        /// effect has a one second delay before it can be triggered again"; "It is not affected by Recovery".
+        /// </summary>
+        public const float VsHealDelay = 1f;
+
+        // Lashes whose damage roll was a critical hit; only their damaging hits heal.
+        private readonly System.Collections.Generic.HashSet<TouchDamage> _critLashes = new System.Collections.Generic.HashSet<TouchDamage>();
+        private System.Action<TouchDamage> _onLashDamaged;
+        private float _nextHealAt = float.NegativeInfinity;
+
+        private void OnLashDamaged(TouchDamage lash)
+        {
+            if (!_critLashes.Contains(lash)) return; // not a crit: no heal
+            if (Time.time < _nextHealAt) return;      // the 1 s lifesteal delay (game time: a pause holds it)
+            _nextHealAt = Time.time + VsHealDelay;
+            if (_playerHealth != null) _playerHealth.Heal(Mathf.RoundToInt(HealAmount)); // 8, not scaled by Recovery
+        }
 
         private void FireWhip(Vector3 direction)
         {
@@ -80,30 +107,17 @@ namespace SoulHunter.Gameplay.Combat
             if (damageDealer == null) damageDealer = whip.AddComponent<TouchDamage>();
             
             damageDealer.DamageAmount = RollDamage(DamageAmount);
+            bool crit = LastRollWasCrit;
             damageDealer.SourceWeaponName = "Bloody Tear";
             damageDealer.SourceWeapon = this; // VS Results
             damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the whip hurt its own holder
             
-            // Critical hit & Heal logic simulation
-            var allEnemies = EnemyController.ActiveEnemies;
-            bool hitEnemy = false;
-            // Shadow Kael's copy heals when it lashes the player, not when its own horde is near.
-            if (HeldByEnemy) hitEnemy = FindNearestEnemy(3f * AreaMultiplier) != null;
-            else foreach(var enemy in allEnemies)
-            {
-                if (enemy == null) continue; // destroyed enemies can linger in the static list
-                if (Vector3.Distance(whip.transform.position, enemy.transform.position) < 3f * AreaMultiplier)
-                {
-                    hitEnemy = true;
-                    // Usually this is handled by collision, we are just hooking the heal here
-                }
-            }
-            
-            if (hitEnemy && _playerHealth != null)
-            {
-                _playerHealth.Heal(Mathf.RoundToInt(HealAmount)); // Heal on hit! (VS signature mechanic)
-            }
-            
+            // CMB-08: the lash heals only when one of its hits really damages a body and its roll was a crit, at most once
+            // a second (VS, see VsHealDelay). It healed when any enemy stood near the lash, so Level 7 ghosts (immune to
+            // Normal damage) healed the player 8 per lash. Shadow Kael's copy heals the boss by the same rule.
+            if (crit) _critLashes.Add(damageDealer); else _critLashes.Remove(damageDealer);
+            damageDealer.DamagedTarget = _onLashDamaged ??= OnLashDamaged;
+
             var lifetime = whip.GetComponent<PooledLifetime>();
             if (lifetime != null) lifetime.Arm(0.3f);
             else Destroy(whip, 0.3f);

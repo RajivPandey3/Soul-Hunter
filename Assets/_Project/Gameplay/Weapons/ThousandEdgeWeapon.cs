@@ -48,28 +48,32 @@ namespace SoulHunter.Gameplay.Combat
 
             // Amount adds knives per volley, thrown one after another (VS interval 0.05 s): all in one frame from one spot
             // they looked like a single knife, so the Duplicator seemed to do nothing (2026-10-04).
-            FireInSuccession(KnivesPerAttack + ExtraAmount, VsInterval, i =>
-            {
-                Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * moveDir;
-                Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
+            FireInSuccession(KnivesPerAttack + ExtraAmount, VsInterval, _knifeShot ??= KnifeShot, moveDir);
+        }
 
-                GameObject knife = WeaponPoolManager.Instance != null
-                    ? WeaponPoolManager.Instance.GetFromPool(KnifePrefab, spawnPos, Quaternion.identity)
-                    : Instantiate(KnifePrefab, spawnPos, Quaternion.identity);
-                if (knife == null) return;
-                ApplyArea(knife, KnifePrefab);
-                knife.transform.forward = spreadDir;
+        private SuccessionShot _knifeShot;
 
-                var proj = knife.GetComponent<Projectile>();
-                if (proj == null) proj = knife.AddComponent<Projectile>();
-                proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 3f, pierce: Pierce);
-                proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
+        private void KnifeShot(int i, int count, Vector3 arg)
+        {
+            Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-5f, 5f), 0) * arg;
+            Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
 
-                var damageDealer = knife.GetComponent<ProjectileDamage>();
-                if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
-                damageDealer.SourceWeaponName = "Thousand Edge";
-                AimAtHostiles(knife);
-            });
+            GameObject knife = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(KnifePrefab, spawnPos, Quaternion.identity)
+                : Instantiate(KnifePrefab, spawnPos, Quaternion.identity);
+            if (knife == null) return;
+            ApplyArea(knife, KnifePrefab);
+            knife.transform.forward = spreadDir;
+
+            var proj = knife.GetComponent<Projectile>();
+            if (proj == null) proj = knife.AddComponent<Projectile>();
+            proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 3f, pierce: Pierce);
+            proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
+
+            var damageDealer = knife.GetComponent<ProjectileDamage>();
+            if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
+            damageDealer.SourceWeaponName = "Thousand Edge";
+            AimAtHostiles(knife);
         }
 
         /// <summary>vampire.survivors.wiki/w/Thousand_Edge: "interval = 0.05 seconds" between the knives of one volley.</summary>
