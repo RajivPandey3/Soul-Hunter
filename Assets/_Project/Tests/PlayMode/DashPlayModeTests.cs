@@ -78,6 +78,41 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         /// <summary>
+        /// Bug MIS CORE-07 (2026-10-19): a pause during a dash (a level-up from XP gained mid-dash) made the step 0, which
+        /// the wall check read as a wall, so the rest of the dash was lost. A pause now holds the dash.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator APauseMidDash_HoldsTheDash_AndItFinishesAfterwards()
+        {
+            yield return BootIntoGameplay();
+            Object.FindFirstObjectByType<EnemySpawner>().enabled = false;
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            var health = player.GetComponent<HealthController>();
+            yield return null;
+
+            Vector3 start = player.transform.position;
+            GameServices.Instance.Get<EventBus>().Raise(new PlayerDashEvent());
+            yield return null;
+            Assert.That(player.IsDashing, Is.True, "The dash starts.");
+            var owner = new object();
+            GameTime.Pause(owner);
+            try
+            {
+                float until = Time.realtimeSinceStartup + 0.3f;
+                while (Time.realtimeSinceStartup < until) yield return null;
+                Assert.That(health.IsAbilityInvulnerable, Is.True, "The paused dash still protects the hero.");
+                Assert.That(player.Rigidbody.isKinematic, Is.True, "The paused dash is held, not ended.");
+            }
+            finally { GameTime.Resume(owner); }
+            yield return new WaitForSeconds(0.3f);
+
+            Assert.That(Vector3.Distance(start, player.transform.position), Is.GreaterThan(2f), "The dash covers its distance after the pause.");
+            Assert.That(health.IsAbilityInvulnerable, Is.False, "Invulnerability ends with the dash.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>
         /// Bug MIS CMB-10 / CORE-06 (2026-10-19): the dash and Soul Burst shared HealthController.IsInvincible, so the
         /// first to end cleared the other's immunity and the bot's or benchmark's god mode (IsInvincible = true).
         /// </summary>

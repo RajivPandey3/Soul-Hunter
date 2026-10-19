@@ -416,6 +416,9 @@ namespace SoulHunter.Gameplay.Player
             float elapsed = 0;
             while(elapsed < _dashDuration)
             {
+                // A pause (a level-up from XP gained mid-dash, a chest, the pause menu) holds the dash: the step is 0 then,
+                // and the wall check below used to read that as a wall and end the dash for good (Bug MIS CORE-07, 2026-10-19).
+                if (SoulHunter.Core.Services.GameTime.IsPaused) { yield return null; continue; }
                 float step = _dashSpeed * Time.deltaTime;
                 Vector3 from = Rigidbody.position;
                 if (UnityEngine.Physics.SphereCast(from, DashProbeRadius, dashDirection, out RaycastHit wall, step + DashSkin, obstacles, QueryTriggerInteraction.Ignore))
