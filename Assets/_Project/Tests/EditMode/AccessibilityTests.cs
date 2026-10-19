@@ -111,6 +111,15 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(144), Is.EqualTo(2));
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(240), Is.EqualTo(4));
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(0), Is.EqualTo(1));
+            // Bug MIS CORE-08 (2026-10-19): V-Sync never runs a 60 Hz-or-faster display under 60 (90 Hz was 45, 100 Hz 50, 165 Hz 55).
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(75), Is.EqualTo(1));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(90), Is.EqualTo(1));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(100), Is.EqualTo(1));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(119.88), Is.EqualTo(2));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(165), Is.EqualTo(2));
+            Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(30), Is.EqualTo(1));
+            foreach (double hz in new[] { 59.94, 60, 75, 90, 100, 119.88, 120, 144, 165, 180, 200, 240, 360 })
+                Assert.That(hz / SoulHunter.Gameplay.Core.DisplaySettingsApplier.VSyncCountFor(hz), Is.GreaterThanOrEqualTo(59.9), $"{hz} Hz");
             Assert.That(SoulHunter.Gameplay.Core.DisplaySettingsApplier.RefreshRateLabel(144), Is.EqualTo("144 Hz"));
             // VS: "Only visible when using Exclusive Fullscreen Window Mode" (Window Mode 1), and PC-exclusive.
             for (int mode = 0; mode < 4; mode++)

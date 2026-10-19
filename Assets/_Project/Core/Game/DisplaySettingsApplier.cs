@@ -73,10 +73,11 @@ namespace SoulHunter.Gameplay.Core
         public static bool Uncapped;
 
         /// <summary>
-        /// V-Sync intervals that bring a display of <paramref name="hz"/> closest to 60 frames a second: 1 on a 60 or 75 Hz
-        /// display, 2 on 120 or 144 Hz, 4 on 240 Hz.
+        /// V-Sync intervals that keep a display of <paramref name="hz"/> at 60 frames a second or more: 1 on a 60, 75, 90
+        /// or 100 Hz display, 2 on 120, 144 or 165 Hz, 4 on 240 Hz. Rounded down: rounding to nearest ran 90 Hz at 45, 100 Hz
+        /// at 50 and 165 Hz at 55 (Bug MIS CORE-08, 2026-10-19). The 0.02 allowance keeps 119.88 Hz at 2 and 59.94 Hz at 1.
         /// </summary>
-        public static int VSyncCountFor(double hz) => hz <= 0d ? 1 : Mathf.Clamp(Mathf.RoundToInt((float)hz / TargetFrameRate), 1, 4);
+        public static int VSyncCountFor(double hz) => hz <= 0d ? 1 : Mathf.Clamp(Mathf.FloorToInt((float)hz / TargetFrameRate + 0.02f), 1, 4);
 
         public static void Apply()
         {
