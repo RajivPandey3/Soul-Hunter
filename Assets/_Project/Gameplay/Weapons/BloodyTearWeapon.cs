@@ -52,6 +52,15 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>vampire.survivors.wiki/w/Bloody_Tear: "interval = 0.1 seconds" between lashes.</summary>
         public const float VsInterval = 0.1f;
 
+        private readonly System.Collections.Generic.HashSet<TouchDamage> _healedLashes = new System.Collections.Generic.HashSet<TouchDamage>();
+        private System.Action<TouchDamage> _onLashDamaged;
+
+        private void OnLashDamaged(TouchDamage lash)
+        {
+            if (!_healedLashes.Add(lash)) return; // one heal per lash
+            if (_playerHealth != null) _playerHealth.Heal(Mathf.RoundToInt(HealAmount)); // Heal on hit! (Soul Hunter's rule)
+        }
+
         private void FireWhip(Vector3 direction)
         {
             Vector3 spawnPosition = transform.position + direction * (2f * AreaMultiplier);
@@ -84,26 +93,15 @@ namespace SoulHunter.Gameplay.Combat
             damageDealer.SourceWeapon = this; // VS Results
             damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the whip hurt its own holder
             
-            // Critical hit & Heal logic simulation
-            var allEnemies = EnemyController.ActiveEnemies;
-            bool hitEnemy = false;
-            // Shadow Kael's copy heals when it lashes the player, not when its own horde is near.
-            if (HeldByEnemy) hitEnemy = FindNearestEnemy(3f * AreaMultiplier) != null;
-            else foreach(var enemy in allEnemies)
-            {
-                if (enemy == null) continue; // destroyed enemies can linger in the static list
-                if (Vector3.Distance(whip.transform.position, enemy.transform.position) < 3f * AreaMultiplier)
-                {
-                    hitEnemy = true;
-                    // Usually this is handled by collision, we are just hooking the heal here
-                }
-            }
-            
-            if (hitEnemy && _playerHealth != null)
-            {
-                _playerHealth.Heal(Mathf.RoundToInt(HealAmount)); // Heal on hit! (VS signature mechanic)
-            }
-            
+            // CMB-08: the lash heals when one of its hits really damages a body, once per lash. It healed when any enemy
+            // stood near the lash, so Level 7 ghosts (immune to Normal damage) healed the player 8 per lash.
+            // VS (vampire.survivors.wiki/w/Bloody_Tear, fetched 2026-10-19): "Restores 8 HP/attack if it hits any enemies
+            // with a crit"; "This lifesteal effect has a one second delay before it can be triggered again". Soul Hunter
+            // keeps its own heal on every damaging lash (AGENTS.md, balance pass Part 1); crit-only and the 1 s delay
+            // wait for the owner.
+            _healedLashes.Remove(damageDealer);
+            damageDealer.DamagedTarget = _onLashDamaged ??= OnLashDamaged;
+
             var lifetime = whip.GetComponent<PooledLifetime>();
             if (lifetime != null) lifetime.Arm(0.3f);
             else Destroy(whip, 0.3f);

@@ -102,6 +102,52 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        // ------------------------------------------------------------------ CMB-08 Bloody Tear heal
+
+        [UnityTest]
+        public IEnumerator BloodyTear_DoesNotHeal_WhenItsLashesPassThroughGhosts()
+        {
+            yield return BloodyTearAmong(ghosts: true, (healed, damaged) =>
+            {
+                Assert.That(damaged, Is.EqualTo(0), "Normal damage passes through Level 7 ghosts.");
+                Assert.That(healed, Is.EqualTo(0), "No damaging hit, no heal.");
+            });
+        }
+
+        [UnityTest]
+        public IEnumerator BloodyTear_HealsOncePerLash_WhenTheLashDamagesAnEnemy()
+        {
+            yield return BloodyTearAmong(ghosts: false, (healed, damaged) =>
+            {
+                Assert.That(damaged, Is.GreaterThan(0), "The lashes hit the enemies.");
+                Assert.That(healed, Is.InRange(8, 16), "8 per damaging lash, two lashes.");
+            });
+        }
+
+        private IEnumerator BloodyTearAmong(bool ghosts, System.Action<int, int> check)
+        {
+            yield return Prepare();
+            var targets = SpawnTargets(12, 2.5f);
+            if (ghosts) foreach (var t in targets) t.ConfigureDamageVulnerability(DamageType.Holy, 2f, true);
+            yield return null;
+            AutoAttackWeapon tear = null;
+            yield return Evolve("Evo_BloodyTear", w => tear = w);
+            Assert.IsInstanceOf<BloodyTearWeapon>(tear, "Bloody Tear is equipped.");
+            yield return new WaitForSeconds(1f); // the lashes of the evolution's first attack are over
+            tear.enabled = false;
+            var health = PlayerController.Instance.GetComponent<HealthController>();
+            typeof(HealthController).GetField("_currentHealth", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(health, 50);
+            var before = targets.Select(t => t.GetComponent<HealthController>().CurrentHealth).ToList();
+            tear.enabled = true;
+            tear.ResetCooldownAndFire();
+            yield return null;
+            // One attack: two lashes 0.1 s apart, 0.3 s each; the next attack is 1.35 s away.
+            yield return new WaitForSeconds(0.8f);
+            int damaged = targets.Where((t, i) => t.GetComponent<HealthController>().CurrentHealth < before[i]).Count();
+            check(health.CurrentHealth - 50, damaged);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>Boots a quiet run: no spawner, an invincible hero, no weapons, no enemies and no gems (no level-ups).</summary>
