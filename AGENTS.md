@@ -2397,6 +2397,21 @@ Five fixer agents worked in their own worktrees (`D:/SoulHunter-Validation/s3-*`
   - Slow frames (over 17.2 ms) went down in 10 of 13 parts, for example Level 7 1.30% to 0.79%, Shadow Kael 1.31% to 0.73% and Level 3 with Curse 1.58% to 1.10%. They went up on Level 1 (1.19% to 1.61%) and were about the same in heavy kill. Every part is between 0.7% and 1.7%.
   - Slowest running frame: better on Level 5 (25.8 to 17.5 ms), Level 7 (23.1 to 17.5), Shadow Kael (27.1 to 17.4) and Level 3 with Curse (42.3 to 19.2). Worse on Level 4 (18.8 to 34.1 ms, 2 jolts), the Pentagram wipe (17.7 to 25.6 ms, 1 jolt in a frame with a GC and two elite deaths) and Level 3 (22.3 to 24 ms; 4 frames of 25-31 ms in one second with no timed section of 1 ms or more).
   - Loads differ run to run (kills, enemies), so single parts compare loosely. **Not a constant 60**: about 1% of frames still exceed 17.2 ms, as before.
+- **Jolt hunt** (owner: "option 2").
+  - A development build profiled Level 4, Level 3 and the wipe for 150 s each (`run-20261019-jolt-prof/`). The bot's new `-sh-autoplay-profile-keep-jolts MS` keeps only the 4 s profiler parts that hold a running frame over MS ms.
+  - Level 4 and Level 3 had no frame over 30 ms.
+  - The wipe's two 33 ms frames were 23 ms of `DXGI.WaitOnSwapChain` right after 420-661 ms chest hitches. Those hitches happen in the development build only; the release run has none.
+  - The release wipe jolt had `PickupPool.Instantiate XP_Gem 3 ms` with a GC: the 32 prewarmed gems ran out at the wipe.
+  - **Fixed:** `PickupPoolManager.TopUpGems` fills the gem pool to the VS gem cap (400 on the ground plus pooled), 8 per frame after Start. `PickupPerformancePlayModeTests.TheGemPool_FillsToTheGemCap_SoAWipeSizedBurstMakesNoNewGems` (R).
+  - Release re-measure (`run-20261019-fps-gems/`):
+
+    | Part | Jolts | Slowest frame | Slow frames |
+    |---|---|---|---|
+    | Wipe | 0 (was 1) | 22.7 ms (was 25.6) | 1.33% |
+    | Level 4 | 0 (was 2) | 17.6 ms (was 34.1) | 1.35% |
+    | Level 3 | 0 | 17.6 ms (was 24) | 0.71% |
+
+  - The Level 4 and Level 3 jolts never reproduced, so their change cannot be credited to the gem fix (one run per part).
 - Not played by the owner.
 
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
