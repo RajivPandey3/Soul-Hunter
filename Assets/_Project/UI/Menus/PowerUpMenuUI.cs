@@ -85,13 +85,31 @@ namespace SoulHunter.UI
 
         private void HandleGoldChanged(int _) => UpdateUI();
 
-        private void OnEnable() => SoulHunter.Gameplay.UI.UiScreen.Changed += MarkLayoutDirty;
+        private void OnEnable()
+        {
+            SoulHunter.Gameplay.UI.UiScreen.Changed += MarkLayoutDirty;
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed += HandleThemeChanged;
+        }
 
-        private void OnDisable() => SoulHunter.Gameplay.UI.UiScreen.Changed -= MarkLayoutDirty;
+        private void OnDisable()
+        {
+            SoulHunter.Gameplay.UI.UiScreen.Changed -= MarkLayoutDirty;
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= HandleThemeChanged;
+        }
+
+        /// <summary>
+        /// Bug MIS UI-10: the cells and the info box carry the theme's soft text colours as rich text, which a live theme
+        /// change never reached. They are written again on each theme change (not per frame).
+        /// </summary>
+        private void HandleThemeChanged()
+        {
+            if (_cells.Count > 0) UpdateUI();
+        }
 
         private void OnDestroy()
         {
             SoulHunter.Gameplay.UI.UiScreen.Changed -= MarkLayoutDirty;
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= HandleThemeChanged;
             if (_listenersBound && _economy != null) _economy.OnGoldChanged -= HandleGoldChanged;
         }
 

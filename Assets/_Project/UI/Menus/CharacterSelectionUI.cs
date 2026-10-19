@@ -298,6 +298,7 @@ namespace SoulHunter.UI
             if (_prevButton) _prevButton.onClick.RemoveListener(PrevCharacter);
             if (_selectAndPlayButton) _selectAndPlayButton.onClick.RemoveListener(ConfirmSelectionAndStart);
             if (_economy != null) _economy.OnGoldChanged -= HandleGoldChanged;
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= HandleThemeChanged;
         }
 
         private void HandleGoldChanged(int _) => UpdateUI();
@@ -594,9 +595,27 @@ namespace SoulHunter.UI
         private bool _layoutDirty, _wasShown;
         private int _revealFrames; // frames until the chosen card is scrolled into view (after the grid's cells are sized)
 
-        private void OnEnable() => SoulHunter.Gameplay.UI.UiScreen.Changed += HandleScreenChanged;
+        private void OnEnable()
+        {
+            SoulHunter.Gameplay.UI.UiScreen.Changed += HandleScreenChanged;
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed += HandleThemeChanged;
+        }
 
-        private void OnDisable() => SoulHunter.Gameplay.UI.UiScreen.Changed -= HandleScreenChanged;
+        private void OnDisable()
+        {
+            SoulHunter.Gameplay.UI.UiScreen.Changed -= HandleScreenChanged;
+            SoulHunter.Gameplay.UI.UiThemeAsset.Changed -= HandleThemeChanged;
+        }
+
+        /// <summary>
+        /// Bug MIS UI-10: PowerUp values in the stats carry the theme's accent as rich text, which a live theme change never
+        /// reached. The stats are written again on each theme change (not per frame).
+        /// </summary>
+        private void HandleThemeChanged()
+        {
+            if (_statsText == null || _availableCharacters == null || _currentIndex < 0 || _currentIndex >= _availableCharacters.Count) return;
+            UpdateStats(_availableCharacters[_currentIndex]);
+        }
 
         private void HandleScreenChanged()
         {

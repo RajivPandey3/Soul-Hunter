@@ -17,7 +17,9 @@ namespace SoulHunter.Gameplay.UI
     public sealed class StatsPanel : MonoBehaviour
     {
         public const string ObjectName = "Stats_Panel";
-        private const string BonusColor = "#FFD940";
+        // Bug MIS UI-10: changed values are in the theme's accent gold (it was a fixed "#FFD940" of this panel's own, which a
+        // theme change never reached). Read on each Refresh, every 0.25 s while shown, so a live theme change follows.
+        private static string BonusColor => "#" + ColorUtility.ToHtmlStringRGB(UITheme.Accent);
         private const float RefreshSeconds = 0.25f;
 
         private TextMeshProUGUI[] _columns;
@@ -332,6 +334,7 @@ namespace SoulHunter.Gameplay.UI
             float size = Mathf.Max(SoulHunter.Gameplay.UI.UiScreen.MinTextUnits, best);
             _fontSize = size;
             _lines = lines;
+            string bonus = BonusColor;
             for (int c = 0; c < _columns.Length; c++)
             {
                 if (c >= used) { _columns[c].text = _values[c].text = ""; continue; }
@@ -342,7 +345,7 @@ namespace SoulHunter.Gameplay.UI
                 {
                     var row = Rows[r];
                     labels.Append(row.Label).Append('\n');
-                    values.Append(row.Changed ? $"<color={BonusColor}>{row.Value}</color>" : row.Value).Append('\n');
+                    values.Append(row.Changed ? $"<color={bonus}>{row.Value}</color>" : row.Value).Append('\n');
                 }
                 _columns[c].fontSize = _values[c].fontSize = size;
                 _columns[c].text = labels.ToString();

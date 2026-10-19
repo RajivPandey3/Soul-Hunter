@@ -105,9 +105,30 @@ namespace SoulHunter.Gameplay.UI
             return screen;
         }
 
-        private void OnEnable() => UiScreen.Changed += MarkDirty;
-        private void OnDisable() => UiScreen.Changed -= MarkDirty;
-        private void OnDestroy() => UiScreen.Changed -= MarkDirty;
+        private void OnEnable() { UiScreen.Changed += MarkDirty; UiThemeAsset.Changed += RefreshThemedTexts; }
+        private void OnDisable() { UiScreen.Changed -= MarkDirty; UiThemeAsset.Changed -= RefreshThemedTexts; }
+        private void OnDestroy() { UiScreen.Changed -= MarkDirty; UiThemeAsset.Changed -= RefreshThemedTexts; }
+
+        /// <summary>
+        /// Bug MIS UI-10: the theme's gold and dim are written into these texts as rich-text colours, so a live theme
+        /// change (Theme Studio) left them in the old colours. They are written again on every theme change (not per frame).
+        /// </summary>
+        private void RefreshThemedTexts()
+        {
+            if (Results == null) return;
+            if (TitleText != null) TitleText.text = TitleLine(Results);
+            if (SummaryText != null) SummaryText.text = SummaryLines(Results);
+            if (ListsText != null) ListsText.text = Lists(Results);
+            if (_characterText != null) _characterText.text = CharacterLine(Results);
+            if (_unlocksText != null) _unlocksText.text = UnlocksLine(Results);
+            _dirty = true;
+        }
+
+        private static string CharacterLine(RunResults results) =>
+            UITheme.Bold(results.Character) + (results.SoulEggs > 0 ? $"     <color=#{Gold}>Soul Eggs: {results.SoulEggs}</color>" : "");
+
+        private static string UnlocksLine(RunResults results) =>
+            $"<color=#{Gold}>{UITheme.Bold("UNLOCKED THIS RUN")}</color>\n\n" + string.Join("\n", results.Unlocks);
 
         private void MarkDirty()
         {
@@ -174,8 +195,7 @@ namespace SoulHunter.Gameplay.UI
                 var panel = Panel(_safe, "UnlocksPanel");
                 UnlocksPanel = panel.gameObject;
                 ResponsiveScroll.Create(Area("UnlocksScroll", panel), null, "Content", out _unlocksBody);
-                _unlocksText = Text(_unlocksBody, "UnlocksText",
-                    $"<color=#{Gold}>{UITheme.Bold("UNLOCKED THIS RUN")}</color>\n\n" + string.Join("\n", results.Unlocks), UnlocksSize, TextAlignmentOptions.Top);
+                _unlocksText = Text(_unlocksBody, "UnlocksText", UnlocksLine(results), UnlocksSize, TextAlignmentOptions.Top);
                 UnlocksPanel.SetActive(false);
             }
 
@@ -298,9 +318,7 @@ namespace SoulHunter.Gameplay.UI
 
         private void BuildCharacter(RectTransform side, RunResults results)
         {
-            _characterText = Text(side, "CharacterText",
-                UITheme.Bold(results.Character) + (results.SoulEggs > 0 ? $"     <color=#{Gold}>Soul Eggs: {results.SoulEggs}</color>" : ""),
-                CharacterSize, TextAlignmentOptions.TopLeft);
+            _characterText = Text(side, "CharacterText", CharacterLine(results), CharacterSize, TextAlignmentOptions.TopLeft);
             TopLeft(_characterText.rectTransform);
 
             // Items: icons in as many columns as the area's width allows, each with its level (yellow when max).
