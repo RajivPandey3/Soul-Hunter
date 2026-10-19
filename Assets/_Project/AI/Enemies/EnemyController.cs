@@ -272,6 +272,7 @@ namespace SoulHunter.Gameplay.AI
             CrowdPush = Vector3.zero;  // the last life's push is not this life's
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
             ClearResistanceOverrides(); // Garlic's freeze-resistance reduction, and any override, last one life too
+            IgnoresPentagram = false;   // the Tide Caller's Pentagram immunity lasts one life
             RestartAbilities();    // VS skills start again on every spawn (pooling-safe)
             SetDefanged(false); // Defang lasts one life; this also restores the type's own tint
             LingeringSlow = 1f;                 // Requiem of Souls' slow lasts one life
@@ -312,6 +313,10 @@ namespace SoulHunter.Gameplay.AI
         /// <summary>VS instant kill resistance (Pentagram, Soul Toll). Stage bosses are always immune.</summary>
         public bool ResistsInstantKill => EnemyResistance.ResistsInstantKill(IsStageBoss,
             _instantKillResistanceOverride ?? (_enemyData != null && _enemyData.InstantKillResistance));
+        /// <summary>
+        /// This life is "unaffected by Pentagram" (VS The Drowner; the Tide Caller sets it). Cleared on every spawn.
+        /// </summary>
+        public bool IgnoresPentagram { get; set; }
         /// <summary>VS debuff resistance: Garlic's knockback and freeze-resistance reductions do not land.</summary>
         public bool ResistsDebuffs => _debuffResistanceOverride ?? (_enemyData != null && _enemyData.DebuffResistance);
 

@@ -24,8 +24,12 @@ namespace SoulHunter.Gameplay.Hazards
     /// - a "game-tick" is not defined: the damage lands every <see cref="StageHazardTable.TideTickSeconds"/>, the game's own
     ///   contact-damage interval;
     /// - the flood does not hurt enemies (the page speaks of the player only).
-    /// Not built: its immunity to Pentagram and its list of instant killers (it dies to damage like any enemy, and to
-    /// every instant kill); a frozen Tide Caller does hold the water, as the page says.
+    /// Its killers (owner, 2026-10-19: "SH = VS"; /w/The_Drowner, raw): ordinary damage defeats it (HP x Level) with no
+    /// chest; it is "unaffected by Pentagram"; Eclipse Sigil, Sundered Hour, Crimson Shroud and Soul Toll kill it at once
+    /// ("instantly killed upon taking damage from Gorgeous Moon, Infinite Corridor, Crimson Shroud, ... Rosary") and then it
+    /// drops a Treasure Chest ("Defeating it with instant-kill effects will make it drop a Treasure Chest",
+    /// {{treasure|evo=1|tier3=6|tier2=66|tier1=100|reward4=evo|reward5=evo}}, the Stalker's high-quality chest). Its
+    /// resistances are the statbox's: freeze, debuff and knockback, not instant kill. A frozen Tide Caller holds the water.
     /// </summary>
     public class RisingTide : MonoBehaviour
     {
@@ -36,6 +40,11 @@ namespace SoulHunter.Gameplay.Hazards
         private EnemyController _caller;
         private HealthController _callerHealth;
         private float _callerKnockbackBefore;
+        private System.Func<DamagePacket, bool> _callerInterceptorBefore;
+        private bool _chestGiven;
+
+        /// <summary>The chest the last Tide Caller left (null when it was not defeated by one of its killers; tests).</summary>
+        public static SoulHunter.Gameplay.Core.ChestTiers? LastChest { get; private set; }
         private Transform _water;
         private float _riseSpeed;
         private float _tick;
@@ -63,11 +72,22 @@ namespace SoulHunter.Gameplay.Hazards
                 tide._caller = callerObject.GetComponent<EnemyController>();
                 tide._callerHealth = callerObject.GetComponent<HealthController>();
                 StillEnemy.Begin(callerObject);
+                LastChest = null;
+                if (tide._caller != null)
+                {
+                    // The statbox's resistances (freeze, debuff, knockback), not the boss model's instant-kill resistance,
+                    // so its instant killers reach it; and Pentagram passes it by.
+                    tide._caller.OverrideResistances(tide._caller.FreezeResistance, false, true);
+                    tide._caller.IgnoresPentagram = true;
+                }
                 if (tide._callerHealth != null)
                 {
                     tide._callerHealth.Initialize(StageHazardTable.TideCallerHealth(playerLevel)); // the spawner sets it again on reuse
                     tide._callerKnockbackBefore = tide._callerHealth.KnockbackResistance;
                     tide._callerHealth.KnockbackResistance = 1f;
+                    tide._callerInterceptorBefore = tide._callerHealth.DamageInterceptor;
+                    tide._callerHealth.DamageInterceptor = tide.InterceptCaller; // Crimson Shroud and Sundered Hour hits
+                    tide._callerHealth.OnDied += tide.HandleCallerDied;          // Eclipse Sigil and Soul Toll erase it
                 }
                 var drop = callerObject.GetComponent<EnemyDrop>();
                 if (drop != null)
@@ -145,12 +165,62 @@ namespace SoulHunter.Gameplay.Hazards
             health.TakeDamage(new DamagePacket(StageHazardTable.TideDamage, player.transform.position, Vector3.zero));
         }
 
+        /// <summary>The caller's body is pooled: its hooks, resistances and Pentagram immunity go back to ordinary.</summary>
+        private void ReleaseCaller()
+        {
+            if (_callerHealth != null)
+            {
+                _callerHealth.KnockbackResistance = _callerKnockbackBefore;
+                _callerHealth.OnDied -= HandleCallerDied;
+                if (_callerHealth.DamageInterceptor == (System.Func<DamagePacket, bool>)InterceptCaller) _callerHealth.DamageInterceptor = _callerInterceptorBefore;
+            }
+            if (_caller != null)
+            {
+                _caller.IgnoresPentagram = false;
+                _caller.ClearResistanceOverrides();
+            }
+        }
+
+        // Destroyed without End (a scene change): the pooled body must not keep this tide's hooks.
+        private void OnDestroy()
+        {
+            if (!IsOver) ReleaseCaller();
+        }
+
+        /// <summary>A hit from Crimson Shroud or Sundered Hour kills it at once; any other hit is ordinary damage.</summary>
+        private bool InterceptCaller(DamagePacket packet)
+        {
+            if (_callerInterceptorBefore != null && _callerInterceptorBefore(packet)) return true;
+            var killer = StageHazardTable.KillerOf(DamageSource.Weapon, DamageSource.Name);
+            if (!StageHazardTable.KillsTideCaller(killer) || _callerHealth == null) return false;
+            GiveChest();
+            _callerHealth.EraseByInstantKill();
+            return true;
+        }
+
+        /// <summary>Its death: a chest when one of its instant killers did it (the erase arrives inside their DamageSource).</summary>
+        private void HandleCallerDied()
+        {
+            if (StageHazardTable.KillsTideCaller(StageHazardTable.KillerOf(DamageSource.Weapon, DamageSource.Name))) GiveChest();
+        }
+
+        private void GiveChest()
+        {
+            if (_chestGiven || _caller == null) return;
+            _chestGiven = true;
+            LastChest = SoulHunter.Gameplay.Core.ChestTiers.StalkerHighQuality;
+            var pickups = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+            var chestObject = pickups != null ? pickups.SpawnChest(_caller.transform.position) : null;
+            var chest = chestObject != null ? chestObject.GetComponent<SoulHunter.Gameplay.Pickups.ChestPickup>() : null;
+            if (chest != null) chest.Tiers = SoulHunter.Gameplay.Core.ChestTiers.StalkerHighQuality;
+        }
+
         /// <summary>The flood is over (time up, the Tide Caller defeated, or the stage changed): the caller leaves without drops.</summary>
         public void End()
         {
             if (IsOver) return;
             IsOver = true;
-            if (_callerHealth != null) _callerHealth.KnockbackResistance = _callerKnockbackBefore;
+            ReleaseCaller();
             if (_caller != null)
             {
                 var flash = _caller.GetComponentInChildren<SoulHunter.Gameplay.VFX.DamageFlash>(true);

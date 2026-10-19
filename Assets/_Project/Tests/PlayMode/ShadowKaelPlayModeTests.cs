@@ -444,5 +444,37 @@ namespace SoulHunter.Tests.PlayMode
             Check(kael.GetComponentsInChildren<AutoAttackWeapon>(true).ToList(), "Shadow Kael");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+
+        /// <summary>
+        /// Owner exception (2026-10-19, Bug MIS CMB-05): Shadow Kael's mirrored Laurel and Crimson Shroud protect him from
+        /// nothing. Before, the copy blocked hits with shield charges and Crimson Shroud capped every hit on him at 10.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator MirroredLaurelAndCrimsonShroud_GiveShadowKaelNoProtection()
+        {
+            yield return EnterStage10();
+            var kael = SpawnShadowKael();
+            var shroudData = Resources.Load<WeaponEvolutionData>("Metaglio/CrimsonShroudEvolution");
+            Assert.IsNotNull(shroudData, "The Crimson Shroud recipe.");
+            var laurelPrefab = SoulHunter.Gameplay.Data.WeaponDefinitionLookup.Find(UpgradeType.Laurel)?.WeaponPrefab;
+            Assert.IsNotNull(laurelPrefab, "The Laurel prefab.");
+            var laurel = Object.Instantiate(laurelPrefab, kael.transform);
+            var shroud = Object.Instantiate(shroudData.EvolvedWeaponPrefab, kael.transform);
+            kael.ConfigureMirroredWeapon(laurel);
+            kael.ConfigureMirroredWeapon(shroud);
+            laurel.SetActive(true);
+            shroud.SetActive(true);
+            yield return null;
+            var health = kael.GetComponent<HealthController>();
+            health.Initialize(1000000);
+            health.Armor = 0;
+            int before = health.CurrentHealth;
+            health.TakeDamage(new DamagePacket(5000, kael.transform.position, Vector3.zero, DamageType.Magic));
+            Assert.That(before - health.CurrentHealth, Is.EqualTo(5000), "The full hit lands: no shield block and no cap of 10.");
+            foreach (var guard in new[] { laurel, shroud })
+                Assert.That(guard.GetComponentsInChildren<Renderer>(false).Any(r => r.gameObject != guard && r.gameObject.name.Contains("Shield")), Is.False,
+                    "The boss's copy shows no shield.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

@@ -42,8 +42,11 @@ namespace SoulHunter.Gameplay.Combat
 
         protected virtual void OnEnable()
         {
-            _playerHealth = GetComponentInParent<HealthController>();
             _stats = GetComponentInParent<PlayerStats>();
+            // Owner exception (2026-10-19, Bug MIS CMB-05): Shadow Kael's mirrored Laurel and Crimson Shroud give the boss no
+            // protection. Strict mirroring capped every hit on him at 10 (Crimson Shroud) and blocked hits with shield charges,
+            // so a 500 x level boss with no time limit became an endless grind. The copy guards nothing and shows no shield.
+            _playerHealth = HeldByEnemy ? null : GetComponentInParent<HealthController>();
             if (_playerHealth != null) _playerHealth.DamageInterceptor = TryBlock;
             UpdateVisual();
         }
@@ -107,6 +110,7 @@ namespace SoulHunter.Gameplay.Combat
 
         private void UpdateVisual()
         {
+            if (HeldByEnemy) { if (_activeShield != null) _activeShield.SetActive(false); return; } // the boss's copy guards nothing
             if (_currentCharges > 0 && _activeShield == null && ShieldVisualPrefab != null)
             {
                 _activeShield = Instantiate(ShieldVisualPrefab, transform);

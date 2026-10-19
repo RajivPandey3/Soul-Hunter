@@ -186,9 +186,8 @@ namespace SoulHunter.Tests.PlayMode
 
         /// <summary>
         /// Bug MIS AI-03. The Tide Caller is the level's boss model, whose data drops a chest; its drops are erased, and an
-        /// erased carrier passed its chest on, so killing it gave a free chest. Random_Events says nothing about a chest; the
-        /// Cappella Magna / Boss Rash Drowner, defeatable by Pentagram like the Tide Caller, "won't make it drop a Treasure
-        /// Chest" (/w/The_Drowner).
+        /// erased carrier passed its chest on, so killing it gave a free chest. Defeated by ordinary damage (here a silent
+        /// kill with no killer), the VS Drowner leaves none (/w/The_Drowner: only "instant-kill effects" drop one).
         /// </summary>
         [UnityTest]
         public IEnumerator RisingTide_TheTideCallersDeath_GivesNoChest()
@@ -207,6 +206,36 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(EnemyDrop.PendingChests.Count, Is.Zero, "No chest is passed on to another enemy.");
             Assert.That(Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy),
                 Is.EqualTo(chestsBefore), "No chest drops where it fell.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>
+        /// Owner 2026-10-19 ("SH = VS"), /w/The_Drowner (raw): "Unlike other Reaper types, it is unaffected by Pentagram";
+        /// "instantly killed upon taking damage from Gorgeous Moon, Infinite Corridor, Crimson Shroud, ... Rosary"; "Defeating
+        /// it with instant-kill effects will make it drop a Treasure Chest" (evo=1, tier3=6, tier2=66, tier1=100).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator RisingTide_TheTideCaller_IgnoresPentagram_AndDropsAChestToAnInstantKill()
+        {
+            yield return BootWithOmens();
+            EnemyDrop.PendingChests.Clear();
+            Assert.That(RandomEventDirector.Instance.Fire(OmenEvent.RisingTide), Is.True, "Rising Tide. " + Errors());
+            var caller = StageHazards.Instance.Tides.Single().Caller;
+            Assert.IsNotNull(caller);
+            Assert.That(caller.IgnoresPentagram, Is.True, "Pentagram passes it by.");
+            Assert.That(caller.ResistsInstantKill, Is.False, "Its instant killers reach it (the boss model's resistance is not the Drowner's).");
+            Assert.That(caller.ResistsDebuffs, Is.True, "Statbox: debuff resistance.");
+            int chestsBefore = Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy);
+
+            // Soul Toll (VS Rosary) erases it: a chest with the Drowner's tiers drops where it fell.
+            using (DamageSource.From(null, ScreenWipePickup.DisplayName)) caller.GetComponent<HealthController>().KillSilently();
+            yield return null;
+            yield return null;
+            Assert.That(RisingTide.LastChest, Is.EqualTo(ChestTiers.StalkerHighQuality), "The Drowner's 6/66/100 chest.");
+            Assert.That(Object.FindObjectsByType<ChestPickup>(FindObjectsSortMode.None).Count(c => c.gameObject.activeInHierarchy),
+                Is.EqualTo(chestsBefore + 1), "One chest drops.");
+            Assert.That(EnemyDrop.PendingChests.Count, Is.Zero, "None is passed on to another enemy.");
+            Assert.That(caller.IgnoresPentagram, Is.False, "The pooled body is ordinary again.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 

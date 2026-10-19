@@ -100,6 +100,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (enemy.IsStageBoss) continue;
                 // VS instant kill resistance (vampire.survivors.wiki/w/Enemies, "Resistances": immunity to Pentagram).
                 if (enemy.ResistsInstantKill) continue;
+                if (enemy.IgnoresPentagram) continue; // VS The Drowner: "Unlike other Reaper types, it is unaffected by Pentagram"
                 if (eraseItems)
                 {
                     // Erase the drops of this life only. Disabling the component (as before) also stopped the kill

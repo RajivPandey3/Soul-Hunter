@@ -280,6 +280,16 @@ namespace SoulHunter.Gameplay.Hazards
         /// Which killer a hit or an instant kill comes from, by its damage source (<see cref="DamageSource"/>). Shadow
         /// Kael's mirrored weapons never count (they are aimed at the player).
         /// </summary>
+        /// <summary>
+        /// The killers of the Rising Tide's Tide Caller (VS The Drowner, raw, 2026-10-19): "The Drowner is instantly killed
+        /// upon taking damage from Gorgeous Moon, Infinite Corridor, Crimson Shroud, Victory Sword, Rosary, or Grenade", and
+        /// "Unlike other Reaper types, it is unaffected by Pentagram". Soul Hunter: Eclipse Sigil, Sundered Hour, Crimson
+        /// Shroud and Soul Toll (no Victory Sword or Grenade); the rail cart is not on the list.
+        /// </summary>
+        public static bool KillsTideCaller(ShadowKiller killer) =>
+            killer == ShadowKiller.EclipseSigil || killer == ShadowKiller.SunderedHour
+            || killer == ShadowKiller.CrimsonShroud || killer == ShadowKiller.SoulToll;
+
         public static ShadowKiller KillerOf(AutoAttackWeapon weapon, string sourceName)
         {
             if (weapon != null)
