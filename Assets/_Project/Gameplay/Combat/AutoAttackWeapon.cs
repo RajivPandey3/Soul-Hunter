@@ -187,30 +187,23 @@ namespace SoulHunter.Gameplay.Combat
         /// VS rule (each weapon's wiki infobox "interval"): a weapon fires its Amount of projectiles one after another,
         /// <paramref name="interval"/> seconds apart, so every extra shot from Amount (Duplicator, Soul Eggs, PowerUps) is
         /// seen on its own. Shot 0 fires now; the rest follow on game time (a pause holds them), and stop if the weapon
-        /// is switched off.
+        /// is switched off. <paramref name="arg"/> carries what the volley fixed when it began (an aim, a direction).
+        /// CMB-13: callers pass a cached delegate and the rest of the volley is ticked by <see cref="SuccessionRunner"/>,
+        /// so an attack allocates nothing (it made a closure, an iterator and a WaitForSeconds per extra shot).
         /// </summary>
-        protected void FireInSuccession(int count, float interval, System.Action<int> fireOne)
+        protected void FireInSuccession(int count, float interval, SuccessionShot fireOne, Vector3 arg = default)
         {
-            if (count <= 0) return;
+            if (count <= 0 || fireOne == null) return;
             if (!Application.isPlaying)
             {
                 // Edit Mode (tests) has no game time to wait on: every shot leaves at once.
-                for (int i = 0; i < count; i++) fireOne(i);
+                for (int i = 0; i < count; i++) fireOne(i, count, arg);
                 return;
             }
-            fireOne(0);
-            if (count > 1 && isActiveAndEnabled) StartCoroutine(FireTheRest(count, interval, fireOne));
+            fireOne(0, count, arg);
+            if (count > 1 && isActiveAndEnabled) SuccessionRunner.Queue(this, fireOne, count, interval, arg);
         }
 
-        private System.Collections.IEnumerator FireTheRest(int count, float interval, System.Action<int> fireOne)
-        {
-            for (int i = 1; i < count; i++)
-            {
-                yield return new WaitForSeconds(interval);
-                if (!isActiveAndEnabled) yield break;
-                fireOne(i);
-            }
-        }
         /// <summary>Extra projectile bounces from the holder's character (e.g. Seraphina).</summary>
         protected int ExtraBounces => OwnerStats != null ? Mathf.Max(0, OwnerStats.ExtraProjectileBounces) : 0;
         /// <summary>

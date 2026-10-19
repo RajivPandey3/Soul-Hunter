@@ -79,31 +79,35 @@ namespace SoulHunter.Gameplay.Combat
             if (BombPrefab == null) return;
 
             // VS interval (wiki Cherry_Bomb): the Amount of shots leave 0.3s apart.
-            FireInSuccession(BombCount + ExtraAmount, VsInterval, i =>
-            {
-                // Owner decision: aim at the nearest enemy; random when none. On the ground plane (a Vector2 here sent bombs vertically).
-                Vector3 randomDir = Quaternion.Euler(0f, (i - (BombCount + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
-                GameObject bomb = WeaponPoolManager.Instance != null
-                    ? WeaponPoolManager.Instance.GetFromPool(BombPrefab, transform.position, Quaternion.identity)
-                    : Instantiate(BombPrefab, transform.position, Quaternion.identity);
-                if (bomb == null) return;
-                bomb.transform.localScale = BombPrefab.transform.localScale * AreaMultiplier * LevelArea;
-                
-                var proj = bomb.GetComponent<Projectile>();
-                if (proj == null) proj = bomb.AddComponent<Projectile>();
-                
-                proj.Initialize(randomDir, ThrowSpeed * LevelSpeed * SpeedMultiplier, ScaledDamage(BaseDamage), VsDuration * DurationMultiplier);
-                proj.AddBounces(ExtraBounces);
-                // VS: only some bombs explode (the chance roll); the prefab's always-on explosion effect is off.
-                var alwaysBoom = bomb.GetComponent<SoulHunter.Gameplay.VFX.SpawnVfxOnDisable>();
-                if (alwaysBoom != null) alwaysBoom.enabled = false;
-                proj.Deactivated += OnBombDone;
-                
-                var damageDealer = bomb.GetComponent<ProjectileDamage>();
-                if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
-                damageDealer.SourceWeaponName = "Cherry Bomb";
-                AimAtHostiles(bomb);
-            });
+            FireInSuccession(BombCount + ExtraAmount, VsInterval, _bombShot ??= BombShot);
+        }
+
+        private SuccessionShot _bombShot;
+
+        private void BombShot(int i, int count, Vector3 arg)
+        {
+            // Owner decision: aim at the nearest enemy; random when none. On the ground plane (a Vector2 here sent bombs vertically).
+            Vector3 randomDir = Quaternion.Euler(0f, (i - (BombCount + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
+            GameObject bomb = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(BombPrefab, transform.position, Quaternion.identity)
+                : Instantiate(BombPrefab, transform.position, Quaternion.identity);
+            if (bomb == null) return;
+            bomb.transform.localScale = BombPrefab.transform.localScale * AreaMultiplier * LevelArea;
+            
+            var proj = bomb.GetComponent<Projectile>();
+            if (proj == null) proj = bomb.AddComponent<Projectile>();
+            
+            proj.Initialize(randomDir, ThrowSpeed * LevelSpeed * SpeedMultiplier, ScaledDamage(BaseDamage), VsDuration * DurationMultiplier);
+            proj.AddBounces(ExtraBounces);
+            // VS: only some bombs explode (the chance roll); the prefab's always-on explosion effect is off.
+            var alwaysBoom = bomb.GetComponent<SoulHunter.Gameplay.VFX.SpawnVfxOnDisable>();
+            if (alwaysBoom != null) alwaysBoom.enabled = false;
+            proj.Deactivated += OnBombDone;
+            
+            var damageDealer = bomb.GetComponent<ProjectileDamage>();
+            if (damageDealer == null) damageDealer = bomb.AddComponent<ProjectileDamage>();
+            damageDealer.SourceWeaponName = "Cherry Bomb";
+            AimAtHostiles(bomb);
         }
     }
 }

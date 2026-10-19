@@ -49,17 +49,21 @@ namespace SoulHunter.Gameplay.Combat
             if (WaterZonePrefab == null) return;
 
             // VS interval (wiki Santa_Water): the Amount of shots leave 0.3s apart.
-            FireInSuccession(FlaskCount + ExtraAmount, VsInterval, i =>
-            {
-                // Random position near player
-                // Owner decision: aim at the nearest enemy; drop on it (extra flasks land close by), random around the player when none.
-                Transform nearest = FindNearestEnemy(DropRadius * 2f);
-                Vector2 randomOffset = Random.insideUnitCircle * (nearest != null ? (i == 0 ? 0f : 1.5f) : DropRadius);
-                Vector3 centre = nearest != null ? new Vector3(nearest.position.x, transform.position.y, nearest.position.z) : transform.position;
-                Vector3 dropPosition = centre + new Vector3(randomOffset.x, 0f, randomOffset.y);
-                
-                SpawnWaterZone(dropPosition);
-            });
+            FireInSuccession(FlaskCount + ExtraAmount, VsInterval, _flaskShot ??= FlaskShot);
+        }
+
+        private SuccessionShot _flaskShot;
+
+        private void FlaskShot(int i, int count, Vector3 arg)
+        {
+            // Random position near player
+            // Owner decision: aim at the nearest enemy; drop on it (extra flasks land close by), random around the player when none.
+            Transform nearest = FindNearestEnemy(DropRadius * 2f);
+            Vector2 randomOffset = Random.insideUnitCircle * (nearest != null ? (i == 0 ? 0f : 1.5f) : DropRadius);
+            Vector3 centre = nearest != null ? new Vector3(nearest.position.x, transform.position.y, nearest.position.z) : transform.position;
+            Vector3 dropPosition = centre + new Vector3(randomOffset.x, 0f, randomOffset.y);
+            
+            SpawnWaterZone(dropPosition);
         }
 
         private void SpawnWaterZone(Vector3 position)

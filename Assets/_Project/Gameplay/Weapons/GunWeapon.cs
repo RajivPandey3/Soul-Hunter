@@ -63,38 +63,38 @@ namespace SoulHunter.Gameplay.Combat
             // Owner decision: aim at the nearest enemy; the other three arms keep the 4-way pattern.
             // Built on the ground plane: Vector2 directions became (x, y, 0) and fired vertically.
             Vector3 aim = Quaternion.Euler(0f, ArmOffsetDegrees, 0f) * AimDirection(new Vector3(1f, 0f, 1f));
-            Vector3[] directions = {
-                aim,
-                Quaternion.Euler(0f, 90f, 0f) * aim,
-                Quaternion.Euler(0f, 180f, 0f) * aim,
-                Quaternion.Euler(0f, 270f, 0f) * aim
-            };
 
             // VS (wiki Phiera Der Tuphello): "Amount affects all four bullet streams"; interval 0.2 s, so each point of
             // Amount is one more volley of four, 0.2 s after the last (they used to leave in one frame, on top of each other).
-            FireInSuccession(BulletsPerArm + ExtraAmount, VsInterval, volley =>
+            FireInSuccession(BulletsPerArm + ExtraAmount, VsInterval, _volleyShot ??= VolleyShot, aim);
+        }
+
+        private SuccessionShot _volleyShot;
+
+        private void VolleyShot(int volley, int count, Vector3 arg)
+        {
+            // The four arms: the aimed one, then 90, 180 and 270 degrees round (built per volley; the array was per attack).
+            for (int arm = 0; arm < 4; arm++)
             {
-                foreach (var dir in directions)
-                {
-                    // Slight spread
-                    Vector3 spreadDir = Quaternion.Euler(0f, Random.Range(-5f, 5f), 0f) * dir;
-                    GameObject bullet = WeaponPoolManager.Instance != null
-                        ? WeaponPoolManager.Instance.GetFromPool(BulletPrefab, transform.position, Quaternion.identity)
-                        : Instantiate(BulletPrefab, transform.position, Quaternion.identity);
-                    if (bullet == null) continue;
-                    ApplyArea(bullet, BulletPrefab);
-                    
-                    var proj = bullet.GetComponent<Projectile>();
-                    if (proj == null) proj = bullet.AddComponent<Projectile>();
-                    proj.Initialize(spreadDir, BulletSpeed * LevelSpeedMultiplier * SpeedMultiplier, ScaledDamage(BaseDamage), BulletLifetime, pierce: Pierce);
-                    proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
-                    
-                    var damageDealer = bullet.GetComponent<ProjectileDamage>();
-                    if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();
-                    damageDealer.SourceWeaponName = ResultsName;
-                    AimAtHostiles(bullet);
-                }
-            });
+                Vector3 dir = arm == 0 ? arg : Quaternion.Euler(0f, 90f * arm, 0f) * arg;
+                // Slight spread
+                Vector3 spreadDir = Quaternion.Euler(0f, Random.Range(-5f, 5f), 0f) * dir;
+                GameObject bullet = WeaponPoolManager.Instance != null
+                    ? WeaponPoolManager.Instance.GetFromPool(BulletPrefab, transform.position, Quaternion.identity)
+                    : Instantiate(BulletPrefab, transform.position, Quaternion.identity);
+                if (bullet == null) continue;
+                ApplyArea(bullet, BulletPrefab);
+                
+                var proj = bullet.GetComponent<Projectile>();
+                if (proj == null) proj = bullet.AddComponent<Projectile>();
+                proj.Initialize(spreadDir, BulletSpeed * LevelSpeedMultiplier * SpeedMultiplier, ScaledDamage(BaseDamage), BulletLifetime, pierce: Pierce);
+                proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
+                
+                var damageDealer = bullet.GetComponent<ProjectileDamage>();
+                if (damageDealer == null) damageDealer = bullet.AddComponent<ProjectileDamage>();
+                damageDealer.SourceWeaponName = ResultsName;
+                AimAtHostiles(bullet);
+            }
         }
     }
 }

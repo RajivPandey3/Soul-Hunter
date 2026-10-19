@@ -129,7 +129,14 @@ namespace SoulHunter.Gameplay.Weapons
 
             // VS (wiki Cross): every cross flies at the closest enemy; the Amount of crosses leave 0.1 s apart (interval).
             // Soul Hunter used to fan them +/-15 degrees in one frame instead.
-            FireInSuccession(LevelCrossCount + ExtraAmount, VsInterval, i => ThrowSingleCross(throwDirection));
+            FireInSuccession(LevelCrossCount + ExtraAmount, VsInterval, _crossShot ??= CrossShot, throwDirection);
+        }
+
+        private SuccessionShot _crossShot;
+
+        private void CrossShot(int i, int count, Vector3 arg)
+        {
+            ThrowSingleCross(arg);
         }
 
         public const float VsInterval = 0.1f;

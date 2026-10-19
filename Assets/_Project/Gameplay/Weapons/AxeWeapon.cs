@@ -89,7 +89,14 @@ namespace SoulHunter.Gameplay.Weapons
 
             // VS (wiki Axe): "subsequent axes from Amount are thrown in quick succession ... in progressively wider arcs";
             // interval 0.2 s. Each later axe goes a little further (Soul Hunter's arc along the ground).
-            FireInSuccession(LevelAxeCount + ExtraAmount, VsInterval, i => ThrowSingleAxe(1f + i * 0.35f));
+            FireInSuccession(LevelAxeCount + ExtraAmount, VsInterval, _throwAxeShot ??= ThrowAxeShot);
+        }
+
+        private SuccessionShot _throwAxeShot;
+
+        private void ThrowAxeShot(int i, int count, Vector3 arg)
+        {
+            ThrowSingleAxe(1f + i * 0.35f);
         }
 
         public const float VsInterval = 0.2f;

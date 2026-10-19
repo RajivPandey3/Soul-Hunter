@@ -103,7 +103,14 @@ namespace SoulHunter.Gameplay.Combat
         {
             int count = Mathf.Max(1, LaserCount);
             // VS: the lasers of a volley come 0.1 s apart, spread evenly round the wheel.
-            FireInSuccession(count, VsInterval, i => FireLaser(i * 360f / count));
+            FireInSuccession(count, VsInterval, _laserShot ??= LaserShot);
+        }
+
+        private SuccessionShot _laserShot;
+
+        private void LaserShot(int i, int count, Vector3 arg)
+        {
+            FireLaser(i * 360f / count);
         }
 
         private void FireLaser(float offsetDegrees)

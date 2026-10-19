@@ -210,6 +210,72 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        // ------------------------------------------------------------------ CMB-13 FireInSuccession without allocations
+
+        [UnityTest]
+        public IEnumerator FireInSuccession_KeepsItsTiming_FirstShotNow_ThenOneEveryInterval_HeldByAPause()
+        {
+            var probe = new GameObject("SuccessionProbe").AddComponent<SuccessionProbeWeapon>();
+            yield return null;
+            probe.Volley(5, 0.1f, new Vector3(1f, 0f, 2f));
+            Assert.That(probe.Indices, Is.EqualTo(new[] { 0 }), "Shot 0 leaves at once.");
+            float start = Time.time;
+            while (probe.Indices.Count < 3 && Time.time < start + 2f) yield return null;
+            // A pause holds the rest, as WaitForSeconds did.
+            var owner = new object();
+            SoulHunter.Core.Services.GameTime.Pause(owner);
+            int held = probe.Indices.Count;
+            float until = Time.realtimeSinceStartup + 0.4f;
+            while (Time.realtimeSinceStartup < until) yield return null;
+            Assert.That(probe.Indices.Count, Is.EqualTo(held), "No shot while the game is paused.");
+            SoulHunter.Core.Services.GameTime.Resume(owner);
+            while (probe.Indices.Count < 5 && Time.time < start + 3f) yield return null;
+            yield return new WaitForSeconds(0.3f);
+
+            Assert.That(probe.Indices, Is.EqualTo(new[] { 0, 1, 2, 3, 4 }), "Every shot once, in order.");
+            for (int i = 1; i < probe.Times.Count; i++)
+                Assert.That(probe.Times[i] - probe.Times[i - 1], Is.InRange(0.0999f, 0.35f), $"Shot {i}: one interval of game time after the last.");
+            Assert.That(probe.Args.All(a => a == new Vector3(1f, 0f, 2f)), "Each shot gets the volley's argument.");
+            Assert.That(probe.Counts.All(c => c == 5), "Each shot gets the volley's count.");
+            Assert.That(SuccessionRunner.Pending, Is.EqualTo(0), "The finished volley is gone.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator FireInSuccession_StopsWhenTheWeaponIsSwitchedOff_AndOverlappingVolleysBothFinish()
+        {
+            var probe = new GameObject("SuccessionProbe").AddComponent<SuccessionProbeWeapon>();
+            yield return null;
+            probe.Volley(3, 0.1f, Vector3.zero);
+            yield return null;
+            probe.Volley(3, 0.1f, Vector3.one); // a new volley before the last one ended (VS Holy Wand tips)
+            yield return new WaitForSeconds(0.5f);
+            Assert.That(probe.Indices.Count, Is.EqualTo(6), "Two overlapping volleys of three both finish.");
+
+            probe.Clear();
+            probe.Volley(4, 0.1f, Vector3.zero);
+            probe.enabled = false;
+            yield return new WaitForSeconds(0.5f);
+            Assert.That(probe.Indices, Is.EqualTo(new[] { 0 }), "A switched-off weapon fires no more of its volley.");
+            Assert.That(SuccessionRunner.Pending, Is.EqualTo(0));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator FireInSuccession_AllocatesNothing_OnAnAttack()
+        {
+            var probe = new GameObject("SuccessionProbe").AddComponent<SuccessionProbeWeapon>();
+            yield return null;
+            probe.Volley(4, 0.05f, Vector3.zero); // warm up: the runner and its list are made once
+            yield return new WaitForSeconds(0.4f);
+            probe.Clear();
+            Assert.That(() => probe.Volley(4, 0.05f, Vector3.forward), UnityEngine.TestTools.Constraints.Is.Not.AllocatingGCMemory(),
+                "An attack of four shots allocated (a closure, an iterator and a WaitForSeconds per shot before CMB-13).");
+            yield return new WaitForSeconds(0.4f);
+            Assert.That(probe.Indices.Count, Is.EqualTo(4));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>Boots a quiet run: no spawner, an invincible hero, no weapons, no enemies and no gems (no level-ups).</summary>
@@ -272,6 +338,31 @@ namespace SoulHunter.Tests.PlayMode
                 list.Add(controller);
             }
             return list;
+        }
+    }
+
+    /// <summary>A weapon that only records the shots FireInSuccession gives it (CMB-13 tests).</summary>
+    public class SuccessionProbeWeapon : AutoAttackWeapon
+    {
+        public readonly List<int> Indices = new List<int>(32);
+        public readonly List<int> Counts = new List<int>(32);
+        public readonly List<float> Times = new List<float>(32);
+        public readonly List<Vector3> Args = new List<Vector3>(32);
+        private SuccessionShot _shot;
+
+        protected override SoulHunter.Gameplay.Audio.WeaponSound FireSound => SoulHunter.Gameplay.Audio.WeaponSound.None;
+        protected override void Attack() { }
+
+        public void Volley(int count, float interval, Vector3 arg) => FireInSuccession(count, interval, _shot ??= Shot, arg);
+
+        public void Clear() { Indices.Clear(); Counts.Clear(); Times.Clear(); Args.Clear(); }
+
+        private void Shot(int index, int count, Vector3 arg)
+        {
+            Indices.Add(index);
+            Counts.Add(count);
+            Times.Add(Time.time);
+            Args.Add(arg);
         }
     }
 }

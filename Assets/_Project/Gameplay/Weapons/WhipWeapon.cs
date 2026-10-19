@@ -88,10 +88,14 @@ namespace SoulHunter.Gameplay.Weapons
             Vector3 aim = AimDirection(HolderFacing);
             int whips = LevelWhipCount + ExtraAmount;
             // VS interval (wiki Whip): the Amount of shots leave 0.1s apart.
-            FireInSuccession(whips, VsInterval, i =>
-            {
-                FireWhip(i % 2 == 0 ? aim : -aim);
-            });
+            FireInSuccession(whips, VsInterval, _lashShot ??= LashShot, aim);
+        }
+
+        private SuccessionShot _lashShot;
+
+        private void LashShot(int i, int count, Vector3 arg)
+        {
+            FireWhip(i % 2 == 0 ? arg : -arg);
         }
 
         private void FireWhip(Vector3 attackDirection)

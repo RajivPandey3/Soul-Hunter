@@ -41,12 +41,16 @@ namespace SoulHunter.Gameplay.Combat
             if (ProjectilePrefab == null) return;
             if (FindNearestEnemy() == null) return;
             // One after another at the VS interval; each bolt flies at the enemy nearest when it leaves (Magic Wand rule).
-            FireInSuccession(VsAmount + ExtraAmount, VsInterval, i =>
-            {
-                // Shared null-safe search (the old loop crashed on destroyed entries in ActiveEnemies).
-                Transform closestEnemy = FindNearestEnemy();
-                if (closestEnemy != null) FireAt(FlatDirectionTo(closestEnemy)); // on the ground plane
-            });
+            FireInSuccession(VsAmount + ExtraAmount, VsInterval, _boltShot ??= BoltShot);
+        }
+
+        private SuccessionShot _boltShot;
+
+        private void BoltShot(int i, int count, Vector3 arg)
+        {
+            // Shared null-safe search (the old loop crashed on destroyed entries in ActiveEnemies).
+            Transform closestEnemy = FindNearestEnemy();
+            if (closestEnemy != null) FireAt(FlatDirectionTo(closestEnemy)); // on the ground plane
         }
 
         private void FireAt(Vector3 shootDir)

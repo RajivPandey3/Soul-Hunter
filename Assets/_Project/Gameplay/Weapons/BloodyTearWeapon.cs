@@ -46,7 +46,14 @@ namespace SoulHunter.Gameplay.Combat
             Vector3 aim = AimDirection(Vector3.right);
             int whips = BaseWhipCount + ExtraAmount;
             // One after another (VS interval 0.1 s, like the Whip): extra lashes used to land on top of the first ones.
-            FireInSuccession(whips, VsInterval, i => FireWhip(i % 2 == 0 ? aim : -aim));
+            FireInSuccession(whips, VsInterval, _lashShot ??= LashShot, aim);
+        }
+
+        private SuccessionShot _lashShot;
+
+        private void LashShot(int i, int count, Vector3 arg)
+        {
+            FireWhip(i % 2 == 0 ? arg : -arg);
         }
 
         /// <summary>vampire.survivors.wiki/w/Bloody_Tear: "interval = 0.1 seconds" between lashes.</summary>

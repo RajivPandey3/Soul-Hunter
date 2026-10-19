@@ -61,27 +61,31 @@ namespace SoulHunter.Gameplay.Combat
             moveDir = AimDirection(moveDir); // Owner decision: aim at the nearest enemy; movement direction when none
 
             // VS interval (wiki Knife): the Amount of knives leave 0.1 s apart.
-            FireInSuccession(KnivesPerAttack + ExtraAmount, VsInterval, i =>
-            {
-                Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-10f, 10f), 0) * moveDir;
-                Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
+            FireInSuccession(KnivesPerAttack + ExtraAmount, VsInterval, _knifeShot ??= KnifeShot, moveDir);
+        }
 
-                GameObject knife = WeaponPoolManager.Instance != null
-                    ? WeaponPoolManager.Instance.GetFromPool(_projectilePrefab, spawnPos, Quaternion.identity)
-                    : Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
-                if (knife == null) return;
-                ApplyArea(knife, _projectilePrefab);
-                knife.transform.forward = spreadDir;
+        private SuccessionShot _knifeShot;
+
+        private void KnifeShot(int i, int count, Vector3 arg)
+        {
+            Vector3 spreadDir = Quaternion.Euler(0, Random.Range(-10f, 10f), 0) * arg;
+            Vector3 spawnPos = transform.position + (Vector3)spreadDir * 0.5f;
+
+            GameObject knife = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(_projectilePrefab, spawnPos, Quaternion.identity)
+                : Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
+            if (knife == null) return;
+            ApplyArea(knife, _projectilePrefab);
+            knife.transform.forward = spreadDir;
 
 
-                var proj = knife.GetComponent<Projectile>();
-                if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 2f, pierce: Pierce);
-                if (proj != null) proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
+            var proj = knife.GetComponent<Projectile>();
+            if (proj != null) proj.Initialize(spreadDir, KnifeSpeed * SpeedMultiplier, RollDamage(BaseDamage), 2f, pierce: Pierce);
+            if (proj != null) proj.AddBounces(ExtraBounces + ArcanaBounces); // + Iron Blue Will (VII)
 
-                var damageDealer = knife.GetComponent<ProjectileDamage>();
-                if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";
-                AimAtHostiles(knife);
-            });
+            var damageDealer = knife.GetComponent<ProjectileDamage>();
+            if (damageDealer != null) damageDealer.SourceWeaponName = "Knife";
+            AimAtHostiles(knife);
         }
     }
 }

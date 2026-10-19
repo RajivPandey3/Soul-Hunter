@@ -50,44 +50,48 @@ namespace SoulHunter.Gameplay.Combat
             if (RunePrefab == null) return;
 
             // VS interval (wiki Runetracer): the Amount of shots leave 0.2s apart.
-            FireInSuccession(RunesPerAttack + ExtraAmount, VsInterval, i =>
-            {
-                // Owner decision: aim at the nearest enemy; random when none. Extra runes fan out.
-                Vector3 aim = Quaternion.Euler(0f, (i - (RunesPerAttack + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
-                GameObject rune = WeaponPoolManager.Instance != null
-                    ? WeaponPoolManager.Instance.GetFromPool(RunePrefab, transform.position, Quaternion.identity)
-                    : Instantiate(RunePrefab, transform.position, Quaternion.identity);
-                if (rune == null) return;
-                ApplyArea(rune, RunePrefab);
+            FireInSuccession(RunesPerAttack + ExtraAmount, VsInterval, _runeShot ??= RuneShot);
+        }
 
-                var rb = rune.GetComponent<Rigidbody>();
-                if (rb == null) rb = rune.AddComponent<Rigidbody>();
-                rb.useGravity = false;
-                rb.isKinematic = false;
-                rb.constraints = RigidbodyConstraints.FreezePositionY;
-                rb.linearVelocity = aim * (Speed * LevelSpeedMultiplier * SpeedMultiplier);
-                // VS wiki (Runetracer): "The runes have infinite pierce and bounce off the edges of the screen".
-                var bounce = rune.GetComponent<ScreenBounce>();
-                if (bounce == null) bounce = rune.AddComponent<ScreenBounce>();
-                bounce.enabled = true;
+        private SuccessionShot _runeShot;
 
-                var damageDealer = rune.GetComponent<ProjectileDamage>();
-                if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
-                damageDealer.DamageAmount = ScaledDamage(BaseDamage);
-                damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
-                damageDealer.SourceWeaponName = "Runetracer";
-                // VS wiki (Runetracer): "a 0.5 seconds Hitbox Delay ... the same enemy cannot be hit more often than every
-                // half a second by the same rune".
-                var delay = rune.GetComponent<HitboxDelay>();
-                if (delay == null) delay = rune.AddComponent<HitboxDelay>();
-                delay.Delay = VsHitboxDelay;
-                delay.enabled = true;
-                AimAtHostiles(rune);
+        private void RuneShot(int i, int count, Vector3 arg)
+        {
+            // Owner decision: aim at the nearest enemy; random when none. Extra runes fan out.
+            Vector3 aim = Quaternion.Euler(0f, (i - (RunesPerAttack + ExtraAmount - 1) * 0.5f) * 15f, 0f) * AimDirection(RandomFlatDirection());
+            GameObject rune = WeaponPoolManager.Instance != null
+                ? WeaponPoolManager.Instance.GetFromPool(RunePrefab, transform.position, Quaternion.identity)
+                : Instantiate(RunePrefab, transform.position, Quaternion.identity);
+            if (rune == null) return;
+            ApplyArea(rune, RunePrefab);
 
-                var lifetime = rune.GetComponent<PooledLifetime>();
-                if (lifetime != null) lifetime.Arm(BaseDuration * DurationMultiplier);
-                else Destroy(rune, BaseDuration * DurationMultiplier); // compatibility when no pool exists
-            });
+            var rb = rune.GetComponent<Rigidbody>();
+            if (rb == null) rb = rune.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.isKinematic = false;
+            rb.constraints = RigidbodyConstraints.FreezePositionY;
+            rb.linearVelocity = aim * (Speed * LevelSpeedMultiplier * SpeedMultiplier);
+            // VS wiki (Runetracer): "The runes have infinite pierce and bounce off the edges of the screen".
+            var bounce = rune.GetComponent<ScreenBounce>();
+            if (bounce == null) bounce = rune.AddComponent<ScreenBounce>();
+            bounce.enabled = true;
+
+            var damageDealer = rune.GetComponent<ProjectileDamage>();
+            if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
+            damageDealer.DamageAmount = ScaledDamage(BaseDamage);
+            damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
+            damageDealer.SourceWeaponName = "Runetracer";
+            // VS wiki (Runetracer): "a 0.5 seconds Hitbox Delay ... the same enemy cannot be hit more often than every
+            // half a second by the same rune".
+            var delay = rune.GetComponent<HitboxDelay>();
+            if (delay == null) delay = rune.AddComponent<HitboxDelay>();
+            delay.Delay = VsHitboxDelay;
+            delay.enabled = true;
+            AimAtHostiles(rune);
+
+            var lifetime = rune.GetComponent<PooledLifetime>();
+            if (lifetime != null) lifetime.Arm(BaseDuration * DurationMultiplier);
+            else Destroy(rune, BaseDuration * DurationMultiplier); // compatibility when no pool exists
         }
     }
 }
