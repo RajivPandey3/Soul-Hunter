@@ -36,6 +36,17 @@ namespace SoulHunter.Gameplay.Pickups
             ChestLook.Apply(visual != null ? visual : transform, Kind);
         }
 
+        /// <summary>Chests in the world with this component on (Pentagram's GroundItemEraser reads it instead of a scene
+        /// search, Bug MIS ITM-11). A handful at most, so a plain list.</summary>
+        public static readonly System.Collections.Generic.List<ChestPickup> Active = new System.Collections.Generic.List<ChestPickup>();
+
+        private void OnEnable() { if (!Active.Contains(this)) Active.Add(this); }
+        private void OnDisable() => Active.Remove(this);
+
+        // Domain reload may be off, so chests from the last play session must not stay listed.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActive() => Active.Clear();
+
         private readonly Collider[] _playerHits = new Collider[1];
 
         private void Update()
