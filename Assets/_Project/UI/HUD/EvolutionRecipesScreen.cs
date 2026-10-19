@@ -139,6 +139,7 @@ namespace SoulHunter.Gameplay.UI
             CollectRecipes();
             ShowPage(0);
             Select(BackButton);
+            _pauseKey.Hold(); // Esc goes back here instead of resuming the game (Bug MIS UI-06)
         }
 
         public void Close()
@@ -191,7 +192,23 @@ namespace SoulHunter.Gameplay.UI
 
         private void OnEnable() => UiScreen.Changed += Relayout;
 
-        private void OnDisable() => UiScreen.Changed -= Relayout;
+        private void OnDisable()
+        {
+            UiScreen.Changed -= Relayout;
+            _pauseKey.Release(); // every way out puts the Pause action back (Bug MIS UI-06)
+        }
+
+        private void OnDestroy() => _pauseKey.Release();
+
+        /// <summary>Esc or gamepad B goes back to the pause menu, as Options does (Bug MIS UI-06).</summary>
+        private void Update()
+        {
+            if (PauseKeyGate.BackPressed()) Close();
+        }
+
+        private readonly PauseKeyGate _pauseKey = new PauseKeyGate();
+        /// <summary>True while this screen keeps the Pause action off (tests).</summary>
+        public bool HoldsPauseKey => _pauseKey.Holding;
 
         private void LateUpdate()
         {
