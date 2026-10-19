@@ -68,6 +68,36 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator APickupEveryFrame_RunsTheUnlockCheckAtMostFourTimesASecond_AndStillUnlocks()
+        {
+            // Bug MIS ITM-08: every pickup made the whole item-unlock check run on its frame (Gold Fever coins, gem streams).
+            yield return QuietRun(ItemUnlocks.LockEverything);
+            var data = Save();
+            var tracker = GameSessionManager.Instance.GetComponent<ItemUnlockTracker>();
+            var stats = RunStatsTracker.Instance;
+            yield return null;
+            int before = tracker.EvaluationCount;
+            float end = Time.unscaledTime + 1f;
+            int frames = 0;
+            while (Time.unscaledTime < end)
+            {
+                stats.RecordPickup(PickupNames.Coin);
+                frames++;
+                yield return null;
+            }
+            int checks = tracker.EvaluationCount - before;
+            // 1 s at PickupCheckSeconds 0.25 plus up to two new stage seconds and the first frame.
+            Assert.That(checks, Is.LessThanOrEqualTo(8), $"{checks} checks in {frames} frames with a pickup each.");
+            Assert.That(checks, Is.GreaterThanOrEqualTo(2), "Pickups still make the check run.");
+
+            // Five chickens still unlock the Garlic, now within PickupCheckSeconds.
+            data.FloorChickensFound = 4;
+            stats.RecordPickup(PickupNames.Chicken);
+            yield return WaitUntilRealtime(() => ItemUnlocks.IsUnlocked(data, "Garlic"), "the Garlic to unlock at 5 chickens");
+        }
+
+        [UnityTest]
+        public IEnumerator BreakingTwentyLanterns_UnlocksItsItem_WithANotice()        [UnityTest]
         public IEnumerator BreakingTwentyLanterns_UnlocksItsItem_WithANotice()
         {
             yield return QuietRun(ItemUnlocks.LockEverything);
