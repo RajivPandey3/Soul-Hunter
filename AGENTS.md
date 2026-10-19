@@ -2301,6 +2301,38 @@ realme RMX5004, Ultra, release APK, Level 5 from 19:50 with a level-90 hero and 
   - Result: fast 59.4 and slow 59.8 FPS mean over the clean windows with 300+ bullets (5 and 4 windows); 59.5 and 59.5 under 300. Minimum FPS was 57 and 58 for the two runs.
   - No gain was measured, and the 40-53 FPS dips of `-phone-hot` run 2 did not come back with either path.
 
+### Full bug MIS, batch 1: the S2 fixes (owner, 2026-10-19)
+
+Owner: "rules wiki ka follow hoga, jo bhi fix hoga wo safe hoga, fps 60 constant, v-sync off". The register is `Docs/BUG_MIS_Full.md`: 58 code findings, 0 S1, and a game-object audit of 7,503 objects. Batch 1 fixed 15 of the 17 S2 rows. Four fixer agents worked in separate git worktrees (`D:/SoulHunter-Validation/wt-*`) and the lead tested and merged their work.
+- **Weapons**
+  - CMB-01: evolutions built on a base script no longer get the base weapon's level table (`AutoAttackWeapon.LevelLocked`, also on Shadow Kael's copy). Wiki: Unholy_Vespers, Heaven_Sword and Soul_Eater give their own numbers, and "With Limit Break, [it] can be further leveled up". Unholy Vespers is 30 damage with 4 books, Heaven Sword 77 with 1 sword at 3.3 s, Soul Eater 20 at 1.0 s.
+  - CMB-02: Pentagram erases only the enemies on the screen (wiki Pentagram: "every enemy, their drops, and all items on the screen").
+  - CMB-03: a weapon zone forgets a killed enemy (`HealthController.Life`) and no longer hits its pooled body elsewhere.
+  - CMB-04: Limit Break, Hyper and Arcana now reach the Magic Wand (Damage, Area, Speed, Amount), Crimson Shroud (Area, Amount, base damage) and the Peachone and Dusk Raven orbit (Speed; wiki: "Speed increases how fast the circle moves").
+  - CORE-02 (the row was half wrong): wiki Gemini_(I) says counterparts "remain as independent weapons if their counterparts unite", so they keep firing. Taking Gemini while holding a union now gives its constituents' counterparts (Twilight Flock at its level, Revenant Wheel at max).
+- **Enemies**
+  - AI-01: Shadow Kael captures the loadout again at every encounter. A pooled body clears the old mirrored weapons.
+  - AI-05: Endless contact damage is applied on every spawn, bosses included.
+  - AI-02: a passed-on chest skips Fixed Direction enemies.
+  - AI-03: the Tide Caller's death gives no chest (balance from The_Drowner's Boss Rash variant).
+  - AI-04: the 30:00 clear takes instant-kill-resistant enemies away with no rewards, and caskets ignore guard deaths during the transition (Mad_Forest: "All enemies on the screen are cleared").
+  - AI-07: the Closing Arena runs on the stage clock.
+- **Items**
+  - ITM-01: Data Recovery never overwrites a replaced-save backup (`.replaced.N.bak`).
+  - ITM-02: the magnet sweep queries only the pickup layers and grows its buffer instead of overflowing.
+- **UI**
+  - UI-01: the Pause key is off on the level-up screen and in the merchant shop.
+  - UI-02: Draw a Fate keeps focus on the Arcana cards.
+  - UI-03: Results DONE keeps the game paused while the menu loads.
+- **Open S2 rows**
+  - CMB-05: Shadow Kael's mirrored Crimson Shroud and Laurel. Owner decision.
+  - AI-03 and AI-04 each carry a balance choice the owner may revisit.
+- **Validation:**
+  - Per branch: save EditMode 992/992 with PlayMode 7/7; UI EditMode 991/991 with PlayMode 33/33.
+  - Integration branch: EditMode 993/993 and PlayMode 178/178 (26 fixtures), 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261019-fix-integ/`).
+  - The full PlayMode suite and an FPS check follow; this entry is updated with their results.
+- Not played by the owner.
+
 ### Keyboard on the level-up and chest screens (owner report, 2026-10-18)
 
 Owner: "keyboard se game khel raha hoon to level up selection mein keyboard kaam nahi kar raha", "or chest ko bhi fix karo". VS wiki (Options, patch 0.2.4): "Spacebar can be used just like Enter to interact with the UI".
@@ -2617,7 +2649,7 @@ Not yet seen by the owner.
 vampire.survivors.wiki/w/Duplicator (+1 Amount per level, 2 levels) and /w/Amount ("how many extra projectiles most weapons have"); each weapon's own page says whether Amount affects it (fetched 2026-10-04): it does for Whip, Magic Wand, Knife, Axe, Cross, King Bible, Fire Wand, Santa Water, Runetracer, Lightning Ring, Peachone, Bone, Cherry Bomb, Gun, Bloody Tear, Holy Wand, Thousand Edge, Death Spiral, Heaven Sword, Unholy Vespers, La Borra, Hellfire, NO FUTURE, Thunder Loop; not for Garlic, Soul Eater, Song of Mana, Mannajja, Pentagram, Gorgeous Moon, Clock Lancet, Laurel. Crimson Shroud: "Amount creates more explosions" (it already adds one per Amount).
 - Code check: every weapon the wiki lists reads Amount, and none of the ignoring ones does.
 - Found and fixed (the same look as the owner's 2026-09-30 report): **Thousand Edge** threw all its knives in one frame from one spot, and **Bloody Tear**'s extra lashes landed on top of the first ones, so the Duplicator looked like it did nothing. Both now fire one after another at the wiki interval (`FireInSuccession`): Thousand Edge 0.05 s, Bloody Tear 0.1 s (`VsInterval`).
-- `DuplicatorEverywherePlayModeTests` (R): each of the 10 evolutions that use Amount fires 2 more, none on top of another (Thousand Edge 6 to 8, Bloody Tear 2 to 4, Holy Wand 1 to 3, Death Spiral 9 to 11, Heaven Sword 3 to 5, Unholy Vespers +2 books, Drowning Chalice 4 to 6, Hellmaw Comet 2 to 4, Severed Fate 1 to 3, Stormbound Halo 6 to 8); the 8 ignoring weapons fire the same; a Knife gained after the Duplicator throws 3 at once. With `DuplicatorPlayModeTests` (14 base weapons and the Bible) that is every Soul Hunter weapon.
+- `DuplicatorEverywherePlayModeTests` (R): each of the 10 evolutions that use Amount fires 2 more, none on top of another (Thousand Edge 6 to 8, Bloody Tear 2 to 4, Holy Wand 1 to 3, Death Spiral 9 to 11, Heaven Sword 1 to 3 since the CMB-01 fix of 2026-10-19 (3 to 5 before), Unholy Vespers +2 books, Drowning Chalice 4 to 6, Hellmaw Comet 2 to 4, Severed Fate 1 to 3, Stormbound Halo 6 to 8); the 8 ignoring weapons fire the same; a Knife gained after the Duplicator throws 3 at once. With `DuplicatorPlayModeTests` (14 base weapons and the Bible) that is every Soul Hunter weapon.
 - Test-side fixes on the way: the shot counter waits for a volley still in flight and counts a pooled object reused in the same frame as a new shot; the targets are marked stage bosses so Eclipse Sigil cannot erase them (their gems levelled the hero and the paused level-up screen stalled a run, which the stall guard stopped); the Mad Forest health/speed checks allow for Curse (the shared boot can take Skull O'Maniac from a leftover level-up).
 - EditMode 566/566, PlayMode 286/286, 0 exceptions, save untouched (`D:/SoulHunter-Validation/run-20261004-dup-full2/`).
 

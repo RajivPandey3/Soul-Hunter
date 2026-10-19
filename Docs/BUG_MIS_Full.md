@@ -3,7 +3,7 @@
 **Date:** 2026-10-19
 **Asked by owner:** "is project mein kitna bug hai wo dhoondho, sirf dhoondho, ek ek game object ko check karo or MIS banakar save karo"
 **Code state:** `main` at `ca1b93ec` (local, not pushed)
-**Status of every row:** OPEN. Nothing was changed in the project for this register.
+**Status:** the register itself changed nothing in the project. Batch 1 (2026-10-19, merged at `ac7077fc`) fixed these S2 rows: CMB-01, CMB-02, CMB-03, CMB-04, CORE-02 (row half wrong; see AGENTS.md), AI-01, AI-02, AI-03, AI-04, AI-05, AI-07, ITM-01, ITM-02, UI-01, UI-02, UI-03. CMB-05 waits for the owner. Every other row is OPEN.
 
 ## How it was found
 
