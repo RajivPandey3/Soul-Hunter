@@ -166,6 +166,33 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        // ------------------------------------------------------------------ CMB-11 Holy Wand
+
+        [UnityTest]
+        public IEnumerator HolyWand_FiresItsVsVolley_FourBolts0Point1SecondsApart_At30Damage()
+        {
+            yield return Prepare();
+            FarTargets();
+            AutoAttackWeapon wand = null;
+            yield return Evolve("Evo_HolyWand", w => wand = w);
+            Assert.IsInstanceOf<HolyWandWeapon>(wand, "Holy Wand is equipped.");
+            Assert.That(wand.DamageAmount, Is.EqualTo(30f), "wiki Holy_Wand: damage 30 (DamageAmount, read by the Arcana zones).");
+            Assert.That(wand.AttackCooldown, Is.EqualTo(0.5f), "wiki Holy_Wand: cooldown 0.5 s.");
+            var shots = new List<DuplicatorPlayModeTests.Shot>();
+            yield return DuplicatorPlayModeTests.MeasureOneAttack(wand, shots, 0.45f);
+            string detail = string.Join("; ", shots.Select(s => s.ToString()));
+            Assert.That(shots.Count, Is.EqualTo(HolyWandWeapon.VsAmount), "Four bolts (wiki amount 4). " + detail);
+            for (int i = 1; i < shots.Count; i++)
+                Assert.That(shots[i].Time - shots[i - 1].Time, Is.GreaterThan(0.08f), "One after another, 0.1 s apart. " + detail);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        /// <summary>Three targets 25 units out: aimed weapons have something to fire at, and no shot hits within a second.</summary>
+        private static void FarTargets()
+        {
+            foreach (var target in SpawnTargets(3, 1f)) target.transform.position += Vector3.right * 25f;
+        }
+
         // ------------------------------------------------------------------ helpers
 
         /// <summary>Boots a quiet run: no spawner, an invincible hero, no weapons, no enemies and no gems (no level-ups).</summary>
