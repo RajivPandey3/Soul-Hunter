@@ -59,13 +59,24 @@ namespace SoulHunter.Gameplay.Combat
         /// <summary>vampire.survivors.wiki/w/Bloody_Tear: "interval = 0.1 seconds" between lashes.</summary>
         public const float VsInterval = 0.1f;
 
-        private readonly System.Collections.Generic.HashSet<TouchDamage> _healedLashes = new System.Collections.Generic.HashSet<TouchDamage>();
+        /// <summary>
+        /// VS (vampire.survivors.wiki/w/Bloody_Tear, raw, fetched 2026-10-19): "Restores 8 HP/attack if it hits any enemies
+        /// with a crit"; "The player can heal 8 points of health if an enemy was damaged by a critical hit"; "This lifesteal
+        /// effect has a one second delay before it can be triggered again"; "It is not affected by Recovery".
+        /// </summary>
+        public const float VsHealDelay = 1f;
+
+        // Lashes whose damage roll was a critical hit; only their damaging hits heal.
+        private readonly System.Collections.Generic.HashSet<TouchDamage> _critLashes = new System.Collections.Generic.HashSet<TouchDamage>();
         private System.Action<TouchDamage> _onLashDamaged;
+        private float _nextHealAt = float.NegativeInfinity;
 
         private void OnLashDamaged(TouchDamage lash)
         {
-            if (!_healedLashes.Add(lash)) return; // one heal per lash
-            if (_playerHealth != null) _playerHealth.Heal(Mathf.RoundToInt(HealAmount)); // Heal on hit! (Soul Hunter's rule)
+            if (!_critLashes.Contains(lash)) return; // not a crit: no heal
+            if (Time.time < _nextHealAt) return;      // the 1 s lifesteal delay (game time: a pause holds it)
+            _nextHealAt = Time.time + VsHealDelay;
+            if (_playerHealth != null) _playerHealth.Heal(Mathf.RoundToInt(HealAmount)); // 8, not scaled by Recovery
         }
 
         private void FireWhip(Vector3 direction)
@@ -96,17 +107,15 @@ namespace SoulHunter.Gameplay.Combat
             if (damageDealer == null) damageDealer = whip.AddComponent<TouchDamage>();
             
             damageDealer.DamageAmount = RollDamage(DamageAmount);
+            bool crit = LastRollWasCrit;
             damageDealer.SourceWeaponName = "Bloody Tear";
             damageDealer.SourceWeapon = this; // VS Results
             damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the whip hurt its own holder
             
-            // CMB-08: the lash heals when one of its hits really damages a body, once per lash. It healed when any enemy
-            // stood near the lash, so Level 7 ghosts (immune to Normal damage) healed the player 8 per lash.
-            // VS (vampire.survivors.wiki/w/Bloody_Tear, fetched 2026-10-19): "Restores 8 HP/attack if it hits any enemies
-            // with a crit"; "This lifesteal effect has a one second delay before it can be triggered again". Soul Hunter
-            // keeps its own heal on every damaging lash (AGENTS.md, balance pass Part 1); crit-only and the 1 s delay
-            // wait for the owner.
-            _healedLashes.Remove(damageDealer);
+            // CMB-08: the lash heals only when one of its hits really damages a body and its roll was a crit, at most once
+            // a second (VS, see VsHealDelay). It healed when any enemy stood near the lash, so Level 7 ghosts (immune to
+            // Normal damage) healed the player 8 per lash. Shadow Kael's copy heals the boss by the same rule.
+            if (crit) _critLashes.Add(damageDealer); else _critLashes.Remove(damageDealer);
             damageDealer.DamagedTarget = _onLashDamaged ??= OnLashDamaged;
 
             var lifetime = whip.GetComponent<PooledLifetime>();

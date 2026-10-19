@@ -353,8 +353,15 @@ namespace SoulHunter.Gameplay.Combat
             float luck = OwnerStats != null ? OwnerStats.Luck : 1f;
             CritFor(BaseCritChance, WeaponCritMultiplier, SlashCritChance, SlashCritMultiplier, SlashArcanaActive, out float chance, out float multiplier);
             if (chance > 0f) chance += LimitBreak.CritChanceBonus(LimitBreakKey); // VS Limit Break: Crit Chance +2.5% per card
-            return IsCrit(chance, luck, Random.value) ? damage * multiplier * CharacterCritFactor(OwnerStats) : damage;
+            LastRollWasCrit = IsCrit(chance, luck, CritRollForTests >= 0f ? CritRollForTests : Random.value);
+            return LastRollWasCrit ? damage * multiplier * CharacterCritFactor(OwnerStats) : damage;
         }
+
+        /// <summary>Whether the last <see cref="RollDamage"/> was a critical hit (Bloody Tear's crit heal).</summary>
+        protected bool LastRollWasCrit { get; private set; }
+
+        /// <summary>Tests only: a fixed 0-1 crit roll in place of Random.value (negative = random).</summary>
+        [System.NonSerialized] public float CritRollForTests = -1f;
 
         /// <summary>Scales a spawned effect by Area, relative to its prefab's own scale (safe for pooled objects).</summary>
         protected void ApplyArea(GameObject instance, GameObject prefab)
