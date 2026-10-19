@@ -81,9 +81,17 @@ namespace SoulHunter.Gameplay.Combat
         public static bool ApplyAlways(SoulHunter.Gameplay.Player.PlayerController player)
         {
             if (Always == AlwaysChoice.None) return false;
-            if (Always == AlwaysChoice.Chicken && HasMissingHealth(player)) GiveChicken(player);
-            else GiveGold(player); // "Always Floor Chicken" at full health gives gold (wiki)
+            if (Always == AlwaysChoice.Chicken) GiveChickenOrGold(player);
+            else GiveGold(player);
             return true;
+        }
+
+        /// <summary>A Floor Chicken (with Recovery) when the player is hurt, else a Big Coin Bag: "Always Floor Chicken" at
+        /// full health gives gold (wiki Level_up).</summary>
+        public static void GiveChickenOrGold(SoulHunter.Gameplay.Player.PlayerController player)
+        {
+            if (HasMissingHealth(player)) GiveChicken(player);
+            else GiveGold(player);
         }
 
         private static bool HasMissingHealth(SoulHunter.Gameplay.Player.PlayerController player)

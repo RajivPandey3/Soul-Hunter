@@ -197,5 +197,35 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(_rounds, Is.EqualTo(rounds), "The same cards stay.");
             Assert.That(_manager.IsLevelUpActive, Is.True);
         }
+
+        [Test]
+        public void AMaxedLevelUpWithNoScreen_PaysOneReward_AChickenWithRecovery_NotBothHealthAndGold()
+        {
+            // Bug MIS ITM-13 (2026-10-19): with no reward cards to show, the legacy payout gave 30 health and 25 gold together,
+            // without Recovery. VS (wiki Level_up) gives gold or a Floor Chicken; with no screen, the chicken when hurt.
+            typeof(LevelUpManager).GetField("_weaponManager", Private).SetValue(_manager, null);
+            UsePool();
+            var player = new GameObject("MaxedPlayer");
+            try
+            {
+                var controller = player.AddComponent<SoulHunter.Gameplay.Player.PlayerController>();
+                var stats = player.GetComponent<SoulHunter.Gameplay.Player.PlayerStats>() ?? player.AddComponent<SoulHunter.Gameplay.Player.PlayerStats>();
+                stats.AddRegen(0.5f);
+                var health = player.GetComponent<HealthController>() ?? player.AddComponent<HealthController>();
+                health.Initialize(100);
+                health.TakeDamage(new DamagePacket(60, Vector3.zero, Vector3.zero, DamageType.Normal));
+                int hurt = health.CurrentHealth;
+                typeof(LevelUpManager).GetField("_playerController", Private).SetValue(_manager, controller);
+                MaxedRewards.Always = MaxedRewards.AlwaysChoice.None;
+
+                OpenLevelUp();
+
+                Assert.That(_rounds, Is.EqualTo(0), "No screen without reward cards.");
+                Assert.That(health.CurrentHealth - hurt, Is.EqualTo(SoulHunter.Gameplay.Pickups.HealthPickup.HealWithRecovery(MaxedRewards.HealAmount, 0.5f)),
+                    "A Floor Chicken with the Recovery bonus (30 x 1.5 = 45), not the flat 30.");
+                Assert.That(_manager.IsLevelUpActive, Is.False, "The level-up closes.");
+            }
+            finally { Object.DestroyImmediate(player); }
+        }
     }
 }

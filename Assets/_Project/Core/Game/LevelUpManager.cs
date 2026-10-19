@@ -403,15 +403,19 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
-        public const int MaxedOutHealAmount = 30;
-        public const int MaxedOutGoldAmount = 25;
-
+        /// <summary>
+        /// A maxed-out level-up that no card screen can show (no WeaponManager, so no reward cards are built). It gave both
+        /// 30 health and 25 gold, with no Recovery bonus and no Big Coin Bag counted (Bug MIS ITM-13, 2026-10-19). VS wiki
+        /// (Level_up, raw 2026-10-19) offers "the options to gain extra Gold or restore health with Floor Chicken", one of
+        /// the two, and "The 'Always Floor Chicken' option will only give Floor Chickens if the player has missing health.
+        /// If the player is fully healed, they will receive Gold instead." With no screen to choose on, the run's "always"
+        /// choice pays if one was made; otherwise the same rule as Always Floor Chicken (balance method: the wiki is silent
+        /// on a level-up with no screen): a Floor Chicken with Recovery when hurt, else one counted Big Coin Bag.
+        /// </summary>
         private void GrantMaxedOutReward()
         {
-            var health = _playerController != null ? _playerController.GetComponent<HealthController>() : null;
-            if (health != null) health.Heal(MaxedOutHealAmount);
-
-            SoulHunter.Gameplay.Pickups.GoldRewards.Grant(MaxedOutGoldAmount, _playerController != null ? _playerController.Stats : null);
+            if (MaxedRewards.ApplyAlways(_playerController)) return;
+            MaxedRewards.GiveChickenOrGold(_playerController);
         }
 
         /// <summary>
