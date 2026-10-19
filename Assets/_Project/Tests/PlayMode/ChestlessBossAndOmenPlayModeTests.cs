@@ -206,6 +206,47 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        /// <summary>
+        /// Bug MIS CORE-04 (2026-10-19): the formation filter read the clock at the XX:30 pick, so a 24:30 pick sent its
+        /// formation at 25:00 together with the guardian. It now reads the fire time, and checks again when it fires.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The2430Pick_SendsNoFormation_WithTheGuardianAt2500()
+        {
+            yield return BootWithOmens();
+            var director = RandomEventDirector.Instance;
+            var progression = LevelProgressionManager.Instance;
+            float boss = progression.CurrentLevel.BossStartSeconds;
+            Assert.That(boss, Is.EqualTo(1500f), "Level 1's guardian comes at 25:00.");
+
+            progression.SkipTo(boss - 30.6f);
+            yield return WaitUntilRealtime(() => progression.StageElapsedTime >= boss - 29.8f, "24:30");
+            Assert.That(director.Pending.HasValue, Is.True, "24:30 picks an event.");
+            Assert.That(OmenTable.IsFormation(director.Pending.Value), Is.False, $"{director.Pending.Value}: no formation fires at the guardian's minute.");
+            // Many picks at the same mark: the pool has no formation (8 of 27 events are formations).
+            var pickAt = typeof(RandomEventDirector).GetMethod("PickAt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            for (int i = 0; i < 60; i++)
+            {
+                pickAt.Invoke(director, new object[] { boss - OmenTable.MarkSeconds });
+                Assert.That(OmenTable.IsFormation(director.Pending.Value), Is.False, $"Pick {i}: {director.Pending.Value}.");
+            }
+
+            // A formation forced into the 24:30 pick (as a clock skip could leave one) is dropped when it would fire.
+            director.ForcedPick = () => OmenEvent.HordeSwarm;
+            pickAt.Invoke(director, new object[] { boss - OmenTable.MarkSeconds });
+            director.ForcedPick = null;
+            Assert.That(director.Pending, Is.EqualTo(OmenEvent.HordeSwarm));
+            int fired = director.FiredCount;
+            progression.SkipTo(boss - 0.6f);
+            yield return WaitUntilRealtime(() => progression.StageElapsedTime >= boss + 0.3f, "25:00");
+            Assert.That(director.FiredCount, Is.EqualTo(fired), "The formation is dropped at the guardian's minute.");
+            Assert.That(director.Pending, Is.Null);
+            Assert.That(OmenTable.FormationsAllowedAt(boss - 1f, boss, false), Is.True);
+            Assert.That(OmenTable.FormationsAllowedAt(boss, boss, false), Is.False);
+            Assert.That(OmenTable.FormationsAllowedAt(boss + 60f, boss, true), Is.True, "Once the guardian falls, formations come again.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         [UnityTest]
         public IEnumerator The2930Pick_IsMade_AndFiresAt3000_BeforeTheStageClears()
         {

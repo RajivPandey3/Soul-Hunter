@@ -140,6 +140,15 @@ namespace SoulHunter.Gameplay.Core
         /// With <paramref name="stageClearsAtFire"/> (the 29:30 pick of a timed stage) only the events that
         /// <see cref="OutlastsStageClear"/> are left.
         /// </summary>
+        /// <summary>
+        /// Whether a formation may come at <paramref name="atSeconds"/>: before the guardian's minute, or once it is defeated.
+        /// The filter used to read the clock at the XX:30 pick, so a 24:30 pick (19:30 on Levels 5-6,
+        /// CampaignLevelCatalog.EarlyGuardianSeconds) sent its formation at 25:00 together with the guardian, against the
+        /// rule above (Bug MIS CORE-04, 2026-10-19). It now reads the time the event fires.
+        /// </summary>
+        public static bool FormationsAllowedAt(float atSeconds, float bossStartSeconds, bool bossDefeated) =>
+            atSeconds < bossStartSeconds || bossDefeated;
+
         public static List<OmenEvent> Pool(int stage, bool formationsAllowed, bool stageClearsAtFire = false)
         {
             var pool = new List<OmenEvent>();
@@ -418,20 +427,28 @@ namespace SoulHunter.Gameplay.Core
             float firesAt = mark + OmenTable.MarkSeconds;
             if (!CanFire()) { Pending = null; return; }
             var forced = ForcedPick != null ? ForcedPick() : null;
-            var pool = OmenTable.Pool(_progression.CurrentStage, FormationsAllowed(), StageClearsAt(firesAt));
+            var pool = OmenTable.Pool(_progression.CurrentStage, FormationsAllowed(firesAt), StageClearsAt(firesAt));
             Pending = forced ?? OmenTable.Pick(pool, Random.value);
             PendingFiresAt = firesAt;
             Debug.Log($"[Omens] {OmenTable.Name(Pending.Value)} picked at {mark:0}s; fires at {firesAt:0}s.");
             OnPicked?.Invoke(Pending.Value, firesAt);
         }
 
-        private bool FormationsAllowed() => !_progression.IsBossWindow || _progression.IsBossDefeated;
+        /// <summary>Formations may come at <paramref name="atSeconds"/> of the stage (CORE-04: the fire time, not the pick time).</summary>
+        private bool FormationsAllowed(float atSeconds) =>
+            OmenTable.FormationsAllowedAt(Mathf.Max(atSeconds, _progression.StageElapsedTime), _progression.CurrentLevel.BossStartSeconds, _progression.IsBossDefeated);
 
         private void FirePending()
         {
             var e = Pending.Value;
             Pending = null;
             if (!CanFire()) return;
+            // Checked again when it fires (a debug clock skip or a jump can move the clock past the guardian's minute).
+            if (OmenTable.IsFormation(e) && !FormationsAllowed(_lastClock))
+            {
+                Debug.Log($"[Omens] {OmenTable.Name(e)} dropped: no formation while the guardian stands.");
+                return;
+            }
             Fire(e);
         }
 
