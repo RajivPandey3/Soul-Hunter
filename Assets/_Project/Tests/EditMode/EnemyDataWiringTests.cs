@@ -56,6 +56,21 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void NoEnemyPrefab_CarriesADamageCaster()
+        {
+            // Learning Comment: Bug MIS CMB-14. Enemies hurt the player through TouchDamage; an enemy's DamageCaster was never called
+            // and had an empty target layer, so it was dead data on every enemy, elite and boss (and their variants).
+            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab == null || prefab.GetComponentInChildren<EnemyController>(true) == null) continue;
+                Assert.That(prefab.GetComponentInChildren<SoulHunter.Gameplay.Combat.DamageCaster>(true), Is.Null,
+                    $"{path} par dead DamageCaster nahi hona chahiye.");
+            }
+        }
+
+        [Test]
         public void EnemyAndBossStats_GrowWithStage()
         {
             // Learning Comment: Aage ke stages ke dushman pichhle stage se kamzor nahi hone chahiye.

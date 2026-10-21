@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7438681762385987756}
-  - component: {fileID: 7787966057068652933}
   m_Layer: 0
   m_Name: Enemy_Weapon_Hitbox
   m_TagString: Untagged
@@ -32,23 +31,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1186049999677019193}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7787966057068652933
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3850192193318174605}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c1fed115605849409f62a7a33e61e01, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _hitboxSize: {x: 1, y: 1, z: 1}
-  _targetLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  _damageAmount: 10
 --- !u!1 &4000637781305953112
 GameObject:
   m_ObjectHideFlags: 0
@@ -89,7 +71,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7438681762385987756}
-  - {fileID: 6847753575620782863}
+  - {fileID: 2824851844217388689}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &5437335142857829628
@@ -257,6 +239,9 @@ MonoBehaviour:
   _healthChickenPrefab: {fileID: 0}
   ChickenDropChance: 5
   DropsChest: 0
+  GoldDropChance: 2
+  GoldValue: 1
+  GemValue: 10
 --- !u!114 &8426754675502947004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -271,7 +256,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _damageAmount: 5
   _damageInterval: 0.5
+  _damageType: 0
   SourceWeaponName: Unknown
+  TargetTag: Player
 --- !u!114 &4896945616428502057
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -287,6 +274,7 @@ MonoBehaviour:
   _renderer: {fileID: 0}
   _flashColor: {r: 1, g: 1, b: 1, a: 1}
   _flashDuration: 0.1
+  _flashBrightness: 1.8
 --- !u!1001 &4366715175822860284
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -295,10 +283,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1186049999677019193}
     m_Modifications:
-    - target: {fileID: 7317860461582191411, guid: b92d7019af1731b498f32589f08c33d8, type: 3}
-      propertyPath: m_Name
-      value: SH10_Visual
-      objectReference: {fileID: 0}
     - target: {fileID: 1993497697760682349, guid: b92d7019af1731b498f32589f08c33d8, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -339,12 +323,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7317860461582191411, guid: b92d7019af1731b498f32589f08c33d8, type: 3}
+      propertyPath: m_Name
+      value: SH10_Visual
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b92d7019af1731b498f32589f08c33d8, type: 3}
---- !u!4 &6847753575620782863 stripped
+--- !u!4 &2824851844217388689 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1993497697760682349, guid: b92d7019af1731b498f32589f08c33d8, type: 3}
   m_PrefabInstance: {fileID: 4366715175822860284}

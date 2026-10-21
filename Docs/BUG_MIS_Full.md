@@ -6,7 +6,8 @@
 **Status (2026-10-19):** the register itself changed nothing in the project. Then:
 - **Batch 1** (merged at `ac7077fc`) fixed the S2 rows CMB-01..04, CORE-02 (row half wrong), AI-01..05, AI-07, ITM-01, ITM-02 and UI-01..03.
 - **Batch 2** (merged at `159192f4`) fixed CMB-05 (owner exception), AI-03 (owner: "SH = VS", the VS Drowner rule) and every S3 row except the three below. Two rows turned out partly wrong: ITM-13 (only the no-screen path was wrong) and CORE-10 (the Limit Break part was already fine).
-- **Left:** AI-09 (owner design call), CMB-14 (dead data, harmless). The Holy Wand pierce is 2 (owner: "SH = VS"; the infobox and the Tips agree).
+- **CMB-14** (2026-10-21): the dead DamageCaster is removed from the 32 enemy, elite and boss base prefabs (and so from their 324 variants), including `Enemy_Entity` and the old `Prefabs/Bosses/SH10_L01_BossGameplay`. Weapons keep theirs. Guard: `EnemyDataWiringTests.NoEnemyPrefab_CarriesADamageCaster` (T).
+- **Left:** AI-09 (owner design call). The Holy Wand pierce is 2 (owner: "SH = VS"; the infobox and the Tips agree).
 - **Found during batch 2:** the HordeVatDrawer prune was starved by repeated requests. Fixed.
 
 ## How it was found
@@ -53,7 +54,7 @@
 | CMB-11 | S3 | Holy Wand fires all shots in one frame from one spot (no FireInSuccession). Its cooldown 0.1 s and damage 40 are hard-coded, and the DamageAmount field (10) is unused, so Arcana zones read 10. | `HolyWandWeapon.cs:15,31` | Against the 2026-09-30 succession rule; the numbers need a wiki check. | Likely |
 | CMB-12 | S3 | A duplicate WeaponManager is never destroyed: the guard sits inside the `Evolutions != null` branch. Latent; only one exists today. | `WeaponManager.cs:105-114` | A second manager would also give the start weapon. | Confirmed |
 | CMB-13 | S3 perf | FireInSuccession allocates a closure, an iterator and a WaitForSeconds on every attack. | `AutoAttackWeapon.cs:185-206` | Thousand Edge every 0.35 s, Gun volleys and others; adds to GC. | Confirmed |
-| CMB-14 | S3 | Dead DamageCaster (empty target layer) on every stage-boss prefab and on 324 enemy prefabs. Nothing calls it. | `Prefabs/Bosses/Gameplay/*`, `Prefabs/Enemies/Gameplay/**` | Dead data. | Confirmed (also found by the audit, G-2) |
+| CMB-14 | S3 | Dead DamageCaster (empty target layer) on every stage-boss prefab and on 324 enemy prefabs. Nothing calls it. | `Prefabs/Bosses/Gameplay/*`, `Prefabs/Enemies/Gameplay/**` | Dead data. | Confirmed (also found by the audit, G-2). **Fixed 2026-10-21.** |
 
 ## B. Enemies, spawning and hazards (AI)
 
@@ -127,7 +128,7 @@
 | ID | Found | Count | Real defect? |
 |---|---|---|---|
 | G-1 | `EnvironmentScanner._feetPivot` points at a missing object on enemy gameplay prefabs | 324 | No. The scanner is off on every horde prefab, so this is dead data (S3). |
-| G-2 | `DamageCaster._targetLayer` empty on enemy prefabs | 324 | No. Nothing calls an enemy's DamageCaster (see CMB-14). Dead component (S3). |
+| G-2 | `DamageCaster._targetLayer` empty on enemy prefabs | 324 | No. Nothing calls an enemy's DamageCaster (see CMB-14). Dead component (S3). Removed 2026-10-21. |
 | G-3 | Player `EnvironmentScanner`: ground layer 0, feet pivot missing | 1 | It never reports grounded. Movement does not need it today. Dead logic (S3). |
 | G-4 | `Main_Gameplay` WeaponManager `_availableUnions`: 6 missing references | 6 | Already known (the six removed invented unions). Skipped by code. Clean-up (S3). |
 | G-5 | Empty layer masks on Soul Burst, Whip and pickup `_playerLayer` | 7 | No. The code defaults them to Enemy, or the field is unused since PlayerReach. |
