@@ -356,6 +356,10 @@ namespace SoulHunter.Gameplay.AI
                 Vector3 offset = enemy.transform.position - playerPos;
                 offset.y = 0f;
                 if (offset.sqrMagnitude <= maxDistanceSqr) continue;
+                // Bug MIS AI-09 (owner, 2026-10-21: option A): an enemy that stands where it was placed (pile shooters,
+                // Powder Ring mines, Rootbound plants, Thorn Circle members, the Tide Caller) stays there, so a player
+                // can run away from it. The wiki says nothing about these.
+                if (enemy.TryGetComponent<IHoldsPlace>(out _)) continue;
 
                 // Stragglers always re-enter ahead of the player, also on side-rule stages: those stages are not walled
                 // corridors (VS's Inlaid Library is), so side-only re-entry let a player running up or down leave the

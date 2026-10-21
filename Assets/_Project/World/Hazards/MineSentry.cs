@@ -14,7 +14,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// drops and is not a kill; it can be killed first like any enemy. The ring's survivors leave when its time is up.
     /// </summary>
     [DisallowMultipleComponent]
-    public class MineSentry : MonoBehaviour
+    public class MineSentry : MonoBehaviour, IHoldsPlace
     {
         private static readonly Color FuseTint = new Color(1f, 0.45f, 0.2f, 0.75f);
 

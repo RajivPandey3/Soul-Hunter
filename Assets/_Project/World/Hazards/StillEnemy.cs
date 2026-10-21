@@ -10,7 +10,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// is undone when the enemy goes back to the pool, so the next one from the pool is ordinary.
     /// </summary>
     [DisallowMultipleComponent]
-    public class StillEnemy : MonoBehaviour
+    public class StillEnemy : MonoBehaviour, IHoldsPlace
     {
         /// <summary>Game seconds left before it leaves; 0 or less = it stays until defeated.</summary>
         public float RemainingSeconds { get; set; }

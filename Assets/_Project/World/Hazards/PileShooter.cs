@@ -14,7 +14,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// without drops. Everything is put back when it leaves, so the next enemy from the pool is ordinary.
     /// </summary>
     [DisallowMultipleComponent]
-    public class PileShooter : MonoBehaviour
+    public class PileShooter : MonoBehaviour, IHoldsPlace
     {
         public float RemainingSeconds { get; set; }
         public float FireIntervalSeconds { get; set; } = StageHazardTable.PileFireIntervalSeconds;

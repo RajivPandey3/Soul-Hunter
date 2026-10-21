@@ -7,7 +7,8 @@
 - **Batch 1** (merged at `ac7077fc`) fixed the S2 rows CMB-01..04, CORE-02 (row half wrong), AI-01..05, AI-07, ITM-01, ITM-02 and UI-01..03.
 - **Batch 2** (merged at `159192f4`) fixed CMB-05 (owner exception), AI-03 (owner: "SH = VS", the VS Drowner rule) and every S3 row except the three below. Two rows turned out partly wrong: ITM-13 (only the no-screen path was wrong) and CORE-10 (the Limit Break part was already fine).
 - **CMB-14** (2026-10-21): the dead DamageCaster is removed from the 32 enemy, elite and boss base prefabs (and so from their 324 variants), including `Enemy_Entity` and the old `Prefabs/Bosses/SH10_L01_BossGameplay`. Weapons keep theirs. Guard: `EnemyDataWiringTests.NoEnemyPrefab_CarriesADamageCaster` (T).
-- **Left:** AI-09 (owner design call). The Holy Wand pierce is 2 (owner: "SH = VS"; the infobox and the Tips agree).
+- **AI-09** (owner, 2026-10-21: option A): an enemy that holds its place (pile shooters, Powder Ring mines, Rootbound plants, Thorn Circle members, the Tide Caller; marker `IHoldsPlace`) is no longer moved ahead of a fleeing player. Test: `StillHazardRelocationPlayModeTests` (R).
+- **Left:** nothing; all 58 rows are closed. The Holy Wand pierce is 2 (owner: "SH = VS"; the infobox and the Tips agree).
 - **Found during batch 2:** the HordeVatDrawer prune was starved by repeated requests. Fixed.
 
 ## How it was found
@@ -68,7 +69,7 @@
 | AI-06 | S3 | Fliers and hazard members spawned during an Orologion are not frozen: their state replaces the freeze. | `EnemySpawner.cs:596-597,745-746,775-776`; PileShooter / MineSentry / StillEnemy `Begin` | During a Time Freeze, formations fly and pile shooters fire. Against the VS "new enemies will also become frozen". | Confirmed |
 | AI-07 | S3→S2 | Level 9's Closing Arena shrinks on its own clock (`Time.deltaTime`), not the stage clock. *(= CORE-03, rated S2 there; counted as S2)* | `CampaignSignatureSystem.cs:53-54,206` | Hurry mode: at 30:00 the radius is ~22.5 instead of 10. Debug skips are ignored. | Confirmed |
 | AI-08 | S3 | Hazard and special spawns ignore the 300 and 500 caps. SoulCasket's comment claims a cap that does not exist. | `EnemySpawner.cs:1045-1053`; `SoulCasket.cs:211` | 500 on screen, then a Thorn Circle, a casket ring and summons push the count past 500. | Confirmed |
-| AI-09 | S3 | Still hazard members (pile shooters, mines, Rootbound plants) are moved in front of a fleeing player as stragglers. | `EnemySpawner.cs:347-365` | Run 40 units from a Pile Assault: its shooters reappear ahead of you. **Design call.** | Confirmed |
+| AI-09 | S3 | Still hazard members (pile shooters, mines, Rootbound plants) are moved in front of a fleeing player as stragglers. | `EnemySpawner.cs:347-365` | Run 40 units from a Pile Assault: its shooters reappear ahead of you. **Design call.** | Confirmed. **Fixed 2026-10-21 (owner: A, they stay).** |
 | AI-10 | S3 | `_special` keeps pooled bodies that later serve as ordinary wave enemies, so Nightfall/Rootbound skip swapping them. | `EnemySpawner.cs:124,814,819,1049` | Some ordinary enemies stay during a takeover. | Confirmed |
 | AI-11 | S3 | Enemy bullets survive the stage clear and stage change. | `StageHazards.cs:434-451`; `EnemyBullet.cs` | Lost Heads' bullets keep hitting through the 5 s transition and into the next stage. | Confirmed |
 | AI-12 | S3 mem | The DontDestroyOnLoad drawers never forget destroyed bodies, batches or material copies. | `HordeVatDrawer.cs:74,216`; `EnemyBulletDrawer.cs:89-91` | They grow over long Endless sessions and repeated runs. Size not measured. | Confirmed |
@@ -140,5 +141,5 @@ No missing scripts, no animators without controllers, no audio sources playing n
 ## Owner decisions needed before fixing
 
 - CMB-05: should Shadow Kael's mirrored Crimson Shroud and Laurel protect him?
-- AI-09: should still hazard rings follow a fleeing player?
+- AI-09: should still hazard rings follow a fleeing player? Answered 2026-10-21: no (A).
 - CMB-11: the Holy Wand numbers need a wiki check before change.
