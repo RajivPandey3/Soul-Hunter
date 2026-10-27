@@ -104,6 +104,36 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
 
+        [UnityTest]
+        public IEnumerator ChestElites_FollowTheirLevelsOwnSourceStage()
+        {
+            // VS wiki, Inlaid_Library "Waves" (2026-10-27): Level 2's chest bosses come at its own minutes with its own
+            // configs; 8:00 Colossal Musc Musc is {{treasure|level=2|evo=|tier3=3|tier2=10|tier1=50|reward1=weapon}}, and
+            // its 25:00 Hag can evolve.
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            LevelProgressionManager.Instance.StartStage(2);
+            yield return null;
+            spawner.enabled = false;
+            Assert.That(spawner.ChestEliteMinutes, Is.EqualTo(StageChestBosses.MinutesFor(2)), "Level 2 uses Inlaid Library's minutes.");
+            Assert.That(spawner.ChestEliteMinutes.Contains(8f) && !spawner.ChestEliteMinutes.Contains(1f), Is.True);
+
+            var musc = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 8f });
+            ChestPickup chest = null;
+            yield return KillAndFindChest(musc, c => chest = c);
+            Assert.That(chest.Tiers, Is.EqualTo(new ChestTiers(2, false, 3f, 10f, 50f, ChestTiers.Slot(1))));
+            Assert.That(chest.Kind, Is.EqualTo(ChestKind.Bronze));
+            chest.gameObject.SetActive(false);
+
+            var bossPrefab = GetPrivateField<GameObject>(spawner, "_stageBossPrefab");
+            Assert.IsTrue((bool)typeof(EnemySpawner).GetMethod("SpawnBoss", Private).Invoke(spawner, new object[] { bossPrefab }));
+            var boss = EnemyController.ActiveEnemies.Last(e => e != null && spawner.IsBoss(e));
+            Assert.That(boss.GetComponent<EnemyDrop>().ChestTiersAtDeath, Is.EqualTo(StageChestBosses.StageBossFor(2)));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
         private IEnumerator KillAndFindChest(GameObject carrier, System.Action<ChestPickup> found)
         {
             Assert.IsNotNull(carrier, "SpawnChestEliteAt produced nothing. " + Errors());

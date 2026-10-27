@@ -32,11 +32,13 @@ namespace SoulHunter.Gameplay.AI
         [SerializeField, Min(1)] private int _maxMinimumTopUpPerFrame = 8;
 
         [Header("Chest elites (VS rule)")]
-        [Tooltip("Stage minutes at which a chest-carrying elite arrives. Owner (2026-09-27): the VS minutes, read from the " +
-                 "Mad Forest wave table (vampire.survivors.wiki/w/Mad_Forest?action=raw). 25:00 is the stage boss; the " +
-                 "11:00 and 21:00 VS chests only hold Arcanas and are left out until Arcana chests exist.")]
-        [SerializeField] private float[] _chestEliteMinutes = DefaultChestEliteMinutes;
-        public static readonly float[] DefaultChestEliteMinutes = { 1f, 3f, 5f, 7f, 9f, 10f, 12f, 14f, 15f, 16f, 18f, 20f, 22f, 23f, 27f, 29f };
+        // Each level's chest-boss minutes come from its source stage's VS "Waves" table (StageChestBosses, 2026-10-27).
+        // 25:00 is the stage boss; the 11:00 and 21:00 Arcana chests come only in Arcana mode (ArcanaChestMinutes).
+        private float[] _chestEliteMinutes = DefaultChestEliteMinutes;
+        /// <summary>Level 1's (Mad Forest's) chest-boss minutes.</summary>
+        public static readonly float[] DefaultChestEliteMinutes = SoulHunter.Gameplay.Core.StageChestBosses.MinutesFor(1);
+        /// <summary>The chest-boss minutes of the stage being played.</summary>
+        public System.Collections.Generic.IReadOnlyList<float> ChestEliteMinutes => _chestEliteMinutes;
         [SerializeField, Min(1f)] private float _chestEliteSizeMultiplier = 1.5f;
         private int _chestElitesSpawned;
         private int _arcanaChestsSpawned;
@@ -118,6 +120,7 @@ namespace SoulHunter.Gameplay.AI
             _stageTimePassed = 0f;
             _timer = 0f;
             _chestElitesSpawned = 0;
+            _chestEliteMinutes = SoulHunter.Gameplay.Core.StageChestBosses.MinutesFor(stageNum);
             _arcanaChestsSpawned = 0;
             _chestlessBossesSpawned = 0;
             EndWaveTakeover();
@@ -454,7 +457,7 @@ namespace SoulHunter.Gameplay.AI
             bossObj.SetActive(true);
             // P1-14: the 25:00 stage boss's chest uses Mad Forest's Giant Blue Venus config (3/10/100, evo=1). Set after
             // SetActive, whose OnEnable clears the previous life's chest.
-            bossObj.GetComponent<EnemyDrop>()?.DropChestThisLife(SoulHunter.Gameplay.Core.ChestTiers.StageBoss);
+            bossObj.GetComponent<EnemyDrop>()?.DropChestThisLife(SoulHunter.Gameplay.Core.StageChestBosses.StageBossFor(SoulHunter.Gameplay.Data.CampaignLevelCatalog.CurrentStage));
             bossObj.transform.localScale = Vector3.one * 3f; // 3x Bigger
             float curse = MinuteCurse(); // speed: from the minute the Curse was gained in (VS wiki Curse)
             bossObj.GetComponent<EnemyController>()?.ApplyCampaignSpeed(
@@ -1042,7 +1045,7 @@ namespace SoulHunter.Gameplay.AI
             var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (health != null && data != null)
                 health.Initialize(ScaleHealthByCurse(ModeHealth(ChestEliteHealth(minute, CurrentPlayerLevel())), CurrentCurse()));
-            // P1-14: the chest carries this minute's Mad Forest config (vampire.survivors.wiki/w/Mad_Forest, "Waves"), so its
+            // P1-14: the chest carries this minute's config from the stage's VS "Waves" table (StageChestBosses), so its
             // item chances and evolution flag belong to the boss, not to the clock when it dies. Off-table minutes (debug
             // spawns) use ChestTiers.Unscheduled.
             elite.GetComponent<EnemyDrop>()?.DropChestThisLife(SoulHunter.Gameplay.Core.ChestTiers.ForMinute(minute));

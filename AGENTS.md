@@ -54,6 +54,10 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
   - Light sources on Levels 5-7 are 7.5% with a 50% cap; at most 18 on Level 5 and 12 on Levels 6-7.
   - Hyper projectile speed is 1 on Levels 6 and 7, because those infoboxes give none.
   - Code: `CampaignLevelCatalog`, `LightSourceSpawner`.
+- Phase 1b, part 1 (2026-10-27): each level's chest bosses come at its source stage's minutes, each with its own {{treasure}} config (`StageChestBosses`, read by `EnemySpawner` and `ChestTiers.ForMinute`). The 25:00 stage boss also has its own stage's config.
+  - Before, every level used Mad Forest's minutes and configs.
+  - Balance method: a config with no "level" uses level 1, and Inlaid Library's "level2/level1" typo is read as tier2/tier1.
+  - Still to do (Phase 1c): each chest boss's own body and statbox. Chest bosses still use the stage elite with Mad Forest's health rule.
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 

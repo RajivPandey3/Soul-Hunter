@@ -8,8 +8,8 @@ namespace SoulHunter.Gameplay.Core
     /// vampire.survivors.wiki/w/Template:Treasure: level (the fallback), evo, tier3 (5 items), tier2 (3 items), tier1
     /// (1 item) and reward1..reward5 (what each item slot is). "open" in the template only shows the wiki table expanded;
     /// it has no gameplay meaning and is left out.
-    /// Soul Hunter's chest elites come at the Mad Forest minutes on every stage (owner, 2026-09-27), so every stage uses
-    /// the Mad Forest configs (<see cref="ForMinute"/>); the 25:00 stage boss uses the Giant Blue Venus config.
+    /// Each level's chest bosses use their source stage's configs (<see cref="StageChestBosses"/>, 2026-10-27); the
+    /// Mad Forest ones below stay for Level 1 and as the default of a pooled chest.
     /// </summary>
     [System.Serializable]
     public struct ChestTiers : System.IEquatable<ChestTiers>
@@ -128,9 +128,21 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
-        /// <summary>The scheduled boss's config at <paramref name="minute"/>, or <see cref="Unscheduled"/> off the table.</summary>
+        /// <summary>
+        /// The config of the stage being played (Level 1 outside a run) at <paramref name="minute"/>: its chest boss, the
+        /// Arcana holder at 11:00 and 21:00, or its stage boss at 25:00; <see cref="Unscheduled"/> off the table.
+        /// </summary>
         public static ChestTiers ForMinute(float minute) =>
-            TryMadForest(minute, out var tiers) ? tiers : Unscheduled(minute * 60f);
+            ForStageMinute(SoulHunter.Gameplay.Data.CampaignLevelCatalog.CurrentStage > 0 ? SoulHunter.Gameplay.Data.CampaignLevelCatalog.CurrentStage : 1, minute);
+
+        public static ChestTiers ForStageMinute(int stage, float minute)
+        {
+            if (StageChestBosses.TryFor(stage, minute, out var tiers)) return tiers;
+            int m = Mathf.RoundToInt(minute);
+            if (Mathf.Abs(minute - m) < 0.01f && (m == 11 || m == 21)) return ArcanaMinutes;
+            if (Mathf.Abs(minute - m) < 0.01f && m == 25) return StageChestBosses.StageBossFor(stage);
+            return Unscheduled(minute * 60f);
+        }
 
         /// <summary>
         /// A chest whose carrier has no scheduled config (a debug spawn, a test, a chest-dropping prefab not spawned by the
