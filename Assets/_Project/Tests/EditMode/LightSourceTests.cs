@@ -53,11 +53,11 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void EachLevel_UsesItsVsStageLanternNumbers()
         {
-            // VS wiki (Light source, destructible table), following the stage-bonus climb.
+            // VS stage infoboxes (dchance, dchance-max, dmax; 2026-10-27): each level's source stage.
             var expected = new (float chance, float max, int count)[]
             {
                 (0.10f, 0.50f, 10), (0.075f, 0.50f, 10), (0.20f, 0.60f, 10), (0.075f, 0.50f, 10),
-                (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20),
+                (0.075f, 0.50f, 18), (0.075f, 0.50f, 12), (0.075f, 0.50f, 12), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20), (0.20f, 0.80f, 20),
             };
             for (int stage = 1; stage <= 10; stage++)
             {
@@ -66,8 +66,8 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(numbers.MaxChance, Is.EqualTo(expected[stage - 1].max).Within(1e-5), $"Level {stage} cap");
                 Assert.That(numbers.Max, Is.EqualTo(expected[stage - 1].count), $"Level {stage} lanterns at once");
             }
-            Assert.That(LightSourceSpawner.SpawnChance(LightSourceSpawner.ForStage(5), 3f), Is.EqualTo(0.60f).Within(1e-5));
-            Assert.That(LightSourceSpawner.SpawnChance(LightSourceSpawner.ForStage(5), 10f), Is.EqualTo(0.80f).Within(1e-5), "Cappella Magna caps at 80%.");
+            Assert.That(LightSourceSpawner.SpawnChance(LightSourceSpawner.ForStage(8), 3f), Is.EqualTo(0.60f).Within(1e-5));
+            Assert.That(LightSourceSpawner.SpawnChance(LightSourceSpawner.ForStage(8), 10f), Is.EqualTo(0.80f).Within(1e-5), "Cappella Magna caps at 80%.");
         }
 
         [Test]

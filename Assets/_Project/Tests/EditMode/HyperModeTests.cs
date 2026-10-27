@@ -18,7 +18,7 @@ namespace SoulHunter.Tests.EditMode
         // Index 0 = Level 1.
         private static readonly float[] NormalPlayerSpeed = { 1.1f, 1.25f, 1.25f, 1.25f, 1.4f, 1.4f, 1.4f, 1.4f, 1.4f, 1.4f };
         private static readonly float[] HyperPlayerSpeed = { 2f, 1.9f, 1.9f, 1.9f, 2f, 2f, 2f, 2f, 2f, 2f };
-        private static readonly float[] HyperProjectile = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f };
+        private static readonly float[] HyperProjectile = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1f, 1f, 1.15f, 1.15f, 1.15f };
         private static readonly float[] HyperLuck = { 0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
         // Hyper / normal enemy-speed. Level 2 (Inlaid Library: x1.25 in both columns) contradicts the Enemies page
         // ("increases ... the movement speed of enemies"); balance method: Dairy Plant's and Gallo Tower's 1.9 / 1.25.
@@ -26,9 +26,8 @@ namespace SoulHunter.Tests.EditMode
         {
             2f / 1.1f, 1.9f / 1.25f, 1.9f / 1.25f, 1.9f / 1.25f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f, 2f / 1.4f
         };
-        // Stage gold + 0.5. L6-L10 use Soul Hunter's DLC 1.5, and the DLC stages go +50% -> +100% in Hyper (wiki Stages:
-        // Mt.Moonspell, Lake Foscari, Polus Replica), so 2.0 there.
-        private static readonly float[] HyperGold = { 1.5f, 1.5f, 1.7f, 1.8f, 1.9f, 2f, 2f, 2f, 2f, 2f };
+        // Stage gold + 0.5 = each source stage's greed2: Abyss Foscari, Mt.Moonspell and Lake Foscari x2, Cappella Magna x1.9.
+        private static readonly float[] HyperGold = { 1.5f, 1.5f, 1.7f, 1.8f, 2f, 2f, 2f, 1.9f, 1.9f, 1.9f };
 
         private GameObject _object;
 
@@ -79,7 +78,7 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void Hyper_ProjectileSpeed_Is1_25OnLevel1_And1_15Elsewhere()
+        public void Hyper_ProjectileSpeed_FollowsEachSourceStage()
         {
             for (int stage = 1; stage <= 10; stage++)
             {

@@ -14,16 +14,16 @@ namespace SoulHunter.Tests.EditMode
         public void TearDown() => CampaignLevelCatalog.CurrentStage = 0;
 
         [Test]
-        public void Bonuses_StartLikeMadForest_AndNeverFallAlongTheStory()
+        public void Bonuses_AreEachLevelsSourceStageInfobox()
         {
-            Assert.That(CampaignLevelCatalog.PlayerSpeedFor(1), Is.EqualTo(1.1f).Within(0.001f), "Mad Forest: x1.1 move speed.");
-            Assert.That(CampaignLevelCatalog.GoldFor(1), Is.EqualTo(1f).Within(0.001f));
-            for (int stage = 2; stage <= 10; stage++)
+            // Raw infoboxes (2026-10-27): Mad Forest, Inlaid Library, Dairy Plant, Gallo Tower, Abyss Foscari,
+            // Mt.Moonspell, Lake Foscari, then Cappella Magna on Levels 8-10.
+            var speed = new[] { 1.1f, 1.25f, 1.25f, 1.25f, 1.4f, 1.4f, 1.4f, 1.4f, 1.4f, 1.4f };
+            var gold = new[] { 1f, 1f, 1.2f, 1.3f, 1.5f, 1.5f, 1.5f, 1.4f, 1.4f, 1.4f };
+            for (int stage = 1; stage <= 10; stage++)
             {
-                Assert.That(CampaignLevelCatalog.PlayerSpeedFor(stage), Is.GreaterThanOrEqualTo(CampaignLevelCatalog.PlayerSpeedFor(stage - 1)), $"Stage {stage}");
-                Assert.That(CampaignLevelCatalog.GoldFor(stage), Is.GreaterThanOrEqualTo(CampaignLevelCatalog.GoldFor(stage - 1)), $"Stage {stage}");
-                Assert.That(CampaignLevelCatalog.PlayerSpeedFor(stage), Is.LessThanOrEqualTo(1.4f + 0.001f), "No more than the VS stages give.");
-                Assert.That(CampaignLevelCatalog.GoldFor(stage), Is.LessThanOrEqualTo(1.5f + 0.001f));
+                Assert.That(CampaignLevelCatalog.PlayerSpeedFor(stage), Is.EqualTo(speed[stage - 1]).Within(0.001f), $"Level {stage} move speed");
+                Assert.That(CampaignLevelCatalog.GoldFor(stage), Is.EqualTo(gold[stage - 1]).Within(0.001f), $"Level {stage} gold");
             }
             Assert.That(CampaignLevelCatalog.Get(4).GoldMultiplier, Is.EqualTo(CampaignLevelCatalog.GoldFor(4)));
         }
@@ -40,7 +40,7 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void StageGold_MultipliesSeparatelyFromGreed()
         {
-            CampaignLevelCatalog.CurrentStage = 5; // x1.4 gold
+            CampaignLevelCatalog.CurrentStage = 8; // Cappella Magna x1.4 gold
             Assert.That(GoldRewards.ApplyGreed(100, null), Is.EqualTo(140));
         }
     }

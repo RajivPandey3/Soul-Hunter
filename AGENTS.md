@@ -46,6 +46,15 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
 - Owner decisions 2026-09-30: the dash only moves and avoids damage (its 50 damage goes); the 6 Soul Hunter-invented weapon unions are removed; XP gem colours change at 20 and 90 XP (VS 2 and 9, scaled to Soul Hunter's 10-XP gems); stage-clear revival gold stacks; missing VS items and the VS unlock system are added later; Shadow Kael's mirrored Clock Lancet slows and his Pentagram erases items. Built: see "Phase 0 of the VS DOT plan" (section 7).
 - The full VS rule list and the gaps are in `Docs/VS_DOT_Table.md`; the work order is in `Docs/VS_DOT_Plan.md`.
 
+**Owner rule (2026-10-27): VS 100% first, then Soul Hunter's extras.** The owner said: "VS Wiki 100% match hona chahiye, to pahle match karo then plus apna extra thing". The scope is mechanics, rules and all VS content.
+- An owner decision no longer replaces a VS rule. The VS rule is built, and the Soul Hunter feature sits on top of it as an extra, an option or a mode. This covers the 10-level campaign, aiming, the Level 3 merchant, the crowd and the open unlocks.
+- The audit of 2026-10-27 is in `Docs/VS_Audit_20261027/`, and the work order is in `Docs/VS_100_Plan.md`.
+- Phase 1a (2026-10-27): Levels 5, 6 and 7 now take every stage value from Abyss Foscari, Mt.Moonspell and Lake Foscari, as their enemy tables already did. Levels 8-10 stay on Cappella Magna.
+  - Gold is 1.5 on Levels 5-7 and 1.4 on Levels 8-10.
+  - Light sources on Levels 5-7 are 7.5% with a 50% cap; at most 18 on Level 5 and 12 on Levels 6-7.
+  - Hyper projectile speed is 1 on Levels 6 and 7, because those infoboxes give none.
+  - Code: `CampaignLevelCatalog`, `LightSourceSpawner`.
+
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 
 ---

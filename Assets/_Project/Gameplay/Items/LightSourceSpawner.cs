@@ -42,7 +42,9 @@ namespace SoulHunter.Gameplay.Pickups
         }
 
         private static readonly StageLanterns MadForest = new StageLanterns(0.10f, 0.50f, 10), InlaidLibrary = new StageLanterns(0.075f, 0.50f, 10),
-            DairyPlant = new StageLanterns(0.20f, 0.60f, 10), GalloTower = new StageLanterns(0.075f, 0.50f, 10), CappellaMagna = new StageLanterns(0.20f, 0.80f, 20);
+            DairyPlant = new StageLanterns(0.20f, 0.60f, 10), GalloTower = new StageLanterns(0.075f, 0.50f, 10),
+            AbyssFoscari = new StageLanterns(0.075f, 0.50f, 18), Moonspell = new StageLanterns(0.075f, 0.50f, 12), LakeFoscari = new StageLanterns(0.075f, 0.50f, 12),
+            CappellaMagna = new StageLanterns(0.20f, 0.80f, 20);
 
         /// <summary>The lantern numbers of a Soul Hunter level (1-10).</summary>
         public static StageLanterns ForStage(int stage)
@@ -53,6 +55,9 @@ namespace SoulHunter.Gameplay.Pickups
                 case 2: return InlaidLibrary;
                 case 3: return DairyPlant;
                 case 4: return GalloTower;
+                case 5: return AbyssFoscari;
+                case 6: return Moonspell;
+                case 7: return LakeFoscari;
                 default: return CappellaMagna;
             }
         }

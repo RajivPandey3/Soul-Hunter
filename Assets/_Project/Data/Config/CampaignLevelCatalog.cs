@@ -83,34 +83,37 @@ namespace SoulHunter.Gameplay.Data
 
         public static int Count => Levels.Length;
 
-        // VS stage bonuses (vampire.survivors.wiki/w/Stages, fetched 2026-09-27): every stage has its own player move
-        // speed and gold multipliers, growing along the stage list (Mad Forest x1.1 speed; Inlaid Library x1.25;
-        // Dairy Plant x1.25 and x1.2 gold; Gallo Tower x1.3 gold; Cappella Magna x1.4 both; the DLC stages x1.4 and
-        // x1.5 gold). Soul Hunter's ten stages follow that climb, in story order. Provisional balance values.
+        // VS stage bonuses: each Soul Hunter level takes its source stage's infobox (raw pages fetched 2026-10-27):
+        // L1 Mad Forest, L2 Inlaid Library, L3 Dairy Plant, L4 Gallo Tower, L5 Abyss Foscari, L6 Mt.Moonspell,
+        // L7 Lake Foscari, L8-L10 Cappella Magna, the same stages the enemy tables use (StageEnemyTables).
+        // player-speed: x1.1, x1.25, x1.25, x1.25, then x1.4 on all six later stages.
+        // greed: 1, x1, x1.2, x1.3; Abyss Foscari, Mt.Moonspell and Lake Foscari x1.5; Cappella Magna x1.4.
         private static readonly float[] PlayerSpeedBonus = { 1.10f, 1.25f, 1.25f, 1.25f, 1.40f, 1.40f, 1.40f, 1.40f, 1.40f, 1.40f };
-        private static readonly float[] GoldBonus = { 1.00f, 1.00f, 1.20f, 1.30f, 1.40f, 1.50f, 1.50f, 1.50f, 1.50f, 1.50f };
+        private static readonly float[] GoldBonus = { 1.00f, 1.00f, 1.20f, 1.30f, 1.50f, 1.50f, 1.50f, 1.40f, 1.40f, 1.40f };
 
         public static float PlayerSpeedFor(int stage) => PlayerSpeedBonus[Mathf.Clamp(stage, 1, PlayerSpeedBonus.Length) - 1];
         public static float GoldFor(int stage) => GoldBonus[Mathf.Clamp(stage, 1, GoldBonus.Length) - 1];
 
         // VS Hyper mode, per stage (2026-10-09). The Stages page: "The overall bonuses granted by hyper mode differ with
         // each stage". Each value is the stage infobox's Hyper column (raw pages fetched 2026-10-09), on the same mapping
-        // as the stage bonuses above: L1 Mad Forest, L2 Inlaid Library, L3 Dairy Plant, L4 Gallo Tower, L5-L10 Cappella
-        // Magna (a Soul Hunter choice, not a wiki fact).
+        // as the stage bonuses above (L5 Abyss Foscari, L6 Mt.Moonspell, L7 Lake Foscari, L8-L10 Cappella Magna; raw
+        // infoboxes fetched again 2026-10-27).
         // - Player speed (absolute, replaces the normal value): Mad Forest "player-speed2 = 2"; Inlaid Library, Dairy
-        //   Plant and Gallo Tower "x1.9"; Cappella Magna "x2". The Stages page lists the same: +100%, +90%, +90%, +90%,
-        //   +100% Move Speed.
-        // - Projectile speed: Mad Forest "projectile-speed2 = 1.25"; the others "x1.15".
+        //   Plant and Gallo Tower "x1.9"; Abyss Foscari, Mt.Moonspell, Lake Foscari and Cappella Magna "x2". The Stages
+        //   page lists the same: +100%, +90%, +90%, +90%, +100% Move Speed.
+        // - Projectile speed: Mad Forest "projectile-speed2 = 1.25"; Inlaid Library, Dairy Plant, Gallo Tower, Abyss
+        //   Foscari and Cappella Magna "x1.15". Mt.Moonspell and Lake Foscari have no projectile-speed field and their
+        //   Stages rows list none, so Levels 6 and 7 get no Hyper projectile speed.
         // - Luck: "x1.1" on the four later stages (their pages: "+10% Luck bonuses", added like Inverse's +20%); Mad
         //   Forest: "the only stage that does not grant a Luck bonus in its hyper mode".
         // - Enemy speed: the ratio hyper / normal of the infobox's enemy-speed, applied on top of Soul Hunter's own stage
         //   pace (CampaignLevelDefinition.EnemySpeedMultiplier): Mad Forest 2 / 1.1, Dairy Plant and Gallo Tower
-        //   1.9 / 1.25, Cappella Magna 2 / 1.4. Inlaid Library gives x1.25 in both columns (ratio 1), which contradicts
+        //   1.9 / 1.25, the four later stages 2 / 1.4. Inlaid Library gives x1.25 in both columns (ratio 1), which contradicts
         //   the Enemies page ("Hyper mode in each stage increases ... the movement speed of enemies"). Balance method
         //   (owner rule 2026-10-09): every other base stage's Hyper enemy speed equals its Hyper player speed, and Dairy
         //   Plant and Gallo Tower share Inlaid Library's normal x1.25, so Level 2 uses their 1.9 / 1.25.
         private static readonly float[] HyperPlayerSpeed = { 2.0f, 1.9f, 1.9f, 1.9f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f };
-        private static readonly float[] HyperProjectileSpeed = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f, 1.15f };
+        private static readonly float[] HyperProjectileSpeed = { 1.25f, 1.15f, 1.15f, 1.15f, 1.15f, 1.00f, 1.00f, 1.15f, 1.15f, 1.15f };
         private static readonly float[] HyperLuck = { 0f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f };
         private static readonly float[] HyperEnemySpeed =
         {
