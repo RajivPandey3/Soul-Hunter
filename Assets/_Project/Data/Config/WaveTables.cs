@@ -64,6 +64,16 @@ namespace SoulHunter.Gameplay.Data
         // block spawns), walls; L4 mostly left/right, walls; L5 all sides, slow heavy crowd, fast straight swarms;
         // L6 mostly top/bottom, fast; L7 ghost swarms; L8 elites, rings; L9 walls and rings; L10 everything, densest.
 
+        // Each source stage's infobox "starting-spawns" (normal) and "starting-spawns2" (Hyper), raw 2026-10-27: Mad Forest
+        // 10 / 15, Inlaid Library 50 / 60, Dairy Plant 40 / 60, Gallo Tower 50 / 60, Abyss Foscari 40 / 60, Mt.Moonspell
+        // 50 / 70, Lake Foscari 50 / 70, Cappella Magna 40 / 60 (Levels 8-10).
+        private static readonly int[] StartingSpawnsNormal = { 10, 50, 40, 50, 40, 50, 50, 40, 40, 40 };
+        private static readonly int[] StartingSpawnsHyper = { 15, 60, 60, 60, 60, 70, 70, 60, 60, 60 };
+
+        /// <summary>How many enemies a stage sends the moment it starts (VS stage infobox).</summary>
+        public static int StartingSpawns(int stage, bool hyper) =>
+            (hyper ? StartingSpawnsHyper : StartingSpawnsNormal)[Mathf.Clamp(stage, 1, 10) - 1];
+
         public static SpawnSide SideFor(int stage)
         {
             switch (Mathf.Clamp(stage, 1, 10))

@@ -70,6 +70,11 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
     - Werewolf 1 (boss) has xp 2; Undead Sassy Witch (boss) and the Foscaritrices have xp 3.
     - Orochimario's statbox gives no res-debuff, while its page text says it resists debuffs.
     - The 10:00 Mt.Moonspell Oni uses the normal Oni statbox.
+- Phase 1b, part 2 (2026-10-27): starting spawns and far enemies.
+  - **Starting spawns:** a stage starts with its source stage's infobox `starting-spawns` (Hyper: `starting-spawns2`): 10/15, 50/60, 40/60, 50/60, 40/60, 50/70, 50/70 and 40/60 on Levels 8-10 (`WaveTables.StartingSpawns`). They are sent a few per frame from the minute's types. Before, only the minute-0 minimum was filled.
+  - **Far enemies:** an ordinary enemy beyond 40 units now despawns without drops and is not a kill. The wiki says enemies "can despawn if the player moves far enough"; it gives no distance, so 40 stays (balance method). Before, every straggler was moved back ahead of the player.
+    - Brought back as before: bosses, chest carriers, scheduled enemies (item guardians, chest-less wave bosses) and still hazards (which stay put).
+  - Tests: `VsSpawnRulesPlayModeTests` (R) and `StageChestBossTests.StartingSpawns_AreEachSourceStagesInfobox` (T).
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 

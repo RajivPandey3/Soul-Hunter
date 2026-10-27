@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using SoulHunter.Gameplay.Core;
 using SoulHunter.Gameplay.Data;
@@ -76,6 +77,15 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(StageChestBosses.TypeFor(1, 10f), Is.EqualTo("GreatMantisWraith"), "Mad Forest 10:00 Giant Mantichana.");
             Assert.That(MadForestEnemies.Find("GreatMantisWraith").FreezeResistance, Is.EqualTo(1.1f).Within(1e-5));
             Assert.That(StageChestBosses.TypeFor(2, 8f), Is.EqualTo("SporeColossus"), "Inlaid Library 8:00 Colossal Musc Musc.");
+        }
+
+        [Test]
+        public void StartingSpawns_AreEachSourceStagesInfobox()
+        {
+            Assert.That(Enumerable.Range(1, 10).Select(s => WaveTables.StartingSpawns(s, false)),
+                Is.EqualTo(new[] { 10, 50, 40, 50, 40, 50, 50, 40, 40, 40 }));
+            Assert.That(Enumerable.Range(1, 10).Select(s => WaveTables.StartingSpawns(s, true)),
+                Is.EqualTo(new[] { 15, 60, 60, 60, 60, 70, 70, 60, 60, 60 }));
         }
 
         [Test]

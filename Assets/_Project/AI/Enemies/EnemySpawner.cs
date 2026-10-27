@@ -120,6 +120,7 @@ namespace SoulHunter.Gameplay.AI
             _stageTimePassed = 0f;
             _timer = 0f;
             _chestElitesSpawned = 0;
+            _startingSpawnsLeft = WaveTables.StartingSpawns(stageNum, RunModes.Hyper);
             _chestEliteMinutes = SoulHunter.Gameplay.Core.StageChestBosses.MinutesFor(stageNum);
             _arcanaChestsSpawned = 0;
             _chestlessBossesSpawned = 0;
@@ -308,10 +309,20 @@ namespace SoulHunter.Gameplay.AI
                 int missing = Mathf.Min(wanted, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
                 for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnWave(NextWavePrefab(level, phase))));
+                for (int i = 0; i < _maxMinimumTopUpPerFrame && _startingSpawnsLeft > 0 && EnemyController.ActiveEnemies.Count < _maxAliveEnemies; i++)
+                {
+                    _startingSpawnsLeft--;
+                    GivePendingChest(Defang(SpawnWave(NextWavePrefab(level, phase))));
+                }
             }
         }
 
         private int _waveTypeCursor;
+        // VS (Enemies, Spawning): "Upon entering a stage, an initial amount of enemies depending on the stage modifiers
+        // spawns." Counted down as they are sent, a few per frame like the minimum.
+        private int _startingSpawnsLeft;
+        /// <summary>The stage's starting enemies still to send (tests).</summary>
+        public int StartingSpawnsLeft => _startingSpawnsLeft;
 
         /// <summary>The next enemy of the wave: its types in turn (VS), or the stage's own enemy when it lists none.</summary>
         private GameObject NextWavePrefab(SoulHunter.Gameplay.Data.CampaignLevelDefinition level, WavePhase phase)
@@ -330,8 +341,8 @@ namespace SoulHunter.Gameplay.AI
         }
 
         /// <summary>
-        /// VS rule: enemies left far behind are not wasted. Every check, any non-boss enemy beyond
-        /// _relocateDistance is moved onto the spawn ring in front of the player, keeping its health.
+        /// Enemies left far behind (beyond _relocateDistance): an ordinary one despawns without drops (VS "can despawn");
+        /// a boss, chest carrier or scheduled enemy is moved onto the spawn ring in front of the player, keeping its health.
         /// </summary>
         private void RelocateStragglers()
         {
@@ -363,6 +374,18 @@ namespace SoulHunter.Gameplay.AI
                 // Powder Ring mines, Rootbound plants, Thorn Circle members, the Tide Caller) stays there, so a player
                 // can run away from it. The wiki says nothing about these.
                 if (enemy.TryGetComponent<IHoldsPlace>(out _)) continue;
+
+                // VS wiki (Enemies, Spawning, raw 2026-10-27): "Enemies generally spawn just outside the screen and can
+                // despawn if the player moves far enough from them." An ordinary enemy left behind leaves without drops
+                // (the wave's minimum sends new ones). Bosses, chest carriers and other scheduled enemies (item guardians,
+                // chest-less wave bosses) are brought back instead, as VS teleports its bosses. The wiki gives no distance;
+                // _relocateDistance (40 units) stays (balance method).
+                if (!_bossControllers.Contains(enemy) && !_special.Contains(enemy.gameObject) &&
+                    !(enemy.TryGetComponent<EnemyDrop>(out var drop) && drop.WillDropChest))
+                {
+                    enemy.gameObject.SetActive(false);
+                    continue;
+                }
 
                 // Stragglers always re-enter ahead of the player, also on side-rule stages: those stages are not walled
                 // corridors (VS's Inlaid Library is), so side-only re-entry let a player running up or down leave the
