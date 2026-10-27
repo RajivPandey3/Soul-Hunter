@@ -158,5 +158,96 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(speed, Is.EqualTo(expected).Within(expected * 0.25f), "Skullone (swarm) speed 700.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+    
+        // ---------------------------------------------------------------- Level 3, Dairy Plant
+
+        private IEnumerator EnterLevel(int level, System.Action<EnemySpawner> found)
+        {
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            DisablePlayerWeapons();
+            PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
+            LevelProgressionManager.Instance.StartStage(level);
+            yield return null;
+            yield return null;
+            spawner.enabled = false;
+            foreach (var stray in EnemyController.ActiveEnemies.ToList()) if (stray != null) stray.gameObject.SetActive(false);
+            found(spawner);
+        }
+
+        [UnityTest]
+        public IEnumerator LevelThree_AJellyfishWall_RingsTheHero_AndClosesInAndOut()
+        {
+            EnemySpawner spawner = null;
+            yield return EnterLevel(3, s => spawner = s);
+            var wall = MapEvents.For(3).First(e => e.Type == StageEventType.PulsingRing && e.Count == 80);
+
+            var spawned = Run(spawner, wall);
+            Assert.That(spawned, Has.Count.EqualTo(80), Errors());
+            Assert.That(spawned.All(e => e.name.StartsWith(DairyPlantEnemies.Table.PrefabName("RingEmber"))), Is.True);
+            var ring = Object.FindObjectsByType<SoulHunter.Gameplay.Hazards.PulsingRing>(FindObjectsSortMode.None).Single();
+            Assert.That(ring.RemainingSeconds, Is.EqualTo(30f).Within(0.5f), "duration=30.");
+            var centre = ring.Centre;
+            float start = Vector3.Distance(spawned[0].transform.position, centre);
+            float least = start;
+            float t0 = Time.time;
+            while (Time.time - t0 < SoulHunter.Gameplay.Hazards.StageHazardTable.JellyPulseSeconds * 0.5f)
+            {
+                yield return null;
+                least = Mathf.Min(least, Vector3.Distance(spawned[0].transform.position, centre));
+            }
+            Assert.That(least, Is.LessThan(start * 0.7f), "It closes in.");
+            float t1 = Time.time;
+            while (Time.time - t1 < SoulHunter.Gameplay.Hazards.StageHazardTable.JellyPulseSeconds * 0.45f) yield return null;
+            Assert.That(Vector3.Distance(spawned[0].transform.position, centre), Is.GreaterThan(least + 1f), "And moves away again.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator LevelThree_APileAssault_StandsRoundTheHero_ShootsAndLeavesAtItsTime()
+        {
+            EnemySpawner spawner = null;
+            yield return EnterLevel(3, s => spawner = s);
+            var pile = MapEvents.For(3).First(e => e.Type == StageEventType.PileRing && e.DurationSeconds == 5f);
+
+            var spawned = Run(spawner, pile);
+            Assert.That(spawned, Has.Count.EqualTo(20), Errors());
+            Assert.That(spawned.All(e => e.name.StartsWith(DairyPlantEnemies.Table.PrefabName("WellSerpents"))), Is.True, "Twin Snakes.");
+            var starts = spawned.Select(e => e.transform.position).ToArray();
+            int bullets = 0;
+            float t0 = Time.time;
+            while (Time.time - t0 < 3f) { yield return null; bullets = Mathf.Max(bullets, SoulHunter.Gameplay.Hazards.EnemyBullet.ActiveCount); }
+            Assert.That(Vector3.Distance(spawned[0].transform.position, starts[0]), Is.LessThan(0.2f), "They stand still.");
+            Assert.That(bullets, Is.GreaterThan(0), "Twin Snakes shoot every 2 seconds.");
+            while (Time.time - t0 < 5.5f) yield return null;
+            Assert.That(spawned.Count(e => e.isActiveAndEnabled), Is.EqualTo(0), "duration=5: they leave.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator LevelThree_AMilkSwarm_HomesOnTheHero_AndAMinotaurRushCrossesFast()
+        {
+            EnemySpawner spawner = null;
+            yield return EnterLevel(3, s => spawner = s);
+            var swarm = MapEvents.For(3).First(e => e.EnemyTypeId == "SmokeWisp");
+            var spawned = Run(spawner, swarm);
+            Assert.That(spawned, Has.Count.EqualTo(25), Errors());
+            Assert.That(spawned.All(e => !e.IsFlying), Is.True, "Milk Elementals home: no fixed course.");
+            var life = spawned[0].GetComponent<SoulHunter.Gameplay.Hazards.EventLifetime>();
+            Assert.That(life, Is.Not.Null);
+            Assert.That(life.RemainingSeconds, Is.EqualTo(30f).Within(0.5f), "duration=30.");
+
+            var rush = MapEvents.For(3).First(e => e.EnemyTypeId == "StampedeOxDemon");
+            var oxen = Run(spawner, rush);
+            Assert.That(oxen, Has.Count.EqualTo(50));
+            Assert.That(oxen.All(e => e.IsFlying), Is.True, "Mignotaur (rush): Fixed Direction.");
+            float expected = 600f * EnemyAbilityDefaults.VsSpeedToUnits * oxen[0].CampaignSpeedMultiplier;
+            var start = oxen[0].transform.position;
+            float t0 = Time.time;
+            for (int i = 0; i < 10; i++) yield return new WaitForFixedUpdate();
+            float speed = Vector3.Distance(oxen[0].transform.position, start) / (Time.time - t0);
+            Assert.That(speed, Is.EqualTo(expected).Within(expected * 0.25f), "speed 600.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

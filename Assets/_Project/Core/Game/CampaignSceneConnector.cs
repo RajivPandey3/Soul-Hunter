@@ -26,8 +26,22 @@ namespace SoulHunter.Gameplay.Core
             if (_loadRoutine != null) StopCoroutine(_loadRoutine);
         }
 
+        /// <summary>
+        /// Off since 2026-10-27 (owner: "jhatka bhi theek karo, 60 constant"): every object a showcase scene brings in is
+        /// hidden in play (its SH10_L* models, its camera and its title; an additive scene's lighting never applies), so
+        /// loading one at each stage start only cost a frame of 30-85 ms (scene activation, physics and GPU uploads) for
+        /// nothing on screen. True loads them again (the old behaviour).
+        /// </summary>
+        public static bool LoadShowcaseScenes;
+
         private void HandleStageStarted(int stage)
         {
+            if (!LoadShowcaseScenes)
+            {
+                if (_hasLoadedScene && _loadedScene.IsValid() && _loadedScene.isLoaded) SceneManager.UnloadSceneAsync(_loadedScene);
+                _hasLoadedScene = false;
+                return;
+            }
             string sceneName = CampaignLevelCatalog.Get(stage).ShowcaseSceneName;
             if (_requestedSceneName == sceneName && ((_loadRoutine != null) || (_hasLoadedScene && _loadedScene.IsValid() && _loadedScene.isLoaded)))
                 return;

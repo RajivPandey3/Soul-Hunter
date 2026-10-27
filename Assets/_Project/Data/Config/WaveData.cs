@@ -37,7 +37,16 @@ namespace SoulHunter.Gameplay.Data
         /// VS Shade Bomb: "summons Red Shades that chases the player and self-destruct after a couple of seconds". The units
         /// start just off the screen around the player and home on it at their own speed.
         /// </summary>
-        Chasers
+        Chasers,
+        /// <summary>VS Jellyfish Wall: an ellipse of the event's units round the player that closes in and moves away
+        /// again for the event's duration (PulsingRing).</summary>
+        PulsingRing,
+        /// <summary>
+        /// VS Pile Assault: "summons a ring of enemies that surrounds the player and attacks from a distance, shooting
+        /// bullets at regular intervals". The event's units (which cannot move and shoot on their own) stand on an ellipse
+        /// round the player for the event's duration.
+        /// </summary>
+        PileRing
     }
 
     /// <summary>

@@ -140,7 +140,34 @@ namespace SoulHunter.Gameplay.AI
 
             // Prepare only the active stage. Prewarming every asset for all ten
             // stages at startup would create a large low-end-device hitch.
-            PrewarmActiveStagePools();
+            // A few bodies per frame (2026-10-27): building them all in the stage-start frame took 9-10 ms of it.
+            if (_prewarmRoutine != null) StopCoroutine(_prewarmRoutine);
+            _prewarmRoutine = isActiveAndEnabled ? StartCoroutine(PrewarmActiveStagePoolsOverFrames()) : null;
+            if (_prewarmRoutine == null) PrewarmActiveStagePools();
+        }
+
+        /// <summary>Bodies the stage-start prewarm builds in one frame.</summary>
+        public const int PrewarmPerFrame = 2;
+        private Coroutine _prewarmRoutine;
+
+        private System.Collections.IEnumerator PrewarmActiveStagePoolsOverFrames()
+        {
+            var targets = new List<(GameObject prefab, Dictionary<GameObject, Stack<GameObject>> pools, int count)>();
+            if (_prewarmPerEnemyType > 0)
+            {
+                if (_stageEnemyPrefab != null) targets.Add((_stageEnemyPrefab, _enemyPools, _prewarmPerEnemyType));
+                if (_stageElitePrefab != null) targets.Add((_stageElitePrefab, _enemyPools, _prewarmPerEnemyType));
+            }
+            if (_prewarmPerBossType > 0 && _stageBossPrefab != null) targets.Add((_stageBossPrefab, _bossPools, _prewarmPerBossType));
+            foreach (var (prefab, pools, count) in targets)
+            {
+                for (int built = 1; built <= count; built++)
+                {
+                    PrewarmPrefab(prefab, pools, built);
+                    if (built % PrewarmPerFrame == 0) yield return null;
+                }
+            }
+            _prewarmRoutine = null;
         }
 
         /// <summary>
@@ -783,6 +810,30 @@ namespace SoulHunter.Gameplay.AI
                 return spawned;
             }
 
+            if (stageEvent.Type == StageEventType.PulsingRing)
+            {
+                var hazards = FindFirstObjectByType<SoulHunter.Gameplay.Hazards.StageHazards>();
+                float seconds = stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds : 30f; // Jellyfish Wall: "lasting for 30 seconds"
+                var ring = hazards != null && typed != null ? hazards.StartPulsingRing(typed, stageEvent.Count, seconds) : null;
+                if (ring != null) spawned.AddRange(ring.Members);
+                return spawned;
+            }
+            if (stageEvent.Type == StageEventType.PileRing)
+            {
+                // Pile Assault: the units stand on the ellipse and shoot by their own statbox; they go when it ends.
+                if (typed == null) return spawned;
+                Vector3 centre = _playerTransform.position;
+                float seconds = stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds : SoulHunter.Gameplay.Hazards.StageHazardTable.PileDurationSeconds;
+                for (int i = 0; i < stageEvent.Count; i++)
+                {
+                    var member = SpawnHazardEnemy(typed, centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count));
+                    if (member == null) break;
+                    SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
+                    if (member.TryGetComponent<EnemyController>(out var still)) spawned.Add(still);
+                }
+                return spawned;
+            }
+
             // The formation travels away from the side it comes from (Part 4: a stage's sides, e.g. castle walls
             // sweep in from the left or right).
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
@@ -799,7 +850,12 @@ namespace SoulHunter.Gameplay.AI
                 enemyObject.transform.position = StageCorridor.Clamp(position);
                 // VS Fixed Direction: the unit crosses at its own speed and leaves once past the far screen edge (twice the
                 // start radius, plus a margin); a duration, when the row gives one, ends it sooner or later.
-                if (stageEvent.Type == StageEventType.Chasers) { } // homes on the player at its own speed (SpawnEnemy)
+                // A homing unit (Shade Bomb, the generic VS Swarm of Milk Elementals or Skeletons) chases the player at
+                // its own speed (SpawnEnemy) and goes when the event's duration is up.
+                bool homes = stageEvent.Type == StageEventType.Chasers || (typed != null &&
+                    enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection &&
+                    enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection);
+                if (homes) SoulHunter.Gameplay.Hazards.EventLifetime.Begin(enemyObject, stageEvent.DurationSeconds);
                 else if (typed != null)
                     enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds
                         : (EventRadius(stageEvent.Type, direction) * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed));

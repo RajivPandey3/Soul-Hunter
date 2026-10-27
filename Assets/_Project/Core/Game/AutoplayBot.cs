@@ -1410,6 +1410,32 @@ namespace SoulHunter.Gameplay.Core
                 _vatAbIndex++;
                 _nextVatSwitch = Elapsed + 30f;
             }
+            // -sh-autoplay-gpu-ab shadows|fx: a GPU cost is switched off for 30 s, then on for 30 s, and so on, so one run
+            // compares both on the same hero (timeline "gpuOff"). shadows: the URP shadow distance is 0; fx: every particle
+            // renderer is off (looked up every 0.5 s, a diagnosis-only scene search).
+            string gpuAb = ArgValue("-sh-autoplay-gpu-ab");
+            if (!string.IsNullOrEmpty(gpuAb))
+            {
+                if (Elapsed >= _nextGpuSwitch)
+                {
+                    _gpuOff = _gpuAbIndex % 2 == 0;
+                    _gpuAbIndex++;
+                    _nextGpuSwitch = Elapsed + 30f;
+                    // URP's asset is reached by reflection, as Apply1080pRenderScale does (this assembly has no URP reference).
+                    var pipeline = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
+                    var distance = pipeline != null ? pipeline.GetType().GetProperty("shadowDistance") : null;
+                    if (gpuAb == "shadows" && distance != null)
+                    {
+                        if (_gpuShadowDistance < 0f) _gpuShadowDistance = (float)distance.GetValue(pipeline);
+                        distance.SetValue(pipeline, _gpuOff ? 0f : _gpuShadowDistance);
+                    }
+                }
+                if (gpuAb == "fx" && Elapsed >= _nextFxSweep)
+                {
+                    _nextFxSweep = Elapsed + 0.5f;
+                    foreach (var fx in FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None)) fx.enabled = !_gpuOff;
+                }
+            }
             // -sh-autoplay-bullet-ab: enemy bullets are drawn instanced (EnemyBulletDrawer) for 30 s, then by their own
             // renderers and halo particles for 30 s, and so on (the timeline's "bulletDraw" field says which was on).
             if (HasArg("-sh-autoplay-bullet-ab") && Elapsed >= _nextBulletSwitch)
@@ -1632,6 +1658,9 @@ namespace SoulHunter.Gameplay.Core
             return recorder.Valid ? recorder.LastValue : -1;
         }
         private float _nextVatSwitch;
+        private float _nextGpuSwitch, _nextFxSweep, _gpuShadowDistance = -1f;
+        private int _gpuAbIndex;
+        private bool _gpuOff;
         private float _nextVSyncSwitch;
         private float _renderScaleBefore = -1f;
 
@@ -1699,7 +1728,7 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\", \"bulletLook\": {37}, \"lightBullet\": {38}, \"coins\": {39}, \"pickups\": {40}, \"lightSince\": {41:0.0}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\", \"bulletLook\": {37}, \"lightBullet\": {38}, \"coins\": {39}, \"pickups\": {40}, \"lightSince\": {41:0.0}, \"gpuOff\": {42}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
@@ -1717,7 +1746,7 @@ namespace SoulHunter.Gameplay.Core
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.DrawLevel,
                 SoulHunter.Gameplay.Hazards.HazardBullets.LightBullets ? "true" : "false",
                 SoulHunter.Gameplay.Pickups.GoldPickup.ActiveCoins.Count, SoulHunter.Gameplay.Pickups.PickupTicker.Count,
-                Elapsed - _lightBulletSwitchedAt));
+                Elapsed - _lightBulletSwitchedAt, _gpuOff ? "true" : "false"));
             // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
             if (HasArg("-sh-autoplay-count-fx"))
             {

@@ -67,6 +67,36 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelThree_PlaysDairyPlantsMapEventRows_AndTheStalker()
+        {
+            var events = MapEvents.For(3);
+            Assert.That(events, Has.Count.EqualTo(25), "28 rows on Dairy Plant, 3 of them The Stalker (Death's Shadow).");
+            Assert.That(WaveTables.Events(3), Has.Count.EqualTo(25));
+            Assert.That(events.Count(e => e.Type == StageEventType.PileRing), Is.EqualTo(7));
+            Assert.That(events.Count(e => e.Type == StageEventType.PulsingRing), Is.EqualTo(5));
+            var jelly = events.First(e => e.Type == StageEventType.PulsingRing);
+            Assert.That((jelly.TimeSeconds, jelly.Count, jelly.DurationSeconds), Is.EqualTo((180f, 80, 30f)), "3:00 Jellyfish Wall, amount 80.");
+            var rush = events.Where(e => e.EnemyTypeId == "StampedeOxDemon").ToArray();
+            Assert.That(rush, Has.Length.EqualTo(5));
+            var shadow = SoulHunter.Gameplay.Hazards.StageHazardTable.For(3)
+                .Where(h => h.Kind == SoulHunter.Gameplay.Hazards.StageHazardKind.DeathsShadow).Select(h => h.TimeSeconds);
+            Assert.That(shadow, Is.EqualTo(new[] { 0f, 480f, 720f }), "The Stalker on its own stage.");
+            var t = DairyPlantEnemies.Table;
+            Assert.That((t.Find("RingEmber").Health, t.Find("RingEmber").Damage, t.Find("RingEmber").VsSpeed, t.Find("RingEmber").Knockback), Is.EqualTo((180f, 8, 200f, 0.2f)));
+            Assert.That((t.Find("DriftEmber").Damage, t.Find("DriftEmber").VsSpeed), Is.EqualTo((10, 150f)));
+            Assert.That((t.Find("StampedeOxDemon").Health, t.Find("StampedeOxDemon").Damage, t.Find("StampedeOxDemon").VsSpeed), Is.EqualTo((250f, 9, 600f)));
+        }
+
+        [Test]
+        public void AJellyRing_StartsWide_ClosesIn_AndComesBack()
+        {
+            float period = SoulHunter.Gameplay.Hazards.StageHazardTable.JellyPulseSeconds;
+            Assert.That(SoulHunter.Gameplay.Hazards.PulsingRing.ScaleAt(0f), Is.EqualTo(1f).Within(1e-4));
+            Assert.That(SoulHunter.Gameplay.Hazards.PulsingRing.ScaleAt(period * 0.5f), Is.EqualTo(SoulHunter.Gameplay.Hazards.StageHazardTable.JellyInnerScale).Within(1e-4));
+            Assert.That(SoulHunter.Gameplay.Hazards.PulsingRing.ScaleAt(period), Is.EqualTo(1f).Within(1e-4));
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

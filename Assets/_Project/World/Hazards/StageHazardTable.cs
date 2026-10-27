@@ -81,8 +81,11 @@ namespace SoulHunter.Gameplay.Hazards
         public const float ShadowLifetimeSeconds = 120f;    // VS: "follows the player for 1 or 2 minutes" (the default)
         public const float ShadowScale = 1.5f;              // Soul Hunter's look: the stage boss model, 1.5x and dark
         public const float ShadowSpawnDistance = 18f;      // just off-screen
-        /// <summary>Owner placement (2026-09-27): Soul Hunter's Stages 5 and 9.</summary>
-        public static readonly int[] ShadowStages = { 5, 9 };
+        /// <summary>
+        /// VS Dairy Plant's own rows on Level 3 (Dairy Plant's place), and the owner's placement of 2026-09-27 on Stages 5
+        /// and 9 kept as an extra (owner, 2026-10-27: "haan dono jagah rakho").
+        /// </summary>
+        public static readonly int[] ShadowStages = { 3, 5, 9 };
         /// <summary>
         /// The VS Dairy Plant rows of The Stalker XL, minute / % chance / seconds: "8:00 Event Spawn 1, lasts 2 minutes,
         /// 30% chance" and "12:00 Event Spawn 1, lasts 1 minute, 30% chance", and the 0:00 row (raw Dairy_Plant, fetched
@@ -169,6 +172,15 @@ namespace SoulHunter.Gameplay.Hazards
         public const float PileBulletLifetime = 6f;
         public const int PileStage = 8;
         public static readonly float[] PileMinutes = { 9f, 10f, 12f, 20f };
+
+        // ---- Jellyfish Wall (VS map event, PulsingRing) ----
+        // The wiki: "an ellipsoid ring around the player ... periodically closes in on and moves away from the player". It
+        // gives no size or rhythm; balance method: as wide as the Pile Assault ellipse plus a unit (inside the screen), in
+        // to 55% and out again every 8 s (the ring's edge moves at most about 2.4 units/s, under the jellyfish's speed 6).
+        public const float JellyRadiusX = 11f;
+        public const float JellyRadiusZ = 8f;
+        public const float JellyInnerScale = 0.55f;
+        public const float JellyPulseSeconds = 8f;
 
         // ---- Rail carts (VS Dairy Plant carts) ----
         public const int RailCartStage = 3;

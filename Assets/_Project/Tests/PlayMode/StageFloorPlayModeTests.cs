@@ -90,6 +90,18 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AStageChange_LoadsNoShowcaseScene()
+        {
+            // Every object of a showcase scene is hidden in play, so it is no longer loaded (it cost a 30-85 ms frame).
+            yield return BootIntoGameplay();
+            LevelProgressionManager.Instance.StartStage(3);
+            for (int i = 0; i < 30; i++) yield return null;
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+                Assert.That(SceneManager.GetSceneAt(i).name, Does.Not.EndWith("_Showcase"), Errors());
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator StageObstacles_BlockThePlayer()
         {
             yield return BootIntoGameplay();

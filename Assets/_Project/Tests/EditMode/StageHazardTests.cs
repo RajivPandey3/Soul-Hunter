@@ -16,14 +16,14 @@ namespace SoulHunter.Tests.EditMode
     public class StageHazardTests
     {
         [Test]
-        public void DeathsShadow_ComesAt8And12Minutes_OnStages5And9_WithTheDairyPlantChancesAndDurations()
+        public void DeathsShadow_ComesAt8And12Minutes_OnStages3_5And9_WithTheDairyPlantChancesAndDurations()
         {
             // vampire.survivors.wiki/w/The_Stalker, The Stalker XL: "8:00 ... lasts 2 minutes, 30% chance" and "12:00 ...
-            // lasts 1 minute, 30% chance". Stages 5 and 9 are the owner's placement.
+            // lasts 1 minute, 30% chance". Stage 3 is Dairy Plant's place; Stages 5 and 9 the owner's, kept as an extra.
             for (int stage = 1; stage <= 10; stage++)
             {
                 var shadows = StageHazardTable.For(stage).Where(e => e.Kind == StageHazardKind.DeathsShadow).ToArray();
-                if (stage != 5 && stage != 9) { Assert.That(shadows, Is.Empty, $"Stage {stage}"); continue; }
+                if (stage != 3 && stage != 5 && stage != 9) { Assert.That(shadows, Is.Empty, $"Stage {stage}"); continue; }
                 Assert.That(shadows.Select(e => e.TimeSeconds), Is.EqualTo(new[] { 0f, 480f, 720f }), $"Stage {stage}");
                 Assert.That(shadows.Select(e => e.ChancePercent), Is.EqualTo(new[] { 1f, 30f, 30f }), $"Stage {stage} (Dairy_Plant: chance=1 at 0:00)");
                 Assert.That(shadows.Select(e => e.DurationSeconds), Is.EqualTo(new[] { 120f, 120f, 60f }), $"Stage {stage}");
@@ -134,7 +134,8 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void OtherStages_HaveNoTimedHazards_AndOnlyStage3HasRails()
         {
-            foreach (int stage in new[] { 1, 2, 3, 4, 7 })
+            // Stage 3 has The Stalker on its Dairy Plant timetable since 2026-10-27 (DeathsShadow test above).
+            foreach (int stage in new[] { 1, 2, 4, 7 })
                 Assert.That(StageHazardTable.For(stage), Is.Empty, $"Stage {stage}");
             for (int stage = 1; stage <= 10; stage++)
                 Assert.That(StageHazardTable.HasRailCarts(stage), Is.EqualTo(stage == 3), $"Stage {stage}");

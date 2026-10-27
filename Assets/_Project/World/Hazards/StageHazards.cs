@@ -30,6 +30,7 @@ namespace SoulHunter.Gameplay.Hazards
         private readonly List<RailCartTrack> _tracks = new List<RailCartTrack>();
         private readonly List<MineSentry> _mines = new List<MineSentry>();
         private readonly List<ThornCircle> _thornCircles = new List<ThornCircle>();
+        private readonly List<PulsingRing> _pulsingRings = new List<PulsingRing>();
         private readonly List<RisingTide> _tides = new List<RisingTide>();
         private readonly List<(float at, Vector3 offset)> _pendingMarkers = new List<(float, Vector3)>();
         private float _volleyClock;
@@ -40,6 +41,7 @@ namespace SoulHunter.Gameplay.Hazards
         public IReadOnlyList<RailCartTrack> Tracks => _tracks;
         public IReadOnlyList<MineSentry> Mines => _mines;
         public IReadOnlyList<ThornCircle> ThornCircles => _thornCircles;
+        public IReadOnlyList<PulsingRing> PulsingRings => _pulsingRings;
         public IReadOnlyList<RisingTide> Tides => _tides;
         public int Stage => _stage;
 
@@ -326,6 +328,20 @@ namespace SoulHunter.Gameplay.Hazards
         }
 
         /// <summary>
+        /// A ring of <paramref name="memberPrefab"/> round the player that closes in and moves away again (VS Jellyfish
+        /// Wall). Returns it, or null.
+        /// </summary>
+        public PulsingRing StartPulsingRing(GameObject memberPrefab, int count, float durationSeconds)
+        {
+            var spawner = Spawner();
+            var player = PlayerController.Instance;
+            if (spawner == null || player == null || InTransition() || memberPrefab == null) return null;
+            var ring = PulsingRing.Begin(spawner, memberPrefab, player.transform.position, count, durationSeconds);
+            if (ring != null) _pulsingRings.Add(ring);
+            return ring;
+        }
+
+        /// <summary>
         /// The Tide Caller at the bottom-left of the screen and its water rising from the screen's bottom edge (VS Random
         /// Event "The Drowner"; Soul Hunter's Omen "Rising Tide"). Returns it, or null.
         /// </summary>
@@ -430,6 +446,7 @@ namespace SoulHunter.Gameplay.Hazards
             _meteors.RemoveAll(m => m == null);
             _mines.RemoveAll(m => m == null || !m.isActiveAndEnabled);
             _thornCircles.RemoveAll(c => c == null);
+            _pulsingRings.RemoveAll(c => c == null);
             _tides.RemoveAll(t => t == null);
         }
 
@@ -448,6 +465,8 @@ namespace SoulHunter.Gameplay.Hazards
             _mines.Clear();
             foreach (var circle in _thornCircles) if (circle != null) circle.Leave();
             _thornCircles.Clear();
+            foreach (var ring in _pulsingRings) if (ring != null) ring.Leave();
+            _pulsingRings.Clear();
             foreach (var tide in _tides) if (tide != null) tide.End();
             _tides.Clear();
             HazardBullets.EndAll(); // Bug MIS AI-11: enemy bullets go with the stage

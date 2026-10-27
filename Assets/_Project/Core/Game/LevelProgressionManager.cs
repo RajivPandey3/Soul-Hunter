@@ -160,7 +160,12 @@ namespace SoulHunter.Gameplay.Core
             ApplyHyperLuck(player != null ? player.Stats : null);
             var level = CurrentLevel;
             Debug.Log($"[LevelProgressionManager] Stage {CurrentStage}: {level.Name} Started! Modifier: {level.Modifier}");
-            OnStageStarted?.Invoke(CurrentStage);
+            // Each listener in its own timed section, so a slow stage start names who took the time (AutoplayBot jolts).
+            var listeners = OnStageStarted;
+            if (listeners == null) return;
+            foreach (Action<int> listener in listeners.GetInvocationList())
+                using (SoulHunter.Core.Services.SlowSpan.Measure("StageStart." + (listener.Target != null ? listener.Target.GetType().Name : listener.Method.Name)))
+                    listener(CurrentStage);
         }
 
         private SoulHunter.Gameplay.Player.PlayerStats _hyperLuckStats;

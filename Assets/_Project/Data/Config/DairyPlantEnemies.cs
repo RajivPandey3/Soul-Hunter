@@ -60,9 +60,16 @@ namespace SoulHunter.Gameplay.Data
                 T("GreatKilnColossus", "Great Kiln Colossus", "Big Golem 2 (boss)", 200f, true, 20, 180, 0f, 1f, 50f, 0.07f).Resists(1.0f),
                 T("GreatHearthColossus", "Great Hearth Colossus", "Big Golem 1 (boss)", 200f, true, 20, 180, 0f, 1f, 50f, 0.05f).Resists(1.0f),
                 T("ColossalCinderCockatrice", "Colossal Cinder Cockatrice", "Colossal Gallotrice", 200f, true, 20, 180, 0f, 1f, 50f, 0.31f).Resists(1.0f, kill: true),
+                // Map event units (MapEvents; statboxes on Jellyfish and Mignotaur, raw 2026-10-27). The Pile Assault and
+                // homing Swarm units are the wave types above (Twin Snakes, Twin Demons, Lost Twin, Milk Elemental, Skeleton).
+                T("RingEmber",     "Ring Ember",     "Jellyfish (wall)",  180, false, 8,  200, 0.2f, 3f, 2.5f,  0.14f).Fixed(),
+                T("DriftEmber",    "Drift Ember",    "Jellyfish (swarm)", 180, false, 10, 150, 0.2f, 3f, 2.5f,  0.16f).Fixed(),
+                T("StampedeOxDemon", "Stampede Ox Demon", "Mignotaur (rush)", 250, false, 9, 600, 0.5f, 3f, 2.25f, 0.96f).Fixed(),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
-            BossOnly = new[] { "OxDemonCaptain", "CinderBat", "TwinHornedGunner", "PitFiendKing", "AxeSentinel", "GreatKilnColossus", "GreatHearthColossus", "ColossalCinderCockatrice" },
+            BossOnly = new[] { "OxDemonCaptain", "CinderBat", "TwinHornedGunner", "PitFiendKing", "AxeSentinel", "GreatKilnColossus", "GreatHearthColossus", "ColossalCinderCockatrice",
+                // Map event units, sent only by MapEvents.
+                "RingEmber", "DriftEmber", "StampedeOxDemon" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "CinderPeasant" },

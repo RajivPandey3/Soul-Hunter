@@ -249,195 +249,258 @@ MonoBehaviour:
   - {fileID: 4366997879220721546, guid: cfaeb8771d097a84dbafa0166d902968, type: 3}
   - {fileID: 1332267554959430882, guid: 2f8cfecd2d42c3d41ad52f2966286e1b, type: 3}
   - {fileID: 5997290891391798580, guid: 14fa3f9194996b141961942c16a2c0f3, type: 3}
+  - {fileID: 3731546183986276162, guid: 7e6444feddae7cc4f9eb1139d3b76a65, type: 3}
+  - {fileID: 588734932907651107, guid: 49e1d1af3dbc6574fb86118fbe9dd335, type: 3}
+  - {fileID: 2432475251105509602, guid: 85da9fc6033638841bc196ae73eb1305, type: 3}
   Phases: []
   Events:
-  - TimeSeconds: 120
-    Type: 1
-    Count: 13
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 180
-    Type: 1
-    Count: 13
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 240
-    Type: 1
-    Count: 14
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 300
-    Type: 0
-    Count: 22
+  - TimeSeconds: 60
+    Type: 6
+    Count: 20
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: WellSerpents
+    DurationSeconds: 5
     Horizontal: 0
-  - TimeSeconds: 360
-    Type: 1
-    Count: 15
+  - TimeSeconds: 75
+    Type: 0
+    Count: 25
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Repeat: 4
+    RepeatDelaySeconds: 15
+    ChancePercent: 100
+    EnemyTypeId: SmokeWisp
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 135
+    Type: 0
+    Count: 25
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 15
+    ChancePercent: 100
+    EnemyTypeId: SmokeWisp
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 180
+    Type: 5
+    Count: 80
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: RingEmber
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 240
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 50
+    EnemyTypeId: WellSerpents
+    DurationSeconds: 5
+    Horizontal: 0
+  - TimeSeconds: 300
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: WellSerpents
+    DurationSeconds: 60
+    Horizontal: 0
+  - TimeSeconds: 330
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 30
+    ChancePercent: 100
+    EnemyTypeId: WellSerpents
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 390
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 30
+    ChancePercent: 100
+    EnemyTypeId: ThickSmokeWisp
+    DurationSeconds: 30
     Horizontal: 0
   - TimeSeconds: 420
-    Type: 1
-    Count: 15
+    Type: 5
+    Count: 40
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: RingEmber
+    DurationSeconds: 30
     Horizontal: 0
-  - TimeSeconds: 480
-    Type: 1
-    Count: 16
+  - TimeSeconds: 422
+    Type: 5
+    Count: 40
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
+    Repeat: 1
+    RepeatDelaySeconds: 2
     ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: RingEmber
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 510
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 30
+    ChancePercent: 100
+    EnemyTypeId: BurntBones
+    DurationSeconds: 30
     Horizontal: 0
   - TimeSeconds: 540
-    Type: 1
-    Count: 16
+    Type: 0
+    Count: 50
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: StampedeOxDemon
     DurationSeconds: 0
     Horizontal: 0
-  - TimeSeconds: 600
+  - TimeSeconds: 556
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 16
+    ChancePercent: 60
+    EnemyTypeId: StampedeOxDemon
+    DurationSeconds: 15
+    Horizontal: 0
+  - TimeSeconds: 605
+    Type: 0
+    Count: 25
+    Speed: 1
+    Repeat: 7
+    RepeatDelaySeconds: 5
+    ChancePercent: 50
+    EnemyTypeId: StampedeOxDemon
+    DurationSeconds: 15
+    Horizontal: 0
+  - TimeSeconds: 610
+    Type: 6
+    Count: 10
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 10
+    ChancePercent: 50
+    EnemyTypeId: BellImps
+    DurationSeconds: 20
+    Horizontal: 0
+  - TimeSeconds: 670
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 10
+    ChancePercent: 100
+    EnemyTypeId: BurntBones
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 725
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 11
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+    EnemyTypeId: BurntBones
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 730
+    Type: 6
+    Count: 10
+    Speed: 1
+    Repeat: 4
+    RepeatDelaySeconds: 10
+    ChancePercent: 50
+    EnemyTypeId: ShrineIdol
+    DurationSeconds: 20
+    Horizontal: 0
+  - TimeSeconds: 1092
+    Type: 5
+    Count: 40
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 12
+    ChancePercent: 80
+    EnemyTypeId: RingEmber
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 1094
+    Type: 5
+    Count: 40
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 14
+    ChancePercent: 80
+    EnemyTypeId: RingEmber
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 1140
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 80
+    EnemyTypeId: DriftEmber
+    DurationSeconds: 10
+    Horizontal: 0
+  - TimeSeconds: 1150
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 10
+    ChancePercent: 80
+    EnemyTypeId: DriftEmber
+    DurationSeconds: 10
+    Horizontal: 0
+  - TimeSeconds: 1205
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 7
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+    EnemyTypeId: BellImps
+    DurationSeconds: 30
+    Horizontal: 0
+  - TimeSeconds: 1380
     Type: 0
     Count: 25
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 60
+    EnemyTypeId: StampedeOxDemon
+    DurationSeconds: 10
     Horizontal: 0
-  - TimeSeconds: 660
-    Type: 1
-    Count: 17
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 720
-    Type: 1
-    Count: 18
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 780
-    Type: 1
-    Count: 18
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 900
+  - TimeSeconds: 1385
     Type: 0
-    Count: 27
-    Speed: 1
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1020
-    Type: 1
-    Count: 20
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1200
-    Type: 1
-    Count: 22
-    Speed: 1
-    Repeat: 5
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1320
-    Type: 1
-    Count: 23
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1500
-    Type: 0
-    Count: 32
-    Speed: 1
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1620
-    Type: 1
-    Count: 24
+    Count: 25
     Speed: 1
     Repeat: 6
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1740
-    Type: 1
-    Count: 26
-    Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    RepeatDelaySeconds: 5
+    ChancePercent: 60
+    EnemyTypeId: StampedeOxDemon
+    DurationSeconds: 10
     Horizontal: 0

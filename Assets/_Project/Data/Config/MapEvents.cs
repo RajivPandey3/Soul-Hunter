@@ -16,7 +16,7 @@ namespace SoulHunter.Gameplay.Data
     public static class MapEvents
     {
         private const StageEventType Swarm = StageEventType.Swarm, Wall = StageEventType.Wall, TrapRing = StageEventType.TrapRing,
-            Chasers = StageEventType.Chasers;
+            Chasers = StageEventType.Chasers, PulsingRing = StageEventType.PulsingRing, PileRing = StageEventType.PileRing;
 
         private static StageEventEntry E(int minute, StageEventType type, string typeId, int amount, float delay = 0f,
             int repeat = 0, float chance = 100f, float duration = 0f, bool horizontal = false) => new StageEventEntry
@@ -107,6 +107,41 @@ namespace SoulHunter.Gameplay.Data
             E(29, Chasers, "CinderShade", 4, delay: 1, repeat: 50, chance: 60), // Shade Bomb
         };
 
+        // Dairy Plant "Waves", the Map events column (Level 3). Pile Assault: "a ring of enemies that surrounds the player
+        // and attacks from a distance, shooting bullets" (the Twin Snakes, Twin Demons and Lost Twin statboxes: they cannot
+        // move and shoot every 2 / 1.5 / 1 s). Swarm: "a large group of enemies that set off to attack the player" (Milk
+        // Elementals and Skeletons home). Jellyfish Wall: "an ellipsoid ring around the player ... periodically closes in
+        // on and moves away". Jellyfish Swarm: "slowly travels across the screen". Minotaur Rush: "travels across the
+        // screen at high speed". The Stalker rows (0:00 1%, 8:00 30%, 12:00 30%) are Death's Shadow (StageHazardTable).
+        private static List<StageEventEntry> DairyPlant() => new List<StageEventEntry>
+        {
+            E(1, PileRing, "WellSerpents", 20, duration: 5), // Pile Assault
+            E(1, Swarm, "SmokeWisp", 25, delay: 15, repeat: 3, duration: 30), // Swarm
+            E(2, Swarm, "SmokeWisp", 25, delay: 15, repeat: 2, duration: 30), // Swarm
+            E(3, PulsingRing, "RingEmber", 80, duration: 30), // Jellyfish Wall
+            E(4, PileRing, "WellSerpents", 20, chance: 50, duration: 5), // Pile Assault
+            E(5, PileRing, "WellSerpents", 20, duration: 60), // Pile Assault
+            E(5, PileRing, "WellSerpents", 20, delay: 30, duration: 30), // Pile Assault
+            E(6, Swarm, "ThickSmokeWisp", 50, delay: 30, duration: 30), // Swarm
+            E(7, PulsingRing, "RingEmber", 40, duration: 30), // Jellyfish Wall
+            E(7, PulsingRing, "RingEmber", 40, delay: 2, chance: 80, duration: 30), // Jellyfish Wall
+            E(8, Swarm, "BurntBones", 50, delay: 30, duration: 30), // Swarm
+            E(9, Swarm, "StampedeOxDemon", 50), // Minotaur Rush
+            E(9, Swarm, "StampedeOxDemon", 50, delay: 16, chance: 60, duration: 15), // Minotaur Rush
+            E(10, Swarm, "StampedeOxDemon", 25, delay: 5, repeat: 6, chance: 50, duration: 15), // Minotaur Rush
+            E(10, PileRing, "BellImps", 10, delay: 10, repeat: 4, chance: 50, duration: 20), // Pile Assault
+            E(11, Swarm, "BurntBones", 50, delay: 10, repeat: 4, duration: 30), // Swarm
+            E(12, PileRing, "ShrineIdol", 10, delay: 10, repeat: 3, chance: 50, duration: 20), // Pile Assault
+            E(12, Swarm, "BurntBones", 50, delay: 5, repeat: 10, duration: 30), // Swarm
+            E(18, PulsingRing, "RingEmber", 40, delay: 12, chance: 80, duration: 30), // Jellyfish Wall
+            E(18, PulsingRing, "RingEmber", 40, delay: 14, chance: 80, duration: 30), // Jellyfish Wall
+            E(19, Swarm, "DriftEmber", 50, chance: 80, duration: 10), // Jellyfish Swarm
+            E(19, Swarm, "DriftEmber", 50, delay: 10, repeat: 2, chance: 80, duration: 10), // Jellyfish Swarm
+            E(20, PileRing, "BellImps", 20, delay: 5, repeat: 6, chance: 80, duration: 30), // Pile Assault
+            E(23, Swarm, "StampedeOxDemon", 25, chance: 60, duration: 10), // Minotaur Rush
+            E(23, Swarm, "StampedeOxDemon", 25, delay: 5, repeat: 5, chance: 60, duration: 10), // Minotaur Rush
+        };
+
         /// <summary>The VS map events of <paramref name="stage"/>, sorted by time; null when the level has no table yet.</summary>
         public static List<StageEventEntry> For(int stage)
         {
@@ -115,6 +150,7 @@ namespace SoulHunter.Gameplay.Data
             {
                 case 1: events = MadForest(); break;
                 case 2: events = InlaidLibrary(); break;
+                case 3: events = DairyPlant(); break;
             }
             events?.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
             return events;
