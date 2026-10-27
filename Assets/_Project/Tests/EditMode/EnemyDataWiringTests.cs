@@ -85,9 +85,7 @@ namespace SoulHunter.Tests.EditMode
                 var previousElite = LoadData(ElitePrefabPath, stage - 1);
                 Assert.That(elite.MaxHealth, Is.GreaterThan(previousElite.MaxHealth), $"Stage {stage} elite health.");
 
-                var boss = LoadData(BossPrefabPath, stage);
-                var previousBoss = LoadData(BossPrefabPath, stage - 1);
-                Assert.That(boss.MaxHealth, Is.GreaterThan(previousBoss.MaxHealth), $"Stage {stage} boss health.");
+                // Stage bosses follow their source stage's statbox (BossScalingAndChestEliteTests), which does not always grow.
             }
         }
 

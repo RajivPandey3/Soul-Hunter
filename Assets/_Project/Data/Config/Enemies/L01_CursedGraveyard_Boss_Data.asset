@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: L01_CursedGraveyard_Boss_Data
   m_EditorClassIdentifier: 
   EnemyName: Cursed Graveyard Boss
-  MaxHealth: 1000
-  MoveSpeed: 3
-  DamageToPlayer: 10
+  MaxHealth: 150
+  MoveSpeed: 4.8
+  DamageToPlayer: 30
   Knockback: 0
-  MaxKnockback: 3
+  MaxKnockback: 1
   DropChanceGem: 95
   DropChanceChicken: 0
   DropsChest: 1
   HealthPerPlayerLevel: 150
-  ExperienceValue: 250
+  ExperienceValue: 500
   FreezeResistance: 1.1
   InstantKillResistance: 0
   DebuffResistance: 0

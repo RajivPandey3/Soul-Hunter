@@ -67,7 +67,7 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
             var progression = LevelProgressionManager.Instance;
 
-            var first = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 1f });
+            var first = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 1f, false });
             progression.SkipTo(2f * 60f + 30f);
             yield return null;
             ChestPickup silver = null;
@@ -77,7 +77,7 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(silver.Kind, Is.EqualTo(ChestKind.Silver));
             silver.gameObject.SetActive(false);
 
-            var third = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 3f });
+            var third = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 3f, false });
             ChestPickup threeMinute = null;
             yield return KillAndFindChest(third, c => threeMinute = c);
             Assert.That(threeMinute.Tiers, Is.EqualTo(ChestTiers.Minute3));
@@ -86,7 +86,7 @@ namespace SoulHunter.Tests.PlayMode
                     "The 3:00 config has tier3=0: never 5 items, whatever the Luck.");
             threeMinute.gameObject.SetActive(false);
 
-            var ninth = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 9f });
+            var ninth = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 9f, false });
             progression.SkipTo(10f * 60f + 5f);
             yield return null;
             ChestPickup bronze = null;
@@ -120,7 +120,12 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(spawner.ChestEliteMinutes, Is.EqualTo(StageChestBosses.MinutesFor(2)), "Level 2 uses Inlaid Library's minutes.");
             Assert.That(spawner.ChestEliteMinutes.Contains(8f) && !spawner.ChestEliteMinutes.Contains(1f), Is.True);
 
-            var musc = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 8f });
+            var musc = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(spawner, new object[] { 8f, false });
+            Assert.That(musc.name, Does.StartWith("SH10_L02_SporeColossus_Gameplay"), "The 8:00 boss is its own statbox type.");
+            int level = PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel;
+            float curse = (float)typeof(EnemySpawner).GetMethod("CurrentCurse", Private).Invoke(spawner, null);
+            Assert.That(musc.GetComponent<HealthController>().MaxHealth, Is.EqualTo(EnemySpawner.ScaleHealthByCurse(50 * level, curse)),
+                "Colossal Musc Musc: 50 x Level.");
             ChestPickup chest = null;
             yield return KillAndFindChest(musc, c => chest = c);
             Assert.That(chest.Tiers, Is.EqualTo(new ChestTiers(2, false, 3f, 10f, 50f, ChestTiers.Slot(1))));

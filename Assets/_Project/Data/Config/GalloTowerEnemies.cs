@@ -48,7 +48,17 @@ namespace SoulHunter.Gameplay.Data
                 T("BloatedFleshGolem", "Bloated Flesh Golem",  "Meat Golem 2",          900, false, 20, 200, 0f,   2f, 3f,   0.93f),
                 T("GreatBoneDrake",    "Great Bone Drake",     "Dragon Shrimp 1 (boss)", 50, true,  10, 170, 1f,   1f, 30f,  0.13f),
                 T("GreatFlameDrake",   "Great Flame Drake",    "Dragon Shrimp 2 (boss)", 60, true,  10, 170, 1f,   1f, 30f,  0.03f),
+                T("CastleFiend", "Castle Fiend", "Elite Devil", 50f, true, 10, 140, 0.5f, 3f, 30f, 0.97f),
+                T("GreatStoneSkull", "Great Stone Skull", "Skullone (boss)", 50f, true, 10, 140, 1f, 3f, 30f, 0.12f),
+                T("GreatHarpyGargoyle", "Great Harpy Gargoyle", "Harzia (boss)", 50f, true, 10, 170, 1f, 1f, 30f, 0.7f),
+                T("RampartEmberBat", "Rampart Ember Bat", "Pipeestrello 4", 50f, true, 10, 140, 1f, 3f, 30f, 0.08f),
+                T("RampartLord", "Rampart Lord", "Gallo", 200f, true, 30, 160, 0f, 1f, 50f, 0.14f).Resists(1.1f, kill: true),
+                T("ShieldSentinel", "Shield Sentinel", "Archon Disco (boss)", 150f, true, 20, 160, 0.5f, 1f, 30f, 0.58f).Resists(1.1f),
+                T("ColossalBasilisk", "Colossal Basilisk", "Colossal Gallotrice", 200f, true, 20, 180, 0f, 1f, 50f, 0.29f).Resists(1.0f, kill: true),
+                T("ColossalCastleChimera", "Colossal Castle Chimera", "Colossal Manticore", 200f, false, 20, 180, 0f, 1f, 50f, 0.04f).Resists(1.0f, kill: true),
             },
+            // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
+            BossOnly = new[] { "CastleFiend", "GreatStoneSkull", "GreatHarpyGargoyle", "RampartEmberBat", "RampartLord", "ShieldSentinel", "ColossalBasilisk", "ColossalCastleChimera" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "GateSkull" },

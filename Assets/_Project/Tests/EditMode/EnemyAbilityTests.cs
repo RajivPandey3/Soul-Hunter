@@ -145,6 +145,8 @@ namespace SoulHunter.Tests.EditMode
                 string file = System.IO.Path.GetFileName(path);
                 // Levels 2-10's VS wave types carry their statbox resistances and shooting (StageEnemyTypeTests).
                 if (StageEnemyTables.IsTypeAsset(path)) continue;
+                // Level 1's chest-boss types carry their statbox resistances too (MadForestEnemies, StageChestBossTests).
+                if (path.Contains("/MadForest/") && System.Array.Exists(MadForestEnemies.BossOnly, id => path.EndsWith($"L01_{id}_Data.asset"))) continue;
                 Assert.That(data.Abilities, Is.Not.Null.And.Empty, file + ": no abilities until the owner picks them.");
                 if (!file.Contains("_Boss_"))
                 {
@@ -155,10 +157,11 @@ namespace SoulHunter.Tests.EditMode
                 }
                 bosses++;
                 Assert.That(data.FreezeResistance, Is.EqualTo(1.1f).Within(1e-5), file + ": VS boss res-freeze 1.1.");
-                // Mad Forest's 25:00 boss (Giant Blue Venus, vampire.survivors.wiki/w/Venus) resists only freeze.
-                bool stageOne = file.StartsWith("L01");
-                Assert.That(data.InstantKillResistance, Is.EqualTo(!stageOne), file);
-                Assert.That(data.DebuffResistance, Is.EqualTo(!stageOne), file);
+                // Each 25:00 boss statbox (2026-10-27): Giant Blue Venus and Ethlenn resist only freeze; Orochimario's statbox
+                // gives res-kill but no res-debuff; the others resist both (Levels 7 and 10 unchanged).
+                int level = int.Parse(file.Substring(1, 2));
+                Assert.That(data.InstantKillResistance, Is.EqualTo(level != 1 && level != 5), file);
+                Assert.That(data.DebuffResistance, Is.EqualTo(level != 1 && level != 5 && level != 6), file);
             }
             Assert.That(bosses, Is.EqualTo(10), "Ten stage bosses.");
         }

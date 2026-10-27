@@ -57,7 +57,19 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
 - Phase 1b, part 1 (2026-10-27): each level's chest bosses come at its source stage's minutes, each with its own {{treasure}} config (`StageChestBosses`, read by `EnemySpawner` and `ChestTiers.ForMinute`). The 25:00 stage boss also has its own stage's config.
   - Before, every level used Mad Forest's minutes and configs.
   - Balance method: a config with no "level" uses level 1, and Inlaid Library's "level2/level1" typo is read as tier2/tier1.
-  - Still to do (Phase 1c): each chest boss's own body and statbox. Chest bosses still use the stage elite with Mad Forest's health rule.
+- Phase 1c (2026-10-27): every chest boss is its own VS statbox type.
+  - The statboxes come from the raw boss pages (`Docs/VS_Audit_20261027/boss-statboxes.md`).
+  - 28 bosses reuse a type that already had the same statbox. 52 new boss-only types were built (`BossOnly` in each table; `MadForestEnemies` now has resistances).
+  - Each row of `StageChestBosses` names its type, and each stage has its own Arcana carrier.
+  - `EnemySpawner.SpawnChestEliteAt` spawns that type with its own health. Before, every level used the stage elite at 1.5x size with Mad Forest's health rule.
+  - Stage bosses take their source stage's 25:00 statbox on Levels 1-6, 8 and 9: Giant Blue Venus, Hag, Sword Guardian, Giant Enemy Crab, Ethlenn, Orochimario's body, and Trinacria (boss). The bosses get their HP x Level, damage, speed, XP, resistances and knockback cap 1.
+    - The old "later guardians never weaker" floor is gone (VS first).
+    - Level 7's Avatar of Gaea needs kill-count health and Level 10 is Shadow Kael (owner's story), so both are unchanged.
+  - Not built yet: the boss abilities (Crab pincers, Orochimario's heads, Avatar of Gaea, the Fomorians' second boss), and the chest-less second bosses at the same minute (Windy Oni, Missing Church Boss 2).
+  - Wiki doubts, read as written:
+    - Werewolf 1 (boss) has xp 2; Undead Sassy Witch (boss) and the Foscaritrices have xp 3.
+    - Orochimario's statbox gives no res-debuff, while its page text says it resists debuffs.
+    - The 10:00 Mt.Moonspell Oni uses the normal Oni statbox.
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 

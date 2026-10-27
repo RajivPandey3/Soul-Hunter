@@ -56,7 +56,14 @@ namespace SoulHunter.Gameplay.Data
             T("ColossalTemptress", "", "Succubus (boss)",                60,  true,  11, 140, 1f,   3f, 30f,   0.87f),
             T("ColossalArchfiend", "", "Archdemon (boss)",               80,  true,  11, 140, 1f,   3f, 30f,   0.96f),
             T("EliteAcolyte",      "", "Reaper Trainee (TRAINEE_ANY)",   80,  true,  20, 120, 0f,   1f, 25f,   0.50f).Resists(1f),
+            // Chest bosses (StageChestBosses), sent only by the boss schedule.
+            T("ColossalEye",       "", "Unknown (boss)",                 60,  true,  11, 200, 0.5f, 3f, 30f,   0.45f),
+            T("ColossalCopperKnight", "", "Archon Rame (boss)",          70,  true,  11, 140, 1f,   3f, 30f,   0.41f),
+            T("AxeSentinel",       "", "Axe Guardian",                   200, false, 20, 180, 0f,   1f, 40f,   0.03f),
         };
+
+        /// <summary>The chest-boss types: in the table, but in no minute's wave.</summary>
+        private static readonly string[] ChestBosses = { "ColossalEye", "ColossalCopperKnight", "AxeSentinel" };
 
         private static readonly string[][] Minutes =
         {
@@ -110,6 +117,7 @@ namespace SoulHunter.Gameplay.Data
                 ["Seraph"] = "Bloodwing", ["SwiftSeraph"] = "Swift Bloodwing", ["Throne"] = "Pit Throne", ["Triskele"] = "Tri-Blade Guard",
                 ["ColossalWarden"] = "Colossal Pit Warden", ["ColossalTemptress"] = "Colossal Blood Siren",
                 ["ColossalArchfiend"] = "Colossal Arena Lord", ["EliteAcolyte"] = "Champion of the Pit",
+                ["ColossalEye"] = "Colossal Arena Eye", ["ColossalCopperKnight"] = "Colossal Bronze Guard", ["AxeSentinel"] = "Arena Axeman",
             },
             [9] = new Dictionary<string, string>
             {
@@ -124,6 +132,7 @@ namespace SoulHunter.Gameplay.Data
                 ["Throne"] = "Bone Throne", ["Triskele"] = "Three-Crowned Guard",
                 ["ColossalWarden"] = "Colossal Throne Warden", ["ColossalTemptress"] = "Colossal Throne Consort",
                 ["ColossalArchfiend"] = "Colossal Vizier", ["EliteAcolyte"] = "Scythe Adept",
+                ["ColossalEye"] = "Colossal Throne Eye", ["ColossalCopperKnight"] = "Colossal Bronze Sentinel", ["AxeSentinel"] = "Throne Axeman",
             },
             [10] = new Dictionary<string, string>
             {
@@ -138,6 +147,7 @@ namespace SoulHunter.Gameplay.Data
                 ["Throne"] = "Crystal Throne", ["Triskele"] = "Three-Faced Doubt",
                 ["ColossalWarden"] = "Colossal Soul Warden", ["ColossalTemptress"] = "Colossal Lost Memory",
                 ["ColossalArchfiend"] = "Colossal Core Tyrant", ["EliteAcolyte"] = "Pure Fragment",
+                ["ColossalEye"] = "Colossal Watching Doubt", ["ColossalCopperKnight"] = "Colossal Rusted Vow", ["AxeSentinel"] = "Axe of Regret",
             },
         };
 
@@ -153,7 +163,7 @@ namespace SoulHunter.Gameplay.Data
             table = new StageEnemyTable
             {
                 Level = level, Source = "Cappella_Magna", Folder = $"Level{level:00}", Types = types,
-                ByMinute = Minutes, Minimum = Minimum, Interval = Interval, AllEliteModel = level == 8,
+                ByMinute = Minutes, Minimum = Minimum, Interval = Interval, AllEliteModel = level == 8, BossOnly = ChestBosses,
             };
             Tables[level] = table;
             return table;

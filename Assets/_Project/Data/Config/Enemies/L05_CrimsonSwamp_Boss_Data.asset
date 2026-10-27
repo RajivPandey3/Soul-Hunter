@@ -13,17 +13,17 @@ MonoBehaviour:
   m_Name: L05_CrimsonSwamp_Boss_Data
   m_EditorClassIdentifier: 
   EnemyName: Crimson Swamp Boss
-  MaxHealth: 5000
-  MoveSpeed: 3
-  DamageToPlayer: 18
-  Knockback: 0
-  MaxKnockback: 3
+  MaxHealth: 150
+  MoveSpeed: 4.8
+  DamageToPlayer: 20
+  Knockback: 0.5
+  MaxKnockback: 1
   DropChanceGem: 95
   DropChanceChicken: 0
   DropsChest: 1
-  HealthPerPlayerLevel: 500
-  ExperienceValue: 250
+  HealthPerPlayerLevel: 150
+  ExperienceValue: 300
   FreezeResistance: 1.1
-  InstantKillResistance: 1
-  DebuffResistance: 1
+  InstantKillResistance: 0
+  DebuffResistance: 0
   Abilities: []

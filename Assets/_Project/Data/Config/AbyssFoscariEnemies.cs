@@ -56,9 +56,13 @@ namespace SoulHunter.Gameplay.Data
                 // Maronna_Meea, "Unlisted variants": "Maronna Meea Boss ... skills = HP x Level | health = 200 | movespeed = 180
                 // | damage = 20 | knockback = 0 | knockback-max = 1 | xp = 30 | res-freeze = 1.1 | res-kill = 1 | res-debuff = 1".
                 T("GreatBogMother",      "Great Bog Mother",       "Maronna Meea Boss",     200, true,  20, 180, 0f,   1f, 30f,   0.94f).Resists(1.1f, kill: true, debuff: true),
+                T("ColossalFleshClot", "Colossal Flesh Clot", "Colossal Meatball", 100f, true, 20, 180, 0f, 1f, 30f, 0.98f).Resists(1.0f),
+                T("WarmBogLeech", "Warm Bog Leech", "Warm Cauld", 200f, true, 20, 180, 0f, 1f, 30f, 0.08f).Resists(1.1f, kill: true),
+                T("GreatMireCrone", "Great Mire Crone", "Edna Boss", 100f, true, 20, 180, 0f, 1f, 30f, 0.8f).Resists(0.0f, kill: true),
+                T("GreatPitLurker", "Great Pit Lurker", "Well Well Well Dweller", 200f, true, 20, 180, 0f, 1f, 30f, 0.66f).Resists(1.1f, kill: true),
             },
             // "24:00 | Edna, Well Dweller, Cold Cauld | 200 | 0.1 | Maronna Meea Boss": only in the boss column.
-            BossOnly = new[] { "GreatBogMother" },
+            BossOnly = new[] { "GreatBogMother", "ColossalFleshClot", "WarmBogLeech", "GreatMireCrone", "GreatPitLurker" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "BogLeech" },

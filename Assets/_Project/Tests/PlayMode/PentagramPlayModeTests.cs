@@ -100,7 +100,7 @@ namespace SoulHunter.Tests.PlayMode
             // {{treasure|level=1|evo=|tier3=1|tier2=5|tier1=100|reward1=weapon}}), so it stays a bronze chest that cannot
             // evolve, even when the next carrier dies after 10:00.
             yield return Setup();
-            var elite = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(_spawner, new object[] { 5f });
+            var elite = (GameObject)typeof(EnemySpawner).GetMethod("SpawnChestEliteAt", Private).Invoke(_spawner, new object[] { 5f, false });
             elite.transform.position = PlayerController.Instance.transform.position + Vector3.right * 6f;
             Fire();
             yield return null;

@@ -13,17 +13,17 @@ MonoBehaviour:
   m_Name: L06_FrozenPeaks_Boss_Data
   m_EditorClassIdentifier: 
   EnemyName: Frozen Peaks Boss
-  MaxHealth: 6000
-  MoveSpeed: 3
-  DamageToPlayer: 20
+  MaxHealth: 500
+  MoveSpeed: 5.7
+  DamageToPlayer: 25
   Knockback: 0
-  MaxKnockback: 3
+  MaxKnockback: 1
   DropChanceGem: 95
   DropChanceChicken: 0
   DropsChest: 1
   HealthPerPlayerLevel: 500
-  ExperienceValue: 250
+  ExperienceValue: 300
   FreezeResistance: 1.1
   InstantKillResistance: 1
-  DebuffResistance: 1
+  DebuffResistance: 0
   Abilities: []

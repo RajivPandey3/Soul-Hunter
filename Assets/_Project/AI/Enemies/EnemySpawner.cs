@@ -216,7 +216,7 @@ namespace SoulHunter.Gameplay.AI
             if (RunModes.Arcana && _arcanaChestsSpawned < ChestElitesDue(_stageTimePassed, ArcanaChestMinutes))
             {
                 _arcanaChestsSpawned++;
-                SpawnChestEliteAt(ArcanaChestMinutes[_arcanaChestsSpawned - 1])?.GetComponent<EnemyDrop>()?.CarryArcanaThisLife();
+                SpawnChestEliteAt(ArcanaChestMinutes[_arcanaChestsSpawned - 1], arcana: true)?.GetComponent<EnemyDrop>()?.CarryArcanaThisLife();
             }
 
             // VS wave bosses that carry no chest, on every level (ChestlessWaveBosses: Level 1 Mad Forest 8:00, 21:00,
@@ -910,25 +910,34 @@ namespace SoulHunter.Gameplay.AI
         /// </summary>
         public GameObject SpawnChestlessBoss(string typeId)
         {
-            if (_currentWave == null || _currentWave.Minutes == null) return null;
-            string wanted = ChestlessWaveBosses.PrefabName(SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage, typeId);
-            if (string.IsNullOrEmpty(wanted)) return null;
-            GameObject prefab = null;
-            foreach (var minute in _currentWave.Minutes)
-            {
-                if (minute == null || minute.EnemyTypes == null) continue;
-                foreach (var type in minute.EnemyTypes)
-                    if (type != null && type.name == wanted) { prefab = type; break; }
-                if (prefab != null) break;
-            }
-            if (prefab == null && _currentWave.BossTypes != null)
-                foreach (var type in _currentWave.BossTypes)
-                    if (type != null && type.name == wanted) { prefab = type; break; }
+            var prefab = FindStageType(typeId);
             if (prefab == null) return null;
             var boss = SpawnEnemy(prefab);
             if (boss != null) _special.Add(boss);
             if (boss != null) SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Chest-less wave boss {typeId} at {_stageTimePassed:0}s.");
             return boss;
+        }
+
+        /// <summary>
+        /// This level's enemy type <paramref name="typeId"/>, found among the stage wave's own types by prefab name (its
+        /// minutes, then its boss-only types), so no scene or asset names it twice. Null when the wave has no such type.
+        /// </summary>
+        public GameObject FindStageType(string typeId)
+        {
+            if (_currentWave == null || _currentWave.Minutes == null || string.IsNullOrEmpty(typeId)) return null;
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            string wanted = ChestlessWaveBosses.PrefabName(progression != null ? progression.CurrentStage : 1, typeId);
+            if (string.IsNullOrEmpty(wanted)) return null;
+            foreach (var minute in _currentWave.Minutes)
+            {
+                if (minute == null || minute.EnemyTypes == null) continue;
+                foreach (var type in minute.EnemyTypes)
+                    if (type != null && type.name == wanted) return type;
+            }
+            if (_currentWave.BossTypes != null)
+                foreach (var type in _currentWave.BossTypes)
+                    if (type != null && type.name == wanted) return type;
+            return null;
         }
 
         /// <summary>
@@ -1034,17 +1043,26 @@ namespace SoulHunter.Gameplay.AI
             return perLevel * Mathf.Max(1, playerLevel);
         }
 
-        private GameObject SpawnChestEliteAt(float minute)
+        private GameObject SpawnChestEliteAt(float minute, bool arcana = false)
         {
-            var prefab = _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
+            // The boss of this minute's row in the stage's VS "Waves" table, with its own statbox (StageChestBosses). A row
+            // with no type yet uses the stage elite, sized up, with the Mad Forest health rule.
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            int stage = progression != null ? progression.CurrentStage : 1;
+            var typed = FindStageType(arcana ? SoulHunter.Gameplay.Core.StageChestBosses.ArcanaCarrierFor(stage)
+                : SoulHunter.Gameplay.Core.StageChestBosses.TypeFor(stage, minute));
+            var prefab = typed != null ? typed : _stageElitePrefab != null ? _stageElitePrefab : _stageEnemyPrefab;
             var elite = SpawnEnemy(prefab);
             if (elite == null) return null;
 
-            elite.transform.localScale *= _chestEliteSizeMultiplier;
-            var data = elite.GetComponent<EnemyController>()?.Data;
-            var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
-            if (health != null && data != null)
-                health.Initialize(ScaleHealthByCurse(ModeHealth(ChestEliteHealth(minute, CurrentPlayerLevel())), CurrentCurse()));
+            if (typed == null)
+            {
+                elite.transform.localScale *= _chestEliteSizeMultiplier;
+                var data = elite.GetComponent<EnemyController>()?.Data;
+                var health = elite.GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
+                if (health != null && data != null)
+                    health.Initialize(ScaleHealthByCurse(ModeHealth(ChestEliteHealth(minute, CurrentPlayerLevel())), CurrentCurse()));
+            }
             // P1-14: the chest carries this minute's config from the stage's VS "Waves" table (StageChestBosses), so its
             // item chances and evolution flag belong to the boss, not to the clock when it dies. Off-table minutes (debug
             // spawns) use ChestTiers.Unscheduled.

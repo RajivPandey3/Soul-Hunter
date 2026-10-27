@@ -53,7 +53,19 @@ namespace SoulHunter.Gameplay.Data
                 T("GreatKelpKnight",       "Great Kelp Knight",        "Big Green Knight",     80,  true,  20, 120, 0f,   1f, 25f,  0.37f).Resists(1f),
                 T("MotherOfTides",         "Mother of Tides",          "Maronna",              900, false, 15, 140, 0.1f, 2f, 0f,   0.63f),
                 T("DrownedHand",           "Drowned Hand",             "Hand of Glory",        900, false, 15, 190, 0.1f, 2f, 0f,   0.51f),
+                T("TideFairy", "Tide Fairy", "Foscaritrice", 40f, true, 10, 170, 0.8f, 3f, 3f, 0.48f),
+                T("ColossalTideFairy", "Colossal Tide Fairy", "Colossal Foscaritrice", 40f, true, 10, 170, 0.8f, 3f, 3f, 0.46f),
+                T("ArcanaTideFairy", "Arcana Tide Fairy", "Arcana Foscaritrice", 40f, true, 10, 170, 0.8f, 3f, 3f, 0.76f),
+                T("GreatSealskinSpirit", "Great Sealskin Spirit", "Nutmeg Boss", 50f, true, 10, 170, 1f, 3f, 30f, 0.52f),
+                T("GreatKelpSteed", "Great Kelp Steed", "Njuggles Boss", 50f, true, 10, 170, 0.3f, 3f, 30f, 0.4f),
+                T("GreatGrinningMourner", "Great Grinning Mourner", "Sam the Boss Clown", 40f, true, 10, 170, 0.8f, 3f, 30f, 0.9f),
+                T("GreatTideHowler", "Great Tide Howler", "Vulvio Boss", 150f, true, 20, 160, 0.5f, 1f, 30f, 0.6f).Resists(1.1f),
+                T("GreatWeepingLamb", "Great Weeping Lamb", "Lammuga Boss", 150f, true, 30, 200, 0f, 1f, 30f, 0.15f),
+                T("GreatDrownedBell", "Great Drowned Bell", "Missing Church Boss", 200f, true, 30, 160, 0f, 1f, 30f, 0.65f).Resists(1.0f),
+                T("DeepKelpKnight", "Deep Kelp Knight", "Deep Green Knight", 200f, true, 20, 180, 0f, 1f, 30f, 0.35f),
             },
+            // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
+            BossOnly = new[] { "TideFairy", "ColossalTideFairy", "ArcanaTideFairy", "GreatSealskinSpirit", "GreatKelpSteed", "GreatGrinningMourner", "GreatTideHowler", "GreatWeepingLamb", "GreatDrownedBell", "DeepKelpKnight" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "TidalImp" },

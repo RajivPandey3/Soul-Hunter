@@ -96,7 +96,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(type.FreezeResistance, Is.EqualTo(1.1f).Within(1e-5));
             Assert.That(type.InstantKillResistance, Is.True);
             Assert.That(type.DebuffResistance, Is.True);
-            CollectionAssert.AreEqual(new[] { "GreatBogMother" }, table.BossOnly);
+            CollectionAssert.Contains(table.BossOnly, "GreatBogMother");
             Assert.That(table.ByMinute.Any(m => m.Contains("GreatBogMother")), Is.False, "The wiki's Enemies column never lists it.");
 
             var data = AssetDatabase.LoadAssetAtPath<EnemyData>(table.DataPath("GreatBogMother"));
@@ -106,13 +106,9 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(data.InstantKillResistance, Is.True);
             Assert.That(data.DebuffResistance, Is.True);
             var wave = AssetDatabase.LoadAssetAtPath<WaveData>(WaveTables.StageWaveAssets[4]);
-            CollectionAssert.AreEqual(new[] { table.PrefabName("GreatBogMother") }, wave.BossTypes.Select(p => p.name).ToArray());
-            for (int level = 1; level <= 10; level++)
-            {
-                if (level == 5) continue;
-                var other = AssetDatabase.LoadAssetAtPath<WaveData>(WaveTables.StageWaveAssets[level - 1]);
-                Assert.That(other.BossTypes, Is.Empty, $"Level {level} has no boss-only type.");
-            }
+            CollectionAssert.AreEqual(table.BossOnly.Select(table.PrefabName).ToArray(), wave.BossTypes.Select(p => p.name).ToArray(),
+                "Level 5's boss-only types: Great Bog Mother and its chest bosses (StageChestBosses).");
+            CollectionAssert.Contains(wave.BossTypes.Select(p => p.name).ToArray(), table.PrefabName("GreatBogMother"));
         }
 
         // ---------------------------------------------------------------- Inverse mode music

@@ -13,17 +13,18 @@ MonoBehaviour:
   m_Name: L09_ThroneofDeath_Boss_Data
   m_EditorClassIdentifier: 
   EnemyName: Throne of Death Boss
-  MaxHealth: 9000
-  MoveSpeed: 3
-  DamageToPlayer: 27
+  MaxHealth: 250
+  MoveSpeed: 6.3
+  DamageToPlayer: 30
   Knockback: 0
-  MaxKnockback: 3
+  MaxKnockback: 1
   DropChanceGem: 95
   DropChanceChicken: 0
   DropsChest: 1
-  HealthPerPlayerLevel: 500
-  ExperienceValue: 250
+  HealthPerPlayerLevel: 250
+  ExperienceValue: 500
   FreezeResistance: 1.1
   InstantKillResistance: 1
   DebuffResistance: 1
+  DefangResistance: 1
   Abilities: []

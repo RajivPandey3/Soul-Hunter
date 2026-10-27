@@ -42,7 +42,13 @@ namespace SoulHunter.Gameplay.Data
                 T("GreatGlacierSpider",   "Great Glacier Spider",    "Tsuchigumo Boss",     100, true,  20, 180, 1f,   1f, 30f,  0.55f).Resists(1f, kill: true, debuff: true),
                 T("GreatThunderOgre",     "Great Thunder Ogre",      "Thunderous Oni Boss", 70,  true,  20, 180, 1f,   1f, 30f,  0.12f).Resists(1f, kill: true),
                 T("GreatGaleOgre",        "Great Gale Ogre",         "Windy Oni Boss",      70,  true,  20, 180, 1f,   1f, 30f,  0.44f).Resists(1f, kill: true),
+                T("FrostSpriteLord", "Frost Sprite Lord", "Spiritello Boss 1", 50f, true, 10, 140, 1f, 3f, 30f, 0.55f),
+                T("GreatTricksterBadger", "Great Trickster Badger", "Tanuki Boss", 60f, true, 20, 200, 1f, 1f, 30f, 0.08f).Resists(0.0f, kill: true),
+                T("GreatSummitCrowman", "Great Summit Crowman", "Tengu Boss", 60f, true, 20, 200, 1f, 1f, 30f, 0.99f).Resists(0.0f, kill: true),
+                T("ColossalFrostSprite", "Colossal Frost Sprite", "Spiritello Boss 2", 200f, true, 10, 140, 1f, 3f, 30f, 0.57f),
             },
+            // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
+            BossOnly = new[] { "FrostSpriteLord", "GreatTricksterBadger", "GreatSummitCrowman", "ColossalFrostSprite" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "FrostSprite" },

@@ -242,6 +242,10 @@ MonoBehaviour:
     - {fileID: 254032460577115768, guid: 528f3595b649ce448b110a57aac75f2b, type: 3}
   BossTypes:
   - {fileID: 4450393172646447439, guid: 5facc20dee058644aae8d6b3a2e587fe, type: 3}
+  - {fileID: 4886276403622422413, guid: 56651721becd6eb458c2eb3f4b0cd255, type: 3}
+  - {fileID: 6791778361754468001, guid: 7bb09fcbe977c0748b205205ea23d115, type: 3}
+  - {fileID: 5142897868582908543, guid: 48706111c0468c242adbeaf70b81315d, type: 3}
+  - {fileID: 1477629794817157074, guid: b81c636626e4591459a6bd10d9bf0efe, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 120

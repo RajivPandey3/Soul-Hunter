@@ -45,10 +45,11 @@ namespace SoulHunter.Tests.EditMode
         [Test]
         public void StageBosses_FollowTheVs2500Bosses_AlongTheStages()
         {
-            // VS wiki (HP x Level per level): Mad Forest Giant Blue Venus 150, Inlaid Library Hag 250, Dairy Plant Sword
-            // Guardian 250, Gallo Tower Giant Enemy Crab 500 (Mt.Moonspell Orochimario 500); later guardians never weaker
-            // (owner's story; Cappella Magna's 250 would drop). Owner, 2026-09-28: "pura VS".
-            int[] expected = { 150, 250, 250, 500, 500, 500, 500, 500, 500, 500 };
+            // Each source stage's 25:00 boss statbox (HP x Level, raw pages 2026-10-27): Giant Blue Venus 150, Hag 250, Sword
+            // Guardian 250, Giant Enemy Crab 500, Ethlenn 150, Orochimario 500, Trinacria (boss) 250 on Levels 8-9. Owner
+            // 2026-10-27: VS first. Level 7 (Avatar of Gaea: kill-count health) and Level 10 (Shadow Kael, the owner's story)
+            // keep 500.
+            int[] expected = { 150, 250, 250, 500, 150, 500, 500, 250, 250, 500 };
             for (int stage = 1; stage <= 10; stage++)
             {
                 var data = AssetDatabase.LoadAssetAtPath<GameObject>(string.Format(BossPrefabPath, stage)).GetComponent<EnemyController>().Data;

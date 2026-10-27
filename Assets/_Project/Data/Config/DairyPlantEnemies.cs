@@ -52,7 +52,17 @@ namespace SoulHunter.Gameplay.Data
                 T("OxDemonChampion",      "Ox Demon Champion",       "Minotaur Boss (large)", 50,  false, 11, 180, 1f,   3f, 30f,   0.99f),
                 T("MassiveHearthColossus", "Massive Hearth Colossus", "Big Golem 1 (LV29)",   80,  true,  20, 120, 0f,   1f, 25f,   0.08f).Resists(1f),
                 T("MassiveKilnColossus",  "Massive Kiln Colossus",   "Big Golem 2 (LV29)",    80,  true,  20, 120, 0f,   1f, 25f,   0.04f).Resists(1f),
+                T("OxDemonCaptain", "Ox Demon Captain", "Minotaur Boss", 60f, false, 11, 200, 0.5f, 3f, 30f, 0.06f),
+                T("CinderBat", "Cinder Bat", "Pipeestrello 4", 50f, true, 10, 140, 1f, 3f, 30f, 0.09f),
+                T("TwinHornedGunner", "Twin-Horned Gunner", "Lost Twin (boss)", 70f, true, 10, 0, 0f, 0f, 30f, 0.85f),
+                T("PitFiendKing", "Pit Fiend King", "Tritont (boss)", 200f, true, 20, 180, 0f, 1f, 50f, 0.55f).Resists(1.1f, kill: true, debuff: true),
+                T("AxeSentinel", "Axe Sentinel", "Axe Guardian", 200f, false, 20, 180, 0f, 1f, 40f, 0.02f),
+                T("GreatKilnColossus", "Great Kiln Colossus", "Big Golem 2 (boss)", 200f, true, 20, 180, 0f, 1f, 50f, 0.07f).Resists(1.0f),
+                T("GreatHearthColossus", "Great Hearth Colossus", "Big Golem 1 (boss)", 200f, true, 20, 180, 0f, 1f, 50f, 0.05f).Resists(1.0f),
+                T("ColossalCinderCockatrice", "Colossal Cinder Cockatrice", "Colossal Gallotrice", 200f, true, 20, 180, 0f, 1f, 50f, 0.31f).Resists(1.0f, kill: true),
             },
+            // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
+            BossOnly = new[] { "OxDemonCaptain", "CinderBat", "TwinHornedGunner", "PitFiendKing", "AxeSentinel", "GreatKilnColossus", "GreatHearthColossus", "ColossalCinderCockatrice" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "CinderPeasant" },

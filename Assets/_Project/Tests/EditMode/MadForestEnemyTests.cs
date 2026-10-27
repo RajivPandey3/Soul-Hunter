@@ -44,7 +44,7 @@ namespace SoulHunter.Tests.EditMode
         public void HpTimesLevel_IsOnlyOnTheWikiSkillHolders()
         {
             var holders = MadForestEnemies.Types.Where(t => t.HealthTimesLevel).Select(t => t.Id).OrderBy(x => x).ToArray();
-            CollectionAssert.AreEqual(new[] { "AshenBat", "EmberBat", "ThornWall" }, holders);
+            CollectionAssert.AreEqual(new[] { "AshenBat", "EmberBat", "GreatGhoulHound", "GreatMantisWraith", "GreatShroudGiant", "ThornWall" }, holders);
         }
 
         [Test]

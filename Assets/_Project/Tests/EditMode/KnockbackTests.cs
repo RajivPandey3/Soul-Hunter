@@ -44,10 +44,14 @@ namespace SoulHunter.Tests.EditMode
                 string file = System.IO.Path.GetFileName(path);
                 // Level 1's VS Mad Forest types carry each wiki statbox's own knockback (MadForestEnemyTests).
                 if (path.Contains("/MadForest/") || StageEnemyTables.IsTypeAsset(path)) continue; // and Levels 2-10's (StageEnemyTypeTests)
-                float expected = file.Contains("_Boss_") ? 0f : file.Contains("_Elite_") ? 0.5f
+                // Stage bosses: their statbox (2026-10-27) - Ethlenn (Level 5) takes 0.5, the others none; cap 1, except the
+                // unchanged Level 7 and Level 10 bosses.
+                bool boss = file.Contains("_Boss_");
+                bool statboxBoss = boss && !file.StartsWith("L07") && !file.StartsWith("L10");
+                float expected = boss ? (file.StartsWith("L05") ? 0.5f : 0f) : file.Contains("_Elite_") ? 0.5f
                                : file.StartsWith("L07") ? 0f : 1f;
                 Assert.That(data.Knockback, Is.EqualTo(expected).Within(1e-5), file);
-                Assert.That(data.MaxKnockback, Is.EqualTo(3f).Within(1e-5), file);
+                Assert.That(data.MaxKnockback, Is.EqualTo(statboxBoss ? 1f : 3f).Within(1e-5), file);
             }
         }
 

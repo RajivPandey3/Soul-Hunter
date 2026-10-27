@@ -33,6 +33,9 @@ namespace SoulHunter.Gameplay.Data
             public bool EliteModel;     // the bigger Level 1 elite model, else the Level 1 enemy model
             public float Scale;         // times the base model's size
             public Color Tint;
+            public float FreezeResistance;      // statbox res-freeze (VS bosses 1.1)
+            public bool InstantKillResistance;  // statbox res-kill
+            public bool DebuffResistance;       // statbox res-debuff
 
             public float MoveSpeed => VsSpeed * EnemyAbilityDefaults.VsSpeedToUnits;
             public int ExperienceValue => Mathf.Max(1, Mathf.RoundToInt(VsXp * 10f));
@@ -56,7 +59,15 @@ namespace SoulHunter.Gameplay.Data
             T("ShroudGiant",     "Shroud Giant",         "Big Mummy",      500, false, 20, 80,  0f,   3f, 3f,   true,  1.25f, new Color(0.86f, 0.80f, 0.62f)),
             T("ThornWall",       "Thorn Wall",           "Flower Wall",    30,  true,  1,  20,  1f,   3f, 2f,   false, 0.9f, new Color(0.40f, 0.70f, 0.40f)),
             T("GraveLily",       "Grave Lily",           "Venus",          500, false, 20, 80,  0f,   3f, 3f,   true,  1.25f, new Color(0.55f, 0.62f, 0.95f)),
+            // Chest bosses (StageChestBosses; statboxes from the raw Mantichana, Werewolf and Big_Mummy pages, 2026-10-27).
+            // Werewolf 1 (boss) gives "xp = 2", quoted as written.
+            Resist(T("GreatMantisWraith", "Great Mantis Wraith", "Mantichana (boss)", 150, true, 20, 160, 0f, 1f, 50f, true, 1.35f, new Color(0.42f, 0.70f, 0.38f)), 1.1f),
+            T("GreatGhoulHound", "Great Ghoul Hound", "Werewolf 1 (boss)", 200, true, 20, 130, 0.1f, 1f, 2f, true, 1.3f, new Color(0.50f, 0.38f, 0.30f)),
+            Resist(T("GreatShroudGiant", "Great Shroud Giant", "Big Mummy (boss)", 250, true, 20, 80, 0f, 1f, 25f, true, 1.4f, new Color(0.80f, 0.72f, 0.52f)), 1.1f),
         };
+
+        /// <summary>Chest bosses: built like every type, but in no minute's wave (the boss schedule sends them).</summary>
+        public static readonly string[] BossOnly = { "GreatMantisWraith", "GreatGhoulHound", "GreatShroudGiant" };
 
         /// <summary>
         /// The wiki's Mad Forest wave enemies per minute (each row lists the types that minute spawns). Sprite variants of
@@ -135,5 +146,11 @@ namespace SoulHunter.Gameplay.Data
             VsSpeed = vsSpeed, Knockback = knockback, MaxKnockback = maxKnockback, VsXp = vsXp, EliteModel = elite,
             Scale = scale, Tint = tint
         };
+
+        private static EnemyType Resist(EnemyType type, float freeze, bool kill = false, bool debuff = false)
+        {
+            type.FreezeResistance = freeze; type.InstantKillResistance = kill; type.DebuffResistance = debuff;
+            return type;
+        }
     }
 }

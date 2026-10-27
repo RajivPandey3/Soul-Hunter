@@ -60,6 +60,25 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void EveryChestBoss_IsAKnownTypeOfItsLevel()
+        {
+            for (int stage = 1; stage <= 10; stage++)
+            {
+                var ids = new System.Collections.Generic.List<string> { StageChestBosses.ArcanaCarrierFor(stage) };
+                foreach (var row in StageChestBosses.For(stage)) ids.Add(row.TypeId);
+                foreach (var id in ids)
+                {
+                    Assert.That(id, Is.Not.Null.And.Not.Empty, $"Level {stage}: every row names its boss type.");
+                    if (stage == 1) Assert.DoesNotThrow(() => MadForestEnemies.Find(id), id);
+                    else Assert.That(System.Array.Exists(StageEnemyTables.For(stage).Types, t => t.Id == id), Is.True, $"Level {stage}: {id}");
+                }
+            }
+            Assert.That(StageChestBosses.TypeFor(1, 10f), Is.EqualTo("GreatMantisWraith"), "Mad Forest 10:00 Giant Mantichana.");
+            Assert.That(MadForestEnemies.Find("GreatMantisWraith").FreezeResistance, Is.EqualTo(1.1f).Within(1e-5));
+            Assert.That(StageChestBosses.TypeFor(2, 8f), Is.EqualTo("SporeColossus"), "Inlaid Library 8:00 Colossal Musc Musc.");
+        }
+
+        [Test]
         public void ForMinute_UsesTheStageBeingPlayed()
         {
             CampaignLevelCatalog.CurrentStage = 2;

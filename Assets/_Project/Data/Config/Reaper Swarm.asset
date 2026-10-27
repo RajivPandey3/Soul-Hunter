@@ -234,7 +234,10 @@ MonoBehaviour:
     EliteBonus: 0
     EnemyTypes:
     - {fileID: 5227612401669276987, guid: c4e6e333045004b478c14c302ab493b2, type: 3}
-  BossTypes: []
+  BossTypes:
+  - {fileID: 6787932194001822736, guid: b787d4192799d22478f15f802869bcb8, type: 3}
+  - {fileID: 8643195512121425704, guid: 60bc9196ee164204ba127c88c2e4327f, type: 3}
+  - {fileID: 3934088092084557668, guid: b263e7e20499496439b353d03a950323, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 120

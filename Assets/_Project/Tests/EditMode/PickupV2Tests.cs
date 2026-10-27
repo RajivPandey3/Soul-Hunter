@@ -166,7 +166,9 @@ namespace SoulHunter.Tests.EditMode
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (path.Contains("/MadForest/") || StageEnemyTables.IsTypeAsset(path)) continue; // VS XP x10 per type (MadForestEnemyTests, StageEnemyTypeTests)
                 var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
-                int expected = data.name.Contains("_Boss_") ? 250 : data.name.Contains("_Elite_") ? 50 : 10;
+                // Stage bosses: their source stage's statbox XP x10 (Levels 7 and 10 unchanged at 250).
+                int[] bossXp = { 500, 500, 500, 500, 300, 300, 250, 500, 500, 250 };
+                int expected = data.name.Contains("_Boss_") ? bossXp[int.Parse(data.name.Substring(1, 2)) - 1] : data.name.Contains("_Elite_") ? 50 : 10;
                 Assert.That(data.ExperienceValue, Is.EqualTo(expected), data.name);
             }
         }

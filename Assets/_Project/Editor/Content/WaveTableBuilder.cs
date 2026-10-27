@@ -34,14 +34,14 @@ namespace SoulHunter.Editor.Content
                 // Types that come only as wave bosses (StageEnemyTable.BossOnly): the spawner finds them here.
                 wave.BossTypes = new System.Collections.Generic.List<GameObject>();
                 var table = StageEnemyTables.For(i + 1);
-                if (table != null)
-                    foreach (var id in table.BossOnly)
-                    {
-                        string path = table.PrefabPath(id);
-                        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                        if (prefab == null) throw new System.IO.FileNotFoundException("Missing wave boss type", path);
-                        wave.BossTypes.Add(prefab);
-                    }
+                var bossIds = table != null ? table.BossOnly : i == 0 ? MadForestEnemies.BossOnly : new string[0];
+                foreach (var id in bossIds)
+                {
+                    string path = table != null ? table.PrefabPath(id) : MadForestEnemies.PrefabPath(id);
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                    if (prefab == null) throw new System.IO.FileNotFoundException("Missing wave boss type", path);
+                    wave.BossTypes.Add(prefab);
+                }
                 wave.SpawnSide = WaveTables.SideFor(i + 1);
                 wave.SideBias = WaveTables.SideBiasFor(i + 1);
                 wave.Events = WaveTables.Events(i + 1);

@@ -232,7 +232,13 @@ MonoBehaviour:
     - {fileID: 7895802875941208901, guid: 576b0894986d4d449aff1b067353bd2b, type: 3}
     - {fileID: 861653175151870642, guid: 121dbc81a7b11254a83341ecd8dda3a7, type: 3}
     - {fileID: 809258727187171603, guid: b0a7511ef40b29f4d816f22b438df92b, type: 3}
-  BossTypes: []
+  BossTypes:
+  - {fileID: 498095502567076284, guid: 3d1f284cbad7fac468e908997b24f3c3, type: 3}
+  - {fileID: 284546803620503456, guid: db86477a549797d4bbfbda2442de939f, type: 3}
+  - {fileID: 802876334061303173, guid: 1505d844aad46124593bcd79c8513351, type: 3}
+  - {fileID: 7034188882904954788, guid: 2c6519e7daf16bc438bdab930e9f7874, type: 3}
+  - {fileID: 2337248175715552683, guid: f6098c13b2709934cb0c670125f74d28, type: 3}
+  - {fileID: 4071068545095311244, guid: 5e07b9db30a5bc349b3a5642b16eee8c, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 120

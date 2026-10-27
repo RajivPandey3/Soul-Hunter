@@ -232,7 +232,10 @@ MonoBehaviour:
     EnemyTypes:
     - {fileID: 8269790501557911724, guid: e257e983267a8f74dbc42c73d9d88504, type: 3}
     - {fileID: 7368756545601457712, guid: 8c70738e0617109499263b09f3c582be, type: 3}
-  BossTypes: []
+  BossTypes:
+  - {fileID: 139893501038108643, guid: dc60168072f3c974b91b5fa366caa386, type: 3}
+  - {fileID: 661842688748814503, guid: d9e6fc958de713a4389600daaea7323d, type: 3}
+  - {fileID: 2661206130001704447, guid: 742c3ad8aa9ad114fbb7195b17645033, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 120

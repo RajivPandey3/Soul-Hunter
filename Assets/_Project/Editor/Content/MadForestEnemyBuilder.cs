@@ -56,9 +56,9 @@ namespace SoulHunter.Editor.Content
             data.ExperienceValue = type.ExperienceValue;
             data.Movement = EnemyMovement.Homing; // the wiki gives these variants no movement skill
             data.DropsChest = false;
-            data.FreezeResistance = 0f;
-            data.InstantKillResistance = false;
-            data.DebuffResistance = false;
+            data.FreezeResistance = type.FreezeResistance;
+            data.InstantKillResistance = type.InstantKillResistance;
+            data.DebuffResistance = type.DebuffResistance;
             data.Abilities.Clear();
             data.VisualTint = type.Tint;
             EditorUtility.SetDirty(data);

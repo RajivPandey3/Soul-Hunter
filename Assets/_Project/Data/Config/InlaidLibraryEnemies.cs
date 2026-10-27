@@ -42,7 +42,15 @@ namespace SoulHunter.Gameplay.Data
                 T("SporeColossus",    "Spore Colossus",      "Colossal Musc Musc",          50,  true,  10, 170, 1f,   1f, 30f,  0.27f),
                 T("ThornLionKing",    "Thorn Lion King",     "Lionhead (boss)",             50,  true,  10, 170, 1f,   1f, 30f,  0.11f),
                 T("GloomMothQueen",   "Gloom Moth Queen",    "Colossal Sneaky Head",        40,  true,  10, 170, 1f,   1f, 30f,  0.75f),
+                T("GreatVineBoundDead", "Great Vine-Bound Dead", "Big Mummy (boss)", 250f, true, 20, 80, 0f, 1f, 25f, 0.17f).Resists(1.1f),
+                T("EmberNightBat", "Ember Night Bat", "Pipeestrello 4", 50f, true, 10, 140, 1f, 3f, 30f, 0.1f),
+                T("AshenNightBat", "Ashen Night Bat", "Pipeestrello 5", 50f, true, 10, 140, 1f, 3f, 30f, 0.62f),
+                T("GorgonWillowQueen", "Gorgon Willow Queen", "Merdusa (boss)", 150f, true, 20, 160, 0.5f, 1f, 30f, 0.44f).Resists(1.1f),
+                T("BriarMatriarch", "Briar Matriarch", "Undead Sassy Witch (boss)", 150f, false, 30, 200, 0.6f, 1f, 3f, 0.36f).Resists(1.1f),
+                T("AshenWyrm", "Ashen Wyrm", "Nesufritto", 200f, true, 30, 160, 0f, 1f, 50f, 0.03f).Resists(1.0f),
             },
+            // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
+            BossOnly = new[] { "GreatVineBoundDead", "EmberNightBat", "AshenNightBat", "GorgonWillowQueen", "BriarMatriarch", "AshenWyrm" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "AshSprite" },
