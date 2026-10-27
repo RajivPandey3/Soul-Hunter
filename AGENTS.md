@@ -75,6 +75,21 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
   - **Far enemies:** an ordinary enemy beyond 40 units now despawns without drops and is not a kill. The wiki says enemies "can despawn if the player moves far enough"; it gives no distance, so 40 stays (balance method). Before, every straggler was moved back ahead of the player.
     - Brought back as before: bosses, chest carriers, scheduled enemies (item guardians, chest-less wave bosses) and still hazards (which stay put).
   - Tests: `VsSpawnRulesPlayModeTests` (R) and `StageChestBossTests.StartingSpawns_AreEachSourceStagesInfobox` (T).
+- Phase 1b, part 3 (2026-10-27): VS map events, Level 1 first.
+  - The rules and all 189 parsed rows are in `Docs/VS_Audit_20261027/mapevent-rules.md` and `mapevents2.json`.
+  - `MapEvents` holds a level's own rows. `WaveTables.Events` uses them, and falls back to the older Soul Hunter schedule for levels not done yet (Levels 2-10).
+  - How a row is read (Template:Map_event):
+    - it fires "delay" seconds into its minute;
+    - it fires 1 + repeat times;
+    - its chance defaults to 100;
+    - the spacing between repeats is not stated, so "delay" is used (the rows read that way).
+  - `StageEventEntry.EnemyTypeId` names the event's own unit, which keeps a straight course at its own speed. `DurationSeconds` gives the event's length. The new `StageEventType.TrapRing` is the Flower Wall: Soul Hunter's Thorn Circle with the given duration.
+  - Level 1 plays Mad Forest's 21 rows:
+    - Bat Swarm: 50 Swarm Bats (Pipeestrello (swarm): 1 HP, 1 damage, speed 700, Fixed Direction, res-defang);
+    - Ghost Swarm: 20 Swarm Wisps (Ghost (swarm): 10 HP, 5 damage, speed 700, Fixed Direction);
+    - Flower Wall: a Thorn Wall ring of 30 at 5:00 (30 s), 10:00 (60 s), 15:00 (80%, 60 s), and 25:10 six times (10 s each).
+  - Balance method: the Flower Wall rows give no amount, so the ring keeps 30 walls.
+  - Not built: swarms pushing other enemies, because enemy bodies are triggers (the crowd rule).
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 

@@ -26,7 +26,8 @@ namespace SoulHunter.Tests.EditMode
         public void Events_FollowTheApprovedTable()
         {
             StageEventType S = StageEventType.Swarm, W = StageEventType.Wall, R = StageEventType.ClosingRing;
-            Assert.That(Share(e => e.Type == S, 1), Is.EqualTo(1f), "L1: swarms.");
+            // L1 plays Mad Forest's own rows since 2026-10-27 (MapEventsTests): swarms and Flower Walls.
+            Assert.That(Share(e => e.Type == S || e.Type == StageEventType.TrapRing, 1), Is.EqualTo(1f), "L1: swarms and Flower Walls.");
             Assert.That(Share(e => e.Type == R, 2), Is.GreaterThan(0.5f), "L2: closing rings.");
             Assert.That(Share(e => e.Type == W, 3), Is.GreaterThan(0.5f), "L3: walls.");
             Assert.That(Share(e => e.Type == W, 4), Is.EqualTo(1f), "L4: walls.");
@@ -50,6 +51,7 @@ namespace SoulHunter.Tests.EditMode
             // repeated swarms at 27 and 29 (after the 25:00 boss). Chance is divided by Luck.
             for (int stage = 1; stage <= 10; stage++)
             {
+                if (MapEvents.For(stage) != null) continue; // a level on its VS table (MapEventsTests)
                 var events = WaveTables.Events(stage);
                 Assert.That(events.Count, Is.GreaterThanOrEqualTo(15), $"Stage {stage}: an event most minutes.");
                 Assert.That(events.Select(e => e.TimeSeconds).Min(), Is.EqualTo(120f), $"Stage {stage}: the first at 2:00.");

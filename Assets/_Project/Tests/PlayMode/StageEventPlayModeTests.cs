@@ -31,11 +31,11 @@ namespace SoulHunter.Tests.PlayMode
             // authors its own events, so read the expected size from the stage's wave instead of the old default 20.
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             var first = GetPrivateField<WaveData>(spawner, "_currentWave").GetEvents()[0];
-            // VS density (2026-09-27): the first event is at 2:00 and is guaranteed.
-            Assert.That(first.TimeSeconds, Is.EqualTo(120f));
+            // VS Mad Forest (MapEvents, 2026-10-27): the first event is the 2:00 Bat Swarm, 5 s in, guaranteed.
+            Assert.That(first.TimeSeconds, Is.EqualTo(125f));
             Assert.That(first.ChancePercent, Is.EqualTo(100f));
             Assert.That(first.Type, Is.EqualTo(StageEventType.Swarm), "The Cursed Graveyard opens with a swarm.");
-            typeof(LevelProgressionManager).GetProperty("StageElapsedTime").GetSetMethod(true).Invoke(progression, new object[] { 121f });
+            typeof(LevelProgressionManager).GetProperty("StageElapsedTime").GetSetMethod(true).Invoke(progression, new object[] { first.TimeSeconds + 1f });
             yield return WaitUntilRealtime(() => Fliers() >= fliersBefore + first.Count, "the 2:00 swarm to spawn");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
@@ -53,6 +53,7 @@ namespace SoulHunter.Tests.PlayMode
 
             foreach (StageEventType type in System.Enum.GetValues(typeof(StageEventType)))
             {
+                if (type == StageEventType.TrapRing) continue; // a standing ring, not a flight (MapEventsPlayModeTests)
                 var entry = new StageEventEntry { Type = type, Count = 8 };
                 var spawned = (List<EnemyController>)run.Invoke(spawner, new object[] { entry, level, phase });
                 Assert.AreEqual(8, spawned.Count, $"{type} should spawn its full formation. " + Errors());

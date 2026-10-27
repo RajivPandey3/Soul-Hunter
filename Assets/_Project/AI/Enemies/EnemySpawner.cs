@@ -771,6 +771,18 @@ namespace SoulHunter.Gameplay.AI
             var spawned = new List<EnemyController>();
             if (_playerTransform == null || stageEvent == null) return spawned;
 
+            // A VS map event names its own unit (MapEvents): that type, at its own speed on a straight course.
+            var typed = FindStageType(stageEvent.EnemyTypeId);
+            if (stageEvent.Type == StageEventType.TrapRing)
+            {
+                var hazards = FindFirstObjectByType<SoulHunter.Gameplay.Hazards.StageHazards>();
+                float seconds = stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds : SoulHunter.Gameplay.Hazards.StageHazardTable.ThornSeconds;
+                var circle = hazards != null ? hazards.StartThornCircle(seconds, typed) : null;
+                if (circle != null) spawned.AddRange(circle.Members);
+                SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Map event TrapRing ({spawned.Count} enemies, {seconds:0} s) at {_stageTimePassed:0}s.");
+                return spawned;
+            }
+
             // The formation travels away from the side it comes from (Part 4: a stage's sides, e.g. castle walls
             // sweep in from the left or right).
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
@@ -779,11 +791,16 @@ namespace SoulHunter.Gameplay.AI
             foreach (var (position, flyDirection) in _formation)
             {
                 if (EnemyController.ActiveEnemies.Count >= HardCap) break; // VS: at most 500 on screen
-                var enemyObject = SpawnEnemy(PickSwarmPrefab(level, phase));
+                var enemyObject = SpawnEnemy(typed != null ? typed : PickSwarmPrefab(level, phase));
                 var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
                 if (enemy == null) continue;
                 enemyObject.transform.position = StageCorridor.Clamp(position);
-                enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
+                // VS Fixed Direction: the unit crosses at its own speed and leaves once past the far screen edge (twice the
+                // start radius, plus a margin); a duration, when the row gives one, ends it sooner or later.
+                if (typed != null)
+                    enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds
+                        : (EventRadius(stageEvent.Type, direction) * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed));
+                else enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
                 KeepWorldFreeze(enemy);
                 spawned.Add(enemy);
             }

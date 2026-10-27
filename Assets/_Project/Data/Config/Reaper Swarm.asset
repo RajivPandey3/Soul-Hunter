@@ -247,6 +247,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 180
     Type: 2
     Count: 13
@@ -254,6 +256,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 240
     Type: 1
     Count: 14
@@ -261,6 +265,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 300
     Type: 2
     Count: 22
@@ -268,6 +274,8 @@ MonoBehaviour:
     Repeat: 1
     RepeatDelaySeconds: 5
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 360
     Type: 1
     Count: 15
@@ -275,6 +283,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 420
     Type: 2
     Count: 15
@@ -282,6 +292,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 480
     Type: 1
     Count: 16
@@ -289,6 +301,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 540
     Type: 2
     Count: 16
@@ -296,6 +310,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 600
     Type: 2
     Count: 25
@@ -303,6 +319,8 @@ MonoBehaviour:
     Repeat: 1
     RepeatDelaySeconds: 5
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 660
     Type: 2
     Count: 17
@@ -310,6 +328,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 720
     Type: 1
     Count: 18
@@ -317,6 +337,8 @@ MonoBehaviour:
     Repeat: 2
     RepeatDelaySeconds: 5
     ChancePercent: 80
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 780
     Type: 2
     Count: 18
@@ -324,6 +346,8 @@ MonoBehaviour:
     Repeat: 3
     RepeatDelaySeconds: 4
     ChancePercent: 70
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 900
     Type: 2
     Count: 27
@@ -331,6 +355,8 @@ MonoBehaviour:
     Repeat: 1
     RepeatDelaySeconds: 5
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 1020
     Type: 2
     Count: 20
@@ -338,6 +364,8 @@ MonoBehaviour:
     Repeat: 3
     RepeatDelaySeconds: 4
     ChancePercent: 70
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 1200
     Type: 1
     Count: 22
@@ -345,6 +373,8 @@ MonoBehaviour:
     Repeat: 5
     RepeatDelaySeconds: 3
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 1320
     Type: 1
     Count: 23
@@ -352,6 +382,8 @@ MonoBehaviour:
     Repeat: 3
     RepeatDelaySeconds: 4
     ChancePercent: 70
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 1500
     Type: 2
     Count: 32
@@ -359,6 +391,8 @@ MonoBehaviour:
     Repeat: 1
     RepeatDelaySeconds: 5
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 1620
     Type: 2
     Count: 24
@@ -366,6 +400,8 @@ MonoBehaviour:
     Repeat: 6
     RepeatDelaySeconds: 3
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
   - TimeSeconds: 1740
     Type: 2
     Count: 26
@@ -373,3 +409,5 @@ MonoBehaviour:
     Repeat: 6
     RepeatDelaySeconds: 3
     ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0

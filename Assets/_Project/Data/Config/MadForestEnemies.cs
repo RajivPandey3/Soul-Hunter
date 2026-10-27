@@ -36,6 +36,8 @@ namespace SoulHunter.Gameplay.Data
             public float FreezeResistance;      // statbox res-freeze (VS bosses 1.1)
             public bool InstantKillResistance;  // statbox res-kill
             public bool DebuffResistance;       // statbox res-debuff
+            public bool DefangResistance;       // statbox res-defang
+            public bool FixedDirection;         // statbox skill "Fixed Direction"
 
             public float MoveSpeed => VsSpeed * EnemyAbilityDefaults.VsSpeedToUnits;
             public int ExperienceValue => Mathf.Max(1, Mathf.RoundToInt(VsXp * 10f));
@@ -63,11 +65,18 @@ namespace SoulHunter.Gameplay.Data
             // Werewolf 1 (boss) gives "xp = 2", quoted as written.
             Resist(T("GreatMantisWraith", "Great Mantis Wraith", "Mantichana (boss)", 150, true, 20, 160, 0f, 1f, 50f, true, 1.35f, new Color(0.42f, 0.70f, 0.38f)), 1.1f),
             T("GreatGhoulHound", "Great Ghoul Hound", "Werewolf 1 (boss)", 200, true, 20, 130, 0.1f, 1f, 2f, true, 1.3f, new Color(0.50f, 0.38f, 0.30f)),
+            // Map event units (raw Pipeestrello and Ghost pages, 2026-10-27): "Pipeestrello (swarm)" 1 HP, 1 power, speed
+            // 700, res-defang 1, Fixed Direction; "Ghost (swarm)" 10 HP, 5 power, speed 700, knockback 0, Fixed Direction.
+            Swarming(T("SwarmBat", "Swarm Bat", "Pipeestrello (swarm)", 1, false, 1, 700, 1f, 3f, 1f, false, 0.8f, new Color(0.55f, 0.52f, 0.66f)), defang: true),
+            Swarming(T("SwarmWisp", "Swarm Wisp", "Ghost (swarm)", 10, false, 5, 700, 0f, 3f, 1.5f, false, 0.9f, new Color(0.70f, 0.90f, 1.00f))),
             Resist(T("GreatShroudGiant", "Great Shroud Giant", "Big Mummy (boss)", 250, true, 20, 80, 0f, 1f, 25f, true, 1.4f, new Color(0.80f, 0.72f, 0.52f)), 1.1f),
         };
 
-        /// <summary>Chest bosses: built like every type, but in no minute's wave (the boss schedule sends them).</summary>
-        public static readonly string[] BossOnly = { "GreatMantisWraith", "GreatGhoulHound", "GreatShroudGiant" };
+        /// <summary>
+        /// Types in no minute's wave, built like every type: the chest bosses (the boss schedule sends them) and the map
+        /// event units (MadForestEvents).
+        /// </summary>
+        public static readonly string[] BossOnly = { "GreatMantisWraith", "GreatGhoulHound", "GreatShroudGiant", "SwarmBat", "SwarmWisp" };
 
         /// <summary>
         /// The wiki's Mad Forest wave enemies per minute (each row lists the types that minute spawns). Sprite variants of
@@ -146,6 +155,12 @@ namespace SoulHunter.Gameplay.Data
             VsSpeed = vsSpeed, Knockback = knockback, MaxKnockback = maxKnockback, VsXp = vsXp, EliteModel = elite,
             Scale = scale, Tint = tint
         };
+
+        private static EnemyType Swarming(EnemyType type, bool defang = false)
+        {
+            type.FixedDirection = true; type.DefangResistance = defang;
+            return type;
+        }
 
         private static EnemyType Resist(EnemyType type, float freeze, bool kill = false, bool debuff = false)
         {

@@ -99,6 +99,9 @@ namespace SoulHunter.Gameplay.Data
         public static List<StageEventEntry> Events(int stage)
         {
             stage = Mathf.Clamp(stage, 1, 10);
+            // VS first (owner, 2026-10-27): a level with its source stage's map event table uses it.
+            var vs = MapEvents.For(stage);
+            if (vs != null) return vs;
             StageEventType S = StageEventType.Swarm, W = StageEventType.Wall, R = StageEventType.ClosingRing;
             StageEventType small, big;
             float speed = 1f;

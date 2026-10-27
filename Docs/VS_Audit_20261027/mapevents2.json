@@ -1,0 +1,1691 @@
+{
+ "Mad_Forest": [
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "repeat": "2",
+   "delay": "5",
+   "min": 2
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "10",
+   "repeat": "1",
+   "delay": "5",
+   "min": 3
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "10",
+   "repeat": "1",
+   "delay": "5",
+   "min": 4
+  },
+  {
+   "name": "Flower Wall (event)|Flower Wall",
+   "enemy": "Flower Wall",
+   "chance": "100",
+   "duration": "30",
+   "min": 5
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "10",
+   "repeat": "1",
+   "delay": "5",
+   "min": 6
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "80",
+   "repeat": "5",
+   "delay": "5",
+   "min": 7
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "80",
+   "repeat": "2",
+   "delay": "15",
+   "min": 8
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "70",
+   "repeat": "2",
+   "delay": "15",
+   "min": 9
+  },
+  {
+   "name": "Flower Wall (event)|Flower Wall",
+   "enemy": "Flower Wall",
+   "chance": "100",
+   "duration": "60",
+   "min": 10
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "amount": "50",
+   "chance": "10",
+   "repeat": "1",
+   "delay": "5",
+   "min": 11
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "10",
+   "repeat": "1",
+   "delay": "5",
+   "min": 12
+  },
+  {
+   "name": "Ghost Swarm",
+   "enemy": "Ghost",
+   "variant": "Ghost (swarm)",
+   "chance": "70",
+   "repeat": "20",
+   "delay": "1.2",
+   "min": 13
+  },
+  {
+   "name": "Ghost Swarm",
+   "enemy": "Ghost",
+   "variant": "Ghost (swarm)",
+   "chance": "70",
+   "repeat": "20",
+   "delay": "2.3",
+   "min": 13
+  },
+  {
+   "name": "Flower Wall (event)|Flower Wall",
+   "enemy": "Flower Wall",
+   "chance": "80",
+   "duration": "60",
+   "min": 15
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "70",
+   "repeat": "20",
+   "delay": "1.2",
+   "min": 20
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "chance": "70",
+   "repeat": "20",
+   "delay": "2.3",
+   "min": 20
+  },
+  {
+   "name": "Flower Wall (event)|Flower Wall",
+   "enemy": "Flower Wall",
+   "repeat": "5",
+   "delay": "10",
+   "duration": "10",
+   "min": 25
+  },
+  {
+   "name": "Ghost Swarm",
+   "enemy": "Ghost",
+   "variant": "Ghost (swarm)",
+   "min": 27
+  },
+  {
+   "name": "Ghost Swarm",
+   "enemy": "Ghost",
+   "variant": "Ghost (swarm)",
+   "repeat": "19",
+   "delay": "3",
+   "min": 27
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "min": 29
+  },
+  {
+   "name": "Bat Swarm",
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "repeat": "19",
+   "delay": "3",
+   "min": 29
+  }
+ ],
+ "Inlaid_Library": [
+  {
+   "enemy": "Sig.ra Rossi",
+   "amount": "1",
+   "delay": "0.1",
+   "name": "Shade Bomb",
+   "min": 0
+  },
+  {
+   "enemy": "Sneaky Head",
+   "amount": "6",
+   "name": "Medusa Wall",
+   "min": 2
+  },
+  {
+   "enemy": "Sneaky Head",
+   "amount": "12",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "4",
+   "name": "Medusa Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Fast Sneaky Head",
+   "amount": "12",
+   "name": "Medusa Wall",
+   "min": 5
+  },
+  {
+   "enemy": "Sneaky Head",
+   "amount": "12",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "5",
+   "name": "Medusa Swarm",
+   "min": 5
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "10",
+   "chance": "50",
+   "repeat": "4",
+   "amount": "1",
+   "name": "Shade Bomb",
+   "min": 6
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "5",
+   "chance": "80",
+   "repeat": "8",
+   "amount": "1",
+   "name": "Shade Bomb",
+   "min": 7
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "20",
+   "chance": "50",
+   "repeat": "2",
+   "amount": "2",
+   "name": "Shade Bomb",
+   "min": 9
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "amount": "1",
+   "name": "Shade Bomb",
+   "min": 10
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "10",
+   "chance": "80",
+   "repeat": "3",
+   "amount": "2",
+   "name": "Shade Bomb",
+   "min": 10
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Fast Sneaky Head",
+   "amount": "12",
+   "name": "Medusa Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Sneaky Head",
+   "amount": "12",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "5",
+   "name": "Medusa Wall",
+   "min": 12
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Fast Sneaky Head",
+   "amount": "12",
+   "name": "Medusa Wall",
+   "min": 15
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Big Sneaky Head",
+   "amount": "6",
+   "delay": "13",
+   "name": "Medusa Wall",
+   "min": 15
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Fast Sneaky Head",
+   "amount": "12",
+   "delay": "2",
+   "chance": "90",
+   "repeat": "25",
+   "name": "Medusa Swarm",
+   "min": 15
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "5",
+   "chance": "50",
+   "repeat": "4",
+   "amount": "3",
+   "name": "Shade Bomb",
+   "min": 17
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "4",
+   "chance": "50",
+   "repeat": "25",
+   "amount": "2",
+   "name": "Shade Bomb",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "amount": "1",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "5",
+   "amount": "2",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "15",
+   "amount": "4",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "25",
+   "amount": "8",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "35",
+   "amount": "16",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "45",
+   "amount": "32",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "55",
+   "amount": "32",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "2",
+   "chance": "50",
+   "repeat": "25",
+   "amount": "3",
+   "name": "Shade Bomb",
+   "min": 22
+  },
+  {
+   "enemy": "Pipeestrello",
+   "variant": "Pipeestrello (swarm)",
+   "amount": "50",
+   "name": "Bat Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "amount": "1",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "5",
+   "amount": "2",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "15",
+   "amount": "4",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "25",
+   "amount": "8",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "35",
+   "amount": "16",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "45",
+   "amount": "32",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Skullone",
+   "variant": "Skullone (swarm)",
+   "delay": "55",
+   "amount": "32",
+   "name": "Skull Swarm",
+   "min": 25
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Fast Big Sneaky Head",
+   "amount": "12",
+   "name": "Medusa Swarm",
+   "min": 27
+  },
+  {
+   "enemy": "Sneaky Head",
+   "variant": "Fast Big Sneaky Head",
+   "amount": "12",
+   "delay": "2",
+   "chance": "90",
+   "repeat": "25",
+   "name": "Medusa Wall",
+   "min": 27
+  },
+  {
+   "enemy": "Sig.ra Rossi",
+   "delay": "1",
+   "chance": "60",
+   "repeat": "50",
+   "amount": "4",
+   "name": "Shade Bomb",
+   "min": 29
+  }
+ ],
+ "Dairy_Plant": [
+  {
+   "enemy": "The Stalker",
+   "amount": "1",
+   "duration": "120",
+   "chance": "1",
+   "name": "The Stalker",
+   "min": 0
+  },
+  {
+   "enemy": "Twin Snakes",
+   "amount": "20",
+   "duration": "5",
+   "name": "Pile Assault",
+   "min": 1
+  },
+  {
+   "enemy": "Milk Elemental",
+   "amount": "25",
+   "duration": "30",
+   "delay": "15",
+   "repeat": "3",
+   "name": "Swarm",
+   "min": 1
+  },
+  {
+   "enemy": "Milk Elemental",
+   "amount": "25",
+   "duration": "30",
+   "delay": "15",
+   "repeat": "2",
+   "name": "Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (wall)",
+   "amount": "80",
+   "duration": "30",
+   "name": "Jellyfish Wall",
+   "min": 3
+  },
+  {
+   "enemy": "Twin Snakes",
+   "amount": "20",
+   "duration": "5",
+   "chance": "50",
+   "name": "Pile Assault",
+   "min": 4
+  },
+  {
+   "enemy": "Twin Snakes",
+   "amount": "20",
+   "duration": "60",
+   "name": "Pile Assault",
+   "min": 5
+  },
+  {
+   "enemy": "Twin Snakes",
+   "amount": "20",
+   "duration": "30",
+   "delay": "30",
+   "name": "Pile Assault",
+   "min": 5
+  },
+  {
+   "enemy": "Milk Elemental",
+   "variant": "Milk Elemental 2",
+   "amount": "50",
+   "duration": "30",
+   "delay": "30",
+   "name": "Swarm",
+   "min": 6
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (wall)",
+   "amount": "40",
+   "duration": "30",
+   "name": "Jellyfish Wall",
+   "min": 7
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (wall)",
+   "amount": "40",
+   "duration": "30",
+   "delay": "2",
+   "chance": "80",
+   "name": "Jellyfish Wall",
+   "min": 7
+  },
+  {
+   "enemy": "The Stalker",
+   "duration": "120",
+   "chance": "30",
+   "name": "The Stalker",
+   "min": 8
+  },
+  {
+   "enemy": "Skeleton",
+   "amount": "50",
+   "duration": "30",
+   "delay": "30",
+   "name": "Swarm",
+   "min": 8
+  },
+  {
+   "enemy": "Mignotaur",
+   "variant": "Mignotaur (rush)",
+   "amount": "50",
+   "name": "Minotaur Rush",
+   "min": 9
+  },
+  {
+   "enemy": "Mignotaur",
+   "variant": "Mignotaur (rush)",
+   "amount": "50",
+   "duration": "15",
+   "delay": "16",
+   "chance": "60",
+   "name": "Minotaur Rush",
+   "min": 9
+  },
+  {
+   "enemy": "Mignotaur",
+   "variant": "Mignotaur (rush)",
+   "amount": "25",
+   "duration": "15",
+   "delay": "5",
+   "repeat": "6",
+   "chance": "50",
+   "name": "Minotaur Rush",
+   "min": 10
+  },
+  {
+   "enemy": "Twin Demons",
+   "amount": "10",
+   "duration": "20",
+   "delay": "10",
+   "repeat": "4",
+   "chance": "50",
+   "name": "Pile Assault",
+   "min": 10
+  },
+  {
+   "enemy": "Skeleton",
+   "duration": "30",
+   "amount": "50",
+   "delay": "10",
+   "repeat": "4",
+   "name": "Swarm",
+   "min": 11
+  },
+  {
+   "enemy": "Lost Twin",
+   "duration": "20",
+   "amount": "10",
+   "delay": "10",
+   "repeat": "3",
+   "chance": "50",
+   "name": "Pile Assault",
+   "min": 12
+  },
+  {
+   "enemy": "The Stalker",
+   "amount": "1",
+   "duration": "60",
+   "chance": "30",
+   "name": "The Stalker",
+   "min": 12
+  },
+  {
+   "enemy": "Skeleton",
+   "duration": "30",
+   "amount": "50",
+   "delay": "5",
+   "repeat": "10",
+   "name": "Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (wall)",
+   "duration": "30",
+   "amount": "40",
+   "chance": "80",
+   "delay": "12",
+   "name": "Jellyfish Wall",
+   "min": 18
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (wall)",
+   "duration": "30",
+   "delay": "14",
+   "amount": "40",
+   "chance": "80",
+   "name": "Jellyfish Wall",
+   "min": 18
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (swarm)",
+   "duration": "10",
+   "amount": "50",
+   "chance": "80",
+   "name": "Jellyfish Swarm",
+   "min": 19
+  },
+  {
+   "enemy": "Jellyfish",
+   "variant": "Jellyfish (swarm)",
+   "duration": "10",
+   "delay": "10",
+   "amount": "50",
+   "chance": "80",
+   "repeat": "2",
+   "name": "Jellyfish Swarm",
+   "min": 19
+  },
+  {
+   "enemy": "Twin Demons",
+   "duration": "30",
+   "amount": "20",
+   "delay": "5",
+   "repeat": "6",
+   "chance": "80",
+   "name": "Pile Assault",
+   "min": 20
+  },
+  {
+   "enemy": "Mignotaur",
+   "variant": "Mignotaur (rush)",
+   "duration": "10",
+   "amount": "25",
+   "chance": "60",
+   "name": "Minotaur Rush",
+   "min": 23
+  },
+  {
+   "enemy": "Mignotaur",
+   "variant": "Mignotaur (rush)",
+   "duration": "10",
+   "amount": "25",
+   "delay": "5",
+   "repeat": "5",
+   "chance": "60",
+   "name": "Minotaur Rush",
+   "min": 23
+  }
+ ],
+ "Gallo_Tower": [
+  {
+   "amount": "2",
+   "delay": "5",
+   "interval": "1.0",
+   "range": "1 (max)",
+   "name": "Shooting Star",
+   "min": 0
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "amount": "1",
+   "duration": "30",
+   "name": "Dragon Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "amount": "3",
+   "duration": "30",
+   "delay": "5",
+   "repeat": "4",
+   "chance": "70",
+   "name": "Dragon Swarm",
+   "min": 2
+  },
+  {
+   "amount": "2",
+   "chance": "50",
+   "delay": "5",
+   "interval": "1.0",
+   "range": "1 (max)",
+   "name": "Shooting Star",
+   "min": 4
+  },
+  {
+   "delay": "10",
+   "chance": "50",
+   "repeat": "2",
+   "amount": "2",
+   "interval": "1.0",
+   "range": "1 (max)",
+   "name": "Shooting Star",
+   "min": 4
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "amount": "12",
+   "duration": "30",
+   "name": "Dragon Swarm",
+   "min": 5
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "amount": "12",
+   "duration": "30",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "5",
+   "name": "Dragon Swarm",
+   "min": 5
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "amount": "5",
+   "duration": "60",
+   "delay": "10",
+   "chance": "70",
+   "interval": "1.33",
+   "name": "Dragon Stream",
+   "min": 6
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "delay": "5",
+   "chance": "70",
+   "duration": "60",
+   "amount": "5",
+   "interval": "1.33",
+   "name": "Dragon Stream",
+   "min": 7
+  },
+  {
+   "enemy": "Undead Mage",
+   "duration": "30",
+   "delay": "20",
+   "chance": "80",
+   "amount": "12",
+   "range": "0.4",
+   "name": "Pile Assault",
+   "min": 9
+  },
+  {
+   "enemy": "Undead Mage",
+   "amount": "6",
+   "duration": "30",
+   "delay": "10",
+   "name": "Pile Assault",
+   "min": 10
+  },
+  {
+   "enemy": "Undead Mage",
+   "amount": "6",
+   "duration": "30",
+   "delay": "20",
+   "chance": "60",
+   "name": "Pile Assault",
+   "min": 10
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "duration": "30",
+   "amount": "12",
+   "name": "Dragon Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "duration": "20",
+   "amount": "12",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "5",
+   "name": "Dragon Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "duration": "60",
+   "amount": "5",
+   "interval": "1.0",
+   "name": "Dragon Stream",
+   "min": 15
+  },
+  {
+   "amount": "12",
+   "interval": "0.1",
+   "range": "0.5 (max)",
+   "name": "Shooting Star",
+   "min": 15
+  },
+  {
+   "delay": "5",
+   "chance": "50",
+   "repeat": "6",
+   "amount": "3",
+   "interval": "0.1",
+   "range": "1 (max)",
+   "name": "Shooting Star",
+   "min": 15
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "duration": "30",
+   "amount": "12",
+   "name": "Dragon Swarm",
+   "min": 16
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "duration": "30",
+   "amount": "6",
+   "delay": "13",
+   "name": "Dragon Swarm",
+   "min": 16
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "duration": "20",
+   "amount": "3",
+   "delay": "2",
+   "chance": "90",
+   "repeat": "12",
+   "name": "Dragon Swarm",
+   "min": 16
+  },
+  {
+   "delay": "2",
+   "repeat": "25",
+   "amount": "3",
+   "interval": "0.1",
+   "range": "1 (max)",
+   "name": "Shooting Star",
+   "min": 22
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "amount": "12",
+   "name": "Dragon Swarm",
+   "min": 27
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "duration": "20",
+   "amount": "6",
+   "delay": "2",
+   "chance": "90",
+   "repeat": "10",
+   "name": "Dragon Swarm",
+   "min": 27
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "amount": "12",
+   "duration": "30",
+   "name": "Dragon Swarm",
+   "min": 29
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 2 (flag)",
+   "duration": "20",
+   "amount": "2",
+   "delay": "1.1",
+   "chance": "90",
+   "repeat": "50",
+   "name": "Dragon Swarm",
+   "min": 29
+  },
+  {
+   "enemy": "Dragon Shrimp",
+   "variant": "Dragon Shrimp 1 (flag)",
+   "duration": "20",
+   "amount": "2",
+   "delay": "1.0",
+   "repeat": "50",
+   "name": "Dragon Swarm",
+   "min": 29
+  },
+  {
+   "amount": "1",
+   "interval": "0.1",
+   "range": "1 (max)",
+   "name": "Shooting Star",
+   "min": 30
+  },
+  {
+   "delay": "0.2",
+   "repeat": "Infinite",
+   "amount": "5",
+   "interval": "0",
+   "range": "0.5 (max)",
+   "name": "Shooting Star",
+   "min": 30
+  }
+ ],
+ "Abyss_Foscari": [
+  {
+   "enemy": "The Blinder",
+   "amount": "1",
+   "duration": "120",
+   "chance": "1",
+   "name": "The Blinder|Sleeper",
+   "min": 0
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "25",
+   "duration": "10",
+   "name": "Swarm",
+   "min": 0
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "25",
+   "duration": "10",
+   "delay": "10",
+   "chance": "20",
+   "repeat": "5",
+   "name": "Swarm",
+   "min": 0
+  },
+  {
+   "enemy": "Lost Head",
+   "amount": "20",
+   "duration": "5",
+   "range": "0.7",
+   "name": "Pile Assault",
+   "min": 1
+  },
+  {
+   "enemy": "Blood Moss",
+   "amount": "25",
+   "duration": "30",
+   "delay": "15",
+   "repeat": "3",
+   "name": "Swarm",
+   "min": 1
+  },
+  {
+   "enemy": "Blood Moss",
+   "amount": "25",
+   "duration": "30",
+   "delay": "15",
+   "repeat": "2",
+   "name": "Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Rellyfish",
+   "amount": "80",
+   "duration": "30",
+   "name": "Jellyfish Wall",
+   "min": 3
+  },
+  {
+   "enemy": "Lost Head",
+   "amount": "20",
+   "duration": "5",
+   "range": "0.7",
+   "name": "Pile Assault",
+   "min": 4
+  },
+  {
+   "enemy": "Lost Head",
+   "amount": "20",
+   "duration": "60",
+   "range": "0.7",
+   "name": "Pile Assault",
+   "min": 5
+  },
+  {
+   "enemy": "Lost Head",
+   "amount": "20",
+   "duration": "30",
+   "delay": "30",
+   "range": "0.7",
+   "name": "Pile Assault",
+   "min": 5
+  },
+  {
+   "enemy": "Blood Moss",
+   "variant": "Swarm Blood Moss",
+   "amount": "50",
+   "duration": "30",
+   "delay": "30",
+   "name": "Swarm",
+   "min": 6
+  },
+  {
+   "enemy": "Rellyfish",
+   "amount": "80",
+   "duration": "30",
+   "chance": "80",
+   "name": "Jellyfish Wall",
+   "min": 7
+  },
+  {
+   "enemy": "Rellyfish",
+   "amount": "40",
+   "duration": "30",
+   "delay": "2",
+   "chance": "80",
+   "name": "Jellyfish Wall",
+   "min": 7
+  },
+  {
+   "enemy": "The Blinder",
+   "amount": "1",
+   "duration": "60",
+   "chance": "30",
+   "name": "The Blinder|Sleeper",
+   "min": 8
+  },
+  {
+   "enemy": "Snek",
+   "amount": "50",
+   "duration": "30",
+   "delay": "30",
+   "name": "Swarm",
+   "min": 8
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "50",
+   "duration": "15",
+   "name": "Swarm",
+   "min": 9
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "50",
+   "duration": "15",
+   "delay": "16",
+   "chance": "60",
+   "name": "Swarm",
+   "min": 9
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "25",
+   "duration": "15",
+   "delay": "5",
+   "repeat": "6",
+   "chance": "50",
+   "name": "Swarm",
+   "min": 10
+  },
+  {
+   "enemy": "Lost Head",
+   "variant": "Lost Head 2",
+   "amount": "10",
+   "duration": "20",
+   "delay": "10",
+   "range": "0.7",
+   "repeat": "4",
+   "chance": "50",
+   "name": "Pile Assault",
+   "min": 10
+  },
+  {
+   "enemy": "Snek",
+   "amount": "50",
+   "duration": "30",
+   "delay": "10",
+   "repeat": "4",
+   "name": "Swarm",
+   "min": 11
+  },
+  {
+   "enemy": "Lost Head",
+   "variant": "Lost Head 2",
+   "amount": "10",
+   "duration": "20",
+   "delay": "10",
+   "range": "0.7",
+   "repeat": "3",
+   "chance": "50",
+   "name": "Pile Assault",
+   "min": 12
+  },
+  {
+   "enemy": "The Blinder",
+   "amount": "1",
+   "duration": "60",
+   "chance": "99",
+   "name": "The Blinder|Sleeper",
+   "min": 12
+  },
+  {
+   "enemy": "Snek",
+   "amount": "50",
+   "duration": "30",
+   "delay": "5",
+   "repeat": "10",
+   "name": "Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Rellyfish",
+   "amount": "40",
+   "duration": "30",
+   "chance": "80",
+   "delay": "12",
+   "name": "Jellyfish Wall",
+   "min": 18
+  },
+  {
+   "enemy": "Rellyfish",
+   "amount": "40",
+   "duration": "30",
+   "delay": "14",
+   "chance": "80",
+   "name": "Jellyfish Wall",
+   "min": 18
+  },
+  {
+   "enemy": "Rellyfish",
+   "variant": "Swarm Rellyfish",
+   "amount": "50",
+   "duration": "10",
+   "chance": "80",
+   "name": "Jellyfish Wall",
+   "min": 19
+  },
+  {
+   "enemy": "Rellyfish",
+   "variant": "Swarm Rellyfish",
+   "amount": "50",
+   "duration": "10",
+   "chance": "80",
+   "delay": "10",
+   "repeat": "2",
+   "name": "Jellyfish Wall",
+   "min": 19
+  },
+  {
+   "enemy": "Lost Head",
+   "variant": "Lost Head 2",
+   "amount": "20",
+   "duration": "30",
+   "delay": "5",
+   "range": "0.7",
+   "repeat": "6",
+   "chance": "80",
+   "name": "Pile Assault",
+   "min": 20
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "25",
+   "duration": "10",
+   "delay": "5",
+   "chance": "60",
+   "repeat": "5",
+   "name": "Swarm",
+   "min": 23
+  },
+  {
+   "enemy": "Rotting Ghoul",
+   "variant": "Swarm Rotting Ghoul",
+   "amount": "25",
+   "duration": "10",
+   "chance": "60",
+   "name": "Swarm",
+   "min": 23
+  }
+ ],
+ "Mt.Moonspell": [
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "25",
+   "duration": "30",
+   "delay": "15",
+   "repeat": "1",
+   "name": "Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "5",
+   "repeat": "1",
+   "chance": "10",
+   "name": "Swarm",
+   "min": 3
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "5",
+   "repeat": "1",
+   "chance": "10",
+   "name": "Swarm",
+   "min": 4
+  },
+  {
+   "name": "Circle",
+   "enemy": "Flower Wall",
+   "variant": "Moonspell Flower Wall",
+   "amount": "50",
+   "duration": "30",
+   "chance": "100",
+   "min": 5
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "5",
+   "repeat": "1",
+   "chance": "10",
+   "name": "Swarm",
+   "min": 6
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "5",
+   "chance": "80",
+   "repeat": "5",
+   "name": "Swarm",
+   "min": 7
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "15",
+   "chance": "80",
+   "repeat": "2",
+   "name": "Swarm",
+   "min": 8
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "15",
+   "chance": "70",
+   "repeat": "2",
+   "name": "Swarm",
+   "min": 9
+  },
+  {
+   "name": "Circle",
+   "enemy": "Flower Wall",
+   "variant": "Moonspell Flower Wall",
+   "amount": "50",
+   "duration": "60",
+   "chance": "100",
+   "min": 10
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "5",
+   "repeat": "1",
+   "chance": "10",
+   "name": "Swarm",
+   "min": 11
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "5",
+   "repeat": "1",
+   "chance": "10",
+   "name": "Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Dusty Spiritello",
+   "amount": "50",
+   "delay": "2.3",
+   "repeat": "20",
+   "chance": "70",
+   "name": "Swarm",
+   "min": 13
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Dusty Spiritello",
+   "amount": "50",
+   "delay": "1.2",
+   "repeat": "20",
+   "chance": "70",
+   "name": "Swarm",
+   "min": 13
+  },
+  {
+   "name": "Circle",
+   "enemy": "Flower Wall",
+   "variant": "Moonspell Flower Wall",
+   "amount": "50",
+   "duration": "30",
+   "chance": "80",
+   "min": 15
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "1.2",
+   "repeat": "20",
+   "chance": "70",
+   "name": "Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Spiritello",
+   "amount": "50",
+   "delay": "2.3",
+   "repeat": "20",
+   "chance": "70",
+   "name": "Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Dusty Spiritello",
+   "amount": "50",
+   "delay": "10",
+   "name": "Swarm",
+   "min": 27
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Dusty Spiritello",
+   "amount": "50",
+   "delay": "3",
+   "repeat": "19",
+   "name": "Swarm",
+   "min": 27
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Dusty Spiritello",
+   "amount": "50",
+   "delay": "10",
+   "name": "Swarm",
+   "min": 29
+  },
+  {
+   "enemy": "Spiritello",
+   "variant": "Swarm Dusty Spiritello",
+   "amount": "50",
+   "delay": "3",
+   "repeat": "10",
+   "name": "Swarm",
+   "min": 29
+  }
+ ],
+ "Lake_Foscari": [
+  {
+   "enemy": "Sammy the Caterpillar",
+   "amount": "1",
+   "duration": "60",
+   "delay": "0.1",
+   "name": "Medusa Swarm",
+   "min": 0
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "name": "Medusa Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "4",
+   "name": "Medusa Swarm",
+   "min": 2
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "name": "Medusa Swarm",
+   "min": 5
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "4",
+   "name": "Medusa Swarm",
+   "min": 5
+  },
+  {
+   "enemy": "Sammy the Caterpillar",
+   "amount": "1",
+   "duration": "30",
+   "repeat": "4",
+   "chance": "50",
+   "name": "Medusa Swarm",
+   "min": 6
+  },
+  {
+   "enemy": "Sammy the Caterpillar",
+   "amount": "1",
+   "duration": "30",
+   "repeat": "4",
+   "chance": "50",
+   "name": "Medusa Swarm",
+   "min": 7
+  },
+  {
+   "enemy": "Sam the Sundown Clown",
+   "variant": "Sam the Swarm Clown",
+   "amount": "8",
+   "duration": "30",
+   "delay": "20",
+   "repeat": "2",
+   "chance": "50",
+   "name": "Swarm",
+   "min": 9
+  },
+  {
+   "enemy": "Sam the Sundown Clown",
+   "variant": "Sam the Swarm Clown",
+   "amount": "8",
+   "duration": "30",
+   "name": "Swarm",
+   "min": 10
+  },
+  {
+   "enemy": "Sam the Sundown Clown",
+   "variant": "Sam the Swarm Clown",
+   "amount": "8",
+   "duration": "30",
+   "delay": "10",
+   "repeat": "3",
+   "chance": "80",
+   "name": "Swarm",
+   "min": 10
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "name": "Medusa Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "delay": "5",
+   "chance": "70",
+   "repeat": "4",
+   "name": "Medusa Swarm",
+   "min": 12
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "name": "Medusa Swarm",
+   "min": 15
+  },
+  {
+   "enemy": "Wiseparke",
+   "variant": "Swimming Wiseparke",
+   "amount": "12",
+   "duration": "15",
+   "delay": "2",
+   "chance": "90",
+   "repeat": "25",
+   "name": "Medusa Swarm",
+   "min": 15
+  },
+  {
+   "enemy": "Sam the Sundown Clown",
+   "variant": "Sam the Swarm Clown",
+   "amount": "16",
+   "duration": "30",
+   "delay": "5",
+   "repeat": "4",
+   "chance": "50",
+   "name": "Swarm",
+   "min": 17
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "1",
+   "duration": "15",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "2",
+   "duration": "15",
+   "delay": "3",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "4",
+   "duration": "15",
+   "delay": "6",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "8",
+   "duration": "15",
+   "delay": "9",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "16",
+   "duration": "15",
+   "delay": "12",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "32",
+   "duration": "15",
+   "delay": "15",
+   "name": "Skull Swarm",
+   "min": 20
+  },
+  {
+   "enemy": "Snek",
+   "variant": "Swarm Snek",
+   "amount": "64",
+   "duration": "15",
+   "delay": "18",
+   "name": "Skull Swarm",
+   "min": 20
+  }
+ ],
+ "Cappella_Magna": [
+  {
+   "enemy": "The Maddener",
+   "amount": "1",
+   "delay": "9.6",
+   "name": "Maddener",
+   "min": 0
+  },
+  {
+   "enemy": "The Drowner",
+   "amount": "1",
+   "name": "Drowner",
+   "min": 5
+  },
+  {
+   "enemy": "The Stalker",
+   "amount": "1",
+   "delay": "10",
+   "name": "Stalker",
+   "min": 10
+  },
+  {
+   "enemy": "The Trickster",
+   "amount": "1",
+   "delay": "10",
+   "name": "Trickster",
+   "min": 15
+  }
+ ]
+}

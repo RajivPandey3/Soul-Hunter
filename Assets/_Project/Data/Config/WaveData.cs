@@ -27,7 +27,12 @@ namespace SoulHunter.Gameplay.Data
         /// <summary>A line of enemies, side by side, sweeps across the player's position.</summary>
         Wall,
         /// <summary>A circle around the player flies inward, closes, and opens out the other side.</summary>
-        ClosingRing
+        ClosingRing,
+        /// <summary>
+        /// VS Flower Wall: "a ring of durable Flower Wall units around the player, which slowly creeps inward" and traps
+        /// the player until they are defeated or the duration ends (Soul Hunter's ThornCircle).
+        /// </summary>
+        TrapRing
     }
 
     /// <summary>
@@ -70,6 +75,11 @@ namespace SoulHunter.Gameplay.Data
         [Min(0.1f)] public float RepeatDelaySeconds = 5f;
         [Tooltip("VS wave events: % chance each time it fires (100 = always); divided by the player's Luck.")]
         [Range(0f, 100f)] public float ChancePercent = 100f;
+        [Tooltip("VS map event enemy (the level's type id). Empty: the stage's own enemy. A typed member keeps a straight " +
+                 "course at its own speed (VS Fixed Direction) and leaves once it has crossed the screen.")]
+        public string EnemyTypeId;
+        [Tooltip("VS map event duration in seconds (0: the event's own default).")]
+        [Min(0f)] public float DurationSeconds;
     }
 
     /// <summary>

@@ -54,11 +54,12 @@ namespace SoulHunter.Editor.Content
             data.Knockback = type.Knockback;
             data.MaxKnockback = type.MaxKnockback;
             data.ExperienceValue = type.ExperienceValue;
-            data.Movement = EnemyMovement.Homing; // the wiki gives these variants no movement skill
+            data.Movement = type.FixedDirection ? EnemyMovement.FixedDirection : EnemyMovement.Homing;
             data.DropsChest = false;
             data.FreezeResistance = type.FreezeResistance;
             data.InstantKillResistance = type.InstantKillResistance;
             data.DebuffResistance = type.DebuffResistance;
+            data.DefangResistance = type.DefangResistance;
             data.Abilities.Clear();
             data.VisualTint = type.Tint;
             EditorUtility.SetDirty(data);

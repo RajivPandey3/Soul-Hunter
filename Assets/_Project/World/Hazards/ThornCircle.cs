@@ -51,6 +51,15 @@ namespace SoulHunter.Gameplay.Hazards
                 return n;
             }
         }
+        /// <summary>The ring's members (for map events that return what they spawned).</summary>
+        public IEnumerable<SoulHunter.Gameplay.AI.EnemyController> Members
+        {
+            get
+            {
+                foreach (var m in _members)
+                    if (m.Enemy != null && m.Enemy.TryGetComponent<SoulHunter.Gameplay.AI.EnemyController>(out var enemy)) yield return enemy;
+            }
+        }
         /// <summary>The solid posts of the members still standing (tests).</summary>
         public int Posts
         {
