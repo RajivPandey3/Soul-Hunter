@@ -40,6 +40,8 @@ namespace SoulHunter.Gameplay.Data
         public float ShootInterval;  // > 0: shoots a Fixed Direction bullet every this many seconds
         public float ShootVsSpeed;
         public int ShootDamage;
+        public bool SelfDestructs;  // VS Self-destruct (Sig.ra Rossi): arms near the player and explodes after its fuse
+        public bool KeepsMovement;  // keeps its statbox movement on a Floaty level (a chaser with no Floaty skill)
 
         public float MoveSpeed => VsSpeed * EnemyAbilityDefaults.VsSpeedToUnits;
         public int ExperienceValue => Mathf.Max(1, Mathf.RoundToInt(VsXp * 10f));
@@ -78,6 +80,8 @@ namespace SoulHunter.Gameplay.Data
         {
             ShootInterval = interval; ShootVsSpeed = vsBulletSpeed; ShootDamage = bulletDamage; return this;
         }
+        public StageEnemyType SelfDestructing() { SelfDestructs = true; return this; }
+        public StageEnemyType OwnMovement() { KeepsMovement = true; return this; }
         public StageEnemyType Named(string name) { Name = name; return this; }
     }
 
@@ -114,7 +118,7 @@ namespace SoulHunter.Gameplay.Data
 
         /// <summary>The movement the built enemy has: the statbox skill, or Floaty on a Floaty level for homing types.</summary>
         public EnemyMovement MovementOf(StageEnemyType type) =>
-            AllFloaty && type.Movement == EnemyMovement.Homing ? EnemyMovement.Floaty : type.Movement;
+            AllFloaty && type.Movement == EnemyMovement.Homing && !type.KeepsMovement ? EnemyMovement.Floaty : type.Movement;
 
         public float KnockbackOf(StageEnemyType type) => NoKnockback ? 0f : type.Knockback;
         public bool EliteModelOf(StageEnemyType type) => AllEliteModel || type.EliteModel;

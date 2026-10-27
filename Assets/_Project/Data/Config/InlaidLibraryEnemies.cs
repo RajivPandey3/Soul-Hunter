@@ -48,9 +48,20 @@ namespace SoulHunter.Gameplay.Data
                 T("GorgonWillowQueen", "Gorgon Willow Queen", "Merdusa (boss)", 150f, true, 20, 160, 0.5f, 1f, 30f, 0.44f).Resists(1.1f),
                 T("BriarMatriarch", "Briar Matriarch", "Undead Sassy Witch (boss)", 150f, false, 30, 200, 0.6f, 1f, 3f, 0.36f).Resists(1.1f),
                 T("AshenWyrm", "Ashen Wyrm", "Nesufritto", 200f, true, 30, 160, 0f, 1f, 50f, 0.03f).Resists(1.0f),
+                // Map event units (MapEvents; statboxes on Sig.ra_Rossi, Sneaky_Head, Skullone and Pipeestrello, raw
+                // 2026-10-27). Big Sneaky Head is the Gloom Moth above. The Sneaky Heads' "maximum speed of 340 / 700" is
+                // a cap on speed bonuses, which Soul Hunter's events do not give.
+                T("CinderShade",    "Cinder Shade",     "Sig.ra Rossi",         11f, true,  3, 330, 1f, 3f, 2f, 0.02f).SelfDestructing().OwnMovement(),
+                T("GloomMote",      "Gloom Mote",       "Sneaky Head",          1,   false, 1, 240, 1f, 3f, 1f, 0.70f).FloatyFixed(),
+                T("SwiftGloomMote", "Swift Gloom Mote", "Fast Sneaky Head",     1,   false, 1, 600, 1f, 3f, 1f, 0.66f).FloatyFixed(),
+                T("SwiftGloomMoth", "Swift Gloom Moth", "Fast Big Sneaky Head", 25,  false, 1, 600, 1f, 3f, 2f, 0.80f).FloatyFixed(),
+                T("SwarmSkull",     "Swarm Skull",      "Skullone (swarm)",     25,  false, 3, 700, 0f, 3f, 2f, 0.15f).Fixed(),
+                T("SwarmNightBat",  "Swarm Night Bat",  "Pipeestrello (swarm)", 1,   false, 1, 700, 1f, 3f, 1f, 0.60f).Fixed().NoDefang(),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
-            BossOnly = new[] { "GreatVineBoundDead", "EmberNightBat", "AshenNightBat", "GorgonWillowQueen", "BriarMatriarch", "AshenWyrm" },
+            BossOnly = new[] { "GreatVineBoundDead", "EmberNightBat", "AshenNightBat", "GorgonWillowQueen", "BriarMatriarch", "AshenWyrm",
+                // Map event units, sent only by MapEvents.
+                "CinderShade", "GloomMote", "SwiftGloomMote", "SwiftGloomMoth", "SwarmSkull", "SwarmNightBat" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "AshSprite" },

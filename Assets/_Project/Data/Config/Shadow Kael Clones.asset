@@ -249,6 +249,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 180
     Type: 0
     Count: 17
@@ -258,6 +259,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 240
     Type: 1
     Count: 18
@@ -267,6 +269,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 300
     Type: 2
     Count: 26
@@ -276,6 +279,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 360
     Type: 0
     Count: 19
@@ -285,6 +289,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 420
     Type: 1
     Count: 19
@@ -294,6 +299,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 480
     Type: 2
     Count: 20
@@ -303,6 +309,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 540
     Type: 0
     Count: 20
@@ -312,6 +319,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 600
     Type: 1
     Count: 29
@@ -321,6 +329,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 660
     Type: 2
     Count: 21
@@ -330,6 +339,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 720
     Type: 0
     Count: 22
@@ -339,6 +349,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 780
     Type: 1
     Count: 22
@@ -348,6 +359,7 @@ MonoBehaviour:
     ChancePercent: 70
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 840
     Type: 2
     Count: 23
@@ -357,6 +369,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 900
     Type: 0
     Count: 31
@@ -366,6 +379,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 960
     Type: 1
     Count: 24
@@ -375,6 +389,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1020
     Type: 2
     Count: 24
@@ -384,6 +399,7 @@ MonoBehaviour:
     ChancePercent: 70
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1080
     Type: 0
     Count: 25
@@ -393,6 +409,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1200
     Type: 2
     Count: 26
@@ -402,6 +419,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1320
     Type: 1
     Count: 27
@@ -411,6 +429,7 @@ MonoBehaviour:
     ChancePercent: 70
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1440
     Type: 0
     Count: 28
@@ -420,6 +439,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1500
     Type: 1
     Count: 36
@@ -429,6 +449,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1560
     Type: 2
     Count: 29
@@ -438,6 +459,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1620
     Type: 0
     Count: 28
@@ -447,6 +469,7 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1680
     Type: 1
     Count: 30
@@ -456,6 +479,7 @@ MonoBehaviour:
     ChancePercent: 80
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1740
     Type: 2
     Count: 30
@@ -465,3 +489,4 @@ MonoBehaviour:
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
+    Horizontal: 0

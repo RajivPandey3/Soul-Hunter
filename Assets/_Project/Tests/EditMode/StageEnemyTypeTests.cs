@@ -314,7 +314,9 @@ namespace SoulHunter.Tests.EditMode
                 foreach (var type in table.Types)
                 {
                     var movement = table.MovementOf(type);
-                    if (table.Level == 2 || table.Level == 7)
+                    // Map event units keep their statbox skill (Fixed Direction swarms, the homing Shade Bomb).
+                    bool eventUnit = type.KeepsMovement || type.Movement == EnemyMovement.FixedDirection;
+                    if ((table.Level == 2 || table.Level == 7) && !eventUnit)
                         Assert.That(movement == EnemyMovement.Floaty || movement == EnemyMovement.FloatyFixedDirection, $"L{table.Level} {type.Id} floats.");
                     else
                         Assert.AreEqual(type.Movement, movement, $"L{table.Level} {type.Id} keeps its statbox movement.");
@@ -372,7 +374,8 @@ namespace SoulHunter.Tests.EditMode
                     Assert.AreEqual(type.Lives, data.Lives, type.Id);
                     Assert.IsFalse(data.DropsChest, type.Id);
                     Assert.AreEqual(type.Tint, data.VisualTint, type.Id);
-                    Assert.AreEqual(type.Shoots ? 1 : 0, data.Abilities.Count, type.Id);
+                    Assert.AreEqual((type.Shoots ? 1 : 0) + (type.SelfDestructs ? 1 : 0), data.Abilities.Count, type.Id);
+                    if (type.SelfDestructs) Assert.AreEqual(EnemyAbilityKind.SelfDestruct, data.Abilities[data.Abilities.Count - 1].Kind, type.Id);
                     if (type.Shoots)
                     {
                         Assert.AreEqual(EnemyAbilityKind.Shoot, data.Abilities[0].Kind);

@@ -32,7 +32,12 @@ namespace SoulHunter.Gameplay.Data
         /// VS Flower Wall: "a ring of durable Flower Wall units around the player, which slowly creeps inward" and traps
         /// the player until they are defeated or the duration ends (Soul Hunter's ThornCircle).
         /// </summary>
-        TrapRing
+        TrapRing,
+        /// <summary>
+        /// VS Shade Bomb: "summons Red Shades that chases the player and self-destruct after a couple of seconds". The units
+        /// start just off the screen around the player and home on it at their own speed.
+        /// </summary>
+        Chasers
     }
 
     /// <summary>
@@ -80,6 +85,9 @@ namespace SoulHunter.Gameplay.Data
         public string EnemyTypeId;
         [Tooltip("VS map event duration in seconds (0: the event's own default).")]
         [Min(0f)] public float DurationSeconds;
+        [Tooltip("VS Medusa Wall / Medusa Swarm: the formation comes from the left or the right side (at random) and " +
+                 "travels horizontally across the screen.")]
+        public bool Horizontal;
     }
 
     /// <summary>

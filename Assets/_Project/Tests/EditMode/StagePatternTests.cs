@@ -28,7 +28,8 @@ namespace SoulHunter.Tests.EditMode
             StageEventType S = StageEventType.Swarm, W = StageEventType.Wall, R = StageEventType.ClosingRing;
             // L1 plays Mad Forest's own rows since 2026-10-27 (MapEventsTests): swarms and Flower Walls.
             Assert.That(Share(e => e.Type == S || e.Type == StageEventType.TrapRing, 1), Is.EqualTo(1f), "L1: swarms and Flower Walls.");
-            Assert.That(Share(e => e.Type == R, 2), Is.GreaterThan(0.5f), "L2: closing rings.");
+            // L2 plays Inlaid Library's own rows since 2026-10-27 (MapEventsTests): Shade Bombs, Medusa and skull swarms.
+            Assert.That(Share(e => e.Type == S || e.Type == StageEventType.Wall || e.Type == StageEventType.Chasers, 2), Is.EqualTo(1f), "L2: Inlaid Library's events.");
             Assert.That(Share(e => e.Type == W, 3), Is.GreaterThan(0.5f), "L3: walls.");
             Assert.That(Share(e => e.Type == W, 4), Is.EqualTo(1f), "L4: walls.");
             Assert.That(WaveTables.Events(5).All(e => e.Type == S && e.Speed > 1.5f), Is.True, "L5: fast straight swarms.");

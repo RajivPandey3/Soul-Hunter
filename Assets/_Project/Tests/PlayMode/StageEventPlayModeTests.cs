@@ -54,6 +54,7 @@ namespace SoulHunter.Tests.PlayMode
             foreach (StageEventType type in System.Enum.GetValues(typeof(StageEventType)))
             {
                 if (type == StageEventType.TrapRing) continue; // a standing ring, not a flight (MapEventsPlayModeTests)
+                if (type == StageEventType.Chasers) continue; // Shade Bombs home on the hero (MapEventsPlayModeTests)
                 var entry = new StageEventEntry { Type = type, Count = 8 };
                 var spawned = (List<EnemyController>)run.Invoke(spawner, new object[] { entry, level, phase });
                 Assert.AreEqual(8, spawned.Count, $"{type} should spawn its full formation. " + Errors());

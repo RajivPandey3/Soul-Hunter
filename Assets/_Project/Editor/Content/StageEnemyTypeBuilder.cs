@@ -95,6 +95,9 @@ namespace SoulHunter.Editor.Content
                     Damage = type.ShootDamage,
                     Count = 1,
                 });
+            // VS Sig.ra Rossi: "upon getting close enough it triggers its self-destruct, exploding 2 seconds later for 50
+            // damage" (the SelfDestruct kind's VS defaults).
+            if (type.SelfDestructs) data.Abilities.Add(new EnemyAbilitySpec(EnemyAbilityKind.SelfDestruct));
             data.VisualTint = type.Tint;
             EditorUtility.SetDirty(data);
             return data;

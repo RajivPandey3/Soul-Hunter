@@ -239,176 +239,371 @@ MonoBehaviour:
   - {fileID: 7034188882904954788, guid: 2c6519e7daf16bc438bdab930e9f7874, type: 3}
   - {fileID: 2337248175715552683, guid: f6098c13b2709934cb0c670125f74d28, type: 3}
   - {fileID: 4071068545095311244, guid: 5e07b9db30a5bc349b3a5642b16eee8c, type: 3}
+  - {fileID: 4940984754137370301, guid: f5287b8a75454514bbf66a1ccc310c36, type: 3}
+  - {fileID: 4932559992133850374, guid: e5288429a10609f4bb82c960145543c9, type: 3}
+  - {fileID: 2618536689723234195, guid: bc6e3fb451d4f60429aa348a04a566fd, type: 3}
+  - {fileID: 1197788094868353169, guid: af76428b676fc414094dd78ca384d3a1, type: 3}
+  - {fileID: 4779079471404830762, guid: 01ca1e9f6dcb0e24a8845cbac75040cb, type: 3}
+  - {fileID: 1900065370319943766, guid: ffea7c98718973842a75cfff1c516658, type: 3}
   Phases: []
   Events:
+  - TimeSeconds: 0.1
+    Type: 4
+    Count: 1
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 120
-    Type: 2
-    Count: 13
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 180
-    Type: 2
-    Count: 13
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 240
-    Type: 0
-    Count: 14
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 300
-    Type: 2
-    Count: 22
+    Type: 1
+    Count: 6
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: GloomMote
     DurationSeconds: 0
-  - TimeSeconds: 360
-    Type: 2
-    Count: 15
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 420
-    Type: 2
-    Count: 15
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 480
+    Horizontal: 1
+  - TimeSeconds: 125
     Type: 0
-    Count: 16
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 540
-    Type: 2
-    Count: 16
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 600
-    Type: 2
-    Count: 25
-    Speed: 1
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 660
-    Type: 2
-    Count: 17
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 720
-    Type: 0
-    Count: 18
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 780
-    Type: 2
-    Count: 18
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 900
-    Type: 2
-    Count: 27
-    Speed: 1
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 1020
-    Type: 2
-    Count: 20
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-  - TimeSeconds: 1200
-    Type: 0
-    Count: 22
+    Count: 12
     Speed: 1
     Repeat: 5
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: GloomMote
     DurationSeconds: 0
-  - TimeSeconds: 1320
-    Type: 2
-    Count: 23
+    Horizontal: 1
+  - TimeSeconds: 300
+    Type: 1
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwiftGloomMote
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 305
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 6
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: GloomMote
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 370
+    Type: 4
+    Count: 1
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 10
+    ChancePercent: 50
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 425
+    Type: 4
+    Count: 1
+    Speed: 1
+    Repeat: 9
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 560
+    Type: 4
+    Count: 2
     Speed: 1
     Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
+    RepeatDelaySeconds: 20
+    ChancePercent: 50
+    EnemyTypeId: CinderShade
     DurationSeconds: 0
-  - TimeSeconds: 1500
-    Type: 2
+    Horizontal: 0
+  - TimeSeconds: 600
+    Type: 4
+    Count: 1
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 610
+    Type: 4
+    Count: 2
+    Speed: 1
+    Repeat: 4
+    RepeatDelaySeconds: 10
+    ChancePercent: 80
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 720
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwiftGloomMote
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 725
+    Type: 1
+    Count: 12
+    Speed: 1
+    Repeat: 6
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: GloomMote
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 900
+    Type: 1
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwiftGloomMote
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 902
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 26
+    RepeatDelaySeconds: 2
+    ChancePercent: 90
+    EnemyTypeId: SwiftGloomMote
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 913
+    Type: 1
+    Count: 6
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 13
+    ChancePercent: 100
+    EnemyTypeId: GloomMoth
+    DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 1025
+    Type: 4
+    Count: 3
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 5
+    ChancePercent: 50
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1200
+    Type: 0
+    Count: 1
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1204
+    Type: 4
+    Count: 2
+    Speed: 1
+    Repeat: 26
+    RepeatDelaySeconds: 4
+    ChancePercent: 50
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1205
+    Type: 0
+    Count: 2
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1215
+    Type: 0
+    Count: 4
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 15
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1225
+    Type: 0
+    Count: 8
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 25
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1235
+    Type: 0
+    Count: 16
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 35
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1245
+    Type: 0
     Count: 32
     Speed: 1
     Repeat: 1
+    RepeatDelaySeconds: 45
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1255
+    Type: 0
+    Count: 32
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 55
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1322
+    Type: 4
+    Count: 3
+    Speed: 1
+    Repeat: 26
+    RepeatDelaySeconds: 2
+    ChancePercent: 50
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1500
+    Type: 0
+    Count: 1
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1500
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwarmNightBat
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1505
+    Type: 0
+    Count: 2
+    Speed: 1
+    Repeat: 1
     RepeatDelaySeconds: 5
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwarmSkull
     DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1515
+    Type: 0
+    Count: 4
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 15
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1525
+    Type: 0
+    Count: 8
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 25
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1535
+    Type: 0
+    Count: 16
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 35
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1545
+    Type: 0
+    Count: 32
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 45
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
+  - TimeSeconds: 1555
+    Type: 0
+    Count: 32
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 55
+    ChancePercent: 100
+    EnemyTypeId: SwarmSkull
+    DurationSeconds: 0
+    Horizontal: 0
   - TimeSeconds: 1620
-    Type: 2
-    Count: 24
+    Type: 0
+    Count: 12
     Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwiftGloomMoth
     DurationSeconds: 0
-  - TimeSeconds: 1740
-    Type: 2
-    Count: 26
+    Horizontal: 1
+  - TimeSeconds: 1622
+    Type: 1
+    Count: 12
     Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
+    Repeat: 26
+    RepeatDelaySeconds: 2
+    ChancePercent: 90
+    EnemyTypeId: SwiftGloomMoth
     DurationSeconds: 0
+    Horizontal: 1
+  - TimeSeconds: 1741
+    Type: 4
+    Count: 4
+    Speed: 1
+    Repeat: 51
+    RepeatDelaySeconds: 1
+    ChancePercent: 60
+    EnemyTypeId: CinderShade
+    DurationSeconds: 0
+    Horizontal: 0

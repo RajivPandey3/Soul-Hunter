@@ -90,6 +90,15 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
     - Flower Wall: a Thorn Wall ring of 30 at 5:00 (30 s), 10:00 (60 s), 15:00 (80%, 60 s), and 25:10 six times (10 s each).
   - Balance method: the Flower Wall rows give no amount, so the ring keeps 30 walls.
   - Not built: swarms pushing other enemies, because enemy bodies are triggers (the crowd rule).
+  - Level 2 plays Inlaid Library's 36 rows (2026-10-27):
+    - Shade Bomb (new `StageEventType.Chasers`): Cinder Shades (Sig.ra Rossi: 11 x Level, 3 damage, speed 330, Self-destruct 2 s / 50) start past the screen edge round the hero and home on it. `StageEnemyType.OwnMovement` keeps them homing on the Floaty level.
+    - Medusa Wall and Medusa Swarm (`StageEventEntry.Horizontal`): from the left or right, travelling horizontally; the units are Floaty + Fixed Direction (Gloom Mote = Sneaky Head 1/1/240, Swift Gloom Mote 1/1/600, Gloom Moth = Big Sneaky Head, Swift Gloom Moth 25/1/600).
+    - Skull Swarm: Swarm Skulls (Skullone (swarm) 25/3/700, knockback 0) at 20:05 and 25:05 in waves of 1, 2, 4, 8, 16, 32, 32.
+    - Bat Swarm at 25:00: 50 Swarm Night Bats (Pipeestrello (swarm)).
+    - Balance method: Shade Bombs spread evenly round the hero; Medusa Wall heads are 1.5 units apart.
+    - Tests: `MapEventsTests` (T), `MapEventsPlayModeTests` (R: a Medusa Wall comes from one side and weaves across; a Shade Bomb homes and carries its self-destruct; a Skull Swarm flies at speed 700).
+    - FPS (release, 1080p pixel count, V-Sync off, 60 cap, fixed loadout, 3 min each; `run-20261027-l2fps`): from 19:50, 24:50 and 28:50, median 60, 0.6-1.2% of frames over 17.2 ms. No frame over 25 ms while playing. The jolts over 25 ms were chest screens (paused) and the 30:00 change to Level 3 (86 ms).
+  - Owner (2026-10-27, "haan dono jagah rakho"): the Stalker XL, Shooting Stars and Pile Assault are added on their VS stages (Level 3; Level 4; Levels 3-5), and stay on their old Soul Hunter levels as extras. Built when those levels' map events are done.
 
 If current code conflicts with an approved owner decision, the approved requirement is authoritative until explicitly revised.
 

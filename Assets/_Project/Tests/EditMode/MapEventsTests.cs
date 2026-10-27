@@ -31,6 +31,42 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelTwo_PlaysInlaidLibrarysMapEventRows()
+        {
+            var events = MapEvents.For(2);
+            Assert.That(events, Has.Count.EqualTo(36), "36 {{map event}} rows on Inlaid Library.");
+            Assert.That(WaveTables.Events(2), Has.Count.EqualTo(36));
+            var first = events[0];
+            Assert.That((first.Type, first.EnemyTypeId, first.Count, first.TimeSeconds), Is.EqualTo((StageEventType.Chasers, "CinderShade", 1, 0.1f)));
+            var medusa = events.Where(e => e.EnemyTypeId.Contains("Gloom")).ToArray();
+            Assert.That(medusa.All(e => e.Horizontal), Is.True, "Medusa events travel horizontally.");
+            var skulls = events.Where(e => e.EnemyTypeId == "SwarmSkull" && e.TimeSeconds < 1260f).Select(e => e.Count);
+            Assert.That(skulls, Is.EqualTo(new[] { 1, 2, 4, 8, 16, 32, 32 }), "Each wave double in size from 1 to 32, then one more 32.");
+            var last = events.Last();
+            Assert.That((last.Repeat, last.Count, last.ChancePercent), Is.EqualTo((51, 4, 60f)), "29:00 Shade Bomb repeat=50, amount 4, 60%.");
+        }
+
+        [Test]
+        public void LevelTwo_EventUnits_HaveTheirWikiStatboxes()
+        {
+            var t = InlaidLibraryEnemies.Table;
+            var shade = t.Find("CinderShade");
+            Assert.That((shade.Health, shade.HealthTimesLevel, shade.Damage, shade.VsSpeed, shade.SelfDestructs), Is.EqualTo((11f, true, 3, 330f, true)));
+            Assert.That(t.MovementOf(shade), Is.EqualTo(EnemyMovement.Homing), "Sig.ra Rossi has no Floaty skill.");
+            Assert.That(t.MovementOf(t.Find("GloomMote")), Is.EqualTo(EnemyMovement.FloatyFixedDirection));
+            Assert.That((t.Find("SwiftGloomMote").VsSpeed, t.Find("SwiftGloomMoth").Health), Is.EqualTo((600f, 25f)));
+            var skull = t.Find("SwarmSkull");
+            Assert.That((skull.Health, skull.Damage, skull.VsSpeed, skull.Knockback, t.MovementOf(skull)), Is.EqualTo((25f, 3, 700f, 0f, EnemyMovement.FixedDirection)));
+            Assert.That(t.Find("SwarmNightBat").DefangResistance, Is.True);
+            var data = AssetDatabase.LoadAssetAtPath<EnemyData>(t.DataPath("CinderShade"));
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Abilities.Any(a => a.Kind == EnemyAbilityKind.SelfDestruct), Is.True);
+            var wave = AssetDatabase.LoadAssetAtPath<WaveData>(WaveTables.StageWaveAssets[1]);
+            foreach (var id in new[] { "CinderShade", "GloomMote", "SwiftGloomMote", "SwiftGloomMoth", "SwarmSkull", "SwarmNightBat" })
+                Assert.That(wave.BossTypes.Select(p => p.name), Does.Contain(t.PrefabName(id)), id);
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

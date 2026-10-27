@@ -787,6 +787,8 @@ namespace SoulHunter.Gameplay.AI
             // sweep in from the left or right).
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
             var direction = -WaveTables.SpawnDirection(side, 1f, 0f, Random.value, Random.value);
+            // VS Medusa Wall: "randomly appears from either the left or right side and travels across the screen".
+            if (stageEvent.Horizontal) direction = Random.value < 0.5f ? Vector3.right : Vector3.left;
             BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, EventRadius(stageEvent.Type, direction), _formation);
             foreach (var (position, flyDirection) in _formation)
             {
@@ -797,7 +799,8 @@ namespace SoulHunter.Gameplay.AI
                 enemyObject.transform.position = StageCorridor.Clamp(position);
                 // VS Fixed Direction: the unit crosses at its own speed and leaves once past the far screen edge (twice the
                 // start radius, plus a margin); a duration, when the row gives one, ends it sooner or later.
-                if (typed != null)
+                if (stageEvent.Type == StageEventType.Chasers) { } // homes on the player at its own speed (SpawnEnemy)
+                else if (typed != null)
                     enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds
                         : (EventRadius(stageEvent.Type, direction) * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed));
                 else enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
@@ -992,7 +995,7 @@ namespace SoulHunter.Gameplay.AI
             var camera = Camera.main;
             Vector3 origin = _playerTransform.position;
             float edge;
-            if (type == StageEventType.ClosingRing)
+            if (type == StageEventType.ClosingRing || type == StageEventType.Chasers)
             {
                 edge = 0f;
                 for (int i = 0; i < 16; i++)
@@ -1038,6 +1041,12 @@ namespace SoulHunter.Gameplay.AI
                     case StageEventType.Wall:
                         const float spacing = 1.5f;
                         results.Add((start + across * ((i - (count - 1) * 0.5f) * spacing), direction));
+                        break;
+                    case StageEventType.Chasers:
+                        // Spread round the player, past the screen edge, starting on the side the event comes from.
+                        float turn = Mathf.Atan2(-direction.z, -direction.x) + i * Mathf.PI * 2f / count;
+                        var from = new Vector3(Mathf.Cos(turn), 0f, Mathf.Sin(turn));
+                        results.Add((player + from * radius, -from));
                         break;
                     default: // ClosingRing
                         float angle = i * Mathf.PI * 2f / count;
