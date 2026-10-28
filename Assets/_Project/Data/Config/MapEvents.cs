@@ -180,6 +180,42 @@ namespace SoulHunter.Gameplay.Data
             E(29, Swarm, "EmberSerpent", 2, delay: 1.0f, repeat: 50, duration: 20, horizontal: true), // Dragon Swarm
         };
 
+        // Abyss Foscari "Waves", the Map events column (Level 5). Swarm: Swarm Rotting Ghouls cross fast (Fixed Direction);
+        // Blood Moss, Swarm Blood Moss and Snek home ("a large group of enemies that set off to attack the player"). Pile
+        // Assault: Lost Heads (1 and 2) round the player, range 0.7. Jellyfish Wall: Rellyfish rings that close in and move
+        // away; the 19:00 rows are written as Jellyfish Wall with Swarm Rellyfish, and are read as written (a ring of them).
+        // The Blinder rows (0:00 1%, 8:00 30%, 12:00 99%) are the Blinding Shade (StageHazardTable.Blinder).
+        private static List<StageEventEntry> AbyssFoscari() => new List<StageEventEntry>
+        {
+            E(0, Swarm, "StampedeGhoul", 25, duration: 10), // Swarm
+            E(0, Swarm, "StampedeGhoul", 25, delay: 10, repeat: 5, chance: 20, duration: 10), // Swarm
+            E(1, PileRing, "WhisperingHead", 20, duration: 5, range: 0.7f), // Pile Assault
+            E(1, Swarm, "CrimsonSpore", 25, delay: 15, repeat: 3, duration: 30), // Swarm
+            E(2, Swarm, "CrimsonSpore", 25, delay: 15, repeat: 2, duration: 30), // Swarm
+            E(3, PulsingRing, "RingMire", 80, duration: 30), // Jellyfish Wall
+            E(4, PileRing, "WhisperingHead", 20, duration: 5, range: 0.7f), // Pile Assault
+            E(5, PileRing, "WhisperingHead", 20, duration: 60, range: 0.7f), // Pile Assault
+            E(5, PileRing, "WhisperingHead", 20, delay: 30, duration: 30, range: 0.7f), // Pile Assault
+            E(6, Swarm, "CrimsonSporeCluster", 50, delay: 30, duration: 30), // Swarm
+            E(7, PulsingRing, "RingMire", 80, chance: 80, duration: 30), // Jellyfish Wall
+            E(7, PulsingRing, "RingMire", 40, delay: 2, chance: 80, duration: 30), // Jellyfish Wall
+            E(8, Swarm, "SwampAdder", 50, delay: 30, duration: 30), // Swarm
+            E(9, Swarm, "StampedeGhoul", 50, duration: 15), // Swarm
+            E(9, Swarm, "StampedeGhoul", 50, delay: 16, chance: 60, duration: 15), // Swarm
+            E(10, Swarm, "StampedeGhoul", 25, delay: 5, repeat: 6, chance: 50, duration: 15), // Swarm
+            E(10, PileRing, "WailingHead", 10, delay: 10, repeat: 4, chance: 50, duration: 20, range: 0.7f), // Pile Assault
+            E(11, Swarm, "SwampAdder", 50, delay: 10, repeat: 4, duration: 30), // Swarm
+            E(12, PileRing, "WailingHead", 10, delay: 10, repeat: 3, chance: 50, duration: 20, range: 0.7f), // Pile Assault
+            E(12, Swarm, "SwampAdder", 50, delay: 5, repeat: 10, duration: 30), // Swarm
+            E(18, PulsingRing, "RingMire", 40, delay: 12, chance: 80, duration: 30), // Jellyfish Wall
+            E(18, PulsingRing, "RingMire", 40, delay: 14, chance: 80, duration: 30), // Jellyfish Wall
+            E(19, PulsingRing, "DriftMire", 50, chance: 80, duration: 10), // Jellyfish Wall
+            E(19, PulsingRing, "DriftMire", 50, delay: 10, repeat: 2, chance: 80, duration: 10), // Jellyfish Wall
+            E(20, PileRing, "WailingHead", 20, delay: 5, repeat: 6, chance: 80, duration: 30, range: 0.7f), // Pile Assault
+            E(23, Swarm, "StampedeGhoul", 25, delay: 5, repeat: 5, chance: 60, duration: 10), // Swarm
+            E(23, Swarm, "StampedeGhoul", 25, chance: 60, duration: 10), // Swarm
+        };
+
         /// <summary>The VS map events of <paramref name="stage"/>, sorted by time; null when the level has no table yet.</summary>
         public static List<StageEventEntry> For(int stage)
         {
@@ -190,6 +226,7 @@ namespace SoulHunter.Gameplay.Data
                 case 2: events = InlaidLibrary(); break;
                 case 3: events = DairyPlant(); break;
                 case 4: events = GalloTower(); break;
+                case 5: events = AbyssFoscari(); break;
             }
             events?.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
             return events;

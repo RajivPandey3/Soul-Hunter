@@ -123,7 +123,7 @@ namespace SoulHunter.Gameplay.Hazards
         /// </summary>
         public void Run(StageHazardEntry entry)
         {
-            if (entry.Kind == StageHazardKind.DeathsShadow)
+            if (entry.Kind == StageHazardKind.DeathsShadow || entry.Kind == StageHazardKind.Blinder)
             {
                 float roll = ShadowRoll != null ? ShadowRoll() : Random.value;
                 if (!StageHazardTable.ShadowEventFires(entry.ChancePercent, PlayerLuck(), roll))
@@ -132,7 +132,8 @@ namespace SoulHunter.Gameplay.Hazards
                     Debug.Log($"[StageHazards] Death's Shadow did not come on Stage {_stage} ({entry.ChancePercent:0}% chance).");
                     return;
                 }
-                SpawnDeathsShadow(entry.DurationSeconds > 0f ? entry.DurationSeconds : StageHazardTable.ShadowLifetimeSeconds);
+                SpawnDeathsShadow(entry.DurationSeconds > 0f ? entry.DurationSeconds : StageHazardTable.ShadowLifetimeSeconds,
+                    StageHazardTable.ReaperFor(entry.Kind));
                 return;
             }
             Run(entry.Kind);
@@ -144,6 +145,7 @@ namespace SoulHunter.Gameplay.Hazards
             switch (kind)
             {
                 case StageHazardKind.DeathsShadow: SpawnDeathsShadow(); break;
+                case StageHazardKind.Blinder: SpawnDeathsShadow(StageHazardTable.ShadowLifetimeSeconds, StageHazardTable.Blinder); break;
                 case StageHazardKind.SoulMeteors: StartMeteorVolley(); break;
                 case StageHazardKind.PileAssault: StartPileAssault(); break;
             }
@@ -158,7 +160,11 @@ namespace SoulHunter.Gameplay.Hazards
         // ------------------------------------------------------------------ Death's Shadow
 
         /// <summary>Sends Death's Shadow after the player from just off-screen. Returns it, or null.</summary>
-        public DeathsShadow SpawnDeathsShadow(float lifetimeSeconds = StageHazardTable.ShadowLifetimeSeconds)
+        public DeathsShadow SpawnDeathsShadow(float lifetimeSeconds = StageHazardTable.ShadowLifetimeSeconds) =>
+            SpawnDeathsShadow(lifetimeSeconds, StageHazardTable.StalkerXL);
+
+        /// <summary>Sends <paramref name="reaper"/> (the Stalker XL or the Blinder) after the player. Returns it, or null.</summary>
+        public DeathsShadow SpawnDeathsShadow(float lifetimeSeconds, ReaperProfile reaper)
         {
             var spawner = Spawner();
             var player = PlayerController.Instance;
@@ -177,11 +183,11 @@ namespace SoulHunter.Gameplay.Hazards
             // VS "HP x Level", and Curse ("allows it to move very fast") with the run modes' enemy speed.
             float minutes = _progression != null ? _progression.StageElapsedTime / 60f : 0f;
             float curseAndModes = spawner.CurseForSpeedAndSpawns * SoulHunter.Gameplay.Data.RunModes.EnemySpeedMultiplier(minutes);
-            var shadow = DeathsShadow.Begin(enemy, lifetimeSeconds, PlayerLevel(), curseAndModes);
+            var shadow = DeathsShadow.Begin(enemy, lifetimeSeconds, PlayerLevel(), curseAndModes, reaper);
             if (shadow != null)
             {
                 _shadows.Add(shadow);
-                Debug.Log($"[StageHazards] Death's Shadow follows the player on Stage {_stage} for {lifetimeSeconds:0} s.");
+                Debug.Log($"[StageHazards] {reaper.Name} follows the player on Stage {_stage} for {lifetimeSeconds:0} s.");
             }
             return shadow;
         }

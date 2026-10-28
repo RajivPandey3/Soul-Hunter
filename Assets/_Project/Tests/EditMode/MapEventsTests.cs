@@ -121,6 +121,28 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelFive_PlaysAbyssFoscarisMapEventRows_AndTheBlinder()
+        {
+            var events = MapEvents.For(5);
+            Assert.That(events, Has.Count.EqualTo(27), "30 rows on Abyss Foscari, 3 of them The Blinder.");
+            Assert.That(WaveTables.Events(5), Has.Count.EqualTo(27));
+            Assert.That(events.Count(e => e.Type == StageEventType.PileRing), Is.EqualTo(7));
+            Assert.That(events.Count(e => e.Type == StageEventType.PulsingRing), Is.EqualTo(7));
+            Assert.That(events.Where(e => e.EnemyTypeId == "StampedeGhoul").All(e => e.Type == StageEventType.Swarm), Is.True);
+            var blinder = SoulHunter.Gameplay.Hazards.StageHazardTable.For(5).Where(h => h.Kind == SoulHunter.Gameplay.Hazards.StageHazardKind.Blinder).ToArray();
+            Assert.That(blinder.Select(h => (h.TimeSeconds, h.ChancePercent, h.DurationSeconds)),
+                Is.EqualTo(new[] { (0f, 1f, 120f), (480f, 30f, 60f), (720f, 99f, 60f) }), "The_Blinder: 0:00 1% 2 min; 8:00 30% 1 min; 12:00 99% 1 min.");
+            var b = SoulHunter.Gameplay.Hazards.StageHazardTable.Blinder;
+            Assert.That((b.HealthPerLevel, b.VsSpeed, b.ContactDamage, b.VsXp, b.FreezeResistance, b.DebuffResistance, b.Intangible),
+                Is.EqualTo((500, 150f, 25, 30f, 2f, true, false)));
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazardTable.ReaperChest(b, SoulHunter.Gameplay.Hazards.ShadowKiller.Pentagram).HasValue, Is.True);
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazardTable.ReaperChest(SoulHunter.Gameplay.Hazards.StageHazardTable.StalkerXL, SoulHunter.Gameplay.Hazards.ShadowKiller.Pentagram).HasValue, Is.False);
+            var t = AbyssFoscariEnemies.Table;
+            Assert.That((t.Find("StampedeGhoul").Health, t.Find("StampedeGhoul").VsSpeed, t.Find("RingMire").Damage, t.Find("DriftMire").VsSpeed),
+                Is.EqualTo((250f, 600f, 6, 150f)));
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

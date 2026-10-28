@@ -246,17 +246,80 @@ MonoBehaviour:
   - {fileID: 6791778361754468001, guid: 7bb09fcbe977c0748b205205ea23d115, type: 3}
   - {fileID: 5142897868582908543, guid: 48706111c0468c242adbeaf70b81315d, type: 3}
   - {fileID: 1477629794817157074, guid: b81c636626e4591459a6bd10d9bf0efe, type: 3}
+  - {fileID: 6204060793988807127, guid: 95828479889902c42bb95e9fe4b9b797, type: 3}
+  - {fileID: 8086777286978921789, guid: 2758043350365b2498b4b1ba95e1ceaa, type: 3}
+  - {fileID: 2781693519545014824, guid: 164b5f0d300938a45a4672693e48efc2, type: 3}
   Phases: []
   Events:
-  - TimeSeconds: 120
+  - TimeSeconds: 0
     Type: 0
-    Count: 13
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
+    Count: 25
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 10
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 10
+    Type: 0
+    Count: 25
+    Speed: 1
+    Repeat: 6
+    RepeatDelaySeconds: 10
+    ChancePercent: 20
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 10
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 60
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: WhisperingHead
+    DurationSeconds: 5
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0.7
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 75
+    Type: 0
+    Count: 25
+    Speed: 1
+    Repeat: 4
+    RepeatDelaySeconds: 15
+    ChancePercent: 100
+    EnemyTypeId: CrimsonSpore
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 135
+    Type: 0
+    Count: 25
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 15
+    ChancePercent: 100
+    EnemyTypeId: CrimsonSpore
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -264,14 +327,14 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 180
-    Type: 0
-    Count: 13
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Type: 5
+    Count: 80
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: RingMire
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -279,44 +342,59 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 240
-    Type: 0
-    Count: 14
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: WhisperingHead
+    DurationSeconds: 5
     Horizontal: 0
     IntervalSeconds: 0
-    Range: 0
+    Range: 0.7
     Side: 0
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 300
-    Type: 0
-    Count: 22
-    Speed: 1.8
+    Type: 6
+    Count: 20
+    Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: WhisperingHead
+    DurationSeconds: 60
     Horizontal: 0
     IntervalSeconds: 0
-    Range: 0
+    Range: 0.7
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 360
+  - TimeSeconds: 330
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 30
+    ChancePercent: 100
+    EnemyTypeId: WhisperingHead
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0.7
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 390
     Type: 0
-    Count: 15
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 30
+    ChancePercent: 100
+    EnemyTypeId: CrimsonSporeCluster
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -324,29 +402,44 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 420
-    Type: 0
-    Count: 15
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
+    Type: 5
+    Count: 80
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: RingMire
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 480
-    Type: 0
-    Count: 16
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
+  - TimeSeconds: 422
+    Type: 5
+    Count: 40
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 2
     ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: RingMire
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 510
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 30
+    ChancePercent: 100
+    EnemyTypeId: SwampAdder
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -355,178 +448,208 @@ MonoBehaviour:
     LaneZ: 0
   - TimeSeconds: 540
     Type: 0
-    Count: 16
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 15
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 600
+  - TimeSeconds: 556
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 16
+    ChancePercent: 60
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 15
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 605
     Type: 0
     Count: 25
-    Speed: 1.8
-    Repeat: 1
+    Speed: 1
+    Repeat: 7
     RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    ChancePercent: 50
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 15
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 660
-    Type: 0
-    Count: 17
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 720
-    Type: 0
-    Count: 18
-    Speed: 1.8
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 780
-    Type: 0
-    Count: 18
-    Speed: 1.8
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 900
-    Type: 0
-    Count: 27
-    Speed: 1.8
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 1020
-    Type: 0
-    Count: 20
-    Speed: 1.8
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 1200
-    Type: 0
-    Count: 22
-    Speed: 1.8
+  - TimeSeconds: 610
+    Type: 6
+    Count: 10
+    Speed: 1
     Repeat: 5
-    RepeatDelaySeconds: 3
+    RepeatDelaySeconds: 10
+    ChancePercent: 50
+    EnemyTypeId: WailingHead
+    DurationSeconds: 20
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0.7
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 670
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 10
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: SwampAdder
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1320
+  - TimeSeconds: 725
     Type: 0
-    Count: 23
-    Speed: 1.8
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 1500
-    Type: 0
-    Count: 32
-    Speed: 1.8
-    Repeat: 1
+    Count: 50
+    Speed: 1
+    Repeat: 11
     RepeatDelaySeconds: 5
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: SwampAdder
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1620
-    Type: 0
-    Count: 24
-    Speed: 1.8
-    Repeat: 6
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+  - TimeSeconds: 730
+    Type: 6
+    Count: 10
+    Speed: 1
+    Repeat: 4
+    RepeatDelaySeconds: 10
+    ChancePercent: 50
+    EnemyTypeId: WailingHead
+    DurationSeconds: 20
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0.7
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1092
+    Type: 5
+    Count: 40
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 12
+    ChancePercent: 80
+    EnemyTypeId: RingMire
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1740
+  - TimeSeconds: 1094
+    Type: 5
+    Count: 40
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 14
+    ChancePercent: 80
+    EnemyTypeId: RingMire
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1140
+    Type: 5
+    Count: 50
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 80
+    EnemyTypeId: DriftMire
+    DurationSeconds: 10
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1150
+    Type: 5
+    Count: 50
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 10
+    ChancePercent: 80
+    EnemyTypeId: DriftMire
+    DurationSeconds: 10
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1205
+    Type: 6
+    Count: 20
+    Speed: 1
+    Repeat: 7
+    RepeatDelaySeconds: 5
+    ChancePercent: 80
+    EnemyTypeId: WailingHead
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0.7
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1380
     Type: 0
-    Count: 26
-    Speed: 1.8
+    Count: 25
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 60
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 10
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1385
+    Type: 0
+    Count: 25
+    Speed: 1
     Repeat: 6
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    RepeatDelaySeconds: 5
+    ChancePercent: 60
+    EnemyTypeId: StampedeGhoul
+    DurationSeconds: 10
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0

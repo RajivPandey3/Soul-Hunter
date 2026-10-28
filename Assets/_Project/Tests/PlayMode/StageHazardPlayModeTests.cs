@@ -87,7 +87,7 @@ namespace SoulHunter.Tests.PlayMode
         [UnityTest]
         public IEnumerator DeathsShadow_ComesOnStage5At8_IsTheStalkerXL_TrailsThenDashes_AndLeaves()
         {
-            yield return Boot(5, invinciblePlayer: true);
+            yield return Boot(9, invinciblePlayer: true); // Stage 9: the Stalker XL alone (Level 5 also has the Blinder since 2026-10-28)
             Assert.That(_hazards.Shadows, Is.Empty, "Nothing before 8:00.");
             _hazards.ShadowRoll = () => 0f; // the 30% roll succeeds
             LevelProgressionManager.Instance.SkipTo(8f * 60f);
@@ -149,7 +149,7 @@ namespace SoulHunter.Tests.PlayMode
         [UnityTest]
         public IEnumerator DeathsShadow_ComesOnlyWhenIts30PercentRollSucceeds_AndTheNoonOneLastsAMinute()
         {
-            yield return Boot(5, invinciblePlayer: true);
+            yield return Boot(9, invinciblePlayer: true); // Stage 9: the Stalker XL alone (Level 5 also has the Blinder since 2026-10-28)
             int atStart = _hazards.ShadowEventsSkipped; // the 0:00 roll (1%) already failed in Boot
             Assert.That(atStart, Is.EqualTo(1), "Stage 5 rolls for Death's Shadow at 0:00 too.");
             _hazards.ShadowRoll = () => 0.99f; // fails 30% / Luck
@@ -170,7 +170,7 @@ namespace SoulHunter.Tests.PlayMode
         [UnityTest]
         public IEnumerator DeathsShadow_OrdinaryWeaponsWipesAndDebuffs_DoNothing()
         {
-            yield return Boot(5, invinciblePlayer: true);
+            yield return Boot(9, invinciblePlayer: true); // Stage 9: the Stalker XL alone (Level 5 also has the Blinder since 2026-10-28)
             var shadow = HeldShadow(new Vector3(6f, 0f, 0f));
             var enemy = shadow.GetComponent<EnemyController>();
             var health = shadow.GetComponent<HealthController>();
@@ -200,7 +200,7 @@ namespace SoulHunter.Tests.PlayMode
         [UnityTest]
         public IEnumerator DeathsShadow_InstantKills_DefeatIt_WithTheirVsChests()
         {
-            yield return Boot(5, invinciblePlayer: true);
+            yield return Boot(9, invinciblePlayer: true); // Stage 9: the Stalker XL alone (Level 5 also has the Blinder since 2026-10-28)
             var player = PlayerController.Instance;
             int kills = Kills();
 
@@ -407,6 +407,60 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(rails.All(r => r == null), Is.True, "Stage 3's rails are removed.");
             Assert.That(meteor == null, Is.True, "Pending markers are removed.");
             Assert.That(_hazards.Tracks, Is.Empty, "Stage 4 has no rails.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+    
+        // ---------------------------------------------------------------- The Blinder (Level 5, Abyss Foscari)
+
+        [UnityTest]
+        public IEnumerator TheBlinder_HasItsStatbox_TakesOrdinaryDamage_AndWornDownLeavesItsGemButNoChest()
+        {
+            yield return Boot(5, invinciblePlayer: true);
+            var shadow = _hazards.SpawnDeathsShadow(60f, StageHazardTable.Blinder);
+            Assert.That(shadow, Is.Not.Null, Errors());
+            shadow.transform.position = PlayerController.Instance.transform.position + new Vector3(6f, 0f, 0f);
+            shadow.GetComponent<EnemyController>().Freeze(60f);
+            UnityEngine.Physics.SyncTransforms();
+            var health = shadow.GetComponent<HealthController>();
+            var touch = shadow.GetComponent<TouchDamage>();
+            int level = PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel;
+            Assert.That(health.MaxHealth, Is.EqualTo(500 * level), "health 500, HP x Level.");
+            Assert.That(touch.DamageAmount, Is.EqualTo(25), "damage 25.");
+            Assert.That(shadow.GetComponent<EnemyController>().TryWeaponFreeze(1f, 2f), Is.False, "res-freeze 2.");
+
+            var whip = PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>(true).First();
+            int chests = ActiveChests().Length;
+            using (DamageSource.From(whip)) health.TakeDamage(new DamagePacket(10, shadow.transform.position, Vector3.forward));
+            Assert.That(health.CurrentHealth, Is.LessThan(health.MaxHealth), "Ordinary weapons hurt the Blinder.");
+            using (DamageSource.From(whip)) health.TakeDamage(new DamagePacket(health.CurrentHealth + 5, shadow.transform.position, Vector3.forward));
+            yield return null;
+            Assert.That(shadow == null || !shadow.gameObject.activeInHierarchy, Is.True, "Worn down, it leaves.");
+            Assert.That(ActiveChests().Length, Is.EqualTo(chests), "No chest without an instant kill (balance method).");
+            Assert.That(XPGem.ActiveGems.Any(g => g != null && g.isActiveAndEnabled && g.XPValue == StageHazardTable.Blinder.GemValue), Is.True, "xp 30.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator TheBlinder_DefeatedByPentagram_DropsTheHighQualityChest()
+        {
+            yield return Boot(5, invinciblePlayer: true);
+            var shadow = _hazards.SpawnDeathsShadow(60f, StageHazardTable.Blinder);
+            shadow.transform.position = PlayerController.Instance.transform.position + new Vector3(6f, 0f, 0f);
+            shadow.GetComponent<EnemyController>().Freeze(60f);
+            UnityEngine.Physics.SyncTransforms();
+            // A gained weapon fires at once (wiki Weapons: "Upgrading a weapon will also reset its Cooldown and activate it
+            // instantly"), so the chests are counted before it is given and that first activation is the one checked.
+            int chests = ActiveChests().Length;
+            WeaponManager.Instance.GiveWeapon(UpgradeType.Pentagram, 1);
+            yield return null;
+            yield return null;
+            var pentagram = PlayerController.Instance.GetComponentsInChildren<PentagramWeapon>(true).First();
+            pentagram.enabled = false; // no second activation
+            Assert.That(DeathsShadow.LastDefeatedBy, Is.EqualTo(ShadowKiller.Pentagram), Errors());
+            Assert.That(DeathsShadow.LastChest.HasValue, Is.True, "The Blinder: \"Defeating it with the aforementioned weapons ... will make it drop a Treasure Chest\", Pentagram first.");
+            Assert.That(DeathsShadow.LastChest.Value.FivePercent, Is.EqualTo(6f));
+            Assert.That(ActiveChests().Length, Is.GreaterThanOrEqualTo(1), "The chest stays: the activation's own item erase comes before its kills.");
+            Assert.That(ActiveChests().Length, Is.LessThanOrEqualTo(chests + 1));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

@@ -16,6 +16,39 @@ namespace SoulHunter.Gameplay.Hazards
         SoulMeteors,
         /// <summary>VS "Pile Assault" / "Pile Shooter": a still ring of enemies around the player that shoots bullets.</summary>
         PileAssault,
+        /// <summary>VS "The Blinder" (Abyss Foscari): a reaper that follows like the Stalker but has finite health.</summary>
+        Blinder,
+    }
+
+    /// <summary>
+    /// One VS reaper's statbox and rules, for Death's Shadow (DeathsShadow). The Stalker XL (The_Stalker) and The Blinder
+    /// (The_Blinder, raw 2026-10-28) share the behaviour ("This behavior is identical to that of The Stalker") and differ in:
+    /// - health and speed (statbox);
+    /// - whether ordinary weapons hurt it. The Stalker is "otherwise intangible". The Blinder page names only the instant
+    ///   killers, but says that in Carlo Cart "its health scaling is much higher, making the only realistic way of
+    ///   defeating it is with insta-kill effects": with Abyss Foscari's 500 x Level, ordinary damage can defeat it;
+    /// - Pentagram's chest. The Stalker: "Pentagram and Grenade cause no chest to drop". The Blinder: "Defeating it with
+    ///   the aforementioned weapons and items will make it drop a Treasure Chest", and Pentagram is the first of them.
+    /// Balance method (the Blinder page is silent on it): defeated by ordinary damage, the Blinder leaves its 30 XP as a
+    /// gem and no chest, like the chest-less patrol variant.
+    /// </summary>
+    public struct ReaperProfile
+    {
+        public string Name;
+        public int HealthPerLevel;
+        public float VsSpeed;
+        public int ContactDamage;
+        public bool Intangible;
+        public bool PentagramGivesChest;
+        public float VsXp;
+        public float FreezeResistance;
+        public bool InstantKillResistance;
+        public bool DebuffResistance;
+
+        public float MoveSpeed => VsSpeed * EnemyAbilityDefaults.VsSpeedToUnits;
+        public int GemValue => Mathf.Max(1, Mathf.RoundToInt(VsXp * 10f)); // Soul Hunter's gem scale (XP x 10)
+        public int Health(int playerLevel) =>
+            (int)System.Math.Min(int.MaxValue, (long)HealthPerLevel * System.Math.Max(1, playerLevel));
     }
 
     public struct StageHazardEntry
@@ -208,6 +241,9 @@ namespace SoulHunter.Gameplay.Hazards
             if (System.Array.IndexOf(ShadowStages, stage) >= 0)
                 foreach (var (minute, chance, seconds) in ShadowEvents)
                     list.Add(new StageHazardEntry(StageHazardKind.DeathsShadow, minute * 60f, chance, seconds));
+            if (System.Array.IndexOf(BlinderStages, stage) >= 0)
+                foreach (var (minute, chance, seconds) in BlinderEvents)
+                    list.Add(new StageHazardEntry(StageHazardKind.Blinder, minute * 60f, chance, seconds));
             if (System.Array.IndexOf(MeteorStages, stage) >= 0)
                 for (float minute = MeteorFirstMinute; minute <= MeteorLastMinute + 0.01f; minute += MeteorEveryMinutes)
                     list.Add(new StageHazardEntry(StageHazardKind.SoulMeteors, minute * 60f));
@@ -270,6 +306,41 @@ namespace SoulHunter.Gameplay.Hazards
         /// </summary>
         public static float ShadowSpeedMultiplier(float enemyBaseSpeed, float curseAndModes = 1f) =>
             ShadowMoveSpeed * Mathf.Max(0.1f, curseAndModes) / Mathf.Max(0.1f, enemyBaseSpeed);
+
+        /// <summary>The Stalker XL statbox (BOSS_XLSTALKER): 655,350 x Level, speed 300, damage 50, xp 0, intangible.</summary>
+        public static readonly ReaperProfile StalkerXL = new ReaperProfile
+        {
+            Name = "Death's Shadow", HealthPerLevel = ShadowHealthPerLevel, VsSpeed = ShadowVsMoveSpeed, ContactDamage = ShadowContactDamage,
+            Intangible = true, PentagramGivesChest = false, VsXp = ShadowExperience, FreezeResistance = ShadowFreezeResistance,
+            InstantKillResistance = ShadowInstantKillResistance, DebuffResistance = ShadowDebuffResistance,
+        };
+
+        /// <summary>
+        /// The Blinder statbox (BOSS_XLBLINDER, raw 2026-10-28): "|skills = [[HP x Level]] |health = 500 |movespeed = 150
+        /// |damage = 25 |knockback = 0 |knockback-max = 0 |xp = 30 |res-freeze = 2 |res-kill = |res-debuff = 1".
+        /// </summary>
+        public static readonly ReaperProfile Blinder = new ReaperProfile
+        {
+            Name = "Blinding Shade", HealthPerLevel = 500, VsSpeed = 150f, ContactDamage = 25,
+            Intangible = false, PentagramGivesChest = true, VsXp = 30f, FreezeResistance = 2f,
+            InstantKillResistance = false, DebuffResistance = true,
+        };
+
+        /// <summary>VS Abyss Foscari's Blinder rows on Level 5 (its place): 0:00 1% for 2 minutes; 8:00 30% and 12:00 99%, 1 minute.</summary>
+        public static readonly int[] BlinderStages = { 5 };
+        public static readonly (float minute, float chancePercent, float seconds)[] BlinderEvents =
+            { (0f, 1f, 120f), (8f, 30f, 60f), (12f, 99f, 60f) };
+
+        /// <summary>The reaper a scheduled entry sends.</summary>
+        public static ReaperProfile ReaperFor(StageHazardKind kind) => kind == StageHazardKind.Blinder ? Blinder : StalkerXL;
+
+        /// <summary>A reaper's speed factor on a pooled body (as ShadowSpeedMultiplier, with the reaper's own speed).</summary>
+        public static float ReaperSpeedMultiplier(ReaperProfile reaper, float enemyBaseSpeed, float curseAndModes = 1f) =>
+            reaper.MoveSpeed * Mathf.Max(0.1f, curseAndModes) / Mathf.Max(0.1f, enemyBaseSpeed);
+
+        /// <summary>The chest a reaper drops when <paramref name="killer"/> defeats it (the Blinder: Pentagram too).</summary>
+        public static ChestTiers? ReaperChest(ReaperProfile reaper, ShadowKiller killer) =>
+            killer == ShadowKiller.Pentagram && reaper.PentagramGivesChest ? ChestTiers.StalkerHighQuality : ShadowChest(killer);
 
         /// <summary>VS "HP x Level": 655,350 x the player's level (capped at int.MaxValue).</summary>
         public static int ShadowHealth(int playerLevel) =>

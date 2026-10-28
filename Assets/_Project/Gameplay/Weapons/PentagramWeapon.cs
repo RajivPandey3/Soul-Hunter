@@ -79,6 +79,14 @@ namespace SoulHunter.Gameplay.Combat
             bool eraseItems = SoulHunter.Gameplay.Pickups.GroundItemEraser.ErasesItems(KeepChance, playerLuck, Random.value);
             LastActivationErasedItems = eraseItems;
 
+            // The items on screen go first, then the enemies. A drop made by this activation itself must stay: the
+            // Blinder "Defeating it with the aforementioned weapons and items will make it drop a Treasure Chest", Pentagram
+            // the first of them (The_Blinder, raw 2026-10-28). Erasing after the enemies erased that chest in the same
+            // frame. Ordinary enemies lose nothing by the order: their drops are erased per life (EraseDropsThisLife).
+            long itemsStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (eraseItems) LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
+            long itemsEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+
             // Wipe all enemies on screen
             // KillSilently disables enemies immediately, and OnDisable removes
             // them from ActiveEnemies. Iterate backwards so that removal during
@@ -114,11 +122,9 @@ namespace SoulHunter.Gameplay.Combat
                 if (health != null) using (DamageSource.From(this)) health.EraseByInstantKill(); // VS: max-health damage
                 LastWipeCount++;
             }
-            long itemsStart = System.Diagnostics.Stopwatch.GetTimestamp();
-            if (eraseItems) LastItemsErased = SoulHunter.Gameplay.Pickups.GroundItemEraser.EraseOnScreen(Camera.main);
             long end = System.Diagnostics.Stopwatch.GetTimestamp();
-            LastEnemyWipeMs = (itemsStart - wipeStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
-            LastItemWipeMs = (end - itemsStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
+            LastEnemyWipeMs = (end - wipeStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
+            LastItemWipeMs = (itemsEnd - itemsStart) * 1000f / System.Diagnostics.Stopwatch.Frequency;
             LastWipeFrame = Time.frameCount;
         }
 

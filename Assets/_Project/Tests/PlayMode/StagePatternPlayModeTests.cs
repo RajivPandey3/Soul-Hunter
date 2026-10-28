@@ -112,8 +112,11 @@ namespace SoulHunter.Tests.PlayMode
             var member = members.First(m => m != null && m.isActiveAndEnabled);
             float flight = member.Rigidbody.linearVelocity.magnitude;
             Assert.That(member.CampaignSpeedMultiplier, Is.LessThan(1f), "The swamp horde is slow (owner-approved pace).");
-            Assert.That(flight, Is.GreaterThan(member.MoveSpeed * EnemyFlyState.SpeedMultiplier * 1.5f),
-                $"Swamp swarms fly fast ({flight:0.0} vs walk {member.MoveSpeed:0.0}).");
+            // Since 2026-10-28 Level 5 plays Abyss Foscari's own rows: the first is a Swarm Rotting Ghoul swarm (Fixed
+            // Direction, VS speed 600), which flies at its own speed, far faster than the stage's walkers (VS 100-140).
+            float expected = 600f * EnemyAbilityDefaults.VsSpeedToUnits * member.CampaignSpeedMultiplier;
+            Assert.That(flight, Is.EqualTo(expected).Within(expected * 0.2f), $"Swamp swarms fly at their own speed ({flight:0.0}).");
+            Assert.That(flight, Is.GreaterThan(140f * EnemyAbilityDefaults.VsSpeedToUnits * 2f), "and fast.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     }

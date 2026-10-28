@@ -526,8 +526,12 @@ namespace SoulHunter.Gameplay.Player
 
             if (_currentState != null)
             {
-                var envData = _scanner != null ? _scanner.ScanEnvironment() : new SoulHunter.Gameplay.Physics.EnvironmentData();
-                _currentState.UpdatePhysics(ref envData);
+                // Timed sections (SlowSpan, free under 5 ms): a 98 ms frame was profiled inside this method (2026-10-28).
+                SoulHunter.Gameplay.Physics.EnvironmentData envData;
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Player.Scan"))
+                    envData = _scanner != null ? _scanner.ScanEnvironment() : new SoulHunter.Gameplay.Physics.EnvironmentData();
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Player.Move"))
+                    _currentState.UpdatePhysics(ref envData);
             }
         }
 

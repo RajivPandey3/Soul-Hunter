@@ -60,9 +60,16 @@ namespace SoulHunter.Gameplay.Data
                 T("WarmBogLeech", "Warm Bog Leech", "Warm Cauld", 200f, true, 20, 180, 0f, 1f, 30f, 0.08f).Resists(1.1f, kill: true),
                 T("GreatMireCrone", "Great Mire Crone", "Edna Boss", 100f, true, 20, 180, 0f, 1f, 30f, 0.8f).Resists(0.0f, kill: true),
                 T("GreatPitLurker", "Great Pit Lurker", "Well Well Well Dweller", 200f, true, 20, 180, 0f, 1f, 30f, 0.66f).Resists(1.1f, kill: true),
+                // Map event units (MapEvents; statboxes on Rotting_Ghoul and Rellyfish, raw 2026-10-28). The Pile Assault and homing
+                // Swarm units are the wave types above (Lost Head 1/2, Blood Moss, Swarm Blood Moss, Snek).
+                T("StampedeGhoul", "Stampede Ghoul", "Swarm Rotting Ghoul", 250, false, 9,  600, 0.5f, 3f, 2.25f, 0.30f).Fixed(),
+                T("RingMire",      "Ring Mire",      "Rellyfish",           140, false, 6,  200, 0.2f, 3f, 2.5f,  0.52f).Fixed(),
+                T("DriftMire",     "Drift Mire",     "Swarm Rellyfish",     180, false, 10, 150, 0.2f, 3f, 2.5f,  0.55f).Fixed(),
             },
             // "24:00 | Edna, Well Dweller, Cold Cauld | 200 | 0.1 | Maronna Meea Boss": only in the boss column.
-            BossOnly = new[] { "GreatBogMother", "ColossalFleshClot", "WarmBogLeech", "GreatMireCrone", "GreatPitLurker" },
+            BossOnly = new[] { "GreatBogMother", "ColossalFleshClot", "WarmBogLeech", "GreatMireCrone", "GreatPitLurker",
+                // Map event units, sent only by MapEvents.
+                "StampedeGhoul", "RingMire", "DriftMire" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "BogLeech" },

@@ -62,17 +62,26 @@ namespace SoulHunter.Gameplay.Hazards
         /// <summary>Turns a freshly spawned pooled enemy into Death's Shadow.</summary>
         /// <param name="curseAndModes">The Curse x run-mode speed factor (StageHazardTable.ShadowSpeedMultiplier).</param>
         public static DeathsShadow Begin(GameObject enemyObject, float lifetimeSeconds = StageHazardTable.ShadowLifetimeSeconds,
-            int playerLevel = 1, float curseAndModes = 1f)
+            int playerLevel = 1, float curseAndModes = 1f) =>
+            Begin(enemyObject, lifetimeSeconds, playerLevel, curseAndModes, StageHazardTable.StalkerXL);
+
+        /// <summary>Turns a freshly spawned pooled enemy into the reaper <paramref name="reaper"/>.</summary>
+        public static DeathsShadow Begin(GameObject enemyObject, float lifetimeSeconds, int playerLevel, float curseAndModes, ReaperProfile reaper)
         {
             if (enemyObject == null) return null;
             var shadow = enemyObject.GetComponent<DeathsShadow>();
             if (shadow == null) shadow = enemyObject.AddComponent<DeathsShadow>();
+            shadow.Reaper = reaper;
             shadow.Setup(lifetimeSeconds, playerLevel, curseAndModes);
             return shadow;
         }
 
+        /// <summary>The reaper's statbox and rules (the Stalker XL unless set).</summary>
+        public ReaperProfile Reaper { get; private set; } = StageHazardTable.StalkerXL;
+
         private void Setup(float lifetimeSeconds, int playerLevel, float curseAndModes)
         {
+            if (Reaper.HealthPerLevel <= 0) Reaper = StageHazardTable.StalkerXL;
             _enemy = GetComponent<EnemyController>();
             _health = GetComponent<HealthController>();
             _touch = GetComponent<TouchDamage>();
@@ -84,10 +93,9 @@ namespace SoulHunter.Gameplay.Hazards
             if (_enemy != null)
             {
                 float baseSpeed = _enemy.MoveSpeed / Mathf.Max(0.1f, _enemy.CampaignSpeedMultiplier * _enemy.LingeringSlow);
-                _enemy.ApplyCampaignSpeed(StageHazardTable.ShadowSpeedMultiplier(baseSpeed, curseAndModes));
+                _enemy.ApplyCampaignSpeed(StageHazardTable.ReaperSpeedMultiplier(Reaper, baseSpeed, curseAndModes));
                 _enemy.SetCastsShadows(true);
-                _enemy.OverrideResistances(StageHazardTable.ShadowFreezeResistance,
-                    StageHazardTable.ShadowInstantKillResistance, StageHazardTable.ShadowDebuffResistance);
+                _enemy.OverrideResistances(Reaper.FreezeResistance, Reaper.InstantKillResistance, Reaper.DebuffResistance);
                 if (_enemy.Abilities != null) _enemy.Abilities.Stop(); // the boss model's skills are not the Stalker's
                 _attackDistanceBefore = _enemy.AttackDistance;
             }
@@ -95,14 +103,14 @@ namespace SoulHunter.Gameplay.Hazards
             {
                 _touchDamageBefore = _touch.DamageAmount;
                 // VS damage 50; the Endless cycle's +25% enemy damage applies to it like to every enemy.
-                _touch.DamageAmount = Mathf.RoundToInt(StageHazardTable.ShadowContactDamage * SoulHunter.Gameplay.Data.RunModes.EnemyDamageMultiplier);
+                _touch.DamageAmount = Mathf.RoundToInt(Reaper.ContactDamage * SoulHunter.Gameplay.Data.RunModes.EnemyDamageMultiplier);
             }
             if (_health != null)
             {
                 _knockbackResistanceBefore = _health.KnockbackResistance;
                 _preventDeathBefore = _health.TryPreventDeath;
                 _interceptorBefore = _health.DamageInterceptor;
-                _health.Initialize(StageHazardTable.ShadowHealth(playerLevel)); // VS HP x Level (the spawner sets it again on reuse)
+                _health.Initialize(Reaper.Health(playerLevel)); // VS HP x Level (the spawner sets it again on reuse)
                 _health.KnockbackResistance = 1f; // VS knockback 0
                 _health.IsInvincible = false;     // hits must reach Intercept, which sorts killers from ordinary weapons
                 _health.DamageInterceptor = Intercept;
@@ -126,25 +134,36 @@ namespace SoulHunter.Gameplay.Hazards
         private bool Intercept(DamagePacket packet)
         {
             var killer = StageHazardTable.KillerOf(DamageSource.Weapon, DamageSource.Name);
-            if (killer != ShadowKiller.None) Defeat(killer);
+            if (killer != ShadowKiller.None) { Defeat(killer); return true; }
+            return Reaper.Intangible; // the Blinder takes ordinary damage; the Stalker XL absorbs it
+        }
+
+        /// <summary>Lethal instant kills (Pentagram, Eclipse Sigil, Soul Toll), wipes and (the Blinder) ordinary deaths arrive here.</summary>
+        private bool OnLethal()
+        {
+            var killer = StageHazardTable.KillerOf(DamageSource.Weapon, DamageSource.Name);
+            if (killer != ShadowKiller.None) { _health.ResetHealth(); Defeat(killer); return true; }
+            if (Reaper.Intangible) { _health.ResetHealth(); return true; } // alive: no OnDied
+            // The Blinder worn down by ordinary weapons: its 30 XP as a gem, no chest (balance method, see ReaperProfile).
+            var pickups = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+            if (pickups != null && Reaper.VsXp > 0f) pickups.SpawnGem(transform.position, Reaper.GemValue);
+            DefeatedBy = ShadowKiller.None;
+            LastDefeatedBy = ShadowKiller.None;
+            LastChest = null;
+            WornDown = true;
+            Leave();
             return true;
         }
 
-        /// <summary>Lethal instant kills (Pentagram, Eclipse Sigil, Soul Toll) and wipes arrive here.</summary>
-        private bool OnLethal()
-        {
-            _health.ResetHealth(); // alive either way: no OnDied
-            var killer = StageHazardTable.KillerOf(DamageSource.Weapon, DamageSource.Name);
-            if (killer != ShadowKiller.None) Defeat(killer);
-            return true;
-        }
+        /// <summary>True once ordinary damage has defeated it (the Blinder).</summary>
+        public bool WornDown { get; private set; }
 
         /// <summary>Defeated by an instant kill: drops that killer's chest (none for Pentagram), then leaves.</summary>
         public void Defeat(ShadowKiller killer)
         {
             if (IsLeaving || killer == ShadowKiller.None) return;
             DefeatedBy = killer;
-            var chest = StageHazardTable.ShadowChest(killer);
+            var chest = StageHazardTable.ReaperChest(Reaper, killer);
             LastDefeatedBy = killer;
             LastChest = chest;
             var pickups = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
