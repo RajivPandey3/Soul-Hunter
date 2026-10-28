@@ -288,6 +288,9 @@ namespace SoulHunter.Gameplay.Player
 
         // Learning Comment:
         // Permanent max health bonus barhata hai aur agar HealthController present ho toh usay IncreaseMaxHealth ke zariye notify karta hai.
+        /// <summary>Lowers the Max Health bonus record only (SoulEggs.Remove changes the health itself).</summary>
+        public void RemoveMaxHealthBonus(int amount) { MaxHealthBonus = Mathf.Max(0, MaxHealthBonus - Mathf.Max(0, amount)); }
+
         public void AddMaxHealth(int amount)
         {
             MaxHealthBonus += amount;

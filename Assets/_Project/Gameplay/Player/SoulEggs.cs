@@ -117,6 +117,42 @@ namespace SoulHunter.Gameplay.Player
             if (record.Cooldown > 0f) stats.ReduceCooldown(Mathf.Min(record.Cooldown, CooldownCap));
         }
 
+        /// <summary>
+        /// Takes back what <see cref="Apply"/> gave (VS Cappella Magna, raw 2026-10-28: "Before defeating Ender, all egg
+        /// bonuses will be snapped away"; owner 2026-10-28: "VS jaisa"). Every stat loses exactly the egg amount Apply added
+        /// (with the same caps). Max Health loses the egg's points times <paramref name="maxHealthMultiplier"/> (the Max
+        /// Health PowerUp multiplied them after Apply), without killing the hero. A Revival already spent is not taken.
+        /// </summary>
+        public static void Remove(SoulEggRecord record, PlayerStats stats, float maxHealthMultiplier = 1f)
+        {
+            if (record == null || stats == null) return;
+            int maxHealth = Whole(record.MaxHealth);
+            if (maxHealth > 0)
+            {
+                stats.RemoveMaxHealthBonus(maxHealth);
+                var health = stats.GetComponent<SoulHunter.Gameplay.Combat.HealthController>() ?? stats.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>();
+                if (health != null) health.ReduceMaxHealth(maxHealth * Mathf.Max(1f, maxHealthMultiplier));
+            }
+            if (record.Recovery > 0f) stats.AddRegen(-record.Recovery);
+            int armor = Mathf.Min(Whole(record.Armor), (int)ArmorCap);
+            if (armor > 0) stats.AddArmor(-armor);
+            int amount = Mathf.Min(Whole(record.Amount), (int)AmountCap);
+            if (amount > 0) stats.AddAmount(-amount);
+            int revival = Mathf.Min(Whole(record.Revival), stats.Revivals);
+            if (revival > 0) stats.AddRevival(-revival);
+            if (record.MoveSpeed > 0f) stats.AddMoveSpeed(-record.MoveSpeed);
+            if (record.Might > 0f) stats.AddMight(-Mathf.Min(record.Might, MightCap));
+            if (record.Speed > 0f) stats.AddProjectileSpeed(-Mathf.Min(record.Speed, SpeedCap));
+            if (record.Duration > 0f) stats.AddDuration(-Mathf.Min(record.Duration, DurationCap));
+            if (record.Area > 0f) stats.AddArea(-Mathf.Min(record.Area, AreaCap));
+            if (record.Luck > 0f) stats.AddLuck(-record.Luck);
+            if (record.Growth > 0f) stats.AddExpBonus(-record.Growth);
+            if (record.Greed > 0f) stats.AddGreed(-record.Greed);
+            if (record.Curse > 0f) stats.AddCurse(-record.Curse);
+            if (record.Magnet > 0f) stats.AddMagnet(-record.Magnet);
+            if (record.Cooldown > 0f) stats.ReduceCooldown(-Mathf.Min(record.Cooldown, CooldownCap));
+        }
+
         /// <summary>Short text for the shop after buying, e.g. "+1% Might".</summary>
         public static string Describe(Stat stat)
         {

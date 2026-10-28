@@ -238,6 +238,8 @@ MonoBehaviour:
   - {fileID: 7799799305710051741, guid: a1a279815ab52f744a76c61796658778, type: 3}
   - {fileID: 429850798081827855, guid: 7f480a054a30f9f429cfdb06a1d191d1, type: 3}
   - {fileID: 8406581271333724370, guid: 24d2be1d16b93374182860bc1786900e, type: 3}
+  - {fileID: 6286023893160529200, guid: d981ee9af9e6ce5419a914f5d8f604f0, type: 3}
+  - {fileID: 4949010096244066360, guid: 91444b388bf87eb4381104290ac1c8c9, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 120

@@ -136,6 +136,15 @@ namespace SoulHunter.Gameplay.Core
             BanishesLeft += SoulEggs.Whole(eggs.Banish);
         }
 
+        /// <summary>Takes back the Reroll, Skip and Banish charges the Soul Eggs gave (Cappella Magna's egg snap); spent ones stay spent.</summary>
+        public void RemoveSoulEggCharges(SoulHunter.Core.Persistence.SoulEggRecord eggs)
+        {
+            if (eggs == null) return;
+            RerollsLeft -= Mathf.Min(RerollsLeft, SoulEggs.Whole(eggs.Reroll));
+            SkipsLeft -= Mathf.Min(SkipsLeft, SoulEggs.Whole(eggs.Skip));
+            BanishesLeft -= Mathf.Min(BanishesLeft, SoulEggs.Whole(eggs.Banish));
+        }
+
         private void Start()
         {
             // Unity Inspector se bachne ke liye Resources folder se load kar rahe hain

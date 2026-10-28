@@ -258,6 +258,21 @@ namespace SoulHunter.Gameplay.Combat
             OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
         }
 
+        /// <summary>
+        /// Takes Max Health away (Cappella Magna's "all egg bonuses will be snapped away"). Current health keeps its value
+        /// but never above the new Max Health, and the hero is never killed by it (at least 1).
+        /// </summary>
+        public void ReduceMaxHealth(float amount)
+        {
+            if (amount <= 0f) return;
+            if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;
+            _preciseMaxHealth = Mathf.Max(1f, _preciseMaxHealth - amount);
+            _maxHealth = Mathf.Max(1, Mathf.FloorToInt(_preciseMaxHealth + 0.0001f));
+            if (_currentHealth > _maxHealth) _currentHealth = _maxHealth;
+            if (_currentHealth < 1) _currentHealth = 1;
+            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+        }
+
         public void Heal(int amount)
         {
             if (_currentHealth <= 0 || amount <= 0) return; // Dead things don't heal

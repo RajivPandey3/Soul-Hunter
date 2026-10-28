@@ -79,6 +79,9 @@ namespace SoulHunter.Gameplay.Hazards
         /// <summary>The reaper's statbox and rules (the Stalker XL unless set).</summary>
         public ReaperProfile Reaper { get; private set; } = StageHazardTable.StalkerXL;
 
+        /// <summary>The reaper's own colour, or Death's Shadow's dark shade.</summary>
+        private Color ShadeColor => Reaper.Tint.a > 0f ? Reaper.Tint : ShadowTint;
+
         private void Setup(float lifetimeSeconds, int playerLevel, float curseAndModes)
         {
             if (Reaper.HealthPerLevel <= 0) Reaper = StageHazardTable.StalkerXL;
@@ -253,7 +256,7 @@ namespace SoulHunter.Gameplay.Hazards
             // Horde models darken through a shared shaded material (CPU audit, 2026-10-14): a property block would take the
             // body out of the SRP Batcher, and DamageFlash would draw its hit flash in the property block's colour.
             var flash = GetComponent<SoulHunter.Gameplay.VFX.DamageFlash>();
-            if (flash != null) flash.SetShade(on ? ShadowTint : (Color?)null);
+            if (flash != null) flash.SetShade(on ? ShadeColor : (Color?)null);
             foreach (var r in GetComponentsInChildren<Renderer>(true))
             {
                 if (r is ParticleSystemRenderer) continue;
@@ -262,8 +265,8 @@ namespace SoulHunter.Gameplay.Hazards
                 var m = r.sharedMaterial;
                 if (m == null) continue;
                 r.GetPropertyBlock(_block);
-                if (m.HasProperty(BaseColorId)) _block.SetColor(BaseColorId, m.GetColor(BaseColorId) * ShadowTint);
-                if (m.HasProperty(ColorId)) _block.SetColor(ColorId, m.GetColor(ColorId) * ShadowTint);
+                if (m.HasProperty(BaseColorId)) _block.SetColor(BaseColorId, m.GetColor(BaseColorId) * ShadeColor);
+                if (m.HasProperty(ColorId)) _block.SetColor(ColorId, m.GetColor(ColorId) * ShadeColor);
                 r.SetPropertyBlock(_block);
             }
         }

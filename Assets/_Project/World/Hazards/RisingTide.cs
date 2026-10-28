@@ -58,7 +58,13 @@ namespace SoulHunter.Gameplay.Hazards
         public bool IsOver { get; private set; }
 
         /// <param name="callerObject">The Tide Caller's body (a pooled enemy, already placed), or null for water alone.</param>
-        public static RisingTide Begin(GameObject callerObject, float startLine, float riseSpeed, float seconds, int playerLevel)
+        public static RisingTide Begin(GameObject callerObject, float startLine, float riseSpeed, float seconds, int playerLevel) =>
+            Begin(callerObject, startLine, riseSpeed, seconds, playerLevel, StageHazardTable.TideCallerHealthPerLevel, 0f);
+
+        /// <param name="healthPerLevel">The caller's HP x Level (the Omen's 800; Cappella Magna's Drowner 2550).</param>
+        /// <param name="vsXp">The caller's xp (Cappella's Drowner: 50), left as a gem when it is defeated.</param>
+        public static RisingTide Begin(GameObject callerObject, float startLine, float riseSpeed, float seconds, int playerLevel,
+            int healthPerLevel, float vsXp)
         {
             var go = new GameObject("RisingTide");
             var tide = go.AddComponent<RisingTide>();
@@ -66,6 +72,7 @@ namespace SoulHunter.Gameplay.Hazards
             tide._riseSpeed = Mathf.Max(0f, riseSpeed);
             tide._left = Mathf.Max(1f, seconds);
             tide._tick = StageHazardTable.TideTickSeconds;
+            tide._vsXp = vsXp;
             tide.BuildWater();
             if (callerObject != null)
             {
@@ -82,7 +89,7 @@ namespace SoulHunter.Gameplay.Hazards
                 }
                 if (tide._callerHealth != null)
                 {
-                    tide._callerHealth.Initialize(StageHazardTable.TideCallerHealth(playerLevel)); // the spawner sets it again on reuse
+                    tide._callerHealth.Initialize(Mathf.Max(1, healthPerLevel) * Mathf.Max(1, playerLevel)); // the spawner sets it again on reuse
                     tide._callerKnockbackBefore = tide._callerHealth.KnockbackResistance;
                     tide._callerHealth.KnockbackResistance = 1f;
                     tide._callerInterceptorBefore = tide._callerHealth.DamageInterceptor;
@@ -199,8 +206,13 @@ namespace SoulHunter.Gameplay.Hazards
         }
 
         /// <summary>Its death: a chest when one of its instant killers did it (the erase arrives inside their DamageSource).</summary>
+        private float _vsXp;
+
         private void HandleCallerDied()
         {
+            // Cappella Magna's Drowner has xp 50: it leaves that gem whatever defeated it (its drops are erased above).
+            var pickups = SoulHunter.Gameplay.Pickups.PickupPoolManager.Instance;
+            if (_vsXp > 0f && pickups != null && _caller != null) pickups.SpawnGem(_caller.transform.position, Mathf.RoundToInt(_vsXp * 10f));
             if (StageHazardTable.KillsTideCaller(StageHazardTable.KillerOf(DamageSource.Weapon, DamageSource.Name))) GiveChest();
         }
 

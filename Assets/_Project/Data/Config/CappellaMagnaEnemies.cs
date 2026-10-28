@@ -60,10 +60,16 @@ namespace SoulHunter.Gameplay.Data
             T("ColossalEye",       "", "Unknown (boss)",                 60,  true,  11, 200, 0.5f, 3f, 30f,   0.45f),
             T("ColossalCopperKnight", "", "Archon Rame (boss)",          70,  true,  11, 140, 1f,   3f, 30f,   0.41f),
             T("AxeSentinel",       "", "Axe Guardian",                   200, false, 20, 180, 0f,   1f, 40f,   0.03f),
+            // The Trickster's gems (Poltergeist, raw 2026-10-28): "Poltergeist Gem" 5 x Level, movespeed 150, damage 3,
+            // knockback 0, xp 2, Self-destruct ("Explodes after two seconds dealing 50 damage"); "(static)" movespeed 0.
+            T("PoltergeistGem",      "", "Poltergeist Gem",          5, true, 3, 150, 0f, 0f, 2f, 0.82f).SelfDestructing(),
+            T("StillPoltergeistGem", "", "Poltergeist Gem (static)", 5, true, 3, 0,   0f, 0f, 2f, 0.84f).SelfDestructing(),
         };
 
         /// <summary>The chest-boss types: in the table, but in no minute's wave.</summary>
-        private static readonly string[] ChestBosses = { "ColossalEye", "ColossalCopperKnight", "AxeSentinel" };
+        private static readonly string[] ChestBosses = { "ColossalEye", "ColossalCopperKnight", "AxeSentinel",
+            // The Trickster's Poltergeist Gems, sent only by TricksterRings.
+            "PoltergeistGem", "StillPoltergeistGem" };
 
         private static readonly string[][] Minutes =
         {
@@ -117,7 +123,7 @@ namespace SoulHunter.Gameplay.Data
                 ["Seraph"] = "Bloodwing", ["SwiftSeraph"] = "Swift Bloodwing", ["Throne"] = "Pit Throne", ["Triskele"] = "Tri-Blade Guard",
                 ["ColossalWarden"] = "Colossal Pit Warden", ["ColossalTemptress"] = "Colossal Blood Siren",
                 ["ColossalArchfiend"] = "Colossal Arena Lord", ["EliteAcolyte"] = "Champion of the Pit",
-                ["ColossalEye"] = "Colossal Arena Eye", ["ColossalCopperKnight"] = "Colossal Bronze Guard", ["AxeSentinel"] = "Arena Axeman",
+                ["ColossalEye"] = "Colossal Arena Eye", ["ColossalCopperKnight"] = "Colossal Bronze Guard", ["AxeSentinel"] = "Arena Axeman", ["PoltergeistGem"] = "Arena Lure Gem", ["StillPoltergeistGem"] = "Still Arena Lure Gem",
             },
             [9] = new Dictionary<string, string>
             {
@@ -132,7 +138,7 @@ namespace SoulHunter.Gameplay.Data
                 ["Throne"] = "Bone Throne", ["Triskele"] = "Three-Crowned Guard",
                 ["ColossalWarden"] = "Colossal Throne Warden", ["ColossalTemptress"] = "Colossal Throne Consort",
                 ["ColossalArchfiend"] = "Colossal Vizier", ["EliteAcolyte"] = "Scythe Adept",
-                ["ColossalEye"] = "Colossal Throne Eye", ["ColossalCopperKnight"] = "Colossal Bronze Sentinel", ["AxeSentinel"] = "Throne Axeman",
+                ["ColossalEye"] = "Colossal Throne Eye", ["ColossalCopperKnight"] = "Colossal Bronze Sentinel", ["AxeSentinel"] = "Throne Axeman", ["PoltergeistGem"] = "Throne Lure Gem", ["StillPoltergeistGem"] = "Still Throne Lure Gem",
             },
             [10] = new Dictionary<string, string>
             {
@@ -147,7 +153,7 @@ namespace SoulHunter.Gameplay.Data
                 ["Throne"] = "Crystal Throne", ["Triskele"] = "Three-Faced Doubt",
                 ["ColossalWarden"] = "Colossal Soul Warden", ["ColossalTemptress"] = "Colossal Lost Memory",
                 ["ColossalArchfiend"] = "Colossal Core Tyrant", ["EliteAcolyte"] = "Pure Fragment",
-                ["ColossalEye"] = "Colossal Watching Doubt", ["ColossalCopperKnight"] = "Colossal Rusted Vow", ["AxeSentinel"] = "Axe of Regret",
+                ["ColossalEye"] = "Colossal Watching Doubt", ["ColossalCopperKnight"] = "Colossal Rusted Vow", ["AxeSentinel"] = "Axe of Regret", ["PoltergeistGem"] = "False Soul Gem", ["StillPoltergeistGem"] = "Still False Soul Gem",
             },
         };
 

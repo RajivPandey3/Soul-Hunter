@@ -176,6 +176,52 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelsEightToTen_SendCappellaMagnasFourReapers_AndTheEggSnapComesAtFourMinutes()
+        {
+            foreach (int level in new[] { 8, 9, 10 })
+            {
+                var reapers = SoulHunter.Gameplay.Hazards.StageHazardTable.For(level)
+                    .Where(h => h.Kind == SoulHunter.Gameplay.Hazards.StageHazardKind.Maddener || h.Kind == SoulHunter.Gameplay.Hazards.StageHazardKind.Drowner
+                             || h.Kind == SoulHunter.Gameplay.Hazards.StageHazardKind.CappellaStalker || h.Kind == SoulHunter.Gameplay.Hazards.StageHazardKind.Trickster)
+                    .Select(h => (h.Kind, h.TimeSeconds, h.ChancePercent)).ToArray();
+                Assert.That(reapers, Is.EqualTo(new[]
+                {
+                    (SoulHunter.Gameplay.Hazards.StageHazardKind.Maddener, 9.6f, 100f), (SoulHunter.Gameplay.Hazards.StageHazardKind.Drowner, 310f, 100f),
+                    (SoulHunter.Gameplay.Hazards.StageHazardKind.CappellaStalker, 610f, 100f), (SoulHunter.Gameplay.Hazards.StageHazardKind.Trickster, 910f, 100f),
+                }), $"Level {level}");
+                var t = CappellaMagnaEnemies.Table(level);
+                Assert.That((t.Find("PoltergeistGem").VsSpeed, t.Find("StillPoltergeistGem").VsSpeed, t.Find("PoltergeistGem").SelfDestructs), Is.EqualTo((150f, 0f, true)));
+            }
+            var m = SoulHunter.Gameplay.Hazards.StageHazardTable.Maddener;
+            Assert.That((m.HealthPerLevel, m.VsSpeed, m.ContactDamage, m.Intangible, m.DropsChest), Is.EqualTo((2550, 150f, 50, false, false)));
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazardTable.ReaperChest(SoulHunter.Gameplay.Hazards.StageHazardTable.CappellaStalker,
+                SoulHunter.Gameplay.Hazards.ShadowKiller.EclipseSigil).HasValue, Is.False, "The Cappella reapers drop no chest.");
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazardTable.Trickster.SummonsGemRings, Is.True);
+            Assert.That((SoulHunter.Gameplay.Core.LevelProgressionManager.EggSnapFirstStage, SoulHunter.Gameplay.Core.LevelProgressionManager.EggSnapSeconds), Is.EqualTo((8, 240f)));
+        }
+
+        [Test]
+        public void SoulEggs_Remove_TakesBackExactlyWhatApplyGave()
+        {
+            var go = new UnityEngine.GameObject("EggStats");
+            try
+            {
+                var stats = go.AddComponent<SoulHunter.Gameplay.Player.PlayerStats>();
+                var record = new SoulHunter.Core.Persistence.SoulEggRecord { Might = 0.05f, Armor = 2f, Luck = 0.1f, Amount = 1f, MoveSpeed = 0.03f };
+                float might = stats.RawMight, luck = stats.Luck, move = stats.MoveSpeedMultiplier;
+                int armor = stats.RawArmor, amount = stats.RawAmount;
+                SoulHunter.Gameplay.Player.SoulEggs.Apply(record, stats);
+                Assert.That(stats.RawMight, Is.GreaterThan(might));
+                SoulHunter.Gameplay.Player.SoulEggs.Remove(record, stats);
+                Assert.That(stats.RawMight, Is.EqualTo(might).Within(1e-5f));
+                Assert.That(stats.Luck, Is.EqualTo(luck).Within(1e-5f));
+                Assert.That(stats.MoveSpeedMultiplier, Is.EqualTo(move).Within(1e-5f));
+                Assert.That((stats.RawArmor, stats.RawAmount), Is.EqualTo((armor, amount)));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

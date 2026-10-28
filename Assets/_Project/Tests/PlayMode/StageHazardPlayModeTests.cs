@@ -463,5 +463,41 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(ActiveChests().Length, Is.LessThanOrEqualTo(chests + 1));
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+    
+        // ---------------------------------------------------------------- Cappella Magna (Levels 8-10)
+
+        [UnityTest]
+        public IEnumerator TheTrickster_SummonsTwoRingsOf48Gems_AndItsDeathSetsThemOff()
+        {
+            yield return Boot(8, invinciblePlayer: true);
+            var shadow = _hazards.SpawnDeathsShadow(120f, StageHazardTable.Trickster);
+            Assert.That(shadow, Is.Not.Null, Errors());
+            yield return null;
+            var rings = Object.FindObjectsByType<TricksterRings>(FindObjectsSortMode.None).Single();
+            Assert.That(rings.RingsSummoned, Is.EqualTo(2), "\"two rings upon spawning\".");
+            Assert.That(rings.GemsAlive, Is.EqualTo(2 * StageHazardTable.TricksterGems), Errors());
+            var health = shadow.GetComponent<HealthController>();
+            Assert.That(health.MaxHealth, Is.EqualTo(2550 * PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel));
+            var whip = PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>(true).First();
+            int chests = ActiveChests().Length;
+            using (DamageSource.From(whip)) health.TakeDamage(new DamagePacket(health.CurrentHealth + 5, shadow.transform.position, Vector3.forward));
+            yield return null;
+            yield return null;
+            Assert.That(rings == null || rings.GemsAlive == 0, Is.True, "\"When The Trickster dies, all remaining Poltergeist Gems explode\".");
+            Assert.That(ActiveChests().Length, Is.EqualTo(chests), "No chest from a Cappella reaper.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator SoulEggBonuses_AreTakenAway_AtFourMinutesOnLevelEight_Once()
+        {
+            yield return Boot(8, invinciblePlayer: true);
+            var progression = LevelProgressionManager.Instance;
+            Assert.That(progression.EggsSnapped, Is.False);
+            progression.SkipTo(241f);
+            yield return WaitUntilRealtime(() => progression.EggsSnapped, "the 4:00 egg snap");
+            Assert.That(progression.EggsSnapped, Is.True);
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

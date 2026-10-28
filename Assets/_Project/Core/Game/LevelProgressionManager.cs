@@ -131,6 +131,10 @@ namespace SoulHunter.Gameplay.Core
                 }
             }
 
+            // VS Cappella Magna (Levels 8-10), 4:00: "Before defeating Ender, all egg bonuses will be snapped away". Soul
+            // Hunter has no Ender, so it happens in every run, once (owner, 2026-10-28: "VS jaisa").
+            if (!EggsSnapped && CurrentStage >= EggSnapFirstStage && StageElapsedTime >= EggSnapSeconds) SnapSoulEggs();
+
             if (!_runDurationReached && StageElapsedTime >= CurrentLevel.RunDurationSeconds)
             {
                 _runDurationReached = true;
@@ -138,6 +142,34 @@ namespace SoulHunter.Gameplay.Core
                 OnRunDurationReached?.Invoke(CurrentStage);
                 CompleteStageAfterSurvival();
             }
+        }
+
+        /// <summary>The first level that plays Cappella Magna, where the Soul Egg bonuses go at 4:00.</summary>
+        public const int EggSnapFirstStage = 8;
+        public const float EggSnapSeconds = 240f;
+        /// <summary>True once this run's Soul Egg bonuses were taken away.</summary>
+        public bool EggsSnapped { get; private set; }
+
+        /// <summary>Takes this run's Soul Egg bonuses away from the hero: stats, Max Health and charges.</summary>
+        public void SnapSoulEggs()
+        {
+            if (EggsSnapped) return;
+            EggsSnapped = true;
+            var services = SoulHunter.Core.Services.GameServices.Instance;
+            if (services == null || !services.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) || save.CurrentData == null) return;
+            var data = save.CurrentData;
+            var eggs = SoulHunter.Gameplay.Player.SoulEggs.For(data, data.SelectedCharacterName);
+            if (eggs == null) return;
+            var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
+            if (player != null && player.Stats != null)
+            {
+                float multiplier = SoulHunter.Core.Persistence.PowerUps.MaxHealthMultiplier(
+                    SoulHunter.Core.Persistence.PowerUps.ActiveRank(data, SoulHunter.Core.Persistence.PowerUpId.MaxHealth));
+                SoulHunter.Gameplay.Player.SoulEggs.Remove(eggs, player.Stats, multiplier);
+            }
+            var levelUps = LevelUpManager.Instance;
+            if (levelUps != null) levelUps.RemoveSoulEggCharges(eggs);
+            Debug.Log($"[LevelProgressionManager] Stage {CurrentStage} at 4:00: the Soul Egg bonuses are taken away (VS Cappella Magna).");
         }
 
         public void StartStage(int stageNumber)

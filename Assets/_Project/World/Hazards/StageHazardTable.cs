@@ -18,6 +18,11 @@ namespace SoulHunter.Gameplay.Hazards
         PileAssault,
         /// <summary>VS "The Blinder" (Abyss Foscari): a reaper that follows like the Stalker but has finite health.</summary>
         Blinder,
+        /// <summary>VS Cappella Magna's reapers (Levels 8-10): The Maddener, The Stalker, The Trickster, The Drowner.</summary>
+        Maddener,
+        CappellaStalker,
+        Trickster,
+        Drowner,
     }
 
     /// <summary>
@@ -44,6 +49,12 @@ namespace SoulHunter.Gameplay.Hazards
         public float FreezeResistance;
         public bool InstantKillResistance;
         public bool DebuffResistance;
+        /// <summary>False for the Cappella Magna reapers: "a weaker variant ... cannot drop a Treasure Chest" (The_Stalker).</summary>
+        public bool DropsChest;
+        /// <summary>Its colour (alpha 0: Death's Shadow's dark shade). Cappella: "a yellow reaper", "a green reaper", "a magenta reaper".</summary>
+        public Color Tint;
+        /// <summary>The Trickster's rings of Poltergeist Gems (TricksterRings).</summary>
+        public bool SummonsGemRings;
 
         public float MoveSpeed => VsSpeed * EnemyAbilityDefaults.VsSpeedToUnits;
         public int GemValue => Mathf.Max(1, Mathf.RoundToInt(VsXp * 10f)); // Soul Hunter's gem scale (XP x 10)
@@ -244,6 +255,9 @@ namespace SoulHunter.Gameplay.Hazards
             if (System.Array.IndexOf(BlinderStages, stage) >= 0)
                 foreach (var (minute, chance, seconds) in BlinderEvents)
                     list.Add(new StageHazardEntry(StageHazardKind.Blinder, minute * 60f, chance, seconds));
+            if (System.Array.IndexOf(CappellaStages, stage) >= 0)
+                foreach (var (kind, seconds) in CappellaReapers)
+                    list.Add(new StageHazardEntry(kind, seconds, 100f, kind == StageHazardKind.Drowner ? TideSeconds : ShadowLifetimeSeconds));
             if (System.Array.IndexOf(MeteorStages, stage) >= 0)
                 for (float minute = MeteorFirstMinute; minute <= MeteorLastMinute + 0.01f; minute += MeteorEveryMinutes)
                     list.Add(new StageHazardEntry(StageHazardKind.SoulMeteors, minute * 60f));
@@ -312,7 +326,7 @@ namespace SoulHunter.Gameplay.Hazards
         {
             Name = "Death's Shadow", HealthPerLevel = ShadowHealthPerLevel, VsSpeed = ShadowVsMoveSpeed, ContactDamage = ShadowContactDamage,
             Intangible = true, PentagramGivesChest = false, VsXp = ShadowExperience, FreezeResistance = ShadowFreezeResistance,
-            InstantKillResistance = ShadowInstantKillResistance, DebuffResistance = ShadowDebuffResistance,
+            InstantKillResistance = ShadowInstantKillResistance, DebuffResistance = ShadowDebuffResistance, DropsChest = true,
         };
 
         /// <summary>
@@ -323,8 +337,56 @@ namespace SoulHunter.Gameplay.Hazards
         {
             Name = "Blinding Shade", HealthPerLevel = 500, VsSpeed = 150f, ContactDamage = 25,
             Intangible = false, PentagramGivesChest = true, VsXp = 30f, FreezeResistance = 2f,
-            InstantKillResistance = false, DebuffResistance = true,
+            InstantKillResistance = false, DebuffResistance = true, DropsChest = true,
         };
+
+        /// <summary>
+        /// Cappella Magna's reaper statbox, the same for The Maddener, The Stalker and The Trickster (raw 2026-10-28):
+        /// health 2550, HP x Level, movespeed 150, damage 50, xp 0, res-freeze 2, res-debuff 1, res-defang 1. They take
+        /// ordinary damage (they "take 10 times more damage from breaking Stained Glass windows", and Stained Glass deals 130
+        /// base damage to enemies); the Stalker variant "cannot drop a Treasure Chest", and the Maddener and Trickster pages
+        /// name no chest, so none drops one. The rows give no duration: balance method, the Stalker default of 2 minutes.
+        /// Not built: the Maddener changing the look of some enemies.
+        /// </summary>
+        private static ReaperProfile Cappella(string name, Color tint, bool gems) => new ReaperProfile
+        {
+            Name = name, HealthPerLevel = 2550, VsSpeed = 150f, ContactDamage = 50, Intangible = false, PentagramGivesChest = false,
+            VsXp = 0f, FreezeResistance = 2f, InstantKillResistance = false, DebuffResistance = true, DropsChest = false,
+            Tint = tint, SummonsGemRings = gems,
+        };
+        public static readonly ReaperProfile Maddener = Cappella("Madness Shade", new Color(0.85f, 0.72f, 0.12f, 1f), false);
+        public static readonly ReaperProfile CappellaStalker = Cappella("Stalking Shade", new Color(0.18f, 0.62f, 0.26f, 1f), false);
+        public static readonly ReaperProfile Trickster = Cappella("Trickster Shade", new Color(0.78f, 0.18f, 0.66f, 1f), true);
+
+        /// <summary>The Drowner's Cappella statbox: health 2550, HP x Level, xp 50 (its flood is the Rising Tide).</summary>
+        public const int CappellaDrownerHealthPerLevel = 2550;
+        public const float CappellaDrownerVsXp = 50f;
+
+        /// <summary>
+        /// Cappella Magna's reapers on Levels 8-10: each "guaranteed to spawn ... if the player has not yet defeated The
+        /// Ender" (Soul Hunter has none, so every run; owner 2026-10-28 for the Maddener): the Maddener at 0:10 (its page;
+        /// the row's delay is 9.6), the Drowner at 5:10, the Stalker at 10:10 and the Trickster at 15:10.
+        /// </summary>
+        public static readonly int[] CappellaStages = { 8, 9, 10 };
+        public static readonly (StageHazardKind kind, float seconds)[] CappellaReapers =
+        {
+            (StageHazardKind.Maddener, 9.6f), (StageHazardKind.Drowner, 310f),
+            (StageHazardKind.CappellaStalker, 610f), (StageHazardKind.Trickster, 910f),
+        };
+
+        // ---- The Trickster's Poltergeist Gems (The_Trickster, Poltergeist, raw 2026-10-28) ----
+        // "periodically summons ellipsoid rings of 48 Poltergeist Gems around the player that self-destruct when approached.
+        // The gems lasts for 30 seconds"; "two rings upon spawning and one every 30 seconds thereafter"; "randomly ... either
+        // a large or a small ring ... The gems in the larger ring remain stationary, however, the gems in the smaller ring
+        // will home at the player". Balance method (no sizes on the wiki): the large ring is the Jellyfish Wall's, the small
+        // one half of it.
+        public const int TricksterGems = 48;
+        public const float TricksterGemSeconds = 30f;
+        public const float TricksterRingEverySeconds = 30f;
+        public const float TricksterSmallRingScale = 0.5f;
+        /// <summary>"When The Trickster dies, all remaining Poltergeist Gems explode": the gem's own blast (Poltergeist).</summary>
+        public const int GemBlastDamage = 50;
+        public const float GemBlastRadius = 2.5f;
 
         /// <summary>VS Abyss Foscari's Blinder rows on Level 5 (its place): 0:00 1% for 2 minutes; 8:00 30% and 12:00 99%, 1 minute.</summary>
         public static readonly int[] BlinderStages = { 5 };
@@ -332,7 +394,19 @@ namespace SoulHunter.Gameplay.Hazards
             { (0f, 1f, 120f), (8f, 30f, 60f), (12f, 99f, 60f) };
 
         /// <summary>The reaper a scheduled entry sends.</summary>
-        public static ReaperProfile ReaperFor(StageHazardKind kind) => kind == StageHazardKind.Blinder ? Blinder : StalkerXL;
+        public static ReaperProfile ReaperFor(StageHazardKind kind) => kind switch
+        {
+            StageHazardKind.Blinder => Blinder,
+            StageHazardKind.Maddener => Maddener,
+            StageHazardKind.CappellaStalker => CappellaStalker,
+            StageHazardKind.Trickster => Trickster,
+            _ => StalkerXL,
+        };
+
+        /// <summary>True for a kind that sends a following reaper (Death's Shadow and its variants).</summary>
+        public static bool IsFollowingReaper(StageHazardKind kind) =>
+            kind == StageHazardKind.DeathsShadow || kind == StageHazardKind.Blinder || kind == StageHazardKind.Maddener
+            || kind == StageHazardKind.CappellaStalker || kind == StageHazardKind.Trickster;
 
         /// <summary>A reaper's speed factor on a pooled body (as ShadowSpeedMultiplier, with the reaper's own speed).</summary>
         public static float ReaperSpeedMultiplier(ReaperProfile reaper, float enemyBaseSpeed, float curseAndModes = 1f) =>
@@ -340,7 +414,8 @@ namespace SoulHunter.Gameplay.Hazards
 
         /// <summary>The chest a reaper drops when <paramref name="killer"/> defeats it (the Blinder: Pentagram too).</summary>
         public static ChestTiers? ReaperChest(ReaperProfile reaper, ShadowKiller killer) =>
-            killer == ShadowKiller.Pentagram && reaper.PentagramGivesChest ? ChestTiers.StalkerHighQuality : ShadowChest(killer);
+            !reaper.DropsChest ? (ChestTiers?)null
+            : killer == ShadowKiller.Pentagram && reaper.PentagramGivesChest ? ChestTiers.StalkerHighQuality : ShadowChest(killer);
 
         /// <summary>VS "HP x Level": 655,350 x the player's level (capped at int.MaxValue).</summary>
         public static int ShadowHealth(int playerLevel) =>

@@ -123,7 +123,13 @@ namespace SoulHunter.Gameplay.Hazards
         /// </summary>
         public void Run(StageHazardEntry entry)
         {
-            if (entry.Kind == StageHazardKind.DeathsShadow || entry.Kind == StageHazardKind.Blinder)
+            if (entry.Kind == StageHazardKind.Drowner)
+            {
+                StartRisingTide(entry.DurationSeconds > 0f ? entry.DurationSeconds : StageHazardTable.TideSeconds,
+                    StageHazardTable.CappellaDrownerHealthPerLevel, StageHazardTable.CappellaDrownerVsXp);
+                return;
+            }
+            if (StageHazardTable.IsFollowingReaper(entry.Kind))
             {
                 float roll = ShadowRoll != null ? ShadowRoll() : Random.value;
                 if (!StageHazardTable.ShadowEventFires(entry.ChancePercent, PlayerLuck(), roll))
@@ -145,7 +151,13 @@ namespace SoulHunter.Gameplay.Hazards
             switch (kind)
             {
                 case StageHazardKind.DeathsShadow: SpawnDeathsShadow(); break;
-                case StageHazardKind.Blinder: SpawnDeathsShadow(StageHazardTable.ShadowLifetimeSeconds, StageHazardTable.Blinder); break;
+                case StageHazardKind.Blinder:
+                case StageHazardKind.Maddener:
+                case StageHazardKind.CappellaStalker:
+                case StageHazardKind.Trickster:
+                    SpawnDeathsShadow(StageHazardTable.ShadowLifetimeSeconds, StageHazardTable.ReaperFor(kind)); break;
+                case StageHazardKind.Drowner:
+                    StartRisingTide(StageHazardTable.TideSeconds, StageHazardTable.CappellaDrownerHealthPerLevel, StageHazardTable.CappellaDrownerVsXp); break;
                 case StageHazardKind.SoulMeteors: StartMeteorVolley(); break;
                 case StageHazardKind.PileAssault: StartPileAssault(); break;
             }
@@ -187,6 +199,8 @@ namespace SoulHunter.Gameplay.Hazards
             if (shadow != null)
             {
                 _shadows.Add(shadow);
+                if (reaper.SummonsGemRings)
+                    TricksterRings.Begin(shadow, spawner.FindStageType("PoltergeistGem"), spawner.FindStageType("StillPoltergeistGem"));
                 Debug.Log($"[StageHazards] {reaper.Name} follows the player on Stage {_stage} for {lifetimeSeconds:0} s.");
             }
             return shadow;
@@ -378,7 +392,11 @@ namespace SoulHunter.Gameplay.Hazards
         /// The Tide Caller at the bottom-left of the screen and its water rising from the screen's bottom edge (VS Random
         /// Event "The Drowner"; Soul Hunter's Omen "Rising Tide"). Returns it, or null.
         /// </summary>
-        public RisingTide StartRisingTide(float seconds = StageHazardTable.TideSeconds)
+        public RisingTide StartRisingTide(float seconds = StageHazardTable.TideSeconds) =>
+            StartRisingTide(seconds, StageHazardTable.TideCallerHealthPerLevel, 0f);
+
+        /// <summary>The Rising Tide with a given caller statbox (Cappella Magna's Drowner: 2550 x Level, xp 50).</summary>
+        public RisingTide StartRisingTide(float seconds, int healthPerLevel, float vsXp)
         {
             var spawner = Spawner();
             var player = PlayerController.Instance;
@@ -396,7 +414,7 @@ namespace SoulHunter.Gameplay.Hazards
             var body = prefab != null ? spawner.SpawnHazardEnemy(prefab, corner) : null;
             // A full screen (500, Bug MIS AI-08) holds the Tide Caller back: no flood without a caller to defeat.
             if (body == null && prefab != null) return null;
-            var tide = RisingTide.Begin(body, line, rise, seconds, PlayerLevel());
+            var tide = RisingTide.Begin(body, line, rise, seconds, PlayerLevel(), healthPerLevel, vsXp);
             _tides.Add(tide);
             Debug.Log($"[StageHazards] Rising Tide on Stage {_stage} for {seconds:0} s.");
             return tide;
