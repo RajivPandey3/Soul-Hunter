@@ -159,6 +159,23 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelSeven_PlaysLakeFoscarisMapEventRows()
+        {
+            var events = MapEvents.For(7);
+            Assert.That(events, Has.Count.EqualTo(22), "22 {{map event}} rows on Lake Foscari.");
+            Assert.That(WaveTables.Events(7), Has.Count.EqualTo(22));
+            var eels = events.Where(e => e.EnemyTypeId == "SwarmEel").Select(e => (e.TimeSeconds, e.Count)).ToArray();
+            Assert.That(eels, Is.EqualTo(new[] { (1200f, 1), (1203f, 2), (1206f, 4), (1209f, 8), (1212f, 16), (1215f, 32), (1218f, 64) }),
+                "Every 3 seconds, 1 to 64.");
+            Assert.That(events.Where(e => e.EnemyTypeId == "SwimmingWisp" || e.EnemyTypeId == "DrownedCaterpillar").All(e => e.Horizontal), Is.True,
+                "Medusa Swarms travel horizontally.");
+            var t = LakeFoscariEnemies.Table;
+            Assert.That((t.Find("StampedeMourner").Health, t.Find("StampedeMourner").VsSpeed, t.Find("SwarmEel").Damage, t.Find("DrownedCaterpillar").HealthTimesLevel),
+                Is.EqualTo((220f, 600f, 6, true)));
+            Assert.That(t.MovementOf(t.Find("SwimmingWisp")), Is.EqualTo(EnemyMovement.FloatyFixedDirection));
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

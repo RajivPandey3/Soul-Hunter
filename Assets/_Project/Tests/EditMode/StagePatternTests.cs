@@ -38,7 +38,8 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(Share(e => e.Type == S || e.Type == StageEventType.PileRing || e.Type == StageEventType.PulsingRing, 5), Is.EqualTo(1f), "L5: Abyss Foscari's events.");
             // L6 plays Mt.Moonspell's own rows since 2026-10-28 (MapEventsTests): Spiritello swarms and Flower Wall circles.
             Assert.That(Share(e => e.Type == S || e.Type == StageEventType.TrapRing, 6), Is.EqualTo(1f), "L6: Mt.Moonspell's events.");
-            Assert.That(Share(e => e.Type == S, 7), Is.GreaterThan(0.5f), "L7: ghost swarms.");
+            // L7 plays Lake Foscari's own rows since 2026-10-28 (MapEventsTests): every row is a swarm.
+            Assert.That(Share(e => e.Type == S, 7), Is.EqualTo(1f), "L7: Lake Foscari's swarms.");
             Assert.That(Share(e => e.Type == R, 8), Is.EqualTo(1f), "L8: rings.");
             Assert.That(WaveTables.Events(9).All(e => e.Type == W || e.Type == R) && WaveTables.Events(9).Any(e => e.Type == R)
                         && WaveTables.Events(9).Any(e => e.Type == W), Is.True, "L9: walls and rings.");

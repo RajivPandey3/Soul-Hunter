@@ -127,6 +127,15 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
     - Circle: "Flower Wall map event spawns an ellipsoid ring of flowers, which surrounds the player, slowly closing in": the Thorn Circle of 50 Moon Thorn Walls (Moonspell Flower Wall: 30 x Level, 5 damage, immobile) at 5:00 (30 s), 10:00 (60 s) and 15:00 (80%, 30 s). The Thorn Circle now takes a row's amount (`ThornCircle.Begin(..., count)`); Level 1's rows give none and keep 30.
     - Tests: `MapEventsTests` (T), `MapEventsPlayModeTests.LevelSix_ACircle_RingsTheHeroWithFiftyMoonThornWalls` (R).
     - FPS (release, 1080p pixel count, V-Sync off, 60 cap; `run-20261028-l6fps`): from 4:50, 12:50 and 19:50, median 60, no running jolt but the bot's start-level frame, slowest 17.4-17.9 ms.
+  - Level 7 plays Lake Foscari's 22 rows (2026-10-28):
+    - Medusa Swarm (horizontal): Drowned Caterpillars (Sammy the Caterpillar: 10 x Level, 10 damage, speed 100) and Swimming Wisps (Swimming Wiseparke 1/1/240, Floaty + Fixed Direction).
+    - Swarm: Stampede Mourners (Sam the Swarm Clown 220/8/600, knockback 0.1). Skull Swarm: Swarm Eels (Swarm Snek 25/6/700) at 20:00 in waves of 1 to 64, 3 s apart.
+    - Level 7's owner signatures (spectral, no knockback) apply to these units as to every Level 7 type.
+    - Tests: `MapEventsTests` (T); EditMode 1016/1016, PlayMode 47/47 (MapEvents, StageEvent, StagePattern, SpectralStage, StageEnemyType, VsSpawnRules).
+    - FPS (release, 1080p pixel count, V-Sync off, 60 cap; `run-20261028-l7fps`): from 14:50, 19:50 and 24:50, median 60, no running jolt but the bot's start-level frame, slowest 17.5-23.3 ms.
+  - **Owner decisions for Levels 8-10 (Cappella Magna), 2026-10-28:**
+    - The Maddener comes in every run at 0:10. The wiki contradicts itself: The_Maddener says "guaranteed to spawn at 0:10 ... if the player has not yet defeated The Ender", and the Cappella Magna page ties it to the Yellow Sign. The owner chose the Maddener page. Soul Hunter has no Ender, so the Drowner (5:10), the Stalker (10:10) and the Trickster (15:10) also come in every run.
+    - Soul Egg bonuses are taken away from 4:00 on Levels 8-10, as VS's "Before defeating Ender, all egg bonuses will be snapped away" (owner: "VS jaisa").
   - **The stage-change jolt and Level 3's jolts** (owner, 2026-10-27: "jhatka bhi theek karo, epf 60 should be constant"):
     - Cause: `CampaignSceneConnector` loaded each level's showcase scene additively at every stage start, although every object it brings is hidden in play (its SH10_L* models, camera and title; an additive scene's lighting never applies). The stage change took 84-86 ms in one frame, and Level 3's late fight had GPU-wait frames of 20-56 ms.
     - Found with per-listener timers on the stage start (`LevelProgressionManager.StartStage`, `SlowSpan` "StageStart.<listener>") and a development-build profile of the jolts (`run-20261027-l3prof`: `FinishFrameRendering` / `Gfx.WaitForPresentOnGfxThread` and a 23 ms `SceneCulling`).

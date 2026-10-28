@@ -244,6 +244,37 @@ namespace SoulHunter.Gameplay.Data
             E(29, Swarm, "SwarmBlackFrostSprite", 50, delay: 3, repeat: 10), // Swarm
         };
 
+        // Lake Foscari "Waves", the Map events column (Level 7). Medusa Swarm: "a group of enemies that travel horizontally";
+        // its stage note: "Sammy Swarm ... spawns groups of Sammies which travel horizontally across the map until the end
+        // of the event", and Swimming Wiseparkes (Floaty + Fixed Direction). Swarm: Sam the Swarm Clowns "sweep in a
+        // straight line across the map". Skull Swarm: Swarm Sneks "Every 3 seconds ... from 1 to 64, lasts 15 seconds"
+        // (the rows give each wave's delay).
+        private static List<StageEventEntry> LakeFoscari() => new List<StageEventEntry>
+        {
+            E(0, Swarm, "DrownedCaterpillar", 1, delay: 0.1f, duration: 60, horizontal: true), // Medusa Swarm
+            E(2, Swarm, "SwimmingWisp", 12, duration: 15, horizontal: true), // Medusa Swarm
+            E(2, Swarm, "SwimmingWisp", 12, delay: 5, repeat: 4, chance: 70, duration: 15, horizontal: true), // Medusa Swarm
+            E(5, Swarm, "SwimmingWisp", 12, duration: 15, horizontal: true), // Medusa Swarm
+            E(5, Swarm, "SwimmingWisp", 12, delay: 5, repeat: 4, chance: 70, duration: 15, horizontal: true), // Medusa Swarm
+            E(6, Swarm, "DrownedCaterpillar", 1, repeat: 4, chance: 50, duration: 30, horizontal: true), // Medusa Swarm
+            E(7, Swarm, "DrownedCaterpillar", 1, repeat: 4, chance: 50, duration: 30, horizontal: true), // Medusa Swarm
+            E(9, Swarm, "StampedeMourner", 8, delay: 20, repeat: 2, chance: 50, duration: 30), // Swarm
+            E(10, Swarm, "StampedeMourner", 8, duration: 30), // Swarm
+            E(10, Swarm, "StampedeMourner", 8, delay: 10, repeat: 3, chance: 80, duration: 30), // Swarm
+            E(12, Swarm, "SwimmingWisp", 12, duration: 15, horizontal: true), // Medusa Swarm
+            E(12, Swarm, "SwimmingWisp", 12, delay: 5, repeat: 4, chance: 70, duration: 15, horizontal: true), // Medusa Swarm
+            E(15, Swarm, "SwimmingWisp", 12, duration: 15, horizontal: true), // Medusa Swarm
+            E(15, Swarm, "SwimmingWisp", 12, delay: 2, repeat: 25, chance: 90, duration: 15, horizontal: true), // Medusa Swarm
+            E(17, Swarm, "StampedeMourner", 16, delay: 5, repeat: 4, chance: 50, duration: 30), // Swarm
+            E(20, Swarm, "SwarmEel", 1, duration: 15), // Skull Swarm
+            E(20, Swarm, "SwarmEel", 2, delay: 3, duration: 15), // Skull Swarm
+            E(20, Swarm, "SwarmEel", 4, delay: 6, duration: 15), // Skull Swarm
+            E(20, Swarm, "SwarmEel", 8, delay: 9, duration: 15), // Skull Swarm
+            E(20, Swarm, "SwarmEel", 16, delay: 12, duration: 15), // Skull Swarm
+            E(20, Swarm, "SwarmEel", 32, delay: 15, duration: 15), // Skull Swarm
+            E(20, Swarm, "SwarmEel", 64, delay: 18, duration: 15), // Skull Swarm
+        };
+
         /// <summary>The VS map events of <paramref name="stage"/>, sorted by time; null when the level has no table yet.</summary>
         public static List<StageEventEntry> For(int stage)
         {
@@ -256,6 +287,7 @@ namespace SoulHunter.Gameplay.Data
                 case 4: events = GalloTower(); break;
                 case 5: events = AbyssFoscari(); break;
                 case 6: events = MtMoonspell(); break;
+                case 7: events = LakeFoscari(); break;
             }
             events?.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
             return events;

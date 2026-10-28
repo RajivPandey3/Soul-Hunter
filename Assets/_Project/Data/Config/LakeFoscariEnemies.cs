@@ -63,9 +63,17 @@ namespace SoulHunter.Gameplay.Data
                 T("GreatWeepingLamb", "Great Weeping Lamb", "Lammuga Boss", 150f, true, 30, 200, 0f, 1f, 30f, 0.15f),
                 T("GreatDrownedBell", "Great Drowned Bell", "Missing Church Boss", 200f, true, 30, 160, 0f, 1f, 30f, 0.65f).Resists(1.0f),
                 T("DeepKelpKnight", "Deep Kelp Knight", "Deep Green Knight", 200f, true, 20, 180, 0f, 1f, 30f, 0.35f),
+                // Map event units (MapEvents; statboxes on Sammy_the_Caterpillar, Wiseparke, Sam_the_Sundown_Clown and Snek, raw
+                // 2026-10-28). Level 7's owner signatures (spectral, no knockback) apply to them as to every Level 7 type.
+                T("DrownedCaterpillar", "Drowned Caterpillar", "Sammy the Caterpillar", 10f,  true,  10, 100, 1f,   3f, 1f, 0.40f).Fixed(),
+                T("SwimmingWisp",       "Swimming Wisp",       "Swimming Wiseparke",    1f,   false, 1,  240, 1f,   3f, 1f, 0.48f).FloatyFixed(),
+                T("StampedeMourner",    "Stampede Mourner",    "Sam the Swarm Clown",   220f, false, 8,  600, 0.1f, 1f, 3f, 0.92f).Fixed(),
+                T("SwarmEel",           "Swarm Eel",           "Swarm Snek",            25f,  false, 6,  700, 0f,   3f, 2f, 0.30f).Fixed(),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
-            BossOnly = new[] { "TideFairy", "ColossalTideFairy", "ArcanaTideFairy", "GreatSealskinSpirit", "GreatKelpSteed", "GreatGrinningMourner", "GreatTideHowler", "GreatWeepingLamb", "GreatDrownedBell", "DeepKelpKnight" },
+            BossOnly = new[] { "TideFairy", "ColossalTideFairy", "ArcanaTideFairy", "GreatSealskinSpirit", "GreatKelpSteed", "GreatGrinningMourner", "GreatTideHowler", "GreatWeepingLamb", "GreatDrownedBell", "DeepKelpKnight" ,
+                // Map event units, sent only by MapEvents.
+                "DrownedCaterpillar", "SwimmingWisp", "StampedeMourner", "SwarmEel" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "TidalImp" },

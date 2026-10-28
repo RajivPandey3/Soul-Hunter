@@ -247,63 +247,82 @@ MonoBehaviour:
   - {fileID: 1210919509716500436, guid: f54958f6c6ac71244b28bca2b60cd1cb, type: 3}
   - {fileID: 3897973436818390977, guid: ce7bed7f546748949943adaea6e418b1, type: 3}
   - {fileID: 2501200535320536129, guid: 70de49cf3b00d6042a303ecfe61b539c, type: 3}
+  - {fileID: 4845968648834522231, guid: 31103172d3cd9274db95dc5f6e750a6a, type: 3}
+  - {fileID: 5339925707051562777, guid: 84695a7032a117a4a80f68817455c66e, type: 3}
+  - {fileID: 7171707879890040635, guid: 59540d1b122fd5649b032b70c0d661bb, type: 3}
+  - {fileID: 478245518867979909, guid: 6fe4f759f9e2f1c4bacaa584e48f03e2, type: 3}
   Phases: []
   Events:
+  - TimeSeconds: 0.1
+    Type: 0
+    Count: 1
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: DrownedCaterpillar
+    DurationSeconds: 60
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 120
     Type: 0
-    Count: 13
+    Count: 12
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 180
+  - TimeSeconds: 125
     Type: 0
-    Count: 13
+    Count: 12
     Speed: 1
-    Repeat: 2
+    Repeat: 5
     RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 240
-    Type: 0
-    Count: 14
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    ChancePercent: 70
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 300
-    Type: 2
-    Count: 22
+    Type: 0
+    Count: 12
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 305
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
@@ -311,14 +330,14 @@ MonoBehaviour:
     LaneZ: 0
   - TimeSeconds: 360
     Type: 0
-    Count: 15
+    Count: 1
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    Repeat: 5
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 50
+    EnemyTypeId: DrownedCaterpillar
+    DurationSeconds: 30
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
@@ -326,43 +345,28 @@ MonoBehaviour:
     LaneZ: 0
   - TimeSeconds: 420
     Type: 0
-    Count: 15
+    Count: 1
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    Repeat: 5
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 50
+    EnemyTypeId: DrownedCaterpillar
+    DurationSeconds: 30
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 480
+  - TimeSeconds: 560
     Type: 0
-    Count: 16
+    Count: 8
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 540
-    Type: 0
-    Count: 16
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Repeat: 3
+    RepeatDelaySeconds: 20
+    ChancePercent: 50
+    EnemyTypeId: StampedeMourner
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -370,29 +374,29 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 600
-    Type: 2
-    Count: 25
+    Type: 0
+    Count: 8
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: StampedeMourner
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 660
+  - TimeSeconds: 610
     Type: 0
-    Count: 17
+    Count: 8
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
+    Repeat: 4
+    RepeatDelaySeconds: 10
     ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: StampedeMourner
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -401,58 +405,73 @@ MonoBehaviour:
     LaneZ: 0
   - TimeSeconds: 720
     Type: 0
-    Count: 18
+    Count: 12
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 780
+  - TimeSeconds: 725
     Type: 0
-    Count: 18
+    Count: 12
     Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
+    Repeat: 5
+    RepeatDelaySeconds: 5
     ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 900
-    Type: 2
-    Count: 27
+    Type: 0
+    Count: 12
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1020
+  - TimeSeconds: 902
     Type: 0
-    Count: 20
+    Count: 12
     Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Repeat: 26
+    RepeatDelaySeconds: 2
+    ChancePercent: 90
+    EnemyTypeId: SwimmingWisp
+    DurationSeconds: 15
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1025
+    Type: 0
+    Count: 16
+    Speed: 1
+    Repeat: 5
+    RepeatDelaySeconds: 5
+    ChancePercent: 50
+    EnemyTypeId: StampedeMourner
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
@@ -461,73 +480,103 @@ MonoBehaviour:
     LaneZ: 0
   - TimeSeconds: 1200
     Type: 0
-    Count: 22
+    Count: 1
     Speed: 1
-    Repeat: 5
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1203
+    Type: 0
+    Count: 2
+    Speed: 1
+    Repeat: 1
     RepeatDelaySeconds: 3
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1320
+  - TimeSeconds: 1206
     Type: 0
-    Count: 23
+    Count: 4
     Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
+    Repeat: 1
+    RepeatDelaySeconds: 6
+    ChancePercent: 100
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1500
-    Type: 2
+  - TimeSeconds: 1209
+    Type: 0
+    Count: 8
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 9
+    ChancePercent: 100
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1212
+    Type: 0
+    Count: 16
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 12
+    ChancePercent: 100
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1215
+    Type: 0
     Count: 32
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 15
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1620
+  - TimeSeconds: 1218
     Type: 0
-    Count: 24
+    Count: 64
     Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
+    Repeat: 1
+    RepeatDelaySeconds: 18
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 1740
-    Type: 0
-    Count: 26
-    Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: SwarmEel
+    DurationSeconds: 15
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
