@@ -15,7 +15,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// </summary>
     public static class StageItems
     {
-        public enum Kind { Passive, Weapon, Chicken, Magnet, TimeFreeze }
+        public enum Kind { Passive, Weapon, Chicken, Magnet, TimeFreeze, SoulToll }
 
         public struct Entry
         {
@@ -55,6 +55,19 @@ namespace SoulHunter.Gameplay.Pickups
         /// starting area." Soul Hunter's Level 2 is Inlaid Library's counterpart; five of its 20-unit floor tiles.
         /// </summary>
         public const float MisersIdolDistance = 100f;
+
+        /// <summary>
+        /// VS Cappella Magna's stage items (raw 2026-10-28, "Stage items"): "Crown and Tirajisú: north of the starting area.
+        /// Duplicator: south of the starting area"; pickups: "Three Rosaries can be found south of the starting area, each
+        /// located one tileset (map tile) away from the previous one". Soul Hunter's Levels 8-10 play Cappella Magna, and the
+        /// Rosary is its Soul Toll. The wiki gives no distance; balance method: four 20-unit tiles out, past the rings (60),
+        /// Crown and Tirajisú a tile apart, and the first Rosary five tiles south. The level's own items stay as extras.
+        /// </summary>
+        public const int CappellaFirstStage = 8;
+        public const float CappellaItemDistance = 80f;
+        public const float CappellaRosaryStart = 100f;
+        public const float FloorTile = 20f;
+        public const int CappellaRosaries = 3;
         public const int MisersIdolStage = 2;
         /// <summary>
         /// The Idol's other places (wiki Stone_Mask: "can be found as a stage item in Inlaid Library, Moongolow, Boss Rash,
@@ -119,6 +132,14 @@ namespace SoulHunter.Gameplay.Pickups
             // as the Metaglios are.
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfLongHours, Offset = Vector3.forward * RingDistance });
             plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.RingOfDarkHours, Offset = Vector3.back * RingDistance });
+            if (s + 1 >= CappellaFirstStage)
+            {
+                plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.Crown, Offset = new Vector3(-FloorTile * 0.5f, 0f, CappellaItemDistance) });
+                plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.Tiragisu, Offset = new Vector3(FloorTile * 0.5f, 0f, CappellaItemDistance) });
+                plan.Add(new Entry { Kind = Kind.Passive, Upgrade = UpgradeType.Duplicator, Offset = Vector3.back * CappellaItemDistance });
+                for (int i = 0; i < CappellaRosaries; i++)
+                    plan.Add(new Entry { Kind = Kind.SoulToll, Offset = Vector3.back * (CappellaRosaryStart + FloorTile * i) });
+            }
             // VS Stone Mask lies east of the start on Inlaid Library (Level 2), west on Abyss Foscari (Level 5) and northeast
             // on Mt.Moonspell (Level 6).
             if (s + 1 == MisersIdolStage)
@@ -164,6 +185,21 @@ namespace SoulHunter.Gameplay.Pickups
     {
         private readonly List<GameObject> _placed = new List<GameObject>();
         private readonly List<PressurePlate> _plates = new List<PressurePlate>();
+        private readonly List<StainedGlass> _windows = new List<StainedGlass>();
+        public IReadOnlyList<StainedGlass> Windows => _windows;
+
+        /// <summary>
+        /// Cappella Magna's Stained Glass windows "spawn randomly at set locations on the stage" (raw 2026-10-28). Balance
+        /// method (the wiki gives no places or count): eight set places, four on a 25-unit ring at the diagonals and four on
+        /// a 50-unit ring straight out, each moved to the nearest open ground.
+        /// </summary>
+        public static List<Vector3> WindowOffsets()
+        {
+            var list = new List<Vector3>();
+            for (int i = 0; i < 4; i++) list.Add(Quaternion.Euler(0f, 45f + 90f * i, 0f) * Vector3.forward * 25f);
+            for (int i = 0; i < 4; i++) list.Add(Quaternion.Euler(0f, 90f * i, 0f) * Vector3.forward * 50f);
+            return list;
+        }
         private SoulHunter.Gameplay.Core.LevelProgressionManager _progression;
         private int _placedFor;
 
@@ -220,6 +256,7 @@ namespace SoulHunter.Gameplay.Pickups
                     case StageItems.Kind.Chicken: item = pool != null ? pool.SpawnChicken(spot) : null; break;
                     case StageItems.Kind.Magnet: item = pool != null ? pool.SpawnMagnet(spot) : null; break;
                     case StageItems.Kind.TimeFreeze: item = pool != null ? pool.SpawnTimeFreeze(spot) : null; break;
+                    case StageItems.Kind.SoulToll: item = ExtraPickupPool.Spawn(ExtraPickupPool.Kind.ScreenWipe, spot); break;
                 }
                 if (item != null)
                 {
@@ -229,6 +266,14 @@ namespace SoulHunter.Gameplay.Pickups
                     if (item.GetComponent<StageItemMark>() == null) item.AddComponent<StageItemMark>();
                 }
             }
+
+            if (stage >= StageItems.CappellaFirstStage)
+                foreach (var offset in WindowOffsets())
+                {
+                    Vector3 spot = GroundCheck.NearestOpen(origin + CorridorOffset(SoulHunter.Gameplay.Data.InverseMap.Layout(offset)), 1f);
+                    spot.y = origin.y - 1f; // the window stands on the floor (the hero's plane is 1 above it)
+                    _windows.Add(StainedGlass.Create(spot));
+                }
 
             var catalog = SoulHunter.Gameplay.Data.GameContentCatalog.Load();
             if (catalog == null || catalog.RunePlate == null) return;
@@ -258,6 +303,8 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>Removes the items of the previous stage that were not picked up.</summary>
         public void Clear()
         {
+            foreach (var window in _windows) if (window != null) Destroy(window.gameObject);
+            _windows.Clear();
             foreach (var item in _placed)
             {
                 if (item == null) continue;

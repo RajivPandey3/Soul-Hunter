@@ -21,6 +21,10 @@ namespace SoulHunter.Gameplay.Hazards
         private GameObject _homingGem, _stillGem;
         private readonly List<GameObject> _gems = new List<GameObject>();
         private float _nextRing;
+        // Gems still to make: a ring's 48 are made 16 a frame (two rings in one frame took 13 + 11 ms, 2026-10-28).
+        private readonly Queue<(GameObject prefab, Vector3 at, bool still)> _pending = new Queue<(GameObject, Vector3, bool)>();
+        public const int GemsPerFrame = 16;
+        public int GemsPending => _pending.Count;
 
         public int RingsSummoned { get; private set; }
         public int GemsAlive { get { int n = 0; foreach (var g in _gems) if (g != null && g.activeInHierarchy) n++; return n; } }
@@ -53,7 +57,8 @@ namespace SoulHunter.Gameplay.Hazards
                 return;
             }
             float dt = Time.deltaTime; // game time
-            if (dt <= 0f) return;
+            if (dt <= 0f) return; // nothing is made under a pause
+            using (SoulHunter.Core.Services.SlowSpan.Measure("Trickster.Gems")) MakePending();
             _nextRing -= dt;
             if (_nextRing <= 0f)
             {
@@ -65,15 +70,8 @@ namespace SoulHunter.Gameplay.Hazards
         /// <summary>One ring of 48 gems round the player: a large still ring or a small homing one, at random.</summary>
         public void SummonRing(bool? large = null)
         {
-            // Timed (a 35 ms frame came at the Trickster's arrival, 2026-10-28; cause not proven yet).
-            using (SoulHunter.Core.Services.SlowSpan.Measure("Trickster.Ring")) SummonRingNow(large);
-        }
-
-        private void SummonRingNow(bool? large)
-        {
-            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             var player = PlayerController.Instance;
-            if (spawner == null || player == null) return;
+            if (player == null) return;
             bool big = large ?? Random.value < 0.5f;
             var prefab = big ? (_stillGem != null ? _stillGem : _homingGem) : (_homingGem != null ? _homingGem : _stillGem);
             float scale = big ? 1f : StageHazardTable.TricksterSmallRingScale;
@@ -82,13 +80,26 @@ namespace SoulHunter.Gameplay.Hazards
             {
                 float angle = Mathf.PI * 2f * i / StageHazardTable.TricksterGems;
                 Vector3 at = centre + new Vector3(Mathf.Cos(angle) * StageHazardTable.JellyRadiusX, 0f, Mathf.Sin(angle) * StageHazardTable.JellyRadiusZ) * scale;
+                _pending.Enqueue((prefab, at, big));
+            }
+            RingsSummoned++;
+        }
+
+        /// <summary>Makes up to <see cref="GemsPerFrame"/> of the queued gems, at the places their ring gave them.</summary>
+        public void MakePending()
+        {
+            if (_pending.Count == 0) return;
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            if (spawner == null) { _pending.Clear(); return; }
+            for (int n = 0; n < GemsPerFrame && _pending.Count > 0; n++)
+            {
+                var (prefab, at, still) = _pending.Dequeue();
                 var gem = spawner.SpawnHazardEnemy(prefab, at);
-                if (gem == null) break; // the 500 hard cap
-                if (big) StillEnemy.Begin(gem, StageHazardTable.TricksterGemSeconds);
+                if (gem == null) { _pending.Clear(); return; } // the 500 hard cap
+                if (still) StillEnemy.Begin(gem, StageHazardTable.TricksterGemSeconds);
                 else EventLifetime.Begin(gem, StageHazardTable.TricksterGemSeconds);
                 _gems.Add(gem);
             }
-            RingsSummoned++;
         }
 
         /// <summary>Every gem left explodes at once: 50 to the hero within the blast (Armor applies), then it is gone.</summary>
@@ -96,6 +107,7 @@ namespace SoulHunter.Gameplay.Hazards
         {
             var player = PlayerController.Instance;
             var health = player != null ? player.GetComponent<HealthController>() : null;
+            _pending.Clear(); // gems not made yet never appear
             bool hit = false;
             foreach (var gem in _gems)
             {

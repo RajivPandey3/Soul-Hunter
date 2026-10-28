@@ -160,5 +160,35 @@ namespace SoulHunter.Tests.PlayMode
             yield return null;
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+    
+        [UnityTest]
+        public IEnumerator LevelEight_HasEightStainedGlassWindows_ThatBreakIntoABlastOf130()
+        {
+            yield return BootIntoGameplay();
+            foreach (var weapon in PlayerController.Instance.GetComponentsInChildren<AutoAttackWeapon>(true)) weapon.enabled = false;
+            LevelProgressionManager.Instance.StartStage(8);
+            for (int i = 0; i < 3; i++) yield return null;
+            var spawner = Object.FindFirstObjectByType<StageItemSpawner>();
+            Assert.That(spawner.Windows.Count, Is.EqualTo(8), Errors());
+            var window = spawner.Windows[0];
+            var enemy = Object.FindObjectsByType<SoulHunter.Gameplay.AI.EnemyController>(FindObjectsSortMode.None).FirstOrDefault(e => e.isActiveAndEnabled && !e.IsStageBoss);
+            Assert.That(enemy, Is.Not.Null, "an enemy to catch in the blast");
+            enemy.transform.position = window.transform.position + Vector3.right * 1f;
+            enemy.Freeze(10f);
+            var enemyHealth = enemy.GetComponent<HealthController>();
+            enemyHealth.Initialize(10000);
+            UnityEngine.Physics.SyncTransforms();
+            var glass = window.GetComponent<HealthController>();
+            Assert.That(glass.MaxHealth, Is.EqualTo(StainedGlass.MaxHealth), "50 damage breaks it.");
+            glass.TakeDamage(new DamagePacket(StainedGlass.MaxHealth, window.transform.position, Vector3.forward));
+            yield return null;
+            Assert.That(window == null || window.IsBroken, Is.True);
+            float might = PlayerController.Instance.Stats.Might;
+            Assert.That(10000 - enemyHealth.CurrentHealth, Is.EqualTo(Mathf.RoundToInt(StainedGlass.BaseDamage * might)), "130 base damage.");
+            LevelProgressionManager.Instance.StartStage(7);
+            for (int i = 0; i < 3; i++) yield return null;
+            Assert.That(spawner.Windows.Count, Is.EqualTo(0), "Level 7 has none.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

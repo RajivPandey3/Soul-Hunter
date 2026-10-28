@@ -472,9 +472,10 @@ namespace SoulHunter.Tests.PlayMode
             yield return Boot(8, invinciblePlayer: true);
             var shadow = _hazards.SpawnDeathsShadow(120f, StageHazardTable.Trickster);
             Assert.That(shadow, Is.Not.Null, Errors());
-            yield return null;
             var rings = Object.FindObjectsByType<TricksterRings>(FindObjectsSortMode.None).Single();
             Assert.That(rings.RingsSummoned, Is.EqualTo(2), "\"two rings upon spawning\".");
+            for (int f = 0; f < 10 && rings.GemsPending > 0; f++) yield return null;
+            Assert.That(rings.GemsPending, Is.EqualTo(0), "96 gems are made 16 a frame.");
             Assert.That(rings.GemsAlive, Is.EqualTo(2 * StageHazardTable.TricksterGems), Errors());
             var health = shadow.GetComponent<HealthController>();
             Assert.That(health.MaxHealth, Is.EqualTo(2550 * PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel));
