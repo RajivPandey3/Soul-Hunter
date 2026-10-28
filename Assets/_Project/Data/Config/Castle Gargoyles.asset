@@ -234,195 +234,397 @@ MonoBehaviour:
   - {fileID: 1707588279368512694, guid: 115be00261490e54b9d530139baf2501, type: 3}
   - {fileID: 127891046789413323, guid: 54e8563baa2fecb429253277be1dbc80, type: 3}
   - {fileID: 3423428405121359381, guid: 6fd26c9541af98f448a13c201c7f2efc, type: 3}
+  - {fileID: 7778342333299353080, guid: dd200749fdc9e68498fcaec70dcc0f2a, type: 3}
+  - {fileID: 6447908598421974121, guid: 1a5d15e5edbb24549bc9d22cb090bc4b, type: 3}
   Phases: []
   Events:
+  - TimeSeconds: 5
+    Type: 7
+    Count: 2
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 1
+    Range: 1
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 120
-    Type: 1
-    Count: 13
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 180
-    Type: 1
-    Count: 13
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 240
-    Type: 1
-    Count: 14
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 300
-    Type: 1
-    Count: 22
+    Type: 0
+    Count: 1
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 360
-    Type: 1
-    Count: 15
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 420
-    Type: 1
-    Count: 15
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 480
-    Type: 1
-    Count: 16
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 540
-    Type: 1
-    Count: 16
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 600
-    Type: 1
-    Count: 25
-    Speed: 1
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 660
-    Type: 1
-    Count: 17
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 720
-    Type: 1
-    Count: 18
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 780
-    Type: 1
-    Count: 18
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 900
-    Type: 1
-    Count: 27
-    Speed: 1
-    Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1020
-    Type: 1
-    Count: 20
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1200
-    Type: 1
-    Count: 22
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 125
+    Type: 0
+    Count: 3
     Speed: 1
     Repeat: 5
-    RepeatDelaySeconds: 3
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1320
-    Type: 1
-    Count: 23
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
+    RepeatDelaySeconds: 5
     ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-  - TimeSeconds: 1500
-    Type: 1
-    Count: 32
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 245
+    Type: 7
+    Count: 2
     Speed: 1
     Repeat: 1
     RepeatDelaySeconds: 5
+    ChancePercent: 50
+    EnemyTypeId: 
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 1
+    Range: 1
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 250
+    Type: 7
+    Count: 2
+    Speed: 1
+    Repeat: 3
+    RepeatDelaySeconds: 10
+    ChancePercent: 50
+    EnemyTypeId: 
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 1
+    Range: 1
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 300
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 305
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 6
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 370
+    Type: 8
+    Count: 5
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 10
+    ChancePercent: 70
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 60
+    Horizontal: 0
+    IntervalSeconds: 1.33
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 425
+    Type: 8
+    Count: 5
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 60
+    Horizontal: 0
+    IntervalSeconds: 1.33
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 560
+    Type: 6
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 20
+    ChancePercent: 80
+    EnemyTypeId: GateSorcerer
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0.4
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 610
+    Type: 6
+    Count: 6
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 10
+    ChancePercent: 100
+    EnemyTypeId: GateSorcerer
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 620
+    Type: 6
+    Count: 6
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 20
+    ChancePercent: 60
+    EnemyTypeId: GateSorcerer
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 720
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 725
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 6
+    RepeatDelaySeconds: 5
+    ChancePercent: 70
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 20
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 900
+    Type: 8
+    Count: 5
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 60
+    Horizontal: 0
+    IntervalSeconds: 1
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 900
+    Type: 7
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0.1
+    Range: 0.5
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 905
+    Type: 7
+    Count: 3
+    Speed: 1
+    Repeat: 7
+    RepeatDelaySeconds: 5
+    ChancePercent: 50
+    EnemyTypeId: 
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 0.1
+    Range: 1
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 960
+    Type: 0
+    Count: 12
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 100
+    EnemyTypeId: BlazeSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 962
+    Type: 0
+    Count: 3
+    Speed: 1
+    Repeat: 13
+    RepeatDelaySeconds: 2
+    ChancePercent: 90
+    EnemyTypeId: BlazeSerpent
+    DurationSeconds: 20
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 973
+    Type: 0
+    Count: 6
+    Speed: 1
+    Repeat: 1
+    RepeatDelaySeconds: 13
+    ChancePercent: 100
+    EnemyTypeId: BlazeSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1322
+    Type: 7
+    Count: 3
+    Speed: 1
+    Repeat: 26
+    RepeatDelaySeconds: 2
+    ChancePercent: 100
+    EnemyTypeId: 
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 0.1
+    Range: 1
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1620
-    Type: 1
-    Count: 24
+    Type: 0
+    Count: 12
     Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: BlazeSerpent
     DurationSeconds: 0
-    Horizontal: 0
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1622
+    Type: 0
+    Count: 6
+    Speed: 1
+    Repeat: 11
+    RepeatDelaySeconds: 2
+    ChancePercent: 90
+    EnemyTypeId: BlazeSerpent
+    DurationSeconds: 20
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1740
-    Type: 1
-    Count: 26
+    Type: 0
+    Count: 12
     Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
+    Repeat: 1
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
+    EnemyTypeId: BlazeSerpent
+    DurationSeconds: 30
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1741
+    Type: 0
+    Count: 2
+    Speed: 1
+    Repeat: 51
+    RepeatDelaySeconds: 1
+    ChancePercent: 100
+    EnemyTypeId: EmberSerpent
+    DurationSeconds: 20
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1741.1
+    Type: 0
+    Count: 2
+    Speed: 1
+    Repeat: 51
+    RepeatDelaySeconds: 1.1
+    ChancePercent: 90
+    EnemyTypeId: BlazeSerpent
+    DurationSeconds: 20
+    Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0

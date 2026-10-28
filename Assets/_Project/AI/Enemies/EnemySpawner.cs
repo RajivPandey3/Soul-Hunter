@@ -272,7 +272,11 @@ namespace SoulHunter.Gameplay.AI
             {
                 var stageEvent = _stageEvents[_nextStageEvent++];
                 for (int r = 0; r < Mathf.Max(1, stageEvent.Repeat); r++)
-                    _eventFirings.Add((stageEvent.TimeSeconds + r * stageEvent.RepeatDelaySeconds, stageEvent));
+                {
+                    float at = stageEvent.TimeSeconds + r * stageEvent.RepeatDelaySeconds;
+                    if (stageEvent.Type == StageEventType.Stream) QueueStream(stageEvent, at);
+                    else _eventFirings.Add((at, stageEvent));
+                }
             }
             for (int i = _eventFirings.Count - 1; i >= 0; i--)
             {
@@ -789,6 +793,33 @@ namespace SoulHunter.Gameplay.AI
         }
 
         /// <summary>
+        /// VS Dragon Stream: one group every 'interval' seconds for its duration, all on one lane ("at set location") and
+        /// alternating between the left and right side. The lane is where the player stands when the stream starts.
+        /// Balance method (the wiki gives one chance per event): each group rolls the stream's chance, so a 70% stream thins
+        /// out instead of coming all or not at all.
+        /// </summary>
+        private void QueueStream(StageEventEntry stream, float start)
+        {
+            float interval = stream.IntervalSeconds > 0f ? stream.IntervalSeconds : 1f;
+            float duration = stream.DurationSeconds > 0f ? stream.DurationSeconds : interval;
+            float laneZ = _playerTransform != null ? _playerTransform.position.z : 0f;
+            int side = Random.value < 0.5f ? 1 : -1;
+            int group = 0;
+            for (float t = 0f; t < duration - 0.001f; t += interval, group++)
+            {
+                _eventFirings.Add((start + t, new StageEventEntry
+                {
+                    TimeSeconds = start + t, Type = StageEventType.Swarm, EnemyTypeId = stream.EnemyTypeId, Count = stream.Count,
+                    ChancePercent = stream.ChancePercent, Horizontal = true, Side = group % 2 == 0 ? side : -side,
+                    HasLane = true, LaneZ = laneZ,
+                }));
+            }
+        }
+
+        /// <summary>Firings queued now (tests).</summary>
+        public int QueuedFirings => _eventFirings.Count;
+
+        /// <summary>
         /// Spawns one stage event's formation around the player and sends every member along its
         /// fixed path. Returns the spawned enemies. Not blocked by the 300 cap (VS: "only bosses and enemies from map events
         /// can spawn"), but by the 500 hard cap.
@@ -818,15 +849,22 @@ namespace SoulHunter.Gameplay.AI
                 if (ring != null) spawned.AddRange(ring.Members);
                 return spawned;
             }
+            if (stageEvent.Type == StageEventType.StarRain)
+            {
+                var hazards = FindFirstObjectByType<SoulHunter.Gameplay.Hazards.StageHazards>();
+                if (hazards != null) hazards.StartStarRain(stageEvent.Count, stageEvent.IntervalSeconds, stageEvent.Range > 0f ? stageEvent.Range : 1f);
+                return spawned;
+            }
             if (stageEvent.Type == StageEventType.PileRing)
             {
                 // Pile Assault: the units stand on the ellipse and shoot by their own statbox; they go when it ends.
                 if (typed == null) return spawned;
                 Vector3 centre = _playerTransform.position;
                 float seconds = stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds : SoulHunter.Gameplay.Hazards.StageHazardTable.PileDurationSeconds;
+                float ring = SoulHunter.Gameplay.Hazards.StageHazardTable.PileRangeScale(stageEvent.Range);
                 for (int i = 0; i < stageEvent.Count; i++)
                 {
-                    var member = SpawnHazardEnemy(typed, centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count));
+                    var member = SpawnHazardEnemy(typed, centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count) * ring);
                     if (member == null) break;
                     SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
                     if (member.TryGetComponent<EnemyController>(out var still)) spawned.Add(still);
@@ -839,8 +877,11 @@ namespace SoulHunter.Gameplay.AI
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
             var direction = -WaveTables.SpawnDirection(side, 1f, 0f, Random.value, Random.value);
             // VS Medusa Wall: "randomly appears from either the left or right side and travels across the screen".
-            if (stageEvent.Horizontal) direction = Random.value < 0.5f ? Vector3.right : Vector3.left;
-            BuildFormation(stageEvent.Type, stageEvent.Count, _playerTransform.position, direction, EventRadius(stageEvent.Type, direction), _formation);
+            if (stageEvent.Horizontal)
+                direction = stageEvent.Side > 0 ? Vector3.right : stageEvent.Side < 0 ? Vector3.left : Random.value < 0.5f ? Vector3.right : Vector3.left;
+            Vector3 origin = _playerTransform.position;
+            if (stageEvent.HasLane) origin.z = stageEvent.LaneZ; // a Dragon Stream keeps its lane
+            BuildFormation(stageEvent.Type, stageEvent.Count, origin, direction, EventRadius(stageEvent.Type, direction), _formation);
             foreach (var (position, flyDirection) in _formation)
             {
                 if (EnemyController.ActiveEnemies.Count >= HardCap) break; // VS: at most 500 on screen
@@ -857,8 +898,12 @@ namespace SoulHunter.Gameplay.AI
                     enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection);
                 if (homes) SoulHunter.Gameplay.Hazards.EventLifetime.Begin(enemyObject, stageEvent.DurationSeconds);
                 else if (typed != null)
-                    enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds
-                        : (EventRadius(stageEvent.Type, direction) * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed));
+                {
+                    // It leaves once past the far screen edge (twice the start radius, plus a margin), or sooner when the
+                    // row's duration ends first.
+                    float crossing = (EventRadius(stageEvent.Type, direction) * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed);
+                    enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? Mathf.Min(stageEvent.DurationSeconds, crossing) : crossing);
+                }
                 else enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
                 KeepWorldFreeze(enemy);
                 spawned.Add(enemy);

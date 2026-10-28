@@ -220,6 +220,32 @@ namespace SoulHunter.Gameplay.Hazards
             DropMeteor(StageCorridor.Clamp(player.transform.position + offset));
         }
 
+        /// <summary>
+        /// VS Shooting Star: <paramref name="amount"/> stars, <paramref name="intervalSeconds"/> apart, each landing at random
+        /// within <see cref="StageHazardTable.StarRange"/> of the player where it is when that star falls.
+        /// </summary>
+        public void StartStarRain(int amount, float intervalSeconds, float range)
+        {
+            if (InTransition() || amount <= 0) return;
+            StartCoroutine(StarRain(amount, Mathf.Max(0f, intervalSeconds), StageHazardTable.StarRange(range)));
+        }
+
+        /// <summary>Stars dropped by Shooting Star events so far (tests).</summary>
+        public int StarsDropped { get; private set; }
+
+        private System.Collections.IEnumerator StarRain(int amount, float interval, float reach)
+        {
+            for (int i = 0; i < amount; i++)
+            {
+                var player = PlayerController.Instance;
+                if (player == null || InTransition()) yield break;
+                Vector2 spot = Random.insideUnitCircle * reach;
+                DropMeteor(StageCorridor.Clamp(player.transform.position + new Vector3(spot.x, 0f, spot.y)));
+                StarsDropped++;
+                if (interval > 0f && i < amount - 1) yield return new WaitForSeconds(interval);
+            }
+        }
+
         /// <summary>One marker at a position (on the player's plane). Strikes after the VS 2 s.</summary>
         public SoulMeteor DropMeteor(Vector3 position, float delaySeconds = StageHazardTable.MeteorDelaySeconds)
         {

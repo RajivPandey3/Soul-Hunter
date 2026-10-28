@@ -46,7 +46,19 @@ namespace SoulHunter.Gameplay.Data
         /// bullets at regular intervals". The event's units (which cannot move and shoot on their own) stand on an ellipse
         /// round the player for the event's duration.
         /// </summary>
-        PileRing
+        PileRing,
+        /// <summary>
+        /// VS Shooting Star: "rains groups of falling stars towards the player. The stars impact 2 seconds after an indicator
+        /// marks their location, dealing 30 damage in the area"; "'Amount' specifies how many stars fall in each repeat and
+        /// 'interval' the time between each falling star", landing at random within 'range' of the player (Soul Meteors).
+        /// </summary>
+        StarRain,
+        /// <summary>
+        /// VS Dragon Stream: "groups ... travelling horizontally accross the screen, periodically at set location until the
+        /// end of its duration. Spawns alternate between left and right side of the screen." A group of the event's units
+        /// every 'interval' seconds on one lane, for the event's duration.
+        /// </summary>
+        Stream
     }
 
     /// <summary>
@@ -97,6 +109,16 @@ namespace SoulHunter.Gameplay.Data
         [Tooltip("VS Medusa Wall / Medusa Swarm: the formation comes from the left or the right side (at random) and " +
                  "travels horizontally across the screen.")]
         public bool Horizontal;
+        [Tooltip("VS map event 'interval' in seconds (Shooting Star: between stars; Dragon Stream: between groups).")]
+        [Min(0f)] public float IntervalSeconds;
+        [Tooltip("VS map event 'range' (Shooting Star: how far from the player stars land, 1 = the most; Pile Assault: the " +
+                 "ring's size). 0 = the event's own default.")]
+        [Min(0f)] public float Range;
+        [Tooltip("Set by a Dragon Stream on its groups: +1 from the left, -1 from the right, 0 at random.")]
+        public int Side;
+        [Tooltip("Set by a Dragon Stream on its groups: the group keeps the stream's lane (world Z).")]
+        public bool HasLane;
+        public float LaneZ;
     }
 
     /// <summary>

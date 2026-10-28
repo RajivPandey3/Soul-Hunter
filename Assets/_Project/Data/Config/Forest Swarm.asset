@@ -257,6 +257,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 120
     Type: 1
     Count: 6
@@ -267,6 +272,11 @@ MonoBehaviour:
     EnemyTypeId: GloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 125
     Type: 0
     Count: 12
@@ -277,6 +287,11 @@ MonoBehaviour:
     EnemyTypeId: GloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 300
     Type: 1
     Count: 12
@@ -287,6 +302,11 @@ MonoBehaviour:
     EnemyTypeId: SwiftGloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 305
     Type: 0
     Count: 12
@@ -297,6 +317,11 @@ MonoBehaviour:
     EnemyTypeId: GloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 370
     Type: 4
     Count: 1
@@ -307,6 +332,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 425
     Type: 4
     Count: 1
@@ -317,6 +347,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 560
     Type: 4
     Count: 2
@@ -327,6 +362,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 600
     Type: 4
     Count: 1
@@ -337,6 +377,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 610
     Type: 4
     Count: 2
@@ -347,6 +392,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 720
     Type: 0
     Count: 12
@@ -357,6 +407,11 @@ MonoBehaviour:
     EnemyTypeId: SwiftGloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 725
     Type: 1
     Count: 12
@@ -367,6 +422,11 @@ MonoBehaviour:
     EnemyTypeId: GloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 900
     Type: 1
     Count: 12
@@ -377,6 +437,11 @@ MonoBehaviour:
     EnemyTypeId: SwiftGloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 902
     Type: 0
     Count: 12
@@ -387,6 +452,11 @@ MonoBehaviour:
     EnemyTypeId: SwiftGloomMote
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 913
     Type: 1
     Count: 6
@@ -397,6 +467,11 @@ MonoBehaviour:
     EnemyTypeId: GloomMoth
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1025
     Type: 4
     Count: 3
@@ -407,6 +482,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1200
     Type: 0
     Count: 1
@@ -417,6 +497,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1204
     Type: 4
     Count: 2
@@ -427,6 +512,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1205
     Type: 0
     Count: 2
@@ -437,6 +527,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1215
     Type: 0
     Count: 4
@@ -447,6 +542,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1225
     Type: 0
     Count: 8
@@ -457,6 +557,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1235
     Type: 0
     Count: 16
@@ -467,6 +572,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1245
     Type: 0
     Count: 32
@@ -477,6 +587,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1255
     Type: 0
     Count: 32
@@ -487,6 +602,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1322
     Type: 4
     Count: 3
@@ -497,6 +617,11 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1500
     Type: 0
     Count: 1
@@ -507,6 +632,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1500
     Type: 0
     Count: 50
@@ -517,6 +647,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmNightBat
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1505
     Type: 0
     Count: 2
@@ -527,6 +662,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1515
     Type: 0
     Count: 4
@@ -537,6 +677,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1525
     Type: 0
     Count: 8
@@ -547,6 +692,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1535
     Type: 0
     Count: 16
@@ -557,6 +707,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1545
     Type: 0
     Count: 32
@@ -567,6 +722,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1555
     Type: 0
     Count: 32
@@ -577,6 +737,11 @@ MonoBehaviour:
     EnemyTypeId: SwarmSkull
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1620
     Type: 0
     Count: 12
@@ -587,6 +752,11 @@ MonoBehaviour:
     EnemyTypeId: SwiftGloomMoth
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1622
     Type: 1
     Count: 12
@@ -597,6 +767,11 @@ MonoBehaviour:
     EnemyTypeId: SwiftGloomMoth
     DurationSeconds: 0
     Horizontal: 1
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1741
     Type: 4
     Count: 4
@@ -607,3 +782,8 @@ MonoBehaviour:
     EnemyTypeId: CinderShade
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0

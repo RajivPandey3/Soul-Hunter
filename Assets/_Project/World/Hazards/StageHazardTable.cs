@@ -173,6 +173,18 @@ namespace SoulHunter.Gameplay.Hazards
         public const int PileStage = 8;
         public static readonly float[] PileMinutes = { 9f, 10f, 12f, 20f };
 
+        /// <summary>
+        /// A Pile Assault row's 'range' as a scale on the ring. The wiki gives the number only (0.4 on Gallo Tower, 0.7 in
+        /// the template example); balance method: 0.7 is the ring as built, so 0.4 is a ring 0.57 as big. No range: 1.
+        /// </summary>
+        public static float PileRangeScale(float range) => range > 0f ? Mathf.Clamp(range / 0.7f, 0.3f, 1.5f) : 1f;
+
+        /// <summary>
+        /// A Shooting Star row's 'range' in units: how far from the player a star may land. The wiki gives "1 (max)" and
+        /// "0.5 (max)"; balance method: 1 is the Soul Meteor volley's widest spread (7 units, inside the screen).
+        /// </summary>
+        public static float StarRange(float range) => MeteorMaxSpread * Mathf.Clamp(range, 0.1f, 1f);
+
         // ---- Jellyfish Wall (VS map event, PulsingRing) ----
         // The wiki: "an ellipsoid ring around the player ... periodically closes in on and moves away from the player". It
         // gives no size or rhythm; balance method: as wide as the Pile Assault ellipse plus a unit (inside the screen), in

@@ -248,6 +248,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 180
     Type: 0
     Count: 13
@@ -258,6 +263,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 240
     Type: 0
     Count: 14
@@ -268,6 +278,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 300
     Type: 1
     Count: 22
@@ -278,6 +293,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 360
     Type: 0
     Count: 15
@@ -288,6 +308,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 420
     Type: 0
     Count: 15
@@ -298,6 +323,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 480
     Type: 0
     Count: 16
@@ -308,6 +338,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 540
     Type: 0
     Count: 16
@@ -318,6 +353,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 600
     Type: 1
     Count: 25
@@ -328,6 +368,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 660
     Type: 0
     Count: 17
@@ -338,6 +383,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 720
     Type: 0
     Count: 18
@@ -348,6 +398,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 780
     Type: 0
     Count: 18
@@ -358,6 +413,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 900
     Type: 1
     Count: 27
@@ -368,6 +428,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1020
     Type: 0
     Count: 20
@@ -378,6 +443,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1200
     Type: 0
     Count: 22
@@ -388,6 +458,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1320
     Type: 0
     Count: 23
@@ -398,6 +473,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1500
     Type: 1
     Count: 32
@@ -408,6 +488,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1620
     Type: 0
     Count: 24
@@ -418,6 +503,11 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1740
     Type: 0
     Count: 26
@@ -428,3 +518,8 @@ MonoBehaviour:
     EnemyTypeId: 
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0

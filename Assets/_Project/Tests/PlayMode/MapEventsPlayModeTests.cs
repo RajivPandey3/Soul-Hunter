@@ -249,5 +249,60 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(speed, Is.EqualTo(expected).Within(expected * 0.25f), "speed 600.");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+    
+        // ---------------------------------------------------------------- Level 4, Gallo Tower
+
+        [UnityTest]
+        public IEnumerator LevelFour_AShootingStar_DropsItsStarsIntervalApart_NearTheHero()
+        {
+            EnemySpawner spawner = null;
+            yield return EnterLevel(4, s => spawner = s);
+            var hazards = Object.FindFirstObjectByType<SoulHunter.Gameplay.Hazards.StageHazards>();
+            var star = MapEvents.For(4).First(e => e.Type == StageEventType.StarRain && e.Count == 12);
+            int before = hazards.StarsDropped;
+            Run(spawner, star);
+            yield return null;
+            Assert.That(hazards.StarsDropped - before, Is.GreaterThanOrEqualTo(1), Errors());
+            float t0 = Time.time;
+            while (Time.time - t0 < 12 * star.IntervalSeconds + 0.5f) yield return null;
+            Assert.That(hazards.StarsDropped - before, Is.EqualTo(12), "15:00 Shooting Star: amount 12, interval 0.1.");
+            var hero = PlayerController.Instance.transform.position;
+            float reach = SoulHunter.Gameplay.Hazards.StageHazardTable.StarRange(star.Range);
+            foreach (var meteor in hazards.Meteors.Where(m => m != null))
+            {
+                var at = meteor.transform.position; at.y = hero.y;
+                Assert.That(Vector3.Distance(at, hero), Is.LessThanOrEqualTo(reach + 0.5f), "range 0.5 (max).");
+            }
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator LevelFour_ADragonStream_SendsGroupsOnOneLane_AlternatingSides()
+        {
+            EnemySpawner spawner = null;
+            yield return EnterLevel(4, s => spawner = s);
+            var stream = MapEvents.For(4).First(e => e.Type == StageEventType.Stream);
+            var queue = typeof(EnemySpawner).GetMethod("QueueStream", Private);
+            int before = spawner.QueuedFirings;
+            queue.Invoke(spawner, new object[] { stream, 0f });
+            int groups = spawner.QueuedFirings - before;
+            Assert.That(groups, Is.EqualTo(Mathf.CeilToInt(stream.DurationSeconds / stream.IntervalSeconds)), "duration 60, interval 1.33.");
+
+            var list = (System.Collections.IList)typeof(EnemySpawner).GetField("_eventFirings", Private).GetValue(spawner);
+            var a = (StageEventEntry)list[before].GetType().GetField("Item2").GetValue(list[before]);
+            var b = (StageEventEntry)list[before + 1].GetType().GetField("Item2").GetValue(list[before + 1]);
+            Assert.That(a.HasLane && b.HasLane && a.LaneZ == b.LaneZ, Is.True, "One lane.");
+            Assert.That(a.Side, Is.EqualTo(-b.Side), "Alternating sides.");
+            Assert.That(a.Side, Is.Not.EqualTo(0));
+
+            var first = Run(spawner, a);
+            Assert.That(first, Has.Count.EqualTo(5), Errors());
+            Assert.That(first.All(e => e.name.StartsWith(GalloTowerEnemies.Table.PrefabName("EmberSerpent"))), Is.True);
+            Assert.That(first.All(e => e.IsFlying), Is.True);
+            var hero = PlayerController.Instance.transform.position;
+            Assert.That(Mathf.Sign(first[0].transform.position.x - hero.x), Is.EqualTo(-a.Side), "It comes from its side.");
+            list.RemoveAt(list.Count - 1); // leave the queue as the test found it (the rest fire in game time)
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

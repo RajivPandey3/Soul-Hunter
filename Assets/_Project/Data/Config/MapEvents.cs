@@ -16,10 +16,11 @@ namespace SoulHunter.Gameplay.Data
     public static class MapEvents
     {
         private const StageEventType Swarm = StageEventType.Swarm, Wall = StageEventType.Wall, TrapRing = StageEventType.TrapRing,
-            Chasers = StageEventType.Chasers, PulsingRing = StageEventType.PulsingRing, PileRing = StageEventType.PileRing;
+            Chasers = StageEventType.Chasers, PulsingRing = StageEventType.PulsingRing, PileRing = StageEventType.PileRing,
+            StarRain = StageEventType.StarRain, Stream = StageEventType.Stream;
 
         private static StageEventEntry E(int minute, StageEventType type, string typeId, int amount, float delay = 0f,
-            int repeat = 0, float chance = 100f, float duration = 0f, bool horizontal = false) => new StageEventEntry
+            int repeat = 0, float chance = 100f, float duration = 0f, bool horizontal = false, float interval = 0f, float range = 0f) => new StageEventEntry
         {
             TimeSeconds = minute * 60f + delay,
             Type = type,
@@ -30,6 +31,8 @@ namespace SoulHunter.Gameplay.Data
             ChancePercent = chance,
             DurationSeconds = duration,
             Horizontal = horizontal,
+            IntervalSeconds = interval,
+            Range = range,
         };
 
         // Mad Forest "Waves", the Map events column. Bat Swarm: "summons 50 Pipeestrellos that move in a straight line
@@ -142,6 +145,41 @@ namespace SoulHunter.Gameplay.Data
             E(23, Swarm, "StampedeOxDemon", 25, delay: 5, repeat: 5, chance: 60, duration: 10), // Minotaur Rush
         };
 
+        // Gallo Tower "Waves", the Map events column (Level 4). Shooting Star: amount stars per repeat, interval apart,
+        // within range of the player (Soul Meteors). Dragon Swarm: "groups of Serpentine Dragon Shrimps ... which travel
+        // horizontally accross the map". Dragon Stream: "periodically at set location until the end of its duration. Spawns
+        // alternate between left and right". Pile Assault: Undead Mages (Gate Sorcerers) round the player. The two 30:00
+        // Shooting Star rows (one "repeat=Infinite") are not played: Soul Hunter's stage ends at 30:00 and the next begins.
+        private static List<StageEventEntry> GalloTower() => new List<StageEventEntry>
+        {
+            E(0, StarRain, null, 2, delay: 5, interval: 1.0f, range: 1f), // Shooting Star
+            E(2, Swarm, "EmberSerpent", 1, duration: 30, horizontal: true), // Dragon Swarm
+            E(2, Swarm, "EmberSerpent", 3, delay: 5, repeat: 4, chance: 70, duration: 30, horizontal: true), // Dragon Swarm
+            E(4, StarRain, null, 2, delay: 5, chance: 50, interval: 1.0f, range: 1f), // Shooting Star
+            E(4, StarRain, null, 2, delay: 10, repeat: 2, chance: 50, interval: 1.0f, range: 1f), // Shooting Star
+            E(5, Swarm, "EmberSerpent", 12, duration: 30, horizontal: true), // Dragon Swarm
+            E(5, Swarm, "EmberSerpent", 12, delay: 5, repeat: 5, chance: 70, duration: 30, horizontal: true), // Dragon Swarm
+            E(6, Stream, "EmberSerpent", 5, delay: 10, chance: 70, duration: 60, interval: 1.33f), // Dragon Stream
+            E(7, Stream, "EmberSerpent", 5, delay: 5, chance: 70, duration: 60, interval: 1.33f), // Dragon Stream
+            E(9, PileRing, "GateSorcerer", 12, delay: 20, chance: 80, duration: 30, range: 0.4f), // Pile Assault
+            E(10, PileRing, "GateSorcerer", 6, delay: 10, duration: 30), // Pile Assault
+            E(10, PileRing, "GateSorcerer", 6, delay: 20, chance: 60, duration: 30), // Pile Assault
+            E(12, Swarm, "EmberSerpent", 12, duration: 30, horizontal: true), // Dragon Swarm
+            E(12, Swarm, "EmberSerpent", 12, delay: 5, repeat: 5, chance: 70, duration: 20, horizontal: true), // Dragon Swarm
+            E(15, Stream, "EmberSerpent", 5, duration: 60, interval: 1.0f), // Dragon Stream
+            E(15, StarRain, null, 12, interval: 0.1f, range: 0.5f), // Shooting Star
+            E(15, StarRain, null, 3, delay: 5, repeat: 6, chance: 50, interval: 0.1f, range: 1f), // Shooting Star
+            E(16, Swarm, "BlazeSerpent", 12, duration: 30, horizontal: true), // Dragon Swarm
+            E(16, Swarm, "BlazeSerpent", 6, delay: 13, duration: 30, horizontal: true), // Dragon Swarm
+            E(16, Swarm, "BlazeSerpent", 3, delay: 2, repeat: 12, chance: 90, duration: 20, horizontal: true), // Dragon Swarm
+            E(22, StarRain, null, 3, delay: 2, repeat: 25, interval: 0.1f, range: 1f), // Shooting Star
+            E(27, Swarm, "BlazeSerpent", 12, horizontal: true), // Dragon Swarm
+            E(27, Swarm, "BlazeSerpent", 6, delay: 2, repeat: 10, chance: 90, duration: 20, horizontal: true), // Dragon Swarm
+            E(29, Swarm, "BlazeSerpent", 12, duration: 30, horizontal: true), // Dragon Swarm
+            E(29, Swarm, "BlazeSerpent", 2, delay: 1.1f, repeat: 50, chance: 90, duration: 20, horizontal: true), // Dragon Swarm
+            E(29, Swarm, "EmberSerpent", 2, delay: 1.0f, repeat: 50, duration: 20, horizontal: true), // Dragon Swarm
+        };
+
         /// <summary>The VS map events of <paramref name="stage"/>, sorted by time; null when the level has no table yet.</summary>
         public static List<StageEventEntry> For(int stage)
         {
@@ -151,6 +189,7 @@ namespace SoulHunter.Gameplay.Data
                 case 1: events = MadForest(); break;
                 case 2: events = InlaidLibrary(); break;
                 case 3: events = DairyPlant(); break;
+                case 4: events = GalloTower(); break;
             }
             events?.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
             return events;

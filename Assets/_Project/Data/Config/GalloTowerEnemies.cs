@@ -56,9 +56,16 @@ namespace SoulHunter.Gameplay.Data
                 T("ShieldSentinel", "Shield Sentinel", "Archon Disco (boss)", 150f, true, 20, 160, 0.5f, 1f, 30f, 0.58f).Resists(1.1f),
                 T("ColossalBasilisk", "Colossal Basilisk", "Colossal Gallotrice", 200f, true, 20, 180, 0f, 1f, 50f, 0.29f).Resists(1.0f, kill: true),
                 T("ColossalCastleChimera", "Colossal Castle Chimera", "Colossal Manticore", 200f, false, 20, 180, 0f, 1f, 50f, 0.04f).Resists(1.0f, kill: true),
+                // Map event units (MapEvents; statboxes on Dragon_Shrimp, raw 2026-10-28). The page: "the flag variants tend to
+                // make horizontal, zig-zag movements that do not follow the player's character", so they weave along their
+                // line (Floaty + Fixed Direction). Not built: the segmented body that hurts only with its head.
+                T("EmberSerpent", "Ember Serpent", "Dragon Shrimp 1 (flag)", 5f,  true, 3, 400, 0f, 0f, 2f, 0.05f).FloatyFixed(),
+                T("BlazeSerpent", "Blaze Serpent", "Dragon Shrimp 2 (flag)", 20f, true, 6, 400, 0f, 0f, 2f, 0.02f).FloatyFixed(),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
-            BossOnly = new[] { "CastleFiend", "GreatStoneSkull", "GreatHarpyGargoyle", "RampartEmberBat", "RampartLord", "ShieldSentinel", "ColossalBasilisk", "ColossalCastleChimera" },
+            BossOnly = new[] { "CastleFiend", "GreatStoneSkull", "GreatHarpyGargoyle", "RampartEmberBat", "RampartLord", "ShieldSentinel", "ColossalBasilisk", "ColossalCastleChimera",
+                // Map event units, sent only by MapEvents.
+                "EmberSerpent", "BlazeSerpent" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "GateSkull" },

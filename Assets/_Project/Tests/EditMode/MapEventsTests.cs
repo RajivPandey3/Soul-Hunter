@@ -97,6 +97,30 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelFour_PlaysGalloTowersMapEventRows()
+        {
+            var events = MapEvents.For(4);
+            Assert.That(events, Has.Count.EqualTo(26), "28 rows on Gallo Tower; the two 30:00 Shooting Star rows end with the stage.");
+            Assert.That(WaveTables.Events(4), Has.Count.EqualTo(26));
+            var first = events[0];
+            Assert.That((first.Type, first.Count, first.TimeSeconds, first.IntervalSeconds, first.Range), Is.EqualTo((StageEventType.StarRain, 2, 5f, 1f, 1f)),
+                "0:05 Shooting Star: amount 2, interval 1.0, range 1 (max).");
+            var streams = events.Where(e => e.Type == StageEventType.Stream).ToArray();
+            Assert.That(streams.Select(e => (e.TimeSeconds, e.Count, e.IntervalSeconds, e.DurationSeconds)),
+                Is.EqualTo(new[] { (370f, 5, 1.33f, 60f), (425f, 5, 1.33f, 60f), (900f, 5, 1f, 60f) }));
+            var pile = events.Where(e => e.Type == StageEventType.PileRing).ToArray();
+            Assert.That(pile.All(e => e.EnemyTypeId == "GateSorcerer"), Is.True, "Undead Mages.");
+            Assert.That(pile[0].Range, Is.EqualTo(0.4f));
+            Assert.That(events.Where(e => e.Type == StageEventType.Swarm).All(e => e.Horizontal), Is.True, "Dragon Swarms travel horizontally.");
+            var t = GalloTowerEnemies.Table;
+            var ds1 = t.Find("EmberSerpent");
+            Assert.That((ds1.Health, ds1.HealthTimesLevel, ds1.Damage, ds1.VsSpeed, ds1.Knockback), Is.EqualTo((5f, true, 3, 400f, 0f)));
+            Assert.That((t.Find("BlazeSerpent").Health, t.Find("BlazeSerpent").Damage), Is.EqualTo((20f, 6)));
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazardTable.PileRangeScale(0.7f), Is.EqualTo(1f).Within(1e-4));
+            Assert.That(SoulHunter.Gameplay.Hazards.StageHazardTable.StarRange(1f), Is.EqualTo(SoulHunter.Gameplay.Hazards.StageHazardTable.MeteorMaxSpread));
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

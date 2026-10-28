@@ -264,6 +264,11 @@ MonoBehaviour:
     EnemyTypeId: WellSerpents
     DurationSeconds: 5
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 75
     Type: 0
     Count: 25
@@ -274,6 +279,11 @@ MonoBehaviour:
     EnemyTypeId: SmokeWisp
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 135
     Type: 0
     Count: 25
@@ -284,6 +294,11 @@ MonoBehaviour:
     EnemyTypeId: SmokeWisp
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 180
     Type: 5
     Count: 80
@@ -294,6 +309,11 @@ MonoBehaviour:
     EnemyTypeId: RingEmber
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 240
     Type: 6
     Count: 20
@@ -304,6 +324,11 @@ MonoBehaviour:
     EnemyTypeId: WellSerpents
     DurationSeconds: 5
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 300
     Type: 6
     Count: 20
@@ -314,6 +339,11 @@ MonoBehaviour:
     EnemyTypeId: WellSerpents
     DurationSeconds: 60
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 330
     Type: 6
     Count: 20
@@ -324,6 +354,11 @@ MonoBehaviour:
     EnemyTypeId: WellSerpents
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 390
     Type: 0
     Count: 50
@@ -334,6 +369,11 @@ MonoBehaviour:
     EnemyTypeId: ThickSmokeWisp
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 420
     Type: 5
     Count: 40
@@ -344,6 +384,11 @@ MonoBehaviour:
     EnemyTypeId: RingEmber
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 422
     Type: 5
     Count: 40
@@ -354,6 +399,11 @@ MonoBehaviour:
     EnemyTypeId: RingEmber
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 510
     Type: 0
     Count: 50
@@ -364,6 +414,11 @@ MonoBehaviour:
     EnemyTypeId: BurntBones
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 540
     Type: 0
     Count: 50
@@ -374,6 +429,11 @@ MonoBehaviour:
     EnemyTypeId: StampedeOxDemon
     DurationSeconds: 0
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 556
     Type: 0
     Count: 50
@@ -384,6 +444,11 @@ MonoBehaviour:
     EnemyTypeId: StampedeOxDemon
     DurationSeconds: 15
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 605
     Type: 0
     Count: 25
@@ -394,6 +459,11 @@ MonoBehaviour:
     EnemyTypeId: StampedeOxDemon
     DurationSeconds: 15
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 610
     Type: 6
     Count: 10
@@ -404,6 +474,11 @@ MonoBehaviour:
     EnemyTypeId: BellImps
     DurationSeconds: 20
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 670
     Type: 0
     Count: 50
@@ -414,6 +489,11 @@ MonoBehaviour:
     EnemyTypeId: BurntBones
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 725
     Type: 0
     Count: 50
@@ -424,6 +504,11 @@ MonoBehaviour:
     EnemyTypeId: BurntBones
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 730
     Type: 6
     Count: 10
@@ -434,6 +519,11 @@ MonoBehaviour:
     EnemyTypeId: ShrineIdol
     DurationSeconds: 20
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1092
     Type: 5
     Count: 40
@@ -444,6 +534,11 @@ MonoBehaviour:
     EnemyTypeId: RingEmber
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1094
     Type: 5
     Count: 40
@@ -454,6 +549,11 @@ MonoBehaviour:
     EnemyTypeId: RingEmber
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1140
     Type: 0
     Count: 50
@@ -464,6 +564,11 @@ MonoBehaviour:
     EnemyTypeId: DriftEmber
     DurationSeconds: 10
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1150
     Type: 0
     Count: 50
@@ -474,6 +579,11 @@ MonoBehaviour:
     EnemyTypeId: DriftEmber
     DurationSeconds: 10
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1205
     Type: 6
     Count: 20
@@ -484,6 +594,11 @@ MonoBehaviour:
     EnemyTypeId: BellImps
     DurationSeconds: 30
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1380
     Type: 0
     Count: 25
@@ -494,6 +609,11 @@ MonoBehaviour:
     EnemyTypeId: StampedeOxDemon
     DurationSeconds: 10
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
   - TimeSeconds: 1385
     Type: 0
     Count: 25
@@ -504,3 +624,8 @@ MonoBehaviour:
     EnemyTypeId: StampedeOxDemon
     DurationSeconds: 10
     Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
