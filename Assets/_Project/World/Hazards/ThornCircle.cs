@@ -71,8 +71,13 @@ namespace SoulHunter.Gameplay.Hazards
             }
         }
 
-        public static ThornCircle Begin(EnemySpawner spawner, GameObject memberPrefab, Vector3 centre, float durationSeconds)
+        public static ThornCircle Begin(EnemySpawner spawner, GameObject memberPrefab, Vector3 centre, float durationSeconds) =>
+            Begin(spawner, memberPrefab, centre, durationSeconds, StageHazardTable.ThornCount);
+
+        /// <summary>A ring of <paramref name="count"/> members (a map event row's amount; the Omen uses ThornCount).</summary>
+        public static ThornCircle Begin(EnemySpawner spawner, GameObject memberPrefab, Vector3 centre, float durationSeconds, int count)
         {
+            count = Mathf.Max(1, count);
             if (spawner == null || memberPrefab == null) return null;
             var go = new GameObject("ThornCircle");
             var circle = go.AddComponent<ThornCircle>();
@@ -80,9 +85,9 @@ namespace SoulHunter.Gameplay.Hazards
             circle._duration = Mathf.Max(1f, durationSeconds);
             circle.Radius = StageHazardTable.ThornStartRadius;
             int obstacleLayer = LayerMask.NameToLayer("Obstacle");
-            for (int i = 0; i < StageHazardTable.ThornCount; i++)
+            for (int i = 0; i < count; i++)
             {
-                float angle = Mathf.PI * 2f * i / StageHazardTable.ThornCount;
+                float angle = Mathf.PI * 2f * i / count;
                 Vector3 at = circle.SpotOf(angle);
                 var enemy = spawner.SpawnHazardEnemy(memberPrefab, at);
                 if (enemy == null) continue;

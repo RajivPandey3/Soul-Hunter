@@ -236,16 +236,34 @@ MonoBehaviour:
   - {fileID: 7704689883774079475, guid: 12ba9e14d1bd53041946583d8fb42aea, type: 3}
   - {fileID: 7959252347374097644, guid: e326cac7f8fef874ab6711d9500bf6fc, type: 3}
   - {fileID: 1145615823362865655, guid: 7e00bb4374c7fd640a2fef833801fbd7, type: 3}
+  - {fileID: 6845704507461248551, guid: 6aa62b5a19a5dea478a042530e441b98, type: 3}
+  - {fileID: 7983362358752287059, guid: b230c2cb024cc954090508543735b97e, type: 3}
+  - {fileID: 1833324382323661354, guid: 2ec881e3268605a49b07c4e8e73442b7, type: 3}
   Phases: []
   Events:
-  - TimeSeconds: 120
+  - TimeSeconds: 135
     Type: 0
-    Count: 13
+    Count: 25
     Speed: 1
     Repeat: 2
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 15
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwarmFrostSprite
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 185
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 10
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -253,29 +271,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 180
+  - TimeSeconds: 245
     Type: 0
-    Count: 13
+    Count: 50
     Speed: 1
     Repeat: 2
     RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 240
-    Type: 0
-    Count: 14
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
+    ChancePercent: 10
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -284,13 +287,28 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 300
-    Type: 1
-    Count: 22
+    Type: 3
+    Count: 50
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: MoonThornWall
+    DurationSeconds: 30
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 365
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 2
+    RepeatDelaySeconds: 5
+    ChancePercent: 10
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -298,14 +316,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 360
+  - TimeSeconds: 425
     Type: 0
-    Count: 15
+    Count: 50
     Speed: 1
-    Repeat: 2
+    Repeat: 6
     RepeatDelaySeconds: 5
     ChancePercent: 80
-    EnemyTypeId: 
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -313,14 +331,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 420
+  - TimeSeconds: 495
     Type: 0
-    Count: 15
+    Count: 50
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
+    Repeat: 3
+    RepeatDelaySeconds: 15
     ChancePercent: 80
-    EnemyTypeId: 
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -328,29 +346,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 480
+  - TimeSeconds: 555
     Type: 0
-    Count: 16
+    Count: 50
     Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 540
-    Type: 0
-    Count: 16
-    Speed: 1
-    Repeat: 2
-    RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
+    Repeat: 3
+    RepeatDelaySeconds: 15
+    ChancePercent: 70
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -359,28 +362,28 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 600
-    Type: 1
-    Count: 25
+    Type: 3
+    Count: 50
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 0.1
     ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    EnemyTypeId: MoonThornWall
+    DurationSeconds: 60
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 660
+  - TimeSeconds: 665
     Type: 0
-    Count: 17
+    Count: 50
     Speed: 1
     Repeat: 2
     RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
+    ChancePercent: 10
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -388,14 +391,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 720
+  - TimeSeconds: 725
     Type: 0
-    Count: 18
+    Count: 50
     Speed: 1
     Repeat: 2
     RepeatDelaySeconds: 5
-    ChancePercent: 80
-    EnemyTypeId: 
+    ChancePercent: 10
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -403,14 +406,29 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 780
+  - TimeSeconds: 781.2
     Type: 0
-    Count: 18
+    Count: 50
     Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
+    Repeat: 21
+    RepeatDelaySeconds: 1.2
     ChancePercent: 70
-    EnemyTypeId: 
+    EnemyTypeId: SwarmBlackFrostSprite
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 782.3
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 21
+    RepeatDelaySeconds: 2.3
+    ChancePercent: 70
+    EnemyTypeId: SwarmBlackFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -419,28 +437,28 @@ MonoBehaviour:
     HasLane: 0
     LaneZ: 0
   - TimeSeconds: 900
-    Type: 1
-    Count: 27
+    Type: 3
+    Count: 50
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
-    ChancePercent: 100
-    EnemyTypeId: 
-    DurationSeconds: 0
+    RepeatDelaySeconds: 0.1
+    ChancePercent: 80
+    EnemyTypeId: MoonThornWall
+    DurationSeconds: 30
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1020
+  - TimeSeconds: 1201.2
     Type: 0
-    Count: 20
+    Count: 50
     Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
+    Repeat: 21
+    RepeatDelaySeconds: 1.2
     ChancePercent: 70
-    EnemyTypeId: 
+    EnemyTypeId: SwarmFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -448,14 +466,29 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1200
+  - TimeSeconds: 1202.3
     Type: 0
-    Count: 22
+    Count: 50
     Speed: 1
-    Repeat: 5
+    Repeat: 21
+    RepeatDelaySeconds: 2.3
+    ChancePercent: 70
+    EnemyTypeId: SwarmFrostSprite
+    DurationSeconds: 0
+    Horizontal: 0
+    IntervalSeconds: 0
+    Range: 0
+    Side: 0
+    HasLane: 0
+    LaneZ: 0
+  - TimeSeconds: 1623
+    Type: 0
+    Count: 50
+    Speed: 1
+    Repeat: 20
     RepeatDelaySeconds: 3
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwarmBlackFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -463,29 +496,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1320
+  - TimeSeconds: 1630
     Type: 0
-    Count: 23
-    Speed: 1
-    Repeat: 3
-    RepeatDelaySeconds: 4
-    ChancePercent: 70
-    EnemyTypeId: 
-    DurationSeconds: 0
-    Horizontal: 0
-    IntervalSeconds: 0
-    Range: 0
-    Side: 0
-    HasLane: 0
-    LaneZ: 0
-  - TimeSeconds: 1500
-    Type: 1
-    Count: 32
+    Count: 50
     Speed: 1
     Repeat: 1
-    RepeatDelaySeconds: 5
+    RepeatDelaySeconds: 10
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwarmBlackFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -493,14 +511,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1620
+  - TimeSeconds: 1743
     Type: 0
-    Count: 24
+    Count: 50
     Speed: 1
-    Repeat: 6
+    Repeat: 11
     RepeatDelaySeconds: 3
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwarmBlackFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0
@@ -508,14 +526,14 @@ MonoBehaviour:
     Side: 0
     HasLane: 0
     LaneZ: 0
-  - TimeSeconds: 1740
+  - TimeSeconds: 1750
     Type: 0
-    Count: 26
+    Count: 50
     Speed: 1
-    Repeat: 6
-    RepeatDelaySeconds: 3
+    Repeat: 1
+    RepeatDelaySeconds: 10
     ChancePercent: 100
-    EnemyTypeId: 
+    EnemyTypeId: SwarmBlackFrostSprite
     DurationSeconds: 0
     Horizontal: 0
     IntervalSeconds: 0

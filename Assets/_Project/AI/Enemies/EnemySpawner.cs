@@ -835,7 +835,7 @@ namespace SoulHunter.Gameplay.AI
             {
                 var hazards = FindFirstObjectByType<SoulHunter.Gameplay.Hazards.StageHazards>();
                 float seconds = stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds : SoulHunter.Gameplay.Hazards.StageHazardTable.ThornSeconds;
-                var circle = hazards != null ? hazards.StartThornCircle(seconds, typed) : null;
+                var circle = hazards != null ? hazards.StartThornCircle(seconds, typed, stageEvent.Count) : null;
                 if (circle != null) spawned.AddRange(circle.Members);
                 SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Map event TrapRing ({spawned.Count} enemies, {seconds:0} s) at {_stageTimePassed:0}s.");
                 return spawned;

@@ -304,5 +304,21 @@ namespace SoulHunter.Tests.PlayMode
             list.RemoveAt(list.Count - 1); // leave the queue as the test found it (the rest fire in game time)
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+    
+        // ---------------------------------------------------------------- Level 6, Mt.Moonspell
+
+        [UnityTest]
+        public IEnumerator LevelSix_ACircle_RingsTheHeroWithFiftyMoonThornWalls()
+        {
+            EnemySpawner spawner = null;
+            yield return EnterLevel(6, s => spawner = s);
+            var circle = MapEvents.For(6).First(e => e.Type == StageEventType.TrapRing);
+            var spawned = Run(spawner, circle);
+            Assert.That(spawned, Has.Count.EqualTo(50), "amount 50. " + Errors());
+            Assert.That(spawned.All(e => e.name.StartsWith(MtMoonspellEnemies.Table.PrefabName("MoonThornWall"))), Is.True);
+            var ring = Object.FindObjectsByType<SoulHunter.Gameplay.Hazards.ThornCircle>(FindObjectsSortMode.None).Single();
+            Assert.That(ring.RemainingSeconds, Is.EqualTo(30f).Within(0.5f), "duration 30.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

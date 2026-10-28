@@ -46,9 +46,16 @@ namespace SoulHunter.Gameplay.Data
                 T("GreatTricksterBadger", "Great Trickster Badger", "Tanuki Boss", 60f, true, 20, 200, 1f, 1f, 30f, 0.08f).Resists(0.0f, kill: true),
                 T("GreatSummitCrowman", "Great Summit Crowman", "Tengu Boss", 60f, true, 20, 200, 1f, 1f, 30f, 0.99f).Resists(0.0f, kill: true),
                 T("ColossalFrostSprite", "Colossal Frost Sprite", "Spiritello Boss 2", 200f, true, 10, 140, 1f, 3f, 30f, 0.57f),
+                // Map event units (MapEvents; statboxes on Spiritello and Flower_Wall, raw 2026-10-28). Health 7.5 and 12.5 round to
+                // whole numbers as the wave table's own Frost Sprites do (7.5 -> 8, 12.5 -> 13).
+                T("SwarmFrostSprite",      "Swarm Frost Sprite",       "Swarm Spiritello",       7.5f,  false, 5, 700, 1f, 3f, 1f,   0.52f).Fixed(),
+                T("SwarmBlackFrostSprite", "Swarm Black Frost Sprite", "Swarm Dusty Spiritello", 12.5f, false, 5, 700, 0f, 3f, 1.5f, 0.65f).Fixed(),
+                T("MoonThornWall",         "Moon Thorn Wall",          "Moonspell Flower Wall",  30f,   true,  5, 0,   0f, 3f, 4f,   0.35f),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
-            BossOnly = new[] { "FrostSpriteLord", "GreatTricksterBadger", "GreatSummitCrowman", "ColossalFrostSprite" },
+            BossOnly = new[] { "FrostSpriteLord", "GreatTricksterBadger", "GreatSummitCrowman", "ColossalFrostSprite",
+                // Map event units, sent only by MapEvents.
+                "SwarmFrostSprite", "SwarmBlackFrostSprite", "MoonThornWall" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "FrostSprite" },

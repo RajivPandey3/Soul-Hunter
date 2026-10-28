@@ -216,6 +216,34 @@ namespace SoulHunter.Gameplay.Data
             E(23, Swarm, "StampedeGhoul", 25, chance: 60, duration: 10), // Swarm
         };
 
+        // Mt.Moonspell "Waves", the Map events column (Level 6). Swarm: Swarm Spiritellos and Swarm Dusty Spiritellos "sweep
+        // in a straight line across the map" (Fixed Direction, speed 700). Circle: "Flower Wall map event spawns an
+        // ellipsoid ring of flowers, which surrounds the player, slowly closing in" with Moonspell Flower Walls (immobile
+        // themselves; the ring moves them): the Thorn Circle with the row's amount (50) and duration.
+        private static List<StageEventEntry> MtMoonspell() => new List<StageEventEntry>
+        {
+            E(2, Swarm, "SwarmFrostSprite", 25, delay: 15, repeat: 1, duration: 30), // Swarm
+            E(3, Swarm, "SwarmFrostSprite", 50, delay: 5, repeat: 1, chance: 10), // Swarm
+            E(4, Swarm, "SwarmFrostSprite", 50, delay: 5, repeat: 1, chance: 10), // Swarm
+            E(5, TrapRing, "MoonThornWall", 50, duration: 30), // Circle
+            E(6, Swarm, "SwarmFrostSprite", 50, delay: 5, repeat: 1, chance: 10), // Swarm
+            E(7, Swarm, "SwarmFrostSprite", 50, delay: 5, repeat: 5, chance: 80), // Swarm
+            E(8, Swarm, "SwarmFrostSprite", 50, delay: 15, repeat: 2, chance: 80), // Swarm
+            E(9, Swarm, "SwarmFrostSprite", 50, delay: 15, repeat: 2, chance: 70), // Swarm
+            E(10, TrapRing, "MoonThornWall", 50, duration: 60), // Circle
+            E(11, Swarm, "SwarmFrostSprite", 50, delay: 5, repeat: 1, chance: 10), // Swarm
+            E(12, Swarm, "SwarmFrostSprite", 50, delay: 5, repeat: 1, chance: 10), // Swarm
+            E(13, Swarm, "SwarmBlackFrostSprite", 50, delay: 2.3f, repeat: 20, chance: 70), // Swarm
+            E(13, Swarm, "SwarmBlackFrostSprite", 50, delay: 1.2f, repeat: 20, chance: 70), // Swarm
+            E(15, TrapRing, "MoonThornWall", 50, chance: 80, duration: 30), // Circle
+            E(20, Swarm, "SwarmFrostSprite", 50, delay: 1.2f, repeat: 20, chance: 70), // Swarm
+            E(20, Swarm, "SwarmFrostSprite", 50, delay: 2.3f, repeat: 20, chance: 70), // Swarm
+            E(27, Swarm, "SwarmBlackFrostSprite", 50, delay: 10), // Swarm
+            E(27, Swarm, "SwarmBlackFrostSprite", 50, delay: 3, repeat: 19), // Swarm
+            E(29, Swarm, "SwarmBlackFrostSprite", 50, delay: 10), // Swarm
+            E(29, Swarm, "SwarmBlackFrostSprite", 50, delay: 3, repeat: 10), // Swarm
+        };
+
         /// <summary>The VS map events of <paramref name="stage"/>, sorted by time; null when the level has no table yet.</summary>
         public static List<StageEventEntry> For(int stage)
         {
@@ -227,6 +255,7 @@ namespace SoulHunter.Gameplay.Data
                 case 3: events = DairyPlant(); break;
                 case 4: events = GalloTower(); break;
                 case 5: events = AbyssFoscari(); break;
+                case 6: events = MtMoonspell(); break;
             }
             events?.Sort((a, b) => a.TimeSeconds.CompareTo(b.TimeSeconds));
             return events;

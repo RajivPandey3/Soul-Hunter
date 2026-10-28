@@ -143,6 +143,22 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void LevelSix_PlaysMtMoonspellsMapEventRows()
+        {
+            var events = MapEvents.For(6);
+            Assert.That(events, Has.Count.EqualTo(20), "20 {{map event}} rows on Mt.Moonspell.");
+            Assert.That(WaveTables.Events(6), Has.Count.EqualTo(20));
+            var circles = events.Where(e => e.Type == StageEventType.TrapRing).ToArray();
+            Assert.That(circles.Select(c => (c.TimeSeconds, c.Count, c.DurationSeconds, c.ChancePercent)),
+                Is.EqualTo(new[] { (300f, 50, 30f, 100f), (600f, 50, 60f, 100f), (900f, 50, 30f, 80f) }));
+            Assert.That(circles.All(c => c.EnemyTypeId == "MoonThornWall"), Is.True);
+            Assert.That(events.Where(e => e.Type == StageEventType.Swarm).All(e => e.EnemyTypeId.StartsWith("Swarm")), Is.True);
+            var t = MtMoonspellEnemies.Table;
+            Assert.That((t.Find("SwarmFrostSprite").VsSpeed, t.Find("SwarmBlackFrostSprite").Knockback, t.Find("MoonThornWall").HealthTimesLevel, t.Find("MoonThornWall").VsSpeed),
+                Is.EqualTo((700f, 0f, true, 0f)));
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

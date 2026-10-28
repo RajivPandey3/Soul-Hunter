@@ -342,7 +342,8 @@ namespace SoulHunter.Gameplay.Hazards
         /// A ring of Thorn Walls around the player that closes in and stops the hero (VS Random Event "Flower Wall"; Soul
         /// Hunter's Omen "Thorn Circle"). Returns it, or null.
         /// </summary>
-        public ThornCircle StartThornCircle(float durationSeconds = StageHazardTable.ThornSeconds, GameObject memberPrefab = null)
+        public ThornCircle StartThornCircle(float durationSeconds = StageHazardTable.ThornSeconds, GameObject memberPrefab = null,
+            int count = StageHazardTable.ThornCount)
         {
             var spawner = Spawner();
             var player = PlayerController.Instance;
@@ -350,7 +351,7 @@ namespace SoulHunter.Gameplay.Hazards
             var catalog = GameContentCatalog.Load();
             var prefab = memberPrefab != null ? memberPrefab
                 : catalog != null && catalog.OmenThornWall != null ? catalog.OmenThornWall : spawner.StageElitePrefab;
-            var circle = ThornCircle.Begin(spawner, prefab, player.transform.position, durationSeconds);
+            var circle = ThornCircle.Begin(spawner, prefab, player.transform.position, durationSeconds, count);
             if (circle != null)
             {
                 _thornCircles.Add(circle);
