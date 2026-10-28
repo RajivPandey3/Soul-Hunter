@@ -156,11 +156,12 @@ namespace SoulHunter.Tests.EditMode
                     continue;
                 }
                 bosses++;
-                Assert.That(data.FreezeResistance, Is.EqualTo(1.1f).Within(1e-5), file + ": VS boss res-freeze 1.1.");
-                // Each 25:00 boss statbox (2026-10-27): Giant Blue Venus and Ethlenn resist only freeze; Orochimario's statbox
-                // gives res-kill but no res-debuff; the others resist both (Levels 7 and 10 unchanged).
                 int level = int.Parse(file.Substring(1, 2));
-                Assert.That(data.InstantKillResistance, Is.EqualTo(level != 1 && level != 5), file);
+                // Level 7 is Avatar of Gaea (2026-10-28): "res-freeze = 2 | res-kill = | res-debuff = 1".
+                Assert.That(data.FreezeResistance, Is.EqualTo(level == 7 ? 2f : 1.1f).Within(1e-5), file + ": VS boss res-freeze.");
+                // Each 25:00 boss statbox (2026-10-27): Giant Blue Venus and Ethlenn resist only freeze; Orochimario's statbox
+                // gives res-kill but no res-debuff; the others resist both (Level 10 unchanged).
+                Assert.That(data.InstantKillResistance, Is.EqualTo(level != 1 && level != 5 && level != 7), file);
                 Assert.That(data.DebuffResistance, Is.EqualTo(level != 1 && level != 5 && level != 6), file);
             }
             Assert.That(bosses, Is.EqualTo(10), "Ten stage bosses.");

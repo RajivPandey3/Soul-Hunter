@@ -166,8 +166,8 @@ namespace SoulHunter.Tests.EditMode
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (path.Contains("/MadForest/") || StageEnemyTables.IsTypeAsset(path)) continue; // VS XP x10 per type (MadForestEnemyTests, StageEnemyTypeTests)
                 var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
-                // Stage bosses: their source stage's statbox XP x10 (Levels 7 and 10 unchanged at 250).
-                int[] bossXp = { 500, 500, 500, 500, 300, 300, 250, 500, 500, 250 };
+                // Stage bosses: their source stage's statbox XP x10 (Level 7 Avatar of Gaea's xp 30; Level 10 unchanged at 250).
+                int[] bossXp = { 500, 500, 500, 500, 300, 300, 300, 500, 500, 250 };
                 int expected = data.name.Contains("_Boss_") ? bossXp[int.Parse(data.name.Substring(1, 2)) - 1] : data.name.Contains("_Elite_") ? 50 : 10;
                 Assert.That(data.ExperienceValue, Is.EqualTo(expected), data.name);
             }

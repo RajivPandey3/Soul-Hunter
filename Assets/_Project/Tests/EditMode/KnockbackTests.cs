@@ -47,7 +47,7 @@ namespace SoulHunter.Tests.EditMode
                 // Stage bosses: their statbox (2026-10-27) - Ethlenn (Level 5) takes 0.5, the others none; cap 1, except the
                 // unchanged Level 7 and Level 10 bosses.
                 bool boss = file.Contains("_Boss_");
-                bool statboxBoss = boss && !file.StartsWith("L07") && !file.StartsWith("L10");
+                bool statboxBoss = boss && !file.StartsWith("L10"); // Level 7: Avatar of Gaea's statbox (2026-10-28)
                 float expected = boss ? (file.StartsWith("L05") ? 0.5f : 0f) : file.Contains("_Elite_") ? 0.5f
                                : file.StartsWith("L07") ? 0f : 1f;
                 Assert.That(data.Knockback, Is.EqualTo(expected).Within(1e-5), file);

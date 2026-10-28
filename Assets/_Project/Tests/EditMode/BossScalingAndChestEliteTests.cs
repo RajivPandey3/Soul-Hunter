@@ -38,6 +38,7 @@ namespace SoulHunter.Tests.EditMode
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 Assert.That(prefab, Is.Not.Null, $"{path} should load.");
                 var data = prefab.GetComponent<EnemyController>().Data;
+                if (stage == 7) continue; // VS Avatar of Gaea: 8, then 8 + the run's kills (AvatarOfGaea), not HP x Level
                 Assert.That(data.HealthPerPlayerLevel, Is.GreaterThan(0), $"Stage {stage} boss health does not scale with level.");
             }
         }
@@ -47,9 +48,9 @@ namespace SoulHunter.Tests.EditMode
         {
             // Each source stage's 25:00 boss statbox (HP x Level, raw pages 2026-10-27): Giant Blue Venus 150, Hag 250, Sword
             // Guardian 250, Giant Enemy Crab 500, Ethlenn 150, Orochimario 500, Trinacria (boss) 250 on Levels 8-9. Owner
-            // 2026-10-27: VS first. Level 7 (Avatar of Gaea: kill-count health) and Level 10 (Shadow Kael, the owner's story)
-            // keep 500.
-            int[] expected = { 150, 250, 250, 500, 150, 500, 500, 250, 250, 500 };
+            // 2026-10-27: VS first. Level 7 is Avatar of Gaea ("health = 8", then the run's kills: AvatarOfGaea, 2026-10-28);
+            // Level 10 (Shadow Kael, the owner's story) keeps 500.
+            int[] expected = { 150, 250, 250, 500, 150, 500, 0, 250, 250, 500 };
             for (int stage = 1; stage <= 10; stage++)
             {
                 var data = AssetDatabase.LoadAssetAtPath<GameObject>(string.Format(BossPrefabPath, stage)).GetComponent<EnemyController>().Data;
@@ -90,6 +91,21 @@ namespace SoulHunter.Tests.EditMode
         {
             Assert.That(EnemySpawner.ChestElitesDue(1000f, null), Is.EqualTo(0));
             Assert.That(EnemySpawner.ChestElitesDue(1000f, new float[0]), Is.EqualTo(0));
+        }
+    
+        [Test]
+        public void LevelSevensGuardian_IsTheAvatarOfGaea()
+        {
+            // Avatar_of_Gaea (raw 2026-10-28): "health = 8 | movespeed = 140 | damage = 5 | knockback = 0 | knockback-max = 1 |
+            // xp = 30 | res-freeze = 2 | res-debuff = 1"; "[(enemies killed / 1,000 x 0.2 seconds), at most 10 seconds + 2 more]".
+            var data = AssetDatabase.LoadAssetAtPath<GameObject>(string.Format(BossPrefabPath, 7)).GetComponent<EnemyController>().Data;
+            Assert.That((data.MaxHealth, data.DamageToPlayer, data.Knockback, data.MaxKnockback, data.FreezeResistance, data.DebuffResistance),
+                Is.EqualTo((8, 5, 0f, 1f, 2f, true)));
+            Assert.That(data.MoveSpeed, Is.EqualTo(140f * SoulHunter.Gameplay.Data.EnemyAbilityDefaults.VsSpeedToUnits).Within(1e-4f));
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.CountdownFor(0), Is.EqualTo(2f));
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.CountdownFor(25000), Is.EqualTo(7f).Within(1e-4f));
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.CountdownFor(90000), Is.EqualTo(12f), "at most 10 seconds + 2 more");
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.HealedHealthFor(40000), Is.EqualTo(40008));
         }
     }
 }

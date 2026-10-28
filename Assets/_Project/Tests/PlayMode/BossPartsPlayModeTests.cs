@@ -115,5 +115,58 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(parts.PartsAlive, Is.EqualTo(0), "the heads go with the body");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
+    
+        [UnityTest]
+        public IEnumerator LevelSeven_TheAvatarOfGaea_ClearsTheScreen_HealsByTheRunsKills_AndSummonsApparitions()
+        {
+            // Avatar_of_Gaea / Lake_Foscari (raw 2026-10-28): "Before the Avatar of Gaea spawns, all the enemies on the screen
+            // are cleared to increase the enemy kill count"; "It starts off with very little health and once it is defeated,
+            // it becomes invulnerable"; "spawn its own Ghostly Apparitions every 0.1 seconds 101 times"; "It increases its
+            // max health by the number of enemies killed in this run".
+            yield return BootIntoGameplay();
+            var player = PlayerController.Instance;
+            foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
+            player.GetComponent<HealthController>().IsInvincible = true;
+            LevelProgressionManager.Instance.StartStage(7);
+            yield return null;
+            yield return null;
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            yield return WaitUntilRealtime(() => EnemyController.ActiveEnemies.Count(e => e != null && e.isActiveAndEnabled) >= 5, "some of the horde");
+            // The horde spawns past the screen edge: bring five of it onto the screen, beside the hero.
+            int placed = 0;
+            foreach (var enemy in EnemyController.ActiveEnemies.Where(e => e != null && e.isActiveAndEnabled).Take(5).ToList())
+            {
+                enemy.transform.position = player.transform.position + new Vector3(1.5f + placed++, 0f, 1f);
+                enemy.Freeze(10f);
+            }
+            int killsBefore = RunStatsTracker.Instance.TotalKills;
+            var bossPrefab = GetPrivateField<GameObject>(spawner, "_stageBossPrefab");
+            Assert.IsTrue((bool)typeof(EnemySpawner).GetMethod("SpawnBoss", Private).Invoke(spawner, new object[] { bossPrefab }), Errors());
+            Assert.That(RunStatsTracker.Instance.TotalKills, Is.GreaterThan(killsBefore), "The screen is cleared as kills.");
+            var avatar = EnemyController.ActiveEnemies.Last(e => e != null && spawner.IsBoss(e));
+            var gaea = avatar.GetComponent<AvatarOfGaea>();
+            Assert.That(gaea, Is.Not.Null);
+            Assert.That(spawner.MinimumOverride, Is.EqualTo(AvatarOfGaea.MinimumBefore), "The enemy minimum is 1 at first.");
+            var health = avatar.GetComponent<HealthController>();
+            Assert.That(health.MaxHealth, Is.EqualTo(AvatarOfGaea.StartHealth), "health = 8");
+
+            health.TakeDamage(new DamagePacket(100, avatar.transform.position, Vector3.zero, DamageType.Holy));
+            Assert.That(health.CurrentHealth, Is.GreaterThan(0), "Defeated the first time, it does not die.");
+            Assert.That(gaea.Current, Is.EqualTo(AvatarOfGaea.Phase.Healing));
+            Assert.That(health.IsInvincible, Is.True, "it becomes invulnerable");
+            // 2 s countdown + 5 s + 101 x 0.1 s: longer than the usual 20 s wait.
+            float until = Time.realtimeSinceStartup + 40f;
+            while (gaea.Current != AvatarOfGaea.Phase.Vulnerable && Time.realtimeSinceStartup < until) yield return null;
+            Assert.That(gaea.Current, Is.EqualTo(AvatarOfGaea.Phase.Vulnerable), "the Avatar's healing and its apparitions. " + Errors());
+            Assert.That(gaea.ApparitionsSummoned, Is.EqualTo(AvatarOfGaea.Apparitions), "101 Ghostly Apparitions");
+            Assert.That(spawner.MinimumOverride, Is.EqualTo(-1), "The minimum is the minute's again (150).");
+            Assert.That(health.IsInvincible, Is.False);
+            Assert.That(health.MaxHealth, Is.EqualTo(AvatarOfGaea.HealedHealthFor(RunStatsTracker.Instance.TotalKills)).Within(5),
+                "8 + the enemies killed this run");
+            health.TakeDamage(new DamagePacket(health.CurrentHealth, avatar.transform.position, Vector3.zero, DamageType.Holy));
+            yield return null;
+            Assert.That(health.CurrentHealth, Is.EqualTo(0), "The second time, it is defeated.");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
     }
 }

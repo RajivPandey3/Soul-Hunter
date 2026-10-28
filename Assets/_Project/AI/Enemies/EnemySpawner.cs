@@ -120,6 +120,7 @@ namespace SoulHunter.Gameplay.AI
             _stageTimePassed = 0f;
             _timer = 0f;
             _chestElitesSpawned = 0;
+            MinimumOverride = -1;
             _startingSpawnsLeft = WaveTables.StartingSpawns(stageNum, RunModes.Hyper);
             _chestEliteMinutes = SoulHunter.Gameplay.Core.StageChestBosses.MinutesFor(stageNum);
             _arcanaChestsSpawned = 0;
@@ -336,7 +337,8 @@ namespace SoulHunter.Gameplay.AI
                 // VS rule: each wave keeps an enemy minimum. Killing faster than the spawn
                 // interval does not empty the screen; the horde is refilled straight away.
                 // VS: Curse raises the wave quantity, and Charm adds a flat number after it (Curse and Charm pages).
-                int wanted = Mathf.RoundToInt(phase.MinimumEnemies * RunModes.MinimumMultiplier * MinuteCurse()) + CurrentCharm();
+                int wanted = MinimumOverride >= 0 ? MinimumOverride
+                    : Mathf.RoundToInt(phase.MinimumEnemies * RunModes.MinimumMultiplier * MinuteCurse()) + CurrentCharm();
                 int missing = Mathf.Min(wanted, _maxAliveEnemies) - EnemyController.ActiveEnemies.Count;
                 // Below the minimum the quota is filled; a wave with enemy types fills it with its types in turn (VS).
                 for (int i = 0; i < Mathf.Min(missing, _maxMinimumTopUpPerFrame); i++) GivePendingChest(Defang(SpawnWave(NextWavePrefab(level, phase))));
@@ -479,6 +481,10 @@ namespace SoulHunter.Gameplay.AI
                 if (progression != null && notices != null && progression.CurrentStage < SoulHunter.Gameplay.Core.LevelProgressionManager.MaxStages)
                     notices.ShowMessage(SoulHunter.Gameplay.Core.LevelProgressionManager.GuardianGoal(progression.CurrentStage));
             }
+            // Level 7's guardian is VS Avatar of Gaea: the screen is cleared before it comes (AvatarOfGaea.ClearScreen).
+            bool avatar = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance != null
+                && SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage == AvatarStage && basePrefab == _stageBossPrefab;
+            if (avatar) SoulHunter.Gameplay.Hazards.AvatarOfGaea.ClearScreen(Camera.main);
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             // In a corridor the boss walks in from one end, like everything else.
             if (StageCorridor.Active) randomDir = new Vector2(randomDir.x >= 0f ? 1f : -1f, 0f);
@@ -557,6 +563,7 @@ namespace SoulHunter.Gameplay.AI
             // their health to the body's final health.
             var partKind = SoulHunter.Gameplay.Hazards.BossParts.KindFor(SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage);
             if (partKind.HasValue && basePrefab == _stageBossPrefab) SoulHunter.Gameplay.Hazards.BossParts.Begin(bossObj, partKind.Value, this);
+            if (avatar) SoulHunter.Gameplay.Hazards.AvatarOfGaea.Begin(bossObj, this);
 
             _isBossAlive = true;
             return true;
@@ -833,6 +840,15 @@ namespace SoulHunter.Gameplay.AI
                 }));
             }
         }
+
+        /// <summary>The level whose guardian is VS Avatar of Gaea (Lake Foscari's 25:00 boss).</summary>
+        public const int AvatarStage = 7;
+
+        /// <summary>
+        /// When 0 or more, the enemy minimum in place of the minute's: VS Avatar of Gaea holds it at 1 until it has healed
+        /// ("The enemy minimum is increased from 1 to 150"). -1 = the minute's own. Reset when a stage starts.
+        /// </summary>
+        public int MinimumOverride { get; set; } = -1;
 
         /// <summary>Firings queued now (tests).</summary>
         public int QueuedFirings => _eventFirings.Count;
