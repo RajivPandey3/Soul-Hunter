@@ -235,6 +235,18 @@ namespace SoulHunter.Gameplay.Combat
         }
 
         /// <summary>
+        /// Damage a linked part passes on to its body (VS Orochimario: "When they take damage, Orochimario itself also take
+        /// that much"). Health only: the part's hit already counted for the Results, showed its number and flashed.
+        /// </summary>
+        public void TakeLinkedDamage(int amount)
+        {
+            if (_currentHealth <= 0 || amount <= 0) return;
+            _currentHealth = Mathf.Max(0, _currentHealth - amount);
+            OnHealthChanged?.Invoke(_currentHealth, _maxHealth);
+            if (_currentHealth == 0) Die();
+        }
+
+        /// <summary>
         /// Changes every heal before it lands (the player's Arcanas: Sarabande of Healing doubles it). Null = unchanged.
         /// </summary>
         public Func<int, int> HealModifier { get; set; }

@@ -33,10 +33,17 @@ namespace SoulHunter.Gameplay.Data
     /// - Level 7, Lake Foscari: none (see the two-boss rows below).
     /// - Levels 8-10, Cappella Magna: none. Every boss cell has a {{treasure}} (18:00 Axe Guardian's is on the next line).
     ///
-    /// Two-boss rows with one {{treasure}} and no note saying who carries it (Mt.Moonspell 10:00 "Windy Oni, Thunderous
-    /// Oni, {{treasure}}"; Lake Foscari 20:00 "Missing Church Boss 2, Missing Church Boss, {{treasure}}"): the wiki does not
-    /// say whether one of the pair is chest-less. Balance method (owner rule 2026-10-09): they are read as rows with
-    /// treasure, which Soul Hunter's 10:00 and 20:00 chest elites already cover; no second boss is added there.
+    /// Two-boss rows with one {{treasure}} (owner, 2026-10-27: "VS 100% first"; both bosses come, as the cell lists
+    /// both): the chest elite carries the treasure (StageChestBosses names Thunderous Oni and Missing Church Boss), and
+    /// the other boss of the cell comes at the same minute without one:
+    /// - Level 5, Abyss Foscari 25:00 "Ethlenn, Elatha [[Fomorian Bosses]], {{treasure}}": Ethlenn is the stage boss; Elatha
+    ///   (Fomorians: the same statbox, "health = 150, movespeed = 160, damage = 20, knockback = 0.5, knockback-max = 1, xp =
+    ///   30, res-freeze = 1.1") comes with it. Soul Hunter's Level 5 guardian comes at 20:00 (owner, 2026-10-13), so she does.
+    /// - Level 6, Mt.Moonspell 10:00 "Windy Oni, Thunderous Oni, {{treasure}}": Windy Oni (the plain statbox, Gale Ogre).
+    /// - Level 7, Lake Foscari 20:00 "Missing Church Boss 2, Missing Church Boss, {{treasure}}": Missing Church Boss 2
+    ///   (Missing_Church: "health = 180, movespeed = 180, damage = 30, knockback = 0, knockback-max = 1, xp = 30, res-freeze
+    ///   = 1", HP x Level).
+    /// Before (2026-10-13, balance method) no second boss was added there.
     /// </summary>
     public static class ChestlessWaveBosses
     {
@@ -60,10 +67,13 @@ namespace SoulHunter.Gameplay.Data
             new Row(3, 24, "RuinedKnight",        "Sword Guardian (Giant Armored Knight)"),
             new Row(4, 1,  "ThriceRisen",         "Scarleton"),
             new Row(4, 4,  "GateSorcerer",        "Undead Mage"),
+            new Row(5, 20, "AbyssalConsort",      "Elatha (Fomorian Bosses, with the stage boss)"),
             new Row(5, 24, "GreatBogMother",      "Maronna Meea Boss"),
             new Row(6, 8,  "ThunderOgre",         "Thunderous Oni"),
+            new Row(6, 10, "GaleOgre",            "Windy Oni (with the Thunderous Oni chest boss)"),
             new Row(6, 21, "GlacierSpider",       "Tsuchigumo"),
             new Row(6, 24, "GreatGlacierSpider",  "Tsuchigumo Boss"),
+            new Row(7, 20, "GreatTollingBell",    "Missing Church Boss 2 (with the Missing Church Boss chest boss)"),
         };
 
         private static readonly (int minute, string id)[] None = new (int minute, string id)[0];

@@ -237,6 +237,7 @@ MonoBehaviour:
     - {fileID: 7226502261475883629, guid: 45033ba20376afc47ae7ce0dc69dc776, type: 3}
     - {fileID: 1546718340032345563, guid: b558d1d15bf1c2240a572e866b2244b2, type: 3}
   BossTypes:
+  - {fileID: 3494031061637698233, guid: 1c0f0f53430754249956b65c7da00a8a, type: 3}
   - {fileID: 2890362665816155104, guid: 0964b545369dc1847b4f20640e3eab82, type: 3}
   - {fileID: 7513629759689682519, guid: 972cb8d27fb8df54f8cd981d93fa0ca6, type: 3}
   - {fileID: 3943120581261561069, guid: 1f8d3906f2723aa4aa36ad1e25ef474f, type: 3}
@@ -251,6 +252,9 @@ MonoBehaviour:
   - {fileID: 5339925707051562777, guid: 84695a7032a117a4a80f68817455c66e, type: 3}
   - {fileID: 7171707879890040635, guid: 59540d1b122fd5649b032b70c0d661bb, type: 3}
   - {fileID: 478245518867979909, guid: 6fe4f759f9e2f1c4bacaa584e48f03e2, type: 3}
+  - {fileID: 8966016875712206864, guid: d393da08ba5b2654aa8d773fde89042d, type: 3}
+  - {fileID: 6274366494909411446, guid: 58759fd51b637294383cfcca67bf342c, type: 3}
+  - {fileID: 2885002170283950884, guid: 90809d94172129a43bd9d7a42b1a0fec, type: 3}
   Phases: []
   Events:
   - TimeSeconds: 0.1
@@ -265,6 +269,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -280,6 +285,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -295,6 +301,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -310,6 +317,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -325,6 +333,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -340,6 +349,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -355,6 +365,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -370,6 +381,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -385,6 +397,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -400,6 +413,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -415,6 +429,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -430,6 +445,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -445,6 +461,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -460,6 +477,7 @@ MonoBehaviour:
     Horizontal: 1
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -475,6 +493,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -490,6 +509,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -505,6 +525,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -520,6 +541,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -535,6 +557,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -550,6 +573,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -565,6 +589,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0
@@ -580,6 +605,7 @@ MonoBehaviour:
     Horizontal: 0
     IntervalSeconds: 0
     Range: 0
+    Straight: 0
     Side: 0
     HasLane: 0
     LaneZ: 0

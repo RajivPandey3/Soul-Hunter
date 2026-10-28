@@ -30,12 +30,14 @@ namespace SoulHunter.Tests.EditMode
             CollectionAssert.AreEqual(new[] { (24, "RuinedKnight") }, ChestlessWaveBosses.For(3));
             // Gallo Tower 1:00 Scarleton, 4:00 Undead Mage.
             CollectionAssert.AreEqual(new[] { (1, "ThriceRisen"), (4, "GateSorcerer") }, ChestlessWaveBosses.For(4));
-            // Abyss Foscari 24:00 Maronna Meea Boss.
-            CollectionAssert.AreEqual(new[] { (24, "GreatBogMother") }, ChestlessWaveBosses.For(5));
-            // Mt.Moonspell 8:00 Thunderous Oni, 21:00 Tsuchigumo, 24:00 Tsuchigumo Boss.
-            CollectionAssert.AreEqual(new[] { (8, "ThunderOgre"), (21, "GlacierSpider"), (24, "GreatGlacierSpider") }, ChestlessWaveBosses.For(6));
-            // Lake Foscari and Cappella Magna: none.
-            for (int level = 7; level <= 10; level++) Assert.That(ChestlessWaveBosses.For(level), Is.Empty, $"Level {level}");
+            // Abyss Foscari: Elatha with the stage boss (Soul Hunter's Level 5 guardian comes at 20:00), 24:00 Maronna Meea Boss.
+            CollectionAssert.AreEqual(new[] { (20, "AbyssalConsort"), (24, "GreatBogMother") }, ChestlessWaveBosses.For(5));
+            // Mt.Moonspell 8:00 Thunderous Oni, 10:00 Windy Oni (with the chest boss), 21:00 Tsuchigumo, 24:00 Tsuchigumo Boss.
+            CollectionAssert.AreEqual(new[] { (8, "ThunderOgre"), (10, "GaleOgre"), (21, "GlacierSpider"), (24, "GreatGlacierSpider") }, ChestlessWaveBosses.For(6));
+            // Lake Foscari 20:00 Missing Church Boss 2 (with the chest boss).
+            CollectionAssert.AreEqual(new[] { (20, "GreatTollingBell") }, ChestlessWaveBosses.For(7));
+            // Cappella Magna: none.
+            for (int level = 8; level <= 10; level++) Assert.That(ChestlessWaveBosses.For(level), Is.Empty, $"Level {level}");
         }
 
         [Test]

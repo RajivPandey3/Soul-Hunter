@@ -65,11 +65,16 @@ namespace SoulHunter.Gameplay.Data
                 T("RingEmber",     "Ring Ember",     "Jellyfish (wall)",  180, false, 8,  200, 0.2f, 3f, 2.5f,  0.14f).Fixed(),
                 T("DriftEmber",    "Drift Ember",    "Jellyfish (swarm)", 180, false, 10, 150, 0.2f, 3f, 2.5f,  0.16f).Fixed(),
                 T("StampedeOxDemon", "Stampede Ox Demon", "Mignotaur (rush)", 250, false, 9, 600, 0.5f, 3f, 2.25f, 0.96f).Fixed(),
+                // Trap unit (StageTraps; Musc_Musc raw 2026-10-28, "Big Musc Musc": health 13, movespeed 160, damage 4,
+                // knockback 1, max 3, xp 1; stages Inlaid Library, Dairy Plant).
+                T("SmokeClump",    "Smoke Clump",    "Big Musc Musc",     13,  false, 4,  160, 1f,   3f, 1f,    0.57f),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
             BossOnly = new[] { "OxDemonCaptain", "CinderBat", "TwinHornedGunner", "PitFiendKing", "AxeSentinel", "GreatKilnColossus", "GreatHearthColossus", "ColossalCinderCockatrice",
                 // Map event units, sent only by MapEvents.
-                "RingEmber", "DriftEmber", "StampedeOxDemon" },
+                "RingEmber", "DriftEmber", "StampedeOxDemon",
+                // Trap units, sent only by StageTraps.
+                "SmokeClump" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "CinderPeasant" },

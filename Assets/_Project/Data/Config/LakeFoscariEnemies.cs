@@ -62,6 +62,7 @@ namespace SoulHunter.Gameplay.Data
                 T("GreatTideHowler", "Great Tide Howler", "Vulvio Boss", 150f, true, 20, 160, 0.5f, 1f, 30f, 0.6f).Resists(1.1f),
                 T("GreatWeepingLamb", "Great Weeping Lamb", "Lammuga Boss", 150f, true, 30, 200, 0f, 1f, 30f, 0.15f),
                 T("GreatDrownedBell", "Great Drowned Bell", "Missing Church Boss", 200f, true, 30, 160, 0f, 1f, 30f, 0.65f).Resists(1.0f),
+                T("GreatTollingBell", "Great Tolling Bell", "Missing Church Boss 2", 180f, true, 30, 180, 0f, 1f, 30f, 0.68f).Resists(1.0f),
                 T("DeepKelpKnight", "Deep Kelp Knight", "Deep Green Knight", 200f, true, 20, 180, 0f, 1f, 30f, 0.35f),
                 // Map event units (MapEvents; statboxes on Sammy_the_Caterpillar, Wiseparke, Sam_the_Sundown_Clown and Snek, raw
                 // 2026-10-28). Level 7's owner signatures (spectral, no knockback) apply to them as to every Level 7 type.
@@ -69,11 +70,20 @@ namespace SoulHunter.Gameplay.Data
                 T("SwimmingWisp",       "Swimming Wisp",       "Swimming Wiseparke",    1f,   false, 1,  240, 1f,   3f, 1f, 0.48f).FloatyFixed(),
                 T("StampedeMourner",    "Stampede Mourner",    "Sam the Swarm Clown",   220f, false, 8,  600, 0.1f, 1f, 3f, 0.92f).Fixed(),
                 T("SwarmEel",           "Swarm Eel",           "Swarm Snek",            25f,  false, 6,  700, 0f,   3f, 2f, 0.30f).Fixed(),
+                // Trap units (StageTraps; raw 2026-10-28): Flower_Wall "Foscari Flower Wall" health 20, movespeed 140,
+                // damage 5, knockback 1, max 3, xp 1; Mantichana "Foscari Mantichana" health 40 HP x Level, movespeed 80,
+                // damage 20, knockback 0, max 3, xp 3; Containers "Foscari Pot" health 20, movespeed 0, damage 0, xp 5
+                // ("Cannot move").
+                T("TideThorn",          "Tide Thorn",          "Foscari Flower Wall",   20f,  false, 5,  140, 1f,   3f, 1f, 0.36f),
+                T("TideMantis",         "Tide Mantis",         "Foscari Mantichana",    40f,  true,  20, 80,  0f,   3f, 3f, 0.40f),
+                T("DrownedUrn",         "Drowned Urn",         "Foscari Pot",           20f,  false, 0,  0,   0f,   0f, 5f, 0.09f),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
-            BossOnly = new[] { "TideFairy", "ColossalTideFairy", "ArcanaTideFairy", "GreatSealskinSpirit", "GreatKelpSteed", "GreatGrinningMourner", "GreatTideHowler", "GreatWeepingLamb", "GreatDrownedBell", "DeepKelpKnight" ,
+            BossOnly = new[] { "GreatTollingBell", "TideFairy", "ColossalTideFairy", "ArcanaTideFairy", "GreatSealskinSpirit", "GreatKelpSteed", "GreatGrinningMourner", "GreatTideHowler", "GreatWeepingLamb", "GreatDrownedBell", "DeepKelpKnight" ,
                 // Map event units, sent only by MapEvents.
-                "DrownedCaterpillar", "SwimmingWisp", "StampedeMourner", "SwarmEel" },
+                "DrownedCaterpillar", "SwimmingWisp", "StampedeMourner", "SwarmEel",
+                // Trap units, sent only by StageTraps.
+                "TideThorn", "TideMantis", "DrownedUrn" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "TidalImp" },

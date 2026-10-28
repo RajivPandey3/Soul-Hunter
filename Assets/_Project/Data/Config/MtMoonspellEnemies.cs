@@ -51,11 +51,16 @@ namespace SoulHunter.Gameplay.Data
                 T("SwarmFrostSprite",      "Swarm Frost Sprite",       "Swarm Spiritello",       7.5f,  false, 5, 700, 1f, 3f, 1f,   0.52f).Fixed(),
                 T("SwarmBlackFrostSprite", "Swarm Black Frost Sprite", "Swarm Dusty Spiritello", 12.5f, false, 5, 700, 0f, 3f, 1.5f, 0.65f).Fixed(),
                 T("MoonThornWall",         "Moon Thorn Wall",          "Moonspell Flower Wall",  30f,   true,  5, 0,   0f, 3f, 4f,   0.35f),
+                // The stage boss's part (BossParts; Orochimario raw 2026-10-28, "Orochimario head": health 500 HP x Level,
+                // movespeed 0, damage 20, knockback 0, max 1, xp 30, res-freeze 1.1, res-kill 1, res-debuffs 1).
+                T("HydraHead",             "Hydra Head",               "Orochimario head",       500f,  true,  20, 0,  0f, 1f, 30f,  0.62f).Resists(1.1f, kill: true, debuff: true),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
             BossOnly = new[] { "FrostSpriteLord", "GreatTricksterBadger", "GreatSummitCrowman", "ColossalFrostSprite",
                 // Map event units, sent only by MapEvents.
-                "SwarmFrostSprite", "SwarmBlackFrostSprite", "MoonThornWall" },
+                "SwarmFrostSprite", "SwarmBlackFrostSprite", "MoonThornWall",
+                // The stage boss's parts, sent only by BossParts.
+                "HydraHead" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "FrostSprite" },

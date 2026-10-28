@@ -61,11 +61,23 @@ namespace SoulHunter.Gameplay.Data
                 // line (Floaty + Fixed Direction). Not built: the segmented body that hurts only with its head.
                 T("EmberSerpent", "Ember Serpent", "Dragon Shrimp 1 (flag)", 5f,  true, 3, 400, 0f, 0f, 2f, 0.05f).FloatyFixed(),
                 T("BlazeSerpent", "Blaze Serpent", "Dragon Shrimp 2 (flag)", 20f, true, 6, 400, 0f, 0f, 2f, 0.02f).FloatyFixed(),
+                // Trap units (StageTraps; Poltergeist raw 2026-10-28): "Poltergeist" health 5 HP x Level, movespeed 50,
+                // damage 3, knockback 0, xp 2, Self-destruct ("Explodes after two seconds dealing 50 damage"); "Poltergeist
+                // (dest)" health 10 HP x Level, movespeed 0 ("Cannot move"). Both "spawn upon stepping on a pressure plate".
+                T("RestlessCandle", "Restless Candle", "Poltergeist",        5f,  true, 3, 50, 0f, 0f, 2f, 0.11f).SelfDestructing(),
+                T("StillCandle",    "Still Candle",    "Poltergeist (dest)", 10f, true, 3, 0,  0f, 0f, 2f, 0.13f).SelfDestructing(),
+                // The stage boss's part (BossParts; Giant_Enemy_Crab raw 2026-10-28, "Pincer": health 5 HP x Level, movespeed 0,
+                // damage 12, knockback 0, max 1, xp 10, res-debuff 1).
+                T("CrabPincer",     "Crab Pincer",     "Pincer",             5f,  true, 12, 0, 0f, 1f, 10f, 0.03f).Resists(0f, debuff: true),
             },
             // Chest bosses (StageChestBosses): their statboxes, sent only by the boss schedule.
             BossOnly = new[] { "CastleFiend", "GreatStoneSkull", "GreatHarpyGargoyle", "RampartEmberBat", "RampartLord", "ShieldSentinel", "ColossalBasilisk", "ColossalCastleChimera",
                 // Map event units, sent only by MapEvents.
-                "EmberSerpent", "BlazeSerpent" },
+                "EmberSerpent", "BlazeSerpent",
+                // Trap units, sent only by StageTraps.
+                "RestlessCandle", "StillCandle",
+                // The stage boss's parts, sent only by BossParts.
+                "CrabPincer" },
             ByMinute = new[]
             {
                 /* 0 */ new[] { "GateSkull" },

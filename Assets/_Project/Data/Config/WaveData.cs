@@ -58,7 +58,13 @@ namespace SoulHunter.Gameplay.Data
         /// end of its duration. Spawns alternate between left and right side of the screen." A group of the event's units
         /// every 'interval' seconds on one lane, for the event's duration.
         /// </summary>
-        Stream
+        Stream,
+        /// <summary>
+        /// VS Circle (the generic map event, Lake Foscari's traps): "summons a large group of enemies around the character
+        /// to attack the player". The units appear on an ellipse round the player ('range' scales it); a unit that moves
+        /// then acts by its own statbox, one that cannot stands. All go at the event's duration.
+        /// </summary>
+        Circle,
     }
 
     /// <summary>
@@ -114,6 +120,9 @@ namespace SoulHunter.Gameplay.Data
         [Tooltip("VS map event 'range' (Shooting Star: how far from the player stars land, 1 = the most; Pile Assault: the " +
                  "ring's size). 0 = the event's own default.")]
         [Min(0f)] public float Range;
+        [Tooltip("VS trap Swarm rows (Abyss Foscari): the group sweeps in a straight line across the map even when its unit " +
+                 "would home.")]
+        public bool Straight;
         [Tooltip("Set by a Dragon Stream on its groups: +1 from the left, -1 from the right, 0 at random.")]
         public int Side;
         [Tooltip("Set by a Dragon Stream on its groups: the group keeps the stream's lane (world Z).")]

@@ -74,6 +74,31 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator LevelSeven_SendsMissingChurchBossTwo_At20Minutes_BesideTheChestBoss()
+        {
+            // Raw Lake_Foscari "Waves": 20:00 "Missing Church Boss 2, Missing Church Boss, {{treasure}}"; Missing_Church:
+            // "Missing Church Boss 2 ... HP x Level | health = 180 | movespeed = 180 | damage = 30 ... res-freeze = 1".
+            yield return BootIntoGameplay();
+            MakeHeroHarmlessAndSafe();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            var progression = LevelProgressionManager.Instance;
+            progression.StartStage(7);
+            yield return null;
+            yield return null;
+            string wanted = ChestlessWaveBosses.PrefabName(7, "GreatTollingBell");
+            progression.SkipTo(20f * 60f);
+            yield return WaitUntilRealtime(() => spawner.ChestlessBossesSpawned == 1, "the 20:00 second boss");
+            Assert.That(Alive(wanted), Is.EqualTo(1), Errors());
+            var boss = EnemyController.ActiveEnemies.First(e => e != null && e.gameObject.activeInHierarchy && e.name.StartsWith(wanted));
+            int level = PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel;
+            float curse = PlayerController.Instance.GetComponent<PlayerStats>().Curse;
+            Assert.AreEqual(EnemySpawner.ScaleHealthByCurse(180 * level, curse), boss.GetComponent<HealthController>().MaxHealth);
+            var drop = boss.GetComponent<EnemyDrop>();
+            Assert.That(drop == null || !drop.WillDropChest, Is.True, "The chest is the Missing Church Boss's (the chest elite).");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator LevelFive_SendsItsOwnBossType_At24Minutes_WithItsStatbox()
         {
             // Raw Abyss_Foscari "Waves": 24:00 "Bosses & Treasure" = Maronna Meea Boss, no {{treasure}}. Maronna_Meea:
@@ -89,7 +114,8 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(Alive(wanted), Is.Zero, "No minute's wave lists it.");
 
             progression.SkipTo(24f * 60f);
-            yield return WaitUntilRealtime(() => spawner.ChestlessBossesSpawned == 1, "the 24:00 wave boss");
+            // Elatha's 20:00 row comes first; the skip passed it by more than a minute, so only the 24:00 boss is sent.
+            yield return WaitUntilRealtime(() => spawner.ChestlessBossesSpawned == 2, "the 24:00 wave boss");
             Assert.That(Alive(wanted), Is.EqualTo(1), "One Great Bog Mother (VS Maronna Meea Boss) comes at 24:00. " + Errors());
             var boss = EnemyController.ActiveEnemies.First(e => e != null && e.gameObject.activeInHierarchy && e.name.StartsWith(wanted));
             int level = PlayerController.Instance.GetComponent<PlayerExperience>().CurrentLevel;

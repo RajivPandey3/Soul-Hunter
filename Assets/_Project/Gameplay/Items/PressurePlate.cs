@@ -39,6 +39,8 @@ namespace SoulHunter.Gameplay.Pickups
 
         public bool IsReady => Time.time >= Mathf.Max(_readyAt, GlobalReadyAt);
         public int TimesTriggered { get; private set; }
+        /// <summary>The stage trap row the last step fired (null on a level without a VS trap table).</summary>
+        public SoulHunter.Gameplay.Data.StageEventEntry LastTrap { get; private set; }
 
         /// <summary>Raised when the plate fires, with the event it started.</summary>
         public event System.Action<PressurePlate, SoulHunter.Gameplay.Data.StageEventType> Triggered;
@@ -89,8 +91,14 @@ namespace SoulHunter.Gameplay.Pickups
             if (!IsReady) return false;
             var spawner = FindFirstObjectByType<SoulHunter.Gameplay.AI.EnemySpawner>();
             if (spawner == null) return false;
-            var type = (SoulHunter.Gameplay.Data.StageEventType)Random.Range(0, 3);
-            var spawned = spawner.TriggerStageEvent(type, EventCount);
+            // A level whose VS source stage has traps fires one of that stage's own options (StageTraps); the others keep
+            // Soul Hunter's random formation of the stage's enemies, as an extra.
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            var trap = SoulHunter.Gameplay.Data.StageTraps.Pick(
+                SoulHunter.Gameplay.Data.StageTraps.For(progression != null ? progression.CurrentStage : 1), Random.value);
+            var type = trap != null ? trap.Type : (SoulHunter.Gameplay.Data.StageEventType)Random.Range(0, 3);
+            var spawned = trap != null ? spawner.TriggerMapEvent(trap) : spawner.TriggerStageEvent(type, EventCount);
+            LastTrap = trap;
             if (spawned.Count == 0) return false; // boss fight or stage transition: nothing to start
             var stats = PlayerController.Instance != null ? PlayerController.Instance.Stats : null;
             GlobalReadyAt = Time.time + EffectiveCooldown(CooldownSeconds, stats != null ? stats.Luck : 1f);

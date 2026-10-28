@@ -553,6 +553,11 @@ namespace SoulHunter.Gameplay.AI
                 }
             }
 
+            // The stage boss's own parts: Level 4's crab pincers, Level 6's eight heads (BossParts). Last, so the heads add
+            // their health to the body's final health.
+            var partKind = SoulHunter.Gameplay.Hazards.BossParts.KindFor(SoulHunter.Gameplay.Core.LevelProgressionManager.Instance.CurrentStage);
+            if (partKind.HasValue && basePrefab == _stageBossPrefab) SoulHunter.Gameplay.Hazards.BossParts.Begin(bossObj, partKind.Value, this);
+
             _isBossAlive = true;
             return true;
         }
@@ -793,6 +798,19 @@ namespace SoulHunter.Gameplay.AI
         }
 
         /// <summary>
+        /// A trap's map event (StageTraps), now: one of the stage's own trap rows, with its own unit, amount, duration and
+        /// range. Like TriggerStageEvent it is refused during a boss fight or a transition (the wiki gives no rule).
+        /// </summary>
+        public List<EnemyController> TriggerMapEvent(StageEventEntry entry)
+        {
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            if (entry == null || progression == null || progression.IsStageTransitioning || _isBossAlive || _currentWave == null)
+                return new List<EnemyController>();
+            var phase = _currentWave.GetPhase(progression.StageElapsedTime);
+            return RunStageEvent(entry, progression.CurrentLevel, phase);
+        }
+
+        /// <summary>
         /// VS Dragon Stream: one group every 'interval' seconds for its duration, all on one lane ("at set location") and
         /// alternating between the left and right side. The lane is where the player stands when the stream starts.
         /// Balance method (the wiki gives one chance per event): each group rolls the stream's chance, so a 70% stream thins
@@ -872,6 +890,26 @@ namespace SoulHunter.Gameplay.AI
                 return spawned;
             }
 
+            if (stageEvent.Type == StageEventType.Circle)
+            {
+                // VS Circle: the units appear on the ellipse round the player and then act by their own statbox (a unit
+                // that cannot move stands); all go at the event's duration.
+                if (typed == null) return spawned;
+                Vector3 centre = _playerTransform.position;
+                float seconds = stageEvent.DurationSeconds > 0f ? stageEvent.DurationSeconds : SoulHunter.Gameplay.Hazards.StageHazardTable.PileDurationSeconds;
+                float ring = SoulHunter.Gameplay.Hazards.StageHazardTable.PileRangeScale(stageEvent.Range);
+                for (int i = 0; i < stageEvent.Count; i++)
+                {
+                    var member = SpawnHazardEnemy(typed, centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count) * ring);
+                    if (member == null) break;
+                    if (!member.TryGetComponent<EnemyController>(out var unit)) continue;
+                    if (unit.MoveSpeed <= 0.001f) SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
+                    else SoulHunter.Gameplay.Hazards.EventLifetime.Begin(member, seconds);
+                    spawned.Add(unit);
+                }
+                return spawned;
+            }
+
             // The formation travels away from the side it comes from (Part 4: a stage's sides, e.g. castle walls
             // sweep in from the left or right).
             var side = _currentWave != null ? _currentWave.SpawnSide : SpawnSide.AllSides;
@@ -893,7 +931,7 @@ namespace SoulHunter.Gameplay.AI
                 // start radius, plus a margin); a duration, when the row gives one, ends it sooner or later.
                 // A homing unit (Shade Bomb, the generic VS Swarm of Milk Elementals or Skeletons) chases the player at
                 // its own speed (SpawnEnemy) and goes when the event's duration is up.
-                bool homes = stageEvent.Type == StageEventType.Chasers || (typed != null &&
+                bool homes = stageEvent.Type == StageEventType.Chasers || (typed != null && !stageEvent.Straight &&
                     enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection &&
                     enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection);
                 if (homes) SoulHunter.Gameplay.Hazards.EventLifetime.Begin(enemyObject, stageEvent.DurationSeconds);
