@@ -58,7 +58,7 @@ namespace SoulHunter.Gameplay.Data
                 T("ColossalCastleChimera", "Colossal Castle Chimera", "Colossal Manticore", 200f, false, 20, 180, 0f, 1f, 50f, 0.04f).Resists(1.0f, kill: true),
                 // Map event units (MapEvents; statboxes on Dragon_Shrimp, raw 2026-10-28). The page: "the flag variants tend to
                 // make horizontal, zig-zag movements that do not follow the player's character", so they weave along their
-                // line (Floaty + Fixed Direction). Not built: the segmented body that hurts only with its head.
+                // line (Floaty + Fixed Direction). Their body is drawn only, so only the head hurts and is hurt (SerpentBody).
                 T("EmberSerpent", "Ember Serpent", "Dragon Shrimp 1 (flag)", 5f,  true, 3, 400, 0f, 0f, 2f, 0.05f).FloatyFixed(),
                 T("BlazeSerpent", "Blaze Serpent", "Dragon Shrimp 2 (flag)", 20f, true, 6, 400, 0f, 0f, 2f, 0.02f).FloatyFixed(),
                 // Trap units (StageTraps; Poltergeist raw 2026-10-28): "Poltergeist" health 5 HP x Level, movespeed 50,

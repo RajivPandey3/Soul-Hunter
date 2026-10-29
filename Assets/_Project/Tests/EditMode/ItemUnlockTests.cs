@@ -256,9 +256,10 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
-        public void Caskets_LieOnLevelsOneToSeven_AndFreeAnExistingLockedCharacter()
+        public void Caskets_LieOnTheirCoffinStagesLevels_AndFreeAnExistingLockedCharacter()
         {
-            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6, 7 }, CasketBook.All.Select(c => c.Level));
+            // wiki Coffin: Mad Forest, Inlaid Library, Dairy Plant, Gallo Tower, Mt. Moonspell, Lake Foscari, Cappella Magna (not Abyss Foscari).
+            CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 6, 7, 8 }, CasketBook.All.Select(c => c.Level));
             Assert.That(CasketBook.All.Select(c => c.Character).Distinct().Count(), Is.EqualTo(CasketBook.All.Length));
             foreach (var casket in CasketBook.All)
             {
@@ -267,7 +268,8 @@ namespace SoulHunter.Tests.EditMode
                 Assert.That(CharacterUnlocks.StartsUnlocked(character), Is.False, casket.Character + " has its own condition, which stays.");
                 Assert.That(character.OriginStage, Is.EqualTo(casket.Level), casket.Character + " comes from the casket's level.");
             }
-            Assert.That(CasketBook.OnLevel(8).HasValue, Is.False);
+            Assert.That(CasketBook.OnLevel(5).HasValue, Is.False, "Abyss Foscari has no coffin");
+            Assert.That(CasketBook.OnLevel(9).HasValue, Is.False);
 
             var data = Fresh();
             var first = CasketBook.OnLevel(1).Value;
@@ -299,7 +301,7 @@ namespace SoulHunter.Tests.EditMode
         {
             foreach (var relic in RelicBook.All)
                 Assert.That(UnlockSites.RelicOffset(relic).magnitude, Is.EqualTo(UnlockSites.RelicDistance).Within(0.01f), relic.Name);
-            for (int level = 1; level <= 7; level++)
+            for (int level = 1; level <= 8; level++)
             {
                 var casket = UnlockSites.CasketOffset(level);
                 Assert.That(casket.magnitude, Is.EqualTo(UnlockSites.CasketDistance).Within(0.01f));

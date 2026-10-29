@@ -44,7 +44,25 @@ namespace SoulHunter.Gameplay.Hazards
         public static float CountdownFor(int kills) => Mathf.Min(Mathf.Max(0, kills) / 1000f * SecondsPerThousandKills, MaxCountdown) + ExtraSeconds;
 
         /// <summary>Its health once it has healed: its own 8 plus every enemy killed this run.</summary>
-        public static int HealedHealthFor(int kills) => StartHealth + Mathf.Max(0, kills);
+        public static int HealedHealthFor(int kills, int eggMaxHealth = 0) => StartHealth + Mathf.Max(0, kills) + Mathf.Max(0, eggMaxHealth);
+
+        /// <summary>Its contact damage with <paramref name="eggMight"/> (0.01 per 1% Might): power 1 + that.</summary>
+        public static float DamageFor(float baseDamage, float eggMight) => baseDamage * (1f + Mathf.Max(0f, eggMight));
+
+        /// <summary>The played character's Soul Egg Max Health points and Might (0.01 per egg), or zeros.</summary>
+        public static void EggBonus(out int maxHealth, out float might)
+        {
+            maxHealth = 0; might = 0f;
+            var services = SoulHunter.Core.Services.GameServices.Instance;
+            if (services == null || !services.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) || save.CurrentData == null) return;
+            var eggs = SoulHunter.Gameplay.Player.SoulEggs.For(save.CurrentData, save.CurrentData.SelectedCharacterName);
+            if (eggs == null) return;
+            maxHealth = SoulHunter.Gameplay.Player.SoulEggs.Whole(eggs.MaxHealth);
+            might = Mathf.Min(eggs.Might, SoulHunter.Gameplay.Player.SoulEggs.MightCap);
+        }
+
+        public int EggMaxHealth { get; private set; }
+        public float EggMight { get; private set; }
 
         public static AvatarOfGaea Begin(GameObject boss, EnemySpawner spawner)
         {
@@ -63,6 +81,11 @@ namespace SoulHunter.Gameplay.Hazards
                 avatar._health.TryPreventDeath = avatar.PreventFirstDeath;
             }
             if (spawner != null) spawner.MinimumOverride = MinimumBefore;
+            EggBonus(out int eggHealth, out float eggMight);
+            avatar.EggMaxHealth = eggHealth;
+            avatar.EggMight = eggMight;
+            var touch = boss.GetComponent<TouchDamage>();
+            if (touch != null && eggMight > 0f) touch.DamageAmount = DamageFor(touch.DamageAmount, eggMight);
             return avatar;
         }
 
@@ -132,7 +155,7 @@ namespace SoulHunter.Gameplay.Hazards
                     }
                     if (_summoned < Apparitions) return;
                     int kills = Kills;
-                    _health.Initialize(HealedHealthFor(kills));
+                    _health.Initialize(HealedHealthFor(kills, EggMaxHealth));
                     _health.IsInvincible = false;
                     transform.localScale = _baseScale * (1f + GrowthPerThousand * (kills / 1000));
                     Current = Phase.Vulnerable;

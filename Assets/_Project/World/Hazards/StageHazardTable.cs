@@ -346,7 +346,7 @@ namespace SoulHunter.Gameplay.Hazards
         /// ordinary damage (they "take 10 times more damage from breaking Stained Glass windows", and Stained Glass deals 130
         /// base damage to enemies); the Stalker variant "cannot drop a Treasure Chest", and the Maddener and Trickster pages
         /// name no chest, so none drops one. The rows give no duration: balance method, the Stalker default of 2 minutes.
-        /// Not built: the Maddener changing the look of some enemies.
+        /// While a Maddener lives, a share of ordinary spawns take its look (EnemyController.SetMaddened, EnemySpawner).
         /// </summary>
         private static ReaperProfile Cappella(string name, Color tint, bool gems) => new ReaperProfile
         {

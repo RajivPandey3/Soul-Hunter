@@ -136,6 +136,8 @@ namespace SoulHunter.Gameplay.AI
         }
         /// <summary>This physics step's push from the crowd, written by EnemyCrowd.Rebuild.</summary>
         public Vector3 CrowdPush { get; set; }
+        /// <summary>Velocity a map-event swarm flying through this enemy carries it along with (EnemyCrowd; Bat_Swarm).</summary>
+        public Vector3 SwarmShove { get; set; }
         private int _crowdId;
         /// <summary>Instance id, cached (read for every enemy on every frame by EnemyCrowd).</summary>
         public int CrowdId => _crowdId != 0 ? _crowdId : (_crowdId = GetInstanceID());
@@ -157,8 +159,31 @@ namespace SoulHunter.Gameplay.AI
         public void SetDefanged(bool defanged)
         {
             IsDefanged = defanged;
+            ApplyTint();
+        }
+
+        /// <summary>
+        /// Cappella_Magna (raw 2026-10-29): "While Maddener is present the appearance of some enemies changes". The page does
+        /// not say how; Soul Hunter's look (balance method): the enemy wears the Maddener's yellow for this life. Its stats
+        /// do not change. Defang's green still wins.
+        /// </summary>
+        public bool IsMaddened { get; private set; }
+        public static readonly Color MaddenedTint = new Color(0.85f, 0.72f, 0.12f, 1f);
+
+        public void SetMaddened(bool maddened)
+        {
+            if (IsMaddened == maddened) return;
+            IsMaddened = maddened;
+            ApplyTint();
+        }
+
+        private void ApplyTint()
+        {
             var flash = GetComponentInChildren<SoulHunter.Gameplay.VFX.DamageFlash>();
-            if (flash != null) flash.SetTint(defanged && SoulHunter.Core.Persistence.GameSettings.ShowDefangedEnemies ? DefangTint : TypeTint);
+            if (flash == null) return;
+            if (IsDefanged && SoulHunter.Core.Persistence.GameSettings.ShowDefangedEnemies) flash.SetTint(DefangTint);
+            else if (IsMaddened) flash.SetTint(MaddenedTint);
+            else flash.SetTint(TypeTint);
         }
         /// <summary>A stage boss (set by EnemySpawner.SpawnBoss; bosses have their own pools). VS: immune to Pentagram.</summary>
         public bool IsStageBoss { get; set; }
@@ -273,16 +298,19 @@ namespace SoulHunter.Gameplay.AI
             if (_touchOffForDeath) { _touchOffForDeath = false; if (_touchDamage != null) _touchDamage.enabled = true; }
             Enables++;
             EnemyRunner.Ensure();
+            SerpentBody.AttachIfSegmented(this); // Gallo Tower's flag dragons: a drawn body behind the head (Dragon_Shrimp)
             // A flat body (no gravity, height frozen) never uses the ground scan: every stage floor is flat, so the chase
             // never tilts its path, and its vertical speed is 0 grounded or not. Skipping it saves two physics queries per
             // enemy 20 times a second (12,000 a second for 300 enemies; 60 FPS pass, 2026-10-14).
             _scans = _scanner != null && _scanner.enabled && !_flatBody;
             _crowdRadiusKnown = false; // spawners resize pooled bodies (chest elites, guardians)
             CrowdPush = Vector3.zero;  // the last life's push is not this life's
+            SwarmShove = Vector3.zero;
             ResetKnockback(); // pooled reuse starts with the data's knockback again (Garlic's increase lasts one life)
             ClearResistanceOverrides(); // Garlic's freeze-resistance reduction, and any override, last one life too
             IgnoresPentagram = false;   // the Tide Caller's Pentagram immunity lasts one life
             RestartAbilities();    // VS skills start again on every spawn (pooling-safe)
+            IsMaddened = false; // the Maddener's look lasts one life
             SetDefanged(false); // Defang lasts one life; this also restores the type's own tint
             LingeringSlow = 1f;                 // Requiem of Souls' slow lasts one life
             ApplyContactDamage();  // this cycle's Endless damage on every spawn, pooled reuse included (AI-05)

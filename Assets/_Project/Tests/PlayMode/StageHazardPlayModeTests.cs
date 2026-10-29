@@ -467,6 +467,40 @@ namespace SoulHunter.Tests.PlayMode
         // ---------------------------------------------------------------- Cappella Magna (Levels 8-10)
 
         [UnityTest]
+        public IEnumerator WhileTheMaddenerLives_SomeSpawnsWearItsLook_AndNoneAfterItGoes()
+        {
+            // Cappella_Magna (raw 2026-10-29): "While Maddener is present the appearance of some enemies changes".
+            yield return Boot(8, invinciblePlayer: true);
+            var shadow = _hazards.SpawnDeathsShadow(120f, StageHazardTable.Maddener);
+            Assert.That(shadow, Is.Not.Null, Errors());
+            Assert.That(DeathsShadow.MaddenersAlive, Is.GreaterThanOrEqualTo(1));
+            _spawner.enabled = true;
+            float until = Time.realtimeSinceStartup + 6f;
+            while (Time.realtimeSinceStartup < until && Ordinary().Count < 30) yield return null;
+            var spawned = Ordinary();
+            Assert.That(spawned.Count, Is.GreaterThanOrEqualTo(20), "the minute's minimum fills");
+            int maddened = spawned.Count(e => e.IsMaddened);
+            Assert.That(maddened, Is.GreaterThan(0).And.LessThan(spawned.Count), $"some, not all: {maddened} of {spawned.Count}");
+            Assert.That(shadow.GetComponent<EnemyController>().IsMaddened, Is.False, "the Maddener itself keeps its own look");
+
+            _spawner.enabled = false;
+            // Every reaper goes (the stage's own 0:10 Maddener may have come meanwhile).
+            foreach (var reaper in Object.FindObjectsByType<DeathsShadow>(FindObjectsSortMode.None)) reaper.gameObject.SetActive(false);
+            _hazards.enabled = false;
+            Assert.That(DeathsShadow.MaddenersAlive, Is.EqualTo(0));
+            foreach (var enemy in spawned) enemy.gameObject.SetActive(false);
+            _spawner.enabled = true;
+            until = Time.realtimeSinceStartup + 6f;
+            while (Time.realtimeSinceStartup < until && Ordinary().Count < 20) yield return null;
+            Assert.That(Ordinary().Count, Is.GreaterThan(0));
+            Assert.That(Ordinary().Count(e => e.IsMaddened), Is.EqualTo(0), "no Maddener: every look is the type's own again, pooled bodies included");
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+
+            static System.Collections.Generic.List<EnemyController> Ordinary() => EnemyController.ActiveEnemies
+                .Where(e => e != null && e.GetComponent<DeathsShadow>() == null && !e.IsStageBoss).ToList();
+        }
+
+        [UnityTest]
         public IEnumerator TheTrickster_SummonsTwoRingsOf48Gems_AndItsDeathSetsThemOff()
         {
             yield return Boot(8, invinciblePlayer: true);

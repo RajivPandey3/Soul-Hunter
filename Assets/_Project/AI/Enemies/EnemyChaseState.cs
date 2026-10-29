@@ -66,7 +66,7 @@ namespace SoulHunter.Gameplay.AI
                 // VS rule: the horde pushes itself apart into a wide crowd (it used to trail the player in single
                 // file). A crowded enemy is slowed, never sped past its own move speed.
                 Vector3 steering = direction + EnemyCrowd.Separation(_controller) * EnemyCrowd.Strength;
-                Vector3 movement = Vector3.ClampMagnitude(steering, 1f) * _controller.MoveSpeed;
+                Vector3 movement = Vector3.ClampMagnitude(steering, 1f) * _controller.MoveSpeed + (EnemyCrowd.Enabled ? _controller.SwarmShove : Vector3.zero);
 
                 // Adjust for slopes using EnvironmentData (Reusable logic!)
                 float yVel = _controller.VerticalVelocity;
@@ -96,7 +96,7 @@ namespace SoulHunter.Gameplay.AI
             else
             {
                 // Next to the player: stop, but still make room for the rest of the crowd around it.
-                Vector3 spread = EnemyCrowd.Separation(_controller) * (EnemyCrowd.Strength * _controller.MoveSpeed);
+                Vector3 spread = EnemyCrowd.Separation(_controller) * (EnemyCrowd.Strength * _controller.MoveSpeed) + (EnemyCrowd.Enabled ? _controller.SwarmShove : Vector3.zero);
                 _controller.Rigidbody.linearVelocity = new Vector3(spread.x, _controller.VerticalVelocity, spread.z);
                 if (_controller.HasAnimator)
                 {

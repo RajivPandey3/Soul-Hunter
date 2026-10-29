@@ -792,6 +792,8 @@ namespace SoulHunter.Gameplay.AI
         /// VS Defang: a share of each wave's spawned enemies cannot deal damage (green). Only ordinary wave spawns: wave
         /// bosses (chest elites), stage bosses and event enemies are never defanged (Defang page).
         /// </summary>
+        public const float MaddenedShare = 0.5f;
+
         private GameObject Defang(GameObject enemy)
         {
             if (enemy == null) return null;
@@ -802,6 +804,9 @@ namespace SoulHunter.Gameplay.AI
             // VS statboxes' res-defang (e.g. Trinacria "res-defang = 1"): such an enemy is never defanged.
             if (controller.Data != null && controller.Data.DefangResistance) chance = 0f;
             controller.SetDefanged(chance > 0f && Random.value < chance);
+            // "While Maddener is present the appearance of some enemies changes" (Cappella_Magna): "some" is not given; balance
+            // method: half of the ordinary spawns.
+            if (SoulHunter.Gameplay.Hazards.DeathsShadow.MaddenersAlive > 0 && Random.value < MaddenedShare) controller.SetMaddened(true);
             return enemy;
         }
 

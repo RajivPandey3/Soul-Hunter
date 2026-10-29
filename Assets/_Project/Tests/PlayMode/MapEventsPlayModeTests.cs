@@ -59,6 +59,43 @@ namespace SoulHunter.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ABatSwarm_PushesTheEnemiesOnItsPathAlong()
+        {
+            // Bat_Swarm (raw 2026-10-29): "These units push other enemies along their path as they travel."
+            yield return BootIntoGameplay();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            DisablePlayerWeapons();
+            PlayerController.Instance.GetComponent<HealthController>().IsInvincible = true;
+            foreach (var stray in EnemyController.ActiveEnemies.ToList()) if (stray != null) stray.gameObject.SetActive(false);
+            var hero = PlayerController.Instance.transform.position;
+            var walker = spawner.SpawnHazardEnemy(spawner.FindStageType("RestlessCorpse"), hero + Vector3.right * 6f);
+            Assert.That(walker, Is.Not.Null, Errors());
+            var walkerController = walker.GetComponent<EnemyController>();
+            for (int f = 0; f < 60 && !(walkerController.CurrentState is EnemyChaseState); f++) yield return null;
+            Assert.That(walkerController.CurrentState, Is.InstanceOf<EnemyChaseState>(), "it walks at the hero");
+            var bats = Run(spawner, MapEvents.For(1).First(e => e.EnemyTypeId == "SwarmBat"));
+            var bat = bats[0];
+            var line = ((EnemyFlyState)bat.CurrentState).Direction;
+            Vector3 spot = bat.transform.position + line * 0.3f;
+            spot.y = walker.transform.position.y;
+            walkerController.Rigidbody.position = spot;
+            walker.transform.position = spot;
+            Assert.That(walkerController.IsFlying, Is.False);
+            EnemyCrowd.Rebuild();
+            Assert.That(Vector3.Dot(walkerController.SwarmShove, line), Is.GreaterThan(1f), "an overlapped enemy is carried along the bats' line");
+            yield return new WaitForFixedUpdate();
+            Assert.That(Vector3.Dot(walkerController.Rigidbody.linearVelocity, line), Is.GreaterThan(walkerController.MoveSpeed),
+                "it is carried faster along the swarm's path than it could walk");
+
+            // Far from every bat, nothing carries it.
+            foreach (var b in bats) b.gameObject.SetActive(false);
+            EnemyCrowd.Rebuild();
+            Assert.That(walkerController.SwarmShove.magnitude, Is.EqualTo(0f).Within(1e-4f));
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
         public IEnumerator AFlowerWall_RingsTheHero_WithThornWalls_ForItsDuration()
         {
             yield return BootIntoGameplay();
@@ -302,6 +339,44 @@ namespace SoulHunter.Tests.PlayMode
             var hero = PlayerController.Instance.transform.position;
             Assert.That(Mathf.Sign(first[0].transform.position.x - hero.x), Is.EqualTo(-a.Side), "It comes from its side.");
             list.RemoveAt(list.Count - 1); // leave the queue as the test found it (the rest fire in game time)
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+        }
+
+        [UnityTest]
+        public IEnumerator LevelFour_AFlagDragon_HasADrawnBody_ThatFollowsItsHead_AndShortensWhenTheHeadFreezes()
+        {
+            // Dragon_Shrimp (raw 2026-10-29): only the head hurts and is hurt; "Players can safely cross through the body";
+            // "its body will continually shorten towards the frozen head".
+            EnemySpawner spawner = null;
+            yield return EnterLevel(4, s => spawner = s);
+            DisablePlayerWeapons();
+            var stream = MapEvents.For(4).First(e => e.Type == StageEventType.Stream);
+            int before = spawner.QueuedFirings;
+            typeof(EnemySpawner).GetMethod("QueueStream", Private).Invoke(spawner, new object[] { stream, 0f });
+            var list = (System.Collections.IList)typeof(EnemySpawner).GetField("_eventFirings", Private).GetValue(spawner);
+            var group = (StageEventEntry)list[before].GetType().GetField("Item2").GetValue(list[before]);
+            while (list.Count > before) list.RemoveAt(list.Count - 1); // only this one group
+            var dragon = Run(spawner, group).First();
+            var body = dragon.GetComponent<SerpentBody>();
+            Assert.That(body, Is.Not.Null, "a flag dragon gets its body");
+            Assert.That(body.SegmentTransforms.Count, Is.EqualTo(SerpentBody.Segments));
+            foreach (var segment in body.SegmentTransforms)
+                Assert.That(segment.GetComponentsInChildren<Collider>(true), Is.Empty, "the body has no collider: it neither hurts nor is hit");
+            for (int f = 0; f < 40; f++) yield return null;
+            var head = dragon.transform.position;
+            var lastSegment = body.SegmentTransforms[SerpentBody.Segments - 1].position;
+            Assert.That(Vector3.Distance(head, lastSegment), Is.GreaterThan(SerpentBody.Spacing * 2f), "the body trails behind the head");
+
+            float spacing = body.CurrentSpacing;
+            dragon.Freeze(3f);
+            float until = Time.time + 1f;
+            while (Time.time < until) yield return null;
+            Assert.That(body.CurrentSpacing, Is.LessThan(spacing * 0.5f), "a frozen head pulls its body in");
+
+            dragon.gameObject.SetActive(false);
+            Assert.That(body.SegmentTransforms.All(s => !s.gameObject.activeSelf), Is.True, "the body goes with its head");
+            var ordinary = spawner.FindStageType("RampartLord");
+            if (ordinary != null) Assert.That(ordinary.GetComponent<SerpentBody>(), Is.Null, "only the flag dragons have one");
             Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
         }
     

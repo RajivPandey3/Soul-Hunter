@@ -247,8 +247,10 @@ namespace SoulHunter.Core.Persistence
     /// arriving at the coffin, an expanding and contracting ring of enemies appears around it. Once all of these enemies
     /// are defeated, the player can open the coffin by moving over it"; "The rescued character joins the survivors and can
     /// be purchased".
-    /// The wiki's coffin stages that the level mapping has: Mad Forest, Inlaid Library, Dairy Plant, Gallo Tower, Cappella
-    /// Magna, Mt. Moonspell and Lake Foscari, so Levels 1-7 each hold one casket. Soul Hunter's addition: a casket frees an
+    /// The wiki's coffin stages that the level mapping has: Mad Forest, Inlaid Library, Dairy Plant, Gallo Tower, Mt. Moonspell,
+    /// Lake Foscari and Cappella Magna, so Levels 1-4, 6, 7 and 8 each hold one casket. Abyss Foscari (Level 5) is not on the
+    /// Coffin page's list, so Level 5 has none; Cappella Magna's coffin ("south of the starting area") lies on Level 8, the
+    /// first of its three levels (2026-10-29: it was on Level 5 from the older mapping, where Levels 5-10 all read Cappella). Soul Hunter's addition: a casket frees an
     /// EXISTING locked character, the one whose origin level it lies on, as a second way to that character; the
     /// character's own condition stays. A freed character is still bought with gold at its own price (the wiki's 1,000
     /// minimum for coffin characters is not used: the owner's prices stay).
@@ -273,9 +275,9 @@ namespace SoulHunter.Core.Persistence
             new CasketInfo(2, "Draven", "Coffin: Inlaid Library (Giovanna)"),
             new CasketInfo(3, "Gideon", "Coffin: Dairy Plant (Poppea)"),
             new CasketInfo(4, "Kaelen", "Coffin: Gallo Tower (Concetta)"),
-            new CasketInfo(5, "Isolde", "Coffin: Cappella Magna (Zi'Assunta)"),
             new CasketInfo(6, "Seraphina", "Coffin: Mt. Moonspell (Miang)"),
             new CasketInfo(7, "Lumina", "Coffin: Lake Foscari (Eleanor)"),
+            new CasketInfo(8, "Rurik", "Coffin: Cappella Magna (Zi'Assunta)"),
         };
 
         public static string OpenedId(int level) => "Casket.Opened.L" + level;

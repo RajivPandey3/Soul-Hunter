@@ -94,6 +94,37 @@ namespace SoulHunter.Tests.PlayMode
         // ---------------------------------------------------------------- Thorn Circle (VS Flower Wall)
 
         [UnityTest]
+        public IEnumerator ThornCircle_TrapsEnemiesOnTheirSide_UntilTheMemberInTheirWayFalls()
+        {
+            // Flower_Wall_(event) (raw 2026-10-29): "The Flower Walls trap both the player and enemies inside".
+            yield return BootWithOmens();
+            var spawner = Object.FindFirstObjectByType<EnemySpawner>();
+            spawner.enabled = false;
+            Vector3 centre = PlayerController.Instance.transform.position;
+            Assert.That(RandomEventDirector.Instance.Fire(OmenEvent.ThornCircle), Is.True, "Thorn Circle. " + Errors());
+            var circle = StageHazards.Instance.ThornCircles.Single();
+            for (int f = 0; f < 10; f++) yield return null; // every member made
+            var members = Alive().Where(e => e.GetComponent<StillEnemy>() != null).ToList();
+            foreach (var other in Alive().Except(members)) other.gameObject.SetActive(false);
+            var walker = spawner.SpawnHazardEnemy(spawner.FindStageType("RestlessCorpse"), centre + Vector3.right * (circle.Radius + 3f));
+            Assert.That(walker, Is.Not.Null, Errors());
+            yield return GameSeconds(3f);
+            float distance = Vector3.Distance(Flat(walker.transform.position), Flat(centre));
+            Assert.That(distance, Is.GreaterThan(circle.Radius), "An enemy outside the ring stays outside while it stands.");
+
+            // The member in its way falls: the ring is open there and it walks in.
+            var inTheWay = members.OrderBy(m => Vector3.Angle(Flat(m.transform.position) - Flat(centre), Vector3.right)).First();
+            inTheWay.GetComponent<HealthController>().KillSilently();
+            float until = Time.realtimeSinceStartup + 8f;
+            while (Time.realtimeSinceStartup < until && Vector3.Distance(Flat(walker.transform.position), Flat(centre)) > circle.Radius - 0.5f) yield return null;
+            Assert.That(Vector3.Distance(Flat(walker.transform.position), Flat(centre)), Is.LessThan(circle.Radius), "Through the gap it comes in.");
+            circle.Leave();
+            Assert.That(Errors(), Is.EqualTo("(no errors logged)"));
+
+            static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
+        }
+
+        [UnityTest]
         public IEnumerator ThornCircle_ClosesIn_StopsTheHero_AndOpensWhereAMemberFalls()
         {
             yield return BootWithOmens();

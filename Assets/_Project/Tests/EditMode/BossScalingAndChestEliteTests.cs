@@ -106,6 +106,10 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.CountdownFor(25000), Is.EqualTo(7f).Within(1e-4f));
             Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.CountdownFor(90000), Is.EqualTo(12f), "at most 10 seconds + 2 more");
             Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.HealedHealthFor(40000), Is.EqualTo(40008));
+            // "it gains 1 max health per Max Health bonus and 0.01 power per 1% Might bonus" (raw 2026-10-29).
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.HealedHealthFor(40000, 3), Is.EqualTo(40011));
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.DamageFor(5f, 0.10f), Is.EqualTo(5.5f).Within(1e-4f), "10 eggs of +1% Might: power 1.1");
+            Assert.That(SoulHunter.Gameplay.Hazards.AvatarOfGaea.DamageFor(5f, 0f), Is.EqualTo(5f));
         }
     }
 }

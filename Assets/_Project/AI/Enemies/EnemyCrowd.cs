@@ -31,6 +31,14 @@ namespace SoulHunter.Gameplay.AI
         private static int[] _sorted = new int[512];
         private static int[] _cellStart = new int[MaxCells + 1];
         private static int _count;
+        // Map-event swarm fliers this rebuild: Bat_Swarm (raw 2026-10-29) "These units push other enemies along their path as
+        // they travel". They still keep their own line; an ordinary enemy they overlap is carried along with their velocity,
+        // weighted by the overlap (balance method: the page gives no strength).
+        private static Vector2[] _pusherPositions = new Vector2[256];
+        private static float[] _pusherRadii = new float[256];
+        private static Vector2[] _pusherVelocities = new Vector2[256];
+        private static Vector2[] _shoves = new Vector2[512];
+        private static int _pushers;
         private static int _builtFrame = -1;
         private static int _rebuilds;
 
@@ -69,16 +77,21 @@ namespace SoulHunter.Gameplay.AI
                 _sorted = new int[size];
             }
 
+            _pushers = 0;
             // 1. Read the horde once (the only engine calls).
             float maxRadius = 0f;
             float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
             for (int i = 0; i < live.Count; i++)
             {
                 var enemy = live[i];
-                // Event fliers keep their formation and path; they neither push nor get pushed.
+                // Event fliers keep their formation and path and are never pushed; they carry the enemies they cross (step 4).
                 if (ReferenceEquals(enemy, null)) continue;
                 if (!playing && (!enemy || !enemy.isActiveAndEnabled)) continue;
-                if (enemy.IsFlying) continue;
+                if (enemy.IsFlying)
+                {
+                    if (enemy.CurrentState is EnemyFlyState flier) AddPusher(enemy, flier, playing, refreshRadii);
+                    continue;
+                }
                 Vector3 position = playing ? enemy.CachedTransform.position : enemy.transform.position;
                 int index = _count++;
                 _enemies[index] = enemy;
@@ -149,7 +162,53 @@ namespace SoulHunter.Gameplay.AI
                 if (push.sqrMagnitude > 1f) push.Normalize();
                 _enemies[i].CrowdPush = new Vector3(push.x, 0f, push.y);
             }
+
+            // 4. Swarms carry the enemies they fly through.
+            if (_shoves.Length < _count) _shoves = new Vector2[_enemies.Length];
+            System.Array.Clear(_shoves, 0, _count);
+            for (int p = 0; p < _pushers; p++)
+            {
+                Vector2 at = _pusherPositions[p];
+                float reach = _pusherRadii[p] + maxRadius;
+                int px0 = Mathf.Max(0, (int)((at.x - reach - minX) / cell)), px1 = Mathf.Min(width - 1, (int)((at.x + reach - minX) / cell));
+                int pz0 = Mathf.Max(0, (int)((at.y - reach - minZ) / cell)), pz1 = Mathf.Min(height - 1, (int)((at.y + reach - minZ) / cell));
+                for (int z = pz0; z <= pz1; z++)
+                    for (int x = px0; x <= px1; x++)
+                    {
+                        int c = z * width + x;
+                        for (int s = _cellStart[c]; s < _cellStart[c + 1]; s++)
+                        {
+                            int j = _sorted[s];
+                            float sum = _pusherRadii[p] + _radii[j];
+                            float d = Vector2.Distance(at, _positions[j]);
+                            if (d >= sum) continue;
+                            _shoves[j] += _pusherVelocities[p] * (1f - d / sum);
+                        }
+                    }
+            }
+            for (int i = 0; i < _count; i++)
+            {
+                Vector2 shove = _shoves[i];
+                _enemies[i].SwarmShove = new Vector3(shove.x, 0f, shove.y);
+            }
             for (int i = 0; i < _count; i++) _enemies[i] = null; // do not keep destroyed enemies referenced
+        }
+
+        private static void AddPusher(EnemyController enemy, EnemyFlyState flier, bool playing, bool refreshRadii)
+        {
+            if (_pushers >= _pusherPositions.Length)
+            {
+                int size = _pusherPositions.Length * 2;
+                System.Array.Resize(ref _pusherPositions, size);
+                System.Array.Resize(ref _pusherRadii, size);
+                System.Array.Resize(ref _pusherVelocities, size);
+            }
+            Vector3 position = playing ? enemy.CachedTransform.position : enemy.transform.position;
+            Vector3 velocity = flier.Direction * flier.Speed;
+            _pusherPositions[_pushers] = new Vector2(position.x, position.z);
+            _pusherRadii[_pushers] = enemy.CrowdRadiusCached(refreshRadii);
+            _pusherVelocities[_pushers] = new Vector2(velocity.x, velocity.z);
+            _pushers++;
         }
 
         /// <summary>This enemy's flat push away from overlapping neighbours for the current physics step (length at most 1).</summary>

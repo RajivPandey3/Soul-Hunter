@@ -73,8 +73,20 @@ namespace SoulHunter.Gameplay.Hazards
             if (shadow == null) shadow = enemyObject.AddComponent<DeathsShadow>();
             shadow.Reaper = reaper;
             shadow.Setup(lifetimeSeconds, playerLevel, curseAndModes);
+            if (!shadow._countedAsMaddener && shadow.Reaper.Name == StageHazardTable.Maddener.Name)
+            {
+                shadow._countedAsMaddener = true;
+                MaddenersAlive++;
+            }
             return shadow;
         }
+
+        /// <summary>
+        /// The Maddeners alive now. Cappella_Magna (raw 2026-10-29): "While Maddener is present the appearance of some enemies
+        /// changes" (EnemySpawner gives a share of ordinary spawns the Maddener's look while this is above 0).
+        /// </summary>
+        public static int MaddenersAlive { get; private set; }
+        private bool _countedAsMaddener;
 
         /// <summary>The reaper's statbox and rules (the Stalker XL unless set).</summary>
         public ReaperProfile Reaper { get; private set; } = StageHazardTable.StalkerXL;
@@ -224,6 +236,7 @@ namespace SoulHunter.Gameplay.Hazards
 
         private void OnDisable()
         {
+            if (_countedAsMaddener) { _countedAsMaddener = false; MaddenersAlive = Mathf.Max(0, MaddenersAlive - 1); }
             Restore();
             Destroy(this);
         }

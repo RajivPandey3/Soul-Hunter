@@ -17,8 +17,10 @@ namespace SoulHunter.Gameplay.Hazards
     ///
     /// Owner (2026-10-13, "kuch bhi nahi bachna chahiye"): this is the one place where enemy bodies stop the hero. The
     /// crowd rule of 2026-09-26 ("the horde never walls the player in") stays for every other enemy.
-    /// Not built: the ring does not hold other enemies inside (enemy bodies pass through each other and through
-    /// obstacles everywhere in Soul Hunter).
+    /// "trap both the player and enemies inside" (owner 2026-10-29: the wiki's answer stands): an enemy on the inside of the
+    /// ring stays inside and one outside stays out, unless the member in its way is down (the ring is open there). Fliers,
+    /// the ring's own members and enemies that hold a place (IHoldsPlace) are left alone. Enemy bodies still pass through
+    /// each other everywhere else.
     /// Soul Hunter's numbers (the wiki gives none): <see cref="StageHazardTable.ThornCount"/> members, from
     /// <see cref="StageHazardTable.ThornStartRadius"/> down to <see cref="StageHazardTable.ThornEndRadius"/> over its time.
     /// </summary>
@@ -147,7 +149,56 @@ namespace SoulHunter.Gameplay.Hazards
                 m.Enemy.transform.position = at;
                 if (m.Post != null) m.Post.transform.position = at;
             }
-            if (!any && _pending <= 0) Destroy(gameObject);
+            if (!any && _pending <= 0) { Destroy(gameObject); return; }
+            HoldEnemiesOnTheirSide();
+        }
+
+        /// <summary>Which side of the ring each enemy was on (true = inside), for the trap rule.</summary>
+        private readonly Dictionary<EnemyController, bool> _side = new Dictionary<EnemyController, bool>();
+        private readonly HashSet<GameObject> _memberObjects = new HashSet<GameObject>();
+        public const float TrapMargin = 0.45f;
+
+        private void HoldEnemiesOnTheirSide()
+        {
+            if (_memberObjects.Count != _members.Count)
+            {
+                _memberObjects.Clear();
+                foreach (var m in _members) if (m.Enemy != null) _memberObjects.Add(m.Enemy);
+            }
+            float step = _members.Count > 0 ? Mathf.PI * 2f / _members.Count : Mathf.PI * 2f;
+            var live = EnemyController.ActiveEnemies;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var enemy = live[i];
+                if (enemy == null || enemy.IsFlying || enemy.IsDying || _memberObjects.Contains(enemy.gameObject)) continue;
+                if (enemy.GetComponent<IHoldsPlace>() != null) continue;
+                Vector3 position = enemy.CachedTransform.position;
+                Vector3 offset = position - _centre; offset.y = 0f;
+                float distance = offset.magnitude;
+                bool inside = distance < Radius;
+                if (!_side.TryGetValue(enemy, out bool wasInside)) { _side[enemy] = inside; continue; }
+                if (inside == wasInside) continue;
+                if (!WallStandsAt(Mathf.Atan2(offset.z, offset.x), step)) { _side[enemy] = inside; continue; } // through a gap
+                float keep = wasInside ? Radius - TrapMargin : Radius + TrapMargin;
+                Vector3 direction = distance > 0.001f ? offset / distance : Vector3.forward;
+                Vector3 held = _centre + direction * Mathf.Max(0.1f, keep);
+                held.y = position.y;
+                if (enemy.Rigidbody != null) enemy.Rigidbody.position = held;
+                enemy.CachedTransform.position = held;
+            }
+        }
+
+        /// <summary>True when the member nearest <paramref name="angle"/> is standing (the ring is closed there).</summary>
+        private bool WallStandsAt(float angle, float step)
+        {
+            Member nearest = null;
+            float best = float.MaxValue;
+            foreach (var m in _members)
+            {
+                float gap = Mathf.Abs(Mathf.DeltaAngle(angle * Mathf.Rad2Deg, m.Angle * Mathf.Rad2Deg));
+                if (gap < best) { best = gap; nearest = m; }
+            }
+            return nearest != null && best <= step * Mathf.Rad2Deg && IsStanding(nearest);
         }
 
         /// <summary>The ring's time is up (or the stage changed): the survivors leave without drops.</summary>

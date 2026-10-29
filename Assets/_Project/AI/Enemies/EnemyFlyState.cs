@@ -23,6 +23,8 @@ namespace SoulHunter.Gameplay.AI
         private float _aliveTimer;
 
         public Vector3 Direction => _flyDirection;
+        /// <summary>The flier's speed on its line (units/s).</summary>
+        public float Speed => _controller.MoveSpeed * _speedMultiplier;
 
         /// <param name="speedMultiplier">Stage-event formations fly at 1.5x; a Fixed Direction enemy at its own speed (1).</param>
         /// <param name="weave">Above 0, the flier weaves along its line whatever its type (Omens' Serpent Streams: VS Shrimp
