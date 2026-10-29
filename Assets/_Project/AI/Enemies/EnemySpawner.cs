@@ -221,22 +221,38 @@ namespace SoulHunter.Gameplay.AI
         /// Tests that count a formation in the frame it fires set this higher (GameplayPlayModeTestBase).
         /// </summary>
         public static int EventSpawnsPerFrame = 16;
+
+        /// <summary>
+        /// And at most this much of a frame (ms), after the frame's first member: one member can cost far more than another
+        /// (2026-10-29, `run-20261029-gpuab`: 16 members took 9 ms in one frame, a 27 ms jolt).
+        /// </summary>
+        public static float EventSpawnMsPerFrame = 2f;
         private readonly Queue<System.Action> _spreadSpawns = new Queue<System.Action>();
         private int _spreadFrame = -1, _spreadThisFrame;
+        private double _spreadMsThisFrame;
 
         /// <summary>Members still waiting to be made (tests).</summary>
         public int PendingEventSpawns => _spreadSpawns.Count;
+
+        private bool SpreadRoom()
+        {
+            if (_spreadFrame != Time.frameCount) { _spreadFrame = Time.frameCount; _spreadThisFrame = 0; _spreadMsThisFrame = 0; }
+            return _spreadThisFrame < EventSpawnsPerFrame && (_spreadThisFrame == 0 || _spreadMsThisFrame < EventSpawnMsPerFrame);
+        }
+
+        private void RunSpread(System.Action spawnOne)
+        {
+            long start = System.Diagnostics.Stopwatch.GetTimestamp();
+            _spreadThisFrame++;
+            spawnOne();
+            _spreadMsThisFrame += (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+        }
 
         /// <summary>Runs <paramref name="spawnOne"/> now while this frame has room, else in a later frame, in order.</summary>
         public void SpawnSpread(System.Action spawnOne)
         {
             if (spawnOne == null) return;
-            if (_spreadFrame != Time.frameCount) { _spreadFrame = Time.frameCount; _spreadThisFrame = 0; }
-            if (_spreadSpawns.Count == 0 && _spreadThisFrame < EventSpawnsPerFrame)
-            {
-                _spreadThisFrame++;
-                spawnOne();
-            }
+            if (_spreadSpawns.Count == 0 && SpreadRoom()) RunSpread(spawnOne);
             else _spreadSpawns.Enqueue(spawnOne);
         }
 
@@ -246,13 +262,8 @@ namespace SoulHunter.Gameplay.AI
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
             if (progression != null && progression.IsStageTransitioning) { _spreadSpawns.Clear(); return; }
             if (Time.deltaTime <= 0f) return; // a pause holds them
-            if (_spreadFrame != Time.frameCount) { _spreadFrame = Time.frameCount; _spreadThisFrame = 0; }
             using (SoulHunter.Core.Services.SlowSpan.Measure("EnemySpawner.SpreadSpawns"))
-                while (_spreadSpawns.Count > 0 && _spreadThisFrame < EventSpawnsPerFrame)
-                {
-                    _spreadThisFrame++;
-                    _spreadSpawns.Dequeue()();
-                }
+                while (_spreadSpawns.Count > 0 && SpreadRoom()) RunSpread(_spreadSpawns.Dequeue());
         }
 
         private void Update()

@@ -23,6 +23,7 @@ namespace SoulHunter.Tests.PlayMode
         {
             yield return BootIntoGameplay();
             EnemySpawner.EventSpawnsPerFrame = 16; // the game's own budget (the test base lifts it)
+            EnemySpawner.EventSpawnMsPerFrame = 2f;
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
             var player = PlayerController.Instance;
             foreach (var weapon in player.GetComponentsInChildren<AutoAttackWeapon>()) weapon.gameObject.SetActive(false);
@@ -41,13 +42,14 @@ namespace SoulHunter.Tests.PlayMode
             yield return EnterLevel(3, s => spawner = s);
             var row = StageTraps.For(3).First(r => r.EnemyTypeId == "SmokeClump" && r.Count == 200);
             var swarm = spawner.TriggerMapEvent(row);
-            Assert.That(swarm.Count, Is.EqualTo(EnemySpawner.EventSpawnsPerFrame), "The first frame makes only its share. " + Errors());
-            Assert.That(spawner.PendingEventSpawns, Is.EqualTo(200 - EnemySpawner.EventSpawnsPerFrame));
+            int first = swarm.Count;
+            Assert.That(first, Is.InRange(1, EnemySpawner.EventSpawnsPerFrame), "The first frame makes only its share. " + Errors());
+            Assert.That(spawner.PendingEventSpawns, Is.EqualTo(200 - first));
 
             // A pause holds the rest.
             GameTime.Pause(this);
             for (int i = 0; i < 5; i++) yield return null;
-            Assert.That(swarm.Count, Is.EqualTo(EnemySpawner.EventSpawnsPerFrame), "Nothing is made under a pause.");
+            Assert.That(swarm.Count, Is.EqualTo(first), "Nothing is made under a pause.");
             GameTime.Resume(this);
 
             yield return WaitUntilRealtime(() => spawner.PendingEventSpawns == 0, "the rest of the swarm");
@@ -63,7 +65,7 @@ namespace SoulHunter.Tests.PlayMode
             yield return EnterLevel(7, s => spawner = s);
             var row = StageTraps.For(7).First(r => r.Type == StageEventType.TrapRing && r.EnemyTypeId == "TideThorn");
             var ring = spawner.TriggerMapEvent(row);
-            Assert.That(ring.Count, Is.EqualTo(EnemySpawner.EventSpawnsPerFrame), Errors());
+            Assert.That(ring.Count, Is.InRange(1, EnemySpawner.EventSpawnsPerFrame), Errors());
             var circle = Object.FindObjectsByType<SoulHunter.Gameplay.Hazards.ThornCircle>(FindObjectsSortMode.None).Single();
             yield return WaitUntilRealtime(() => spawner.PendingEventSpawns == 0, "the rest of the ring");
             Assert.That(circle.Members.Count(), Is.EqualTo(row.Count), "The whole ring stands.");
