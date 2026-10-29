@@ -14,7 +14,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// without drops. Everything is put back when it leaves, so the next enemy from the pool is ordinary.
     /// </summary>
     [DisallowMultipleComponent]
-    public class PileShooter : MonoBehaviour, IHoldsPlace
+    public class PileShooter : MonoBehaviour, IHoldsPlace, ILeavesWithItsLife
     {
         public float RemainingSeconds { get; set; }
         public float FireIntervalSeconds { get; set; } = StageHazardTable.PileFireIntervalSeconds;
@@ -28,8 +28,7 @@ namespace SoulHunter.Gameplay.Hazards
         public static PileShooter Begin(GameObject enemyObject, float durationSeconds, float firstShotDelay)
         {
             if (enemyObject == null) return null;
-            var shooter = enemyObject.GetComponent<PileShooter>();
-            if (shooter == null) shooter = enemyObject.AddComponent<PileShooter>();
+            var shooter = LifeComponent.Fresh<PileShooter>(enemyObject);
             shooter._enemy = enemyObject.GetComponent<EnemyController>();
             shooter.RemainingSeconds = Mathf.Max(0.1f, durationSeconds);
             shooter._nextShot = Mathf.Max(0f, firstShotDelay);
@@ -89,8 +88,12 @@ namespace SoulHunter.Gameplay.Hazards
             gameObject.SetActive(false);
         }
 
+        public bool Doomed { get; private set; }
+
         private void OnDisable()
         {
+            if (Doomed) return;
+            Doomed = true;
             // EnemyController.OnDisable already cleared the state; a reused enemy starts idle and chases again.
             _enemy = null;
             Destroy(this);

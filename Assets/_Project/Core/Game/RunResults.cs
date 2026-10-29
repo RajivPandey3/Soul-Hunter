@@ -111,7 +111,8 @@ namespace SoulHunter.Gameplay.Core
                 string name = GameContentCatalog.CurrentName(data.SelectedCharacterName);
                 var character = GameContentCatalog.FindCharacterExact(name);
                 results.Character = character != null ? character.CharacterName : name;
-                var eggs = SoulHunter.Gameplay.Player.SoulEggs.For(data, name);
+                // VS Results: the Golden Eggs used this run, i.e. the ones it started with (eggs gained mid-run count next run).
+                var eggs = SoulHunter.Gameplay.Player.SoulEggs.AppliedThisRun ?? SoulHunter.Gameplay.Player.SoulEggs.For(data, name);
                 results.SoulEggs = eggs != null ? eggs.Eggs : 0;
                 results.AddPowerUps(data);
             }

@@ -33,12 +33,19 @@ namespace SoulHunter.Gameplay.AI
         public float CurrentSpacing => _spacing;
         public IReadOnlyList<Transform> SegmentTransforms => _segments;
 
+        // Asked on every enemy spawn: the answer per type is kept (reading a name allocates).
+        private static readonly Dictionary<SoulHunter.Gameplay.Data.EnemyData, bool> Known = new Dictionary<SoulHunter.Gameplay.Data.EnemyData, bool>();
+
         public static bool IsSegmented(SoulHunter.Gameplay.Data.EnemyData data)
         {
             if (data == null) return false;
+            if (Known.TryGetValue(data, out bool known)) return known;
+            bool segmented = false;
+            string name = data.name;
             foreach (var id in SegmentedTypes)
-                if (data.name.Contains("_" + id + "_")) return true;
-            return false;
+                if (name.Contains("_" + id + "_")) { segmented = true; break; }
+            Known[data] = segmented;
+            return segmented;
         }
 
         /// <summary>Gives <paramref name="enemy"/> its body if it is a flag dragon; restarts it on every spawn.</summary>
@@ -57,11 +64,10 @@ namespace SoulHunter.Gameplay.AI
             _trail.Clear();
             _trail.Add(transform.position);
             _spacing = Spacing;
-            for (int i = 0; i < _segments.Length; i++)
-            {
-                _segments[i].gameObject.SetActive(true);
-                _segments[i].position = transform.position;
-            }
+            _placed = false; // the spawner moves a pooled body after OnEnable: the first frame starts the trail again
+            _hidden = true;
+            ShowSegments(true);
+            for (int i = 0; i < _segments.Length; i++) _segments[i].position = transform.position;
         }
 
         private void Build()
@@ -100,13 +106,32 @@ namespace SoulHunter.Gameplay.AI
         }
 
         private Transform _root;
+        private bool _placed;
+        private bool _hidden;
+
+        private void ShowSegments(bool show)
+        {
+            if (_hidden == !show) return;
+            _hidden = !show;
+            foreach (var segment in _segments) if (segment != null) segment.gameObject.SetActive(show);
+        }
 
         private void LateUpdate()
         {
             if (_segments == null) return;
             float dt = Time.deltaTime; // game time: a pause holds the body too
             if (dt <= 0f) return;
+            // A dead head waiting in the death queue has left the screen; its body goes with it at once.
+            if (_enemy != null && _enemy.IsDying) { ShowSegments(false); return; }
             Vector3 head = transform.position;
+            if (!_placed)
+            {
+                _placed = true;
+                _trail.Clear();
+                _trail.Add(head);
+                foreach (var segment in _segments) segment.position = head;
+                ShowSegments(true);
+            }
             Vector3 last = _trail[_trail.Count - 1];
             if ((head - last).sqrMagnitude > 25f) { Restart(); return; } // placed by the spawner after its pool woke it
             bool moving = (head - last).sqrMagnitude > 0.0004f;
@@ -149,7 +174,7 @@ namespace SoulHunter.Gameplay.AI
         private void OnDisable()
         {
             if (_segments == null) return;
-            foreach (var segment in _segments) if (segment != null) segment.gameObject.SetActive(false);
+            ShowSegments(false);
         }
 
         private void OnDestroy()

@@ -135,6 +135,21 @@ namespace SoulHunter.Gameplay.Combat
         private static readonly Dictionary<AutoAttackWeapon, Bonus> Bonuses = new Dictionary<AutoAttackWeapon, Bonus>();
         private static readonly Dictionary<UpgradeData, (AutoAttackWeapon Weapon, Stat Stat)> Offers = new Dictionary<UpgradeData, (AutoAttackWeapon, Stat)>();
 
+        /// <summary>
+        /// Gives <paramref name="copy"/> the cards <paramref name="source"/> has (Shadow Kael's mirrored weapons, which are new
+        /// instances: bug hunt 2026-10-29, the loadout is "copied exactly", Limit Break included).
+        /// </summary>
+        public static void CopyBonuses(AutoAttackWeapon source, AutoAttackWeapon copy)
+        {
+            if (source == null || copy == null || !Bonuses.TryGetValue(source, out var from)) return;
+            var to = new Bonus { Cards = from.Cards };
+            System.Array.Copy(from.Totals, to.Totals, from.Totals.Length);
+            Bonuses[copy] = to;
+        }
+
+        /// <summary>Drops a weapon's cards (a mirrored copy that is thrown away).</summary>
+        public static void Forget(AutoAttackWeapon weapon) { if (weapon != null) Bonuses.Remove(weapon); }
+
         /// <summary>Limit Break cards taken for this weapon in this run.</summary>
         public static int CardsFor(AutoAttackWeapon weapon) => weapon != null && Bonuses.TryGetValue(weapon, out var b) ? b.Cards : 0;
 

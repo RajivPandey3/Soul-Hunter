@@ -53,9 +53,7 @@ namespace SoulHunter.Gameplay.Hazards
         public static void EggBonus(out int maxHealth, out float might)
         {
             maxHealth = 0; might = 0f;
-            var services = SoulHunter.Core.Services.GameServices.Instance;
-            if (services == null || !services.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) || save.CurrentData == null) return;
-            var eggs = SoulHunter.Gameplay.Player.SoulEggs.For(save.CurrentData, save.CurrentData.SelectedCharacterName);
+            var eggs = SoulHunter.Gameplay.Player.SoulEggs.AppliedThisRun; // the eggs this run started with
             if (eggs == null) return;
             maxHealth = SoulHunter.Gameplay.Player.SoulEggs.Whole(eggs.MaxHealth);
             might = Mathf.Min(eggs.Might, SoulHunter.Gameplay.Player.SoulEggs.MightCap);

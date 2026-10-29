@@ -102,6 +102,12 @@ namespace SoulHunter.Gameplay.Combat
 
             // Zero Garbage SphereCast
             int hitCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, _explosionRadius, _hitsBuffer, _enemyLayer);
+            // A full buffer may have left enemies out (bug hunt 2026-10-29; CMB-07 fixed Garlic and Requiem): grow and ask again.
+            while (hitCount == _hitsBuffer.Length)
+            {
+                _hitsBuffer = new Collider[_hitsBuffer.Length * 2];
+                hitCount = UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, _explosionRadius, _hitsBuffer, _enemyLayer);
+            }
             
             for (int i = 0; i < hitCount; i++)
             {

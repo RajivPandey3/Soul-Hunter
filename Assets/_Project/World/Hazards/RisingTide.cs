@@ -123,7 +123,7 @@ namespace SoulHunter.Gameplay.Hazards
             quad.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
             var shader = Shader.Find("SoulHunter/VFX/Particle");
             if (shader == null) shader = Shader.Find("Sprites/Default");
-            var material = new Material(shader);
+            var material = _material = new Material(shader); // destroyed with the tide (OnDestroy)
             material.SetColor(ColorId, WaterColour);
             material.SetFloat("_SrcBlend", 5f);  // SrcAlpha
             material.SetFloat("_DstBlend", 10f); // OneMinusSrcAlpha: see-through water, not a glow
@@ -189,8 +189,11 @@ namespace SoulHunter.Gameplay.Hazards
         }
 
         // Destroyed without End (a scene change): the pooled body must not keep this tide's hooks.
+        private Material _material;
+
         private void OnDestroy()
         {
+            if (_material != null) Destroy(_material); // bug hunt 2026-10-29: every tide leaked its water material
             if (!IsOver) ReleaseCaller();
         }
 

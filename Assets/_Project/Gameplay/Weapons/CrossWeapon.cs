@@ -45,8 +45,6 @@ namespace SoulHunter.Gameplay.Weapons
         /// <summary>Speed bonus from levels (multiplies the projectile Speed stat).</summary>
         public float LevelSpeedMultiplier { get; private set; } = 1f;
 
-        private Collider[] _hits = new Collider[50];
-        private int _enemyLayerMask;
 
         protected override void Awake()
         {
@@ -62,7 +60,6 @@ namespace SoulHunter.Gameplay.Weapons
             }
 
             base.Awake();
-            _enemyLayerMask = LayerMask.GetMask("Enemy");
             // Damage and cooldown live in the base fields so levelling and
             // Shadow Kael's mirroring can scale them.
             DamageAmount = _damage;
@@ -102,24 +99,9 @@ namespace SoulHunter.Gameplay.Weapons
                 return;
             }
 
-            // Sabse nazdeek ka dushman dhoondho O(1) performance ke sath
-            // Shadow Kael's copy aims at the player, not at its own horde.
-            int count = HeldByEnemy ? 0 : UnityEngine.Physics.OverlapSphereNonAlloc(transform.position, 15f, _hits, _enemyLayerMask);
-            Transform closestEnemy = null;
-            float minDistance = float.MaxValue;
-
-            for (int i = 0; i < count; i++)
-            {
-                if (_hits[i] == null) continue;
-                float dist = (_hits[i].transform.position - transform.position).sqrMagnitude;
-                if (dist < minDistance)
-                {
-                    minDistance = dist;
-                    closestEnemy = _hits[i].transform;
-                }
-            }
-
-            if (HeldByEnemy) closestEnemy = FindNearestEnemy(15f);
+            // The nearest live enemy within 15 units (Shadow Kael's copy: the player). An Enemy-layer overlap also found Soul
+            // Lanterns, Stained Glass windows and bodies waiting in the death queue (bug hunt 2026-10-29).
+            Transform closestEnemy = FindNearestEnemy(15f);
             Vector3 throwDirection = HolderFacing;
             if (closestEnemy != null)
             {

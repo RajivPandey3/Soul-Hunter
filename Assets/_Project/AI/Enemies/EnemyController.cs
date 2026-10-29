@@ -274,6 +274,9 @@ namespace SoulHunter.Gameplay.AI
         }
 
         private SoulHunter.Gameplay.Combat.HealthController _hitSoundHealth;
+        /// <summary>This enemy's HealthController (cached on first use).</summary>
+        public SoulHunter.Gameplay.Combat.HealthController Health =>
+            _hitSoundHealth != null ? _hitSoundHealth : (_hitSoundHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>());
 
         // VS: every hit on an enemy is heard (AudioManager throttles it for hordes).
         private void PlayHitSound()
@@ -507,6 +510,7 @@ namespace SoulHunter.Gameplay.AI
         /// </summary>
         public bool TryWeaponFreeze(float weaponFreezeChance, float duration)
         {
+            if (IsDying) return false; // a body waiting in the death queue is dead (bug hunt 2026-10-29)
             if (!EnemyResistance.WeaponFreezes(_freezeResistance, weaponFreezeChance)) return false;
             Freeze(duration);
             return true;
@@ -518,7 +522,7 @@ namespace SoulHunter.Gameplay.AI
         /// </summary>
         public bool ApplyGarlicDebuff()
         {
-            if (!EnemyResistance.GarlicDebuffApplies(ResistsDebuffs)) return false;
+            if (IsDying || !EnemyResistance.GarlicDebuffApplies(ResistsDebuffs)) return false;
             AddKnockbackTaken(GarlicKnockbackStep);
             _freezeResistance = EnemyResistance.AfterGarlicHit(_freezeResistance);
             return true;
@@ -544,6 +548,7 @@ namespace SoulHunter.Gameplay.AI
         /// </summary>
         public void Freeze(float duration)
         {
+            if (IsDying) return; // dead: no freeze, and no Shattering Frost blast from a corpse
             // VS Out of Bounds (XII): "Freezing enemies generates explosions."
             SoulHunter.Gameplay.Core.ArcanaManager.OnEnemyFrozen(this);
             var resume = _currentState is EnemyFrozenState frozen ? frozen.ResumeState

@@ -153,8 +153,14 @@ namespace SoulHunter.Gameplay.Hazards
             HoldEnemiesOnTheirSide();
         }
 
-        /// <summary>Which side of the ring each enemy was on (true = inside), for the trap rule.</summary>
-        private readonly Dictionary<EnemyController, bool> _side = new Dictionary<EnemyController, bool>();
+        /// <summary>
+        /// Which side of the ring each enemy was on (true = inside) in the life it was seen in, and whether it is left alone
+        /// (it holds a place). A pooled body comes back with a new life (HealthController.Life), so a reused body starts on
+        /// the side it now stands on instead of being pulled to the side its last life was on.
+        /// </summary>
+        private struct Seen { public int Life; public bool Inside; public bool Skip; public int Frame; }
+        private readonly Dictionary<EnemyController, Seen> _side = new Dictionary<EnemyController, Seen>();
+        private readonly List<EnemyController> _stale = new List<EnemyController>();
         private readonly HashSet<GameObject> _memberObjects = new HashSet<GameObject>();
         public const float TrapMargin = 0.45f;
 
@@ -165,26 +171,44 @@ namespace SoulHunter.Gameplay.Hazards
                 _memberObjects.Clear();
                 foreach (var m in _members) if (m.Enemy != null) _memberObjects.Add(m.Enemy);
             }
+            int frame = Time.frameCount;
             float step = _members.Count > 0 ? Mathf.PI * 2f / _members.Count : Mathf.PI * 2f;
             var live = EnemyController.ActiveEnemies;
             for (int i = 0; i < live.Count; i++)
             {
                 var enemy = live[i];
-                if (enemy == null || enemy.IsFlying || enemy.IsDying || _memberObjects.Contains(enemy.gameObject)) continue;
-                if (enemy.GetComponent<IHoldsPlace>() != null) continue;
+                if (enemy == null || enemy.IsFlying || enemy.IsDying) continue;
+                var health = enemy.Health;
+                int life = health != null ? health.Life : 0;
                 Vector3 position = enemy.CachedTransform.position;
                 Vector3 offset = position - _centre; offset.y = 0f;
                 float distance = offset.magnitude;
                 bool inside = distance < Radius;
-                if (!_side.TryGetValue(enemy, out bool wasInside)) { _side[enemy] = inside; continue; }
-                if (inside == wasInside) continue;
-                if (!WallStandsAt(Mathf.Atan2(offset.z, offset.x), step)) { _side[enemy] = inside; continue; } // through a gap
-                float keep = wasInside ? Radius - TrapMargin : Radius + TrapMargin;
+                if (!_side.TryGetValue(enemy, out var seen) || seen.Life != life)
+                {
+                    var holds = enemy.GetComponent<IHoldsPlace>();
+                    bool skip = _memberObjects.Contains(enemy.gameObject) ||
+                                (holds != null && !(holds is ILeavesWithItsLife life0 && life0.Doomed)); // a doomed one is last life's
+                    _side[enemy] = new Seen { Life = life, Inside = inside, Skip = skip, Frame = frame };
+                    continue;
+                }
+                seen.Frame = frame;
+                if (seen.Skip || inside == seen.Inside) { _side[enemy] = seen; continue; }
+                if (!WallStandsAt(Mathf.Atan2(offset.z, offset.x), step)) { seen.Inside = inside; _side[enemy] = seen; continue; } // through a gap
+                _side[enemy] = seen;
+                float keep = seen.Inside ? Radius - TrapMargin : Radius + TrapMargin;
                 Vector3 direction = distance > 0.001f ? offset / distance : Vector3.forward;
                 Vector3 held = _centre + direction * Mathf.Max(0.1f, keep);
                 held.y = position.y;
                 if (enemy.Rigidbody != null) enemy.Rigidbody.position = held;
                 enemy.CachedTransform.position = held;
+            }
+            // Forget bodies that left the live list (so the table does not grow over the ring's life).
+            if ((frame & 63) == 0)
+            {
+                _stale.Clear();
+                foreach (var pair in _side) if (pair.Key == null || pair.Value.Frame != frame) _stale.Add(pair.Key);
+                foreach (var key in _stale) _side.Remove(key);
             }
         }
 

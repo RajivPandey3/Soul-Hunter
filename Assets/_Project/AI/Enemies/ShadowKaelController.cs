@@ -82,6 +82,7 @@ namespace SoulHunter.Gameplay.AI
                     var mirroredWeapon = weaponInstance.GetComponent<AutoAttackWeapon>();
                     if (mirroredWeapon != null) mirroredWeapon.LevelLocked = pair.Value.LevelLocked;
                     WeaponManager.ApplyWeaponLevel(weaponInstance, pair.Value.CurrentLevel);
+                    LimitBreak.CopyBonuses(pair.Value, mirroredWeapon);
                     MirroredWeaponCount++;
                 }
                 Debug.Log($"[ShadowKael] Mirrored {MirroredWeaponCount} weapons from the player.");
@@ -115,6 +116,7 @@ namespace SoulHunter.Gameplay.AI
             {
                 var old = _mirroredWeapons[i];
                 if (old == null) continue;
+                LimitBreak.Forget(old.GetComponent<AutoAttackWeapon>());
                 old.SetActive(false);
                 Destroy(old);
             }

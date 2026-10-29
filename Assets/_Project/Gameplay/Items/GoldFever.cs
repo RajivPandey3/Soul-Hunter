@@ -6,7 +6,7 @@ namespace SoulHunter.Gameplay.Pickups
     /// VS Gold Fever (vampire.survivors.wiki, Gilded Clover, fetched 2026-09-27), started by Soul Hunter's Gilded Charm:
     /// it lasts 10 s; while it runs every kill has a 75% chance to drop a coin worth 0.5 gold before Greed and the stage
     /// bonus; picking up a gold coin, coin bag or rich coin bag adds 0.5, 5 or 10 s, a fever coin 0.01 s; the timer is
-    /// capped at 10 s. Not adopted: Orologion halving the decay, and the character/arcana bonuses (Soul Hunter has none).
+    /// capped at 10 s. An Orologion freeze halves the decay (wiki Orologion). Not adopted: the character/arcana bonuses (Soul Hunter has none).
     /// Lives on the player for the run, so it ends with the scene. Timed in game time (a pause stops it).
     /// </summary>
     public sealed class GoldFever : MonoBehaviour

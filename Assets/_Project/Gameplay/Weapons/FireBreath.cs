@@ -9,7 +9,7 @@ namespace SoulHunter.Gameplay.Combat
     /// 300%, pierces as an area of effect, scales with every stat). For 10 s x Duration the holder breathes a cone of 12
     /// (+ Amount) fire flames every 0.5 s x Cooldown. Owner aiming rule: the cone points at the nearest enemy, else
     /// where the hero faces. Flames reuse the Fire Wand's fireball (GameContentCatalog.FireBreathProjectile), grow as
-    /// they fly, pierce everything and deal Fire damage x Might (so Level 7 ghosts are immune, like other Fire hits).
+    /// they fly, pierce everything and deal Magic damage x Might (as the Fire Wand, so they hurt Level 7 ghosts; owner, 2026-09-26).
     /// It is a temporary child of the player, not a WeaponManager slot: it takes no weapon slot, has no levels, and
     /// Shadow Kael does not mirror it. Flame speed and cone width are Soul Hunter numbers (provisional).
     /// </summary>

@@ -387,11 +387,26 @@ namespace SoulHunter.Gameplay.Combat
                 _timer = Mathf.Max(MinimumCooldown, AttackCooldown * CooldownMultiplier);
                 ShowAttackOnHolder(); // before Attack(): the shot may kill the enemy it aimed at
                 Attack();
-                SoulHunter.Gameplay.Core.ArcanaManager.OnWeaponFired(this); // VS Blood Astronomia (XXI)
-                var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
-                if (audio != null && FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None) audio.PlayWeaponSound(FireSound);
+                AfterAttack();
             }
         }
+
+        /// <summary>
+        /// What every attack does around itself besides its shots: the Arcana hook and the fire sound. Weapons with their
+        /// own Update call <see cref="BeforeAttack"/> and this (bug hunt 2026-10-29: the Magic Wand was never heard).
+        /// </summary>
+        protected void AfterAttack()
+        {
+            SoulHunter.Gameplay.Core.ArcanaManager.OnWeaponFired(this); // VS Blood Astronomia (XXI)
+            var audio = SoulHunter.Gameplay.Audio.AudioManager.Instance;
+            if (audio != null && FireSound != SoulHunter.Gameplay.Audio.WeaponSound.None) audio.PlayWeaponSound(FireSound);
+        }
+
+        /// <summary>The attack pose and turn, before the shots (see <see cref="AfterAttack"/>).</summary>
+        protected void BeforeAttack() => ShowAttackOnHolder();
+
+        /// <summary>How fast this weapon's cooldown runs now (VS Tragic Princess; 1 without it).</summary>
+        protected float CooldownTick => SoulHunter.Gameplay.Core.ArcanaManager.CooldownTickRate(this);
 
         /// <summary>
         /// Weapons the player visibly swings, throws or casts toward enemies. Constant auras and orbits

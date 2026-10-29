@@ -27,7 +27,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// </para>
     /// </summary>
     [DisallowMultipleComponent]
-    public class DeathsShadow : MonoBehaviour
+    public class DeathsShadow : MonoBehaviour, ILeavesWithItsLife
     {
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -69,8 +69,7 @@ namespace SoulHunter.Gameplay.Hazards
         public static DeathsShadow Begin(GameObject enemyObject, float lifetimeSeconds, int playerLevel, float curseAndModes, ReaperProfile reaper)
         {
             if (enemyObject == null) return null;
-            var shadow = enemyObject.GetComponent<DeathsShadow>();
-            if (shadow == null) shadow = enemyObject.AddComponent<DeathsShadow>();
+            var shadow = LifeComponent.Fresh<DeathsShadow>(enemyObject);
             shadow.Reaper = reaper;
             shadow.Setup(lifetimeSeconds, playerLevel, curseAndModes);
             if (!shadow._countedAsMaddener && shadow.Reaper.Name == StageHazardTable.Maddener.Name)
@@ -103,6 +102,7 @@ namespace SoulHunter.Gameplay.Hazards
             RemainingSeconds = Mathf.Max(0.1f, lifetimeSeconds);
             IsLeaving = false;
             DefeatedBy = ShadowKiller.None;
+            Defeated = null;
 
             transform.localScale *= StageHazardTable.ShadowScale; // the spawner puts the pool's scale back on reuse
             if (_enemy != null)
@@ -166,6 +166,7 @@ namespace SoulHunter.Gameplay.Hazards
             LastDefeatedBy = ShadowKiller.None;
             LastChest = null;
             WornDown = true;
+            Defeated?.Invoke();
             Leave();
             return true;
         }
@@ -173,11 +174,19 @@ namespace SoulHunter.Gameplay.Hazards
         /// <summary>True once ordinary damage has defeated it (the Blinder).</summary>
         public bool WornDown { get; private set; }
 
+        /// <summary>
+        /// Raised once when it is defeated (worn down or by an instant kill), before it leaves. TricksterRings listens: the
+        /// component is gone by the next frame, so reading it then missed a death that came after the rings' Update
+        /// (bug hunt 2026-10-29). Cleared for every new life.
+        /// </summary>
+        public event System.Action Defeated;
+
         /// <summary>Defeated by an instant kill: drops that killer's chest (none for Pentagram), then leaves.</summary>
         public void Defeat(ShadowKiller killer)
         {
             if (IsLeaving || killer == ShadowKiller.None) return;
             DefeatedBy = killer;
+            Defeated?.Invoke();
             var chest = StageHazardTable.ReaperChest(Reaper, killer);
             LastDefeatedBy = killer;
             LastChest = chest;
@@ -234,9 +243,23 @@ namespace SoulHunter.Gameplay.Hazards
             gameObject.SetActive(false); // AutoReturnToPool takes it back; OnDisable restores the enemy
         }
 
+        public bool Doomed { get; private set; }
+
         private void OnDisable()
         {
-            if (_countedAsMaddener) { _countedAsMaddener = false; MaddenersAlive = Mathf.Max(0, MaddenersAlive - 1); }
+            if (Doomed) return;
+            Doomed = true;
+            if (_countedAsMaddener)
+            {
+                _countedAsMaddener = false;
+                MaddenersAlive = Mathf.Max(0, MaddenersAlive - 1);
+                // "While Maddener is present": with the last one gone, every enemy wears its own look again.
+                if (MaddenersAlive == 0)
+                {
+                    var live = EnemyController.ActiveEnemies;
+                    for (int i = 0; i < live.Count; i++) if (live[i] != null && live[i].IsMaddened) live[i].SetMaddened(false);
+                }
+            }
             Restore();
             Destroy(this);
         }

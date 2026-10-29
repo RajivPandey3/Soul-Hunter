@@ -8,15 +8,14 @@ namespace SoulHunter.Gameplay.Hazards
     /// Removed when the enemy goes back to the pool, so the next one from the pool is ordinary.
     /// </summary>
     [DisallowMultipleComponent]
-    public class EventLifetime : MonoBehaviour
+    public class EventLifetime : MonoBehaviour, ILeavesWithItsLife
     {
         public float RemainingSeconds { get; set; }
 
         public static EventLifetime Begin(GameObject enemyObject, float seconds)
         {
             if (enemyObject == null || seconds <= 0f) return null;
-            var life = enemyObject.GetComponent<EventLifetime>();
-            if (life == null) life = enemyObject.AddComponent<EventLifetime>();
+            var life = LifeComponent.Fresh<EventLifetime>(enemyObject);
             life.RemainingSeconds = seconds;
             return life;
         }
@@ -29,6 +28,13 @@ namespace SoulHunter.Gameplay.Hazards
             if (RemainingSeconds <= 0f) gameObject.SetActive(false);
         }
 
-        private void OnDisable() => Destroy(this);
+        public bool Doomed { get; private set; }
+
+        private void OnDisable()
+        {
+            if (Doomed) return;
+            Doomed = true;
+            Destroy(this);
+        }
     }
 }

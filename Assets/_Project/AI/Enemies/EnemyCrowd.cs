@@ -31,9 +31,10 @@ namespace SoulHunter.Gameplay.AI
         private static int[] _sorted = new int[512];
         private static int[] _cellStart = new int[MaxCells + 1];
         private static int _count;
-        // Map-event swarm fliers this rebuild: Bat_Swarm (raw 2026-10-29) "These units push other enemies along their path as
-        // they travel". They still keep their own line; an ordinary enemy they overlap is carried along with their velocity,
-        // weighted by the overlap (balance method: the page gives no strength).
+        // Fliers this rebuild (every enemy on a fixed course: map-event swarms and Fixed Direction wave units). Bat_Swarm (raw
+        // 2026-10-29): "These units push other enemies along their path as they travel"; the wiki names no other kind, so
+        // every fixed-course flier pushes alike (balance method). They keep their own line; an ordinary enemy they overlap
+        // is carried along with the strongest overlapping flier's velocity, weighted by the overlap (the page gives no strength).
         private static Vector2[] _pusherPositions = new Vector2[256];
         private static float[] _pusherRadii = new float[256];
         private static Vector2[] _pusherVelocities = new Vector2[256];
@@ -182,7 +183,9 @@ namespace SoulHunter.Gameplay.AI
                             float sum = _pusherRadii[p] + _radii[j];
                             float d = Vector2.Distance(at, _positions[j]);
                             if (d >= sum) continue;
-                            _shoves[j] += _pusherVelocities[p] * (1f - d / sum);
+                            // The strongest overlap wins, not the sum: ten bats over one enemy carry it at a bat's speed at most.
+                            Vector2 shove = _pusherVelocities[p] * (1f - d / sum);
+                            if (shove.sqrMagnitude > _shoves[j].sqrMagnitude) _shoves[j] = shove;
                         }
                     }
             }

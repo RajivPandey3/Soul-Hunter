@@ -32,7 +32,8 @@ namespace SoulHunter.Gameplay.Combat
         public override void LevelUp() { }
 
         private float _activeUntil = -1f, _nextPulse, _nextRing;
-        private readonly Dictionary<HealthController, float> _nextHit = new Dictionary<HealthController, float>();
+        // Per body and life: a body the pool hands out again is a new enemy (bug hunt 2026-10-29: it waited out its last life's delay).
+        private readonly Dictionary<HealthController, (float at, int life)> _nextHit = new Dictionary<HealthController, (float at, int life)>();
         private Collider[] _hits = new Collider[128];
         private static int _enemyMask, _playerMask;
 
@@ -90,8 +91,8 @@ namespace SoulHunter.Gameplay.Combat
                 var col = _hits[i];
                 if (col == null || !col.CompareTag(hostileTag)) continue;
                 var health = col.GetComponentInParent<HealthController>();
-                if (health == null || (_nextHit.TryGetValue(health, out float next) && Time.time < next)) continue;
-                _nextHit[health] = Time.time + VsHitboxDelay;
+                if (health == null || (_nextHit.TryGetValue(health, out var next) && next.life == health.Life && Time.time < next.at)) continue;
+                _nextHit[health] = (Time.time + VsHitboxDelay, health.Life);
                 Hit(health, new DamagePacket(amount, health.transform.position, (health.transform.position - transform.position).normalized, DamageType.Magic).WithKnockback(Knockback));
                 var enemy = health.GetComponent<EnemyController>();
                 if (enemy != null) enemy.ApplyLingeringSlow(SlowStep, SlowFloor);

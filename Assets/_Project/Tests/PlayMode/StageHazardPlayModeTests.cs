@@ -488,6 +488,7 @@ namespace SoulHunter.Tests.PlayMode
             foreach (var reaper in Object.FindObjectsByType<DeathsShadow>(FindObjectsSortMode.None)) reaper.gameObject.SetActive(false);
             _hazards.enabled = false;
             Assert.That(DeathsShadow.MaddenersAlive, Is.EqualTo(0));
+            Assert.That(spawned.Count(e => e.IsMaddened), Is.EqualTo(0), "with the Maddener gone, the living enemies wear their own look again");
             foreach (var enemy in spawned) enemy.gameObject.SetActive(false);
             _spawner.enabled = true;
             until = Time.realtimeSinceStartup + 6f;

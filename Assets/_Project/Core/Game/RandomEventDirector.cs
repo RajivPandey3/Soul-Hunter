@@ -590,7 +590,7 @@ namespace SoulHunter.Gameplay.Core
         }
 
         private static bool Formation(EnemySpawner spawner, StageEventType type, int count, float speed = 1f) =>
-            spawner != null && spawner.TriggerStageEvent(type, count, speed).Count > 0;
+            spawner != null && (spawner.TriggerStageEvent(type, count, speed).Count > 0 || spawner.LastEventStarted);
 
         /// <summary>The first formation now and the rest one after another (game time: a pause holds them).</summary>
         private bool Formations(EnemySpawner spawner, StageEventType type, int count, int times, float gapSeconds, float speed)

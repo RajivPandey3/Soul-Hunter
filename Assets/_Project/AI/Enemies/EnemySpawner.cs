@@ -253,8 +253,25 @@ namespace SoulHunter.Gameplay.AI
         public void SpawnSpread(System.Action spawnOne)
         {
             if (spawnOne == null) return;
-            if (_spreadSpawns.Count == 0 && SpreadRoom()) RunSpread(spawnOne);
+            _spreadRequests++;
+            // Nothing is made under a pause (the queue waits for game time too).
+            if (_spreadSpawns.Count == 0 && !SoulHunter.Core.Services.GameTime.IsPaused && SpreadRoom()) RunSpread(spawnOne);
             else _spreadSpawns.Enqueue(spawnOne);
+        }
+
+        private int _spreadRequests;
+
+        /// <summary>
+        /// True when the last TriggerStageEvent / TriggerMapEvent started something: members made now or queued for the next
+        /// frames. Its returned list holds only those made now, so an empty list does not mean nothing came (bug hunt
+        /// 2026-10-29: a busy queue made pressure plates skip their cooldown and Omens drop their later waves).
+        /// </summary>
+        public bool LastEventStarted { get; private set; }
+
+        private List<EnemyController> Started(List<EnemyController> spawned, int requestsBefore)
+        {
+            LastEventStarted = spawned.Count > 0 || _spreadRequests > requestsBefore;
+            return spawned;
         }
 
         private void MakeSpreadSpawns()
@@ -858,11 +875,13 @@ namespace SoulHunter.Gameplay.AI
         public List<EnemyController> TriggerStageEvent(StageEventType type, int count, float speed = 1f)
         {
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            LastEventStarted = false;
             if (progression == null || progression.IsStageTransitioning || _isBossAlive || _currentWave == null)
                 return new List<EnemyController>();
             var phase = _currentWave.GetPhase(progression.StageElapsedTime);
-            return RunStageEvent(new StageEventEntry { Type = type, Count = Mathf.Max(1, count), Speed = Mathf.Max(0.2f, speed) },
-                progression.CurrentLevel, phase);
+            int before = _spreadRequests;
+            return Started(RunStageEvent(new StageEventEntry { Type = type, Count = Mathf.Max(1, count), Speed = Mathf.Max(0.2f, speed) },
+                progression.CurrentLevel, phase), before);
         }
 
         /// <summary>
@@ -872,10 +891,12 @@ namespace SoulHunter.Gameplay.AI
         public List<EnemyController> TriggerMapEvent(StageEventEntry entry)
         {
             var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            LastEventStarted = false;
             if (entry == null || progression == null || progression.IsStageTransitioning || _isBossAlive || _currentWave == null)
                 return new List<EnemyController>();
             var phase = _currentWave.GetPhase(progression.StageElapsedTime);
-            return RunStageEvent(entry, progression.CurrentLevel, phase);
+            int before = _spreadRequests;
+            return Started(RunStageEvent(entry, progression.CurrentLevel, phase), before);
         }
 
         /// <summary>

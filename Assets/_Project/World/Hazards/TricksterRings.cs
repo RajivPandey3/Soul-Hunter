@@ -35,6 +35,7 @@ namespace SoulHunter.Gameplay.Hazards
             if (trickster == null || (homingGem == null && stillGem == null)) return null;
             var rings = new GameObject("TricksterRings").AddComponent<TricksterRings>();
             rings._trickster = trickster;
+            trickster.Defeated += rings.OnTricksterDefeated;
             rings._homingGem = homingGem;
             rings._stillGem = stillGem;
             rings.SummonRing();
@@ -42,6 +43,9 @@ namespace SoulHunter.Gameplay.Hazards
             rings._nextRing = StageHazardTable.TricksterRingEverySeconds;
             return rings;
         }
+
+        private bool _tricksterDied;
+        private void OnTricksterDefeated() => _tricksterDied = true;
 
         private bool TricksterHere => _trickster != null && _trickster.isActiveAndEnabled && !_trickster.IsLeaving;
 
@@ -51,8 +55,7 @@ namespace SoulHunter.Gameplay.Hazards
             if (!TricksterHere)
             {
                 // Its death sets the gems off; leaving at the end of its time does not (they keep their own 30 s).
-                bool died = _trickster != null && (_trickster.WornDown || _trickster.DefeatedBy != ShadowKiller.None);
-                if (died) ExplodeAll();
+                if (_tricksterDied) ExplodeAll();
                 Destroy(gameObject);
                 return;
             }

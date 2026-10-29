@@ -99,7 +99,7 @@ namespace SoulHunter.Gameplay.Pickups
             var type = trap != null ? trap.Type : (SoulHunter.Gameplay.Data.StageEventType)Random.Range(0, 3);
             var spawned = trap != null ? spawner.TriggerMapEvent(trap) : spawner.TriggerStageEvent(type, EventCount);
             LastTrap = trap;
-            if (spawned.Count == 0) return false; // boss fight or stage transition: nothing to start
+            if (spawned.Count == 0 && !spawner.LastEventStarted) return false; // boss fight or stage transition: nothing to start
             var stats = PlayerController.Instance != null ? PlayerController.Instance.Stats : null;
             GlobalReadyAt = Time.time + EffectiveCooldown(CooldownSeconds, stats != null ? stats.Luck : 1f);
             _readyAt = GlobalReadyAt;

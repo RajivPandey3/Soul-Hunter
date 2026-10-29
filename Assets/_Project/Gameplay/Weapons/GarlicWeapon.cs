@@ -160,7 +160,10 @@ namespace SoulHunter.Gameplay.Weapons
                 var damageable = DamageableLookup.Of(_hitsBuffer[i]);
                 if (damageable != null)
                 {
-                    enemiesHit++;
+                    var enemy = _hitsBuffer[i].GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
+                    // Soul Eater steals from enemies (the player, for Shadow Kael's copy), not from Soul Lanterns or Stained
+                    // Glass windows on the Enemy layer (bug hunt 2026-10-29).
+                    if (enemy != null || HeldByEnemy) enemiesHit++;
                     // A weak push (provisional), but VS Garlic makes each enemy it touches take more knockback.
                     var packet = new DamagePacket
                     {
@@ -171,7 +174,6 @@ namespace SoulHunter.Gameplay.Weapons
                         KnockbackSet = true
                     };
                     Hit(damageable, packet);
-                    var enemy = _hitsBuffer[i].GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>();
                     // VS Garlic debuffs (+0.3 knockback taken, -0.1 freeze resistance), blocked by debuff resistance.
                     if (enemy != null) enemy.ApplyGarlicDebuff();
                 }

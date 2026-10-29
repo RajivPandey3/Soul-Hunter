@@ -67,7 +67,7 @@ namespace SoulHunter.Gameplay.UI
         private ArcanaDraft _draft;
         private Action<ArcanaData> _chosen;
         private ArcanaData _selected;
-        private bool _paused, _pauseActionWasEnabled;
+        private bool _paused;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
         public ArcanaDraft Draft => _draft;
@@ -559,15 +559,12 @@ namespace SoulHunter.Gameplay.UI
         // The same switch as the chest and Revive screens: Esc must not open the pause menu over the choice.
         private void DisablePauseAction()
         {
-            var pause = PauseAction();
-            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+            SoulHunter.Core.Input.PauseKeyHolds.Hold(this, PauseAction()); // counted: overlapping screens share the key
         }
 
         private void RestorePauseAction()
         {
-            if (!_pauseActionWasEnabled) return;
-            _pauseActionWasEnabled = false;
-            PauseAction()?.Enable();
+            SoulHunter.Core.Input.PauseKeyHolds.Release(this, PauseAction());
         }
 
         private static UnityEngine.InputSystem.InputAction PauseAction()

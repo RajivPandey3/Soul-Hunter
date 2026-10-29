@@ -22,7 +22,7 @@ namespace SoulHunter.Gameplay.UI
         [SerializeField] private System.Collections.Generic.List<UpgradeData> _availableUpgrades;
 
         private ChestOpeningScreen _screen;
-        private bool _pauseActionWasEnabled, _paused;
+        private bool _paused;
 
         /// <summary>A chest screen is open (the game is paused under it).</summary>
         public bool IsOpen => _screen != null && _screen.IsOpen;
@@ -86,6 +86,9 @@ namespace SoulHunter.Gameplay.UI
                 data.ChestsOpened++;
                 if (items >= 5) data.FiveItemChestsOpened++;
                 if (saveNow) SaveService()?.SaveInBackground(); // the write runs on the worker, as CloseChest's
+                // Otherwise pending (bug hunt 2026-10-29): quitting with the screen open lost the count, as the chest's gold
+                // save may already have written before it. SaveSoon writes it within 2 s, and on quit.
+                else SaveService()?.SaveSoon();
             }
             return (before, fiveBefore);
         }
@@ -186,15 +189,12 @@ namespace SoulHunter.Gameplay.UI
         // Esc skips a chest (VS), so it must not open the pause menu at the same time (as OptionsMenuUI does).
         private void DisablePauseAction()
         {
-            var pause = PauseAction();
-            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+            SoulHunter.Core.Input.PauseKeyHolds.Hold(this, PauseAction()); // counted: overlapping screens share the key
         }
 
         private void RestorePauseAction()
         {
-            if (!_pauseActionWasEnabled) return;
-            _pauseActionWasEnabled = false;
-            PauseAction()?.Enable();
+            SoulHunter.Core.Input.PauseKeyHolds.Release(this, PauseAction());
         }
 
         private static UnityEngine.InputSystem.InputAction PauseAction()

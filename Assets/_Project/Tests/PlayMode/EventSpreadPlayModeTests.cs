@@ -46,6 +46,11 @@ namespace SoulHunter.Tests.PlayMode
             Assert.That(first, Is.InRange(1, EnemySpawner.EventSpawnsPerFrame), "The first frame makes only its share. " + Errors());
             Assert.That(spawner.PendingEventSpawns, Is.EqualTo(200 - first));
 
+            // Bug hunt 2026-10-29: with the queue busy a second row makes nothing this frame, but it did start.
+            var second = spawner.TriggerMapEvent(row);
+            Assert.That(second, Is.Empty, "the queue is busy: nothing made this frame");
+            Assert.That(spawner.LastEventStarted, Is.True, "yet it started (its members are queued), so a plate takes its cooldown");
+
             // A pause holds the rest.
             GameTime.Pause(this);
             for (int i = 0; i < 5; i++) yield return null;

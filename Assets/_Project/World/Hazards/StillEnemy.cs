@@ -10,7 +10,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// is undone when the enemy goes back to the pool, so the next one from the pool is ordinary.
     /// </summary>
     [DisallowMultipleComponent]
-    public class StillEnemy : MonoBehaviour, IHoldsPlace
+    public class StillEnemy : MonoBehaviour, IHoldsPlace, ILeavesWithItsLife
     {
         /// <summary>Game seconds left before it leaves; 0 or less = it stays until defeated.</summary>
         public float RemainingSeconds { get; set; }
@@ -23,8 +23,7 @@ namespace SoulHunter.Gameplay.Hazards
         public static StillEnemy Begin(GameObject enemyObject, float lifetimeSeconds = 0f)
         {
             if (enemyObject == null) return null;
-            var still = enemyObject.GetComponent<StillEnemy>();
-            if (still == null) still = enemyObject.AddComponent<StillEnemy>();
+            var still = LifeComponent.Fresh<StillEnemy>(enemyObject);
             still._enemy = enemyObject.GetComponent<EnemyController>();
             still._timed = lifetimeSeconds > 0f;
             still.RemainingSeconds = lifetimeSeconds;
@@ -62,10 +61,30 @@ namespace SoulHunter.Gameplay.Hazards
             gameObject.SetActive(false);
         }
 
+        public bool Doomed { get; private set; }
+
         private void OnDisable()
         {
+            if (Doomed) return;
+            Doomed = true;
             _enemy = null;
             Destroy(this);
+        }
+    }
+    /// <summary>
+    /// A component that lives for one enemy life and removes itself in OnDisable (Destroy(this)). Unity removes it only at the
+    /// end of the frame, so a body handed out again by its pool in that same frame still carries it (bug hunt 2026-10-29).
+    /// <see cref="LifeComponent.Fresh{T}"/> replaces such a doomed copy with a new one.
+    /// </summary>
+    public interface ILeavesWithItsLife { bool Doomed { get; } }
+
+    public static class LifeComponent
+    {
+        public static T Fresh<T>(GameObject go) where T : Component, ILeavesWithItsLife
+        {
+            var current = go.GetComponent<T>();
+            if (current != null && current.Doomed) { Object.DestroyImmediate(current); current = go.GetComponent<T>(); }
+            return current != null ? current : go.AddComponent<T>();
         }
     }
 }

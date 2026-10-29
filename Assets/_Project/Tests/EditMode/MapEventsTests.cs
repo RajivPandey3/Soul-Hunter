@@ -222,6 +222,29 @@ namespace SoulHunter.Tests.EditMode
         }
 
         [Test]
+        public void TheEggSnap_TakesBackOnlyTheEggsTheRunStartedWith()
+        {
+            // Bug hunt 2026-10-29: eggs bought or found mid-run go on the save's record "from the next run"; the snap at
+            // Level 8, 4:00 must not take them from this run.
+            var go = new UnityEngine.GameObject("EggStats");
+            try
+            {
+                var stats = go.AddComponent<SoulHunter.Gameplay.Player.PlayerStats>();
+                var record = new SoulHunter.Core.Persistence.SoulEggRecord { Might = 0.02f };
+                float might = stats.RawMight;
+                SoulHunter.Gameplay.Player.SoulEggs.Apply(record, stats);
+                var applied = SoulHunter.Gameplay.Player.SoulEggs.AppliedThisRun;
+                Assert.That(applied, Is.Not.SameAs(record), "a copy, not the live record");
+                record.Might += 0.05f; // bought from the Level 3 merchant during the run
+                record.Curse += 0.01f;
+                SoulHunter.Gameplay.Player.SoulEggs.Remove(applied, stats);
+                Assert.That(stats.RawMight, Is.EqualTo(might).Within(1e-5f), "only the 2% the run started with goes");
+                Assert.That(applied.Might, Is.EqualTo(0.02f).Within(1e-6f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
+        [Test]
         public void TheSwarmUnits_HaveTheirWikiStatboxes()
         {
             var bat = MadForestEnemies.Find("SwarmBat");

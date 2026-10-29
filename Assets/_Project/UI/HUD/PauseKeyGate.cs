@@ -12,7 +12,7 @@ namespace SoulHunter.Gameplay.UI
     public sealed class PauseKeyGate
     {
         private InputAction _pause;
-        private bool _holding, _wasEnabled;
+        private bool _holding;
 
         /// <summary>True while this gate keeps the Pause action off.</summary>
         public bool Holding => _holding;
@@ -23,8 +23,7 @@ namespace SoulHunter.Gameplay.UI
             if (_pause == null && GameServices.Instance != null && GameServices.Instance.TryGet(out InputService input))
                 _pause = input?.Actions?.FindAction(InputService.PauseAction);
             if (_pause == null) return;
-            _wasEnabled = _pause.enabled;
-            _pause.Disable();
+            PauseKeyHolds.Hold(this, _pause);
             _holding = true;
         }
 
@@ -32,7 +31,7 @@ namespace SoulHunter.Gameplay.UI
         {
             if (!_holding) return;
             _holding = false;
-            if (_pause != null && _wasEnabled) _pause.Enable();
+            PauseKeyHolds.Release(this, _pause);
         }
 
         /// <summary>Esc on a keyboard or B (east) on a gamepad, this frame.</summary>

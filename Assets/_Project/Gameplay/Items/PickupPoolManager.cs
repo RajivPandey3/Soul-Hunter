@@ -139,6 +139,9 @@ namespace SoulHunter.Gameplay.Pickups
                 _mergeGem = null;
             }
             var gem = SpawnFromPool(_gemPool, _xpGemPrefab, position);
+            // The pool may hand the old merge gem out again as an ordinary gem: it is no longer the merge gem (bug hunt
+            // 2026-10-29), unless it becomes it again just below.
+            if (gem != null && _mergeGem != null && gem == _mergeGem.gameObject) _mergeGem = null;
             if (gem != null && XPGem.ActiveGems.Count > MaxGemsOnGround) _mergeGem = gem.GetComponent<XPGem>();
             if (gem == null) return;
             var xp = gem.GetComponent<XPGem>();

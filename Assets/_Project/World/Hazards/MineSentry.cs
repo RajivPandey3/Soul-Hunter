@@ -14,7 +14,7 @@ namespace SoulHunter.Gameplay.Hazards
     /// drops and is not a kill; it can be killed first like any enemy. The ring's survivors leave when its time is up.
     /// </summary>
     [DisallowMultipleComponent]
-    public class MineSentry : MonoBehaviour, IHoldsPlace
+    public class MineSentry : MonoBehaviour, IHoldsPlace, ILeavesWithItsLife
     {
         private static readonly Color FuseTint = new Color(1f, 0.45f, 0.2f, 0.75f);
 
@@ -31,8 +31,7 @@ namespace SoulHunter.Gameplay.Hazards
         public static MineSentry Begin(GameObject enemyObject, float durationSeconds)
         {
             if (enemyObject == null) return null;
-            var mine = enemyObject.GetComponent<MineSentry>();
-            if (mine == null) mine = enemyObject.AddComponent<MineSentry>();
+            var mine = LifeComponent.Fresh<MineSentry>(enemyObject);
             mine._enemy = enemyObject.GetComponent<EnemyController>();
             mine.RemainingSeconds = Mathf.Max(0.1f, durationSeconds);
             mine.IsArmed = false;
@@ -102,8 +101,12 @@ namespace SoulHunter.Gameplay.Hazards
             gameObject.SetActive(false);
         }
 
+        public bool Doomed { get; private set; }
+
         private void OnDisable()
         {
+            if (Doomed) return;
+            Doomed = true;
             if (_marker != null) Destroy(_marker.gameObject);
             _marker = null;
             _enemy = null;

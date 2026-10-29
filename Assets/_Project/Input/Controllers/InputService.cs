@@ -163,4 +163,43 @@ namespace SoulHunter.Core.Input
             _moveAction = _dashAction = _ultimateAction = _pauseAction = null;
         }
     }
+
+    /// <summary>
+    /// Who keeps the Pause action off (bug hunt 2026-10-29). Each modal screen used to remember on its own whether it had
+    /// switched the one shared action off, so when two overlapped (a chest over a level-up) the first to close put it
+    /// back under the other. Now the action is off while anyone holds it, and back as it was once the last one lets go.
+    /// </summary>
+    public static class PauseKeyHolds
+    {
+        private static readonly System.Collections.Generic.HashSet<object> Holders = new System.Collections.Generic.HashSet<object>();
+        private static readonly System.Collections.Generic.List<object> Gone = new System.Collections.Generic.List<object>();
+        private static bool _wasEnabled;
+        private static UnityEngine.InputSystem.InputAction _action;
+
+        public static bool IsHeld { get { Prune(); return Holders.Count > 0; } }
+
+        public static void Hold(object owner, UnityEngine.InputSystem.InputAction pause)
+        {
+            if (owner == null || pause == null) return;
+            Prune();
+            if (Holders.Count == 0 || _action != pause) { _action = pause; _wasEnabled = pause.enabled; }
+            Holders.Add(owner);
+            pause.Disable();
+        }
+
+        public static void Release(object owner, UnityEngine.InputSystem.InputAction pause)
+        {
+            if (owner == null || !Holders.Remove(owner)) return;
+            Prune();
+            if (Holders.Count == 0 && _wasEnabled) (pause ?? _action)?.Enable();
+        }
+
+        // A screen destroyed while it held the key (scene change) lets go of it.
+        private static void Prune()
+        {
+            Gone.Clear();
+            foreach (var holder in Holders) if (holder is UnityEngine.Object unity && unity == null) Gone.Add(holder);
+            foreach (var holder in Gone) Holders.Remove(holder);
+        }
+    }
 }

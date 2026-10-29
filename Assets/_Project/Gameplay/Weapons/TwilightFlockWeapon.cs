@@ -101,8 +101,15 @@ namespace SoulHunter.Gameplay.Combat
         {
             if (BombPrefab == null) return;
             SetNextAttackIn(ActiveSeconds + CooldownForLevel * CooldownMultiplier);
-            StartCoroutine(Activation());
+            // As Peachone (CMB-09): an upgrade fires at once, so the running activation and its set stop and the new one
+            // starts alone (bug hunt 2026-10-29: Twilight Flock still ran two).
+            if (_activation != null) StopCoroutine(_activation);
+            if (_bombingRun != null) StopCoroutine(_bombingRun);
+            _bombingRun = null;
+            _activation = StartCoroutine(Activation());
         }
+
+        private Coroutine _activation, _bombingRun;
 
         private IEnumerator Activation()
         {
@@ -115,7 +122,7 @@ namespace SoulHunter.Gameplay.Combat
                 int zone = LastActivationSets % 2; // "alternating between each zone"
                 LastActivationSets++;
                 SetsByZone[zone]++;
-                StartCoroutine(BombingRun(ZonePosition(zone)));
+                _bombingRun = StartCoroutine(BombingRun(ZonePosition(zone)));
                 yield return new WaitForSeconds(setInterval);
                 elapsed += setInterval;
             }

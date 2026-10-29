@@ -29,7 +29,7 @@ namespace SoulHunter.Gameplay.UI
         private RectTransform _root, _safe, _panel;
         private Vector2 _lastSafe = new Vector2(-1f, -1f);
         private readonly System.Collections.Generic.Dictionary<TMP_Text, float> _sizes = new System.Collections.Generic.Dictionary<TMP_Text, float>();
-        private bool _paused, _pauseActionWasEnabled;
+        private bool _paused;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
         public Button ReviveButton { get; private set; }
@@ -251,15 +251,12 @@ namespace SoulHunter.Gameplay.UI
         // The same switch as the chest screen and Options (ChestUI.DisablePauseAction).
         private void DisablePauseAction()
         {
-            var pause = PauseAction();
-            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+            SoulHunter.Core.Input.PauseKeyHolds.Hold(this, PauseAction()); // counted: overlapping screens share the key
         }
 
         private void RestorePauseAction()
         {
-            if (!_pauseActionWasEnabled) return;
-            _pauseActionWasEnabled = false;
-            PauseAction()?.Enable();
+            SoulHunter.Core.Input.PauseKeyHolds.Release(this, PauseAction());
         }
 
         private static UnityEngine.InputSystem.InputAction PauseAction()

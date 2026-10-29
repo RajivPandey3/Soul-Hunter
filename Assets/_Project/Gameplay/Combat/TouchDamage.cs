@@ -50,7 +50,21 @@ namespace SoulHunter.Gameplay.Combat
         private Dictionary<IDamageable, ContactInfo> _targets = new Dictionary<IDamageable, ContactInfo>();
         private readonly List<IDamageable> _targetKeysSnapshot = new List<IDamageable>();
 
-        private void OnEnable() { _targets.Clear(); _targetKeysSnapshot.Clear(); }
+        private void OnEnable() { _targets.Clear(); _targetKeysSnapshot.Clear(); _waits.Clear(); }
+
+        // Bug hunt 2026-10-29: a body that left the zone and came back was hit at once, so King Bible's 1.7 s hitbox delay
+        // ("one book hits the same enemy at most every 1.7 s") and Santa Water's pool interval did not hold when a book
+        // lapped faster than 1.7 s. The wait left on a target is kept when it leaves (game time), for the same life.
+        private struct Wait { public float ReadyAt; public int Life; }
+        private readonly Dictionary<IDamageable, Wait> _waits = new Dictionary<IDamageable, Wait>();
+        private readonly List<IDamageable> _expired = new List<IDamageable>();
+
+        private float WaitLeft(IDamageable target, int life)
+        {
+            if (!_waits.TryGetValue(target, out var wait)) return 0f;
+            _waits.Remove(target);
+            return wait.Life == life ? Mathf.Max(0f, wait.ReadyAt - Time.time) : 0f;
+        }
 
         // 60 FPS pass (2026-10-14): every enemy carries one of these, and about 300 Update calls a frame did nothing
         // (no contact). Only a TouchDamage that is touching something is ticked, by TouchDamageTicker.
@@ -75,7 +89,8 @@ namespace SoulHunter.Gameplay.Combat
             var health = damageable as HealthController;
             if (!_targets.TryGetValue(damageable, out var known))
             {
-                _targets[damageable] = new ContactInfo { TargetTransform = other.transform, Timer = 0f, Health = health, Life = health != null ? health.Life : 0 };
+                int life = health != null ? health.Life : 0;
+                _targets[damageable] = new ContactInfo { TargetTransform = other.transform, Timer = WaitLeft(damageable, life), Health = health, Life = life };
             }
             else if (known.Health != null && known.Life != known.Health.Life)
             {
@@ -86,7 +101,7 @@ namespace SoulHunter.Gameplay.Combat
             TouchDamageTicker.Add(this);
         }
 
-        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); TouchDamageTicker.Remove(this); DamagedTarget = null; } 
+        private void OnDisable() { _targets.Clear(); _targetKeysSnapshot.Clear(); _waits.Clear(); TouchDamageTicker.Remove(this); DamagedTarget = null; } 
         
         private void OnCollisionExit(Collision collision)
         {
@@ -100,11 +115,23 @@ namespace SoulHunter.Gameplay.Combat
             if (other != null && other.CompareTag(TargetTag))
             {
                 var damageable = DamageableLookup.Of(other);
-                if (damageable != null && _targets.ContainsKey(damageable))
+                if (damageable != null && _targets.TryGetValue(damageable, out var info))
                 {
+                    if (info.Timer > 0f) KeepWait(damageable, info);
                     _targets.Remove(damageable);
                 }
             }
+        }
+
+        private void KeepWait(IDamageable target, ContactInfo info)
+        {
+            if (_waits.Count >= 256)
+            {
+                _expired.Clear();
+                foreach (var pair in _waits) if (pair.Value.ReadyAt <= Time.time) _expired.Add(pair.Key);
+                foreach (var key in _expired) _waits.Remove(key);
+            }
+            _waits[target] = new Wait { ReadyAt = Time.time + info.Timer, Life = info.Life };
         }
 
         private SoulHunter.Gameplay.AI.EnemyController _owner;

@@ -67,7 +67,12 @@ namespace SoulHunter.Gameplay.Core
             // One frame later: the player's stats and the level-up manager have run their own Start (character, PowerUps,
             // Soul Eggs); the boons only add to them, so the order does not change any value.
             yield return null;
-            ApplyRelicBoons();
+            // Tried again while the player or the save is not there yet (bug hunt 2026-10-29: one try could miss the run).
+            for (int tries = 0; tries < 600 && !BoonsApplied; tries++)
+            {
+                ApplyRelicBoons();
+                if (!BoonsApplied) yield return null;
+            }
         }
 
         private void Update()

@@ -86,7 +86,9 @@ namespace SoulHunter.Gameplay.Combat
                 }
             }
 
-            int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, BeamRange);
+            // Only the side it can freeze (bug hunt 2026-10-29; as Clock Lancet).
+            int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, BeamRange,
+                LayerMask.GetMask(HeldByEnemy ? "Player" : "Enemy"), QueryTriggerInteraction.Collide);
             float freezeSeconds = VsFreezeDuration * DurationMultiplier;
 
             if (HeldByEnemy)

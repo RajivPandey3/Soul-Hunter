@@ -1527,7 +1527,7 @@ namespace SoulHunter.Gameplay.Core
                     var stage = LevelProgressionManager.Instance != null ? LevelProgressionManager.Instance.CurrentStage : 0;
                     var row = SoulHunter.Gameplay.Data.StageTraps.For(stage).FirstOrDefault(r => r.EnemyTypeId == unitWanted);
                     var spawner = FindFirstObjectByType<EnemySpawner>();
-                    if (row != null && spawner != null && spawner.TriggerMapEvent(row).Count > 0)
+                    if (row != null && spawner != null && (spawner.TriggerMapEvent(row).Count > 0 || spawner.LastEventStarted))
                     {
                         _nextTrapTry = Elapsed + 20f;
                         Event("trap", $"\"type\": \"{row.Type}\", \"unit\": \"{row.EnemyTypeId}\", \"count\": {row.Count}");

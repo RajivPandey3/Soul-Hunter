@@ -183,21 +183,24 @@ namespace SoulHunter.Gameplay.Weapons
             _damage = damage;
             _hit.Clear();
             _usedUp = false;
+            // The damage itself asks this axe first (bug hunt 2026-10-29): before, the count and the damage were separate
+            // trigger callbacks, so enemies entered in the step the pierce ran out were still hurt, and an enemy that left
+            // and came back was hurt again.
+            if (damage != null) damage.HitGate = _gate ??= Allow;
         }
+
+        private System.Func<Component, bool> _gate;
 
         private void OnDisable() { _hit.Clear(); _usedUp = false; _expiresAt = float.PositiveInfinity; }
 
-        private void OnTriggerEnter(Collider other) => Count(other);
-        private void OnCollisionEnter(Collision collision) => Count(collision.collider);
-
-        private void Count(Collider other)
+        /// <summary>True when the axe may hurt <paramref name="body"/>: once per enemy, and not after its pierce is used up.</summary>
+        private bool Allow(Component body)
         {
-            if (_usedUp || other == null || _damage == null || !other.CompareTag(_damage.TargetTag)) return;
-            var damageable = DamageableLookup.Of(other);
-            if (damageable == null) return;
-            if (!_hit.Add(damageable is Component body ? body.GetInstanceID() : other.GetInstanceID())) return;
-            if (_hit.Count >= _pierce) { _usedUp = true; return; }
-            if (_bouncesLeft > 0) Bounce(other.transform.position);
+            if (_usedUp || body == null) return false;
+            if (!_hit.Add(body.GetInstanceID())) return false;
+            if (_hit.Count >= _pierce) _usedUp = true;
+            else if (_bouncesLeft > 0) Bounce(body.transform.position);
+            return true;
         }
 
         /// <summary>Reflects the axe's flight off the enemy it hit, as Projectile bounces do.</summary>

@@ -67,10 +67,13 @@ namespace SoulHunter.Gameplay.Weapons
             if (Time.deltaTime <= 0f) return;
             if (_remainingShots == 0)
             {
-                _cooldownTimer -= Time.deltaTime;
+                _cooldownTimer -= Time.deltaTime * CooldownTick;
                 if (_cooldownTimer > 0f || FindClosestEnemy() == null || _projectilePrefab == null) return;
                 _remainingShots = ShotCount;
                 _shotTimer = 0f;
+                // A volley is the wand's attack: the pose, the Arcana hook and the fire sound, as every weapon's.
+                BeforeAttack();
+                AfterAttack();
             }
             else _shotTimer -= Time.deltaTime;
 

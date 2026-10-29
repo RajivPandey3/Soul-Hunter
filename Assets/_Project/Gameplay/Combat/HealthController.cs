@@ -142,8 +142,15 @@ namespace SoulHunter.Gameplay.Combat
         {
             _maxHealth = maxHealth;
             _preciseMaxHealth = maxHealth;
+            MaxHealthScale = 1f;
             ResetHealth();
         }
+
+        /// <summary>
+        /// Every Max Health multiplier since Initialize (PowerUp, Hollow Heart, Awake ...). Cappella Magna's egg snap takes
+        /// the eggs' points times this, so the hero keeps none of them (bug hunt 2026-10-29: only the PowerUp was counted).
+        /// </summary>
+        public float MaxHealthScale { get; private set; } = 1f;
 
         [Tooltip("0 = Full Knockback, 1 = Immune (Bosses)")]
         [Range(0f, 1f)]
@@ -413,6 +420,7 @@ namespace SoulHunter.Gameplay.Combat
             if (_preciseMaxHealth <= 0f) _preciseMaxHealth = _maxHealth;
             int previous = _maxHealth;
             _preciseMaxHealth *= multiplier;
+            MaxHealthScale *= multiplier;
             _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_preciseMaxHealth));
             if (_currentHealth > 0)
                 _currentHealth = Mathf.Clamp(healByIncrease ? _currentHealth + _maxHealth - previous : _currentHealth, 1, _maxHealth);

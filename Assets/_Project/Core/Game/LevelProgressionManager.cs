@@ -158,7 +158,7 @@ namespace SoulHunter.Gameplay.Core
             var services = SoulHunter.Core.Services.GameServices.Instance;
             if (services == null || !services.TryGet<SoulHunter.Core.Persistence.SaveService>(out var save) || save.CurrentData == null) return;
             var data = save.CurrentData;
-            var eggs = SoulHunter.Gameplay.Player.SoulEggs.For(data, data.SelectedCharacterName);
+            var eggs = SoulHunter.Gameplay.Player.SoulEggs.AppliedThisRun; // only what this run started with
             if (eggs == null) return;
             var player = SoulHunter.Gameplay.Player.PlayerController.Instance;
             if (player != null && player.Stats != null)

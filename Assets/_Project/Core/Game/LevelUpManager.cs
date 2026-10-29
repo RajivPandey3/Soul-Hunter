@@ -437,19 +437,15 @@ namespace SoulHunter.Gameplay.Core
         // The same switch as the chest, Arcana and Revive screens (ChestUI.DisablePauseAction): while a level-up holds the
         // pause, Esc / Start would open the pause menu drawn under this screen (HUD canvas order 0 against the level-up's
         // 300) and move keyboard focus to its hidden Resume button.
-        private bool _pauseActionWasEnabled;
 
         private void DisablePauseAction()
         {
-            var pause = PauseAction();
-            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+            SoulHunter.Core.Input.PauseKeyHolds.Hold(this, PauseAction()); // counted: overlapping screens share the key
         }
 
         private void RestorePauseAction()
         {
-            if (!_pauseActionWasEnabled) return;
-            _pauseActionWasEnabled = false;
-            PauseAction()?.Enable();
+            SoulHunter.Core.Input.PauseKeyHolds.Release(this, PauseAction());
         }
 
         private static UnityEngine.InputSystem.InputAction PauseAction()

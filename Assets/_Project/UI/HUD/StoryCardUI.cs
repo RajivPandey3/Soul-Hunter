@@ -96,9 +96,11 @@ namespace SoulHunter.Gameplay.UI
         {
             var data = SaveData();
             int opened = 0;
+            // Every level is counted, not only today's casket levels: a save that opened the Level 5 casket before it moved to
+            // Level 8 (2026-10-29) has already seen the first casket's line.
             if (data != null)
-                foreach (var casket in SoulHunter.Core.Persistence.CasketBook.All)
-                    if (SoulHunter.Core.Persistence.CasketBook.IsOpened(data, casket.Level)) opened++;
+                for (int level = 1; level <= 10; level++)
+                    if (SoulHunter.Core.Persistence.CasketBook.IsOpened(data, level)) opened++;
             // The event comes after the casket is recorded: the save's first casket is the only one opened so far.
             ShowText(StoryTwist.CasketTitle, StoryTwist.CasketText(GameContentCatalog.CurrentName(character), opened <= 1, FreedHunters(data) >= 12));
         }

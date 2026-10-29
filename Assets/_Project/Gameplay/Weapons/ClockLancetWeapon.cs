@@ -64,11 +64,15 @@ namespace SoulHunter.Gameplay.Combat
                 }
             }
 
-            int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, 20f * AreaMultiplier);
+            // Only the side it can freeze (bug hunt 2026-10-29): with no mask, gems, the floor and weapon zones filled the
+            // 128-hit buffer on a crowded field and enemies on the beam were left unfrozen.
+            bool heldByEnemy = GetComponentInParent<EnemyController>() != null;
+            int mask = LayerMask.GetMask(heldByEnemy ? "Player" : "Enemy");
+            int count = UnityEngine.Physics.RaycastNonAlloc(transform.position, direction, _hits, 20f * AreaMultiplier, mask, QueryTriggerInteraction.Collide);
 
             // Shadow Kael's mirrored copy never freezes the boss or its horde. Owner decision (2026-09-30): a player the
             // beam crosses moves at half speed for the weapon's freeze time (VS has no player freeze).
-            if (GetComponentInParent<EnemyController>() != null)
+            if (heldByEnemy)
             {
                 for (int i = 0; i < count; i++)
                 {

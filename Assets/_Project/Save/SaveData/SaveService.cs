@@ -239,7 +239,14 @@ namespace SoulHunter.Core.Persistence
                 WaitForBackgroundWrite(); // an older background write must not land after this one
                 bool written;
                 using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.WriteJson")) written = WriteJson(json, _filePath, fromWorker: false);
-                if (!written) return false;
+                if (!written)
+                {
+                    // Tried again by SaveFlusher (2 s later, and on pause, focus loss and quit), as a failed background
+                    // write is (bug hunt 2026-10-29: a locked file lost a PowerUp buy or an Options change).
+                    _dirty = true;
+                    if (Application.isPlaying) SaveFlusher.Ensure(this);
+                    return false;
+                }
                 SavesWritten++;
                 _dirty = false;
                 _backgroundWriteFailed = false; // the background writes have finished (waited above) and this one is newer
@@ -251,8 +258,12 @@ namespace SoulHunter.Core.Persistence
             }
         }
 
+        /// <summary>True when a damaged save could not be backed up at load: nothing is written this session.</summary>
+        public bool WritesBlocked { get; private set; }
+
         private bool WriteJson(string json, string path, bool fromWorker)
         {
+            if (WritesBlocked) return false;
             string temp = path + ".tmp", previous = path + ".prev";
             lock (_writeLock)
             {
@@ -294,6 +305,14 @@ namespace SoulHunter.Core.Persistence
             {
                 CurrentData = data;
                 Debug.Log("[SaveService] Game Loaded successfully.");
+                // A save from a newer build: this build's next write would drop the fields it does not know, so the file is
+                // kept once as it was (bug hunt 2026-10-29). The game never reads the copy.
+                if (data.SaveVersion > GameData.CurrentVersion)
+                {
+                    string keep = _filePath + ".v" + data.SaveVersion + ".bak";
+                    try { if (!File.Exists(keep)) File.Copy(_filePath, keep, false); }
+                    catch (System.Exception copyError) { Debug.LogWarning($"[SaveService] Could not keep the newer save: {copyError.Message}"); }
+                }
             }
             else
             {
@@ -304,9 +323,20 @@ namespace SoulHunter.Core.Persistence
                 int suffix = 1;
                 while (File.Exists(backupPath))
                     backupPath = _filePath + "." + suffix++ + ".bak";
-                File.Copy(_filePath, backupPath, false);
-                // Preserved; remove it so the next save does not rotate the damaged file into ".prev".
-                File.Delete(_filePath);
+                try
+                {
+                    File.Copy(_filePath, backupPath, false);
+                    // Preserved; remove it so the next save does not rotate the damaged file into ".prev".
+                    File.Delete(_filePath);
+                }
+                catch (System.Exception copyError)
+                {
+                    // Bug hunt 2026-10-29: a full disk (a common cause of the damage) made this throw, so the game could not
+                    // boot although a good ".prev" was there. The damaged file could not be preserved, so this session
+                    // plays on the previous save without writing (a write would rotate the damaged file over ".prev").
+                    WritesBlocked = true;
+                    Debug.LogError($"[SaveService] The damaged save could not be backed up ({copyError.Message}); saving is off this session.");
+                }
                 if (File.Exists(PreviousPath) && TryRead(PreviousPath, out var previous, out _))
                 {
                     CurrentData = previous;

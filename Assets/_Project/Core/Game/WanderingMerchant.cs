@@ -117,19 +117,15 @@ namespace SoulHunter.Gameplay.Core
         // The same switch as the chest, Arcana and Revive screens (ChestUI.DisablePauseAction): with the shop open, Esc /
         // Start opened the pause menu drawn under it (HUD canvas order 0 against the shop's 900), moved keyboard focus to
         // its hidden Resume, and its Quit showed the Results screen under the shop.
-        private bool _pauseActionWasEnabled;
 
         private void DisablePauseAction()
         {
-            var pause = PauseAction();
-            if (pause != null && pause.enabled) { _pauseActionWasEnabled = true; pause.Disable(); }
+            SoulHunter.Core.Input.PauseKeyHolds.Hold(this, PauseAction()); // counted: overlapping screens share the key
         }
 
         private void RestorePauseAction()
         {
-            if (!_pauseActionWasEnabled) return;
-            _pauseActionWasEnabled = false;
-            PauseAction()?.Enable();
+            SoulHunter.Core.Input.PauseKeyHolds.Release(this, PauseAction());
         }
 
         private static UnityEngine.InputSystem.InputAction PauseAction()

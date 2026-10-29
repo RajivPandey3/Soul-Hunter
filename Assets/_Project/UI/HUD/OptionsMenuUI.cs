@@ -49,7 +49,6 @@ namespace SoulHunter.Gameplay.UI
         private Action _onClosed;
         private InputService _input;
         private InputActionRebindingExtensions.RebindingOperation _rebinding;
-        private bool _pauseActionWasEnabled;
 
         public IReadOnlyList<Selectable> Selectables => _selectables;
         public bool IsRebinding => _rebinding != null;
@@ -156,7 +155,7 @@ namespace SoulHunter.Gameplay.UI
             if (GameServices.Instance != null) GameServices.Instance.TryGet(out _input);
             // Esc toggles pause in a run; while Options is open it closes Options instead.
             var pause = _input?.Actions?.FindAction(InputService.PauseAction);
-            if (pause != null) { _pauseActionWasEnabled = pause.enabled; pause.Disable(); }
+            SoulHunter.Core.Input.PauseKeyHolds.Hold(this, pause); // counted with the other screens
 
             UITheme.AddVeil(transform); // the menu or game behind stays dark, full screen
             // The content lives in the safe area (notch, gesture bar); the panel is placed in it by LayoutNow.
@@ -545,7 +544,7 @@ namespace SoulHunter.Gameplay.UI
         private void RestorePauseAction()
         {
             var pause = _input?.Actions?.FindAction(InputService.PauseAction);
-            if (pause != null && _pauseActionWasEnabled) pause.Enable();
+            SoulHunter.Core.Input.PauseKeyHolds.Release(this, pause);
         }
 
         // ---------- binding lookup ----------

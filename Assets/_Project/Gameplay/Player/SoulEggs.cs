@@ -89,12 +89,24 @@ namespace SoulHunter.Gameplay.Player
         public static int Whole(float total) => Mathf.FloorToInt(total + 1e-4f);
 
         /// <summary>
+        /// The eggs this run really started with: a copy taken by <see cref="Apply"/>. Eggs bought or found during the run go
+        /// on the save's record but count "from the next run", so Cappella Magna's egg snap (Level 8, 4:00), Avatar of Gaea
+        /// and the Results read this copy, not the live record (bug hunt 2026-10-29: the snap took eggs the run never had).
+        /// </summary>
+        public static SoulEggRecord AppliedThisRun { get; private set; }
+
+        public static SoulEggRecord Copy(SoulEggRecord record) =>
+            record == null ? null : JsonUtility.FromJson<SoulEggRecord>(JsonUtility.ToJson(record));
+
+        /// <summary>
         /// Applies a character's eggs to the run's stats (once, at run start, after the character's own stats).
         /// Reroll, Skip and Banish charges are added by LevelUpManager.
         /// </summary>
         public static void Apply(SoulEggRecord record, PlayerStats stats)
         {
-            if (record == null || stats == null) return;
+            if (stats == null) return;
+            AppliedThisRun = Copy(record);
+            if (record == null) return;
             int maxHealth = Whole(record.MaxHealth);
             if (maxHealth > 0) stats.AddMaxHealth(maxHealth);
             if (record.Recovery > 0f) stats.AddRegen(record.Recovery);
@@ -131,7 +143,7 @@ namespace SoulHunter.Gameplay.Player
             {
                 stats.RemoveMaxHealthBonus(maxHealth);
                 var health = stats.GetComponent<SoulHunter.Gameplay.Combat.HealthController>() ?? stats.GetComponentInParent<SoulHunter.Gameplay.Combat.HealthController>();
-                if (health != null) health.ReduceMaxHealth(maxHealth * Mathf.Max(1f, maxHealthMultiplier));
+                if (health != null) health.ReduceMaxHealth(maxHealth * Mathf.Max(1f, maxHealthMultiplier, health.MaxHealthScale));
             }
             if (record.Recovery > 0f) stats.AddRegen(-record.Recovery);
             int armor = Mathf.Min(Whole(record.Armor), (int)ArmorCap);
