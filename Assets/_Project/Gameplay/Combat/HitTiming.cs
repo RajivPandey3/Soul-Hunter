@@ -17,7 +17,8 @@ namespace SoulHunter.Gameplay.Combat
 
         /// <summary>The parts of a damaging hit inside HealthController.TakeDamage.</summary>
         public enum Part { Multiplier, Stats, Observer, Number, OnDamaged, Knockback, HealthChanged, Die,
-            DeathOnDied, DeathDeactivate, DeathPuff, DeathBlood, DeathCorpse, DeathKillStats, DeathGem, Count }
+            DeathOnDied, DeathDeactivate, DeathPuff, DeathBlood, DeathCorpse, DeathKillStats, DeathGem,
+            GemActivate, GemReset, GemTier, Count }
         private static readonly long[] PartTicks = new long[(int)Part.Count];
         private static readonly int[] PartCalls = new int[(int)Part.Count];
 
@@ -31,8 +32,30 @@ namespace SoulHunter.Gameplay.Combat
             PartCalls[(int)part]++;
         }
 
+        // Each OnDied listener, by its class and method (2026-10-29: OnDied's timed parts covered 2.1 of its 5.2 ms).
+        private static readonly System.Collections.Generic.Dictionary<string, long> ListenerTicks = new System.Collections.Generic.Dictionary<string, long>();
+        private static readonly System.Collections.Generic.Dictionary<string, int> ListenerCalls = new System.Collections.Generic.Dictionary<string, int>();
+        private static readonly System.Collections.Generic.Dictionary<System.Reflection.MethodInfo, string> ListenerNames = new System.Collections.Generic.Dictionary<System.Reflection.MethodInfo, string>();
+
+        /// <summary>Runs every listener of <paramref name="died"/> in turn, timing each (when timing is on).</summary>
+        public static void RunTimed(System.Action died)
+        {
+            foreach (var d in died.GetInvocationList())
+            {
+                long t = Stopwatch.GetTimestamp();
+                ((System.Action)d).Invoke();
+                t = Stopwatch.GetTimestamp() - t;
+                if (!ListenerNames.TryGetValue(d.Method, out var name))
+                    ListenerNames[d.Method] = name = (d.Method.DeclaringType != null ? d.Method.DeclaringType.Name : "?") + "." + d.Method.Name;
+                ListenerTicks.TryGetValue(name, out long sum); ListenerTicks[name] = sum + t;
+                ListenerCalls.TryGetValue(name, out int n); ListenerCalls[name] = n + 1;
+            }
+        }
+
         public static void Clear()
         {
+            ListenerTicks.Clear();
+            ListenerCalls.Clear();
             FindTicks = DamagingTicks = EmptyTicks = 0;
             FindCalls = DamagingCalls = EmptyCalls = 0;
             System.Array.Clear(PartTicks, 0, PartTicks.Length);
@@ -48,6 +71,11 @@ namespace SoulHunter.Gameplay.Combat
             sb.Append($"find {Ms(FindTicks):0.00} ms x{FindCalls}; damaging {Ms(DamagingTicks):0.00} ms x{DamagingCalls}; empty {Ms(EmptyTicks):0.00} ms x{EmptyCalls} |");
             for (int i = 0; i < PartTicks.Length; i++)
                 if (PartCalls[i] > 0) sb.Append($" {(Part)i} {Ms(PartTicks[i]):0.00} ms x{PartCalls[i]};");
+            if (ListenerTicks.Count > 0)
+            {
+                sb.Append(" | died:");
+                foreach (var entry in ListenerTicks) sb.Append($" {entry.Key} {Ms(entry.Value):0.00} ms x{ListenerCalls[entry.Key]};");
+            }
             return sb.ToString();
         }
     }

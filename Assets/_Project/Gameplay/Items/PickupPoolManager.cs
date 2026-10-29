@@ -143,8 +143,10 @@ namespace SoulHunter.Gameplay.Pickups
             if (gem == null) return;
             var xp = gem.GetComponent<XPGem>();
             if (xp != null) xp.XPValue = Mathf.Max(1, value);
+            long tt = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0;
             var tier = gem.GetComponent<TieredVisual>();
             if (tier != null) tier.SetValue(value);
+            SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.GemTier, tt);
         }
 
         /// <summary>
@@ -251,8 +253,11 @@ namespace SoulHunter.Gameplay.Pickups
             }
 
             objToSpawn.transform.position = position;
-            using (SoulHunter.Core.Services.SlowSpan.Measure("PickupPool.SetActive " + prefab.name)) objToSpawn.SetActive(true);
-            
+            long ta = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0;
+            objToSpawn.SetActive(true);
+            SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.GemActivate, ta);
+            long tr = SoulHunter.Gameplay.Combat.HitTiming.Enabled ? SoulHunter.Gameplay.Combat.HitTiming.Now : 0;
+
             // Reset state if it has XPGem or HealthPickup script
             var gem = objToSpawn.GetComponent<XPGem>();
             if (gem != null) gem.ResetPickup();
@@ -273,6 +278,7 @@ namespace SoulHunter.Gameplay.Pickups
 
             var pickup = objToSpawn.GetComponent<Pickup>();
             if (pickup != null) pickup.ResetPickup();
+            SoulHunter.Gameplay.Combat.HitTiming.Add(SoulHunter.Gameplay.Combat.HitTiming.Part.GemReset, tr);
             return objToSpawn;
         }
 

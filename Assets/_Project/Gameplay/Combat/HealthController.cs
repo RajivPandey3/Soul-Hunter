@@ -432,7 +432,7 @@ namespace SoulHunter.Gameplay.Combat
 
         private void DieWithoutPrevention()
         {
-            if (OnDied != null) { long td = HitTiming.Enabled ? HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDied")) OnDied(); HitTiming.Add(HitTiming.Part.DeathOnDied, td); }
+            if (OnDied != null) { long td = HitTiming.Enabled ? HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("Health.OnDied")) { if (HitTiming.Enabled) HitTiming.RunTimed(OnDied); else OnDied(); } HitTiming.Add(HitTiming.Part.DeathOnDied, td); }
             // Learning Comment:
             // Generic cloned enemies (horde) ke marne par Debug.Log karne se Unity console freeze ho jata tha.
             // Ab sirf unique entities (jaise Player ya Boss) ka death log hoga.
