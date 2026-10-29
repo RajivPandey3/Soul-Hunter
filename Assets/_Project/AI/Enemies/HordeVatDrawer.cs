@@ -114,6 +114,10 @@ namespace SoulHunter.Gameplay.AI
             _pruneAfterFrame = Time.frameCount;
         }
 
+        /// <summary>True while the drawer draws this body in place of its own renderer (it is drawn only while live).</summary>
+        public static bool Draws(EnemyController enemy) =>
+            _instance != null && Enabled && enemy != null && _instance._bodies.TryGetValue(enemy, out var body) && body != null && body.Handed;
+
         /// <summary>Bodies the drawer remembers (tests).</summary>
         public static int KnownBodies => _instance != null ? _instance._bodies.Count : 0;
 

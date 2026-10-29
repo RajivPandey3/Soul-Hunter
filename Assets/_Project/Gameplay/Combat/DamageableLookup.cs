@@ -14,15 +14,23 @@ namespace SoulHunter.Gameplay.Combat
         private const int MaxEntries = 4096;
         private static readonly Dictionary<Collider, IDamageable> Cache = new Dictionary<Collider, IDamageable>();
 
+        /// <summary>
+        /// The collider's IDamageable, or null when there is none or its health is already 0. A body that died this frame
+        /// can still be on the screen's colliders for a frame or two (EnemyDeathQueue); a shot passing it keeps its pierce.
+        /// </summary>
         public static IDamageable Of(Collider collider)
         {
             if (collider == null) return null;
-            if (Cache.TryGetValue(collider, out var found) && found is Object alive && alive != null) return found;
-            found = collider.GetComponentInParent<IDamageable>();
-            if (found == null) { Cache.Remove(collider); return null; }
-            if (Cache.Count >= MaxEntries) Cache.Clear(); // destroyed colliders never come back; start again
-            Cache[collider] = found;
-            return found;
+            if (!Cache.TryGetValue(collider, out var found) || !(found is Object alive) || alive == null)
+            {
+                found = collider.GetComponentInParent<IDamageable>();
+                if (found == null) { Cache.Remove(collider); return null; }
+                if (Cache.Count >= MaxEntries) Cache.Clear(); // destroyed colliders never come back; start again
+                Cache[collider] = found;
+            }
+            // Enemies only: a hero held at 0 for the Revive screen keeps its contacts, so the horde touching it still hurts
+            // once the revival's immunity ends.
+            return found is HealthController health && health.CurrentHealth <= 0 && health.Enemy != null ? null : found;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

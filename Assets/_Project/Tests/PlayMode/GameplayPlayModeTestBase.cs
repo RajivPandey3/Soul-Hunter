@@ -45,6 +45,8 @@ namespace SoulHunter.Tests.PlayMode
             // formation in the frame it fires, often with the spawner switched off. EventSpreadPlayModeTests sets it back.
             SoulHunter.Gameplay.AI.EnemySpawner.EventSpawnsPerFrame = int.MaxValue;
             SoulHunter.Gameplay.AI.EnemySpawner.EventSpawnMsPerFrame = float.MaxValue;
+            // Tests check that a killed body is pooled in its death's frame; EnemyDeathQueuePlayModeTests switches it on.
+            SoulHunter.Gameplay.AI.EnemyDeathQueue.Enabled = false;
             Application.logMessageReceived += CaptureErrors;
             // Report unrelated runtime errors in the failure message instead of
             // failing on the first one, so the flow under test stays visible.

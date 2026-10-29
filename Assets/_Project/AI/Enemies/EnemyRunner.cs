@@ -19,7 +19,11 @@ namespace SoulHunter.Gameplay.AI
             _instance = go.AddComponent<EnemyRunner>();
         }
 
-        private void Update() => EnemyController.StepAll(false);
+        private void Update()
+        {
+            EnemyDeathQueue.Drain();
+            EnemyController.StepAll(false);
+        }
 
         private void FixedUpdate() => EnemyController.StepAll(true);
 

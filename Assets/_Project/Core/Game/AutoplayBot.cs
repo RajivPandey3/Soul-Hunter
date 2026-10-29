@@ -358,12 +358,13 @@ namespace SoulHunter.Gameplay.Core
             if (_player == null || Finished) return;
             _frameTimes.Add(Time.unscaledDeltaTime);
             float now = Time.realtimeSinceStartup;
-            WatchForHangs(now);
-            WatchLevelUpFrames();
+            // The bot's own parts are timed apart (2026-10-29): a jolt frame showed AutoplayBot.Update at 9-10 ms.
+            using (SoulHunter.Core.Services.SlowSpan.Measure("Bot.WatchForHangs")) WatchForHangs(now);
+            using (SoulHunter.Core.Services.SlowSpan.Measure("Bot.LevelUpFrames")) WatchLevelUpFrames();
             if (now >= _nextSteer)
             {
                 _nextSteer = now + 0.1f;
-                Steer();
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Bot.Steer." + _lookStep)) Steer();
             }
             // Timed shots show play, not a level-up or chest screen (level-ups came every ~15 s and hid every shot).
             if (now >= _nextShot && !GameTime.IsPaused)
@@ -374,7 +375,7 @@ namespace SoulHunter.Gameplay.Core
             if (now >= _nextTimeline)
             {
                 _nextTimeline = now + 5f;
-                WriteTimeline();
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Bot.WriteTimeline")) WriteTimeline();
             }
             if (Elapsed >= Config.Minutes * 60f) Finish("time limit");
         }
@@ -1247,7 +1248,8 @@ namespace SoulHunter.Gameplay.Core
                     $", \"triggers\": \"{Escape(_lastFrameTriggers)}\"" +
                     $", \"hits\": \"{Escape(_lastFrameHits)}\"" +
                     $", \"loop\": \"{Escape(LoopTimer.DescribeLastFrame())}\"" +
-                    $", \"churn\": \"on {EnemyController.Enables - _churnOn} off {EnemyController.Disables - _churnOff}, before on {_churnPrevOn} off {_churnPrevOff}, gems {XPGem.ActiveGems.Count}\"");
+                    $", \"churn\": \"on {EnemyController.Enables - _churnOn} off {EnemyController.Disables - _churnOff}, before on {_churnPrevOn} off {_churnPrevOff}, gems {XPGem.ActiveGems.Count}\"" +
+                    $", \"deathq\": {(EnemyDeathQueue.Enabled ? "true" : "false")}, \"deathqWaiting\": {EnemyDeathQueue.Count}");
             }
             else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
             // Bodies switched on and off since the last bot frame, and in the one before (a physics jolt's churn).
@@ -1436,6 +1438,16 @@ namespace SoulHunter.Gameplay.Core
                 HordeVatDrawer.Enabled = _vatAbIndex % 2 == 0;
                 _vatAbIndex++;
                 _nextVatSwitch = Elapsed + 30f;
+            }
+            // -sh-autoplay-deathq-ab: dead horde bodies are switched off a few a frame (EnemyDeathQueue) for 30 s, then in
+            // their death's frame for 30 s, and so on (a "deathq" event marks each switch; jolt events carry the state).
+            if (HasArg("-sh-autoplay-deathq-ab") && Elapsed >= _nextDeathQSwitch)
+            {
+                EnemyDeathQueue.Flush();
+                EnemyDeathQueue.Enabled = _deathQAbIndex % 2 == 0;
+                _deathQAbIndex++;
+                _nextDeathQSwitch = Elapsed + 30f;
+                Event("deathq", $"\"on\": {(EnemyDeathQueue.Enabled ? "true" : "false")}");
             }
             // -sh-autoplay-gpu-ab shadows|fx: a GPU cost is switched off for 30 s, then on for 30 s, and so on, so one run
             // compares both on the same hero (timeline "gpuOff"). shadows: the URP shadow distance is 0; fx: every particle
@@ -1777,6 +1789,8 @@ namespace SoulHunter.Gameplay.Core
         private float _nextQualitySwitch;
         private int _vSyncAbIndex;
         private int _vatAbIndex;
+        private int _deathQAbIndex;
+        private float _nextDeathQSwitch;
         private int _bulletAbIndex;
         private float _nextBulletSwitch;
         private float _nextBulletLookSwitch;

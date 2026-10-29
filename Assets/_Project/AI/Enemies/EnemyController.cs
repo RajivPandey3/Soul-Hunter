@@ -269,6 +269,8 @@ namespace SoulHunter.Gameplay.AI
             if (_hitSoundHealth == null) _hitSoundHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
             AddActive();
+            IsDying = false;
+            if (_touchOffForDeath) { _touchOffForDeath = false; if (_touchDamage != null) _touchDamage.enabled = true; }
             Enables++;
             EnemyRunner.Ensure();
             // A flat body (no gravity, height frozen) never uses the ground scan: every stage floor is flat, so the chase
@@ -295,7 +297,8 @@ namespace SoulHunter.Gameplay.AI
         private void OnDisable()
         {
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged -= PlayHitSound; _hitSoundHealth.OnDied -= PlayDeathSound; }
-            RemoveActive();
+            if (IsDying) EndDying(); // it left the live list when it died
+            else RemoveActive();
             Disables++;
             if (_abilities != null) _abilities.Stop();
             _currentState?.Exit();
@@ -341,6 +344,60 @@ namespace SoulHunter.Gameplay.AI
             }
             ActiveEnemies.RemoveAt(last);
         }
+
+        // ---------------------------------------------------------------- the death queue (EnemyDeathQueue)
+        /// <summary>
+        /// Dead, waiting for its body to be switched off a frame or two later: off the live list (nothing aims at it, steps
+        /// it, pushes it or draws it), hit by nothing (DamageableLookup) and harmless (its contact damage is off).
+        /// </summary>
+        public bool IsDying { get; private set; }
+        private bool _touchOffForDeath;
+        private static readonly List<Renderer> RendererScratch = new List<Renderer>(4);
+        private static readonly List<Collider> ColliderScratch = new List<Collider>(4);
+
+        /// <summary>
+        /// True for a plain horde body whose switch-off can wait: drawn by the GPU horde drawer (so leaving the live list
+        /// hides it), one renderer and one collider, no skill running and no component added for a hazard role
+        /// (a Pile Assault shooter, a Powder Ring mine, a Thorn Circle post). Bosses and everything else switch off at once.
+        /// </summary>
+        internal bool CanFinishDyingLater()
+        {
+            if (IsDying || IsStageBoss || !isActiveAndEnabled) return Refuse("dying, boss or off");
+            if (_abilities != null && _abilities.IsRunning) return Refuse("skill running");
+            if (!HordeVatDrawer.Draws(this)) return Refuse("not drawn by the GPU drawer");
+            if (GetComponent<IHoldsPlace>() != null) return Refuse("hazard role"); // shooter, mine, still member
+            // Nothing of it may draw itself: the drawer's body has forceRenderingOff, and the prefab's own placeholder
+            // renderer is switched off. A renderer still drawing would stay on screen until the body is switched off.
+            GetComponentsInChildren(false, RendererScratch);
+            bool drawsItself = false;
+            foreach (var r in RendererScratch) if (r.enabled && !r.forceRenderingOff) { drawsItself = true; break; }
+            RendererScratch.Clear();
+            if (drawsItself) return Refuse("a renderer draws itself");
+            // One live collider, its body (a Thorn Circle member's post is a second one).
+            GetComponentsInChildren(false, ColliderScratch);
+            int colliders = 0;
+            foreach (var c in ColliderScratch) if (c.enabled) colliders++;
+            ColliderScratch.Clear();
+            return colliders == 1 || Refuse(colliders + " colliders");
+        }
+
+        /// <summary>Why the last body was switched off at once (tests, diagnostics).</summary>
+        public static string LastRefusal { get; private set; } = "";
+        private static bool Refuse(string why) { LastRefusal = why; return false; }
+
+        internal void BeginDying()
+        {
+            IsDying = true;
+            RemoveActive();
+            if (_touchDamage != null && _touchDamage.enabled) { _touchDamage.enabled = false; _touchOffForDeath = true; }
+            if (Rigidbody != null && !Rigidbody.isKinematic)
+            {
+                Rigidbody.linearVelocity = Vector3.zero;
+                Rigidbody.angularVelocity = Vector3.zero;
+            }
+        }
+
+        private void EndDying() => IsDying = false; // its contact damage comes back on its next spawn (OnEnable)
 
         /// <summary>The state the enemy is in (chase, fly, frozen, hold, lunge ...).</summary>
         public IEnemyState CurrentState => _currentState;

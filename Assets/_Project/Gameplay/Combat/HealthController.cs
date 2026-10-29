@@ -113,7 +113,7 @@ namespace SoulHunter.Gameplay.Combat
         private static readonly Unity.Profiling.ProfilerMarker HitKnockbackMarker = new("Hit.Knockback");
         private static readonly Unity.Profiling.ProfilerMarker HitHealthChangedMarker = new("Hit.OnHealthChanged");
         private static readonly Unity.Profiling.ProfilerMarker HitDieMarker = new("Hit.Die");
-        private SoulHunter.Gameplay.AI.EnemyController Enemy => _enemy != null ? _enemy : (_enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>());
+        internal SoulHunter.Gameplay.AI.EnemyController Enemy => _enemy != null ? _enemy : (_enemy = GetComponentInParent<SoulHunter.Gameplay.AI.EnemyController>());
 
         private void Awake()
         {
@@ -443,7 +443,17 @@ namespace SoulHunter.Gameplay.Combat
             
             // Basic death logic (Disable object); an OnDied listener that revived keeps it alive.
             if (_keepAliveAfterDeath) _keepAliveAfterDeath = false;
-            else { long ta = HitTiming.Enabled ? HitTiming.Now : 0; using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Deactivate")) gameObject.SetActive(false); HitTiming.Add(HitTiming.Part.DeathDeactivate, ta); }
+            else
+            {
+                long ta = HitTiming.Enabled ? HitTiming.Now : 0;
+                using (SoulHunter.Core.Services.SlowSpan.Measure("Health.Deactivate"))
+                {
+                    // A plain horde body leaves the screen now and is switched off a frame or two later (EnemyDeathQueue).
+                    var enemy = Enemy;
+                    if (enemy == null || !SoulHunter.Gameplay.AI.EnemyDeathQueue.TryDefer(enemy)) gameObject.SetActive(false);
+                }
+                HitTiming.Add(HitTiming.Part.DeathDeactivate, ta);
+            }
         }
     }
 }
