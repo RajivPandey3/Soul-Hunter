@@ -1246,9 +1246,15 @@ namespace SoulHunter.Gameplay.Core
                     gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"" +
                     $", \"triggers\": \"{Escape(_lastFrameTriggers)}\"" +
                     $", \"hits\": \"{Escape(_lastFrameHits)}\"" +
-                    $", \"loop\": \"{Escape(LoopTimer.DescribeLastFrame())}\"");
+                    $", \"loop\": \"{Escape(LoopTimer.DescribeLastFrame())}\"" +
+                    $", \"churn\": \"on {EnemyController.Enables - _churnOn} off {EnemyController.Disables - _churnOff}, before on {_churnPrevOn} off {_churnPrevOff}, gems {XPGem.ActiveGems.Count}\"");
             }
             else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
+            // Bodies switched on and off since the last bot frame, and in the one before (a physics jolt's churn).
+            _churnPrevOn = EnemyController.Enables - _churnOn;
+            _churnPrevOff = EnemyController.Disables - _churnOff;
+            _churnOn = EnemyController.Enables;
+            _churnOff = EnemyController.Disables;
             // -sh-autoplay-frame-timing (a build with Frame Timing Stats on): where a long frame went, main thread, render
             // thread or GPU, in a release build without the profiler. The timings arrive a few frames late, so every frame
             // the latest ones are read and each long one is reported once.
@@ -1522,6 +1528,15 @@ namespace SoulHunter.Gameplay.Core
                     Event("trap", $"\"type\": \"{(trap != null ? trap.Type.ToString() : "formation")}\", \"unit\": \"{(trap != null ? trap.EnemyTypeId : "")}\", \"count\": {(trap != null ? trap.Count : 0)}");
                 }
             }
+            // -sh-autoplay-death-bench S: at S seconds, what switching a killed enemy's body off costs, per component type, in
+            // this build. 120 ordinary enemies are switched off whole (the control); 120 others have each component type
+            // switched off in turn, then the rest of the object. The bodies go back to their pools as on a death.
+            if (!_deathBenchDone && float.TryParse(ArgValue("-sh-autoplay-death-bench"), NumberStyles.Float, CultureInfo.InvariantCulture, out var benchAt)
+                && Elapsed >= benchAt && EnemyController.ActiveEnemies.Count >= 240)
+            {
+                _deathBenchDone = true;
+                Event("death-bench", DeathBench(120));
+            }
             // A boss's parts (Crab Pincers, Hydra Heads) and its Drowner: every change is an event, so a jolt can be
             // matched to a pincer regrowing or the tide arriving.
             if (Elapsed >= _nextPartsLook)
@@ -1539,6 +1554,59 @@ namespace SoulHunter.Gameplay.Core
             }
         }
 
+        private bool _deathBenchDone;
+
+        private static string DeathBench(int count)
+        {
+            var spawner = FindFirstObjectByType<EnemySpawner>();
+            var bodies = EnemyController.ActiveEnemies
+                .Where(e => e != null && e.isActiveAndEnabled && (spawner == null || !spawner.IsBoss(e)) && !e.IsFlying)
+                .Take(count * 2).Select(e => e.gameObject).ToList();
+            if (bodies.Count < count * 2) return $"\"error\": \"only {bodies.Count} bodies\"";
+            double Ms(long start) => (System.Diagnostics.Stopwatch.GetTimestamp() - start) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+
+            long t = System.Diagnostics.Stopwatch.GetTimestamp();
+            for (int i = 0; i < count; i++) bodies[i].SetActive(false);
+            double whole = Ms(t);
+
+            var parts = new List<(double ms, string text)>();
+            var switchedOff = new List<Component>();
+            var test = bodies.Skip(count).ToList();
+            var types = new List<System.Type>();
+            foreach (var c in test[0].GetComponentsInChildren<Component>(true))
+                if (c != null && (c is Behaviour || c is Renderer || c is Collider) && !types.Contains(c.GetType())) types.Add(c.GetType());
+            double sum = 0;
+            foreach (var type in types)
+            {
+                t = System.Diagnostics.Stopwatch.GetTimestamp();
+                int n = 0;
+                foreach (var body in test)
+                    foreach (var c in body.GetComponentsInChildren(type, true))
+                    {
+                        if (c is Behaviour b && b.enabled) { b.enabled = false; n++; switchedOff.Add(c); }
+                        else if (c is Renderer r && r.enabled) { r.enabled = false; n++; switchedOff.Add(c); }
+                        else if (c is Collider col && col.enabled) { col.enabled = false; n++; switchedOff.Add(c); }
+                    }
+                double ms = Ms(t);
+                sum += ms;
+                parts.Add((ms, string.Format(CultureInfo.InvariantCulture, "{0} {1:0.00} ms x{2}", type.Name, ms, n)));
+            }
+            t = System.Diagnostics.Stopwatch.GetTimestamp();
+            foreach (var body in test) body.SetActive(false);
+            double rest = Ms(t);
+            // Put back on what was switched off, for the pool's next use.
+            foreach (var c in switchedOff)
+            {
+                if (c is Behaviour b) b.enabled = true;
+                else if (c is Renderer r) r.enabled = true;
+                else if (c is Collider col) col.enabled = true;
+            }
+            parts.Sort((a, b) => b.ms.CompareTo(a.ms));
+            return string.Format(CultureInfo.InvariantCulture, "\"wholeMs\": {0:0.00}, \"partsMs\": {1:0.00}, \"restMs\": {2:0.00}, \"parts\": \"{3}\"",
+                whole, sum, rest, string.Join("; ", parts.Select(p => p.text)));
+        }
+
+        private int _churnOn, _churnOff, _churnPrevOn, _churnPrevOff;
         private readonly FrameTiming[] _frameTimings = new FrameTiming[8];
         private ulong _lastTimedFrame;
         private float _nextPartsLook;

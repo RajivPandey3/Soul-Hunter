@@ -14,6 +14,9 @@ namespace SoulHunter.Gameplay.AI
     public class EnemyController : MonoBehaviour
     {
         public static readonly List<EnemyController> ActiveEnemies = new List<EnemyController>();
+
+        /// <summary>Bodies switched on and off so far (measuring: pool churn per frame next to a physics jolt).</summary>
+        public static int Enables, Disables;
         public Rigidbody Rigidbody { get; private set; }
         /// <summary>This enemy's transform, cached (read for every enemy on every step).</summary>
         public Transform CachedTransform { get; private set; }
@@ -72,15 +75,18 @@ namespace SoulHunter.Gameplay.AI
             _stepTargetKnown = false;
             _stepTarget = null;
             _inStep = true;
+            int step = ++_stepId;
             try
             {
                 if (physics) EnemyCrowd.EnsureBuilt();
                 // Backwards: an enemy that leaves during its own step (a flier's lifetime) removes itself from the list.
+                // A leaving enemy's place takes the last one, which may already have been stepped: it is not stepped twice.
                 for (int i = ActiveEnemies.Count - 1; i >= 0; i--)
                 {
                     if (i >= ActiveEnemies.Count) continue;
                     var enemy = ActiveEnemies[i];
-                    if (ReferenceEquals(enemy, null)) continue;
+                    if (ReferenceEquals(enemy, null) || enemy._steppedIn == step) continue;
+                    enemy._steppedIn = step;
                     try
                     {
                         if (physics) enemy.PhysicsStep(); else enemy.FrameStep();
@@ -262,7 +268,8 @@ namespace SoulHunter.Gameplay.AI
         {
             if (_hitSoundHealth == null) _hitSoundHealth = GetComponent<SoulHunter.Gameplay.Combat.HealthController>();
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged += PlayHitSound; _hitSoundHealth.OnDied += PlayDeathSound; }
-            if (!ActiveEnemies.Contains(this)) ActiveEnemies.Add(this);
+            AddActive();
+            Enables++;
             EnemyRunner.Ensure();
             // A flat body (no gravity, height frozen) never uses the ground scan: every stage floor is flat, so the chase
             // never tilts its path, and its vertical speed is 0 grounded or not. Skipping it saves two physics queries per
@@ -288,7 +295,8 @@ namespace SoulHunter.Gameplay.AI
         private void OnDisable()
         {
             if (_hitSoundHealth != null) { _hitSoundHealth.OnDamaged -= PlayHitSound; _hitSoundHealth.OnDied -= PlayDeathSound; }
-            ActiveEnemies.Remove(this);
+            RemoveActive();
+            Disables++;
             if (_abilities != null) _abilities.Stop();
             _currentState?.Exit();
             _currentState = null;
@@ -298,6 +306,40 @@ namespace SoulHunter.Gameplay.AI
                 Rigidbody.linearVelocity = Vector3.zero;
                 Rigidbody.angularVelocity = Vector3.zero;
             }
+        }
+
+        // Death jolt (2026-10-29): List.Remove looked the enemy up in the whole list on every death, and Contains on every
+        // spawn (death bench: 0.54 ms of 3.4 ms for 120 deaths in one step). Each enemy keeps its place in the list, and
+        // leaving moves the last enemy into that place. A list changed from outside (tests add and remove directly) is
+        // still handled: a place that no longer holds this enemy falls back to the old search.
+        private int _activeIndex = -1;
+        private int _steppedIn; // the step that last moved this enemy (a swap can move an enemy behind the loop)
+        private static int _stepId;
+
+        private void AddActive()
+        {
+            if (_activeIndex >= 0 && _activeIndex < ActiveEnemies.Count && ReferenceEquals(ActiveEnemies[_activeIndex], this)) return;
+            _activeIndex = ActiveEnemies.Count;
+            ActiveEnemies.Add(this);
+        }
+
+        private void RemoveActive()
+        {
+            int i = _activeIndex;
+            _activeIndex = -1;
+            if (i < 0 || i >= ActiveEnemies.Count || !ReferenceEquals(ActiveEnemies[i], this))
+            {
+                ActiveEnemies.Remove(this);
+                return;
+            }
+            int last = ActiveEnemies.Count - 1;
+            if (i != last)
+            {
+                var moved = ActiveEnemies[last];
+                ActiveEnemies[i] = moved;
+                if (!ReferenceEquals(moved, null)) moved._activeIndex = i;
+            }
+            ActiveEnemies.RemoveAt(last);
         }
 
         /// <summary>The state the enemy is in (chase, fly, frozen, hold, lunge ...).</summary>
