@@ -56,6 +56,7 @@ namespace SoulHunter.Tests.PlayMode
                 if (type == StageEventType.TrapRing) continue; // a standing ring, not a flight (MapEventsPlayModeTests)
                 if (type == StageEventType.Chasers) continue; // Shade Bombs home on the hero (MapEventsPlayModeTests)
                 if (type == StageEventType.PulsingRing || type == StageEventType.PileRing || type == StageEventType.StarRain || type == StageEventType.Stream) continue; // standing rings of a VS unit (MapEventsPlayModeTests)
+                if (type == StageEventType.Circle) continue; // a VS unit's ring that acts by its statbox (StageTrapsPlayModeTests)
                 var entry = new StageEventEntry { Type = type, Count = 8 };
                 var spawned = (List<EnemyController>)run.Invoke(spawner, new object[] { entry, level, phase });
                 Assert.AreEqual(8, spawned.Count, $"{type} should spawn its full formation. " + Errors());

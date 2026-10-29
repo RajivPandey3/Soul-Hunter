@@ -1475,6 +1475,19 @@ namespace SoulHunter.Gameplay.Core
                 Event("omen", $"\"name\": \"{OmenTable.Name(omen)}\", \"fired\": {(fired ? "true" : "false")}");
                 StartCoroutine(OmenShots(omen.ToString()));
             }
+            // -sh-autoplay-traps S: from S seconds in, steps on a Rune Plate whenever the trap cooldown allows (a stage's
+            // trap events under measurement, without walking out to the plates).
+            if (float.TryParse(ArgValue("-sh-autoplay-traps"), NumberStyles.Float, CultureInfo.InvariantCulture, out var trapsFrom)
+                && Elapsed >= trapsFrom && Elapsed >= _nextTrapTry)
+            {
+                _nextTrapTry = Elapsed + 1f;
+                var items = FindFirstObjectByType<SoulHunter.Gameplay.Pickups.StageItemSpawner>();
+                if (items != null && items.Plates.Count > 0 && items.Plates[0] != null && items.Plates[0].Step())
+                {
+                    var trap = items.Plates[0].LastTrap;
+                    Event("trap", $"\"type\": \"{(trap != null ? trap.Type.ToString() : "formation")}\", \"unit\": \"{(trap != null ? trap.EnemyTypeId : "")}\", \"count\": {(trap != null ? trap.Count : 0)}");
+                }
+            }
         }
 
         private float GiveAfter => float.TryParse(ArgValue("-sh-autoplay-give-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var giveAt) ? giveAt : 12f;
@@ -1507,6 +1520,7 @@ namespace SoulHunter.Gameplay.Core
         }
 
         private bool _omenDone, _giveDone, _chestDropped;
+        private float _nextTrapTry;
         private EnemySpawner _spawnerForLog; // pooled enemy bodies in the timeline (memory checks)
 
         private IEnumerator OmenShots(string name)
