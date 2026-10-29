@@ -84,29 +84,40 @@ namespace SoulHunter.Gameplay.Hazards
             circle._centre = centre;
             circle._duration = Mathf.Max(1f, durationSeconds);
             circle.Radius = StageHazardTable.ThornStartRadius;
-            int obstacleLayer = LayerMask.NameToLayer("Obstacle");
             for (int i = 0; i < count; i++)
             {
                 float angle = Mathf.PI * 2f * i / count;
-                Vector3 at = circle.SpotOf(angle);
-                var enemy = spawner.SpawnHazardEnemy(memberPrefab, at);
-                if (enemy == null) continue;
-                var member = new Member { Enemy = enemy, Angle = angle, Body = enemy.GetComponent<Rigidbody>(), Still = StillEnemy.Begin(enemy) };
-                // The post is its own object, not a child: a solid collider under the enemy's body would let the hero
-                // shove the enemy about, and the pool would hand the collider on with it.
-                var post = new GameObject("ThornCircle_Post");
-                post.transform.SetParent(go.transform, false);
-                post.transform.position = enemy.transform.position;
-                if (obstacleLayer >= 0) post.layer = obstacleLayer;
-                var collider = post.AddComponent<CapsuleCollider>();
-                collider.radius = StageHazardTable.ThornPostRadius;
-                collider.height = 4f;
-                collider.direction = 1;
-                member.Post = post;
-                circle._members.Add(member);
+                circle._pending++;
+                // A few members a frame (EnemySpawner.SpawnSpread): 100 in one frame made a 29-37 ms jolt (2026-10-29).
+                spawner.SpawnSpread(() => circle.AddMember(spawner, memberPrefab, angle));
             }
-            if (circle._members.Count == 0) { Destroy(go); return null; }
+            if (circle._members.Count == 0 && circle._pending == 0) { Destroy(go); return null; }
             return circle;
+        }
+
+        private int _pending;
+        private bool _left;
+
+        private void AddMember(EnemySpawner spawner, GameObject memberPrefab, float angle)
+        {
+            _pending--;
+            if (this == null || _left || spawner == null) return;
+            var enemy = spawner.SpawnHazardEnemy(memberPrefab, SpotOf(angle));
+            if (enemy == null) return;
+            var member = new Member { Enemy = enemy, Angle = angle, Body = enemy.GetComponent<Rigidbody>(), Still = StillEnemy.Begin(enemy) };
+            // The post is its own object, not a child: a solid collider under the enemy's body would let the hero
+            // shove the enemy about, and the pool would hand the collider on with it.
+            var post = new GameObject("ThornCircle_Post");
+            post.transform.SetParent(transform, false);
+            post.transform.position = enemy.transform.position;
+            int obstacleLayer = LayerMask.NameToLayer("Obstacle");
+            if (obstacleLayer >= 0) post.layer = obstacleLayer;
+            var collider = post.AddComponent<CapsuleCollider>();
+            collider.radius = StageHazardTable.ThornPostRadius;
+            collider.height = 4f;
+            collider.direction = 1;
+            member.Post = post;
+            _members.Add(member);
         }
 
         private Vector3 SpotOf(float angle) => _centre + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * Radius;
@@ -136,12 +147,13 @@ namespace SoulHunter.Gameplay.Hazards
                 m.Enemy.transform.position = at;
                 if (m.Post != null) m.Post.transform.position = at;
             }
-            if (!any) Destroy(gameObject);
+            if (!any && _pending <= 0) Destroy(gameObject);
         }
 
         /// <summary>The ring's time is up (or the stage changed): the survivors leave without drops.</summary>
         public void Leave()
         {
+            _left = true; // members still waiting are not made
             foreach (var m in _members)
                 if (IsStanding(m)) m.Still.Leave();
             _members.Clear();

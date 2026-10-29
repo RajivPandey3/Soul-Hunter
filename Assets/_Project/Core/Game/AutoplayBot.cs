@@ -231,6 +231,7 @@ namespace SoulHunter.Gameplay.Core
             Directory.CreateDirectory(Path.Combine(Config.OutputFolder, "shots"));
             // A run froze for 8 minutes after a chest (2026-10-16); the watchdog writes where the main thread is stuck.
             SoulHunter.Core.Services.SlowSpan.StartWatchdog(Path.Combine(Config.OutputFolder, "stall.txt"));
+            if (HasArg("-sh-autoplay-loop-timing")) LoopTimer.Install();
             while (SceneManager.GetActiveScene().name != "MainMenu") yield return null;
             yield return new WaitForSecondsRealtime(0.5f);
             var save = GameServices.Instance.Get<SaveService>();
@@ -1244,9 +1245,29 @@ namespace SoulHunter.Gameplay.Core
                     dt * 1000f, GameTime.IsPaused ? "true" : "false", EnemyController.ActiveEnemies.Count,
                     gc0 - _lastGc0, gc1 - _lastGc1, gc2 - _lastGc2) + $", \"spans\": \"{Escape(SoulHunter.Core.Services.SlowSpan.TakeRecent())}\"" +
                     $", \"triggers\": \"{Escape(_lastFrameTriggers)}\"" +
-                    $", \"hits\": \"{Escape(_lastFrameHits)}\"");
+                    $", \"hits\": \"{Escape(_lastFrameHits)}\"" +
+                    $", \"loop\": \"{Escape(LoopTimer.DescribeLastFrame())}\"");
             }
             else SoulHunter.Core.Services.SlowSpan.Prune(); // a long frame reports the timed sections of its last two frames
+            // -sh-autoplay-frame-timing (a build with Frame Timing Stats on): where a long frame went, main thread, render
+            // thread or GPU, in a release build without the profiler. The timings arrive a few frames late, so every frame
+            // the latest ones are read and each long one is reported once.
+            if (HasArg("-sh-autoplay-frame-timing") && FrameTimingManager.IsFeatureEnabled())
+            {
+                FrameTimingManager.CaptureFrameTimings();
+                uint got = FrameTimingManager.GetLatestTimings((uint)_frameTimings.Length, _frameTimings);
+                for (int i = (int)got - 1; i >= 0; i--)
+                {
+                    var ft = _frameTimings[i];
+                    if (ft.frameStartTimestamp <= _lastTimedFrame) continue;
+                    _lastTimedFrame = ft.frameStartTimestamp;
+                    if (ft.cpuFrameTime < JoltSeconds * 1000.0 && ft.gpuFrameTime < JoltSeconds * 1000.0) continue;
+                    Event("jolt-timing", string.Format(CultureInfo.InvariantCulture,
+                        "\"cpuMs\": {0:0.0}, \"mainMs\": {1:0.0}, \"mainPresentWaitMs\": {2:0.0}, \"renderMs\": {3:0.0}, \"gpuMs\": {4:0.0}, \"paused\": {5}",
+                        ft.cpuFrameTime, ft.cpuMainThreadFrameTime, ft.cpuMainThreadPresentWaitTime, ft.cpuRenderThreadFrameTime, ft.gpuFrameTime,
+                        GameTime.IsPaused ? "true" : "false"));
+                }
+            }
             // -sh-autoplay-hit-timing: the release-build time of weapon hits, summed per frame (a jolt lists the previous frame).
             if (HasArg("-sh-autoplay-hit-timing"))
             {
@@ -1481,14 +1502,48 @@ namespace SoulHunter.Gameplay.Core
                 && Elapsed >= trapsFrom && Elapsed >= _nextTrapTry)
             {
                 _nextTrapTry = Elapsed + 1f;
-                var items = FindFirstObjectByType<SoulHunter.Gameplay.Pickups.StageItemSpawner>();
+                // -sh-autoplay-trap-unit U: fires that unit's trap row of this stage instead, every 20 s (a measured row).
+                string unitWanted = ArgValue("-sh-autoplay-trap-unit");
+                if (!string.IsNullOrEmpty(unitWanted))
+                {
+                    var stage = LevelProgressionManager.Instance != null ? LevelProgressionManager.Instance.CurrentStage : 0;
+                    var row = SoulHunter.Gameplay.Data.StageTraps.For(stage).FirstOrDefault(r => r.EnemyTypeId == unitWanted);
+                    var spawner = FindFirstObjectByType<EnemySpawner>();
+                    if (row != null && spawner != null && spawner.TriggerMapEvent(row).Count > 0)
+                    {
+                        _nextTrapTry = Elapsed + 20f;
+                        Event("trap", $"\"type\": \"{row.Type}\", \"unit\": \"{row.EnemyTypeId}\", \"count\": {row.Count}");
+                    }
+                }
+                var items = string.IsNullOrEmpty(unitWanted) ? FindFirstObjectByType<SoulHunter.Gameplay.Pickups.StageItemSpawner>() : null;
                 if (items != null && items.Plates.Count > 0 && items.Plates[0] != null && items.Plates[0].Step())
                 {
                     var trap = items.Plates[0].LastTrap;
                     Event("trap", $"\"type\": \"{(trap != null ? trap.Type.ToString() : "formation")}\", \"unit\": \"{(trap != null ? trap.EnemyTypeId : "")}\", \"count\": {(trap != null ? trap.Count : 0)}");
                 }
             }
+            // A boss's parts (Crab Pincers, Hydra Heads) and its Drowner: every change is an event, so a jolt can be
+            // matched to a pincer regrowing or the tide arriving.
+            if (Elapsed >= _nextPartsLook)
+            {
+                _nextPartsLook = Elapsed + 0.1f;
+                var parts = FindFirstObjectByType<SoulHunter.Gameplay.Hazards.BossParts>();
+                int alive = parts != null ? parts.PartsAlive : -1;
+                bool drowner = parts != null && parts.DrownerSummoned;
+                if (alive != _partsAlive || drowner != _partsDrowner)
+                {
+                    _partsAlive = alive;
+                    _partsDrowner = drowner;
+                    Event("boss-parts", $"\"alive\": {alive}, \"drowner\": {(drowner ? "true" : "false")}");
+                }
+            }
         }
+
+        private readonly FrameTiming[] _frameTimings = new FrameTiming[8];
+        private ulong _lastTimedFrame;
+        private float _nextPartsLook;
+        private int _partsAlive = -1;
+        private bool _partsDrowner;
 
         private float GiveAfter => float.TryParse(ArgValue("-sh-autoplay-give-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var giveAt) ? giveAt : 12f;
 

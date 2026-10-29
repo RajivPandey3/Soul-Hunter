@@ -41,6 +41,9 @@ namespace SoulHunter.Tests.PlayMode
             // The start prompt (VS "PRESS TO START", 2026-10-12) shows once per launch and hides the menu's buttons until it
             // is answered. Tests reach the menu as on a later visit; the prompt's own test sets this back to false.
             SoulHunter.Gameplay.UI.StartPrompt.ShownThisLaunch = true;
+            // A map event's members are made a few a frame in the game (EnemySpawner.EventSpawnsPerFrame); tests count a
+            // formation in the frame it fires, often with the spawner switched off. EventSpreadPlayModeTests sets it back.
+            SoulHunter.Gameplay.AI.EnemySpawner.EventSpawnsPerFrame = int.MaxValue;
             Application.logMessageReceived += CaptureErrors;
             // Report unrelated runtime errors in the failure message instead of
             // failing on the first one, so the flow under test stays visible.

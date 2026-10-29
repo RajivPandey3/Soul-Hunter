@@ -69,12 +69,24 @@ namespace SoulHunter.Gameplay.Hazards
             for (int i = 0; i < count; i++)
             {
                 float angle = Mathf.PI * 2f * i / count;
-                var enemy = spawner.SpawnHazardEnemy(memberPrefab, ring.SpotOf(angle));
-                if (enemy == null) continue;
-                ring._members.Add(new Member { Enemy = enemy, Angle = angle, Body = enemy.GetComponent<Rigidbody>(), Still = StillEnemy.Begin(enemy) });
+                ring._pending++;
+                // A few members a frame (EnemySpawner.SpawnSpread), as the Thorn Circle's.
+                spawner.SpawnSpread(() => ring.AddMember(spawner, memberPrefab, angle));
             }
-            if (ring._members.Count == 0) { Destroy(go); return null; }
+            if (ring._members.Count == 0 && ring._pending == 0) { Destroy(go); return null; }
             return ring;
+        }
+
+        private int _pending;
+        private bool _left;
+
+        private void AddMember(EnemySpawner spawner, GameObject memberPrefab, float angle)
+        {
+            _pending--;
+            if (this == null || _left || spawner == null) return;
+            var enemy = spawner.SpawnHazardEnemy(memberPrefab, SpotOf(angle));
+            if (enemy == null) return;
+            _members.Add(new Member { Enemy = enemy, Angle = angle, Body = enemy.GetComponent<Rigidbody>(), Still = StillEnemy.Begin(enemy) });
         }
 
         private Vector3 SpotOf(float angle) =>
@@ -101,12 +113,13 @@ namespace SoulHunter.Gameplay.Hazards
                 if (m.Body != null) m.Body.position = at;
                 m.Enemy.transform.position = at;
             }
-            if (!any) Destroy(gameObject);
+            if (!any && _pending <= 0) Destroy(gameObject);
         }
 
         /// <summary>The ring's time is up (or the stage changed): the survivors leave without drops.</summary>
         public void Leave()
         {
+            _left = true; // members still waiting are not made
             foreach (var m in _members)
                 if (IsStanding(m)) m.Still.Leave();
             _members.Clear();

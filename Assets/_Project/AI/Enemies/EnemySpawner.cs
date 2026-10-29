@@ -130,6 +130,7 @@ namespace SoulHunter.Gameplay.AI
             _stageEvents = _currentWave.GetEvents();
             _nextStageEvent = 0;
             _eventFirings.Clear();
+            _spreadSpawns.Clear();
             // A corridor stage (the Ruined Castle) is walled along world X around where the player stands now.
             StageCorridor.Begin(WaveTables.CorridorHalfWidth(stageNum), _playerTransform != null ? _playerTransform.position.z : 0f);
             int stageIndex = Mathf.Clamp(stageNum - 1, 0, 9);
@@ -212,9 +213,52 @@ namespace SoulHunter.Gameplay.AI
             }
         }
 
+        /// <summary>
+        /// Map-event members made in one frame, at most (2026-10-29). A trap's 200 Smoke Clumps or 100 Tide Thorns made in
+        /// the frame the plate was stepped on took that frame to 29-56 ms (`run-20261029-wrapped`: the whole frame was the
+        /// trap's event). Members past this many wait for the next frames, at the places the event gave them; nothing is
+        /// made under a pause, and a stage change drops the queue. TricksterRings.GemsPerFrame does the same for its gems.
+        /// Tests that count a formation in the frame it fires set this higher (GameplayPlayModeTestBase).
+        /// </summary>
+        public static int EventSpawnsPerFrame = 16;
+        private readonly Queue<System.Action> _spreadSpawns = new Queue<System.Action>();
+        private int _spreadFrame = -1, _spreadThisFrame;
+
+        /// <summary>Members still waiting to be made (tests).</summary>
+        public int PendingEventSpawns => _spreadSpawns.Count;
+
+        /// <summary>Runs <paramref name="spawnOne"/> now while this frame has room, else in a later frame, in order.</summary>
+        public void SpawnSpread(System.Action spawnOne)
+        {
+            if (spawnOne == null) return;
+            if (_spreadFrame != Time.frameCount) { _spreadFrame = Time.frameCount; _spreadThisFrame = 0; }
+            if (_spreadSpawns.Count == 0 && _spreadThisFrame < EventSpawnsPerFrame)
+            {
+                _spreadThisFrame++;
+                spawnOne();
+            }
+            else _spreadSpawns.Enqueue(spawnOne);
+        }
+
+        private void MakeSpreadSpawns()
+        {
+            if (_spreadSpawns.Count == 0) return;
+            var progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
+            if (progression != null && progression.IsStageTransitioning) { _spreadSpawns.Clear(); return; }
+            if (Time.deltaTime <= 0f) return; // a pause holds them
+            if (_spreadFrame != Time.frameCount) { _spreadFrame = Time.frameCount; _spreadThisFrame = 0; }
+            using (SoulHunter.Core.Services.SlowSpan.Measure("EnemySpawner.SpreadSpawns"))
+                while (_spreadSpawns.Count > 0 && _spreadThisFrame < EventSpawnsPerFrame)
+                {
+                    _spreadThisFrame++;
+                    _spreadSpawns.Dequeue()();
+                }
+        }
+
         private void Update()
         {
             TrimIdlePools();
+            MakeSpreadSpawns();
             // Player visuals are selected/instantiated during scene startup,
             // which can occur after this manager's Start(). Reacquire cheaply
             // instead of permanently disabling all ten stage spawners.
@@ -898,10 +942,14 @@ namespace SoulHunter.Gameplay.AI
                 float ring = SoulHunter.Gameplay.Hazards.StageHazardTable.PileRangeScale(stageEvent.Range);
                 for (int i = 0; i < stageEvent.Count; i++)
                 {
-                    var member = SpawnHazardEnemy(typed, centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count) * ring);
-                    if (member == null) break;
-                    SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
-                    if (member.TryGetComponent<EnemyController>(out var still)) spawned.Add(still);
+                    Vector3 at = centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count) * ring;
+                    SpawnSpread(() =>
+                    {
+                        var member = SpawnHazardEnemy(typed, at);
+                        if (member == null) return;
+                        SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
+                        if (member.TryGetComponent<EnemyController>(out var still)) spawned.Add(still);
+                    });
                 }
                 return spawned;
             }
@@ -916,12 +964,15 @@ namespace SoulHunter.Gameplay.AI
                 float ring = SoulHunter.Gameplay.Hazards.StageHazardTable.PileRangeScale(stageEvent.Range);
                 for (int i = 0; i < stageEvent.Count; i++)
                 {
-                    var member = SpawnHazardEnemy(typed, centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count) * ring);
-                    if (member == null) break;
-                    if (!member.TryGetComponent<EnemyController>(out var unit)) continue;
-                    if (unit.MoveSpeed <= 0.001f) SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
-                    else SoulHunter.Gameplay.Hazards.EventLifetime.Begin(member, seconds);
-                    spawned.Add(unit);
+                    Vector3 at = centre + SoulHunter.Gameplay.Hazards.StageHazardTable.PileOffset(i, stageEvent.Count) * ring;
+                    SpawnSpread(() =>
+                    {
+                        var member = SpawnHazardEnemy(typed, at);
+                        if (member == null || !member.TryGetComponent<EnemyController>(out var unit)) return;
+                        if (unit.MoveSpeed <= 0.001f) SoulHunter.Gameplay.Hazards.StillEnemy.Begin(member, seconds);
+                        else SoulHunter.Gameplay.Hazards.EventLifetime.Begin(member, seconds);
+                        spawned.Add(unit);
+                    });
                 }
                 return spawned;
             }
@@ -936,34 +987,40 @@ namespace SoulHunter.Gameplay.AI
             Vector3 origin = _playerTransform.position;
             if (stageEvent.HasLane) origin.z = stageEvent.LaneZ; // a Dragon Stream keeps its lane
             BuildFormation(stageEvent.Type, stageEvent.Count, origin, direction, EventRadius(stageEvent.Type, direction), _formation);
+            float radius = EventRadius(stageEvent.Type, direction);
             foreach (var (position, flyDirection) in _formation)
-            {
-                if (EnemyController.ActiveEnemies.Count >= HardCap) break; // VS: at most 500 on screen
-                var enemyObject = SpawnEnemy(typed != null ? typed : PickSwarmPrefab(level, phase));
-                var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
-                if (enemy == null) continue;
-                enemyObject.transform.position = StageCorridor.Clamp(position);
-                // VS Fixed Direction: the unit crosses at its own speed and leaves once past the far screen edge (twice the
-                // start radius, plus a margin); a duration, when the row gives one, ends it sooner or later.
-                // A homing unit (Shade Bomb, the generic VS Swarm of Milk Elementals or Skeletons) chases the player at
-                // its own speed (SpawnEnemy) and goes when the event's duration is up.
-                bool homes = stageEvent.Type == StageEventType.Chasers || (typed != null && !stageEvent.Straight &&
-                    enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection &&
-                    enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection);
-                if (homes) SoulHunter.Gameplay.Hazards.EventLifetime.Begin(enemyObject, stageEvent.DurationSeconds);
-                else if (typed != null)
-                {
-                    // It leaves once past the far screen edge (twice the start radius, plus a margin), or sooner when the
-                    // row's duration ends first.
-                    float crossing = (EventRadius(stageEvent.Type, direction) * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed);
-                    enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? Mathf.Min(stageEvent.DurationSeconds, crossing) : crossing);
-                }
-                else enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
-                KeepWorldFreeze(enemy);
-                spawned.Add(enemy);
-            }
-            SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Stage event {stageEvent.Type} ({spawned.Count} enemies) at {_stageTimePassed:0}s.");
+                SpawnSpread(() => SpawnEventMember(stageEvent, typed, level, phase, position, flyDirection, radius, spawned));
+            SoulHunter.Core.Services.GameLog.Info($"[EnemySpawner] Stage event {stageEvent.Type} ({stageEvent.Count} enemies) at {_stageTimePassed:0}s.");
             return spawned;
+        }
+
+        // One member of a flying formation, made now or a few frames later (SpawnSpread).
+        private void SpawnEventMember(StageEventEntry stageEvent, GameObject typed, CampaignLevelDefinition level, WavePhase phase,
+            Vector3 position, Vector3 flyDirection, float radius, List<EnemyController> spawned)
+        {
+            if (EnemyController.ActiveEnemies.Count >= HardCap) return; // VS: at most 500 on screen
+            var enemyObject = SpawnEnemy(typed != null ? typed : PickSwarmPrefab(level, phase));
+            var enemy = enemyObject != null ? enemyObject.GetComponent<EnemyController>() : null;
+            if (enemy == null) return;
+            enemyObject.transform.position = StageCorridor.Clamp(position);
+            // VS Fixed Direction: the unit crosses at its own speed and leaves once past the far screen edge (twice the
+            // start radius, plus a margin); a duration, when the row gives one, ends it sooner or later.
+            // A homing unit (Shade Bomb, the generic VS Swarm of Milk Elementals or Skeletons) chases the player at
+            // its own speed (SpawnEnemy) and goes when the event's duration is up.
+            bool homes = stageEvent.Type == StageEventType.Chasers || (typed != null && !stageEvent.Straight &&
+                enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FixedDirection &&
+                enemy.Movement != SoulHunter.Gameplay.Data.EnemyMovement.FloatyFixedDirection);
+            if (homes) SoulHunter.Gameplay.Hazards.EventLifetime.Begin(enemyObject, stageEvent.DurationSeconds);
+            else if (typed != null)
+            {
+                // It leaves once past the far screen edge (twice the start radius, plus a margin), or sooner when the
+                // row's duration ends first.
+                float crossing = (radius * 2f + 6f) / Mathf.Max(0.1f, enemy.MoveSpeed);
+                enemy.StartFixedCourse(flyDirection, stageEvent.DurationSeconds > 0f ? Mathf.Min(stageEvent.DurationSeconds, crossing) : crossing);
+            }
+            else enemy.StartFlyingMode(flyDirection, stageEvent.Speed);
+            KeepWorldFreeze(enemy);
+            spawned.Add(enemy);
         }
 
         // ---------------------------------------------------------------- Omens: fliers on a given path, and a wave takeover

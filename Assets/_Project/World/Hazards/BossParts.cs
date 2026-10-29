@@ -121,7 +121,8 @@ namespace SoulHunter.Gameplay.Hazards
         {
             if (!_active || part.LivesLeft <= 0 || _spawner == null) return;
             part.LivesLeft--;
-            var obj = _spawner.SpawnHazardEnemy(_partPrefab, SlotPosition(part), ignoreHardCap: true);
+            GameObject obj;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("BossParts.Grow")) obj = _spawner.SpawnHazardEnemy(_partPrefab, SlotPosition(part), ignoreHardCap: true);
             if (obj == null) return;
             part.Object = obj;
             part.Enemy = obj.GetComponent<EnemyController>();
@@ -249,7 +250,8 @@ namespace SoulHunter.Gameplay.Hazards
             if (_belowFor < BelowSeconds) return;
             DrownerSummoned = true;
             var hazards = FindFirstObjectByType<StageHazards>();
-            if (hazards != null) hazards.StartRisingTide(DrownerSeconds, DrownerXlHealthPerLevel, DrownerXlXp);
+            using (SoulHunter.Core.Services.SlowSpan.Measure("BossParts.Drowner"))
+                if (hazards != null) hazards.StartRisingTide(DrownerSeconds, DrownerXlHealthPerLevel, DrownerXlXp);
         }
 
         /// <summary>For tests: how long the hero has stood below the crab.</summary>
