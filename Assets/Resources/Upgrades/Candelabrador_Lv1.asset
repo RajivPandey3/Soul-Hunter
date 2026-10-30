@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Candelabrador_Lv1
   m_EditorClassIdentifier: 
-  UpgradeName: Candelabrador Lv.1
-  Description: Candelabrador upgrade level 1.
+  UpgradeName: Grave Candle Lv.1
+  Description: Grave Candle upgrade level 1.
   Icon: {fileID: -7648935954811957849, guid: 905ec260f9637c641830c79cf6373c83, type: 3}
   Type: 24
   Level: 1

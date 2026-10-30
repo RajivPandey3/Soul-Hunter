@@ -20,7 +20,7 @@ namespace SoulHunter.Tests.EditMode
                 var rows = CharacterStatSheet.Live(stats, 120, 2, 0, 1).InGameRows();
                 Assert.That(rows.Select(r => r.Label), Is.EqualTo(new[]
                 {
-                    "Max Health", "Recovery", "Armor", "Move Speed", "Might", "Area", "Speed", "Duration", "Amount", "Cooldown",
+                    "Max Health", "Recovery", "Armour", "Move Speed", "Might", "Area", "Speed", "Duration", "Amount", "Cooldown",
                     "Luck", "Growth", "Greed", "Curse", "Magnet", "Revival", "Reroll", "Skip", "Banish",
                 }));
                 string Value(string label) => rows.First(r => r.Label == label).Value;

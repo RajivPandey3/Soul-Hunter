@@ -4,15 +4,16 @@ using UnityEditor;
 
 namespace SoulHunter.Tests.EditMode
 {
-    /// <summary>Bug MIS B03 (2026-09-30): the chest reel showed evolution IDs such as "Evo_BloodyTear".</summary>
+    /// <summary>Bug MIS B03 (2026-09-30): the chest reel showed evolution IDs such as "Evo_BloodyTear". Since 2026-10-30 VS names show as Soul Hunter's (SoulHunterNames).</summary>
     public class ChestNameTests
     {
-        [TestCase("Evo_BloodyTear", "Bloody Tear")]
-        [TestCase("Evo_ThousandEdge", "Thousand Edge")]
-        [TestCase("Evo_UnholyVespers", "Unholy Vespers")]
-        [TestCase("Evo_SoulEater", "Soul Eater")]
+        [TestCase("Evo_BloodyTear", "Crimson Lash")]
+        [TestCase("Evo_ThousandEdge", "Blade Storm")]
+        [TestCase("Evo_UnholyVespers", "Black Psalter")]
+        [TestCase("Evo_SoulEater", "Soul Devourer")]
         [TestCase("Union_Something", "Something")]
-        [TestCase("Holy Wand", "Holy Wand")]
+        [TestCase("Evo_HellmawComet", "Hellmaw Comet")] // Soul Hunter's own names stay
+        [TestCase("Holy Wand", "Radiant Rod")]
         public void EvolutionIds_ShowAsNames(string id, string shown)
         {
             Assert.That(WeaponEvolutionData.DisplayName(id), Is.EqualTo(shown));

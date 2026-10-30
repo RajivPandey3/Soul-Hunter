@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Arcana_IronBlueWill
   m_EditorClassIdentifier: 
   CardNumber: VII
-  CardName: Iron Blue Will
-  Description: Knife, Thousand Edge, Axe and Gun shots bounce off up to 3 enemies; Death Spiral bounces off the screen edge once.
+  CardName: Iron Rebound
+  Description: Knife, Blade Storm, Axe and Gun shots bounce off up to 3 enemies; Reaper Spiral bounces off the screen edge once.
   CardIcon: {fileID: 0}
   Type: 2

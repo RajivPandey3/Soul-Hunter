@@ -53,7 +53,7 @@ namespace SoulHunter.Tests.EditMode
         public void C15_C16_ItemNames_ReadAsItems()
         {
             var names = GameContentCatalog.Load().WeaponDefinitions.Where(d => d != null).ToDictionary(d => d.Type, d => d.DisplayName);
-            Assert.That(names[UpgradeData.UpgradeType.SongOfMana], Is.EqualTo("Song of Mana"));
+            Assert.That(names[UpgradeData.UpgradeType.SongOfMana], Is.EqualTo("Soul Hymn"));
             Assert.That(names[UpgradeData.UpgradeType.MaxHealth], Is.Not.EqualTo("Max Health"), "Not a stat name.");
             Assert.That(names[UpgradeData.UpgradeType.PlayerSpeed], Is.Not.EqualTo("Player Speed"), "Not a stat name.");
         }

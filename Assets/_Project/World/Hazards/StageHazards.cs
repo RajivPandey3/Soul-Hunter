@@ -135,7 +135,7 @@ namespace SoulHunter.Gameplay.Hazards
                 if (!StageHazardTable.ShadowEventFires(entry.ChancePercent, PlayerLuck(), roll))
                 {
                     ShadowEventsSkipped++;
-                    Debug.Log($"[StageHazards] Death's Shadow did not come on Stage {_stage} ({entry.ChancePercent:0}% chance).");
+                    SoulHunter.Core.Services.GameLog.Info($"[StageHazards] Death's Shadow did not come on Stage {_stage} ({entry.ChancePercent:0}% chance).");
                     return;
                 }
                 SpawnDeathsShadow(entry.DurationSeconds > 0f ? entry.DurationSeconds : StageHazardTable.ShadowLifetimeSeconds,
@@ -201,7 +201,7 @@ namespace SoulHunter.Gameplay.Hazards
                 _shadows.Add(shadow);
                 if (reaper.SummonsGemRings)
                     TricksterRings.Begin(shadow, spawner.FindStageType("PoltergeistGem"), spawner.FindStageType("StillPoltergeistGem"));
-                Debug.Log($"[StageHazards] {reaper.Name} follows the player on Stage {_stage} for {lifetimeSeconds:0} s.");
+                SoulHunter.Core.Services.GameLog.Info($"[StageHazards] {reaper.Name} follows the player on Stage {_stage} for {lifetimeSeconds:0} s.");
             }
             return shadow;
         }

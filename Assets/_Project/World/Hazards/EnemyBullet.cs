@@ -110,7 +110,8 @@ namespace SoulHunter.Gameplay.Hazards
                 if (i >= bullets.Count) continue;
                 var bullet = bullets[i];
                 if (bullet == null) { bullets.RemoveAt(i); continue; }
-                bullet.Tick(dt);
+                try { bullet.Tick(dt); }
+                catch (System.Exception e) { Debug.LogException(e, bullet); } // one bullet's error never stops the rest
             }
         }
 

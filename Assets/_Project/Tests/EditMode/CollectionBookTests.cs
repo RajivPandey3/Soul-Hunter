@@ -171,7 +171,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(entries.FindIndex(e => e.Kind == CollectionKind.Pickup), Is.GreaterThan(entries.FindLastIndex(e => e.Kind == CollectionKind.Passive)));
             Assert.That(entries.FindIndex(e => e.Kind == CollectionKind.Arcana), Is.GreaterThan(entries.FindLastIndex(e => e.Kind == CollectionKind.Pickup)));
             int whip = entries.FindIndex(e => e.Id == CollectionCatalog.ItemId(UpgradeData.UpgradeType.Whip));
-            Assert.That(entries[whip + 1].Name, Is.EqualTo("Bloody Tear"), "Whip, then Bloody Tear, as the wiki's table.");
+            Assert.That(entries[whip + 1].Name, Is.EqualTo("Crimson Lash"), "Whip, then Crimson Lash (VS Bloody Tear), as the wiki's table.");
             Assert.That(entries.All(e => !string.IsNullOrEmpty(e.Name)), Is.True);
         }
 

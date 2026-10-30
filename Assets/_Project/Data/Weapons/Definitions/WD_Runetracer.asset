@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 15
   IsPassive: 0
-  DisplayName: Runetracer
+  DisplayName: Rune Ricochet
   Description: A glowing rune that races across the field.
   Icon: {fileID: 658483851337776300, guid: b69ec6d02b67fd642bcd2179ab653c78, type: 3}
   WeaponPrefab: {fileID: 6989098805370584031, guid: e6d8d2ba8cea1a44f923bd6b7a6eacc8, type: 3}

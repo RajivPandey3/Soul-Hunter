@@ -71,7 +71,7 @@ namespace SoulHunter.Gameplay.Player
         {
             new Row("Max Health", MaxHealth.ToString(), MaxHealth != 100),
             new Row("Recovery", Recovery > 0f ? Recovery.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "-", Recovery > 0f),
-            Flat("Armor", Armor),
+            Flat("Armour", Armor),
             Percent("Move Speed", MoveSpeed),
             Percent("Might", Might),
             Percent("Area", Area),
@@ -221,7 +221,7 @@ namespace SoulHunter.Gameplay.Player
         {
             new Row("Max Health", MaxHealth.ToString(), MaxHealth != 100),
             new Row("Recovery", Recovery > 0f ? Recovery.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) : "-", Recovery > 0f),
-            Flat("Armor", Armor),
+            Flat("Armour", Armor),
             Percent("Move Speed", MoveSpeed),
             Percent("Might", Might),
             Percent("Speed", Speed),

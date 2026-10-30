@@ -92,11 +92,11 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(sheet.Revivals, Is.EqualTo(1));
 
             var rows = sheet.DisplayRows().ToDictionary(r => r.Label);
-            Assert.That(rows.Keys, Is.EquivalentTo(new[] { "Max Health", "Recovery", "Armor", "Move Speed", "Might", "Speed",
+            Assert.That(rows.Keys, Is.EquivalentTo(new[] { "Max Health", "Recovery", "Armour", "Move Speed", "Might", "Speed",
                 "Duration", "Area", "Cooldown", "Amount", "Revival", "Magnet", "Luck", "Growth", "Greed", "Curse" }));
             Assert.That(rows["Cooldown"].Value, Is.EqualTo("-15%"));
             Assert.That(rows["Cooldown"].Changed, Is.True);
-            Assert.That(rows["Armor"].Value, Is.EqualTo("+1"));
+            Assert.That(rows["Armour"].Value, Is.EqualTo("+1"));
             Assert.That(rows["Revival"].Value, Is.EqualTo("+1"));
             Assert.That(rows["Area"].Value, Is.EqualTo("-"));
             Assert.That(rows["Area"].Changed, Is.False);

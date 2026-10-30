@@ -26,7 +26,37 @@ namespace SoulHunter.Gameplay.Core
             Application.runInBackground = true;
             GameSettings.Changed -= Apply;
             GameSettings.Changed += Apply;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= ApplyAntiAliasingOnLoad;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += ApplyAntiAliasingOnLoad;
             Apply();
+        }
+
+        private static void ApplyAntiAliasingOnLoad(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) => ApplyAntiAliasing();
+
+        public static readonly string[] AntiAliasingNames = { "Off", "FXAA", "SMAA" };
+
+        /// <summary>The bot's A/B switch sets this; -1 follows the option.</summary>
+        public static int AntiAliasingOverride = -1;
+
+        public static int AntiAliasingMode => AntiAliasingOverride >= 0 ? AntiAliasingOverride : GameSettings.AntiAliasing;
+
+        /// <summary>
+        /// Anti-aliasing on every camera (owner, 2026-10-30, release audit question 8; VS Options list none, so it is an SH
+        /// extra): URP's per-camera post-process anti-aliasing, 0 None, 1 FXAA, 2 SMAA. URP is reached by reflection: this
+        /// assembly has no URP reference (as the bot reaches the render scale).
+        /// </summary>
+        public static void ApplyAntiAliasing()
+        {
+            int mode = Mathf.Clamp(AntiAliasingMode, 0, AntiAliasingNames.Length - 1);
+            foreach (var camera in Camera.allCameras)
+            {
+                var data = camera.GetComponent("UniversalAdditionalCameraData");
+                if (data == null) continue;
+                var property = data.GetType().GetProperty("antialiasing");
+                if (property == null || !property.CanWrite) continue;
+                object value = System.Enum.ToObject(property.PropertyType, mode);
+                if (!Equals(property.GetValue(data), value)) property.SetValue(data, value);
+            }
         }
 
         public static FullScreenMode ModeFor(int windowMode) => Modes[Mathf.Clamp(windowMode, 0, Modes.Length - 1)];
@@ -95,6 +125,7 @@ namespace SoulHunter.Gameplay.Core
                 // Not in batch mode: the test runner has no display, and a cap would only slow every test down.
                 Application.targetFrameRate = Application.isBatchMode ? -1 : TargetFrameRate;
             }
+            ApplyAntiAliasing();
             // The editor's Game view cannot change window mode or resolution; builds follow the options.
             if (Application.isEditor || Application.isMobilePlatform) return;
             var mode = ModeFor(GameSettings.WindowMode);

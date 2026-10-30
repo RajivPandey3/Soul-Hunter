@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 20
   IsPassive: 0
-  DisplayName: Peachone
+  DisplayName: Pale Dove
   Description: A spirit bird circles you and drops blasts.
   Icon: {fileID: -5696232168332645895, guid: 44b7f02a1062bc94f932c20773e61330, type: 3}
   WeaponPrefab: {fileID: 8651560908677845679, guid: ac892fc7a32d99d48b8ea8ae42a3317b, type: 3}

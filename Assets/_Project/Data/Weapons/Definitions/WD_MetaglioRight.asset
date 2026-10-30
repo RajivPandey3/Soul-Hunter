@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 35
   IsPassive: 1
-  DisplayName: Metaglio Right
+  DisplayName: Right Soul Gauntlet
   Description: +5% curse.
   Icon: {fileID: 0}
   WeaponPrefab: {fileID: 0}

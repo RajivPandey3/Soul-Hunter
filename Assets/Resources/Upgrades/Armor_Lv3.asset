@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Armor_Lv3
   m_EditorClassIdentifier: 
-  UpgradeName: Armor Lv.3
-  Description: Armor upgrade level 3.
+  UpgradeName: Armour Lv.3
+  Description: Armour upgrade level 3.
   Icon: {fileID: 8253109200740065530, guid: b773fcd2cbdb700418211d5c27850b8c, type: 3}
   Type: 27
   Level: 3

@@ -43,8 +43,13 @@ namespace SoulHunter.Gameplay.Combat
                     shots.RemoveAt(last);
                     continue;
                 }
-                shot.Tick(dt);
-                if ((i & 3) == phase && i < shots.Count && shots[i] == shot) shot.UpdateFx(_camera);
+                // One shot's error never stops every other shot for the rest of the run (as EnemyRunner and TouchDamageTicker).
+                try
+                {
+                    shot.Tick(dt);
+                    if ((i & 3) == phase && i < shots.Count && shots[i] == shot) shot.UpdateFx(_camera);
+                }
+                catch (System.Exception e) { Debug.LogException(e, shot); }
             }
         }
 

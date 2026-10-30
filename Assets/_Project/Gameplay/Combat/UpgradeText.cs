@@ -12,7 +12,7 @@ namespace SoulHunter.Gameplay.Combat
     /// </summary>
     public static class UpgradeText
     {
-        private static readonly Regex Placeholder = new Regex(@"^\s*\w+ upgrade level \d+\.?\s*$");
+        private static readonly Regex Placeholder = new Regex(@"^\s*[\w' ]+ upgrade level \d+\.?\s*$");
         private static readonly Regex LevelSuffix = new Regex(@"\s*Lv\.?\s*\d+\s*$");
         private static readonly Regex CamelSplit = new Regex(@"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])");
 

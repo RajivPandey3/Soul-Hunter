@@ -173,7 +173,7 @@ namespace SoulHunter.Gameplay.UI
             // Gameplay), then Soul Hunter's Controls. VS Co-op and Account have nothing behind them in Soul Hunter.
             // The tabs share the theme's one tab size and sit centred in a row with the theme's gap (ThemedRow), which
             // wraps onto more lines on a narrow screen.
-            var sectionNames = new List<string> { "Favorites", "Display", "Sound", "Gameplay", "Controls" };
+            var sectionNames = new List<string> { "Favourites", "Display", "Sound", "Gameplay", "Controls" };
             if (_withSaveData) { _saveTab = sectionNames.Count; sectionNames.Add(SaveDataTabName); }
             string[] sections = sectionNames.ToArray();
             _tabRow = Rect("Tabs", _panel, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
@@ -189,7 +189,7 @@ namespace SoulHunter.Gameplay.UI
 
             // Favorites (VS): copies of options from other sections, bound to the same settings, so a change in one place
             // shows in the other. Language and Classic Sound Effects have nothing behind them in Soul Hunter and are left out.
-            var favorites = BeginTab("Favorites", _panel);
+            var favorites = BeginTab("Favourites", _panel);
             AddSlider(favorites, "Sounds", () => GameSettings.SfxVolume, v => { if (data != null) data.SfxVolume = v; });
             AddSlider(favorites, "Music", () => GameSettings.MusicVolume, v => { if (data != null) data.MusicVolume = v; });
             AddToggle(favorites, "Damage Numbers", () => GameSettings.DamageNumbers, v => { if (data != null) data.DamageNumbers = v; });
@@ -211,6 +211,9 @@ namespace SoulHunter.Gameplay.UI
                 i => { if (data != null) data.RefreshRateHz = RefreshRateAt(i); });
             ShowOnlyWhen(refresh, () => SoulHunter.Gameplay.Core.DisplaySettingsApplier.ShowsRefreshRate(GameSettings.WindowMode, Application.isMobilePlatform));
             AddToggle(display, "V-Sync", () => GameSettings.VSync, v => { if (data != null) data.VSync = v; });
+            // Soul Hunter extra (owner, 2026-10-30, release audit question 8): VS's Display section lists no anti-aliasing.
+            AddCycle(display, "Anti-aliasing", () => GameSettings.AntiAliasing, () => SoulHunter.Gameplay.Core.DisplaySettingsApplier.AntiAliasingNames.Length,
+                i => SoulHunter.Gameplay.Core.DisplaySettingsApplier.AntiAliasingNames[i], i => { if (data != null) data.AntiAliasing = i; });
             AddToggle(display, "Flashing VFX", () => GameSettings.FlashingVfx, v => { if (data != null) data.FlashingVfx = v; });
             AddToggle(display, "Disable Blood", () => GameSettings.DisableBlood, v => { if (data != null) data.DisableBlood = v; });
             AddToggle(display, "Screen Shake", () => GameSettings.ScreenShake, v => { if (data != null) data.ScreenShake = v; });

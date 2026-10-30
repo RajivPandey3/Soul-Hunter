@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Tiragisu_Lv3
   m_EditorClassIdentifier: 
-  UpgradeName: Tiragisu Lv.3
-  Description: Tiragisu upgrade level 3.
+  UpgradeName: Undying Sweet Lv.3
+  Description: Undying Sweet upgrade level 3.
   Icon: {fileID: 3045440801195614347, guid: b226c5cc69a9e4d42b7152936599142e, type: 3}
   Type: 33
   Level: 3

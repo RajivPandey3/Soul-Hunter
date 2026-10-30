@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Runetracer_Lv4
   m_EditorClassIdentifier: 
-  UpgradeName: Runetracer Lv.4
-  Description: Runetracer upgrade level 4.
+  UpgradeName: Rune Ricochet Lv.4
+  Description: Rune Ricochet upgrade level 4.
   Icon: {fileID: 658483851337776300, guid: b69ec6d02b67fd642bcd2179ab653c78, type: 3}
   Type: 15
   Level: 4

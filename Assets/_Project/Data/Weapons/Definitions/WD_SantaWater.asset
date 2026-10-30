@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 10
   IsPassive: 0
-  DisplayName: Santa Water
+  DisplayName: Holy Water
   Description: Pours holy water that burns enemies standing in it.
   Icon: {fileID: 4417556809098773341, guid: d98b5964a95327944b29bbffae77ab52, type: 3}
   WeaponPrefab: {fileID: 5737434468981683643, guid: 755516ac901c45d4c9f7c65b093c8830, type: 3}

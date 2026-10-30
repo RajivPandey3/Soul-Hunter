@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: III
   CardName: Restless Pilgrim
-  Description: "While you move, Garlic, Soul Eater, Santa Water, Drowning Chalice, Lightning Ring and Stormbound Halo recharge faster. The faster you move, the faster they recharge."
+  Description: "While you move, Garlic, Soul Devourer, Holy Water, Drowning Chalice, Lightning Ring and Stormbound Halo recharge faster. The faster you move, the faster they recharge."
   CardIcon: {fileID: 0}
   Type: 6

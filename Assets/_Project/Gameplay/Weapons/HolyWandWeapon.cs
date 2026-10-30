@@ -70,7 +70,7 @@ namespace SoulHunter.Gameplay.Combat
 
             var damageDealer = projObj.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = projObj.AddComponent<ProjectileDamage>();
-            damageDealer.SourceWeaponName = "Holy Wand";
+            damageDealer.SourceWeaponName = "Radiant Rod";
             damageDealer.DamageType = DamageType.Holy;
             AimAtHostiles(projObj);
         }

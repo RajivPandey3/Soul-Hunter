@@ -30,6 +30,8 @@ namespace SoulHunter.Core.Persistence
         public static int WindowMode => Data != null ? Data.WindowMode : 0;
         public static int ResolutionIndex => Data != null ? Data.ResolutionIndex : -1;
         public static bool VSync => Data != null && Data.VSync;
+        /// <summary>0 Off, 1 FXAA, 2 SMAA (an SH extra, 2026-10-30).</summary>
+        public static int AntiAliasing => Data != null ? System.Math.Max(0, System.Math.Min(2, Data.AntiAliasing)) : 0;
         public static bool DisableBlood => Data != null && Data.DisableBlood;
         public static bool ShowStageProgression => Data == null || Data.ShowStageProgression;
         public static bool VisibleJoystick => Data != null && Data.VisibleJoystick;

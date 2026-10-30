@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Spellbinder_Lv6
   m_EditorClassIdentifier: 
-  UpgradeName: Spellbinder Lv.6
-  Description: Spellbinder upgrade level 6.
+  UpgradeName: Lingering Sigil Lv.6
+  Description: Lingering Sigil upgrade level 6.
   Icon: {fileID: 21300000, guid: 7077a037c318bd846b766c6f59098351, type: 3}
   Type: 25
   Level: 6

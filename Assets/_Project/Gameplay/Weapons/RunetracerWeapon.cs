@@ -80,7 +80,7 @@ namespace SoulHunter.Gameplay.Combat
             if (damageDealer == null) damageDealer = rune.AddComponent<ProjectileDamage>();
             damageDealer.DamageAmount = ScaledDamage(BaseDamage);
             damageDealer.DamageType = DamageType.Magic; // Owner (2026-09-26, Level 7): weapons are typed by theme so ghosts can be fought with more than four weapons.
-            damageDealer.SourceWeaponName = "Runetracer";
+            damageDealer.SourceWeaponName = "Rune Ricochet";
             // VS wiki (Runetracer): "a 0.5 seconds Hitbox Delay ... the same enemy cannot be hit more often than every
             // half a second by the same rune".
             var delay = rune.GetComponent<HitboxDelay>();

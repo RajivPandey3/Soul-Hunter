@@ -44,7 +44,7 @@ namespace SoulHunter.Core.Persistence
         public static readonly PowerUpInfo[] All =
         {
             new PowerUpInfo(PowerUpId.Might, "Might", "Raises inflicted damage by 5% per rank (max +25%).", 5, 0.05f, 200),
-            new PowerUpInfo(PowerUpId.Armor, "Armor", "Reduces incoming damage by 1 per rank (max -3).", 3, 1f, 600),
+            new PowerUpInfo(PowerUpId.Armor, "Armour", "Reduces incoming damage by 1 per rank (max -3).", 3, 1f, 600),
             new PowerUpInfo(PowerUpId.MaxHealth, "Max Health", "Augments Max Health by 10% per rank (max +30%).", 3, 0.10f, 200),
             new PowerUpInfo(PowerUpId.Recovery, "Recovery", "Recovers 0.1 HP per rank (max 0.5) per second.", 5, 0.1f, 200),
             new PowerUpInfo(PowerUpId.Cooldown, "Cooldown", "Uses weapons 2.5% faster per rank (max 5%).", 2, 0.025f, 900),

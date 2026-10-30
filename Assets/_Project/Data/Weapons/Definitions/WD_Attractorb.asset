@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 29
   IsPassive: 1
-  DisplayName: Attractorb
+  DisplayName: Soul Lodestone
   Description: Bigger pickup range.
   Icon: {fileID: 1572192499065990504, guid: fc94b9929738fff43a240bea024fc1b1, type: 3}
   WeaponPrefab: {fileID: 0}

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Attractorb_Lv5
   m_EditorClassIdentifier: 
-  UpgradeName: Attractorb Lv.5
-  Description: Attractorb upgrade level 5.
+  UpgradeName: Soul Lodestone Lv.5
+  Description: Soul Lodestone upgrade level 5.
   Icon: {fileID: 1572192499065990504, guid: fc94b9929738fff43a240bea024fc1b1, type: 3}
   Type: 29
   Level: 5

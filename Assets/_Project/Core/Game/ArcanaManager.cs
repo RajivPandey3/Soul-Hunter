@@ -38,7 +38,7 @@ namespace SoulHunter.Gameplay.Core
         private void Awake()
         {
             if (Instance == null) Instance = this;
-            else if (Instance != this) Destroy(gameObject);
+            else if (Instance != this) { Destroy(gameObject); return; } // a duplicate must not reset the live run's Arcana effects (audit 2026-10-30)
             // Every card lives in GameContent (Assets/Resources/GameContent.asset), so Main_Gameplay is not edited: the
             // catalog's cards in numeral order, then any card the scene lists that the catalog does not.
             var catalog = GameContentCatalog.Load();

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Peachone_Lv1
   m_EditorClassIdentifier: 
-  UpgradeName: Peachone Lv.1
-  Description: Peachone upgrade level 1.
+  UpgradeName: Pale Dove Lv.1
+  Description: Pale Dove upgrade level 1.
   Icon: {fileID: -5696232168332645895, guid: 44b7f02a1062bc94f932c20773e61330, type: 3}
   Type: 20
   Level: 1

@@ -21,7 +21,7 @@ namespace SoulHunter.Tests.PlayMode
     {
         private static readonly string[] WikiOrder =
         {
-            "Max Health", "Recovery", "Armor", "Move Speed", "Might", "Area", "Speed", "Duration", "Amount", "Cooldown",
+            "Max Health", "Recovery", "Armour", "Move Speed", "Might", "Area", "Speed", "Duration", "Amount", "Cooldown",
             "Luck", "Growth", "Greed", "Curse", "Magnet", "Revival", "Reroll", "Skip", "Banish",
         };
 

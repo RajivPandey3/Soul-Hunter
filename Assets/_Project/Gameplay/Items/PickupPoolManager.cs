@@ -66,7 +66,7 @@ namespace SoulHunter.Gameplay.Pickups
         private void Awake()
         {
             if (Instance == null) Instance = this;
-            else Destroy(gameObject);
+            else if (Instance != this) { Destroy(gameObject); return; } // a duplicate builds no pools of its own (audit 2026-10-30)
 
             // Keep missing content wiring visible during integration instead of silently
             // dropping a rare reward. The pool remains safe: an unassigned prefab simply

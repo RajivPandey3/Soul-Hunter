@@ -75,7 +75,7 @@ namespace SoulHunter.Gameplay.Combat
 
         protected override void Attack()
         {
-            StartCoroutine(Burst(FlamesPerBurst + ExtraAmount));
+            using (SoulHunter.Core.Services.SlowSpan.Measure("FireBreath.Attack")) StartCoroutine(Burst(FlamesPerBurst + ExtraAmount));
         }
 
         private IEnumerator Burst(int count)
@@ -100,7 +100,8 @@ namespace SoulHunter.Gameplay.Combat
 
         private void SpawnFlame(Vector3 aim)
         {
-            var template = FlameTemplate();
+            GameObject template;
+            using (SoulHunter.Core.Services.SlowSpan.Measure("FireBreath.Template")) template = FlameTemplate();
             if (template == null) return;
             float half = ConeDegrees * 0.5f;
             Vector3 direction = Quaternion.Euler(0f, Random.Range(-half, half), 0f) * aim;
@@ -108,11 +109,14 @@ namespace SoulHunter.Gameplay.Combat
             var rotation = Quaternion.LookRotation(direction, Vector3.up);
 
             GameObject flame;
-            if (WeaponPoolManager.Instance != null) flame = WeaponPoolManager.Instance.GetFromPool(template, origin, rotation);
-            else
+            using (SoulHunter.Core.Services.SlowSpan.Measure("FireBreath.Flame"))
             {
-                flame = Instantiate(template, origin, rotation);
-                flame.SetActive(true);
+                if (WeaponPoolManager.Instance != null) flame = WeaponPoolManager.Instance.GetFromPool(template, origin, rotation);
+                else
+                {
+                    flame = Instantiate(template, origin, rotation);
+                    flame.SetActive(true);
+                }
             }
             if (flame == null) return;
 
@@ -123,7 +127,7 @@ namespace SoulHunter.Gameplay.Combat
             var grow = flame.GetComponent<FireBreathFlame>();
             Vector3 baseScale = template.transform.localScale * AreaMultiplier;
             if (grow != null) grow.Begin(baseScale, baseScale * FlameEndScale, life);
-            AimAtHostiles(flame);
+            using (SoulHunter.Core.Services.SlowSpan.Measure("FireBreath.Aim")) AimAtHostiles(flame);
             if (WeaponPoolManager.Instance == null) Destroy(flame, life + 0.5f);
         }
 

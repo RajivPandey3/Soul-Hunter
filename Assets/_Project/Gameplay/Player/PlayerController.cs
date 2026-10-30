@@ -73,6 +73,9 @@ namespace SoulHunter.Gameplay.Player
                 if (_eventBusInput.sqrMagnitude > 0.001f)
                     return _eventBusInput;
 
+                // The hardware poll stands in only while the Input System's Move action is not running. With it running,
+                // the poll made W/A/S/D and the arrows walk even after Options remapped Move (audit 2026-10-30).
+                if (MoveActionLive()) return Vector2.zero;
                 return PollDirectInput();
             }
             private set => _eventBusInput = value;
@@ -342,6 +345,7 @@ namespace SoulHunter.Gameplay.Player
         /// </summary>
         private void ApplySelectedCharacterStats()
         {
+            SoulEggs.BeginRun();
             if (GameServices.Instance == null) return;
             var saveSvc = GameServices.Instance.Get<SoulHunter.Core.Persistence.SaveService>();
             if (saveSvc == null || saveSvc.CurrentData == null) return;
@@ -548,6 +552,13 @@ namespace SoulHunter.Gameplay.Player
         /// Game start hone par agar Game View focused na ho ya New Input System event drop ho jaye,
         /// ye method seedha hardware keyboard/joystick se direct input le kar responsive movement deta hai.
         /// </summary>
+        private static bool MoveActionLive()
+        {
+            if (GameServices.Instance == null || !GameServices.Instance.TryGet(out SoulHunter.Core.Input.InputService input)) return false;
+            var move = input.Actions?.FindAction(SoulHunter.Core.Input.InputService.MoveAction);
+            return move != null && move.enabled;
+        }
+
         private Vector2 PollDirectInput()
         {
             Vector2 direct = Vector2.zero;

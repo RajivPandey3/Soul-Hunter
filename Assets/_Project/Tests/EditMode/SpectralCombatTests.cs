@@ -560,7 +560,7 @@ namespace SoulHunter.Tests.EditMode
                 "TouchDamage on SantaWater zone must be configured with DamageType.Holy.");
             Assert.That(touchDamage.TargetTag, Is.EqualTo("Enemy"),
                 "TouchDamage on SantaWater zone must have TargetTag set to 'Enemy'.");
-            Assert.That(touchDamage.SourceWeaponName, Is.EqualTo("Santa Water"),
+            Assert.That(touchDamage.SourceWeaponName, Is.EqualTo("Holy Water"),
                 "TouchDamage on SantaWater zone must have SourceWeaponName set to 'Santa Water'.");
             Assert.That(touchDamage.DamageAmount, Is.EqualTo(configuredDamage),
                 "TouchDamage on SantaWater zone must match weapon's DamageAmount.");

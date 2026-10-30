@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: Pummarola_Lv8
   m_EditorClassIdentifier: 
-  UpgradeName: Pummarola Lv.8
-  Description: Pummarola upgrade level 8.
+  UpgradeName: Heartroot Lv.8
+  Description: Heartroot upgrade level 8.
   Icon: {fileID: -6625864876067820037, guid: b47a1664c6a27014a8d0e24855a5ffab, type: 3}
   Type: 28
   Level: 8

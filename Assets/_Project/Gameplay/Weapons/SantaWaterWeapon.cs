@@ -80,7 +80,7 @@ namespace SoulHunter.Gameplay.Combat
             
             damageDealer.DamageAmount = ScaledDamage(BaseDamage);
             damageDealer.DamageInterval = 0.5f; // Har adhe second baad dubara damage
-            damageDealer.SourceWeaponName = "Santa Water";
+            damageDealer.SourceWeaponName = "Holy Water";
             // Learning Comment:
             // Santa Water ground zone Enemy tag ko target karta hai aur DamageType.Holy emit karta hai
             // taaki Level 7 ke spectral ghosts isse damage le sakein (GDD & AGENTS.md Section 5).

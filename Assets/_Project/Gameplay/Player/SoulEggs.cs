@@ -95,6 +95,13 @@ namespace SoulHunter.Gameplay.Player
         /// </summary>
         public static SoulEggRecord AppliedThisRun { get; private set; }
 
+        /// <summary>
+        /// A new run starts with no eggs until <see cref="Apply"/> says otherwise (audit 2026-10-30): the copy used to be
+        /// null for a run with no eggs, so the Results fell back to the live record and counted eggs bought mid-run, and a
+        /// run whose character was not found kept the last run's copy.
+        /// </summary>
+        public static void BeginRun() => AppliedThisRun = new SoulEggRecord();
+
         public static SoulEggRecord Copy(SoulEggRecord record) =>
             record == null ? null : JsonUtility.FromJson<SoulEggRecord>(JsonUtility.ToJson(record));
 
@@ -105,7 +112,7 @@ namespace SoulHunter.Gameplay.Player
         public static void Apply(SoulEggRecord record, PlayerStats stats)
         {
             if (stats == null) return;
-            AppliedThisRun = Copy(record);
+            AppliedThisRun = Copy(record) ?? new SoulEggRecord();
             if (record == null) return;
             int maxHealth = Whole(record.MaxHealth);
             if (maxHealth > 0) stats.AddMaxHealth(maxHealth);

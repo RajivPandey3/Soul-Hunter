@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 17
   IsPassive: 0
-  DisplayName: Clock Lancet
+  DisplayName: Hour Lance
   Description: A beam of frost that freezes enemies in place.
   Icon: {fileID: -7440709273541419159, guid: da1d3b3b1b12bc84cacefd73df9aa0bb, type: 3}
   WeaponPrefab: {fileID: 6776182737823650166, guid: ae53fffb611f31749bf5aba1f0d86f00, type: 3}

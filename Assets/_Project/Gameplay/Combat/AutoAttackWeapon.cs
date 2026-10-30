@@ -375,6 +375,8 @@ namespace SoulHunter.Gameplay.Combat
             _damageCaster = GetComponent<DamageCaster>();
         }
 
+        private string _spanPose, _spanAttack, _spanAfter;
+
         protected virtual void Update()
         {
             // VS Tragic Princess (III): listed weapons recharge faster while the player moves (1 without it).
@@ -385,9 +387,12 @@ namespace SoulHunter.Gameplay.Combat
                 // The cooldown is set first: a weapon whose attack throws must not retry every frame (Death Spiral
                 // threw 30,000 times in one 30-minute run and dragged the frame rate from 80 to 20).
                 _timer = Mathf.Max(MinimumCooldown, AttackCooldown * CooldownMultiplier);
-                ShowAttackOnHolder(); // before Attack(): the shot may kill the enemy it aimed at
-                Attack();
-                AfterAttack();
+                // Timed per weapon type (free under SlowSpan.RecordMs): a 195 ms frame was charged to this method on Level 5
+                // with no way to tell which weapon or which part (2026-10-30).
+                if (_spanPose == null) { string type = GetType().Name; _spanPose = type + ".Pose"; _spanAttack = type + ".Attack"; _spanAfter = type + ".AfterAttack"; }
+                using (SoulHunter.Core.Services.SlowSpan.Measure(_spanPose)) ShowAttackOnHolder(); // before Attack(): the shot may kill the enemy it aimed at
+                using (SoulHunter.Core.Services.SlowSpan.Measure(_spanAttack)) Attack();
+                using (SoulHunter.Core.Services.SlowSpan.Measure(_spanAfter)) AfterAttack();
             }
         }
 

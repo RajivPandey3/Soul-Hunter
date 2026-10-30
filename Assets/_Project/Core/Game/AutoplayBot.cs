@@ -1,3 +1,4 @@
+#if !SOULHUNTER_STORE // measuring tool: compiled out of the store build (owner, 2026-10-30, release audit question 9)
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1422,6 +1423,21 @@ namespace SoulHunter.Gameplay.Core
                 _qualityAbIndex++;
                 _nextQualitySwitch = Elapsed + 30f;
             }
+            // -sh-autoplay-aa-ab "A,B" (anti-aliasing modes, 0 Off, 1 FXAA, 2 SMAA): switches every 30 s and logs an "aa" event,
+            // so one run compares the two with the same loadout (release audit question 8, 2026-10-30).
+            string aaAb = ArgValue("-sh-autoplay-aa-ab");
+            if (aaAb != null && Elapsed >= _nextAaSwitch)
+            {
+                var modes = aaAb.Split(',');
+                if (modes.Length == 2 && int.TryParse(modes[_aaAbIndex % 2], out int aa))
+                {
+                    DisplaySettingsApplier.AntiAliasingOverride = aa;
+                    DisplaySettingsApplier.ApplyAntiAliasing();
+                    Event("aa", $"\"mode\": {aa}");
+                }
+                _aaAbIndex++;
+                _nextAaSwitch = Elapsed + 30f;
+            }
             // -sh-autoplay-vsync-ab: V-Sync on for 30 s, then off for 30 s, and so on, with the game's 60 FPS cap (the throw-away
             // save's option), so one run compares what the player feels (the timeline's "vsync" and "jolts" fields).
             if (HasArg("-sh-autoplay-vsync-ab") && Elapsed >= _nextVSyncSwitch && GameSettings.Data != null)
@@ -1513,6 +1529,17 @@ namespace SoulHunter.Gameplay.Core
                 bool fired = RandomEventDirector.Instance.Fire(omen);
                 Event("omen", $"\"name\": \"{OmenTable.Name(omen)}\", \"fired\": {(fired ? "true" : "false")}");
                 StartCoroutine(OmenShots(omen.ToString()));
+            }
+            // -sh-autoplay-breath S (and -sh-autoplay-breath-every N, default 0 = once): gives the hero Hellfire Breath at S
+            // seconds, as the lantern pickup does, so its first-use cost is measured on purpose (a 197 ms jolt came 2.5 s
+            // after a Hellfire Breath drop on Level 5, 2026-10-30).
+            if (float.TryParse(ArgValue("-sh-autoplay-breath"), NumberStyles.Float, CultureInfo.InvariantCulture, out var breathAt)
+                && Elapsed >= breathAt && Elapsed >= _nextBreath && PlayerController.Instance != null && !GameTime.IsPaused)
+            {
+                float every = float.TryParse(ArgValue("-sh-autoplay-breath-every"), NumberStyles.Float, CultureInfo.InvariantCulture, out var e) ? e : 0f;
+                _nextBreath = every > 0f ? Elapsed + every : float.MaxValue;
+                SoulHunter.Gameplay.Combat.FireBreath.Begin(PlayerController.Instance.transform);
+                Event("breath", "\"given\": true");
             }
             // -sh-autoplay-traps S: from S seconds in, steps on a Rune Plate whenever the trap cooldown allows (a stage's
             // trap events under measurement, without walking out to the plates).
@@ -1655,6 +1682,8 @@ namespace SoulHunter.Gameplay.Core
         }
 
         private bool _omenDone, _giveDone, _chestDropped;
+        private float _nextBreath, _nextAaSwitch;
+        private int _aaAbIndex;
         private float _nextTrapTry;
         private EnemySpawner _spawnerForLog; // pooled enemy bodies in the timeline (memory checks)
 
@@ -2139,3 +2168,4 @@ namespace SoulHunter.Gameplay.Core
         private static string Escape(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", " ").Replace("\r", " ");
     }
 }
+#endif

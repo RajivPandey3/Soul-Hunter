@@ -114,7 +114,7 @@ namespace SoulHunter.Gameplay.Data
             [8] = new Dictionary<string, string>
             {
                 ["WingedThrall"] = "Arena Imp", ["WingedVeteran"] = "Veteran Arena Imp", ["WingedWarden"] = "Pit Warden",
-                ["AcolyteYellow"] = "Gold Initiate", ["AcolyteBlue"] = "Blue Initiate", ["AcolyteGray"] = "Gray Initiate",
+                ["AcolyteYellow"] = "Gold Initiate", ["AcolyteBlue"] = "Blue Initiate", ["AcolyteGray"] = "Grey Initiate",
                 ["AcolyteGreen"] = "Green Initiate", ["AcolytePurple"] = "Purple Initiate",
                 ["FourArmed"] = "Four-Armed Gladiator", ["FourArmedFury"] = "Four-Armed Champion", ["Temptress"] = "Blood Siren",
                 ["Swordsman"] = "Arena Swordsman", ["FlameKnight"] = "Brand Knight", ["CopperKnight"] = "Bronze Guard",
@@ -128,7 +128,7 @@ namespace SoulHunter.Gameplay.Data
             [9] = new Dictionary<string, string>
             {
                 ["WingedThrall"] = "Death's Page", ["WingedVeteran"] = "Death's Herald", ["WingedWarden"] = "Throne Warden",
-                ["AcolyteYellow"] = "Gold Scythe Novice", ["AcolyteBlue"] = "Blue Scythe Novice", ["AcolyteGray"] = "Gray Scythe Novice",
+                ["AcolyteYellow"] = "Gold Scythe Novice", ["AcolyteBlue"] = "Blue Scythe Novice", ["AcolyteGray"] = "Grey Scythe Novice",
                 ["AcolyteGreen"] = "Green Scythe Novice", ["AcolytePurple"] = "Purple Scythe Novice",
                 ["FourArmed"] = "Four-Armed Courtier", ["FourArmedFury"] = "Four-Armed Regent", ["Temptress"] = "Throne Consort",
                 ["Swordsman"] = "Royal Blade", ["FlameKnight"] = "Pyre Knight", ["CopperKnight"] = "Bronze Sentinel",
@@ -143,7 +143,7 @@ namespace SoulHunter.Gameplay.Data
             [10] = new Dictionary<string, string>
             {
                 ["WingedThrall"] = "Soul Shard", ["WingedVeteran"] = "Cracked Soul Shard", ["WingedWarden"] = "Soul Warden",
-                ["AcolyteYellow"] = "Gold Fragment", ["AcolyteBlue"] = "Blue Fragment", ["AcolyteGray"] = "Gray Fragment",
+                ["AcolyteYellow"] = "Gold Fragment", ["AcolyteBlue"] = "Blue Fragment", ["AcolyteGray"] = "Grey Fragment",
                 ["AcolyteGreen"] = "Green Fragment", ["AcolytePurple"] = "Purple Fragment",
                 ["FourArmed"] = "Four-Armed Regret", ["FourArmedFury"] = "Four-Armed Rage", ["Temptress"] = "Lost Memory",
                 ["Swordsman"] = "Echo Blade", ["FlameKnight"] = "Burning Guilt", ["CopperKnight"] = "Rusted Vow",

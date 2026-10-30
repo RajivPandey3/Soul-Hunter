@@ -63,10 +63,11 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(ArcanaCatalog.All.Select(c => c.Numeral), Is.EqualTo(Numerals), "The cards in numeral order, each numeral once.");
             Assert.That(ArcanaCatalog.All.Select(c => c.Type).Distinct().Count(), Is.EqualTo(22));
             Assert.That(ArcanaCatalog.All.Select(c => c.Name).Distinct().Count(), Is.EqualTo(22), "Every name is its own.");
-            var kept = new[] { ArcanaData.ArcanaType.Awake, ArcanaData.ArcanaType.Gemini, ArcanaData.ArcanaType.IronBlueWill, ArcanaData.ArcanaType.WaltzOfPearls };
+            // Owner 2026-10-09 kept four VS names; 2026-10-30 (release audit, "Sirf VS naam badlo") renamed Iron Blue Will and Waltz of Pearls. Awake and Gemini are common words and stay.
+            var kept = new[] { ArcanaData.ArcanaType.Awake, ArcanaData.ArcanaType.Gemini };
             foreach (var card in ArcanaCatalog.All)
             {
-                if (kept.Contains(card.Type)) Assert.That(card.Name, Is.EqualTo(card.VsName), "Owner 2026-10-09: the existing four keep their names.");
+                if (kept.Contains(card.Type)) Assert.That(card.Name, Is.EqualTo(card.VsName), "Awake and Gemini keep their names.");
                 else
                 {
                     Assert.That(card.Name, Is.Not.EqualTo(card.VsName).IgnoreCase, $"{card.Numeral} must not use the VS name.");

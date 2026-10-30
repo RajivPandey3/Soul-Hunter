@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 33
   IsPassive: 1
-  DisplayName: 'Tirajisu'
+  DisplayName: 'Undying Sweet'
   Description: +1 revival.
   Icon: {fileID: 3045440801195614347, guid: b226c5cc69a9e4d42b7152936599142e, type: 3}
   WeaponPrefab: {fileID: 0}

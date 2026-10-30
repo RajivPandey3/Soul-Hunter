@@ -132,6 +132,10 @@ namespace SoulHunter.Gameplay.AI
             _eventFirings.Clear();
             _spreadSpawns.Clear();
             EnemyDeathQueue.Flush(); // the last stage's dead bodies go back to their pools before the new stage spawns
+            // An Orologion freeze ends with its stage (audit L-09, 2026-10-30): VS has no stage change, so balance method; the
+            // new stage's opening horde used to spawn frozen for up to 10 s.
+            SoulHunter.Gameplay.Pickups.TimeFreezePickup.ResetWorldFreeze();
+            SoulHunter.Gameplay.Pickups.WeaponCachePickup.RemoveLeftovers(); // an unopened Armoury Cache goes with its stage (L-11)
             // A corridor stage (the Ruined Castle) is walled along world X around where the player stands now.
             StageCorridor.Begin(WaveTables.CorridorHalfWidth(stageNum), _playerTransform != null ? _playerTransform.position.z : 0f);
             int stageIndex = Mathf.Clamp(stageNum - 1, 0, 9);

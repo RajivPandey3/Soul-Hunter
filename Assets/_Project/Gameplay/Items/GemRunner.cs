@@ -37,7 +37,8 @@ namespace SoulHunter.Gameplay.Pickups
                     gems.RemoveAt(last);
                     continue;
                 }
-                gem.Tick();
+                try { gem.Tick(); }
+                catch (System.Exception e) { Debug.LogException(e, gem); } // one gem's error never stops the rest
             }
         }
 

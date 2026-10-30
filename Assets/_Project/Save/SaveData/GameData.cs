@@ -50,6 +50,14 @@ namespace SoulHunter.Core.Persistence
         /// <summary>VS Options, Display: "Show Defanged Enemies" (the green look of Defanged enemies).</summary>
         public bool ShowDefangedEnemies = true;
         /// <summary>
+        /// Anti-aliasing (owner, 2026-10-30, release audit question 8: an SH extra on top of VS, whose Options list none):
+        /// 0 Off, 1 FXAA, 2 SMAA. Default FXAA (owner, 2026-10-30, from the A/B run-20261030-aa: no measurable cost at the 60
+        /// cap on the reference laptop, smoother edges). A save without the field loads with this default.
+        /// </summary>
+        public int AntiAliasing = 1;
+        /// <summary>The pause map's Guides switch (VS Milky Way Map "Show Guides"); kept between runs and launches (audit L-06, owner 2026-10-30).</summary>
+        public bool ShowMapGuides = false;
+        /// <summary>
         /// VS Options, Display (PC-exclusive): "Screen Refresh Rate", "Only visible when using Exclusive Fullscreen Window Mode".
         /// Stored in whole hertz, not as a list index, so it survives a resolution change (each resolution has its own list);
         /// 0 = Default (the display picks). A save written before this field loads it as 0.

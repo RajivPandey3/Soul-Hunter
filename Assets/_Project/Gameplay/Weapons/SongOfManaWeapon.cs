@@ -78,7 +78,7 @@ namespace SoulHunter.Gameplay.Combat
             if (projectile == null) projectile = shot.AddComponent<Projectile>();
             // Duration stretches how far the shot travels before it fades.
             projectile.Initialize(direction, _shotSpeed * SpeedMultiplier, ScaledDamage(BaseDamage),
-                ShotLifetime * DurationMultiplier, DamageType.Magic, "Song Of Mana", _shotPierce);
+                ShotLifetime * DurationMultiplier, DamageType.Magic, "Soul Hymn", _shotPierce);
             projectile.AddBounces(ExtraBounces);
             AimAtHostiles(shot);
         }

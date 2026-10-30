@@ -324,7 +324,7 @@ namespace SoulHunter.Gameplay.Combat
         public static string ReadableName(string objectName)
         {
             string name = Suffix.Replace(objectName ?? "", "").Replace('_', ' ').Trim();
-            return CamelSplit.Replace(name, " ").Trim();
+            return SoulHunter.Gameplay.Data.SoulHunterNames.ReplaceAll(CamelSplit.Replace(name, " ").Trim()); // VS names shown as Soul Hunter's (2026-10-30)
         }
     }
 }

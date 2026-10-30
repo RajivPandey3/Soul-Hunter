@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 24
   IsPassive: 1
-  DisplayName: Candelabrador
+  DisplayName: Grave Candle
   Description: +10% area.
   Icon: {fileID: -7648935954811957849, guid: 905ec260f9637c641830c79cf6373c83, type: 3}
   WeaponPrefab: {fileID: 0}

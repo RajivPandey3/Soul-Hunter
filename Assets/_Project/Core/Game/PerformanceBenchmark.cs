@@ -1,3 +1,4 @@
+#if !SOULHUNTER_STORE // measuring tool: compiled out of the store build (owner, 2026-10-30, release audit question 9)
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -370,3 +371,4 @@ namespace SoulHunter.Gameplay.Core
         private static string Escape(string s) => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", " ");
     }
 }
+#endif

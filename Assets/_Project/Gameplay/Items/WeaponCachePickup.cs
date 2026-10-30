@@ -33,6 +33,26 @@ namespace SoulHunter.Gameplay.Pickups
         /// <summary>Opens the list; null uses the game's choice screen. Tests set their own to answer it.</summary>
         public static System.Func<IReadOnlyList<UpgradeType>, System.Action<UpgradeType?>, bool> Chooser { get; set; }
 
+        private static readonly List<WeaponCachePickup> Live = new List<WeaponCachePickup>();
+        /// <summary>Caches lying on the ground now (tests).</summary>
+        public static int LiveCount { get { Live.RemoveAll(c => c == null); return Live.Count; } }
+
+        /// <summary>
+        /// A cache left unopened goes with its stage, like the stage's own items (audit L-11, 2026-10-30): before, every
+        /// unopened cache stayed until the scene ended, a slow pile-up in long Endless runs. A guardian's Soul Egg is an
+        /// earned reward and stays (at most four guardians a stage).
+        /// </summary>
+        public static void RemoveLeftovers()
+        {
+            foreach (var cache in Live) if (cache != null && !cache._taken) Destroy(cache.gameObject);
+            Live.Clear();
+        }
+
+        private void OnDestroy() => Live.Remove(this);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Live.Clear();
+
         public static WeaponCachePickup Create(Vector3 position)
         {
             var go = new GameObject("WeaponCache");
@@ -46,6 +66,7 @@ namespace SoulHunter.Gameplay.Pickups
             body.useGravity = false;
             var cache = go.AddComponent<WeaponCachePickup>();
             cache.BuildVisual();
+            Live.Add(cache);
             return cache;
         }
 

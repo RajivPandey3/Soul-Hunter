@@ -142,7 +142,9 @@ namespace SoulHunter.Core.Persistence
         private volatile bool _backgroundWriteFailed;
 
         /// <summary>True while a SaveSoon request, or a background write that failed, has not been written yet.</summary>
-        public bool HasPendingSave => _dirty || _backgroundWriteFailed;
+        // With writes blocked nothing is pending: the save is never written this session, so SaveFlusher must not make the
+        // whole JSON again every 2 s for nothing (audit 2026-10-30).
+        public bool HasPendingSave => !WritesBlocked && (_dirty || _backgroundWriteFailed);
 
         /// <summary>
         /// Heavy-kill pass (2026-09-29): saves soon instead of now. Gold pickups saved the whole file on every coin, up to
@@ -199,7 +201,7 @@ namespace SoulHunter.Core.Persistence
         /// </summary>
         private void WriteInBackground()
         {
-            if (CurrentData == null) return;
+            if (CurrentData == null || WritesBlocked) return;
             if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
             string json;
             using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.FlushToJson")) json = JsonUtility.ToJson(CurrentData, true);
@@ -232,7 +234,7 @@ namespace SoulHunter.Core.Persistence
         {
             using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.SaveGame"))
             {
-                if (CurrentData == null) return false;
+                if (CurrentData == null || WritesBlocked) return false;
                 if (CurrentData.SaveVersion < GameData.CurrentVersion) CurrentData.SaveVersion = GameData.CurrentVersion;
                 string json;
                 using (SoulHunter.Core.Services.SlowSpan.Measure("SaveService.ToJson")) json = JsonUtility.ToJson(CurrentData, true);

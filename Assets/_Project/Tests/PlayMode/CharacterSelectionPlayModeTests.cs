@@ -45,7 +45,7 @@ namespace SoulHunter.Tests.PlayMode
 
             Assert.That(ui.SelectedCharacter.CharacterName, Is.EqualTo("Isolde"));
             string stats = ui.StatsText.text;
-            foreach (var label in new[] { "Max Health", "Recovery", "Armor", "Move Speed", "Might", "Speed", "Duration", "Area",
+            foreach (var label in new[] { "Max Health", "Recovery", "Armour", "Move Speed", "Might", "Speed", "Duration", "Area",
                                           "Cooldown", "Amount", "Revival", "Magnet", "Luck", "Growth", "Greed", "Curse" })
                 StringAssert.Contains(label, stats, $"Stats panel is missing {label}.");
             StringAssert.Contains("-15%", stats, "Isolde's -15% cooldown should show.");

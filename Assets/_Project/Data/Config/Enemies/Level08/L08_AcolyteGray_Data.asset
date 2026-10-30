@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7ea9dafbc0c2c145b6022abe980dc8a, type: 3}
   m_Name: L08_AcolyteGray_Data
   m_EditorClassIdentifier: 
-  EnemyName: Gray Initiate
+  EnemyName: Grey Initiate
   VisualTint: {r: 0.92, g: 0.50600004, b: 0.50600004, a: 1}
   MaxHealth: 15
   MoveSpeed: 4.2

@@ -72,7 +72,7 @@ namespace SoulHunter.Gameplay.Combat
 
             var damageDealer = knife.GetComponent<ProjectileDamage>();
             if (damageDealer == null) damageDealer = knife.AddComponent<ProjectileDamage>();
-            damageDealer.SourceWeaponName = "Thousand Edge";
+            damageDealer.SourceWeaponName = "Blade Storm";
             AimAtHostiles(knife);
         }
 

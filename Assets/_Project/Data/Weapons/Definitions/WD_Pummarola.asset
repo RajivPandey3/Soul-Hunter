@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 28
   IsPassive: 1
-  DisplayName: Pummarola
+  DisplayName: Heartroot
   Description: Recover 0.2 health every second.
   Icon: {fileID: -6625864876067820037, guid: b47a1664c6a27014a8d0e24855a5ffab, type: 3}
   WeaponPrefab: {fileID: 0}

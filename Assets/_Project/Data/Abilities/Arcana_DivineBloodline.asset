@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: IX
   CardName: Ironblood Oath
-  Description: "Cross, Bible, Garlic, Santa Water, Lightning Ring and Song of Mana deal +5 damage per Armor. Every weapon deals +0.1 damage per missing health. Enemies that touch you take 10 damage per Armor, and enemies slain by retaliation give +0.5 Max Health."
+  Description: "Cross, Bible, Garlic, Holy Water, Lightning Ring and Soul Hymn deal +5 damage per Armour. Every weapon deals +0.1 damage per missing health. Enemies that touch you take 10 damage per Armour, and enemies slain by retaliation give +0.5 Max Health."
   CardIcon: {fileID: 0}
   Type: 10

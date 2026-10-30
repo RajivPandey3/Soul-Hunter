@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Arcana_Waltz
   m_EditorClassIdentifier: 
   CardNumber: XI
-  CardName: Waltz of Pearls
-  Description: Magic Wand, Holy Wand and Fire Wand shots bounce off up to 3 enemies; Hellmaw Comet bounces off the screen edge once, Cross and Heaven Sword twice.
+  CardName: Dancing Spheres
+  Description: Magic Wand, Radiant Rod and Fire Wand shots bounce off up to 3 enemies; Hellmaw Comet bounces off the screen edge once, Cross and Sky Blade twice.
   CardIcon: {fileID: 0}
   Type: 3

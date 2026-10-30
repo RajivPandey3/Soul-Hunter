@@ -71,7 +71,7 @@ namespace SoulHunter.Gameplay.Combat
         /// </summary>
         public float OrbitRate => OrbitDegreesPerSecond * SpeedMultiplier;
         /// <summary>The weapon's name on its damage (Results screen fallback).</summary>
-        protected virtual string ResultsName => "Peachone";
+        protected virtual string ResultsName => "Pale Dove";
 
         protected override void Awake()
         {

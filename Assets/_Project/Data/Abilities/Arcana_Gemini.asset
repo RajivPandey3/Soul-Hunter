@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: I
   CardName: Gemini
-  Description: Peachone, Gun and Hellfire Breath gain a twin that levels with them and takes no slot.
+  Description: Pale Dove, Gun and Hellfire Breath gain a twin that levels with them and takes no slot.
   CardIcon: {fileID: 0}
   Type: 1

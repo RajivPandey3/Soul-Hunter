@@ -62,7 +62,7 @@ namespace SoulHunter.Gameplay.Pickups
         {
             _progression = SoulHunter.Gameplay.Core.LevelProgressionManager.Instance;
             if (_progression != null) _progression.OnStageStarted += HandleStageStarted;
-            StartCoroutine(PlaceWhenReady(_progression != null ? _progression.CurrentStage : 1));
+            QueuePlacement(_progression != null ? _progression.CurrentStage : 1);
         }
 
         private void OnDestroy()
@@ -70,14 +70,27 @@ namespace SoulHunter.Gameplay.Pickups
             if (_progression != null) _progression.OnStageStarted -= HandleStageStarted;
         }
 
-        private void HandleStageStarted(int stage) => StartCoroutine(PlaceWhenReady(stage));
+        private void HandleStageStarted(int stage) => QueuePlacement(stage);
+
+        // Start and the first OnStageStarted both asked for Level 1, so it was built, destroyed and built again (and the
+        // Miser's Idol rolled twice). One placement per stage start (audit L-03, 2026-10-30): a request for a stage that is
+        // already waiting, or was placed in the last two frames, is the same request.
+        private int _pendingFor = -1, _placedFrame = -10;
+        private void QueuePlacement(int stage)
+        {
+            if (_pendingFor == stage || (_placedFor == stage && Time.frameCount - _placedFrame <= 2)) return;
+            _pendingFor = stage;
+            StartCoroutine(PlaceWhenReady(stage));
+        }
 
         /// <summary>One frame later, after InfiniteMap has laid this level's floor (as StageItemSpawner does).</summary>
         private System.Collections.IEnumerator PlaceWhenReady(int stage)
         {
             yield return null;
+            _pendingFor = -1;
             UnityEngine.Physics.SyncTransforms();
             Place(stage);
+            _placedFrame = Time.frameCount;
         }
 
         private static GameData SaveData()

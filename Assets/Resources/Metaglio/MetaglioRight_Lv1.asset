@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 797eee8931b907d4d83c4820f61ba8b2, type: 3}
   m_Name: MetaglioRight_Lv1
   m_EditorClassIdentifier: 
-  UpgradeName: Metaglio Right Lv1
+  UpgradeName: Right Soul Gauntlet Lv1
   Description: Found in the stage. Unlocks further upgrades.
   Icon: {fileID: 0}
   Type: 35

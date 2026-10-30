@@ -73,7 +73,8 @@ namespace SoulHunter.Gameplay.Pickups
                     Remove(pickup); // destroyed without OnDisable (never expected)
                     continue;
                 }
-                pickup.Tick();
+                try { pickup.Tick(); }
+                catch (System.Exception e) { Debug.LogException(e, pickup as Object); } // one pickup's error never stops the rest
             }
         }
 

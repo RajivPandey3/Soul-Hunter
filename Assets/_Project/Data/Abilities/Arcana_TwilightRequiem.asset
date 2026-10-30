@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: II
   CardName: Final Echo
-  Description: "Shots from Bible, Unholy Vespers, Lightning Ring, Stormbound Halo, Peachone, Runetracer and Bone explode when they fade. Curse makes the blasts stronger."
+  Description: "Shots from Bible, Black Psalter, Lightning Ring, Stormbound Halo, Pale Dove, Rune Ricochet and Bone explode when they fade. Curse makes the blasts stronger."
   CardIcon: {fileID: 0}
   Type: 5

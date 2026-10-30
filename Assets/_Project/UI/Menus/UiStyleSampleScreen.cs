@@ -115,7 +115,7 @@ namespace SoulHunter.UI
             Heading(window, 0.61f, 0.77f, "Cards");
             var icons = ItemIcons();
             var levelUp = Card(window, 0.61f, 0.61f, 0.98f, 0.76f, ThemedElement.SurfaceRole.Card, IconOf(UpgradeType.Whip), "Whip", "+1 projectile. Lashes the nearest enemy.", "Level 2");
-            string[] states = { "Might\n2/5", "Armor\n0/3", "Recovery\nMAX", "Luck\nLOCKED" };
+            string[] states = { "Might\n2/5", "Armour\n0/3", "Recovery\nMAX", "Luck\nLOCKED" };
             UpgradeType[] cellIcons = { UpgradeType.Spinach, UpgradeType.Armor, UpgradeType.Pummarola, UpgradeType.Clover };
             ThemedElement.SurfaceRole[] roles = { ThemedElement.SurfaceRole.Card, ThemedElement.SurfaceRole.CardSelected, ThemedElement.SurfaceRole.CardMaxed, ThemedElement.SurfaceRole.CardLocked };
             for (int i = 0; i < 4; i++)

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 34
   IsPassive: 1
-  DisplayName: Metaglio Left
+  DisplayName: Left Soul Gauntlet
   Description: +0.1 health per second and +5% max health.
   Icon: {fileID: 0}
   WeaponPrefab: {fileID: 0}

@@ -37,10 +37,7 @@ namespace SoulHunter.Editor.Build
             }
 
             // Read enabled scenes from EditorBuildSettings
-            string[] enabledScenes = EditorBuildSettings.scenes
-                .Where(s => s.enabled && File.Exists(s.path))
-                .Select(s => s.path)
-                .ToArray();
+            string[] enabledScenes = ScenesFor(SkipShowcaseScenes);
 
             if (enabledScenes.Length == 0)
             {
@@ -57,10 +54,12 @@ namespace SoulHunter.Editor.Build
                 locationPathName = outputExePath,
                 target = BuildTarget.StandaloneWindows64,
                 // SOULHUNTER_BUILD_DEVELOPMENT=1 makes a development build (profiler captures; slower than a release build).
-                options = Environment.GetEnvironmentVariable("SOULHUNTER_BUILD_DEVELOPMENT") == "1" ? BuildOptions.Development : BuildOptions.None
+                options = Environment.GetEnvironmentVariable("SOULHUNTER_BUILD_DEVELOPMENT") == "1" ? BuildOptions.Development : BuildOptions.None,
+                extraScriptingDefines = StoreBuild ? new[] { StoreDefine } : null
             };
 
             ApplyAppIcon();
+            ApplyIdentity();
             BuildReport report = BuildPipeline.BuildPlayer(buildOptions);
             BuildSummary summary = report.summary;
 
@@ -77,11 +76,49 @@ namespace SoulHunter.Editor.Build
         }
 
         /// <summary>
-        /// Android test build (2026-10-10, T-01 device test): an arm64 IL2CPP APK at SOULHUNTER_BUILD_OUTPUT_APK, signed
-        /// with the debug key. The project has no Android application id yet (Standalone's "com.DefaultCompany.2D-URP" is
-        /// not valid on Android), so a provisional id is used for this build only; the release id is the owner's choice.
+        /// Owner, 2026-10-30 (release audit, question 4): the store id on every platform. Before, Windows kept the Unity
+        /// template's "com.DefaultCompany.2D-URP" and Android used a provisional id set at build time.
         /// </summary>
-        public const string ProvisionalAndroidId = "com.NimritaGames.SoulHunter";
+        public const string ApplicationId = "com.nimritagames.soulhunter";
+
+        /// <summary>The version players see (owner, 2026-10-30: 0.9.0, the build number rising with every build).</summary>
+        public const string Version = "0.9.0";
+
+        /// <summary>
+        /// Rises with every build, so a store accepts each upload: whole minutes since 2026-01-01 UTC (Android's version code
+        /// is a 32-bit int; this stays below 2^31 for about 4,000 years).
+        /// </summary>
+        public static int BuildNumber => (int)((DateTime.UtcNow - new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMinutes);
+
+        public static void ApplyIdentity()
+        {
+            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Standalone, ApplicationId);
+            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, ApplicationId);
+            PlayerSettings.bundleVersion = Version;
+            PlayerSettings.Android.bundleVersionCode = BuildNumber;
+            Debug.Log($"[SoulHunterBuildRunner] {ApplicationId} {Version} (build {BuildNumber}){(StoreBuild ? ", store build" : "")}");
+        }
+
+        /// <summary>
+        /// SOULHUNTER_STORE_BUILD=1 makes the build players get (owner, 2026-10-30, release audit questions 9 and 10):
+        /// - the measuring tools (AutoplayBot, PerformanceBenchmark: god mode and other launch flags) are compiled out
+        ///   through <see cref="StoreDefine"/>;
+        /// - the ten level showcase scenes are left out. The game has not loaded them since 2026-10-27
+        ///   (CampaignSceneConnector.LoadShowcaseScenes), and they stay in the editor's build list for tests and tools.
+        /// Validation builds (the FPS suite, the bot) are made without it and keep both.
+        /// </summary>
+        public static bool StoreBuild => Environment.GetEnvironmentVariable("SOULHUNTER_STORE_BUILD") == "1";
+        public const string StoreDefine = "SOULHUNTER_STORE";
+
+        /// <summary>The store build leaves the showcase scenes out; SOULHUNTER_BUILD_SKIP_SHOWCASE=1 does that alone, so a validation build with the bot can test it.</summary>
+        public static bool SkipShowcaseScenes => StoreBuild || Environment.GetEnvironmentVariable("SOULHUNTER_BUILD_SKIP_SHOWCASE") == "1";
+
+        public static bool IsShowcaseScene(string path) => Path.GetFileNameWithoutExtension(path).EndsWith("_Showcase", StringComparison.Ordinal);
+
+        public static string[] ScenesFor(bool store) => EditorBuildSettings.scenes
+            .Where(s => s.enabled && File.Exists(s.path) && !(store && IsShowcaseScene(s.path)))
+            .Select(s => s.path)
+            .ToArray();
 
         public const string AppIconPath = "Assets/_Project/Art/AppIcon/SH10_AppIcon.png";
 
@@ -116,7 +153,7 @@ namespace SoulHunter.Editor.Build
             string buildDir = Path.GetDirectoryName(outputApk);
             if (!string.IsNullOrEmpty(buildDir) && !Directory.Exists(buildDir)) Directory.CreateDirectory(buildDir);
 
-            string[] enabledScenes = EditorBuildSettings.scenes.Where(s => s.enabled && File.Exists(s.path)).Select(s => s.path).ToArray();
+            string[] enabledScenes = ScenesFor(SkipShowcaseScenes);
             if (enabledScenes.Length == 0)
             {
                 Debug.LogError("[SoulHunterBuildRunner] No enabled scenes. Build abort.");
@@ -125,9 +162,7 @@ namespace SoulHunter.Editor.Build
             }
 
             ApplyAppIcon();
-            string id = PlayerSettings.GetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android);
-            if (string.IsNullOrWhiteSpace(id) || id.Contains("-") || id == "com.DefaultCompany.2D-URP")
-                PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, ProvisionalAndroidId);
+            ApplyIdentity();
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             EditorUserBuildSettings.buildAppBundle = false;
@@ -139,7 +174,8 @@ namespace SoulHunter.Editor.Build
                 scenes = enabledScenes,
                 locationPathName = outputApk,
                 target = BuildTarget.Android,
-                options = Environment.GetEnvironmentVariable("SOULHUNTER_BUILD_DEVELOPMENT") == "1" ? BuildOptions.Development : BuildOptions.None
+                options = Environment.GetEnvironmentVariable("SOULHUNTER_BUILD_DEVELOPMENT") == "1" ? BuildOptions.Development : BuildOptions.None,
+                extraScriptingDefines = StoreBuild ? new[] { StoreDefine } : null
             });
             if (report.summary.result == BuildResult.Succeeded)
             {

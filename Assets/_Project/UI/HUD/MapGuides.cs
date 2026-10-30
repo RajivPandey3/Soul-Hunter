@@ -23,8 +23,7 @@ namespace SoulHunter.Gameplay.UI
     /// Balance method where the wiki is silent or Soul Hunter differs (owner rule, 2026-10-09):
     /// - The wiki says an arrow for "each item". Soul Hunter shows the nearest <see cref="MaxArrows"/> only (coordinator
     ///   direction, 2026-10-12: the HUD stays calm): a level has six stage items, and six arrows ring the whole screen.
-    /// - The switch lasts until the game is closed; it is not written to the save (the wiki does not say it is kept, and
-    ///   this change does not touch the save's fields).
+    /// - The switch is kept on the save (owner, 2026-10-30; see <see cref="Enabled"/>).
     /// - The arrows keep clear of the HUD's top band and are hidden whenever the game is paused (a menu is open) or the
     ///   run is over. They are not controls, so the touch-size rule does not apply; their text keeps the 12 sp floor.
     /// - No blinking or movement of their own (nothing for the Flashing VFX option to switch off).
@@ -44,8 +43,27 @@ namespace SoulHunter.Gameplay.UI
         /// <summary>Seconds between looks for new things that ask for a mark (relics, caskets); stage items are read every frame.</summary>
         public const float ScanSeconds = 2f;
 
-        /// <summary>The Guides switch (VS "Show Guides"/"Hide Guides"); off when the game starts.</summary>
-        public static bool Enabled { get; set; }
+        /// <summary>
+        /// The Guides switch (VS "Show Guides"/"Hide Guides"); off on a new save. Owner, 2026-10-30 (audit L-06): it is kept
+        /// on the save, like the Options switches. Before, it lasted until the game was closed, so it carried into the next
+        /// run but was lost on the next launch.
+        /// </summary>
+        public static bool Enabled
+        {
+            get => Data() is SoulHunter.Core.Persistence.GameData data ? data.ShowMapGuides : _fallback;
+            set
+            {
+                _fallback = value;
+                if (!(Data() is SoulHunter.Core.Persistence.GameData data) || data.ShowMapGuides == value) return;
+                data.ShowMapGuides = value;
+                if (SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Persistence.SaveService save)) save.SaveSoon();
+            }
+        }
+        private static bool _fallback; // no save loaded (edit-mode tests)
+
+        private static SoulHunter.Core.Persistence.GameData Data() =>
+            SoulHunter.Core.Services.GameServices.Instance != null
+            && SoulHunter.Core.Services.GameServices.Instance.TryGet(out SoulHunter.Core.Persistence.SaveService save) ? save.CurrentData : null;
 
         public static MapGuides Current { get; private set; }
 

@@ -108,7 +108,7 @@ namespace SoulHunter.Gameplay.Combat
             
             damageDealer.DamageAmount = RollDamage(DamageAmount);
             bool crit = LastRollWasCrit;
-            damageDealer.SourceWeaponName = "Bloody Tear";
+            damageDealer.SourceWeaponName = "Crimson Lash";
             damageDealer.SourceWeapon = this; // VS Results
             damageDealer.TargetTag = HostileTag; // TouchDamage defaults to "Player": the whip hurt its own holder
             

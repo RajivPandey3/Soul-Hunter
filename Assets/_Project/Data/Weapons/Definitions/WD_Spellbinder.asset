@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 25
   IsPassive: 1
-  DisplayName: Spellbinder
+  DisplayName: Lingering Sigil
   Description: +10% weapon duration.
   Icon: {fileID: 21300000, guid: 7077a037c318bd846b766c6f59098351, type: 3}
   WeaponPrefab: {fileID: 0}

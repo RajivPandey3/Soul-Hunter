@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: XVI
   CardName: Keen Edge
-  Description: "Whip, Knife, Axe, Thousand Edge, Death Spiral and Bloody Tear can land critical hits, and every critical hit deals double damage."
+  Description: "Whip, Knife, Axe, Blade Storm, Reaper Spiral and Crimson Lash can land critical hits, and every critical hit deals double damage."
   CardIcon: {fileID: 0}
   Type: 16

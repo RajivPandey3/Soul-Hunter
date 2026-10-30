@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: IV
   CardName: Awake
-  Description: +3 Revivals. Every Revival used grants x1.1 Max Health, +1 Armor and +5% Might, Area, Duration and Speed.
+  Description: +3 Revivals. Every Revival used grants x1.1 Max Health, +1 Armour and +5% Might, Area, Duration and Speed.
   CardIcon: {fileID: 0}
   Type: 0

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: XXI
   CardName: Crimson Orbit
-  Description: "Enemies inside your Magnet range take damage that grows with Amount. Garlic, Soul Eater, Pentagram, Eclipse Sigil, Song of Mana, Requiem of Souls and Laurel also leave blood zones."
+  Description: "Enemies inside your Magnet range take damage that grows with Amount. Garlic, Soul Devourer, Pentagram, Eclipse Sigil, Soul Hymn, Requiem of Souls and Laurel also leave blood zones."
   CardIcon: {fileID: 0}
   Type: 21

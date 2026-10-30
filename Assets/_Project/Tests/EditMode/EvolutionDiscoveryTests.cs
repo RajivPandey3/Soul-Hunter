@@ -99,7 +99,7 @@ namespace SoulHunter.Tests.EditMode
         {
             var bloodyTear = Evolution("Evo_BloodyTear", UpgradeData.UpgradeType.Whip, UpgradeData.UpgradeType.MaxHealth);
             string weaponCard = EvolutionRecipes.HintText(UpgradeData.UpgradeType.Whip, new[] { bloodyTear });
-            Assert.That(weaponCard, Does.StartWith("Evolves with ").And.EndWith(" into Bloody Tear"));
+            Assert.That(weaponCard, Does.StartWith("Evolves with ").And.EndWith(" into Crimson Lash")); // VS Bloody Tear, renamed 2026-10-30
             Assert.That(weaponCard, Does.Contain(UpgradeText.NameOf(UpgradeData.UpgradeType.MaxHealth)));
             string passiveCard = EvolutionRecipes.HintText(UpgradeData.UpgradeType.MaxHealth, new[] { bloodyTear, bloodyTear });
             Assert.That(passiveCard, Does.Contain(UpgradeText.NameOf(UpgradeData.UpgradeType.Whip)).And.EndWith("(+1 more)"));
@@ -115,7 +115,7 @@ namespace SoulHunter.Tests.EditMode
             Assert.That(recipe.Items, Is.EqualTo(new[] { UpgradeData.UpgradeType.Laurel, UpgradeData.UpgradeType.MetaglioLeft, UpgradeData.UpgradeType.MetaglioRight }));
             Assert.That(EvolutionRecipes.Counterparts(recipe, UpgradeData.UpgradeType.Laurel),
                 Is.EqualTo(new[] { UpgradeData.UpgradeType.MetaglioLeft, UpgradeData.UpgradeType.MetaglioRight }));
-            Assert.That(recipe.Name, Is.EqualTo("Crimson Shroud"));
+            Assert.That(recipe.Name, Is.EqualTo("Blood Veil"));
         }
 
         [Test]

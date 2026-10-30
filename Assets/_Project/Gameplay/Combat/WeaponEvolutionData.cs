@@ -58,7 +58,7 @@ namespace SoulHunter.Gameplay.Combat
                 if (i > 0 && char.IsUpper(c) && name[i - 1] != ' ' && !char.IsUpper(name[i - 1])) text.Append(' ');
                 text.Append(c);
             }
-            return text.ToString();
+            return SoulHunter.Gameplay.Data.SoulHunterNames.For(text.ToString()); // VS names are shown with Soul Hunter's (owner, 2026-10-30)
         }
         public Sprite EvolvedIcon;
     }

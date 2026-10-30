@@ -126,7 +126,7 @@ namespace SoulHunter.Tests.PlayMode
             var whipHint = Hint(cards[0]);
             Assert.That(whipHint != null && whipHint.gameObject.activeInHierarchy, Is.True, "The Whip card hints Bloody Tear.");
             var whipText = HintText(cards[0]);
-            Assert.That(whipText.text, Does.Contain(UpgradeText.NameOf(UpgradeData.UpgradeType.MaxHealth)).And.Contain("Bloody Tear"));
+            Assert.That(whipText.text, Does.Contain(UpgradeText.NameOf(UpgradeData.UpgradeType.MaxHealth)).And.Contain("Crimson Lash"));
             var counterpart = whipHint.Find(LevelUpUI.EvoHintIconName + "0/Icon").GetComponent<Image>();
             Assert.That(counterpart.sprite, Is.EqualTo(EvolutionRecipes.IconOf(UpgradeData.UpgradeType.MaxHealth)), "The other item's own icon.");
             var result = whipHint.Find(LevelUpUI.EvoHintIconName + "1").GetComponent<Outline>();
@@ -208,7 +208,7 @@ namespace SoulHunter.Tests.PlayMode
 
             var bloodyTear = screen.Rows.First(r => r.Recipe.Id == "Evo_BloodyTear");
             Assert.That(bloodyTear.State, Is.EqualTo(EvolutionRecipes.RowState.Open));
-            Assert.That(bloodyTear.NameText.text, Does.Contain("Bloody Tear"));
+            Assert.That(bloodyTear.NameText.text, Does.Contain("Crimson Lash"));
             Assert.That(bloodyTear.HeldItems, Is.EquivalentTo(new[] { UpgradeData.UpgradeType.Whip, UpgradeData.UpgradeType.MaxHealth }));
             Assert.That(bloodyTear.HeldLabels.Count, Is.EqualTo(2), "Each held item is labelled Held (not by colour alone).");
             Assert.That(bloodyTear.StatusText.text, Does.StartWith("Held: "));

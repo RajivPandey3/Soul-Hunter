@@ -196,6 +196,35 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
         - So the old one-off jolts did not come back: Level 4's 246 ms burst, Level 5's 7:50 burst, Level 10's 113 ms after the skip, and the GPU-bound stretch of a Smoke Clump run (no frame had a GPU time over 16.7 ms). Their causes stay **not proven**.
         - Level 7's guardian (Avatar of Gaea) with a level-110 hero and the fixed loadout: it came at 25:00 and was defeated 47.5 s later (its invulnerable countdown and 101 apparitions included), with about 5,800 kills in the run. One run, the bot in god mode, so this says nothing yet about a weaker hero.
       - **Tried and dropped:** Lightning Ring and Stormbound Halo strikes finding their hits by one `OverlapSphere` per physics step instead of their trigger collider (same sphere, 0.5 s, layers, once per body). In an A/B in one run (`run-20261029-strikeab`, L4 late x3) the windows' slow frames were 61/55/60 with the query and 70/57/63 without, and in the one heavy lightning frame caught (50 hits, 19.2 ms) the query's own FixedUpdate took 4.4 ms. No gain shown; removed.
+    - **Re-measured after the bug hunt** (2026-10-30, owner: "fps re-measure karo bug fixes ke baad"; `run-20261030-postfix`, the same setup as `run-20261029-pendmeasure`, plus heavy kill and the Pentagram wipe): every part had median 60 and 0 errors; the save was unchanged.
+      - No running frame over 25 ms on Level 1 late, Level 3 Smoke Clump traps, Level 4 late (twice), Level 10 from 0:05, heavy kill or the wipe. Slowest running frames there were 17.4-21.9 ms.
+      - Level 5 from 7:50: three running frames of 31-34 ms (at 117 s and twice at 157 s, 34-91 enemies). They were all main-thread time, with GPU at 7 ms, no timed section, no GC and no other event. **Cause not proven.** The 2026-10-29 run had none there.
+      - Level 7 late: one 30 ms frame at 21 s, 13 s after the debug clock skip. That frame had 40 death-queue switch-offs and 199 gems, and fell inside the warm-up the suite does not count.
+      - Level 4 run 2's 33 ms frames were a chest screen (paused).
+    - **Audit 2026-10-30** (owner: "sabhi game object ka full properties check karo or jhatke ka karan pata karo ... har angle se check karo, or bug free karo"; register `Docs/AUDIT_20261030.md`):
+      - **Every game object, by a tool** (isolated copy only): 9,987 GameObjects, 15,619 components and 1,040,660 properties. 1,315 findings in 12 groups; none reaches the player (dead leftovers and false alarms, listed in the register).
+      - **Level 5 jolt:** 10 clean release runs with every Update timed and 3 runs with Hellfire Breath given on purpose. 12 runs had no running frame over 25 ms. One frame of 197 ms (inside `AutoAttackWeapon.Update`, 2.5 s after a Hellfire Breath drop) did not come back when the breath was given 12 times. **Cause not proven.** Each weapon's attack is now timed by type and part, so the next one names itself.
+      - **Fixed (A-01 to A-06):**
+        - W/A/S/D and the arrows walked after Move was remapped;
+        - one error in a shot, enemy bullet, pickup or gem stopped all of them;
+        - Results counted mid-run Soul Eggs;
+        - a blocked save rebuilt its JSON every 2 s;
+        - duplicate managers kept running `Awake`;
+        - a release log fired at each Death's Shadow roll.
+      - **Owner decisions listed, not changed:** VS item names on screen, art without a recorded source, AI pictures, store setup (signed AAB, product id, version), IL2CPP, localization, graphics options.
+      - Tests: EditMode 1027/1027 and PlayMode 111/111 (20 fixtures), 0 exceptions, save unchanged (`run-20261030-auditfix`).
+      - **Owner's 12 answers, then the work** (register section 4a/4b):
+        - **VS names replaced on screen** (`SoulHunterNames`, `Docs/Name_Changes_20261030.md`), with ids and the save unchanged;
+        - **British English**;
+        - **Build identity:** `com.nimritagames.soulhunter`, version 0.9.0, build number rising;
+        - **Store build** (`SOULHUNTER_STORE_BUILD=1`): no bot or benchmark, and no showcase scenes;
+        - **Anti-aliasing option** (Off/FXAA/SMAA, an SH extra, FXAA by default);
+        - **Gameplay→HUD guard test**;
+        - **L-03, L-06, L-09, L-11 fixed**;
+        - **Docs:** art credits, AI disclosure, localization plan.
+      - **IL2CPP** waits for the owner to install the Hub module.
+      - **Exception to section 3:** 12 runtime files call the HUD directly. `GameplayUiCouplingGuardTests` freezes that list; the events refactor comes after release.
+      - Full suite: EditMode 1032/1032, PlayMode 542/542, save unchanged (`run-20261030-full`). The one exception logged is a test's own deliberate error.
     - **Bug hunt (2026-10-29, owner: "ab naya baug dundho pure project mein", then "sabhi bug fix karo pending mat choro"):** four read-only agents found 31 rows (`Docs/BUG_MIS_20261029.md`), all fixed: among them the Level 8 egg snap reading eggs bought during the run (`SoulEggs.AppliedThisRun`), the Thorn Circle side kept per life, a busy event queue leaving a Rune Plate without its cooldown (`EnemySpawner.LastEventStarted`), one pause-key count for every screen (`Input.PauseKeyHolds`), and Shadow Kael copying Limit Break cards. Full suite EditMode 1027/1027, PlayMode 537/537, 0 exceptions, save unchanged (`run-20261029-full4`).
     - Full suite (`run-20261029-full`): EditMode 1025/1025, PlayMode 528/529, 0 exceptions, save unchanged. The failure was test-side: `StageEventPlayModeTests.EveryFormation_FliesItsPath` ran every event type without a unit, and `Circle` spawns only its VS unit; Circle is now skipped there (covered by `StageTrapsPlayModeTests`). EditMode 1025/1025 and StageEvent + StageTraps 7/7 after (`run-20261029-fix1`).
     - **The three open jolts, measured** (owner rule: no fix before the cause is proven):

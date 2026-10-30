@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 21
   IsPassive: 0
-  DisplayName: 'Song of Mana'
+  DisplayName: 'Soul Hymn'
   Description: Piercing magic shots toward the nearest enemy.
   Icon: {fileID: -5073605158764676077, guid: 807baf14699bdc240895a8464618dc37, type: 3}
   WeaponPrefab: {fileID: 1468209639630668397, guid: 42f63f8f21f197f4b8d0a1589d02758d, type: 3}

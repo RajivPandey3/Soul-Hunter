@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardNumber: XIV
   CardName: Icebound Snare
-  Description: "Magic Wand, Holy Wand, Runetracer and Severed Fate hits have a 25% chance to freeze, raised by Luck."
+  Description: "Magic Wand, Radiant Rod, Rune Ricochet and Severed Fate hits have a 25% chance to freeze, raised by Luck."
   CardIcon: {fileID: 0}
   Type: 14
