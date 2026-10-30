@@ -225,6 +225,30 @@ Owner rule (2026-09-30): "everwhere follow DOT VS ONLY". Every change is a DOT i
       - **IL2CPP** waits for the owner to install the Hub module.
       - **Exception to section 3:** 12 runtime files call the HUD directly. `GameplayUiCouplingGuardTests` freezes that list; the events refactor comes after release.
       - Full suite: EditMode 1032/1032, PlayMode 542/542, save unchanged (`run-20261030-full`). The one exception logged is a test's own deliberate error.
+      - **Phone FPS after these fixes** (owner, 2026-10-30; `run-20261030-phone`):
+        - Setup: realme RMX5004, release APK of `09bf940e`, Ultra, landscape, god mode, fixed loadout, 4 min each. Each run started at thermal status 0; the phone reached status 3 (36-39 °C) in every run.
+        - Results:
+
+          | Run | FPS mean (min) | Slow frames per 5 s | Worst frame |
+          |---|---|---|---|
+          | Level 5 from 19:50, run 1, FXAA off | 58.7 (57) | 7.8 | 49.8 ms |
+          | Level 5 from 19:50, run 1, FXAA on | 58.4 (55) | 8.1 | 33.3 ms |
+          | Level 5 from 19:50, run 2 (started at 35.4 °C), FXAA off | 56.2 (52) | 19.3 | 66.5 ms |
+          | Level 5 from 19:50, run 2, FXAA on | 57.5 (53) | 13.4 | 33.3 ms |
+          | Level 1 from 24:50 (started at 35.7 °C), FXAA on (the default), 311 enemies at most | 59 (56); median 60 | 5.5 | 49.8 ms |
+
+        - Every run had 0 errors.
+        - FXAA has no consistent cost on the phone: it was slower in run 1 and faster in run 2, so the difference follows heat and enemy count.
+        - Not a constant 60: the phone's heat throttling remains, as on 2026-10-18.
+        - Found on the way: realme's verifier refuses a second `adb install` of the same APK (`INSTALL_FAILED_VERIFICATION_FAILURE`), and the dozing screen stops the game. `run-20261030-phone/go.ps1` pushes the APK and installs it with `pm install`, and keeps the screen on over USB (`svc power stayon usb`, switched off after the runs).
+        - **Phone heat profile** (owner: "profile se garmi ka kaaran dhundho"; `run-20261030-phoneheat`, development APK, same setup, two 4-minute runs from a cooled phone, 12 s profiles at 40 s and 210 s, CPU cluster frequency every 5 s):
+          - Both runs reached thermal status 3 within 5-36 s, and the big cluster stayed at 2.4-2.5 GHz for most of both runs (2.1 GHz only after about 200 s). So the 40 s / 210 s profiles are not "cool against hot"; they differ in load (110 against 200 enemies, physics 0.1 against 2.3 ms). Main thread busy 10.6-11.2 ms at 40 s and 11.8-13.2 ms at 210 s; the render thread mostly waits for the 60 FPS present. Median frame 16.6 ms in all six profile parts.
+          - The two runs differed at 145-175 s, at the same temperature and the same 600-850 enemy bullets: the run with 400 gems on the ground (the bot did not collect them) read 50-56 FPS; the run with 20-50 gems read 59-60. **Cause not proven** (one run each): heat throttling is not shown to be the cause; the gem count is the lead to test with an A/B in one run.
+        - **Gem A/B on the phone** (owner: "haan"; `run-20261030-phonegem`, `go.ps1`, `analyse.py`; release APK, same setup, 4 runs of 4 minutes from a cooled phone). New bot option `-sh-autoplay-gem-ab` (`-sh-autoplay-gem-ab-seconds 25`, `-sh-autoplay-gem-first many|few`): gems left on the ground (`PlayerExperience.GemMagnetOff`, measurement only, so they pile to the 400 cap) against every gem pulled to the hero each second; timeline `gemsLeft`, `gemSince`. Windows counted from 8 s after a switch.
+          - With 300+ bullets in the air: gems left (371 on average) 54.8 FPS mean, min 49, 26.9 slow frames per 5 s; gems gathered (49) 57.5, min 54, 12.8. Under 300 bullets: 59.0 against 59.3.
+          - **Not consistent between runs:** in run 4 every gems-left window read 49-53 and every gathered one 54-59, even with more bullets (up to 1,006); in run 2 the order flipped once (gems left 58-59 at 160-170 s, gathered 54 at 135-145 s with the same bullets), and the last minute was 49-54 both ways. Runs 1 and 3 were light (about 170 enemies) and read 59-60 both ways.
+          - In both heavy runs the big cluster dropped from 2.5 to 2.2 GHz at about 220 s (battery 39 °C), and the slowest windows of both kinds came after it.
+          - **Cause not proven:** 400 gems may cost up to about 3-5 FPS under the heaviest load, but one of the two heavy runs does not show it. Nothing in the game was changed.
     - **Bug hunt (2026-10-29, owner: "ab naya baug dundho pure project mein", then "sabhi bug fix karo pending mat choro"):** four read-only agents found 31 rows (`Docs/BUG_MIS_20261029.md`), all fixed: among them the Level 8 egg snap reading eggs bought during the run (`SoulEggs.AppliedThisRun`), the Thorn Circle side kept per life, a busy event queue leaving a Rune Plate without its cooldown (`EnemySpawner.LastEventStarted`), one pause-key count for every screen (`Input.PauseKeyHolds`), and Shadow Kael copying Limit Break cards. Full suite EditMode 1027/1027, PlayMode 537/537, 0 exceptions, save unchanged (`run-20261029-full4`).
     - Full suite (`run-20261029-full`): EditMode 1025/1025, PlayMode 528/529, 0 exceptions, save unchanged. The failure was test-side: `StageEventPlayModeTests.EveryFormation_FliesItsPath` ran every event type without a unit, and `Circle` spawns only its VS unit; Circle is now skipped there (covered by `StageTrapsPlayModeTests`). EditMode 1025/1025 and StageEvent + StageTraps 7/7 after (`run-20261029-fix1`).
     - **The three open jolts, measured** (owner rule: no fix before the cause is proven):

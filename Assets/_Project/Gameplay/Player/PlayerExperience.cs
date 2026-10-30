@@ -55,6 +55,10 @@ namespace SoulHunter.Gameplay.Player
 
         private Collider[] _magnetHits = new Collider[256];
         private float _magnetCheckTimer = 0f;
+
+        /// <summary>Measurement only (AutoplayBot -sh-autoplay-gem-ab): true leaves gems on the ground, out of the Magnet's
+        /// pull, so a run can compare frames with many gems lying about against few. Never set by the game.</summary>
+        public static bool GemMagnetOff;
         // Gems, coins, the Vacuum, Time Freeze and the light-source pickups all lie on Default (their prefabs, the coin
         // template built by PickupPoolManager.PrepareGoldTemplate and the ExtraPickupPool stand-ins); the unused Pickup
         // layer is included so a pickup moved there keeps working. Before (Bug MIS ITM-02) the sweep took every layer, so
@@ -96,7 +100,7 @@ namespace SoulHunter.Gameplay.Player
 
                     if (_magnetHits[i].TryGetComponent<SoulHunter.Gameplay.Pickups.XPGem>(out var gem))
                     {
-                        gem.Magnetize(this.transform);
+                        if (!GemMagnetOff) gem.Magnetize(this.transform);
                         continue;
                     }
                     // VS wiki (Magnet): other pickups are gathered too. Chests are never pulled (wiki Treasure_Chest:

@@ -434,7 +434,9 @@ namespace SoulHunter.Gameplay.Core
                 }
                 _lookStep = (_lookStep + 1) % 6;
             }
-            if (Reachable(_gemGoal)) pull += Flat(_gemGoal.position - me).normalized * (near > 8 ? 0.8f : 1.6f);
+            // Gem A/B: while gems are left on the ground the bot does not walk to them (the search above still runs, so
+            // the bot's own cost is the same in both turns).
+            if (!SoulHunter.Gameplay.Player.PlayerExperience.GemMagnetOff && Reachable(_gemGoal)) pull += Flat(_gemGoal.position - me).normalized * (near > 8 ? 0.8f : 1.6f);
             if (Reachable(_chestGoal)) pull += Flat(_chestGoal.position - me).normalized * 2f;
             if (Reachable(_merchantGoal)) pull += Flat(_merchantGoal.position - me).normalized * 3f;
             if (near < 6)
@@ -1520,6 +1522,32 @@ namespace SoulHunter.Gameplay.Core
                 _lightBulletSwitchedAt = Elapsed;
                 _nextLightBulletSwitch = Elapsed + turn;
             }
+            // -sh-autoplay-gem-ab (phone heat lead, 2026-10-30): gems left on the ground (the Magnet and the bot leave them, so
+            // they pile up to the 400 cap) against gems gathered (every gem pulled to the hero each second, as a Vacuum does),
+            // in turns of -sh-autoplay-gem-ab-seconds N (default 25). -sh-autoplay-gem-first many starts with gems left, so
+            // runs can take turns on the order. Timeline "gemsLeft" and "gemSince" (seconds since the switch).
+            if (HasArg("-sh-autoplay-gem-ab"))
+            {
+                if (Elapsed >= _nextGemSwitch)
+                {
+                    bool manyFirst = string.Equals(ArgValue("-sh-autoplay-gem-first"), "many", System.StringComparison.OrdinalIgnoreCase);
+                    SoulHunter.Gameplay.Player.PlayerExperience.GemMagnetOff = (_gemAbIndex % 2 == 0) == manyFirst;
+                    _gemAbIndex++;
+                    float turn = float.TryParse(ArgValue("-sh-autoplay-gem-ab-seconds"), NumberStyles.Float, CultureInfo.InvariantCulture, out var gemSeconds) && gemSeconds > 0f ? gemSeconds : 25f;
+                    _gemSwitchedAt = Elapsed;
+                    _nextGemSwitch = Elapsed + turn;
+                }
+                if (!SoulHunter.Gameplay.Player.PlayerExperience.GemMagnetOff && Elapsed >= _nextGemPull && PlayerController.Instance != null)
+                {
+                    _nextGemPull = Elapsed + 1f;
+                    var hero = PlayerController.Instance.transform;
+                    for (int i = XPGem.ActiveGems.Count - 1; i >= 0; i--)
+                    {
+                        var gem = XPGem.ActiveGems[i];
+                        if (gem != null && gem.isActiveAndEnabled) gem.Magnetize(hero);
+                    }
+                }
+            }
             // -sh-autoplay-omen <OmenEvent name> (and -sh-autoplay-omen-after S, default 20): fires that Omen once, then takes
             // screenshots 1, 4 and 10 s later, so a build run can show an Omen without waiting for the wheel.
             if (!_omenDone && Elapsed >= (float.TryParse(ArgValue("-sh-autoplay-omen-after"), NumberStyles.Float, CultureInfo.InvariantCulture, out var omenAt) ? omenAt : 20f)
@@ -1825,6 +1853,8 @@ namespace SoulHunter.Gameplay.Core
         private float _nextBulletLookSwitch;
         private float _nextLightBulletSwitch;
         private int _lightBulletAbIndex;
+        private int _gemAbIndex;
+        private float _nextGemSwitch, _nextGemPull, _gemSwitchedAt;
         private float _lightBulletSwitchedAt;
         private int _bulletLookAbIndex;
 
@@ -1908,7 +1938,7 @@ namespace SoulHunter.Gameplay.Core
             var stats = RunStatsTracker.Instance;
             if (_spawnerForLog == null) _spawnerForLog = FindFirstObjectByType<EnemySpawner>();
             _timeline.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\", \"bulletLook\": {37}, \"lightBullet\": {38}, \"coins\": {39}, \"pickups\": {40}, \"lightSince\": {41:0.0}, \"gpuOff\": {42}}}",
+                "{{\"t\": {0:0.0}, \"stage\": {1}, \"stageTime\": {2:0}, \"level\": {3}, \"hp\": {4}, \"maxHp\": {5}, \"kills\": {6}, \"gold\": {7}, \"enemies\": {8}, \"fps\": {9}, \"paused\": {10}, \"weapons\": [{11}], \"gems\": {12}, \"heapMb\": {13:0.0}, \"gc\": [{14}, {15}, {16}], \"pooled\": {17}, \"unityMb\": {18:0}, \"quality\": {19}, \"slow\": {20}, \"maxMs\": {21:0.0}, \"shots\": {22}, \"jolts\": {23}, \"vsync\": {24}, \"vat\": {25}, \"vatBodies\": {26}, \"drawCalls\": {27}, \"setPass\": {28}, \"batches\": {29}, \"bulletDraw\": {30}, \"bullets\": {31}, \"bulletsAlive\": {32}, \"writeMs\": {33:0}, \"vatHanded\": {34}, \"vatCulled\": {35}, \"vatView\": \"{36}\", \"bulletLook\": {37}, \"lightBullet\": {38}, \"coins\": {39}, \"pickups\": {40}, \"lightSince\": {41:0.0}, \"gpuOff\": {42}, \"gemsLeft\": {43}, \"gemSince\": {44:0.0}}}",
                 Elapsed, progression != null ? progression.CurrentStage : 0, progression != null ? progression.StageElapsedTime : 0f,
                 _experience != null ? _experience.CurrentLevel : 0, _health != null ? _health.CurrentHealth : 0, _health != null ? _health.MaxHealth : 0,
                 stats != null ? stats.TotalKills : 0, stats != null ? stats.TotalGoldCollected : 0, EnemyController.ActiveEnemies.Count, fps,
@@ -1926,7 +1956,8 @@ namespace SoulHunter.Gameplay.Core
                 SoulHunter.Gameplay.Hazards.EnemyBulletDrawer.DrawLevel,
                 SoulHunter.Gameplay.Hazards.HazardBullets.LightBullets ? "true" : "false",
                 SoulHunter.Gameplay.Pickups.GoldPickup.ActiveCoins.Count, SoulHunter.Gameplay.Pickups.PickupTicker.Count,
-                Elapsed - _lightBulletSwitchedAt, _gpuOff ? "true" : "false"));
+                Elapsed - _lightBulletSwitchedAt, _gpuOff ? "true" : "false",
+                SoulHunter.Gameplay.Player.PlayerExperience.GemMagnetOff ? "true" : "false", Elapsed - _gemSwitchedAt));
             // -sh-autoplay-count-fx: who owns the playing particle systems (a scene search, so only for diagnosis runs).
             if (HasArg("-sh-autoplay-count-fx"))
             {
